@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.0: Fast & compact specialized utility classes for Java
+ * fastUtil 2.1: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -45,13 +45,10 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
     /** Index into the prime list, giving the current table size. */
     int p;
 
-    /** Table size. It must be the {@link #p}-th item of {@link Hash#primes}. */
-    transient int n;
-
-    /** Threshold after which we rehash. It must be {@link #n} times {@link #f}. */
+    /** Threshold after which we rehash. It must be the table size times {@link #f}. */
     transient int maxFill;
 
-    /** Number of free entries in the table (may be less than {@link #n}-{@link #count} because of deleted entries). */
+    /** Number of free entries in the table (may be less than the table size - {@link #count} because of deleted entries). */
     transient int free;
 
     /** Number of entries in the set. */
@@ -68,21 +65,18 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
      * @see Hash#primes
      */
 	 
-    public OPENHASHSET( int n, float f ) {
+    public OPENHASHSET( final int n, final float f ) {
 	if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
 	if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
 	int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
 	if ( l < 0 ) l = -l - 1;
 
-	//System.err.println("Allocation dimension: " + primes[l]);
-
+	free = primes[ p = l ];
 	this.f = f;
-	this.n = free = primes[ l ];
-	this.maxFill = (int)( n * f );
-	p = l;
-	key = new KEY_TYPE[ this.n ];
-	state = new byte[ this.n ];
+	this.maxFill = (int)( free * f );
+	key = new KEY_TYPE[ free ];
+	state = new byte[ free ];
     }
 	 
 	 
@@ -91,7 +85,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
      * @param n the expected number of elements in the hash set. 
      */
 	 
-    public OPENHASHSET(int n) {
+    public OPENHASHSET( final int n ) {
 	this(n, DEFAULT_LOAD_FACTOR);
     }
 
@@ -111,7 +105,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
      * @param f the load factor.
      */
 	 
-    public OPENHASHSET( Collection c, float f ) {
+    public OPENHASHSET( final Collection c, final float f ) {
 	this(c.size(), f);
 	addAll(c);
     }
@@ -124,18 +118,18 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
      * @param c a {@link Collection} to be copied into the new hash set. 
      */
 	 
-    public OPENHASHSET( Collection c ) {
+    public OPENHASHSET( final Collection c ) {
 	this(c, DEFAULT_LOAD_FACTOR);
     }
 
 
-    /** Creates a new set copying the elements of an array and 
+    /** Creates a new set copying the elements of an array.
      *
      * @param a an array to be copied into the new hash set. 
      * @param f the load factor.
      */
 	 
-    public OPENHASHSET( KEY_TYPE[] a, float f ) {
+    public OPENHASHSET( final KEY_TYPE[] a, final float f ) {
 	this( a.length, f );
 	int i = a.length;
 	while(i-- != 0) add(a[i]);
@@ -147,7 +141,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
      * @param a an array to be copied into the new hash set. 
      */
 	 
-    public OPENHASHSET( KEY_TYPE[] a ) {
+    public OPENHASHSET( final KEY_TYPE[] a ) {
 	this( a, DEFAULT_LOAD_FACTOR );
     }
 
@@ -167,27 +161,34 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
     private int findInsertionPoint( final KEY_TYPE k ) {
 	final KEY_TYPE key[] = this.key;
 	final byte state[] = this.state;
+	final int n = key.length;
 
 	// First of all, we make the key into a positive integer.
 	final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
 	// The primary hash, a.k.a. starting point.
 	int h1 = k2i % n;
-	// The secondary hash.
-	final int h2 = (k2i % (n - 2)) + 1;
 
-	while( state[h1] == OCCUPIED && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	if ( state[ h1 ] == OCCUPIED && ! KEY_EQUAL( key[ h1 ], k ) ) {
+	    // The secondary hash.
+	    final int h2 = ( k2i % ( n - 2 ) ) + 1;
+	    do h1 = ( h1 + h2 ) % n; while( state[ h1 ] == OCCUPIED && ! KEY_EQUAL( key[ h1 ], k ) ); // There's always a FREE entry.
+	}
 
-	if (state[h1] == FREE) return h1;
-	if (state[h1] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[h1], k).
+	if (state[ h1 ] == FREE) return h1;
+	if (state[ h1 ] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[ h1 ], k).
 
 	/* Tables without deletions will never use code beyond this point. */
 
 	final int i = h1; // Remember first available bucket for later.
 		  
 	/** See the comments in the documentation of the interface Hash. */
-	while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	if ( state[ h1 ] != FREE && ! KEY_EQUAL( key[ h1 ], k ) ) {
+	    // The secondary hash.
+	    final int h2 = ( k2i % ( n - 2 ) ) + 1;
+	    do h1 = ( h1 + h2 ) % n;  while( state[ h1 ] != FREE && ! KEY_EQUAL( key[ h1 ], k ) );
+	}
 		  
-	return state[h1] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+	return state[ h1 ] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[ h1 ], k).
     }
 
 
@@ -200,18 +201,21 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
     private int findKey( final KEY_TYPE k ) {
 	final KEY_TYPE key[] = this.key;
 	final byte state[] = this.state;
+	final int n = key.length;
 
 	// First of all, we make the key into a positive integer.
 	final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
 	// The primary hash, a.k.a. starting point.
 	int h1 = k2i % n;
-	// The secondary hash.
-	final int h2 = (k2i % (n - 2)) + 1;
 		  
 	/** See the comments in the documentation of the interface Hash. */
-	while( state[h1] != FREE && ! KEY_EQUAL(key[h1], k) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	if ( state[ h1 ] != FREE && ! KEY_EQUAL(key[ h1 ], k) ) {
+	    // The secondary hash.
+	    final int h2 = ( k2i % ( n - 2 ) ) + 1;
+	    do h1 = ( h1 + h2 ) % n; while( state[ h1 ] != FREE && ! KEY_EQUAL(key[ h1 ], k) ); // There's always a FREE entry.
+	}
 
-	return state[h1] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+	return state[ h1 ] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[ h1 ], k).
     }
  
 
@@ -265,7 +269,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
     public void clear() {
 	count = 0;
-	free = n;
+	free = state.length;
 	Arrays.fill(state, FREE);
 #if #keyclass(Object)
 	Arrays.fill(key, null);
@@ -307,13 +311,13 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 					 
 		{ 
 		    final byte state[] = OPENHASHSET.this.state;
-		    final int n = OPENHASHSET.this.n;
+		    final int n = state.length;
 
 		    if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
 		}
 					 
 		public boolean hasNext() {
-		    return c != 0 && pos < n;
+		    return c != 0 && pos < OPENHASHSET.this.state.length;
 		}
 					 
 					 
@@ -321,7 +325,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		public KEY_TYPE NEXT_KEY() {
 		    KEY_TYPE retVal;
 		    final byte state[] = OPENHASHSET.this.state;
-		    final int n = OPENHASHSET.this.n;
+		    final int n = state.length;
 						  
 		    if (!hasNext()) throw new NoSuchElementException();
 		    retVal = key[last = pos];
@@ -334,7 +338,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		public Object next() {
 		    Object retVal;
 		    final byte state[] = OPENHASHSET.this.state;
-		    final int n = OPENHASHSET.this.n;
+		    final int n = state.length;
 						  
 		    if (!hasNext()) throw new NoSuchElementException();
 		    retVal = KEY2OBJ(key[last = pos]);
@@ -384,7 +388,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
      */
 
     public boolean trim() {
-	int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
+	int l = Arrays.binarySearch( primes, (int)( count / f ) + 1 );
 	if ( l < 0 ) l = -l - 1;
 	try {
 	    rehash( l );
@@ -416,19 +420,20 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	    k2i = KEY2INT(k) & 0x7FFFFFFF;
 
 	    h1 = k2i % newN;
-	    h2 = (k2i % (newN - 2)) + 1;
 
-	    while( newState[h1] != FREE ) h1 = ( h1 + h2 ) % newN;
+	    if ( newState[h1] != FREE ) {
+		h2 = (k2i % (newN - 2)) + 1;
+		do h1 = ( h1 + h2 ) % newN; while( newState[h1] != FREE );
+	    }
 				
 	    newState[h1] = OCCUPIED;
 	    newKey[h1] = k;
 	    i++;
 	}
 
-	n = newN;
 	p = newP;
-	free = n - count;
-	maxFill = (int)( this.n * f );
+	free = newN - count;
+	maxFill = (int)( newN * f );
 	this.key = newKey;
 	this.state = newState;
     }
@@ -530,11 +535,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
     private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 	s.defaultReadObject();
-	free = n = primes[p];
-	maxFill = (int)( n * f );
+	free = primes[p];
+	maxFill = (int)( free * f );
 
-	key = new KEY_TYPE[n];
-	state = new byte[n];
+	key = new KEY_TYPE[ free ];
+	state = new byte[ free ];
 
 	int count = this.count;
 	this.count = 0;
@@ -899,7 +904,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 	/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-	int p = m.n;
+	int p = m.state.length;
 
 	for(int i=0; i<p; i++) {
 	    for (int j=0; j<20; j++) {

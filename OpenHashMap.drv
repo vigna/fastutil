@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.0: Fast & compact specialized utility classes for Java
+ * fastUtil 2.1: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -47,13 +47,10 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
     /** Index into the prime list, giving the current table size. */
     int p;
 
-    /** Table size. It must be the {@link #p}-th item of {@link Hash#primes}. */
-    transient int n;
-
-    /** Threshold after which we rehash. It must be {@link #n} times {@link #f}. */
+    /** Threshold after which we rehash. It must be the table size times {@link #f}. */
     transient int maxFill;
 
-    /** Number of free entries in the table (may be less than {@link #n}-{@link #count} because of deleted entries). */
+    /** Number of free entries in the table (may be less than the table size - {@link #count} because of deleted entries). */
     transient int free;
 
     /** Number of entries in the map. */
@@ -75,20 +72,19 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
      * @see Hash#primes
      */
 	 
-    public OPENHASHMAP( int n, float f ) {
+    public OPENHASHMAP( final int n, final float f ) {
 	if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
 	if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
 	int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
 	if ( l < 0 ) l = -l - 1;
 
+	free = primes[ p = l ];
 	this.f = f;
-	this.n = free = primes[ l ];
-	this.maxFill = (int)( n * f );
-	p = l;
-	key = new KEY_TYPE[ this.n ];
-	value = new VALUE_TYPE[ this.n ];
-	state = new byte[ this.n ];
+	this.maxFill = (int)( free * f );
+	key = new KEY_TYPE[ free ];
+	value = new VALUE_TYPE[ free ];
+	state = new byte[ free ];
     }
 	 
 	 
@@ -97,7 +93,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
      * @param n the expected number of elements in the hash map.
      */
 	 
-    public OPENHASHMAP(int n) {
+    public OPENHASHMAP( final int n ) {
 	this(n, DEFAULT_LOAD_FACTOR);
     }
 
@@ -118,7 +114,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
      * @param f the load factor.
      */
 	 
-    public OPENHASHMAP( Map m, float f ) {
+    public OPENHASHMAP( final Map m, final float f ) {
 	this(m.size(), f);
 	putAll(m);
     }
@@ -128,7 +124,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
      * @param m a {@link Map} to be copied into the new hash map. 
      */
 	 
-    public OPENHASHMAP( Map m ) {
+    public OPENHASHMAP( final Map m ) {
 	this(m, DEFAULT_LOAD_FACTOR);
     }
 
@@ -147,27 +143,34 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
     private int findInsertionPoint( final KEY_TYPE k ) {
 	final KEY_TYPE key[] = this.key;
 	final byte state[] = this.state;
+	final int n = key.length;
 
 	// First of all, we make the key into a positive integer.
 	final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
 	// The primary hash, a.k.a. starting point.
 	int h1 = k2i % n;
-	// The secondary hash.
-	final int h2 = (k2i % (n - 2)) + 1;
 
-	while( state[h1] == OCCUPIED && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	if ( state[ h1 ] == OCCUPIED && ! KEY_EQUAL( key[ h1 ], k ) ) {
+	    // The secondary hash.
+	    final int h2 = ( k2i % ( n - 2 ) ) + 1;
+	    do h1 = ( h1 + h2 ) % n; while( state[ h1 ] == OCCUPIED && ! KEY_EQUAL( key[ h1 ], k ) ); // There's always a FREE entry.
+	}
 
-	if (state[h1] == FREE) return h1;
-	if (state[h1] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[h1], k).
+	if (state[ h1 ] == FREE) return h1;
+	if (state[ h1 ] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[ h1 ], k).
 
 	/* Tables without deletions will never use code beyond this point. */
 
 	final int i = h1; // Remember first available bucket for later.
 		  
 	/** See the comments in the documentation of the interface Hash. */
-	while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	if ( state[ h1 ] != FREE && ! KEY_EQUAL( key[ h1 ], k ) ) {
+	    // The secondary hash.
+	    final int h2 = ( k2i % ( n - 2 ) ) + 1;
+	    do h1 = ( h1 + h2 ) % n;  while( state[ h1 ] != FREE && ! KEY_EQUAL( key[ h1 ], k ) );
+	}
 		  
-	return state[h1] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+	return state[ h1 ] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[ h1 ], k).
     }
 
 
@@ -180,20 +183,22 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
     private int findKey( final KEY_TYPE k ) {
 	final KEY_TYPE key[] = this.key;
 	final byte state[] = this.state;
+	final int n = key.length;
 
 	// First of all, we make the key into a positive integer.
 	final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
 	// The primary hash, a.k.a. starting point.
 	int h1 = k2i % n;
-	// The secondary hash.
-	final int h2 = (k2i % (n - 2)) + 1;
 		  
 	/** See the comments in the documentation of the interface Hash. */
-	while( state[h1] != FREE && ! KEY_EQUAL(key[h1], k) ) h1 = ( h1 + h2 ) % n;  // There's always a FREE entry.
+	if ( state[ h1 ] != FREE && ! KEY_EQUAL(key[ h1 ], k) ) {
+	    // The secondary hash.
+	    final int h2 = ( k2i % ( n - 2 ) ) + 1;
+	    do h1 = ( h1 + h2 ) % n; while( state[ h1 ] != FREE && ! KEY_EQUAL(key[ h1 ], k) ); // There's always a FREE entry.
+	}
 
-	return state[h1] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+	return state[ h1 ] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[ h1 ], k).
     }
-
 
 
 
@@ -294,7 +299,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
     public void clear() {
 	count = 0;
-	free = n;
+	free = state.length;
 	Arrays.fill(state, FREE);
 	// We null all object entries so that the garbage collector can do its work.
 #if #keyclass(Object)
@@ -308,14 +313,14 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	KEY_TYPE key;
 	VALUE_TYPE value;
 
-	Entry(Object key, Object value) {
+	Entry( final Object key, final Object value ) {
 	    this.key = KEY2TYPE(key);
 	    this.value = VALUE2TYPE(value);
 	}
 
 #if ! #keyclass(Object) || ! #valueclass(Object) 
 		  
-	Entry(KEY_TYPE key, VALUE_TYPE value) {
+	Entry( final KEY_TYPE key, final VALUE_TYPE value ) {
 	    this.key = key;
 	    this.value = value;
 	}
@@ -342,7 +347,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	}
 #endif
 
-	public VALUE_TYPE setValue(final VALUE_TYPE value) {
+	public VALUE_TYPE setValue( final VALUE_TYPE value ) {
 	    final VALUE_TYPE oldValue = this.value;
 	    this.value = value;
 	    return oldValue;
@@ -350,14 +355,14 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		  
 #if ! #valueclass(Object)
 		  
-	public Object setValue(final Object value) {
+	public Object setValue( final Object value ) {
 	    return VALUE2OBJ(setValue(VALUE2TYPE(value)));
 	}
 
 #endif
 
 
-	public boolean equals(Object o) {
+	public boolean equals( final Object o ) {
 	    if (!(o instanceof Entry)) return false;
 	    Entry e = (Entry)o;
 				
@@ -384,19 +389,19 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 						  
 			    { 
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 
 				if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
 			    }
 						  
 			    public boolean hasNext() {
-				return c != 0 && pos < n;
+				return c != 0 && pos < OPENHASHMAP.this.state.length;
 			    }
 						  
 			    public Object next() {
 				Entry retVal;
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 		  
 				if (!hasNext()) throw new NoSuchElementException();
 				retVal = new Entry(key[last = pos], value[pos]);
@@ -421,14 +426,14 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		}
 					 
-		public boolean contains(Object o) {
+		public boolean contains( final Object o ) {
 		    if (!(o instanceof Map.Entry)) return false;
 		    final Map.Entry e = (Map.Entry)o;
 		    final int i = findKey( KEY2TYPE( e.getKey() ) );
 		    return i >= 0 && VALUE_EQUAL( value[ i ], VALUE2TYPE( e.getValue() ) );
 		}
 					 
-		public boolean remove(Object o) {
+		public boolean remove( final Object o ) {
 		    if (!(o instanceof Map.Entry)) return false;
 		    final Map.Entry e = (Map.Entry)o;
 		    final int i = findKey( KEY2TYPE( e.getKey() ) );
@@ -458,20 +463,20 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		  
 			    { 
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 										  
 				if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
 			    }
 									 
 			    public boolean hasNext() {
-				return c != 0 && pos < n;
+				return c != 0 && pos < OPENHASHMAP.this.state.length;
 			    }
 									 
 #if !#keyclass(Object)
 			    public KEY_TYPE NEXT_KEY() {
 				KEY_TYPE retVal;
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 										  
 				if (!hasNext()) throw new NoSuchElementException();
 				retVal = key[last = pos];
@@ -485,7 +490,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			    public Object next() {
 				Object retVal;
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 										  
 				if (!hasNext()) throw new NoSuchElementException();
 				retVal = KEY2OBJ(key[last = pos]);
@@ -526,11 +531,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		}
 					 
 #endif
-		public boolean contains(Object ok) {
+		public boolean contains( final Object ok) {
 		    return containsKey(ok);
 		}
 
-		public boolean remove(Object ok) {
+		public boolean remove( final Object ok) {
 		    int oldCount = count;
 		    OPENHASHMAP.this.remove(ok);
 		    return count != oldCount;
@@ -553,20 +558,20 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 									 
 			    { 
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 										  
 				if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
 			    }
 		  
 			    public boolean hasNext() {
-				return c != 0 && pos < n;
+				return c != 0 && pos < OPENHASHMAP.this.state.length;
 			    }
 		  
 #if !#valueclass(Object)
 			    public VALUE_TYPE NEXT_VALUE() {
 				VALUE_TYPE retVal;
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 		  
 				if (!hasNext()) throw new NoSuchElementException();
 				retVal = value[pos];
@@ -579,7 +584,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			    public Object next() {
 				Object retVal;
 				final byte state[] = OPENHASHMAP.this.state;
-				final int n = OPENHASHMAP.this.n;
+				final int n = state.length;
 		  
 				if (!hasNext()) throw new NoSuchElementException();
 				retVal = VALUE2OBJ(value[pos]);
@@ -598,7 +603,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		    return count;
 		}
 
-		public boolean contains(Object ok) {
+		public boolean contains( final Object ok) {
 		    return containsValue(ok);
 		}
 
@@ -646,7 +651,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
      */
 
     public boolean trim() {
-	int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
+	int l = Arrays.binarySearch( primes, (int)( count / f ) + 1 );
 	if ( l < 0 ) l = -l - 1;
 	try {
 	    rehash( l );
@@ -681,18 +686,20 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	    h1 = k2i % newN;
 	    h2 = (k2i % (newN - 2)) + 1;
 
-	    while( newState[h1] != FREE ) h1 = ( h1 + h2 ) % newN;
-				
+	    if ( newState[h1] != FREE ) {
+		h2 = (k2i % (newN - 2)) + 1;
+		do h1 = ( h1 + h2 ) % newN; while( newState[h1] != FREE );
+	    }
+
 	    newState[h1] = OCCUPIED;
 	    newKey[h1] = k;
 	    newValue[h1] = v;
 	    i++;
 	}
 
-	n = newN;
 	p = newP;
-	free = n - count;
-	maxFill = (int)( this.n * f );
+	free = newN - count;
+	maxFill = (int)( newN * f );
 	this.key = newKey;
 	this.value = newValue;
 	this.state = newState;
@@ -851,12 +858,12 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
     private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 	s.defaultReadObject();
-	free = n = primes[p];
-	maxFill = (int)( n * f );
+	free = primes[p];
+	maxFill = (int)( free * f );
 
-	key = new KEY_TYPE[n];
-	value = new VALUE_TYPE[n];
-	state = new byte[n];
+	key = new KEY_TYPE[ free ];
+	value = new VALUE_TYPE[ free ];
+	state = new byte[ free ];
 
 	int count = this.count;
 	this.count = 0;
@@ -1370,7 +1377,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 	/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-	int p = m.n;
+	int p = m.state.length;
 
 	for(int i=0; i<p; i++) {
 	    for (int j=0; j<20; j++) {

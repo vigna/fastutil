@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.0: Fast & compact specialized utility classes for Java
+ * fastUtil 2.1: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -104,7 +104,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
      * @param m a {@link Set} to be copied into the new tree set. 
      */
 	 
-    public AVLTREESET( Set m ) {
+    public AVLTREESET( final Set m ) {
 	this();
 	addAll( m );
     }
@@ -114,9 +114,33 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
      * @param m a {@link SortedSet} to be copied into the new tree set. 
      */
 	 
-    public AVLTREESET( SortedSet m ) {
+    public AVLTREESET( final SortedSet m ) {
 	this( m.comparator() );
 	addAll( m );
+    }
+
+    /** Creates a new tree set copying the elements of an array.
+     *
+     * @param a an array to be copied into the new tree set. 
+     */
+	 
+    public AVLTREESET( final KEY_TYPE[] a ) {
+	this();
+	int i = a.length;
+	while( i-- != 0 ) add( a[ i ] );
+    }
+
+
+    /** Creates a new tree set copying the elements of an array and using a given {@link Comparator}.
+     *
+     * @param a an array to be copied into the new tree set. 
+     * @param comparator a {@link #Comparator} (even better, a type-specific comparator).
+     */
+	 
+    public AVLTREESET( final KEY_TYPE[] a, final Comparator c ) {
+	this( c );
+	int i = a.length;
+	while( i-- != 0 ) add( a[ i ] );
     }
 
 
@@ -142,7 +166,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
      * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
      */
 	 
-    final int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+    final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
 	return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
     }
 
@@ -154,7 +178,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
      * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
      */
 
-    private Entry findKey( KEY_TYPE k ) {
+    private Entry findKey( final KEY_TYPE k ) {
 	Entry e = tree;
 	int cmp;
 		  
@@ -171,7 +195,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
      * the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
      */
 
-    Entry locateKey( KEY_TYPE k ) {
+    final Entry locateKey( final KEY_TYPE k ) {
 	Entry e = tree, last = tree;
 	int cmp = 0;
 		  
@@ -386,7 +410,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
      * @return the parent of the given node, or <code>null</code> for the root.
      */
 
-    private Entry parent( Entry e ) {
+    private Entry parent( final Entry e ) {
 	if ( e == tree ) return null;
 
 	Entry x, y, p;
@@ -758,7 +782,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	 *
 	 * @param k a key.
 	 */
-	Entry( Object k ) {
+	Entry( final Object k ) {
 	    this.key = KEY2TYPE( k );
 	    info = SUCC_MASK | PRED_MASK;
 	}
@@ -769,7 +793,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	 *
 	 * @param k a key.
 	 */
-	Entry( KEY_TYPE k ) {
+	Entry( final KEY_TYPE k ) {
 	    this.key = k;
 	    info = SUCC_MASK | PRED_MASK;
 	}
@@ -811,7 +835,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	/** Sets whether the left pointer is really a predecessor.
 	 * @param pred if true then the left pointer will be considered a predecessor.
 	 */
-	void pred( boolean pred ) {
+	void pred( final boolean pred ) {
 	    if ( pred ) info |= PRED_MASK;
 	    else info &= ~PRED_MASK;
 	}
@@ -819,7 +843,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	/** Sets whether the right pointer is really a successor.
 	 * @param succ if true then the right pointer will be considered a successor.
 	 */
-	void succ( boolean succ ) {
+	void succ( final boolean succ ) {
 	    if ( succ ) info |= SUCC_MASK;
 	    else info &= ~SUCC_MASK;
 	}
@@ -827,7 +851,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	/** Sets the left pointer to a predecessor.
 	 * @param pred the predecessr.
 	 */
-	void pred( Entry pred ) {
+	void pred( final Entry pred ) {
 	    info |= PRED_MASK;
 	    left = pred;
 	}
@@ -835,7 +859,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	/** Sets the right pointer to a successor.
 	 * @param succ the successor.
 	 */
-	void succ( Entry succ ) {
+	void succ( final Entry succ ) {
 	    info |= SUCC_MASK;
 	    right = succ;
 	}
@@ -843,7 +867,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	/** Sets the left pointer to the given subtree.
 	 * @param left the new left subtree.
 	 */
-	void left( Entry left ) {
+	void left( final Entry left ) {
 	    info &= ~PRED_MASK;
 	    this.left = left;
 	}
@@ -851,7 +875,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	/** Sets the right pointer to the given subtree.
 	 * @param right the new right subtree.
 	 */
-	void right( Entry right ) {
+	void right( final Entry right ) {
 	    info &= ~SUCC_MASK;
 	    this.right = right;
 	}
@@ -928,7 +952,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	    return c;
 	}
 
-	public boolean equals(Object o) {
+	public boolean equals( final Object o ) {
 	    if (!(o instanceof Entry)) return false;
 	    Entry e = (Entry)o;
 				
@@ -1025,7 +1049,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	    next = firstEntry;
 	}
 
-	SetIterator( KEY_TYPE k ) {
+	SetIterator( final KEY_TYPE k ) {
 	    if ( ( next = locateKey( k ) ) != null ) {
 		if ( compare( next.key, k ) <= 0 ) {
 		    prev = next;
@@ -1103,7 +1127,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	return new SetIterator();
     }
 
-    public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+    public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
 	return new SetIterator( from );
     }
 
@@ -1111,28 +1135,28 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	return storedComparator;
     }
 
-    public SortedSet headSet( Object to  ) {
+    public SortedSet headSet( final Object to  ) {
 	return new Subset( KEY_NULL, true, KEY2TYPE( to ), false );
     }
 
-    public SortedSet tailSet( Object from ) {
+    public SortedSet tailSet( final Object from ) {
 	return new Subset( KEY2TYPE( from ), false, KEY_NULL, true );
     }
 
-    public SortedSet subSet( Object from, Object to ) {
+    public SortedSet subSet( final Object from, final Object to ) {
 	return new Subset( KEY2TYPE( from ), false, KEY2TYPE( to ), false );
     }
 
 #if !#keyclass(Object)
-    public SORTEDSET headSet( KEY_TYPE to ) {
+    public SORTEDSET headSet( final KEY_TYPE to ) {
 	return new Subset( KEY_NULL, true, to, false );
     }
 
-    public SORTEDSET tailSet( KEY_TYPE from ) {
+    public SORTEDSET tailSet( final KEY_TYPE from ) {
 	return new Subset( from, false, KEY_NULL, true );
     }
 
-    public SORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) {
+    public SORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) {
 	return new Subset( from, false, to, false );
     }
 #endif
@@ -1163,7 +1187,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	 * @param to the end of the subset range.
 	 * @param top if true, the third parameter is ignored and the range goes to &infin;.
 	 */
-	public Subset( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
+	public Subset( final KEY_TYPE from, final boolean bottom, final KEY_TYPE to, final boolean top ) {
 	    if ( ! bottom && ! top && AVLTREESET.this.compare( from, to ) > 0 ) {
 		throw new IllegalArgumentException( "fromKey > toKey" );
 	    }
@@ -1186,7 +1210,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	 * @param k a key.
 	 * @return true if is the key is in the subset range.
 	 */
-	boolean in( KEY_TYPE k ) {
+	final boolean in( final KEY_TYPE k ) {
 	    return ( bottom || AVLTREESET.this.compare( k, from ) >= 0 ) &&
 		( top || AVLTREESET.this.compare( k, to ) < 0 );
 	}
@@ -1253,7 +1277,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	    return new SubsetIterator();
 	}
 
-	public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+	public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
 	    return new SubsetIterator( from );
 	}
 		  
@@ -1381,7 +1405,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		next = firstEntry();
 	    }
 
-	    SubsetIterator( KEY_TYPE k ) {
+	    SubsetIterator( final KEY_TYPE k ) {
 		this();
 
 		if ( next != null ) {
