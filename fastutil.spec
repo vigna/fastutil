@@ -76,7 +76,7 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
-* Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 4.0-1jpp
+* Sun Jan 18 2004 Sebastiano Vigna <vigna at acm.org> - 4.0-1jpp
 - Several implementations of priority queues.
 
 * Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.1-1jpp
@@ -91,10 +91,10 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 * Sun Apr 06 2003 Sebastiano Vigna <vigna at acm.org> - 2.60-1jpp
 - Improved iterators.
 
-* Fri Apr  4 2003 Ville Skytt‰ <ville.skytta at iki.fi> - 0:2.52-2jpp
+* Fri Apr  4 2003 Ville Skytt√§ <ville.skytta at iki.fi> - 0:2.52-2jpp
 - Rebuilt for JPackage 1.5.
 
-* Thu Mar 13 2003 Ville Skytt‰ <ville.skytta at iki.fi> - 2.52-1jpp
+* Thu Mar 13 2003 Ville Skytt√§ <ville.skytta at iki.fi> - 2.52-1jpp
 - Updated to 2.52.
 - Comments from upstream (thanks to Sebastiano Vigna):
   - IMPORTANT: The package name has changed. Please remove manually
@@ -103,7 +103,7 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
   - Deleted docs from source tar.
   - Merged in patches to Makefile.
 
-* Sun Mar  9 2003 Ville Skytt‰ <ville.skytta at iki.fi> - 2.51-2jpp
+* Sun Mar  9 2003 Ville Skytt√§ <ville.skytta at iki.fi> - 2.51-2jpp
 - First official JPackage release.
 - Fix Group tags.
 - No manual subpackage (there's no manual... :)
