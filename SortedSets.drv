@@ -80,8 +80,8 @@ public class SORTEDSETS {
 
 		public Comparator comparator() { return comparator; }
 
-		public STDSORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) { if ( compare( from, element ) <= 0 && compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
-		public STDSORTEDSET headSet( final KEY_TYPE to ) { if ( compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+		public STDSORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) { if ( compare( from, element ) <= 0 && compare( element, to ) < 0 ) return this; else return Sets.EMPTY_SET; }
+		public STDSORTEDSET headSet( final KEY_TYPE to ) { if ( compare( element, to ) < 0 ) return this; else return Sets.EMPTY_SET; }
 		public STDSORTEDSET tailSet( final KEY_TYPE from ) { if ( compare( from, element ) <= 0 ) return this; else return Sets.EMPTY_SET; }
 
 		public KEY_TYPE FIRST() { return element; }
@@ -186,17 +186,17 @@ public class SORTEDSETS {
 	}
 
 
-	/** Returns a synchronized sorted set backed by the specified sorted set.
+	/** Returns a synchronized type-specific sorted set backed by the specified type-specific sorted set.
 	 *
-	 * @param s the sorted set to be "wrapped" in a synchronized sorted set.
+	 * @param s the sorted set to be wrapped in a synchronized sorted set.
 	 * @return a synchronized view of the specified sorted set.
 	 * @see java.util.Collections#synchronizedSortedSet(SortedSet)
 	 */
 	public static SORTEDSET synchronize( final SORTEDSET s ) {	return new SynchronizedSortedSet( s ); }
 
-	/** Returns a synchronized sorted set backed by the specified sorted set, using an assigned object to synchronize.
+	/** Returns a synchronized type-specific sorted set backed by the specified type-specific sorted set, using an assigned object to synchronize.
 	 *
-	 * @param s the sorted set to be "wrapped" in a synchronized sorted set.
+	 * @param s the sorted set to be wrapped in a synchronized sorted set.
 	 * @param sync an object that will be used to synchronize the access to the sorted set.
 	 * @return a synchronized view of the specified sorted set.
 	 * @see java.util.Collections#synchronizedSortedSet(SortedSet)
@@ -219,7 +219,7 @@ public class SORTEDSETS {
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
 #else
-		return new java.io.Serializable() {};
+		return new Integer( 0 ); // Otherwise sorting won't work.
 #endif
 	}
 
@@ -442,8 +442,10 @@ public class SORTEDSETS {
 			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		}
 
-		ensure( m.equals( ((Singleton)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
-		ensure( ((Singleton)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
+		if ( m instanceof Singleton ) {
+			ensure( m.equals( ((Singleton)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
+			ensure( ((Singleton)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
+		}
 
 		int h = m.hashCode();
 
@@ -483,31 +485,31 @@ public class SORTEDSETS {
 
 		/* Now we select a pair of keys and create a subset. */
 
-		java.util.ListIterator i;
-		Object start = m.first(), end = m.first();
-		if ( r.nextBoolean() ) start = KEY2OBJ( GEN_KEY() );
-		if ( r.nextBoolean() ) end = KEY2OBJ( GEN_KEY() );
-		if ( KEY_CMP( KEY2TYPE( start), KEY2TYPE( end ) ) > 0 ) start = end;
-		
-		//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
-		testSets( k, (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), level - 1 );
+		if ( ! m.isEmpty() ) {
+			java.util.ListIterator i;
+			Object start = m.first(), end = m.first();
+			for( i = (java.util.ListIterator)m.iterator(); i.hasNext() && r.nextBoolean(); start = end = i.next() );
+			for( ; i.hasNext() && r.nextBoolean(); end = i.next() );
+			
+			//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+			testSets( k, (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), level - 1 );
+			
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet" );
+			
+			//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
+			testSets( k, (SORTEDSET)m.headSet( end ), t.headSet( end ), level - 1 );
+			
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet" );
+			
+			//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
+			testSets( k, (SORTEDSET)m.tailSet( start ), t.tailSet( start ), level - 1 );
+			
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet" );
+		}
 
-		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet" );
-		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet" );
-		
-		//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
-		testSets( k, (SORTEDSET)m.headSet( end ), t.headSet( end ), level - 1 );
-		
-		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet" );
-		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet" );
-		
-		//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
-		testSets( k, (SORTEDSET)m.tailSet( start ), t.tailSet( start ), level - 1 );
-		
-		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet" );
-		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet" );
-
-		System.out.println("Test OK");
 		return;
 	}
 
@@ -517,6 +519,7 @@ public class SORTEDSETS {
 		SortedSet u = new java.util.TreeSet();
 		u.add( KEY2OBJ( k ) );
 		testSets( k, m, java.util.Collections.unmodifiableSortedSet( u ), 3 );
+		System.out.println("Test OK");
 	}
 
 	

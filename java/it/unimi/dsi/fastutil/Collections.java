@@ -170,6 +170,13 @@ public class Collections {
 
 		public int size() { return 0; }
 		public void clear() {}
+
+		public int hashCode() { return 0; }
+		public boolean equals( Object o ) { 
+			if ( o == this ) return true;
+			if ( ! ( o instanceof Collection ) ) return false;
+			return ((Collection)o).isEmpty();
+		}
 	}
 }
 

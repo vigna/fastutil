@@ -50,7 +50,7 @@ public class SETS {
 
 	private SETS() {}
 
-	/** A class representing a singleton. */
+	/** An immutable class representing a type-specific singleton. */
 
 	protected static class Singleton extends ABSTRACT_SET implements java.io.Serializable, Cloneable {
 	
@@ -144,17 +144,17 @@ public class SETS {
 	}
 
 
-	/** Returns a synchronized set backed by the specified set.
+	/** Returns a synchronized type-specific set backed by the specified type-specific set.
 	 *
-	 * @param s the set to be "wrapped" in a synchronized set.
+	 * @param s the set to be wrapped in a synchronized set.
 	 * @return a synchronized view of the specified set.
 	 * @see java.util.Collections#synchronizedSet(Set)
 	 */
 	public static SET synchronize( final SET s ) {	return new SynchronizedSet( s ); }
 
-	/** Returns a synchronized set backed by the specified set, using an assigned object to synchronize.
+	/** Returns a synchronized type-specific set backed by the specified type-specific set, using an assigned object to synchronize.
 	 *
-	 * @param s the set to be "wrapped" in a synchronized set.
+	 * @param s the set to be wrapped in a synchronized set.
 	 * @param sync an object that will be used to synchronize the access to the set.
 	 * @return a synchronized view of the specified set.
 	 * @see java.util.Collections#synchronizedSet(Set)
@@ -316,7 +316,7 @@ public class SETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			if ( ! KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
+			if ( ! KEY_EQUAL( T, k ) && mThrowsUnsupp && ! tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
@@ -377,6 +377,7 @@ public class SETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
+			if ( ! KEY_EQUAL( T, k ) && mThrowsUnsupp && ! tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
@@ -400,8 +401,10 @@ public class SETS {
 			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		}
 
-		ensure( m.equals( ((Singleton)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
-		ensure( ((Singleton)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+		if ( m instanceof Singleton ) {
+			ensure( m.equals( ((Singleton)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+			ensure( ((Singleton)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+		}
 
 		int h = m.hashCode();
 

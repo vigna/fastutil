@@ -271,7 +271,7 @@ $(SORTEDSETS_STATIC): SortedSets.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(SORTEDSETS_STATIC)
 
 
-LISTS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Lists.c)
+LISTS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Lists.c)
 $(LISTS_STATIC): Lists.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LISTS_STATIC)

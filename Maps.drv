@@ -70,7 +70,7 @@ public class MAPS {
 		public boolean containsValue( final VALUE_TYPE v ) { return false; }
 
 		public VALUE_TYPE defaultReturnValue()  { return VALUE_NULL; }
-		public void defaultReturnValue( final VALUE_TYPE defRetValue )  {}
+		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
 	
 		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
 
@@ -99,7 +99,7 @@ public class MAPS {
 #endif
 
 		public int size() { return 0; }
-		public void clear() { throw new UnsupportedOperationException(); }
+		public void clear() {}
 	
         private Object readResolve() { return EMPTY_MAP; }
 
@@ -113,7 +113,7 @@ public class MAPS {
 	public static final EmptyMap EMPTY_MAP = new EmptyMap();
 
 
-	/** A class representing a singleton map. */
+	/** An immutable class representing a type-specific singleton map. */
 
 	protected static class Singleton extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
 	
@@ -137,8 +137,8 @@ public class MAPS {
 		public boolean containsValue( final VALUE_TYPE v ) { return VALUE_EQUAL( value, v ); }
 
 		public VALUE_TYPE defaultReturnValue()  { return VALUE_NULL; }
-		public void defaultReturnValue( final VALUE_TYPE defRetValue ) {}
-	
+		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
+
 		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
 
 		public Set entrySet() { if ( entries == null ) entries = ObjectSets.singleton( new SingletonEntry() ); return entries; }
@@ -173,7 +173,7 @@ public class MAPS {
 #endif
 
 #if ! #valueclass( Object ) && ! #valueclass( Reference )
-		public boolean containsValue( final Object ok ) { return KEY_EQUAL( key, KEY2TYPE( ok ) ); }
+		public boolean containsValue( final Object ov ) { return VALUE_EQUAL( value, VALUE2TYPE( ov ) ); }
 #endif
 
 #if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
@@ -218,8 +218,8 @@ public class MAPS {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		final MAP map;
-		final Object sync;
+		protected final MAP map;
+		protected final Object sync;
 
 		protected transient volatile Set entries, keys;
 		protected transient volatile Collection values;
@@ -278,17 +278,17 @@ public class MAPS {
 
 	}
 
-	/** Returns a synchronized map backed by the specified map.
+	/** Returns a synchronized type-specific map backed by the specified type-specific map.
 	 *
-	 * @param m the map to be "wrapped" in a synchronized map.
+	 * @param m the map to be wrapped in a synchronized map.
 	 * @return a synchronized view of the specified map.
 	 * @see java.util.Collections#synchronizedMap(Map)
 	 */
 	public static MAP synchronize( final MAP m ) { return new SynchronizedMap( m ); }
 
-	/** Returns a synchronized map backed by the specified map, using an assigned object to synchronize.
+	/** Returns a synchronized type-specific map backed by the specified type-specific map, using an assigned object to synchronize.
 	 *
-	 * @param m the map to be "wrapped" in a synchronized map.
+	 * @param m the map to be wrapped in a synchronized map.
 	 * @param sync an object that will be used to synchronize the access to the map.
 	 * @return a synchronized view of the specified map.
 	 * @see java.util.Collections#synchronizedMap(Map)

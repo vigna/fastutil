@@ -31,6 +31,8 @@ import it.unimi.dsi.fastutil.floats.*;
 import it.unimi.dsi.fastutil.doubles.*;
 import it.unimi.dsi.fastutil.objects.*;
 
+import it.unimi.dsi.fastutil.Lists;
+
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.List;
@@ -46,7 +48,7 @@ public class LISTS {
 
 	private LISTS() {}
 
-	/** A class representing a singleton list. */
+	/** An immutable class representing a type-specific singleton list. */
 
 	protected static class Singleton extends ABSTRACT_LIST implements java.io.Serializable, Cloneable {
 	
@@ -97,10 +99,19 @@ public class LISTS {
 			if ( i == 1 ) l.next();
 			return l;
 		}
-	
+
+		public LIST SUBLIST_METHOD( final int from, final int to ) {
+			ensureIndex( from );
+			ensureIndex( to );
+			if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+			
+			if ( from != 0 || to != 1 ) return Lists.EMPTY_LIST;
+			else return this;
+		}
+		
 		public int size() { return 1; }
 
-		public void size( final int size ) { if ( size != 1 ) throw new UnsupportedOperationException(); }
+		public void size( final int size ) { throw new UnsupportedOperationException(); }
 		public void clear() { throw new UnsupportedOperationException(); }
 	
 		public Object clone() { return this; }
@@ -196,17 +207,17 @@ public class LISTS {
 	}
 
 
-	/** Returns a synchronized list backed by the specified list.
+	/** Returns a synchronized type-specific list backed by the specified type-specific list.
 	 *
-	 * @param l the list to be "wrapped" in a synchronized list.
+	 * @param l the list to be wrapped in a synchronized list.
 	 * @return a synchronized view of the specified list.
 	 * @see java.util.Collections#synchronizedList(List)
 	 */
 	public static LIST synchronize( final LIST l ) {	return new SynchronizedList( l ); }
 
-	/** Returns a synchronized list backed by the specified list, using an assigned object to synchronize.
+	/** Returns a synchronized type-specific list backed by the specified type-specific list, using an assigned object to synchronize.
 	 *
-	 * @param l the list to be "wrapped" in a synchronized list.
+	 * @param l the list to be wrapped in a synchronized list.
 	 * @param sync an object that will be used to synchronize the access to the list.
 	 * @return a synchronized view of the specified list.
 	 * @see java.util.Collections#synchronizedList(List)
@@ -232,32 +243,31 @@ public class LISTS {
 	}
 
 
-	private static void test() {
+	private static void testLists( KEY_TYPE k, LIST m, List t, int level ) {
 		int n = 100;
 		int c;
-		KEY_TYPE k = GEN_KEY();
-		LIST m = new Singleton( k );
-		List t = java.util.Collections.singletonList( KEY2OBJ( k ) );
 
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsIndex, tThrowsIndex, mThrowsUnsupp, tThrowsUnsupp;
 		boolean rt = false, rm = false;
 		Object Rt = null, Rm = null;
 
+		if ( level == 0 ) return;
+
 		/* Now we check that m and t are equal. */
 		if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
-		ensure( m.equals( t ), "Error (" + seed + "): ! m.equals( t ) at start" );
-		ensure( t.equals( m ), "Error (" + seed + "): ! t.equals( m ) at start" );
+		ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start" );
+		ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start" );
 
 		/* Now we check that m actually holds that data. */
 		for(Iterator i=t.iterator(); i.hasNext();  ) {
-			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on t)" );
+			ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on t)" );
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		for(Iterator i=m.iterator(); i.hasNext();  ) {
-			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on m)" );
+			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m)" );
 		}
 
 		/* Now we check that inquiries about random data give the same answer in m and t. For
@@ -282,10 +292,10 @@ public class LISTS {
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method) " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method) " + m );
 		}
 
 		/* Again, we check that inquiries about random data give the same answer in m and t, but
@@ -312,11 +322,11 @@ public class LISTS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence between t and m (standard method) " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence between t and m (standard method) " + m );
 		}
 
 		/* Now we add and remove random data in m and t, checking that the result is the same. */
@@ -342,11 +352,11 @@ public class LISTS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in add() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in add() between t and m " + m );
 
 			T = GEN_KEY();
 
@@ -368,17 +378,17 @@ public class LISTS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			if ( ! KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
+			if ( ! KEY_EQUAL( T, k ) && mThrowsUnsupp && ! tThrowsUnsupp ) mThrowsUnsupp = true; // Stupid bug in Collections.singleton()
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in remove() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in remove() between t and m " + m );
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after removal " + m );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal " + m );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal " + m );
 
 		/* Now we add and remove random data in m and t at specific positions, checking that the result is the same. */
 
@@ -405,10 +415,10 @@ public class LISTS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() at " + pos + " divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() at " + pos + " divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() at " + pos + " divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): add() at " + pos + " divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): add() at " + pos + " divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): add() at " + pos + " divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): add() at " + pos + " divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): add() at " + pos + " divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
 
 			T = GEN_KEY();
 
@@ -433,15 +443,15 @@ public class LISTS {
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() at " + pos + " divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() at " + pos + " divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): remove() at " + pos + " divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): remove() at " + pos + " divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( Rm == Rt || Rm != null && Rm.equals(Rt), "Error (" + seed + "): divergence in remove() at " + pos + " between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() at " + pos + " divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() at " + pos + " divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): remove() at " + pos + " divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): remove() at " + pos + " divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( Rm == Rt || Rm != null && Rm.equals(Rt), "Error (" + level + ", " + seed + "): divergence in remove() at " + pos + " between t and m " + m );
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after removal " + m );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal " + m );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal " + m );
 
 		/* Now we add and remove random collections in m and t, checking that the result is the same. */
 
@@ -466,11 +476,11 @@ public class LISTS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in addAll() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in addAll() between t and m " + m );
 
 			T = GEN_KEY();
 
@@ -493,15 +503,15 @@ public class LISTS {
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in removeAll() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in removeAll() between t and m " + m );
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after set removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after set removal " + m );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after set removal " + m );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after set removal " + m );
 
 		/* Now we add random collections at specific positions in m and t, checking that the result is the same. */
 
@@ -528,31 +538,33 @@ public class LISTS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() at " + pos + " divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() at " + pos + " divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): addAll() at " + pos + " divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): addAll() at " + pos + " divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in addAll() at " + pos + " between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): addAll() at " + pos + " divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): addAll() at " + pos + " divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): addAll() at " + pos + " divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): addAll() at " + pos + " divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in addAll() at " + pos + " between t and m " + m );
 
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after set removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after set removal " + m );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after set removal " + m );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after set removal " + m );
 
 		/* Now we check that m actually holds the same data. */
 		  
 		for(Iterator i=t.iterator(); i.hasNext();  ) {
-			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on t)");
+			ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
 		for(Iterator i=m.iterator(); i.hasNext();  ) {
-			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on m)" );
+			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		}
-
-		ensure( m.equals( ((Singleton)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
-		ensure( ((Singleton)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+		
+		if ( m instanceof Singleton ) {
+			ensure( m.equals( ((Singleton)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
+			ensure( ((Singleton)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
+		}
 
 		int h = m.hashCode();
 
@@ -582,30 +594,35 @@ public class LISTS {
 
 #if ! #keyclass(Reference)
 
-		ensure( m2.hashCode() == h, "Error (" + seed + "): hashCode() changed after save/read" );
+		ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read" );
 		  
 		/* Now we check that m2 actually holds that data. */
 		  
-		ensure( m2.equals(t), "Error (" + seed + "): ! m2.equals( t ) after save/read" );
-		ensure( t.equals(m2), "Error (" + seed + "): ! t.equals( m2 ) after save/read" );
+		ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read" );
+		ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read" );
 #endif
 
-		System.out.println("Test OK");
+		if ( ! m.isEmpty() ) {
+			int start = r.nextInt( m.size() );
+			int end = start + r.nextInt( m.size() - start );
+			//System.err.println("Checking subList from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+			testLists( k, m.SUBLIST_METHOD( start, end ), t.subList( start, end ), level - 1 );
+
+			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after subList" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subList" );
+
+		}
+
 		return;
 	}
 
-
-
-#endif
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
-
-
-#ifdef TEST
+	private static void test() {
+		KEY_TYPE k = GEN_KEY();
+		LIST m = new Singleton( k );
+		List u = java.util.Collections.singletonList( KEY2OBJ( k ) );
+		testLists( k, m, java.util.Collections.unmodifiableList( u ), 3 );
+		System.out.println("Test OK");
+	}
 	
 	private static long seed = System.currentTimeMillis(); 
 	private static java.util.Random r = new java.util.Random( seed );
