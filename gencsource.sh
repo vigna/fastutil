@@ -193,6 +193,7 @@ echo -e \
 "#define KEY_EMPTY_SET ${TYPE_UC[$k]}_EMPTY_SET\n\n"\
 "#define KEY_EMPTY_MAP ${TYPE_UC[$k]}_EMPTY_MAP\n\n"\
 "#define KEY_EMPTY_LIST ${TYPE_UC[$k]}_EMPTY_LIST\n\n"\
+"#define KEY_EMPTY_ITERATOR ${TYPE_UC[$k]}_EMPTY_ITERATOR\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define STACK ${TYPE_CAP[$k]}Stack\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\

@@ -224,6 +224,32 @@ $(SOURCEDIR)/Iterators.java: $(ITERATORS_FRAGMENTS:.h=.j)
 CSOURCES += $(SOURCEDIR)/Iterators.c
 
 
+COLLECTIONS_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(k)Collections-Fragment.h)
+$(COLLECTIONS_FRAGMENTS): Collections-Fragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(COLLECTIONS_FRAGMENTS)
+
+$(SOURCEDIR)/Collections.c: Collections.drv $(COLLECTIONS_FRAGMENTS)
+	cp $< $@
+
+$(SOURCEDIR)/Collections.java: $(COLLECTIONS_FRAGMENTS:.h=.j)
+
+CSOURCES += $(SOURCEDIR)/Collections.c
+
+
+ARRAYS_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(k)Arrays-Fragment.h)
+$(ARRAYS_FRAGMENTS): Arrays-Fragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(ARRAYS_FRAGMENTS)
+
+$(SOURCEDIR)/Arrays.c: Arrays.drv $(ARRAYS_FRAGMENTS)
+	cp $< $@
+
+$(SOURCEDIR)/Arrays.java: $(ARRAYS_FRAGMENTS:.h=.j)
+
+CSOURCES += $(SOURCEDIR)/Arrays.c
+
+
 
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
