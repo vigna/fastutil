@@ -1,7 +1,7 @@
 #!/bin/sh
 
 TYPE=(boolean byte short int long char float double Object Object)
-TYPE_PACK=(booleans bytes shorts ints longs chars floats doubles objects objects)
+PACKAGE=(booleans bytes shorts ints longs chars floats doubles objects objects)
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
 
@@ -17,7 +17,7 @@ for ((t=1; t<10000; t*=10)); do
 	l=${#TYPE[*]}
 	if [[ ${SET[$f]} != "OpenHashSet" && ${SET[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
 	for ((k=1; k<l; k++)); do
-		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_PACK[$k]}.${TYPE_CAP[$k]}${SET[$f]}
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${SET[$f]}
 		if [[ $f < 2 ]]; then
 			echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
 			java -ea -server $CLASSNAME test $t $lf
@@ -35,7 +35,7 @@ for ((t=1; t<10000; t*=10)); do
 	if [[ ${MAP[$f]} != "OpenHashMap" && ${MAP[$f]} != "LinkedOpenHashMap" ]]; then l=$((l-1)); fi # Only hash maps may have reference keys.
 	for ((k=1; k<l; k++)); do
 	    for ((v=1; v<${#TYPE[*]}; v++)); do
-		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_PACK[$k]}.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}
 		if [[ $f < 2 ]]; then
 			echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
 			java -ea -server $CLASSNAME test $t $lf
@@ -52,9 +52,20 @@ for ((t=1; t<10000; t*=10)); do
     for ((f=0; f<${#LIST[*]}; f++)); do
 	l=${#TYPE[*]}
 	for ((k=1; k<l; k++)); do
-		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_PACK[$k]}.${TYPE_CAP[$k]}${LIST[$f]}
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${LIST[$f]}
 		echo "Testing $CLASSNAME ($t elements)..."
 		java -ea -server $CLASSNAME test $t
+	done
+    done
+
+    SINGLETONS=(Sets Lists)
+
+    for ((f=0; f<${#SINGLETONS[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=0; k<l; k++)); do
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${LIST[$f]}
+		echo "Testing ${TYPE_CAP[$k]} ${SINGLETONS[$f]} singleton..."
+		java -ea -server it.unimi.dsi.fastutil.${SINGLETONS[$f]} ${TYPE_CAP[$k]}
 	done
     done
 

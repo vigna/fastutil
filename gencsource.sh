@@ -81,6 +81,7 @@ echo -e \
 \
 "#define PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$k]}\n"\
 "#define IMPORT_VALUES import it.unimi.dsi.fastutil.${PACKAGE[$v]}.*\n"\
+"#define KEY_TEST test${TYPE_CAP[$k]}\n"\
 \
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
@@ -116,7 +117,10 @@ echo -e \
 \
 "#define SUBLIST ${TYPE_CAP[$k]}SubList\n"\
 "#define SUBLIST_METHOD ${TYPE_LC[$k]}SubList\n"\
+"#define SINGLETON ${TYPE_CAP[$k]}Singleton\n\n"\
+"#define SINGLETON_METHOD ${TYPE_LC[$k]}Singleton\n\n"\
 "#define KEY_ITERATOR_CONCATENATOR ${TYPE_CAP[$k]}IteratorConcatenator\n\n"\
+"#define GEN_KEY gen${TYPE_CAP[$k]}\n\n"\
 \
 \
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
@@ -165,7 +169,10 @@ echo -e \
 \
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
+\
 "#define ENTRY_GET_KEY getKey\n"\
+"#define TO_KEY_ARRAY toArray\n"\
+\
 "#define KEY_NULL (null)\n"\
 \
 "#if #keyclass(Object)\n"\
@@ -193,6 +200,7 @@ echo -e \
 "#define KEY_EMPTY_SET ${TYPE_UC[$k]}_EMPTY_SET\n\n"\
 "#define KEY_EMPTY_MAP ${TYPE_UC[$k]}_EMPTY_MAP\n\n"\
 "#define KEY_EMPTY_LIST ${TYPE_UC[$k]}_EMPTY_LIST\n\n"\
+"#define KEY_EMPTY_ARRAY ${TYPE_UC[$k]}_EMPTY_ARRAY\n\n"\
 "#define KEY_EMPTY_ITERATOR ${TYPE_UC[$k]}_EMPTY_ITERATOR\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define STACK ${TYPE_CAP[$k]}Stack\n\n"\

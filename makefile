@@ -224,7 +224,7 @@ $(SOURCEDIR)/Iterators.java: $(ITERATORS_FRAGMENTS:.h=.j)
 CSOURCES += $(SOURCEDIR)/Iterators.c
 
 
-COLLECTIONS_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(k)Collections-Fragment.h)
+COLLECTIONS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Collections-Fragment.h)
 $(COLLECTIONS_FRAGMENTS): Collections-Fragment.drv; ./gencsource.sh $< $@ >$@
 
 CFRAGMENTS += $(COLLECTIONS_FRAGMENTS)
@@ -235,6 +235,32 @@ $(SOURCEDIR)/Collections.c: Collections.drv $(COLLECTIONS_FRAGMENTS)
 $(SOURCEDIR)/Collections.java: $(COLLECTIONS_FRAGMENTS:.h=.j)
 
 CSOURCES += $(SOURCEDIR)/Collections.c
+
+
+SETS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Sets-Fragment.h)
+$(SETS_FRAGMENTS): Sets-Fragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(SETS_FRAGMENTS)
+
+$(SOURCEDIR)/Sets.c: Sets.drv $(SETS_FRAGMENTS)
+	cp $< $@
+
+$(SOURCEDIR)/Sets.java: $(SETS_FRAGMENTS:.h=.j)
+
+CSOURCES += $(SOURCEDIR)/Sets.c
+
+
+LISTS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Lists-Fragment.h)
+$(LISTS_FRAGMENTS): Lists-Fragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(LISTS_FRAGMENTS)
+
+$(SOURCEDIR)/Lists.c: Lists.drv $(LISTS_FRAGMENTS)
+	cp $< $@
+
+$(SOURCEDIR)/Lists.java: $(LISTS_FRAGMENTS:.h=.j)
+
+CSOURCES += $(SOURCEDIR)/Lists.c
 
 
 ARRAYS_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(k)Arrays-Fragment.h)

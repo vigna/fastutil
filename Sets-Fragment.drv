@@ -1,0 +1,366 @@
+/** A class representing a singleton. */
+
+private static class SINGLETON extends ABSTRACT_SET implements java.io.Serializable, Cloneable {
+	
+	private KEY_TYPE element;
+	
+	private SINGLETON( final KEY_TYPE element ) {
+		this.element = element;
+	}
+	
+	/** This function differs in behaviour from {@link Collections.singleton()}: if <code>k</code>
+	 * is the singleton element, it just returns false, whereas {@link Collections.singleton()} would
+	 * throw an {@link UnsupportedOperationException}. This behaviour is, however, not coherent
+	 * with that of <code>remove()</code>, which does not throw an exception if its argument
+	 * is not the singleton element 
+	 */
+	public boolean add( KEY_TYPE k ) { if ( KEY_EQUAL( k, element ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean remove( KEY_TYPE k ) { if ( ! KEY_EQUAL( k, element ) ) return false; else throw new UnsupportedOperationException(); }
+
+#if #keyclass(Integer)
+	public boolean rem( final int k ) { return remove( k ); }
+#endif
+
+	public boolean contains( final KEY_TYPE k ) { return KEY_EQUAL( k, element ); }
+	
+	public boolean addAll( final List l ) { if ( containsAll( l ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean addAll( final Collection c ) { if ( containsAll( c ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean removeAll( final Collection c ) { if ( ! c.contains( KEY2OBJ( element ) ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean retainAll( final Collection c ) { if ( c.contains( KEY2OBJ( element ) ) ) return false; else throw new UnsupportedOperationException(); }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+	public boolean addAll( final LIST l ) { if ( containsAll( l ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean addAll( final COLLECTION c ) { if ( containsAll( c ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean removeAll( final COLLECTION c ) { if ( ! c.contains( element ) ) return false; else throw new UnsupportedOperationException(); }
+	public boolean retainAll( final COLLECTION c ) { if ( c.contains( element ) ) return false; else throw new UnsupportedOperationException(); }
+#endif
+
+	/* Slightly optimised w.r.t. the one in ABSTRACT_SET. */
+	
+	public KEY_TYPE[] TO_KEY_ARRAY() {
+		KEY_TYPE a[] = new KEY_TYPE[ 1 ];
+		a[ 0 ] = element;
+		return a;
+	}
+	
+	public KEY_ITERATOR KEY_ITERATOR_METHOD() { return Iterators.wrap( TO_KEY_ARRAY() ); }
+	
+	public int size() { return 1; }
+	public void clear() { throw new UnsupportedOperationException(); }
+	
+	public Object clone() { return this; }
+	}
+
+	/** Returns a type-specific immutable set containing only the specified element. The returned set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned set.
+	 * @return a type-specific immutable set containing just <code>element</code>.
+	 */
+
+	public static SET SINGLETON_METHOD( final KEY_TYPE element ) {
+		return new SINGLETON( element );
+	}
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+
+	/** Returns a type-specific immutable set containing only the specified element. The returned set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned set.
+	 * @return a type-specific immutable set containing just <code>element</code>.
+	 */
+
+	public static SET SINGLETON_METHOD( Object element ) {
+		return new SINGLETON( KEY2TYPE( element ) );
+	}
+
+#endif
+
+#ifdef TEST
+
+	private static KEY_TYPE GEN_KEY() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif !#keyclass(Object) && !#keyclass(Reference)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else
+		return new java.io.Serializable() {};
+#endif
+	}
+
+
+	private static void KEY_TEST() {
+		int n = 100;
+		int c;
+		KEY_TYPE k = GEN_KEY();
+		SINGLETON m = new SINGLETON( k );
+		Set t = java.util.Collections.singleton( KEY2OBJ( k ) );
+
+		long ms;
+		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsIndex, tThrowsIndex, mThrowsUnsupp, tThrowsUnsupp;
+		boolean rt = false, rm = false;
+
+
+		/* Now we check that m and t are equal. */
+		if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
+
+		ensure( m.equals( t ), "Error (" + seed + "): ! m.equals( t ) at start" );
+		ensure( t.equals( m ), "Error (" + seed + "): ! t.equals( m ) at start" );
+
+		/* Now we check that m actually holds that data. */
+		for(Iterator i=t.iterator(); i.hasNext();  ) {
+			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on t)" );
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		for(Iterator i=m.iterator(); i.hasNext();  ) {
+			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on m)" );
+		}
+
+		/* Now we check that inquiries about random data give the same answer in m and t. For
+		   m we use the polymorphic method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+				
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				m.contains(T);
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+
+			try {
+				t.contains(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method) " + m );
+		}
+
+		/* Again, we check that inquiries about random data give the same answer in m and t, but
+		   for m we use the standard method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				m.contains(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				t.contains(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence between t and m (standard method) " + m );
+		}
+
+		/* Now we add and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.add(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.add(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in add() between t and m " + m );
+
+			T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.remove(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.remove(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in remove() between t and m " + m );
+		}
+
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after removal " + m );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after removal " + m );
+
+		/* Now we add and remove random collections in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.addAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.addAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in addAll() between t and m " + m );
+
+			T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.removeAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.removeAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in removeAll() between t and m " + m );
+		}
+
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after set removal " + m );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after set removal " + m );
+
+		/* Now we check that m actually holds the same data. */
+		  
+		for(Iterator i=t.iterator(); i.hasNext();  ) {
+			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on t)");
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(Iterator i=m.iterator(); i.hasNext();  ) {
+			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on m)" );
+		}
+
+		ensure( m.equals( ((SINGLETON)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+		ensure( ((SINGLETON)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+
+		int h = m.hashCode();
+
+		/* Now we save and read m. */
+
+		SET m2 = null;
+		  
+		try {
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+			oos.writeObject(m);
+			oos.close();
+				
+			java.io.InputStream is = new java.io.FileInputStream(ff);
+			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+			m2 = (SET)ois.readObject();
+			ois.close();
+			ff.delete();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+
+#if ! #keyclass(Reference)
+
+		ensure( m2.hashCode() == h, "Error (" + seed + "): hashCode() changed after save/read" );
+		  
+		/* Now we check that m2 actually holds that data. */
+		  
+		ensure( m2.equals(t), "Error (" + seed + "): ! m2.equals( t ) after save/read" );
+		ensure( t.equals(m2), "Error (" + seed + "): ! t.equals( m2 ) after save/read" );
+#endif
+
+		System.out.println("Test OK");
+		return;
+	}
+
+
+
+#endif
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

@@ -31,7 +31,8 @@ import it.unimi.dsi.fastutil.floats.*;
 import it.unimi.dsi.fastutil.doubles.*;
 import it.unimi.dsi.fastutil.objects.*;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /** A class providing static methods that do useful things with type-specific iterators.
  *
@@ -42,10 +43,14 @@ public class Iterators {
 
 	private Iterators() {}
 	
-	private static class EmptyIterator extends AbstractObjectListIterator implements 
+	public static class EmptyIterator extends AbstractObjectListIterator implements 
 		BooleanListIterator, ByteListIterator, ShortListIterator, IntListIterator,
 		LongListIterator, CharListIterator, FloatListIterator, DoubleListIterator,
 		ObjectListIterator {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		private EmptyIterator() {}
 
 		public boolean hasNext() { return false; }
 		public boolean hasPrevious() { return false; }
@@ -90,9 +95,23 @@ public class Iterators {
 		public void add( float x ) { throw new UnsupportedOperationException(); }
 		public void set( double x ) { throw new UnsupportedOperationException(); }
 		public void add( double x ) { throw new UnsupportedOperationException(); }
+
+		public Object clone() { return EMPTY_ITERATOR; }
+
+        private Object readResolve() { return EMPTY_ITERATOR; }
+	
 	}
 
-	public final static ObjectListIterator EMPTY_ITERATOR = new EmptyIterator();
+	/** An empty iterator (immutable). It is serialisable and cloneable.
+	 *
+	 * <P>The class of this objects represent an abstract empty iterator
+	 * that can iterate as any type-specific (list) iterator. Thus, {@link #EMPTY_ITERATOR}
+	 * may be assigned to a variable of any type-specific (list) iterator.
+	 *
+	 * @return an empty iterator that implements any type-specific (list) iterator.
+	 */
+
+	public final static EmptyIterator EMPTY_ITERATOR = new EmptyIterator();
 		
 #include "BooleanIterators-Fragment.j"
 #include "ByteIterators-Fragment.j"
