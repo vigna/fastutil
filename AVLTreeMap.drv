@@ -828,12 +828,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  protected Entry prev;
 		  /** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
 		  protected Entry next;
-		  /** The last entry that was returned (or null if we did not iterate or used {@link #remove()}). */
+		  /** The last entry that was returned (or <code>null</code> if we did not iterate or used {@link #remove()}). */
 		  protected Entry curr;
 		  /** The current index (in the sense of a {@link ListIterator}). */
 		  protected int index = 0;
 		  
-		  TreeIterator() {
+		  protected TreeIterator() {
 				next = firstEntry;
 		  }
 
@@ -1111,6 +1111,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @param top if true, the third parameter is ignored and the range goes to &infin;.
 			*/
 		  public Submap( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
+				if ( ! bottom && ! top && TREEMAP.this.compare( from, to ) > 0 ) {
+					 throw new IllegalArgumentException( "fromKey > toKey" );
+				}
+
+
 				this.from = from;
 				this.bottom = bottom;
 				this.to = to;
@@ -1293,31 +1298,31 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 		  public Object put( final Object ok, final Object ov ) {
 				if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
-				return put( ok, ov );
+				return TREEMAP.this.put( ok, ov );
 		  }
 
 		  
 #if ! ( #valueclass(Object) && #keyclass(Object) )
 		  public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
 				if ( ! in( k ) ) throw new IllegalArgumentException(); 
-				return put( k, v );
+				return TREEMAP.this.put( k, v );
 		  }
 #endif
 
 
 		  public Object remove( final Object ok ) {
-				if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
+				if ( ! in( KEY2TYPE( ok ) ) ) return null;
 				return TREEMAP.this.remove( ok );
 		  }
 
 #if ! #keyclass(Object)
 		  public VALUE_TYPE remove( final KEY_TYPE k ) {
-				if ( ! in( k ) ) throw new IllegalArgumentException(); 
+				if ( ! in( k ) ) return defRetValue;
 				return TREEMAP.this.remove( k );
 		  }
 #elif ! #valueclass(Object)
 		  public VALUE_TYPE REMOVE_VALUE( final Object k ) {
-				if ( ! in( k ) ) throw new IllegalArgumentException(); 
+				if ( ! in( k ) ) return defRetValue; 
 				return TREEMAP.this.REMOVE_VALUE( k );
 		  }
 #endif
@@ -1407,51 +1412,76 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 
 
-		  public KEY_TYPE FIRST_KEY() {
-				if ( tree == null ) throw new NoSuchElementException();
-				// If this submap goes to -infinity, we return the main map first key.
-				if ( bottom ) return firstEntry.key;
-				// Otherwise, we locate locate the start of the map.
-				TREEMAP.Entry e = locateKey( from );
+		  public TREEMAP.Entry firstEntry() {
+				if ( tree == null ) return null;
+				// If this submap goes to -infinity, we return the main map first entry; otherwise, we locate the start of the map.
+				TREEMAP.Entry e;
+				if ( bottom ) e = firstEntry;
+				else e = locateKey( from );
 				// If we find either the start or something greater we're OK.
-				if ( compare( e.key, from ) >= 0 ) return e.key;
-				// Otherwise, we look for a successor.
-				e = e.right;
-				// Oops, it's already the last element.
-				if ( e == null ) throw new NoSuchElementException();
-				// We descend the tree on the left.
-				if ( ! e.pred() ) while ( e.left() != sentinel ) e = e.left;
+				if ( compare( e.key, from ) < 0 ) {
+					 // Otherwise, we look for a successor.
+					 boolean succ = e.succ();
+					 e = e.right;
+					 // Oops, it's already the last element.
+					 if ( e == null ) return null;
+					 // If we did not follow a thread we descend the tree on the left.
+					 if ( ! succ ) while ( e.left() != sentinel ) e = e.left;
+				}
 				// Finally, if this submap doesn't go to infinity, we check that the resulting key isn't greater than the end.
-				if ( ! top && compare( e.key, to ) > 0 ) throw new NoSuchElementException();
-				return e.key;
+				if ( ! top && compare( e.key, to ) >= 0 ) return null;
+				return e;
 		  }
 	 
-		  public KEY_TYPE LAST_KEY() {
-				if ( tree == null ) throw new NoSuchElementException();
-				// If this submap goes to infinity, we return the main map last key.
-				if ( top ) return lastEntry.key;
-				// Otherwise, we locate locate the end of the map.
-				TREEMAP.Entry e = locateKey( to );
-				// If we find either the end or something smaller we're OK.
-				if ( compare( e.key, to ) <= 0 ) return e.key;
-				// Otherwise, we look for a predecessor.
-				e = e.left;
-				// Oops, it's already the first element.
-				if ( e == null ) throw new NoSuchElementException();
-				// We descend the tree on the right.
-				if ( ! e.succ() ) while ( e.right() != sentinel ) e = e.right;
+		  public TREEMAP.Entry lastEntry() {
+				if ( tree == null ) return null;
+				// If this submap goes to infinity, we return the main map last entry; otherwise, we locate the end of the map.
+				TREEMAP.Entry e;
+				if ( top ) e = lastEntry;
+				else e = locateKey( to );
+				System.err.println("Located key " + e);
+				// If we find something smaller than the end we're OK.
+				if ( compare( e.key, to ) >= 0 ) {
+					 // Otherwise, we look for a predecessor.
+					 System.err.print("Search predecessor...");
+					 boolean pred = e.pred();
+					 e = e.left;
+					 System.err.print("moved left to " + e + " (pred=" + pred + ")...");
+					 // Oops, it's already the first element.
+					 if ( e == null ) return null;
+					 // If we did not follow a thread we descend the tree on the right.
+					 if ( ! pred ) System.err.print("following right path...");
+					 if ( ! pred ) while ( e.right() != sentinel ) e = e.right;
+					 System.err.println("got " + e);
+				}
 				// Finally, if this submap doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
-				if ( ! bottom && compare( e.key, from ) <= 0 ) throw new NoSuchElementException();
+				if ( ! bottom && compare( e.key, from ) < 0 ) return null;
+				return e;
+		  }
+
+
+		  public KEY_TYPE FIRST_KEY() {
+				TREEMAP.Entry e = firstEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.key;
+		  }
+		  public KEY_TYPE LAST_KEY() {
+				TREEMAP.Entry e = lastEntry();
+				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 	 
 #if !#keyclass(Object)
 		  public Object firstKey() {
-				return KEY2OBJ( FIRST_KEY() );
+				TREEMAP.Entry e = firstEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.getKey();
 		  }
 	 
 		  public Object lastKey() {
-				return KEY2OBJ( LAST_KEY() );
+				TREEMAP.Entry e = lastEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.getKey();
 		  }
 
 #endif
@@ -1465,14 +1495,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* entry with <code>null</code>.
 			*/
 		  private class SubmapIterator extends TreeIterator {
+				protected SubmapIterator() {
+					 next = firstEntry();
+					 if ( next != null && TREEMAP.this.compare( next.key, to ) >= 0 ) next = null; 
+				}
 				protected void updatePrevious() {
 					 super.updatePrevious();
-					 if ( ! bottom && TREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
+					 if ( ! bottom && prev != null && TREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
 				}
 				
 				protected void updateNext() {
 					 super.updateNext();
-					 if ( ! top && TREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
+					 if ( ! top && next != null && TREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
 				}
 		  }
 
@@ -1673,108 +1707,73 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return o1 == null ? o2 == null : o1.equals(o2);
 	 }
 
+	 private static void fatal( String msg ) {
+		  System.out.println( msg );
+		  System.exit( 1 );
+	 }
 
-	 private static void regressionTest( int n ) {
-		  TREEMAP m = new TREEMAP();
-		  SortedMap t = new TreeMap();
-		  Object[] k = new Object[n], v = new Object[n], nk = new Object[n];
-		  KEY_TYPE kt[] = new KEY_TYPE[n];
-		  KEY_TYPE nkt[] = new KEY_TYPE[n];
-		  VALUE_TYPE vt[] = new VALUE_TYPE[n];
+	 private static void ensure( boolean cond, String msg ) {
+		  if ( cond ) return;
+		  fatal( msg );
+	 }
+
+	 private static Object[] k, v, nk;
+	 private static KEY_TYPE kt[];
+	 private static KEY_TYPE nkt[];
+	 private static VALUE_TYPE vt[];
+
+	 private static void testMaps( SORTEDMAP m, SortedMap t, int n, int level ) {
 		  long ms;
-
-		  for( int i = 0; i < n; i++ ) {
-#if #keyclass(Object)
-				k[i] = kt[i] = genKey();
-				nk[i] = nkt[i] = genKey();
-#else
-				k[i] = new KEY_CLASS( kt[i] = genKey() );
-				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
-#endif
-#if #valueclass(Object)
-				v[i] = vt[i] = genValue();
-#else
-					 v[i] = new VALUE_CLASS( vt[i] = genValue() );
-#endif
-		  }
-		  
 		  Random r = new Random();
-				
-		  /* We add pairs to t. */
-		  ms = System.currentTimeMillis();
-		  for( int i = 0; i < n;  i++ ) t.put( k[i], v[i] );
-		  
-		  /* We add to m the same data */
-		  m.putAll(t);
+		  boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement;
+		  Object rt = null, rm = null;
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after insertion.\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after insertion.\n");
+		  if ( level > 4 ) return;
+				
+		  if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
+
+		  ensure( m.equals( t ), "Error: ! m.equals( t ) at start.\n" );
+		  ensure( t.equals( m ), "Error: ! t.equals( m ) at start.\n" );
 
 		  /* Now we check that m actually holds that data. */
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
 				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      if (!valEquals(e.getValue(), m.get(e.getKey()))) 
-					 System.out.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on t).\n");
+		      ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error: m and t differ on an entry ("+e+") after insertion (iterating on t).\n" );
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
 				Entry e = (Entry)i.next();
-		      if (!valEquals(e.getValue(), t.get(e.getKey()))) 
-					 System.out.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on m).\n");
+		      ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error: m and t differ on an entry ("+e+") after insertion (iterating on m).\n" );
 		  }
 
 		  /* Now we check that m actually holds the same keys. */
 		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!m.containsKey(o)) {
-					 System.out.println("Error: m and t differ on a key ("+o+") after insertion (iterating on t).\n");
-					 System.exit(-1);
-				}
-		      if (!m.keySet().contains(o)) {
-					 System.out.println("Error: m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t).\n");
-					 System.exit(-1);
-				}
+		      ensure( m.containsKey(o), "Error: m and t differ on a key ("+o+") after insertion (iterating on t).\n" );
+		      ensure( m.keySet().contains(o), "Error: m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t).\n" );
 		  }
 
 		  /* Now we check that m actually holds the same keys, but iterating on m. */
 		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!t.containsKey(o)) {
-					 System.out.println("Error: m and t differ on a key after insertion (iterating on m).\n");
-					 System.exit(-1);
-				}
-		      if (!t.keySet().contains(o)) {
-					 System.out.println("Error: m and t differ on a key (in keySet()) after insertion (iterating on m).\n");
-					 System.exit(-1);
-				}
+		      ensure( t.containsKey(o), "Error: m and t differ on a key after insertion (iterating on m).\n" );
+		      ensure( t.keySet().contains(o), "Error: m and t differ on a key (in keySet()) after insertion (iterating on m).\n" );
 		  }
 
 
 		  /* Now we check that m actually hold the same values. */
 		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!m.containsValue(o)) {
-					 System.out.println("Error: m and t differ on a value after insertion (iterating on t).\n");
-					 System.exit(-1);
-				}
-		      if (!m.values().contains(o)) {
-					 System.out.println("Error: m and t differ on a value (in values()) after insertion (iterating on t).\n");
-					 System.exit(-1);
-				}
+		      ensure( m.containsValue(o), "Error: m and t differ on a value after insertion (iterating on t).\n" );
+		      ensure( m.values().contains(o), "Error: m and t differ on a value (in values()) after insertion (iterating on t).\n" );
 		  }
 
 		  /* Now we check that m actually hold the same values, but iterating on m. */
 		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!t.containsValue(o)) {
-					 System.out.println("Error: m and t differ on a value after insertion (iterating on m).\n");
-					 System.exit(-1);
-				}
-		      if (!t.values().contains(o)) {
-					 System.out.println("Error: m and t differ on a value (in values()) after insertion (iterating on m).\n");
-					 System.exit(-1);
-				}
+		      ensure( t.containsValue(o), "Error: m and t differ on a value after insertion (iterating on m).\n");
+		      ensure( t.values().contains(o), "Error: m and t differ on a value (in values()) after insertion (iterating on m).\n");
 		  }
 
 		  /* Now we check that inquiries about random data give the same answer in m and t. For
@@ -1790,25 +1789,40 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 new Long(r.nextLong())
 #endif
 					 ;
+				
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 
-				if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
-					 System.out.println("Error: divergence in keys between t and m (polymorphic method).\n");
-					 System.exit(-1);
+				try {
+					 m.containsKey(KEY2OBJ(T));
 				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 
+				try {
+					 t.containsKey(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: containsKey() divergence in NoSuchElementException (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: containsKey() divergence in IllegalArgumentException (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) {
+					 ensure( m.containsKey(KEY2OBJ(T)) == t.containsKey(KEY2OBJ(T)), "Error: divergence in keys between t and m (polymorphic method).\n" );
+					 
 #if #keyclass(Object) && ! #valueclass(Object)
-				if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
-					 t.get(KEY2OBJ(T)) != null && 
-					 ! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
-#else
-					 if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+					 if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
 						  t.get(KEY2OBJ(T)) != null && 
-						  ! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
+						  ! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
+#else
+						  if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+								t.get(KEY2OBJ(T)) != null && 
+								! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
 #endif
-						  {
-								System.out.println("Error: divergence between t and m (polymorphic method).\n");
-								System.exit(-1);
-						  }
+								{
+									 System.out.println("Error: divergence between t and m (polymorphic method).\n");
+									 System.exit(-1);
+								}
+				}
 		  }
 
 		  /* Again, we check that inquiries about random data give the same answer in m and t, but
@@ -1824,10 +1838,24 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 new Long(r.nextLong())
 #endif
 					 ;
-				if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
-					 System.out.println("Error: divergence between t and m (standard method).\n");
-					 System.exit(-1);
+
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 m.get(KEY2OBJ(T));
 				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 t.get(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: get() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: get() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T))), "Error: divergence between t and m (standard method).\n" );
 		  }
 
 		  /* Now we put and remove random data in m and t, checking that the result is the same. */
@@ -1851,10 +1879,28 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 new Long(r.nextLong())
 #endif
 					 ;
-				if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
-					 System.out.println("Error: divergence in put() between t and m.\n");
-					 System.exit(-1);
+
+
+
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 rm = m.put(KEY2OBJ(T), VALUE2OBJ(U));
 				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 rt = t.put(KEY2OBJ(T), VALUE2OBJ(U));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: put() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: put() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error: divergence in put() between t and m.\n" );
+
 				T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
@@ -1864,61 +1910,59 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 new Long(r.nextLong())
 #endif
 					 ;
-				if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
-					 System.out.println("Error: divergence in remove() between t and m.\n");
-					 System.exit(-1);
+
+
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 rm = m.remove(KEY2OBJ(T));
 				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 rt = t.remove(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error: divergence in remove() between t and m.\n" );
 		  }
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after removal.\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after removal.\n");
+		  ensure( m.equals(t), "Error: ! m.equals( t ) after removal.\n" );
+		  ensure( t.equals(m), "Error: ! t.equals( m ) after removal.\n" );
 
 		  /* Now we check that m actually holds the same data. */
 		  
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
 				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      if (!valEquals(e.getValue(), m.get(e.getKey()))) {
-					 System.out.println("Error: m and t differ on an entry ("+e+") after removal (iterating on t).\n");
-					 System.exit(-1);
-				}
+		      ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error: m and t differ on an entry ("+e+") after removal (iterating on t).\n");
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  
 		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
 				Entry e = (Entry)i.next();
-		      if (!valEquals(e.getValue(), t.get(e.getKey()))) {
-					 System.out.println("Error: m and t differ on an entry ("+e+") after removal (iterating on m).\n");
-					 System.exit(-1);
-				}
+		      ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error: m and t differ on an entry ("+e+") after removal (iterating on m).\n" );
 		  }
 
 		  /* Now we check that m actually holds the same keys. */
 		  
 		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!m.containsKey(o)) {
-					 System.out.println("Error: m and t differ on a key ("+o+") after removal (iterating on t).\n");
-					 System.exit(-1);
-				}
-		      if (!m.keySet().contains(o)) {
-					 System.out.println("Error: m and t differ on a key ("+o+", in keySet()) after removal (iterating on t).\n");
-					 System.exit(-1);
-				}
+		      ensure( m.containsKey(o), "Error: m and t differ on a key ("+o+") after removal (iterating on t).\n");
+		      ensure( m.keySet().contains(o), "Error: m and t differ on a key ("+o+", in keySet()) after removal (iterating on t).\n");
 		  }
 
 		  /* Now we check that m actually holds the same keys, but iterating on m. */
 		  
 		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!t.containsKey(o)) {
-					 System.out.println("Error: m and t differ on a key after removal (iterating on m).\n");
-					 System.exit(-1);
-				}
-		      if (!t.keySet().contains(o)) {
-					 System.out.println("Error: m and t differ on a key (in keySet()) after removal (iterating on m).\n");
-					 System.exit(-1);
-				}
+		      ensure( t.containsKey(o), "Error: m and t differ on a key after removal (iterating on m).\n");
+		      ensure( t.keySet().contains(o), "Error: m and t differ on a key (in keySet()) after removal (iterating on m).\n");
 		  }
 
 
@@ -1926,29 +1970,54 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!m.containsValue(o)) {
-					 System.out.println("Error: m and t differ on a value after removal (iterating on t).\n");
-					 System.exit(-1);
-				}
-		      if (!m.values().contains(o)) {
-					 System.out.println("Error: m and t differ on a value (in values()) after removal (iterating on t).\n");
-					 System.exit(-1);
-				}
+		      ensure( m.containsValue(o), "Error: m and t differ on a value after removal (iterating on t).\n" );
+		      ensure( m.values().contains(o), "Error: m and t differ on a value (in values()) after removal (iterating on t).\n");
 		  }
 
 		  /* Now we check that m actually hold the same values, but iterating on m. */
 		  
 		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      if (!t.containsValue(o)) {
-					 System.out.println("Error: m and t differ on a value after removal (iterating on m).\n");
-					 System.exit(-1);
-				}
-		      if (!t.values().contains(o)) {
-					 System.out.println("Error: m and t differ on a value (in values()) after removal (iterating on m).\n");
-					 System.exit(-1);
-				}
+		      ensure( t.containsValue(o), "Error: m and t differ on a value after removal (iterating on m).\n");
+		      ensure( t.values().contains(o), "Error: m and t differ on a value (in values()) after removal (iterating on m).\n");
 		  }
+
+
+		  /* Now we check that both maps agree on first/last keys. */
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.firstKey();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.firstKey();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: firstKey() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error: m and t differ on their first key (" + m.firstKey() + ", " + t.firstKey() +").\n" );
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.lastKey();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.lastKey();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: lastKey() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+		  if (  ! mThrowsNoElement && ! t.lastKey().equals( m.lastKey() ) ){
+				System.err.println("m: " + m + " t: " + t);
+		  }
+
+
+		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error: m and t differ on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
 
 
 		  int h = m.hashCode();
@@ -1967,7 +2036,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (TREEMAP)ois.readObject();
+				m = (SORTEDMAP)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }
@@ -1980,23 +2049,114 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 		  /* Now we check that m actually holds that data. */
 		  
-		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!valEquals(m.get(o),t.get(o))) {
-					 System.out.println("Error: m and t differ on an entry after save/read.\n");
-					 System.exit(-1);
-				}
-		  }
+		  ensure( m.equals(t), "Error: ! m.equals( t ) after save/read.\n" );
+		  ensure( t.equals(m), "Error: ! t.equals( m ) after save/read.\n" );
 
 		  /* Now we take out of m everything, and check that it is empty. */
 
 		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
 
-		  if (!m.isEmpty())  {
-				System.out.println("Error: m is not empty (as it should be).\n");
-				System.exit(-1);
+		  ensure( m.isEmpty(), "Error: m is not empty (as it should be).\n" );
+				 
+		  /* Now we put back all data. */
+
+		  m.putAll( t );
+				 
+		  /* Now we play with iterators. */
+
+		  {
+				Iterator i, j;
+				i = m.keySet().iterator(); 
+				j = t.keySet().iterator(); 
+
+				for( int k = 0; k < n/2; k++ ) {
+					 if ( i.hasNext() != j.hasNext() ) {
+						  System.out.println("Error: divergence in hasNext().\n");
+						  System.exit(-1);
+					 }
+					 if ( r.nextFloat() < .8 && i.hasNext() ) {
+						  if ( !i.next().equals( j.next() ) ) {
+								System.out.println("Error: divergence in next().\n");
+								System.exit(-1);
+						  }
+
+						  if ( r.nextFloat() < 0.05 ) {
+								i.remove();
+								j.remove();
+						  }
+					 }
+				}
+
 		  }
 
+		  /* Now we check that m actually holds that data. */
+		  
+		  ensure( m.equals(t), "Error: ! m.equals( t ) after iteration.\n" );
+		  ensure( t.equals(m), "Error: ! t.equals( m ) after iteration.\n" );
+
+		  /* Now we select a pair of keys and create a submap. */
+
+		  if ( ! m.isEmpty() ) {
+				ListIterator i;
+				Object start = m.firstKey(), end = m.firstKey();
+				for( i = (ListIterator)m.keySet().iterator(); i.hasNext() && r.nextFloat() < .3; start = i.next() );
+				for( ; i.hasNext() && r.nextFloat() < .99; end = i.next() );
+
+				System.err.println("Checking subMap from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+				testMaps( (SORTEDMAP)m.subMap( start, end ), t.subMap( start, end ), n, level + 1 );
+
+				ensure( m.equals(t), "Error: ! m.equals( t ) after subMap.\n" );
+				ensure( t.equals(m), "Error: ! t.equals( m ) after subMap.\n" );
+
+				System.err.println("Checking headMap to " + end + " (level=" + (level+1) + ")..." );
+				testMaps( (SORTEDMAP)m.headMap( end ), t.headMap( end ), n, level + 1 );
+
+				ensure( m.equals(t), "Error: ! m.equals( t ) after headMap.\n" );
+				ensure( t.equals(m), "Error: ! t.equals( m ) after headMap.\n" );
+
+				System.err.println("Checking tailMap from " + start + " (level=" + (level+1) + ")..." );
+				testMaps( (SORTEDMAP)m.tailMap( start ), t.tailMap( start ), n, level + 1 );
+
+				ensure( m.equals(t), "Error: ! m.equals( t ) after tailMap.\n" );
+				ensure( t.equals(m), "Error: ! t.equals( m ) after tailMap.\n" );
+		  }
+		  
+
+	 }
+
+
+	 private static void regressionTest( int n ) {
+		  TREEMAP m = new TREEMAP();
+		  SortedMap t = new TreeMap();
+		  k = new Object[n];
+		  v = new Object[n];
+		  nk = new Object[n];
+		  kt = new KEY_TYPE[n];
+		  nkt = new KEY_TYPE[n];
+		  vt = new VALUE_TYPE[n];
+
+		  for( int i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+				k[i] = kt[i] = genKey();
+				nk[i] = nkt[i] = genKey();
+#else
+				k[i] = new KEY_CLASS( kt[i] = genKey() );
+				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
+#endif
+#if #valueclass(Object)
+				v[i] = vt[i] = genValue();
+#else
+					 v[i] = new VALUE_CLASS( vt[i] = genValue() );
+#endif
+		  }
+		  
+		  /* We add pairs to t. */
+		  for( int i = 0; i < n;  i++ ) t.put( k[i], v[i] );
+		  
+		  /* We add to m the same data */
+		  m.putAll(t);
+
+		  testMaps( m, t, n, 0 );
 
 		  System.out.println("Regression test OK.\n");
 		  System.exit(0);

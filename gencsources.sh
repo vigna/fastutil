@@ -213,6 +213,7 @@ done
 
 rm -f $DIR/BooleanAbstractSet.c
 rm -f $DIR/BooleanHashSet.c
+rm -f $DIR/BooleanTreeSet.c
 
 
 
