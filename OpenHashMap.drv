@@ -1,4 +1,6 @@
  /*	 
+ * fastUtil 1.1: Fast & compact specialized hash-based utility classes for Java
+ *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -48,14 +50,11 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 /** Table size. Must be the p-th item of {@link Hash#primes}. */
 	 private transient int n;
 
-	 /** Secondary jump for conflict resolution. Must be the p-th item of {@link Hash#prevPrimes}. */
+	 /** Secondary jump for conflict resolution. Must be the {@link #n}-2. */
 	 private transient int n2;
 
 	 /** Number of entries in the map. */
 	 private int count;
-
-	 /** Number of used buckets in the map. May be larger than {@link #count} if there are items in state {@link #REMOVED}.  */
-	 private transient int used;
 
 	 /** Cached set of entries and keys. */
 	 private transient Set entries, keys;
@@ -91,7 +90,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 		  this.loadFactor = f;
 		  this.n = primes[l];
-		  n2 = prevPrimes[l];
+		  n2 = this.n - 2;
 		  p = l;
 		  key = new KEY_TYPE[this.n];
 		  value = new VALUE_TYPE[this.n];
@@ -155,7 +154,6 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				return VALUE2OBJ(oldValue);
 		  }
 		  else {
-				if ( state[h] == FREE ) used++;
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
@@ -194,7 +192,6 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				return oldValue;
 		  }
 		  else {
-				if ( state[h] == FREE ) used++;
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
@@ -217,6 +214,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+
+		  if (count == 0) return null;
 
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
@@ -256,6 +255,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 public boolean containsValue(VALUE_TYPE v) {
 		  final VALUE_TYPE value[] = this.value;
 		  final byte state[] = this.state;
+
+		  if (count == 0) return false;
 		  
 		  for(int i = n; i-- != 0; ) if (state[i] == BUSY && VALUE_EQUAL(value[i], v)) return true;
 		  return false;
@@ -264,7 +265,6 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 	 public void clear() {
 		  this.count = 0;
-		  this.used = 0;
 		  Arrays.fill(state, FREE);
 		  // We null all object entries so that the garbage collector can do its work.
 #if #keyclass(Object)
@@ -377,6 +377,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 										  final byte state[] = HASHMAP_NAME.this.state;
 										  final int n = HASHMAP_NAME.this.n;
 
+										  if (count == 0) pos = n;
+
 										  while( pos < n && state[pos] != BUSY ) pos++;
 									 }
 						  
@@ -444,6 +446,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 										  final byte state[] = HASHMAP_NAME.this.state;
 										  final int n = HASHMAP_NAME.this.n;
 										  
+										  if (count == 0) pos = n;
+
 										  while( pos < n && state[pos] != BUSY ) pos++;
 									 }
 									 
@@ -536,6 +540,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 										  final byte state[] = HASHMAP_NAME.this.state;
 										  final int n = HASHMAP_NAME.this.n;
 										  
+										  if (count == 0) pos = n;
+		  
 										  while( pos < n && state[pos] != BUSY ) pos++;
 									 }
 		  
@@ -613,12 +619,12 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  */
 
 	 private void rehash( int newP ) {
-		  int i, count = 0, used = 0, h, m;
+		  int i, count = 0, h, m;
 
 		  KEY_TYPE k;
 		  VALUE_TYPE v;
 
-		  final int n = this.n, newN = primes[newP], newN2 = prevPrimes[newP];
+		  final int n = this.n, newN = primes[newP], newN2 = newN-2;
 		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		  final VALUE_TYPE value[] = this.value, newValue[] = new VALUE_TYPE[newN];
 		  final byte state[] = this.state, newState[] = new byte[newN];
@@ -639,7 +645,6 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				newKey[h] = k;
 				newValue[h] = v;
 				count++;
-				used++;
 
 		  }
 
@@ -650,13 +655,14 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  this.value = newValue;
 		  this.state = newState;
 		  this.count = count;
-		  this.used = used;
 	 }
 	 
 	 public boolean containsKey(KEY_TYPE k) {
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+
+		  if (count == 0) return false;
 
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
@@ -680,6 +686,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
 
+		  if (count == 0) return null;
+
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
@@ -696,6 +704,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+
+		  if (count == 0) return DEF_RET_VALUE;
 
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
@@ -719,6 +729,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+
+		  if (count == 0) return DEF_RET_VALUE;
 
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
@@ -749,6 +761,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
+		  if (count == 0) return DEF_RET_VALUE;
+
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
@@ -770,6 +784,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  final int n = this.n;
 		  KEY_TYPE key[] = this.key;
 		  byte state[] = this.state;
+
+		  if (count == 0) return DEF_RET_VALUE;
 
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
@@ -811,14 +827,13 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 		  s.defaultReadObject();
 		  this.n = primes[p];
-		  this.n2 = prevPrimes[p];
+		  this.n2 = this.n - 2;
 		  count = this.count;
 
 		  this.key = new KEY_TYPE[n];
 		  this.value = new VALUE_TYPE[n];
 		  this.state = new byte[n];
 		  this.count = 0;
-		  this.used = 0;
 
 		  for (int i = count; i-- != 0; ) {
 				key = s.READ_KEY_TYPE_CAP();

@@ -11,7 +11,7 @@ CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 .SECONDARY: $(SOURCES)
 
 tar: jar
-	tar zhcvf fastUtil-1.0.tgz fastUtil-1.0/
+	tar zhcvf fastUtil-1.1.tgz fastUtil-1.1/
 
 jar: jsources
 	ant dist

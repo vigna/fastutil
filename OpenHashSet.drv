@@ -1,4 +1,6 @@
 /*
+ * fastUtil 1.1: Fast & compact specialized hash-based utility classes for Java
+ *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -44,14 +46,11 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	 /** Table size. Must be the p-th item of {@link Hash#primes}. */
 	 private transient int n;
 
-	 /** Secondary jump for conflict resolution. Must be the p-th item of {@link Hash#prevPrimes}. */
+	 /** Secondary jump for conflict resolution. Must be {@link #n}-2. */
 	 private transient int n2;
 
 	 /** Number of entries in the set. */
 	 private int count;
-
-	 /** Number of used buckets in the set. May be larger than {@link #count} if there are items in state {@link #REMOVED}.  */
-	 private transient int used;
 
 
 
@@ -73,7 +72,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 		  this.loadFactor = f;
 		  this.n = primes[l];
-		  n2 = prevPrimes[l];
+		  n2 = this.n - 2;
 		  p = l;
 		  key = new KEY_TYPE[this.n];
 		  state = new byte[this.n];
@@ -138,7 +137,6 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
 		  
 		  if ( state[h] != BUSY ) {
-				if ( state[h] == FREE ) used++;
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
@@ -168,7 +166,6 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) h = ( h + m ) % n;
 		  
 		  if ( state[h] != BUSY ) {
-				if ( state[h] == FREE ) used++;
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
@@ -189,6 +186,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
 
+		  if (count == 0) return false;
+
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
@@ -207,7 +206,6 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 	 public void clear() {
 		  this.count = 0;
-		  this.used = 0;
 		  Arrays.fill(state, FREE);
 #if #keyclass(Object)
 		  Arrays.fill(key, null);
@@ -281,6 +279,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 					 { 
 						  final byte state[] = HASHSET_NAME.this.state;
 						  final int n = HASHSET_NAME.this.n;
+
+						  if (count == 0) pos = n;
 						  
 						  while( pos < n && state[pos] != BUSY ) pos++;
 					 }
@@ -331,13 +331,13 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  */
 
 	 private void rehash( int newP ) {
-		  int i, count = 0, used = 0, h, m;
+		  int i, count = 0, h, m;
 
 		  //System.err.println("Rehashing to size " +  primes[newP] + "...");
 
 		  KEY_TYPE k;
 
-		  final int n = this.n, newN = primes[newP], newN2 = prevPrimes[newP];
+		  final int n = this.n, newN = primes[newP], newN2 = newN - 2;
 		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		  final byte state[] = this.state, newState[] = new byte[newN];
 
@@ -355,7 +355,6 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				newState[h] = BUSY;
 				newKey[h] = k;
 				count++;
-				used++;
 
 		  }
 
@@ -365,7 +364,6 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  this.key = newKey;
 		  this.state = newState;
 		  this.count = count;
-		  this.used = used;
 	 }
 	 
 	 public int size() {
@@ -382,6 +380,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
 
+		  if (count == 0) return false;
+
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
@@ -397,6 +397,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+
+		  if (count == 0) return false;
 
 		  //System.err.print("Examining " + k + "...");
 
@@ -417,6 +419,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+
+		  if (count == 0) return false;
 
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
@@ -451,13 +455,12 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 		  s.defaultReadObject();
 		  this.n = primes[p];
-		  this.n2 = prevPrimes[p];
+		  this.n2 = this.n - 2;
 		  count = this.count;
 
 		  this.key = new KEY_TYPE[n];
 		  this.state = new byte[n];
 		  this.count = 0;
-		  this.used = 0;
 
 		  for (int i = count; i-- != 0; ) {
 				add(s.READ_KEY_TYPE_CAP());
