@@ -166,6 +166,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		 return e;
    }
 
+
+	 /** This vector remembers the path followed during the current insertion. It suffices for
+		  about 2<sup>32</sup> entries. */
 	 private boolean dirPath[] = new boolean[ 48 ];
 
 	 /** Inserts a new pair in the map.
@@ -766,14 +769,14 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
 		  private final static int PRED_MASK = 1 << 30;
 		  /** The bits in this mask hold the node level. */
-		  private final static int LEVEL_MASK = 0xFF;
+		  private final static int BALANCE_MASK = 0xFF;
 		  /** The key of this entry. */
 		  protected KEY_TYPE key;
 		  /** The value of this entry. */
 		  protected VALUE_TYPE value;
 		  /** The pointers to the left and right subtrees. */
 		  protected Entry left, right;
-		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #LEVEL_MASK}). */
+		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
 		  private int info;
 
 		  /** Creates a new entry with no explicitly set key/value and <code>null</code> subtrees.
@@ -789,7 +792,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  protected Entry( Object k, Object v ) {
 				this.key = KEY2TYPE( k );
 				this.value = VALUE2TYPE( v );
-				info = 0 | SUCC_MASK | PRED_MASK;
+				info = SUCC_MASK | PRED_MASK;
 		  }
 
 #if ! #keyclass(Object) || ! #valueclass(Object) 
@@ -802,7 +805,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  protected Entry( KEY_TYPE k, VALUE_TYPE v ) {
 				this.key = k;
 				this.value = v;
-				info = 0 | SUCC_MASK | PRED_MASK;
+				info = SUCC_MASK | PRED_MASK;
 		  }
 		  
 #endif
@@ -898,18 +901,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @param level the new level of this node.
 			*/
 		  protected void balance( int level ) {
-				info &= ~LEVEL_MASK;
-				info |= ( level & LEVEL_MASK );
+				info &= ~BALANCE_MASK;
+				info |= ( level & BALANCE_MASK );
 		  }
 
 		  /** Increments the level of this node. */
 		  protected void incBalance() {
-				info = info & ~LEVEL_MASK | ( (byte)info + 1 ) & 0xFF;
+				info = info & ~BALANCE_MASK | ( (byte)info + 1 ) & 0xFF;
 		  }
 		  
 		  /** Decrements the level of this node. */
 		  protected	void decBalance() {
-				info = info & ~LEVEL_MASK | ( (byte)info - 1 ) & 0xFF;
+				info = info & ~BALANCE_MASK | ( (byte)info - 1 ) & 0xFF;
 		  }
 		  
 		  public Object getKey() {

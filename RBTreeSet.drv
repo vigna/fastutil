@@ -41,22 +41,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 /** The entry of the last element of this set. */
 	 private transient Entry lastEntry;
 
-	 /** Temporary place to keep a key during recursive operations. */
-	 private transient KEY_TYPE key;
-
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, whether the set has been modified. */
-	 private transient boolean modified;
-
-	 /** The value of this variable remembers the entry that was removed by a <code>delete()</code>. */
-	 private transient Entry removed;
-
-	 /** The value of this variable remembers, after a <code>delete()</code>,
-	  * the entry that during the operation was deleted. Note that 
-	  * if {@link #removed} != {@link deleted}, then this entry is still in the
-	  * set, but it contains the key and value previously stored in {@link #removed}. */
-	 private transient Entry deleted;
-
 	 /** This set's comparator, as provided in the constructor. */
 	 private Comparator storedComparator;
 
@@ -172,10 +156,12 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		 return e;
    }
 
+	 /** This vector remembers the path followed during the current insertion. It suffices for
+		  about 2<sup>32</sup> entries. */
+	 private boolean dirPath[] = new boolean[ 48 ];
+
+
 	 /** Inserts a new element in the set.
-	  *
-	  * <P>After execution of this method, {@link #modified} is true iff a new
-	  * entry has been inserted.
 	  *
 	  * @param k a key.
 	  * @return true if the insertion modified the set.
@@ -183,188 +169,515 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 
 	 private boolean insert( final KEY_TYPE k ) {
-		  modified = false;
-		  key = k;
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
 				tree = lastEntry = firstEntry = new Entry( k );
-				modified = true;
 		  }
-		  else tree = insertRec( tree );
+		  else {
+				Entry p = tree, q = null, y = tree, z = null, e = null, w = null;
+				int cmp, i = 0;
 
-#if #keyclass(Object)
-		  key = null;
-#endif
+				while( true ) {
+					 if ( ( cmp = compare( k, p.key ) ) == 0 ) return false;
+					 
+					 if ( (byte)p.info != 0 ) {
+						  i = 0;
+						  z = q;
+						  y = p;
+					 }
+					 
+					 if ( dirPath[ i++ ] = cmp > 0 ) {
+						  if ( p.succ() ) {
+								count++;
+								e = new Entry( k );
+								
+								if ( p.right == null ) lastEntry = e;
+								
+								e.left = p;
+								e.right = p.right;
+								
+								p.right( e );
+								
+								break;
+						  }
 
-		  return modified;
+						  q = p;
+						  p = p.right;
+					 }
+					 else {
+						  if ( p.pred() ) {
+								count++;
+								e = new Entry( k );
+								
+								if ( p.left == null ) firstEntry = e;
+								
+								e.right = p;
+								e.left = p.left;
+								
+								p.left( e );
+
+								break;
+						  }
+
+						  q = p;
+						  p = p.left;
+					 }
+				}
+
+				p = y;
+				i = 0;
+
+				while( p != e ) {
+					 if ( dirPath[ i ] ) p.incBalance();
+					 else p.decBalance();
+
+					 p = dirPath[ i++ ] ? p.right : p.left;
+				}
+				
+				if ( (byte)y.info == -2 ) {
+					 Entry x = y.left;
+
+					 if ( (byte)x.info == -1 ) {
+						  w = x;
+						  if ( x.succ() ) {
+								x.succ( false );
+								y.pred( x );
+						  }
+						  else y.left = x.right;
+
+						  x.right = y;
+						  x.balance( 0 );
+						  y.balance( 0 );
+					 }
+					 else {
+						  //assert (byte)x.info == 1;
+
+						  w = x.right;
+						  x.right = w.left;
+						  w.left = x;
+						  y.left = w.right;
+						  w.right = y;
+						  if ( (byte)w.info == -1 ) {
+								x.balance( 0 );
+								y.balance( 1 );
+						  }
+						  else if ( (byte)w.info == 0 ) {
+								x.balance( 0 );
+								y.balance( 0 );
+						  }
+						  else {
+								x.balance( -1 );
+								y.balance( 0 );
+						  }
+						  w.balance( 0 );
+
+
+						  if ( w.pred() ) {
+								x.succ( w );
+								w.pred( false );
+						  }
+						  if ( w.succ() ) {
+								y.pred( w );
+								w.succ( false );
+						  }
+
+					 }
+				}
+				else if ( (byte)y.info == +2 ) {
+					 Entry x = y.right;
+
+					 if ( (byte)x.info == 1 ) {
+						  w = x;
+						  if ( x.pred() ) {
+								x.pred( false );
+								y.succ( x );
+						  }
+						  else y.right = x.left;
+
+						  x.left = y;
+						  x.balance( 0 );
+						  y.balance( 0 );
+					 }
+					 else {
+						  //assert (byte)x.info == -1;
+
+						  w = x.left;
+						  x.left = w.right;
+						  w.right = x;
+						  y.right = w.left;
+						  w.left = y;
+						  if ( (byte)w.info == 1 ) {
+								x.balance( 0 );
+								y.balance( -1 );
+						  }
+						  else if ( (byte)w.info == 0 ) {
+								x.balance( 0 );
+								y.balance( 0 );
+						  }
+						  else {
+								x.balance( 1 );
+								y.balance( 0 );
+						  }
+						  w.balance( 0 );
+
+
+						  if ( w.pred() ) {
+								y.succ( w );
+								w.pred( false );
+						  }
+						  if ( w.succ() ) {
+								x.pred( w );
+								w.succ( false );
+						  }
+
+					 }
+				}
+				else return true;
+
+				if ( z == null ) tree = w;
+				else {
+					 if ( z.left == y ) z.left = w;
+					 else z.right = w;
+				}
+		  }
+
+		  return true;
 	 }
+	 
+	 
+	 
 
-
-	 /** Inserts recursively a given pair in a nonempty tree.
+	 /** Finds the parent of an entry.
 	  *
-	  * <P>After execution of this method, {@link #modified} is true iff
-	  * a new entry has been inserted. Moreover, {@link #turnedRight} if true iff we
-	  * turned right during the search; analogously for {@link #turnedLeft}.
-	  *
-	  * @param e a tree (i.e., an {@link Entry}).
-	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
+	  * @param e a node of the tree.
+	  * @return the parent of the given node, or <code>null</code> for the root.
 	  */
 
-   private Entry insertRec( Entry e ) {
+	 private Entry parent( Entry e ) {
+		  if ( e == tree ) return null;
 
-		 final int cmp = compare( key, e.key );
-		 
-		 if ( cmp < 0 ) {
-			  if ( e.left() != null ) e.left = insertRec( e.left );
-			  else {
-					/* <P>This method we create a new {@link Entry} (marked as a leaf) and
-					 * link it at the left of <code>e</code>. The {@link Entry#right} pointer
-					 * of the new entry is <code>e</code>, whereas its {@link Entry#left} pointer
-					 * is the {@link Entry#left} pointer of <code>e</code>. */
-					count++;
-					final Entry l = new Entry( key );
-					
-					modified = true;
-					if ( e.left == null ) firstEntry = l;
-					
-					l.right = e;
-					l.left = e.left;
-					
-					e.pred( false );
-					e.left = l;
-			  }
-		 } 
-		 else if ( cmp > 0 ) {
-			  if ( e.right() != null ) e.right = insertRec( e.right );
-			  else {
-					/* <P>We create a new {@link Entry} (marked as a leaf) and
-					 * link it at the right of <code>e</code>. The {@link Entry#left} pointer
-					 * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
-					 * is the {@link Entry#right} pointer of <code>e</code>. */
-					count++;
-					final Entry r = new Entry( key );
-					
-					modified = true;
-					if ( e.right == null ) lastEntry = r;
-					
-					r.left = e;
-					r.right = e.right;
-					
-					e.succ( false );
-					e.right = r;
-			  }
-		 }
-		 else return e;
+		  Entry x, y, p;
+		  x = y = e;
 
-		 if ( modified ) {
-			  e = e.skew();
-			  e = e.split();
-		 }
+		  while( true ) {
+				if ( y.succ() ) {
+					 p = y.right;
+					 if ( p == null || p.left != e ) {
+						  while( ! x.pred() ) x = x.left;
+						  p = x.left;
+					 }
+					 return p;
+				}
+				else if ( x.pred() ) {
+					 p = x.left;
+					 if ( p == null || p.right != e ) {
+						  while( ! y.succ() ) y = y.right;
+						  p = y.right;
+					 }
+					 return p;
+				}
 
-		 return e;
-   }
+				x = x.left;
+				y = y.right;
+		  }
+	 }
+
 	 
 	 
 	 /** Deletes an entry from the set.
-	  *
-	  * <P>After execution of this method, {@link #modified} is true iff an 
-	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
-	  * the deleted key and {@link #removed} is the entry actually removed from the tree.
 	  *
 	  * @param k a key.
 	  * @return true if the deletion modified the set.
 	  */
 	 
 	 private boolean delete( final KEY_TYPE k ) {
-		  removed = deleted = null;
-		  modified = false;
-		  key = k;
-
 		  if ( tree == null ) return false;
 
-		  tree = deleteRec( null, tree );
+		  int cmp;
+		  Entry p = tree, q = null;
+		  boolean dir = false;
 
-#if #keyclass(Object)
-		  key = null;
-#endif
-
-		  return modified;
-	 }
-
-	 /** Deletes recursively an entry from a tree.
-	  *
-	  * <P>After execution of this method, {@link #modified} is true iff an 
-	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
-	  * the deleted key and {@link #removed} is the entry actually removed from the tree.
-	  *
-	  * @param p the parent of the second argument (i.e., an {@link Entry}.
-	  * @param e a tree (i.e., an {@link Entry}.
-	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
-	  */
-
-	 private Entry deleteRec( Entry p, Entry e ) {
-		  removed = e;
-
-		  if ( compare( key, e.key ) < 0 ) {
-				if ( e.left() != null ) e.left = deleteRec( e, e.left );
+		  while( true ) {
+				if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
+				else if ( dir = cmp > 0 ) {
+					 q = p;
+					 if ( ( p = p.right() ) == null ) return false;
+				}
+				else if ( cmp < 0 ) {
+					 q = p;
+					 if ( ( p = p.left() ) == null ) return false;
+				}
 		  }
-		  else  {
-				deleted = e;
-				if ( e.right() != null ) e.right = deleteRec( e, e.right );
+
+		  if ( p.left == null ) {
+				firstEntry = p.right;
+				if ( ! p.succ()  ) while( ! firstEntry.pred() ) firstEntry = firstEntry.left;
 		  }
-				
-		  if ( e == removed && deleted != null && compare( key, deleted.key ) == 0 ) {
 
-				deleted.key = e.key;
+		  if ( p.right == null ) {
+				lastEntry = p.left;
+				if ( ! p.pred() ) while( ! lastEntry.succ() ) lastEntry = lastEntry.right;
+		  }
 
-				modified = true;
-				count--;
-
-				if ( p != null ) {
-					 if ( p.right == e ) {
-						  if ( e.succ() ) p.succ( true );  // This handles the case of e being a leaf to the right of p.
-						  else if ( e.right.pred() ) e.right.left = p; // This handles the case of e being a right subtree and e.right a leaf.
+		  if ( p.succ() ) {
+				if ( p.pred() ) {
+					 if ( q != null ) {
+						  if ( dir ) q.succ( p.right );
+						  else q.pred( p.left );
 					 }
-					 else if ( e.right() != null && e.right.pred() ) e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
+					 else tree = dir ? p.right : p.left;
 				}
+				else {
+					 Entry l = p.left;
+					 while( ! l.succ() ) l = l.right;
 
-				// If we are deleting the first or last entry, we must update our state accordingly.
-				if ( e.right == null ) lastEntry = e.left;
-				if ( e.left == null ) firstEntry = e.right;
+					 l.right = p.right;
 
-				/* If e is a leaf to the left of p, returning e.right would cause a
-				loop. The right thing to do is to return e.left and set the
-				predecessor flag in the parent. */
-
-				if ( p != null && p.left == e && e.succ() ) {
-					 p.pred( true );
-					 return e.left;
+					 if ( q != null ) {
+						  if ( dir ) q.right = p.left;
+						  else q.left = p.left;
+					 }
+					 else tree = p.left;
 				}
+		  }
+		  else {
+				Entry r = p.right;
 
-				return e.right;
+				if ( r.pred() ) {
+					 r.left = p.left;
+					 r.pred( p.pred() );
+					 if ( ! r.pred() ) {
+						  Entry l = r.left;
+						  while( ! l.succ() ) l = l.right;
+						  l.right = r;
+					 }
+					 if ( q != null ) {
+						  if ( dir ) q.right = r;
+						  else q.left = r;
+					 }
+					 else tree = r;
+
+					 r.balance( (byte)p.info );
+					 q = r;
+					 dir = true;
+
+				}
+				else {
+					 Entry s;
+
+					 while( true ) {
+						  s = r.left;
+						  if ( s.pred() ) break;
+						  r = s;
+					 }
+
+					 if ( s.succ() ) r.pred( s );
+					 else r.left = s.right;
+
+					 s.left = p.left;
+
+					 if ( ! p.pred() ) {
+						  Entry l = p.left;
+						  while( ! l.succ() ) l = l.right;
+						  l.right = s;
+
+						  s.pred( false );
+					 }
+
+					 s.right = p.right;
+					 s.succ( false );
+								
+					 if ( q != null ) {
+						  if ( dir ) q.right = s;
+						  else q.left = s;
+					 }
+					 else tree = s;
+
+					 s.balance( (byte)p.info );
+					 q = r;
+					 dir = false;
+				}
 		  }
 
-		  if ( ! modified ) return e;
+		  Entry y;
 
-		  Entry l, r;
-		  final int level = e.level() - 1;
+		  while( q != null ) {
+				y = q;
+				q = parent( y );
 
-		  if ( level > ( ( r = e.right() ) == null ? 0 : r.level() ) ||
-				 level > ( ( l = e.left() ) == null ? 0 : l.level() ) ) {
-				e.decLevel();
-				if ( r != null && r.level() > level ) r.level( level );
-				e = e.skew();
-				if ( ( r = e.right() ) != null ) {
-					 r = e.right = r.skew();
-					 if ( r.right() != null ) r.right = r.right.skew();
+				if ( ! dir ) {
+					 dir = q != null && q.left != y;
+					 y.incBalance();
+
+					 if ( (byte)y.info == 1 ) break;
+					 else if ( (byte)y.info == 2 ) {
+
+						  Entry x = y.right;
+						  //assert x != null;
+									 
+						  if ( (byte)x.info == -1 ) {
+								Entry w;
+								
+								//assert (byte)x.info == -1;
+
+								w = x.left;
+								x.left = w.right;
+								w.right = x;
+								y.right = w.left;
+								w.left = y;
+
+								if ( (byte)w.info == 1 ) {
+									 x.balance( 0 );
+									 y.balance( -1 );
+								}
+								else if ( (byte)w.info == 0 ) {
+									 x.balance( 0 );
+									 y.balance( 0 );
+								}
+								else {
+									 //assert (byte)w.info == -1;
+
+									 x.balance( 1 );
+									 y.balance( 0 );
+								}
+
+								w.balance( 0 );
+
+								if ( w.pred() ) {
+									 y.succ( w );
+									 w.pred( false );
+								}
+								if ( w.succ() ) {
+									 x.pred( w );
+									 w.succ( false );
+								}
+
+								if ( q != null ) {
+									 if ( dir ) q.right = w;
+									 else q.left = w;
+								}
+								else tree = w;
+						  }
+						  else {
+								if ( q != null ) {
+									 if ( dir ) q.right = x;
+									 else q.left = x;
+								}
+								else tree = x;
+										  
+								if ( (byte)x.info == 0 ) {
+									 y.right = x.left;
+									 x.left = y;
+									 x.balance( -1 );
+									 y.balance( +1 );
+									 break;
+								}
+								else {
+									 //assert (byte)x.info == 1;
+
+									 if ( x.pred() ) {
+										  y.succ( true );
+										  x.pred( false );
+									 }
+									 else y.right = x.left;
+
+									 x.left = y;
+									 y.balance( 0 );
+									 x.balance( 0 );
+								}
+						  }
+					 }
 				}
-				e = e.split();
-				if ( ( r = e.right() ) != null ) e.right = r.split();
+				else {
+					 dir = q != null && q.left != y;
+					 y.decBalance();
+
+					 if ( (byte)y.info == -1 ) break;
+					 else if ( (byte)y.info == -2 ) {
+
+						  Entry x = y.left;
+						  //assert x != null;
+									 
+						  if ( (byte)x.info == 1 ) {
+								Entry w;
+								
+								//assert (byte)x.info == 1;
+
+								w = x.right;
+								x.right = w.left;
+								w.left = x;
+								y.left = w.right;
+								w.right = y;
+
+								if ( (byte)w.info == -1 ) {
+									 x.balance( 0 );
+									 y.balance( 1 );
+								}
+								else if ( (byte)w.info == 0 ) {
+									 x.balance( 0 );
+									 y.balance( 0 );
+								}
+								else {
+									 //assert (byte)w.info == 1;
+
+									 x.balance( -1 );
+									 y.balance( 0 );
+								}
+
+								w.balance( 0 );
+
+								if ( w.pred() ) {
+									 x.succ( w );
+									 w.pred( false );
+								}
+								if ( w.succ() ) {
+									 y.pred( w );
+									 w.succ( false );
+								}
+
+								if ( q != null ) {
+									 if ( dir ) q.right = w;
+									 else q.left = w;
+								}
+								else tree = w;
+						  }
+						  else {
+								if ( q != null ) {
+									 if ( dir ) q.right = x;
+									 else q.left = x;
+								}
+								else tree = x;
+										  
+								if ( (byte)x.info == 0 ) {
+									 y.left = x.right;
+									 x.right = y;
+									 x.balance( +1 );
+									 y.balance( -1 );
+									 break;
+								}
+								else {
+									 //assert (byte)x.info == -1;
+
+									 if ( x.succ() ) {
+										  y.pred( true );
+										  x.succ( false );
+									 }
+									 else y.left = x.right;
+
+									 x.right = y;
+									 y.balance( 0 );
+									 x.balance( 0 );
+								}
+						  }
+					 }  
+				}
 		  }
 
-		  return e;
+		  count--;
+		  return true;
 	 }
+
 	 
 
 #if ! #keyclass(Object)
@@ -373,9 +686,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 }
 
    public boolean remove( final KEY_TYPE k ) {
-		 delete( k );
-		 deleted = removed = null;
-		 return modified;
+		 return delete( k );
    }
 
 	 public boolean contains( final KEY_TYPE k ) {
@@ -388,9 +699,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 }
 	 
 	 public boolean remove( final Object ok ) {
-		  delete( KEY2TYPE( ok ) );
-		  deleted = removed = null;
-		  return modified;
+		  return delete( KEY2TYPE( ok ) );
 	 }
 	 
 	 public boolean contains( final Object ok ) {
@@ -407,7 +716,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 
 	 /** This class represent an entry in a tree set.
 	  *
-	  * <P>We use the only "metadata", i.e., {@link Entry#mix}, to store
+	  * <P>We use the only "metadata", i.e., {@link Entry#info}, to store
 	  * information about level, predecessor status and successor status.
 	  *
 	  * <P>Note that since the class is recursive, it can be
@@ -420,13 +729,13 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
 		  private final static int PRED_MASK = 1 << 30;
 		  /** The bits in this mask hold the node level. */
-		  private final static int LEVEL_MASK = ~( SUCC_MASK | PRED_MASK );
+		  private final static int BALANCE_MASK = 0xFF;
 		  /** The key of this entry. */
 		  protected KEY_TYPE key;
 		  /** The pointers to the left and right subtrees. */
 		  protected Entry left, right;
-		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #LEVEL_MASK}). */
-		  private int mix;
+		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
+		  private int info;
 
 		  /** Creates a new entry with no explicitly set key and <code>null</code> subtrees.
 			*/
@@ -439,7 +748,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			*/
 		  protected Entry( Object k ) {
 				this.key = KEY2TYPE( k );
-				mix = 1 | SUCC_MASK | PRED_MASK;
+				info = SUCC_MASK | PRED_MASK;
 		  }
 
 #if ! #keyclass(Object)  
@@ -450,7 +759,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			*/
 		  protected Entry( KEY_TYPE k ) {
 				this.key = k;
-				mix = 1 | SUCC_MASK | PRED_MASK;
+				info = SUCC_MASK | PRED_MASK;
 		  }
 		  
 #endif
@@ -461,7 +770,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* subtree is empty).
 			*/
 		  protected Entry left() {
-				return ( mix & PRED_MASK ) != 0 ? null : left;
+				return ( info & PRED_MASK ) != 0 ? null : left;
 		  }
 		  
 		  /** Returns the right subtree. 
@@ -470,62 +779,94 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* subtree is empty).
 			*/
 		  protected Entry right() {
-				return ( mix & SUCC_MASK ) != 0 ? null : right;
+				return ( info & SUCC_MASK ) != 0 ? null : right;
 		  }
 		  
 		  /** Checks whether the left pointer is really a predecessor.
 			* @return true if the left pointer is a predecessor.
 			*/
 		  protected boolean pred() {
-				return ( mix & PRED_MASK ) != 0;
+				return ( info & PRED_MASK ) != 0;
 		  }
 		  
 		  /** Checks whether the right pointer is really a successor.
 			* @return true if the right pointer is a successor.
 			*/
 		  protected boolean succ() {
-				return ( mix & SUCC_MASK ) != 0;
+				return ( info & SUCC_MASK ) != 0;
 		  }
 		  
 		  /** Sets whether the left pointer is really a predecessor.
 			* @param pred if true then the left pointer will be considered a predecessor.
 			*/
 		  protected void pred( boolean pred ) {
-				if ( pred ) mix |= PRED_MASK;
-				else mix &= ~PRED_MASK;
+				if ( pred ) info |= PRED_MASK;
+				else info &= ~PRED_MASK;
 		  }
 		  
 		  /** Sets whether the right pointer is really a successor.
 			* @param succ if true then the right pointer will be considered a successor.
 			*/
 		  protected void succ( boolean succ ) {
-				if ( succ ) mix |= SUCC_MASK;
-				else mix &= ~SUCC_MASK;
+				if ( succ ) info |= SUCC_MASK;
+				else info &= ~SUCC_MASK;
+		  }
+		  
+		  /** Sets the left pointer to a predecessor.
+			* @param pred the predecessr.
+			*/
+		  protected void pred( Entry pred ) {
+				info |= PRED_MASK;
+				left = pred;
+		  }
+		  
+		  /** Sets the right pointer to a successor.
+			* @param succ the successor.
+			*/
+		  protected void succ( Entry succ ) {
+				info |= SUCC_MASK;
+				right = succ;
+		  }
+		  
+		  /** Sets the left pointer to the given subtree.
+			* @param left the new left subtree.
+			*/
+		  protected void left( Entry left ) {
+				info &= ~PRED_MASK;
+				this.left = left;
+		  }
+		  
+		  /** Sets the right pointer to the given subtree.
+			* @param right the new right subtree.
+			*/
+		  protected void right( Entry right ) {
+				info &= ~SUCC_MASK;
+				this.right = right;
 		  }
 		  
 		  /** Returns the current level of the node.
 			* @return the current level of this node.
 			*/
-		  protected int level() {
-				return mix & LEVEL_MASK ;
+		  protected int balance() {
+				return (byte)info;
 		  }
 
 		  /** Sets the level of this node.
 			* @param level the new level of this node.
 			*/
-		  protected void level( int level ) {
-				mix &= ~LEVEL_MASK;
-				mix |= level;
+		  protected void balance( int level ) {
+				info &= ~BALANCE_MASK;
+				info |= ( level & BALANCE_MASK );
 		  }
 
 		  /** Increments the level of this node. */
-		  protected void incLevel() {
-				mix++;
+		  protected void incBalance() {
+				info = info & ~BALANCE_MASK | ( (byte)info + 1 ) & 0xFF;
 		  }
 		  
 		  /** Decrements the level of this node. */
-		  protected	void decLevel() {
-				mix--;
+		  protected	void decBalance() {
+				info = info & ~BALANCE_MASK | ( (byte)info - 1 ) & 0xFF;
 		  }
 		  
 		  public Object getKey() {
@@ -552,48 +893,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  
 		  public String toString() {
 				return "" + key;
-		  }
-		  
-
-		  /** Splits this subtree.
-			* @return the new top of the subtree.
-			*/
-		  Entry split() {
-				final Entry r;
-				if ( ( r = right() ) != null && r.right() != null && r.right.level() == level() ) {
-					 /* If our right subtree contains a predecessor, we set the
-						 subtree as our successor. */
-					 if ( ! r.pred() ) right = r.left;
-					 
-					 succ( r.pred() );
-					 
-					 r.left = this;
-					 r.pred( false );
-					 r.incLevel();
-					 
-					 return r;
-				}
-				return this;
-		  }
-		  
-		  /** Skews this subtree.
-			* @return the new top of the subtree.
-			*/
-		  Entry skew() {
-				final Entry l;
-				if ( ( l = left() ) != null && l.level() == level() ) {
-					 /* If our left subtree contains a successor, we set the
-						 subtree as our predecessor. */
-					 if ( ! l.succ() ) left = l.right;
-					 
-					 pred( l.succ() );
-					 
-					 l.right = this;
-					 l.succ( false );
-					 
-					 return l;
-				}
-				return this;
 		  }
 		  
 		  /*
@@ -732,16 +1031,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				updatePrevious();
 				updateNext();
 				TREESET.this.delete( curr.key );
-
-				/* It could happen that the entry we chose as next is exactly the
-				one that gets deleted (as deletion is performed by copying a
-				suitable entry over the one to be deleted and then removing the
-				source of the copy).  In this case, next will point to a removed
-				entry (removed); it should instead point to the destination of the
-				copy (deleted), which is certainly the entry immediately after the
-				deleted one. */
-				if ( next == removed ) next = deleted;
-				removed = deleted = curr = null;
+				curr = null;
 		  }
 
 		  public void set( Object o ) {
@@ -869,17 +1159,13 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  public boolean remove( final Object ok ) {
 				if ( ! in( KEY2TYPE( ok ) ) ) return false;
-				delete( KEY2TYPE( ok ) );
-				deleted = removed = null;
-				return modified;
+				return delete( KEY2TYPE( ok ) );
 		  }
 
 #if ! #keyclass(Object)
 		  public boolean remove( final KEY_TYPE k ) {
 				if ( ! in( k ) ) return false;
-				delete( k );
-				deleted = removed = null;
-				return modified;
+				return delete( k );
 		  }
 #endif
 
