@@ -30,7 +30,7 @@ import java.io.*;
 /**  A type-specific hash set with with a very fast, small-footprint implementation.
  */
 
-public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializable, Hash, SET_NAME {
+public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, SET {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
@@ -63,7 +63,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  * @see Hash#primes
 	  */
 	 
-	 public HASHSET_NAME( int n, float f ) {
+	 public HASHSET( int n, float f ) {
 		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
 		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
 
@@ -86,7 +86,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  * @param n the expected number of elements in the hash set. 
 	  */
 	 
-	 public HASHSET_NAME(int n) {
+	 public HASHSET(int n) {
 		  this(n, Hash.DEFAULT_LOAD_FACTOR);
 	 }
 
@@ -95,7 +95,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
-	 public HASHSET_NAME() {
+	 public HASHSET() {
 		  this(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 	 }
  
@@ -105,7 +105,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  * @param c a {@link Collection} to be copied into the new hash set. 
 	  */
 	 
-	 public HASHSET_NAME( Collection c ) {
+	 public HASHSET( Collection c ) {
 		  this(c.size());
 		  addAll(c);
 	 }
@@ -116,7 +116,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  * @param a an array to be copied into the new hash set. 
 	  */
 	 
-	 public HASHSET_NAME( KEY_TYPE[] a ) {
+	 public HASHSET( KEY_TYPE[] a ) {
 		  this( a.length );
 		  int i = a.length;
 		  while(i-- != 0) add(a[i]);
@@ -224,9 +224,9 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  */
 
 	 public boolean addAll(Collection c) {
-		  if (c instanceof SET_NAME) {
+		  if (c instanceof SET) {
 				boolean retVal = false;
-				for(KEY_ITERATOR_NAME i = (KEY_ITERATOR_NAME)c.iterator(); i.hasNext(); ) if (add(i.NEXT_KEY_TYPE_CAP())) retVal = true;
+				for(KEY_ITERATOR i = (KEY_ITERATOR)c.iterator(); i.hasNext(); ) if (add(i.NEXT_KEY())) retVal = true;
 				return retVal;
 		  }
 		  else return super.addAll(c);
@@ -241,8 +241,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  */
 
 	 public boolean containsAll(Collection c) {
-		  if (c instanceof SET_NAME) {
-				for(KEY_ITERATOR_NAME i = (KEY_ITERATOR_NAME)c.iterator(); i.hasNext(); ) if (!contains(i.NEXT_KEY_TYPE_CAP())) return false;
+		  if (c instanceof SET) {
+				for(KEY_ITERATOR i = (KEY_ITERATOR)c.iterator(); i.hasNext(); ) if (!contains(i.NEXT_KEY())) return false;
 				return true;
 		  }
 		  else return super.containsAll(c);
@@ -252,7 +252,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	 /* We override the method in the type-specific {@link AbstractCollection}
 		 with a faster version without iterators. */
 
-    public KEY_TYPE[] TO_KEY_TYPE_CAP_ARRAY( KEY_TYPE a[] ) {
+    public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
 		  final KEY_TYPE key[] = this.key, result[];
 		  final int n = this.n, count = this.count;
 		  final byte state[] = this.state;
@@ -275,12 +275,12 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  */
 
 	 public Iterator iterator() {
-		  return new KEY_ITERATOR_NAME() {
+		  return new KEY_ITERATOR() {
 					 int pos = 0, last = -1, c = count;
 					 
 					 { 
-						  final byte state[] = HASHSET_NAME.this.state;
-						  final int n = HASHSET_NAME.this.n;
+						  final byte state[] = HASHSET.this.state;
+						  final int n = HASHSET.this.n;
 
 						  if (c == 0) pos = n;
 						  
@@ -293,10 +293,10 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 					 
 					 
 #if !#keyclass(Object)
-					 public KEY_TYPE NEXT_KEY_TYPE_CAP() {
+					 public KEY_TYPE NEXT_KEY() {
 						  KEY_TYPE retVal;
-						  final byte state[] = HASHSET_NAME.this.state;
-						  final int n = HASHSET_NAME.this.n;
+						  final byte state[] = HASHSET.this.state;
+						  final int n = HASHSET.this.n;
 						  
 						  if (!hasNext()) throw new NoSuchElementException();
 						  retVal = key[last = pos];
@@ -308,8 +308,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 					 public Object next() {
 						  Object retVal;
-						  final byte state[] = HASHSET_NAME.this.state;
-						  final int n = HASHSET_NAME.this.n;
+						  final byte state[] = HASHSET.this.state;
+						  final int n = HASHSET.this.n;
 						  
 						  if (!hasNext()) throw new NoSuchElementException();
 						  retVal = KEY2OBJ(key[last = pos]);
@@ -448,7 +448,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  s.defaultWriteObject();
 
 		  for (int i = n; i-- != 0; ) {
-				if (state[i] == BUSY) s.WRITE_KEY_TYPE_CAP(key[i]);
+				if (state[i] == BUSY) s.WRITE_KEY(key[i]);
 		  }
     }
 
@@ -465,7 +465,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  this.count = 0;
 
 		  for (int i = count; i-- != 0; ) {
-				add(s.READ_KEY_TYPE_CAP());
+				add(s.READ_KEY());
 		  }
     }
 
@@ -473,7 +473,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 	 private static void speedTest( int n, float f ) {
 		  int i;
-		  SET_NAME m;
+		  SET m;
 		  Set t;
 		  Random r = new Random();
 		  Object o;
@@ -484,7 +484,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				if (k>0) System.out.println();
 
 				t = new HashSet(n);
-				m = new HASHSET_NAME(n, f);
+				m = new HASHSET(n, f);
 				/* First of all, we measure the time that is necessary to produce the inputs. */
 		  
 				v = System.currentTimeMillis();
@@ -494,7 +494,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						  new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+						  new KEY_CLASS(r.NEXT_KEY()) 
 #else
 						  new Long(r.nextLong()) 
 #endif
@@ -513,7 +513,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY()) 
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -533,7 +533,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 									new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-									new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
+									new KEY_CLASS(r.NEXT_KEY())
 #else
 									r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -553,7 +553,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextLong()
 #endif
@@ -572,7 +572,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY()) 
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -591,7 +591,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 									(KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-									r.NEXT_KEY_TYPE_CAP()
+									r.NEXT_KEY()
 #else
 									r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -603,22 +603,19 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
 
-#if !#keyclass(Object) && !#keyclass(Boolean)
+				/* Then we enumerate items in t. */
 				v = System.currentTimeMillis();
 				
-				/* Then we enumerate items in t. */
-				int s = 0;
-				for(Iterator it=t.iterator(); it.hasNext(); ) s += KEY2TYPE(it.next());
+				for(Iterator it=t.iterator(); it.hasNext(); ) it.next();
 				
 				System.out.println("Iterated on old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
 	 
+				/* Then we enumerate items in m. */
 				v = System.currentTimeMillis();
 
-				/* Then we enumerate items in m. */
-				for(KEY_ITERATOR_NAME it=(KEY_ITERATOR_NAME)m.iterator(); it.hasNext(); ) s += it.NEXT_KEY_TYPE_CAP();
+				for(KEY_ITERATOR it=(KEY_ITERATOR)m.iterator(); it.hasNext(); ) it.NEXT_KEY();
 				
 				System.out.println("Iterated on new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
-#endif
 	 
 		  }
 
@@ -629,7 +626,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 
 	 private static void regressionTest( int n, float f ) {
-		  SET_NAME m = new HASHSET_NAME(Hash.DEFAULT_INITIAL_SIZE, f);
+		  SET m = new HASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
 		  Set t = new HashSet();
 		  Random r = new Random();
 
@@ -640,7 +637,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+						new KEY_CLASS(r.NEXT_KEY()) 
 #else
 						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -679,7 +676,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -692,7 +689,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -728,10 +725,10 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 
 		  /* Now we make m into an array, make it again a set and check it is OK. */
-		  KEY_TYPE a[] = m.TO_KEY_TYPE_CAP_ARRAY();
+		  KEY_TYPE a[] = m.TO_KEY_ARRAY();
 
 		  
-		  if (!new HASHSET_NAME(a).equals(m)) {
+		  if (!new HASHSET(a).equals(m)) {
 				System.out.println("Error: toArray() output (or array-based constructor) is not OK.\n");
 				System.exit(-1);
 		  }
@@ -750,7 +747,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (SET_NAME)ois.readObject();
+				m = (SET)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }

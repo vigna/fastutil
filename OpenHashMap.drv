@@ -31,7 +31,7 @@ import java.io.*;
 /** A type-specific hash map with a very fast, small-footprint implementation.
  */
 
-public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
+public final class HASHMAP implements Serializable, Hash, MAP {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
@@ -81,7 +81,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  * @see Hash#primes
 	  */
 	 
-	 public HASHMAP_NAME( int n, float f ) {
+	 public HASHMAP( int n, float f ) {
 		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
 		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
 
@@ -103,7 +103,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  * @param n the expected number of elements in the hash map.
 	  */
 	 
-	 public HASHMAP_NAME(int n) {
+	 public HASHMAP(int n) {
 		  this(n, Hash.DEFAULT_LOAD_FACTOR);
 	 }
 
@@ -113,7 +113,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
-	 public HASHMAP_NAME() {
+	 public HASHMAP() {
 		  this(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 	 }
 
@@ -123,7 +123,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  * @param m a {@link Map} to be copied into the new hash map. 
 	  */
 	 
-	 public HASHMAP_NAME( Map m ) {
+	 public HASHMAP( Map m ) {
 		  this(m.size());
 		  putAll(m);
 	 }
@@ -278,10 +278,10 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 #if ! #keyclass(Object) || ! #valueclass(Object) 
 	 public void putAll(Map m) {
-		  if (m instanceof MAP_NAME) {
-				MAP_NAME.Entry e;
+		  if (m instanceof MAP) {
+				MAP.Entry e;
 				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-					 e = (MAP_NAME.Entry)i.next();
+					 e = (MAP.Entry)i.next();
 					 put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
 				}
 		  }
@@ -295,7 +295,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 }
 #endif
 
-    private static class Entry implements MAP_NAME.Entry {
+    private static class Entry implements MAP.Entry {
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
 
@@ -374,8 +374,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 									 int pos = 0, last = -1, c = count;
 						  
 									 { 
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 
 										  if (c == 0) pos = n;
 
@@ -388,8 +388,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 						  
 									 public Object next() {
 										  Entry retVal;
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 		  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = new Entry(key[last = pos], value[pos]);
@@ -427,7 +427,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 					 }
 					 
 					 public void clear() {
-						  HASHMAP_NAME.this.clear();
+						  HASHMAP.this.clear();
 					 }
 				};
 	 
@@ -436,15 +436,15 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 
     public Set keySet() {
-		  if (keys == null) keys = new ABSTRACT_KEY_SET() {
+		  if (keys == null) keys = new KEY_ABSTRACT_SET() {
 
 					 public Iterator iterator() {
-						  return new KEY_ITERATOR_NAME() {
+						  return new KEY_ITERATOR() {
 									 int pos = 0, last = -1, c = count;
 		  
 									 { 
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 										  
 										  if (c == 0) pos = n;
 
@@ -456,10 +456,10 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 									 }
 									 
 #if !#keyclass(Object)
-									 public KEY_TYPE NEXT_KEY_TYPE_CAP() {
+									 public KEY_TYPE NEXT_KEY() {
 										  KEY_TYPE retVal;
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 										  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = key[last = pos];
@@ -472,8 +472,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 									 public Object next() {
 										  Object retVal;
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 										  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = KEY2OBJ(key[last = pos]);
@@ -506,7 +506,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 					 
 					 public boolean remove(KEY_TYPE k) {
 						  int oldCount = count;
-						  HASHMAP_NAME.this.remove(k);
+						  HASHMAP.this.remove(k);
 						  return count != oldCount;
 					 }
 					 
@@ -517,12 +517,12 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 					 public boolean remove(Object ok) {
 						  int oldCount = count;
-						  HASHMAP_NAME.this.remove(ok);
+						  HASHMAP.this.remove(ok);
 						  return count != oldCount;
 					 }
 
 					 public void clear() {
-						  HASHMAP_NAME.this.clear();
+						  HASHMAP.this.clear();
 					 }
 				};
 		  return keys;
@@ -530,15 +530,15 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 
     public Collection values() {
-		  if (values == null) values = new ABSTRACT_VALUE_COLLECTION() {
+		  if (values == null) values = new VALUE_ABSTRACT_COLLECTION() {
 
 					 public Iterator iterator() {
-						  return new VALUE_ITERATOR_NAME() {
+						  return new VALUE_ITERATOR() {
 									 int pos = 0, last = -1, c = count;
 									 
 									 { 
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 										  
 										  if (c == 0) pos = n;
 		  
@@ -550,10 +550,10 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 									 }
 		  
 #if !#valueclass(Object)
-									 public VALUE_TYPE NEXT_VALUE_TYPE_CAP() {
+									 public VALUE_TYPE NEXT_VALUE() {
 										  VALUE_TYPE retVal;
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 		  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = value[pos];
@@ -565,8 +565,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  
 									 public Object next() {
 										  Object retVal;
-										  final byte state[] = HASHMAP_NAME.this.state;
-										  final int n = HASHMAP_NAME.this.n;
+										  final byte state[] = HASHMAP.this.state;
+										  final int n = HASHMAP.this.n;
 		  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = VALUE2OBJ(value[pos]);
@@ -603,7 +603,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 					 }
 #endif
 					 public void clear() {
-						  HASHMAP_NAME.this.clear();
+						  HASHMAP.this.clear();
 					 }
 				};
 
@@ -756,7 +756,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 #if !#valueclass(Object)
 
-	 public VALUE_TYPE GET_VALUE_TYPE_CAP(Object k) {
+	 public VALUE_TYPE GET_VALUE(Object k) {
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
@@ -778,7 +778,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  * @return the old value, or the default return value if no value was present for the given key.
 	  */
 
-	 public VALUE_TYPE REMOVE_VALUE_TYPE_CAP(Object k) {
+	 public VALUE_TYPE REMOVE_VALUE(Object k) {
 		  VALUE_TYPE oldValue;
 
 		  final int n = this.n;
@@ -814,8 +814,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  s.defaultWriteObject();
 		  for (int i = n; i-- != 0; ) {
 				if (state[i] == BUSY) {
-					 s.WRITE_KEY_TYPE_CAP(key[i]);
-					 s.WRITE_VALUE_TYPE_CAP(value[i]);
+					 s.WRITE_KEY(key[i]);
+					 s.WRITE_VALUE(value[i]);
 				}
 		  }
     }
@@ -836,8 +836,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  this.count = 0;
 
 		  for (int i = count; i-- != 0; ) {
-				key = s.READ_KEY_TYPE_CAP();
-				value = s.READ_VALUE_TYPE_CAP();
+				key = s.READ_KEY();
+				value = s.READ_VALUE();
 				put(key, value);
 		  }
     }
@@ -846,7 +846,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 	 private static void speedTest( int n, float f ) {
 		  int i;
-		  MAP_NAME m;
+		  MAP m;
 		  Map t;
 		  Random r = new Random();
 		  Object o;
@@ -857,7 +857,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				if (k>0) System.out.println();
 
 				t = new HashMap(n);
-				m = new HASHMAP_NAME(n, f);
+				m = new HASHMAP(n, f);
 				/* First of all, we measure the time that is necessary to produce the inputs. */
 		  
 				v = System.currentTimeMillis();
@@ -867,7 +867,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						  new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+						  new KEY_CLASS(r.NEXT_KEY()) 
 #else
 						  new Long(r.nextLong()) 
 #endif
@@ -875,7 +875,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 					 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-						  new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+						  new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
 						  new Long(r.nextLong()) 
 #endif
@@ -894,7 +894,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY()) 
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -902,7 +902,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-							 new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+							 new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -922,7 +922,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
+							 new KEY_CLASS(r.NEXT_KEY())
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -943,7 +943,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextLong()
 #endif
@@ -961,7 +961,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY()) 
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -969,7 +969,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-							 new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+							 new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -988,7 +988,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 							 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-							 r.NEXT_KEY_TYPE_CAP()
+							 r.NEXT_KEY()
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -997,24 +997,22 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				
 				System.out.println("Examined "+n+" pairs in new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-	 
-				
-#if !#valueclass(Object) && !#valueclass(Boolean) && !#keyclass(Object) && !#keyclass(Boolean)
-				v = System.currentTimeMillis();
+			
 				
 				/* Then we enumerate items in t. */
-				int s = 0;
+				v = System.currentTimeMillis();
+
 				for(Iterator it=t.keySet().iterator(); it.hasNext(); ) t.get(it.next());
 				
 				System.out.println("Iterated on old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
 	 
-				v = System.currentTimeMillis();
 
 				/* Then we enumerate items in m. */
-				for(KEY_ITERATOR_NAME it=(KEY_ITERATOR_NAME)m.keySet().iterator(); it.hasNext(); ) m.get(it.NEXT_KEY_TYPE_CAP());
-				
+				v = System.currentTimeMillis();
+
+				for(KEY_ITERATOR it=(KEY_ITERATOR)m.keySet().iterator(); it.hasNext(); ) m.get(it.NEXT_KEY());
+
 				System.out.println("Iterated on new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
-#endif
 	 
 		  }
 
@@ -1028,7 +1026,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 
 	 private static void regressionTest( int n, float f ) {
-		  MAP_NAME m = new HASHMAP_NAME(Hash.DEFAULT_INITIAL_SIZE, f);
+		  MAP m = new HASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
 		  Map t = new HashMap();
 		  Random r = new Random();
 
@@ -1039,7 +1037,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+						new KEY_CLASS(r.NEXT_KEY()) 
 #else
 						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -1047,7 +1045,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-						new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+						new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
 						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
@@ -1143,7 +1141,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -1155,9 +1153,9 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				}
 
 #if #keyclass(Object) && ! #valueclass(Object)
-				if ((m.GET_VALUE_TYPE_CAP(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+				if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
 					 t.get(KEY2OBJ(T)) != null && 
-					 ! VALUE2OBJ(m.GET_VALUE_TYPE_CAP(T)).equals(t.get(KEY2OBJ(T)))) 
+					 ! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
 #else
 					 if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
 						  t.get(KEY2OBJ(T)) != null && 
@@ -1177,7 +1175,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -1195,7 +1193,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -1204,7 +1202,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 					 (VALUE_TYPE)r.nextInt()
 #elif ! #valueclass(Object)
-					 r.NEXT_VALUE_TYPE_CAP()
+					 r.NEXT_VALUE()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -1217,7 +1215,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY_TYPE_CAP()
+					 r.NEXT_KEY()
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
@@ -1323,7 +1321,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (MAP_NAME)ois.readObject();
+				m = (MAP)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }

@@ -35,6 +35,10 @@ docs: jsources
 	javadoc -d $(DOCSDIR)  -windowtitle "fastUtil 1.1" -link $(APIURL) $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
+
+tags:
+	etags gendrivers.sh *.drv it/unimi/dsi/fastUtil/Hash.java
+
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
