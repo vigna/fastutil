@@ -844,181 +844,167 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 
 #ifndef NDEBUG
 
+	 private static Random r = new Random();
+
+	 private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		  return (KEY_TYPE)(r.nextInt());
+#elif ! #keyclass(Object)
+		  return r.NEXT_KEY(); 
+#else
+		  return new Long( r.nextLong() );
+#endif
+	 }
+
+	 private static VALUE_TYPE genValue() {
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+		  return (VALUE_TYPE)(r.nextInt());
+#elif ! #valueclass(Object)
+		  return r.NEXT_VALUE();
+#else
+		  return new Long( r.nextLong() );
+#endif
+	 }
+
+
+	 private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	 private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
+
+	 private static String format( double d ) {
+		  StringBuffer s = new StringBuffer();
+		  return format.format( d, s, fp ).toString();
+	 }
+
+
 	 private static void speedTest( int n, float f ) {
 		  int i;
 		  MAP m;
 		  Map t;
-		  Random r = new Random();
-		  Object o;
-		  long v, fm, ct;
+		  KEY_TYPE k[] = new KEY_TYPE[n];
+		  KEY_TYPE nk[] = new KEY_TYPE[n];
+		  VALUE_TYPE v[] = new VALUE_TYPE[n];
+		  long ms;
 
-		  for(int k=0; k<10; k++) {
+		  for( i = 0; i < n; i++ ) {
+				k[i] = genKey();
+				nk[i] = genKey();
+				v[i] = genValue();
+		  }
 
-				if (k>0) System.out.println();
+		  double totPut = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
 
-				t = new HashMap(n);
-				m = new HASHMAP(n, f);
-				/* First of all, we measure the time that is necessary to produce the inputs. */
-		  
-				v = System.currentTimeMillis();
-		  
-				for( i=0; i<n;  i++ ) {
+		  for( int j = 0; j < 20; j++ ) {
+
+				t = new HashMap( n );
+
+				/* We put pairs to t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] ) );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totPut += d; 				
+				System.out.print("Put: " + format( d ) +" K/s " );
+
+				/* We check for pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totYes += d; 				
+				System.out.print("Yes: " + format( d ) +" K/s " );
+
+				/* We check for pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( nk[i] ) );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totNo += d; 				
+				System.out.print("No: " + format( d ) +" K/s " );
+
+				/* We iterate on t. */
+				ms = System.currentTimeMillis();
+				for( Iterator it = t.entrySet().iterator(); it.hasNext(); it.next() );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totIter += d; 				
+				System.out.print("Iter: " + format( d ) +" K/s " );
 				
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-						  new KEY_CLASS(r.NEXT_KEY()) 
-#else
-						  new Long(r.nextLong()) 
-#endif
-						  ;
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-					 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-						  new VALUE_CLASS(r.NEXT_VALUE()) 
-#else
-						  new Long(r.nextLong()) 
-#endif
-						  ;
-				}
-		  
-				ct = System.currentTimeMillis() - v;
-		  
-				v = System.currentTimeMillis();
-		  
-
-				/* Then we add pairs to t. */
-
-				for( i=0; i<n;  i++ ) {
-					 t.put( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY()) 
-#else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
-#endif
-							 ,
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-							 new VALUE_CLASS(r.NEXT_VALUE()) 
-#else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
-#endif
-							 
-							 );
-				}
-
-				System.out.println("Added "+n+" pairs in old HashMap (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-
-				v = System.currentTimeMillis();
-
-				/* Then we check for pairs in t. */
-
-				for( i=0; i<n;  i++ ) {
-					 t.get( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY())
-#else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
-#endif
-							 );
-				}
-
-				System.out.println("Examined "+n+" pairs in old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-
-				v = System.currentTimeMillis();
-
-				/* Again, we measure the time that is necessary to produce the inputs. */
-		  
-				v = System.currentTimeMillis();
-		  
-				for( i=0; i<n;  i++ ) {
+				/* We delete pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemNo += d; 				
+				System.out.print("RemNo: " + format( d ) +" K/s " );
 				
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 r.nextInt()
-#elif ! #keyclass(Object)
-					 r.NEXT_KEY()
-#else
-					 r.nextLong()
-#endif
-						  ;
-				}
-		  
-				ct = System.currentTimeMillis() - v;
-		  
-				v = System.currentTimeMillis();
-
-				/* Then we add pairs to m. */
-
-				for( i=0; i<n;  i++ ) {
-					 m.put( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY()) 
-#else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
-#endif
-							 ,
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-							 new VALUE_CLASS(r.NEXT_VALUE()) 
-#else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
-#endif
-							 );
-				}
-		  
-				System.out.println("Added "+n+" pairs in new HashMap (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-
-				v = System.currentTimeMillis();
-
-				/* Then we check for pairs in m. */
-
-				for( i=0; i<n;  i++ ) {
-					 m.get( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 (KEY_TYPE)r.nextInt()
-#elif ! #keyclass(Object)
-							 r.NEXT_KEY()
-#else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
-#endif
-							 );
-				}
+				/* We delete pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemYes += d; 				
+				System.out.print("RemYes: " + format( d ) +" K/s " );
 				
-				System.out.println("Examined "+n+" pairs in new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-			
-				
-				/* Then we enumerate items in t. */
-				v = System.currentTimeMillis();
+				System.out.println();
+		  }
 
-				for(Iterator it=t.keySet().iterator(); it.hasNext(); ) t.get(it.next());
-				
-				System.out.println("Iterated on old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
-	 
+		  System.out.println();
+		  System.out.println( "java.util Put: " + format( totPut/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + "K/s" );
 
-				/* Then we enumerate items in m. */
-				v = System.currentTimeMillis();
+		  System.out.println();
 
-				for(KEY_ITERATOR it=(KEY_ITERATOR)m.keySet().iterator(); it.hasNext(); ) m.get(it.NEXT_KEY());
+		  totPut = totYes = totNo = totIter = totRemYes = totRemNo = 0;
 
-				System.out.println("Iterated on new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
-	 
+		  for( int j = 0; j < 20; j++ ) {
+
+				m = new HASHMAP( n, f );
+
+				/* We put pairs to m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.put( k[i], v[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totPut += d; 				
+				System.out.print("Put: " + format( d ) +" K/s " );
+
+				/* We check for pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totYes += d; 				
+				System.out.print("Yes: " + format( d ) +" K/s " );
+
+				/* We check for pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.containsKey( nk[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totNo += d; 				
+				System.out.print("No: " + format( d ) +" K/s " );
+
+				/* We iterate on m. */
+				ms = System.currentTimeMillis();
+				for( Iterator it = m.entrySet().iterator(); it.hasNext(); it.next() );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totIter += d; 	 
+				System.out.print("Iter: " + format( d ) +" K/s " );
+
+				/* We delete pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( nk[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemNo += d; 	
+				System.out.print("RemNo: " + format( d ) +" K/s " );
+
+				/* We delete pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( k[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemYes += d; 				
+				System.out.print("RemYes: " + format( d ) +" K/s " );	 
+
+				System.out.println();
 		  }
 
 
-	 }
+		  System.out.println();
+		  System.out.println( "fastUtil  Put: " + format( totPut/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s" );
 
+		  System.out.println();
+
+	 }
 
 	 private static boolean valEquals(Object o1, Object o2) {
 		  return o1 == null ? o2 == null : o1.equals(o2);

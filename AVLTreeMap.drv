@@ -774,10 +774,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #endif
 
 	 public KEY_TYPE FIRST_KEY() {
+		  if ( tree == null ) throw new NoSuchElementException();
 		  return firstEntry.key;
 	 }
 	 
 	 public KEY_TYPE LAST_KEY() {
+		  if ( tree == null ) throw new NoSuchElementException();
 		  return lastEntry.key;
 	 }
 	 
@@ -1609,25 +1611,15 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  int i;
 		  MAP m;
 		  SortedMap t;
-		  Object[] k = new Object[n], v = new Object[n], nk = new Object[n];
-		  KEY_TYPE kt[] = new KEY_TYPE[n];
-		  KEY_TYPE nkt[] = new KEY_TYPE[n];
-		  VALUE_TYPE vt[] = new VALUE_TYPE[n];
+		  KEY_TYPE k[] = new KEY_TYPE[n];
+		  KEY_TYPE nk[] = new KEY_TYPE[n];
+		  VALUE_TYPE v[] = new VALUE_TYPE[n];
 		  long ms;
 
 		  for( i = 0; i < n; i++ ) {
-#if #keyclass(Object)
-				k[i] = kt[i] = genKey();
-				nk[i] = nkt[i] = genKey();
-#else
-				k[i] = new KEY_CLASS( kt[i] = genKey() );
-				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
-#endif
-#if #valueclass(Object)
-				v[i] = vt[i] = genValue();
-#else
-				v[i] = new VALUE_CLASS( vt[i] = genValue() );
-#endif
+				k[i] = genKey();
+				nk[i] = genKey();
+				v[i] = genValue();
 		  }
 
 		  double totPut = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
@@ -1638,21 +1630,21 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 				/* We put pairs to t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.put( k[i], v[i] );
+				for( i = 0; i < n;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] ) );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totPut += d; 				
 				System.out.print("Put: " + format( d ) +" K/s " );
 
 				/* We check for pairs in t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.containsKey( k[i] );
+				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totYes += d; 				
 				System.out.print("Yes: " + format( d ) +" K/s " );
 
 				/* We check for pairs not in t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.containsKey( nk[i] );
+				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( nk[i] ) );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totNo += d; 				
 				System.out.print("No: " + format( d ) +" K/s " );
@@ -1666,14 +1658,14 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				
 				/* We delete pairs not in t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( nk[i] );
+				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totRemNo += d; 				
 				System.out.print("RemNo: " + format( d ) +" K/s " );
 				
 				/* We delete pairs in t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( k[i] );
+				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totRemYes += d; 				
 				System.out.print("RemYes: " + format( d ) +" K/s " );
@@ -1694,21 +1686,21 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 				/* We put pairs to m. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.put( kt[i], vt[i] );
+				for( i = 0; i < n;  i++ ) m.put( k[i], v[i] );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totPut += d; 				
 				System.out.print("Put: " + format( d ) +" K/s " );
 
 				/* We check for pairs in m. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.containsKey( kt[i] );
+				for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totYes += d; 				
 				System.out.print("Yes: " + format( d ) +" K/s " );
 
 				/* We check for pairs not in m. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.containsKey( nkt[i] );
+				for( i = 0; i < n;  i++ ) m.containsKey( nk[i] );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totNo += d; 				
 				System.out.print("No: " + format( d ) +" K/s " );
@@ -1722,14 +1714,14 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 				/* We delete pairs not in m. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( nkt[i] );
+				for( i = 0; i < n;  i++ ) m.remove( nk[i] );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totRemNo += d; 	
 				System.out.print("RemNo: " + format( d ) +" K/s " );
 
 				/* We delete pairs in m. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( kt[i] );
+				for( i = 0; i < n;  i++ ) m.remove( k[i] );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totRemYes += d; 				
 				System.out.print("RemYes: " + format( d ) +" K/s " );	 
