@@ -24,7 +24,7 @@ package it.unimi.dsi.fastUtil;
 import java.util.*;
 import java.io.*;
 
-/** A type-specific treap map with a very fast, small-footprint implementation.
+/** A type-specific tree map with a very fast, small-footprint implementation.
  */
 
 #define PRI(x) ( x.mix & PRI_MASK )
@@ -35,10 +35,10 @@ import java.io.*;
 #define SET_PRED(x) x.mix |= PRED_MASK
 #define RESET_PRED(x) x.mix &= ~PRED_MASK
 
-public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
+public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
-	 public Entry treap;
+	 public Entry tree;
 
 	 /** Our private random number generator. */
 	 private transient Random random = new Random();
@@ -79,7 +79,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  * given key, if any. */
 	 private transient VALUE_TYPE oldValue;
 
-	 /** This treap map's comparator. */
+	 /** This tree map's comparator. */
 	 private Comparator comparator;
 
 	 final static int SUCC_MASK = 1;
@@ -87,49 +87,49 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );
 	 
 
-	 /** Creates a new empty treap map. 
+	 /** Creates a new empty tree map. 
 	  */
 
-	 public TREAPMAP() {
-		  treap = null;
+	 public TREEMAP() {
+		  tree = null;
 		  count = 0;
 	 }
 	 
 
-	 /** Creates a new empty treap map with the given comparator.
+	 /** Creates a new empty tree map with the given comparator.
 	  *
 	  * @param comparator a {@link #Comparator}.
 	  */
 
-	 public TREAPMAP( Comparator c ) {
+	 public TREEMAP( Comparator c ) {
 		  this();
 		  comparator = c;
 	 }
 	 
 
-	 /** Creates a new treap map copying a given map.
+	 /** Creates a new tree map copying a given map.
 	  *
-	  * @param m a {@link Map} to be copied into the new treap map. 
+	  * @param m a {@link Map} to be copied into the new tree map. 
 	  */
 	 
-	 public TREAPMAP( Map m ) {
+	 public TREEMAP( Map m ) {
 		  this();
 		  putAll( m );
 	 }
 
-	 /** Creates a new treap map copying a given sorted map (and its {@link Comparator}).
+	 /** Creates a new tree map copying a given sorted map (and its {@link Comparator}).
 	  *
-	  * @param m a {@link SortedMap} to be copied into the new treap map. 
+	  * @param m a {@link SortedMap} to be copied into the new tree map. 
 	  */
 	 
-	 public TREAPMAP( SortedMap m ) {
+	 public TREEMAP( SortedMap m ) {
 		  this( m.comparator() );
 		  putAll( m );
 	 }
 
 	 /*
 	  * The following private methods implements some basic building blocks used by
-	  * all accessors.  They are (and should be maintained) identical to those used in TreapSet.drv.
+	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
 	  */
 
 	 /** Compares two keys in the right way. 
@@ -153,7 +153,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  */
 
    private Entry findKey( KEY_TYPE k ) {
-      Entry e = treap;
+      Entry e = tree;
       int cmp;
 
       while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
@@ -191,11 +191,11 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  key = k;
 		  value = v;
 
-		  if ( treap == null ) { // The case of the empty treap is treated separately.
+		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
-				treap = change = new Entry( k, v, random.nextInt() );
+				tree = change = new Entry( k, v, random.nextInt() );
 		  }
-		  else treap = insertRec( treap );
+		  else tree = insertRec( tree );
 
 		  if ( change != null ) { // We update last/first if we actually changed the map domain.
 				if ( ! turnedLeft ) lastEntry = change;
@@ -206,7 +206,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 }
 
 
-	 /** Inserts recursively a given pair in a nonempty treap.
+	 /** Inserts recursively a given pair in a nonempty tree.
 	  *
 	  * <P>After execution of this method, {@link #change} contains the new
 	  * entry, and it is <code>null</code> iff an entry with the same key was
@@ -214,8 +214,8 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
 	  * turned right during the search; analogously for {@link #turnedLeft}.
 	  *
-	  * @param e a treap (i.e., an {@link Entry}).
-	  * @return the new treap, that is, the {@link Entry} that is now at the top of the treap.
+	  * @param e a tree (i.e., an {@link Entry}).
+	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
 	  */
 
    private Entry insertRec( Entry e ) {
@@ -308,9 +308,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  change = null;
 		  turnedLeft = turnedRight = false;
 
-		  if ( treap == null ) return DEF_RET_VALUE;
+		  if ( tree == null ) return DEF_RET_VALUE;
 
-		  treap = deleteRec( k, treap );
+		  tree = deleteRec( k, tree );
 
 		  if ( change != null ) {
 				if ( ! turnedLeft ) lastEntry = change.right;
@@ -320,7 +320,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  return oldValue;
 	 }
 
-	 /** Deletes recursively an entry from a treap.
+	 /** Deletes recursively an entry from a tree.
 	  *
 	  * <P>After execution of this method, {@link #change} contains the deleted
 	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
@@ -328,8 +328,8 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
 	  *
 	  * @param k a key.
-	  * @param e a treap (i.e., an {@link Entry}.
-	  * @return the new treap, that is, the {@link Entry} that is now at the top of the treap.
+	  * @param e a tree (i.e., an {@link Entry}.
+	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
 	  */
 
 	 private Entry deleteRec( KEY_TYPE k, Entry e ) {
@@ -392,7 +392,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #endif
 
 	 public boolean containsValue(final VALUE_TYPE v) {
-		  final TreapIterator i = new TreapIterator();
+		  final TreeIterator i = new TreeIterator();
 		  VALUE_TYPE ev;
 		  
 		  while( i.hasNext() ) {
@@ -405,15 +405,15 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 
 
 	 public synchronized void clear() {
-		  treap = null;
+		  tree = null;
 		  count = 0;
 	 }
 
 	 
-	 /** This class represent an entry in a treap map.
+	 /** This class represent an entry in a tree map.
 	  *
 	  * <P>Note that since the class is recursive, it can be
-	  * considered equivalently a treap.
+	  * considered equivalently a tree.
 	  */
 
     private static final class Entry implements MAP.Entry {
@@ -517,9 +517,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  }
 		  
 
-		  /** Applies a left rotation to this treap. 
+		  /** Applies a left rotation to this tree. 
 			*
-			* @return the new top of this treap.
+			* @return the new top of this tree.
 			*/
 		  
 		  Entry rotateLeft() {
@@ -542,9 +542,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				return t;
 		  }
 		  
-		  /** Applies a right rotation to this treap.
+		  /** Applies a right rotation to this tree.
 			*
-			* @return the new top of this treap.
+			* @return the new top of this tree.
 			*/
 		  Entry rotateRight() {
 				/* Firstly, we save current left pointer and whether it is a predecessor. */
@@ -566,11 +566,11 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				return t;
 		  }
 		  
-		  /** Deletes the root of this treap.
+		  /** Deletes the root of this tree.
 			*
 			* <P>To do so, it must move the root down until it is a leaf.
 			*
-			* @return the new top of this treap.
+			* @return the new top of this tree.
 			*/
 
 		  Entry deleteRoot() {
@@ -616,7 +616,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 
    public void printDebug() {
       System.err.println("size: " + count);
-      if (treap != null) treap.printDebug();
+      if (tree != null) tree.printDebug();
    }
 
 
@@ -677,7 +677,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 
 
 	 public KEY_TYPE FIRST_KEY() {
-		  Entry e = treap;
+		  Entry e = tree;
 		  
 		  if (e == null) throw new NoSuchElementException();
 		  while ( e.left != null ) e = e.left;
@@ -685,7 +685,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 }
 	 
 	 public KEY_TYPE LAST_KEY() {
-		  Entry e = treap;
+		  Entry e = tree;
 		  
 		  if (e == null) throw new NoSuchElementException();
 		  while (e.right != null) e = e.right;
@@ -703,11 +703,11 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 
 #endif
 	 /*
-	 private class TreapIterator implements Iterator {
+	 private class TreeIterator implements Iterator {
 		  private List stack = new ArrayList();
 		  
-		  TreapIterator() {
-				Entry e = treap;
+		  TreeIterator() {
+				Entry e = tree;
 
 				while ( e != null  ) {
 					 stack.add( e );
@@ -715,8 +715,8 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				}
 		  }
 
-		  TreapIterator( KEY_TYPE firstKey ) {
-				Entry e = treap;
+		  TreeIterator( KEY_TYPE firstKey ) {
+				Entry e = tree;
 				int cmp;
 
 				while ( e != null && ( cmp = compare( firstKey, e.key ) ) != 0 ) {
@@ -755,17 +755,17 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 */
 
 
-	 private class TreapIterator implements ListIterator {
+	 private class TreeIterator implements ListIterator {
 		  Entry curr, prev, next, first, last;
 		  int currIndex;
 		  
-		  TreapIterator() {
+		  TreeIterator() {
 				currIndex = -1;
 				first = firstEntry;
 				last = lastEntry;
 		  }
 
-		  TreapIterator( Entry firstEntry, Entry lastEntry ) {
+		  TreeIterator( Entry firstEntry, Entry lastEntry ) {
 				currIndex = -1;
 				first = firstEntry;
 				last = lastEntry;
@@ -839,7 +839,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
     public Set entrySet() {
 		  if ( entries == null ) entries = new AbstractSet() {
 					 public Iterator iterator() {
-						  return new TreapIterator();
+						  return new TreeIterator();
 					 }
 
 					 public boolean contains(Object o) {
@@ -853,7 +853,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
 						  final Map.Entry f = findKey( KEY2TYPE( e.getKey() ) );
-						  if ( f != null ) TREAPMAP.this.remove( f.getKey() );
+						  if ( f != null ) TREEMAP.this.remove( f.getKey() );
 						  return f != null;
 					 }
 
@@ -862,7 +862,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 					 }
 					 
 					 public void clear() {
-						  TREAPMAP.this.clear();
+						  TREEMAP.this.clear();
 					 }
 					 
 				};
@@ -875,7 +875,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  if ( keys == null ) keys = new KEY_ABSTRACT_SET() {
 					 public Iterator iterator() {
 						  return new KEY_ITERATOR() {
-									 TreapIterator iterator = new TreapIterator();
+									 TreeIterator iterator = new TreeIterator();
 
 									 public boolean hasNext() { return iterator.hasNext(); }
 									 public KEY_TYPE NEXT_KEY() { return ((Entry)iterator.next()).key; }
@@ -892,7 +892,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 
 					 public boolean remove( KEY_TYPE k ) {
 						  int oldCount = count;
-						  TREAPMAP.this.remove( k );
+						  TREEMAP.this.remove( k );
 						  return count != oldCount;
 					 }					 
 
@@ -913,7 +913,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 					 }
 					 
 					 public void clear() {
-						  TREAPMAP.this.clear();
+						  TREEMAP.this.clear();
 					 }
 					 
 				};
@@ -926,7 +926,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
 					 public Iterator iterator() {
 						  return new VALUE_ITERATOR() {
-									 TreapIterator iterator = new TreapIterator();
+									 TreeIterator iterator = new TreeIterator();
 
 									 public boolean hasNext() { return iterator.hasNext(); }
 									 public VALUE_TYPE NEXT_VALUE() { return ((Entry)iterator.next()).value; }
@@ -954,7 +954,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 					 }
 					 
 					 public void clear() {
-						  TREAPMAP.this.clear();
+						  TREEMAP.this.clear();
 					 }
 					 
 				};
@@ -996,10 +996,10 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 /*
    public Object clone() {
       try {
-         Treap treap = (Treap) super.clone();
+         Tree tree = (Tree) super.clone();
 
-         treap.tree = (tree != null) ? (Entry) tree.clone() : null;
-         return treap;a
+         tree.tree = (tree != null) ? (Entry) tree.clone() : null;
+         return tree;a
       } catch (CloneNotSupportedException e) {
          // Cannot happen
          throw new InternalError(e.toString());
@@ -1009,13 +1009,13 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 */
 
 	 /*
-class TreapEnumeration implements Enumeration
+class TreeEnumeration implements Enumeration
 {
    private Stack stack;
    private boolean keys;
    private boolean ascending;
 
-   TreapEnumeration(Entry t, boolean keys, boolean ascending) {
+   TreeEnumeration(Entry t, boolean keys, boolean ascending) {
       stack = new Stack();
 
       this.keys = keys;
@@ -1034,7 +1034,7 @@ class TreapEnumeration implements Enumeration
 
    public Object nextElement() {
       if (stack.empty())
-         throw new NoSuchElementException("TreapEnumeration");
+         throw new NoSuchElementException("TreeEnumeration");
 
       Entry node = (Entry) stack.peek();
       if (ascending)
@@ -1079,7 +1079,7 @@ class TreapEnumeration implements Enumeration
 				if (k>0) System.out.println();
 
 				t = new TreeMap();
-				m = new TREAPMAP();
+				m = new TREEMAP();
 				/* First of all, we measure the time that is necessary to produce the inputs. */
 		  
 				v = System.currentTimeMillis();
@@ -1248,7 +1248,7 @@ class TreapEnumeration implements Enumeration
 
 
 	 private static void regressionTest( int n ) {
-		  TREAPMAP m = new TREAPMAP();
+		  TREEMAP m = new TREEMAP();
 		  SortedMap t = new TreeMap();
 		  Random r = new Random();
 
@@ -1545,7 +1545,7 @@ class TreapEnumeration implements Enumeration
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (TREAPMAP)ois.readObject();
+				m = (TREEMAP)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }

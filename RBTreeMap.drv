@@ -1,0 +1,1598 @@
+/*		 
+ * fastUtil 1.3: Fast & compact specialized hash-based utility classes for Java
+ *
+ * Copyright (C) 2002 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package it.unimi.dsi.fastUtil;
+
+import java.util.*;
+import java.io.*;
+
+/** A type-specific tree map with a very fast, small-footprint implementation.
+ */
+
+#define PRI(x) ( x.mix & PRI_MASK )
+#define SUCC(x) ( ( x.mix & SUCC_MASK ) != 0 )
+#define PRED(x) ( ( x.mix & PRED_MASK ) != 0 )
+#define SET_SUCC(x) x.mix |= SUCC_MASK
+#define RESET_SUCC(x) x.mix &= ~SUCC_MASK
+#define SET_PRED(x) x.mix |= PRED_MASK
+#define RESET_PRED(x) x.mix &= ~PRED_MASK
+
+public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
+
+	 /** A reference to the root entry. */
+	 public Entry tree;
+
+	 /** Our private random number generator. */
+	 private transient Random random = new Random();
+
+	 /** Number of entries in the map. */
+	 private int count;
+
+	 /** The first key in this map. */
+	 private transient Entry firstEntry;
+
+	 /** The last key in this map. */
+	 private transient Entry lastEntry;
+
+	 /** Cached set of entries and keys. */
+	 private transient volatile Set entries, keys;
+
+	 /** Cached collection of values. */
+	 private transient volatile Collection values;
+
+	 private transient KEY_TYPE key;
+	 private transient VALUE_TYPE value;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, the entry that during the operation we
+	  * possibly created or removed. */
+	 private transient Entry change;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, whether we ever turned left. */
+	 private transient boolean turnedLeft;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, whether we ever turned right. */
+	 private transient boolean turnedRight;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, the value previously associated to the
+	  * given key, if any. */
+	 private transient VALUE_TYPE oldValue;
+
+	 /** This tree map's comparator. */
+	 private Comparator comparator;
+
+	 final static int SUCC_MASK = 1;
+	 final static int PRED_MASK = 2;
+	 final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );
+	 
+
+	 /** Creates a new empty tree map. 
+	  */
+
+	 public TREEMAP() {
+		  tree = null;
+		  count = 0;
+	 }
+	 
+
+	 /** Creates a new empty tree map with the given comparator.
+	  *
+	  * @param comparator a {@link #Comparator}.
+	  */
+
+	 public TREEMAP( Comparator c ) {
+		  this();
+		  comparator = c;
+	 }
+	 
+
+	 /** Creates a new tree map copying a given map.
+	  *
+	  * @param m a {@link Map} to be copied into the new tree map. 
+	  */
+	 
+	 public TREEMAP( Map m ) {
+		  this();
+		  putAll( m );
+	 }
+
+	 /** Creates a new tree map copying a given sorted map (and its {@link Comparator}).
+	  *
+	  * @param m a {@link SortedMap} to be copied into the new tree map. 
+	  */
+	 
+	 public TREEMAP( SortedMap m ) {
+		  this( m.comparator() );
+		  putAll( m );
+	 }
+
+	 /*
+	  * The following private methods implements some basic building blocks used by
+	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
+	  */
+
+	 /** Compares two keys in the right way. 
+	  *
+	  * @param k1 the first key.
+	  * @param k2 the second key.
+	  * @return a number smaller than, equal to or greater than 0, as usual
+	  * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
+	  */
+	 
+    private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+		  return comparator == null ? KEY_CMP( k1, k2 ) : comparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
+    }
+
+
+
+	 /** Returns the entry corresponding to the given key, if it is in the tree; <code>null</code>, otherwise.
+	  *
+	  * @param k the key to search for.
+	  * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
+	  */
+
+   private Entry findKey( KEY_TYPE k ) {
+      Entry e = tree;
+      int cmp;
+
+      while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
+			 if ( cmp < 0 ) {
+				  if ( PRED(e) ) return null; // We should go right, but it's really a predecessor...
+				  e = e.left;
+			 }
+			 else {
+				  if ( SUCC(e) ) return null; // We should go right, but it's really a successor...
+				  e = e.right;
+			 }
+		}
+
+      return e;
+   }
+
+	 /** Inserts a new pair in the map.
+	  *
+	  * <P>After execution of this method, {@link #change} contains the new
+	  * entry, and it is <code>null</code> iff an entry with the same key was
+	  * found; in this case, {@link #oldValue} contains the value previously
+	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
+	  * turned right during the search; analogously for {@link #turnedLeft}.
+	  *
+	  * @param k a key.
+	  * @param v a value.
+	  * @return the previous value associated to the key (or the default return value, if there 
+	  * was no existing entry with the same key).
+	  */
+	 
+	 private VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
+		  oldValue = DEF_RET_VALUE;
+		  change = null;
+		  turnedLeft = turnedRight = false;
+		  key = k;
+		  value = v;
+
+		  if ( tree == null ) { // The case of the empty tree is treated separately.
+				count++;
+				tree = change = new Entry( k, v, random.nextInt() );
+		  }
+		  else tree = insertRec( tree );
+
+		  if ( change != null ) { // We update last/first if we actually changed the map domain.
+				if ( ! turnedLeft ) lastEntry = change;
+				if ( ! turnedRight ) firstEntry = change;
+		  }
+
+		  return oldValue;
+	 }
+
+
+	 /** Inserts recursively a given pair in a nonempty tree.
+	  *
+	  * <P>After execution of this method, {@link #change} contains the new
+	  * entry, and it is <code>null</code> iff an entry with the same key was
+	  * found; in this case, {@link #oldValue} contains the value previously
+	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
+	  * turned right during the search; analogously for {@link #turnedLeft}.
+	  *
+	  * @param e a tree (i.e., an {@link Entry}).
+	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
+	  */
+
+   private Entry insertRec( Entry e ) {
+
+		 final int cmp = compare( key, e.key );
+		 
+		 if ( cmp < 0 ) {
+			  turnedLeft = true;
+			  if ( ! PRED(e) && e.left != null ) e.left = insertRec( e.left );
+			  else insertLeft( e );
+			  //if ( ! PRED(e) && e.left != null ) {e.left = insertRec( e.left, k, v );System.err.println("turning left..." + e + " " + k);}
+			  //else {insertLeft( e, k, v );System.err.println("inserting left..." + e + " " + k);}
+			  
+			  if ( PRI(e) > PRI(e.left) ) e = e.rotateRight();
+			  //if ( e.pri() > e.left.pri() ) {System.err.println("Going to rotate right...");e.printDebug();e = e.rotateRight();System.err.println("Rotated.");e.printDebug();}
+		 } 
+		 else if ( cmp > 0 ) {
+			  turnedRight = true;
+			  if ( ! SUCC(e) && e.right != null ) e.right = insertRec( e.right );
+			  else insertRight( e );
+			  //if ( ! SUCC(e) && e.right != null ) {e.right = insertRec( e.right, k, v );System.err.println("turning right..." + e + " " + k);}
+			  //else {insertRight( e, k, v );System.err.println("inserting right..." + e + " " + k);}
+
+			  if ( PRI(e) > PRI(e.right) ) e = e.rotateLeft();
+			  //if ( e.pri() > e.right.pri() ) {System.err.println("Going to rotate left...");e.printDebug();e = e.rotateLeft();System.err.println("Rotated.");e.printDebug();}
+		 }
+		 else {
+			  oldValue = e.value;
+			  e.value = value;
+		 }
+		 return e;
+   }
+
+
+	 /** Insert the given pair at the left of an {@link Entry}.
+	  *
+	  * <P>This method will create a new {@link Entry} (marked as a leaf) and
+	  * link it at the left of <code>e</code>. The {@link Entry#right} pointer
+	  * of the new entry is <code>e</code>, whereas its {@link Entry#left} pointer
+	  * is the {@link Entry#left} pointer of <code>e</code>.
+	  *
+	  * @param e an {@link Entry}
+	  */
+	 private void insertLeft( Entry e ) {
+		  count++;
+		  final Entry l = change = new Entry( key, value, random.nextInt() );
+
+		  l.right = e;
+		  l.left = e.left;
+
+		  RESET_PRED(e);
+		  e.left = l;
+	 }
+
+	 /** Insert the given pair at the right of an {@link Entry}.
+	  *
+	  * <P>This method will create a new {@link Entry} (marked as a leaf) and
+	  * link it at the right of <code>e</code>. The {@link Entry#left} pointer
+	  * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
+	  * is the {@link Entry#right} pointer of <code>e</code>.
+	  *
+	  * @param e an {@link Entry}
+	  */
+	 private void insertRight( Entry e ) {
+		  count++;
+		  final Entry r = change = new Entry( key, value, random.nextInt() );
+
+		  r.left = e;
+		  r.right = e.right;
+
+		  RESET_SUCC(e);
+		  e.right = r;
+	 }
+
+
+	 /** Deletes an entry from the map.
+	  *
+	  * <P>After execution of this method, {@link #change} contains the deleted
+	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
+	  * value previously associated with the key. Moreover, {@link #turnedRight}
+	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
+	  *
+	  * @param k a key.
+	  * @return the value previously associated to the key (or the default return value, if there 
+	  * was no existing entry with the given key).
+	  */
+	 
+	 private VALUE_TYPE delete( final KEY_TYPE k ) {
+		  oldValue = DEF_RET_VALUE;
+		  change = null;
+		  turnedLeft = turnedRight = false;
+
+		  if ( tree == null ) return DEF_RET_VALUE;
+
+		  tree = deleteRec( k, tree );
+
+		  if ( change != null ) {
+				if ( ! turnedLeft ) lastEntry = change.right;
+				if ( ! turnedRight ) firstEntry = change.left;
+		  }
+
+		  return oldValue;
+	 }
+
+	 /** Deletes recursively an entry from a tree.
+	  *
+	  * <P>After execution of this method, {@link #change} contains the deleted
+	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
+	  * value previously associated with the key. Moreover, {@link #turnedRight}
+	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
+	  *
+	  * @param k a key.
+	  * @param e a tree (i.e., an {@link Entry}.
+	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
+	  */
+
+	 private Entry deleteRec( KEY_TYPE k, Entry e ) {
+		  if ( e == null ) return null;
+		  
+		  final int cmp = compare( k, e.key );
+		  
+		  if ( cmp < 0 ) {
+				turnedLeft = true;
+				if ( PRED(e) ) return null;
+				e.left = deleteRec( k, e.left );
+		  }
+		  else if ( cmp > 0 ) {
+				turnedRight = true;
+				if ( SUCC(e) ) return null;
+				e.right = deleteRec( k, e.right );
+		  }
+		  else {
+				change = e;
+				oldValue = e.value;
+				e = e.deleteRoot();
+				count--;
+		  }
+		  return e;
+	 }
+	 
+	 
+	 
+	 public Object put( final Object ok, final Object ov ) {
+		  if ( ok == null ) throw new IllegalArgumentException();
+		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
+		  return change == null ? VALUE2OBJ( oldValue ) : null;
+	 }
+
+
+#if ! ( #valueclass(Object) && #keyclass(Object) )
+
+	 public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+#if #keyclass( Object )
+		  if ( k == null ) throw new IllegalArgumentException();
+#endif
+		  return insert( k, v );
+	 }
+	 
+	 
+#endif
+
+   public Object remove(final Object ok) {
+		 if ( ok == null ) throw new IllegalArgumentException();
+		 delete( KEY2TYPE( ok ) );
+		 return change == null ? VALUE2OBJ( oldValue ) : null;
+   }
+
+#if ! #valueclass(Object) 
+	 
+	 public boolean containsValue(final Object v) {
+		  return containsValue( VALUE2TYPE( v ) );
+	 }
+
+#endif
+
+	 public boolean containsValue(final VALUE_TYPE v) {
+		  final TreeIterator i = new TreeIterator();
+		  VALUE_TYPE ev;
+		  
+		  while( i.hasNext() ) {
+				ev = ((Entry)i.next()).value;
+				if ( VALUE_EQUAL( ev, v ) ) return true;
+		  }
+		  
+		  return false;
+	 }
+
+
+	 public synchronized void clear() {
+		  tree = null;
+		  count = 0;
+	 }
+
+	 
+	 /** This class represent an entry in a tree map.
+	  *
+	  * <P>Note that since the class is recursive, it can be
+	  * considered equivalently a tree.
+	  */
+
+    private static final class Entry implements MAP.Entry {
+
+		  /*		  final static int SUCC_MASK = 1;
+		  final static int PRED_MASK = 2;
+		  final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );*/
+
+		  KEY_TYPE key;
+		  VALUE_TYPE value;
+
+		  Entry left, right;
+		  int mix;
+
+		  Entry(Object k, Object v, int p) {
+				this.key = KEY2TYPE( k );
+				this.value = VALUE2TYPE( v );
+				mix = p | SUCC_MASK | PRED_MASK;
+		  }
+
+#if ! #keyclass(Object) || ! #valueclass(Object) 
+		  
+		  Entry(KEY_TYPE k, VALUE_TYPE v, int p) {
+				this.key = k;
+				this.value = v;
+				mix = p | SUCC_MASK | PRED_MASK;
+		  }
+		  
+#endif
+
+		  public boolean pred() {
+				return ( mix & PRED_MASK ) != 0;
+		  }
+		  
+		  public boolean succ() {
+				return ( mix & SUCC_MASK ) != 0;
+		  }
+		  
+		  public void pred( boolean pred ) {
+				if ( pred ) mix |= PRED_MASK;
+				else mix &= ~PRED_MASK;
+		  }
+		  
+		  public void succ( boolean succ ) {
+				if ( succ ) mix |= SUCC_MASK;
+				else mix &= ~SUCC_MASK;
+		  }
+		  
+		  public int pri() {
+				return mix & PRI_MASK ;
+		  }
+		  
+		  public Object getKey() {
+				return KEY2OBJ(key);
+		  }
+		  
+#if ! #keyclass(Object)
+		  public KEY_TYPE ENTRY_GET_KEY() {
+				return key;
+		  }
+#endif
+		  
+		  public Object getValue() {
+				return VALUE2OBJ(value);
+		  }
+		  
+#if ! #valueclass(Object)
+		  public VALUE_TYPE ENTRY_GET_VALUE() {
+				return value;
+		  }
+#endif
+		  
+		  public VALUE_TYPE setValue(final VALUE_TYPE value) {
+				final VALUE_TYPE oldValue = this.value;
+				this.value = value;
+				return oldValue;
+		  }
+		  
+#if ! #valueclass(Object)
+		  
+		  public Object setValue(final Object value) {
+				return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+		  }
+		  
+#endif
+		  
+		  public boolean equals(Object o) {
+				if (!(o instanceof Entry)) return false;
+				Entry e = (Entry)o;
+				
+				return KEY_EQUAL(key, e.key) && VALUE_EQUAL(value, e.value);
+		  }
+		  
+		  public int hashCode() {
+				return KEY2INT(key) ^ VALUE2INT(value);
+		  }
+		  
+		  
+		  public String toString() {
+				return key + "=" + value;
+		  }
+		  
+
+		  /** Applies a left rotation to this tree. 
+			*
+			* @return the new top of this tree.
+			*/
+		  
+		  Entry rotateLeft() {
+				/* Firstly, we save current right pointer and whether it is a successor. */
+				final Entry t = right;
+
+				/* Then, if our right subtree has a left subtree, we take it as our
+				new right subtree. In this case, we reset our successor flag. If,
+				however, our right subtree contains a predecessor, we set the
+				subtree as our successor. */
+				if ( PRED(t) ) right = t;
+				else right = t.left;
+
+				if ( PRED(t) ) SET_SUCC( this );
+				else RESET_SUCC( this );
+				
+				t.left = this;
+				RESET_PRED( t );
+
+				return t;
+		  }
+		  
+		  /** Applies a right rotation to this tree.
+			*
+			* @return the new top of this tree.
+			*/
+		  Entry rotateRight() {
+				/* Firstly, we save current left pointer and whether it is a predecessor. */
+				final Entry t = left;
+
+				/* Then, if our left subtree has a right subtree, we take it as our
+				new left subtree. In this case, we reset our predecessor flag. If,
+				however, our left subtree contains a successor, we set the
+				subtree as our predecessor. */
+				if ( SUCC(t) ) left = t;
+				else left = t.right;
+
+				if ( SUCC(t) ) SET_PRED( this );
+				else RESET_PRED( this );
+
+				t.right = this;
+				RESET_SUCC( t );
+
+				return t;
+		  }
+		  
+		  /** Deletes the root of this tree.
+			*
+			* <P>To do so, it must move the root down until it is a leaf.
+			*
+			* @return the new top of this tree.
+			*/
+
+		  Entry deleteRoot() {
+				Entry t;
+				
+				if ( PRED(this) ) return right;
+				if ( SUCC(this) ) return left;
+				if ( PRI(left) < PRI(right) ) {
+					 t = rotateRight();
+					 t.right = deleteRoot();
+				}
+				else {
+					 t = rotateLeft();
+					 t.left = deleteRoot();
+				}
+				return t;
+		  }
+
+		  public void printDebug() {
+				printDebug(0);
+		  }
+
+		  public void printDebug(int level) {
+				if ( PRED(this) ) {
+					 for (int i = 0; i < level; i++)
+						  System.err.print("  ");
+					 System.err.println("pred: " + left );
+				}
+				else if (left != null)
+					 left.printDebug(level +1 );
+				for (int i = 0; i < level; i++)
+					 System.err.print("  ");
+				System.err.println(key + "=" + value + " (" + mix + ")");
+				if ( SUCC(this) ) {
+					 for (int i = 0; i < level; i++)
+						  System.err.print("  ");
+					 System.err.println("succ: " + right );
+				}
+				else if (right != null)
+					 right.printDebug(level + 1);
+		  }
+    }
+	 
+   public void printDebug() {
+      System.err.println("size: " + count);
+      if (tree != null) tree.printDebug();
+   }
+
+
+	 public boolean containsKey( KEY_TYPE k ) {
+		  return findKey( k ) != null;
+	 }
+	 
+	 public int size() {
+		  return count;
+	 }
+	 
+	 public boolean isEmpty() {
+		  return count == 0;
+	 }
+	 
+	 
+	 public Object get( final Object ok ) {
+		  if ( ok == null ) throw new IllegalArgumentException();
+		  final Entry e = findKey( KEY2TYPE( ok ) );
+		  return e == null ? (VALUE_CLASS)null : e.getValue();
+	 }
+	 
+
+#if !#keyclass(Object)
+
+	 public VALUE_TYPE get(final KEY_TYPE k) {
+		  final Entry e = findKey( k );
+		  
+		  return e == null ? DEF_RET_VALUE : e.value;
+	 }
+	 
+
+	 public VALUE_TYPE remove(final KEY_TYPE k) {
+		  return delete( k );
+	 }
+	 
+	 public boolean containsKey(final Object ok) {
+		  return containsKey( KEY2TYPE( ok ) );
+	 }
+	 
+#else
+#if !#valueclass(Object)
+
+	 public VALUE_TYPE GET_VALUE( final Object k ) {
+		  if ( k == null ) throw new IllegalArgumentException();
+		  final Entry e = findKey( k );
+		  return e == null ? DEF_RET_VALUE : e.value;
+	 }
+
+
+	 public VALUE_TYPE REMOVE_VALUE( final Object k ) {
+		  if ( k == null ) throw new IllegalArgumentException();
+		  return delete( k );
+	 }
+
+#endif
+#endif
+
+
+	 public KEY_TYPE FIRST_KEY() {
+		  Entry e = tree;
+		  
+		  if (e == null) throw new NoSuchElementException();
+		  while ( e.left != null ) e = e.left;
+		  return e.ENTRY_GET_KEY();
+	 }
+	 
+	 public KEY_TYPE LAST_KEY() {
+		  Entry e = tree;
+		  
+		  if (e == null) throw new NoSuchElementException();
+		  while (e.right != null) e = e.right;
+		  return e.ENTRY_GET_KEY();
+	 }
+	 
+#if !#keyclass(Object)
+	 public Object firstKey() {
+		  return KEY2OBJ( FIRST_KEY() );
+	 }
+	 
+	 public Object lastKey() {
+		  return KEY2OBJ( LAST_KEY() );
+	 }
+
+#endif
+	 /*
+	 private class TreeIterator implements Iterator {
+		  private List stack = new ArrayList();
+		  
+		  TreeIterator() {
+				Entry e = tree;
+
+				while ( e != null  ) {
+					 stack.add( e );
+					 e = e.left;
+				}
+		  }
+
+		  TreeIterator( KEY_TYPE firstKey ) {
+				Entry e = tree;
+				int cmp;
+
+				while ( e != null && ( cmp = compare( firstKey, e.key ) ) != 0 ) {
+					 stack.add( e );
+					 e = cmp < 0 ? e.left : e.right;
+				}
+		  }
+
+		  public boolean hasNext() {
+				return ! stack.isEmpty();
+		  }
+
+		  public Object next() {
+				if ( ! hasNext() ) throw new NoSuchElementException();
+				
+				final Entry e = (Entry)stack.get( stack.size() - 1 );
+
+				if ( e.right == null ) {
+					 Entry f;
+					 do 
+						  f = (Entry) stack.remove( stack.size() - 1 );
+					 while ( ! stack.isEmpty() && ( (Entry)stack.get( stack.size() - 1 ) ).right == f );
+				} 
+				else {
+					 Entry f;
+					 for( f = e.right; f != null; f = f.left ) stack.add( f );
+				}
+
+				return e;
+		  }
+
+		  public void remove() {
+				throw new UnsupportedOperationException();
+		  }
+	 }
+	 */
+
+
+	 private class TreeIterator implements ListIterator {
+		  Entry curr, prev, next, first, last;
+		  int currIndex;
+		  
+		  TreeIterator() {
+				currIndex = -1;
+				first = firstEntry;
+				last = lastEntry;
+		  }
+
+		  TreeIterator( Entry firstEntry, Entry lastEntry ) {
+				currIndex = -1;
+				first = firstEntry;
+				last = lastEntry;
+		  }
+
+		  public boolean hasNext() {
+				if ( count == 0 ) return false;
+				if ( currIndex == -1 ) return true;
+				return curr != lastEntry;
+		  }
+
+		  public boolean hasPrevious() {
+				if ( count == 0 || currIndex == -1 ) return false;
+				return curr != firstEntry;
+		  }
+
+		  public Object next() {
+				if ( currIndex == -1 ) {
+					 currIndex++;
+					 return curr = firstEntry;
+				}
+				if ( ! hasNext() ) throw new NoSuchElementException();
+
+				final boolean follow = ! SUCC(curr);
+
+				currIndex++;
+				curr = curr.right;
+
+				if ( curr != null && follow ) while ( curr.left != null && ! PRED(curr) ) curr = curr.left;
+
+				return curr;
+		  }
+
+		  public Object previous() {
+				if ( ! hasPrevious() ) throw new NoSuchElementException();
+
+				final boolean follow = ! PRED(curr);
+
+				currIndex--;
+				curr = curr.left;
+
+				if ( curr != null && follow ) while ( curr.right != null && ! SUCC(curr) ) curr = curr.right;
+
+				return curr;
+		  }
+
+		  public int nextIndex() {
+				if ( ! hasNext() ) throw new NoSuchElementException();
+				return currIndex + 1;
+		  }
+
+		  public int previousIndex() {
+				if ( ! hasPrevious() ) throw new NoSuchElementException();
+				return currIndex - 1;
+		  }
+
+		  public void remove() {
+				throw new UnsupportedOperationException();
+		  }
+
+		  public void set( Object o ) {
+				throw new UnsupportedOperationException();
+		  }
+
+		  public void add( Object o ) {
+				throw new UnsupportedOperationException();
+		  }
+	 }
+
+
+    public Set entrySet() {
+		  if ( entries == null ) entries = new AbstractSet() {
+					 public Iterator iterator() {
+						  return new TreeIterator();
+					 }
+
+					 public boolean contains(Object o) {
+						  if (!(o instanceof Map.Entry)) return false;
+						  final Map.Entry e = (Map.Entry)o;
+						  final Map.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						  return e.equals( f );
+					 }					 
+
+					 public boolean remove(Object o) {
+						  if (!(o instanceof Map.Entry)) return false;
+						  final Map.Entry e = (Map.Entry)o;
+						  final Map.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						  if ( f != null ) TREEMAP.this.remove( f.getKey() );
+						  return f != null;
+					 }
+
+					 public int size() {
+						  return count;
+					 }
+					 
+					 public void clear() {
+						  TREEMAP.this.clear();
+					 }
+					 
+				};
+
+		  return entries;
+	 }
+
+
+    public Set keySet() {
+		  if ( keys == null ) keys = new KEY_ABSTRACT_SET() {
+					 public Iterator iterator() {
+						  return new KEY_ITERATOR() {
+									 TreeIterator iterator = new TreeIterator();
+
+									 public boolean hasNext() { return iterator.hasNext(); }
+									 public KEY_TYPE NEXT_KEY() { return ((Entry)iterator.next()).key; }
+#if !#keyclass(Object)
+									 public Object next() { return KEY2OBJ( NEXT_KEY() ); }
+#endif									
+									 public void remove() { iterator.remove(); }
+								};
+					 }
+
+					 public boolean contains( KEY_TYPE k ) {
+						  return containsKey( k );
+					 }					 
+
+					 public boolean remove( KEY_TYPE k ) {
+						  int oldCount = count;
+						  TREEMAP.this.remove( k );
+						  return count != oldCount;
+					 }					 
+
+#if ! #keyclass( Object )
+
+					 public boolean contains( Object ok ) {
+						  return containsKey( ok );
+					 }					 
+
+					 public boolean remove( Object ok ) {
+						  return remove( KEY2TYPE( ok ) );
+					 }
+
+#endif
+
+					 public int size() {
+						  return count;
+					 }
+					 
+					 public void clear() {
+						  TREEMAP.this.clear();
+					 }
+					 
+				};
+
+		  return keys;
+	 }
+
+
+    public Collection values() {
+		  if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
+					 public Iterator iterator() {
+						  return new VALUE_ITERATOR() {
+									 TreeIterator iterator = new TreeIterator();
+
+									 public boolean hasNext() { return iterator.hasNext(); }
+									 public VALUE_TYPE NEXT_VALUE() { return ((Entry)iterator.next()).value; }
+#if !#valueclass(Object)
+									 public Object next() { return VALUE2OBJ( NEXT_VALUE() ); }
+#endif									
+									 public void remove() { throw new UnsupportedOperationException(); }
+								};
+					 }
+
+					 public boolean contains( VALUE_TYPE k ) {
+						  return containsValue( k );
+					 } 
+
+#if ! #valueclass( Object )
+
+					 public boolean contains( Object ok ) {
+						  return containsValue( ok );
+					 }					 
+
+#endif
+
+					 public int size() {
+						  return count;
+					 }
+					 
+					 public void clear() {
+						  TREEMAP.this.clear();
+					 }
+					 
+				};
+
+		  return values;
+	 }
+
+	 public Comparator comparator() {
+		  return comparator;
+	 }
+	 
+	 public SortedMap headMap(Object toKey) {
+		  return null; // TODO
+	 }
+
+	 public SortedMap tailMap(Object fromKey) {
+		  return null; // TODO
+	 }
+
+	 public SortedMap subMap(Object fromKey, Object toKey) {
+		  return null; // TODO
+	 }
+
+#if !#keyclass(Object)
+	 public SORTEDMAP headMap(KEY_TYPE toKey) {
+		  return null; // TODO
+	 }
+
+	 public SORTEDMAP tailMap(KEY_TYPE fromKey) {
+		  return null; // TODO
+	 }
+
+	 public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
+		  return null; // TODO
+	 }
+#endif
+
+
+	 /*
+   public Object clone() {
+      try {
+         Tree tree = (Tree) super.clone();
+
+         tree.tree = (tree != null) ? (Entry) tree.clone() : null;
+         return tree;a
+      } catch (CloneNotSupportedException e) {
+         // Cannot happen
+         throw new InternalError(e.toString());
+      }
+   }
+
+	 */
+
+	 /*
+class TreeEnumeration implements Enumeration
+{
+   private Stack stack;
+   private boolean keys;
+   private boolean ascending;
+
+   TreeEnumeration(Entry t, boolean keys, boolean ascending) {
+      stack = new Stack();
+
+      this.keys = keys;
+      this.ascending = ascending;
+      if (ascending)
+         for ( ; t != null; t = t.left)
+            stack.push(t);
+      else // descending
+         for ( ; t != null; t = t.right)
+            stack.push(t);
+   }
+
+   public boolean hasMoreElements() {
+      return !stack.empty();
+   }
+
+   public Object nextElement() {
+      if (stack.empty())
+         throw new NoSuchElementException("TreeEnumeration");
+
+      Entry node = (Entry) stack.peek();
+      if (ascending)
+         if (node.right == null) {
+            Entry t = (Entry) stack.pop();
+            while (!stack.empty() &&
+                   ((Entry) stack.peek()).right == t)
+               t = (Entry) stack.pop();
+         } else
+            for (Entry t = node.right; t != null; t = t.left)
+               stack.push(t);
+      else // descending
+         if (node.left == null) {
+            Entry t = (Entry) stack.pop();
+            while (!stack.empty() &&
+                   ((Entry) stack.peek()).left == t)
+               t = (Entry) stack.pop();
+         } else
+            for (Entry t = node.left; t != null; t = t.right)
+               stack.push(t);
+
+      return keys ? node.key : node.value;
+   }
+}
+	 */
+
+
+
+
+#ifndef NDEBUG
+
+	 private static void speedTest( int n ) {
+		  int i;
+		  MAP m;
+		  SortedMap t;
+		  Random r = new Random();
+		  Object o;
+		  long v, fm, ct;
+
+		  for(int k=0; k<10; k++) {
+
+				if (k>0) System.out.println();
+
+				t = new TreeMap();
+				m = new TREEMAP();
+				/* First of all, we measure the time that is necessary to produce the inputs. */
+		  
+				v = System.currentTimeMillis();
+		  
+				for( i=0; i<n;  i++ ) {
+				
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						  new KEY_CLASS(r.NEXT_KEY()) 
+#else
+						  new Long(r.nextLong()) 
+#endif
+						  ;
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+					 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+						  new VALUE_CLASS(r.NEXT_VALUE()) 
+#else
+						  new Long(r.nextLong()) 
+#endif
+						  ;
+				}
+		  
+				ct = System.currentTimeMillis() - v;
+		  
+				v = System.currentTimeMillis();
+		  
+
+				/* Then we add pairs to t. */
+
+				for( i=0; i<n;  i++ ) {
+					 t.put( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+							 new KEY_CLASS(r.NEXT_KEY()) 
+#else
+							 new Long(r.nextLong()) 
+#endif
+							 ,
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+							 new VALUE_CLASS(r.NEXT_VALUE()) 
+#else
+							 new Long(r.nextLong()) 
+#endif
+							 
+							 );
+				}
+
+				System.out.println("Added "+n+" pairs in old TreeMap (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+
+				v = System.currentTimeMillis();
+
+				/* Then we check for pairs in t. */
+
+				for( i=0; i<n;  i++ ) {
+					 t.get( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+							 new KEY_CLASS(r.NEXT_KEY())
+#else
+							 new Long(r.nextLong())
+#endif
+							 );
+				}
+
+				System.out.println("Examined "+n+" pairs in old TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+
+				v = System.currentTimeMillis();
+
+				/* Again, we measure the time that is necessary to produce the inputs. */
+		  
+				v = System.currentTimeMillis();
+		  
+				for( i=0; i<n;  i++ ) {
+				
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 r.nextLong()
+#endif
+						  ;
+				}
+		  
+				ct = System.currentTimeMillis() - v;
+		  
+				v = System.currentTimeMillis();
+
+				/* Then we add pairs to m. */
+
+				for( i=0; i<n;  i++ ) {
+					 m.put( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+							 new KEY_CLASS(r.NEXT_KEY()) 
+#else
+							 new Long(r.nextLong()) 
+#endif
+							 ,
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+							 new VALUE_CLASS(r.NEXT_VALUE()) 
+#else
+							 new Long(r.nextLong()) 
+#endif
+							 );
+				}
+		  
+				System.out.println("Added "+n+" pairs in new TreeMap (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+
+				v = System.currentTimeMillis();
+
+				/* Then we check for pairs in m. */
+
+				for( i=0; i<n;  i++ ) {
+					 m.get( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+							 r.NEXT_KEY()
+#else
+							 new Long(r.nextLong())
+#endif
+							 );
+				}
+				
+				System.out.println("Examined "+n+" pairs in new TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+			
+				
+				/* Then we enumerate items in t. */
+				v = System.currentTimeMillis();
+
+				for(Iterator it=t.keySet().iterator(); it.hasNext(); ) t.get(it.next());
+				
+				System.out.println("Iterated on old TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
+	 
+
+				/* Then we enumerate items in m. */
+				v = System.currentTimeMillis();
+
+				for(KEY_ITERATOR it=(KEY_ITERATOR)m.keySet().iterator(); it.hasNext(); ) m.get(it.NEXT_KEY());
+
+				System.out.println("Iterated on new TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
+	 
+		  }
+
+
+	 }
+
+
+	 private static boolean valEquals(Object o1, Object o2) {
+		  return o1 == null ? o2 == null : o1.equals(o2);
+	 }
+
+
+	 private static void regressionTest( int n ) {
+		  TREEMAP m = new TREEMAP();
+		  SortedMap t = new TreeMap();
+		  Random r = new Random();
+
+		  /* First of all, we fill t with random data. */
+
+		  for(int i=0; i<n;  i++ ) {
+				t.put( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY()) 
+#else
+						new Long(r.nextLong()) 
+#endif
+						,
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+						new VALUE_CLASS(r.NEXT_VALUE()) 
+#else
+						new Long(r.nextLong()) 
+#endif
+						);
+		  }
+		  
+		  /* Now we add to m the same data */
+		  
+		  m.putAll(t);
+
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after insertion.\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after insertion.\n");
+
+		  /* Now we check that m actually holds that data. */
+		  
+		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		      if (!valEquals(e.getValue(), m.get(e.getKey()))) 
+					 System.out.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on t).\n");
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+				Entry e = (Entry)i.next();
+		      if (!valEquals(e.getValue(), t.get(e.getKey()))) 
+					 System.out.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on m).\n");
+		  }
+
+		  /* Now we check that m actually holds the same keys. */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsKey(o)) {
+					 System.out.println("Error: m and t differ on a key ("+o+") after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.keySet().contains(o)) {
+					 System.out.println("Error: m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys, but iterating on m. */
+		  
+		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsKey(o)) {
+					 System.out.println("Error: m and t differ on a key after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.keySet().contains(o)) {
+					 System.out.println("Error: m and t differ on a key (in keySet()) after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we check that m actually hold the same values. */
+		  
+		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsValue(o)) {
+					 System.out.println("Error: m and t differ on a value after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.values().contains(o)) {
+					 System.out.println("Error: m and t differ on a value (in values()) after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually hold the same values, but iterating on m. */
+		  
+		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsValue(o)) {
+					 System.out.println("Error: m and t differ on a value after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.values().contains(o)) {
+					 System.out.println("Error: m and t differ on a value (in values()) after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that inquiries about random data give the same answer in m and t. For
+			  m we use the polymorphic method. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+
+				if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
+					 System.out.println("Error: divergence in keys between t and m (polymorphic method).\n");
+					 System.exit(-1);
+				}
+
+#if #keyclass(Object) && ! #valueclass(Object)
+				if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+					 t.get(KEY2OBJ(T)) != null && 
+					 ! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
+#else
+					 if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+						  t.get(KEY2OBJ(T)) != null && 
+						  ! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
+#endif
+						  {
+								System.out.println("Error: divergence between t and m (polymorphic method).\n");
+								System.exit(-1);
+						  }
+		  }
+
+		  /* Again, we check that inquiries about random data give the same answer in m and t, but
+			  for m we use the standard method. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+				if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
+					 System.out.println("Error: divergence between t and m (standard method).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		  for(int i=0; i<20*n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+				VALUE_TYPE U =
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+					 (VALUE_TYPE)r.nextInt()
+#elif ! #valueclass(Object)
+					 r.NEXT_VALUE()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+				if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
+					 System.out.println("Error: divergence in put() between t and m.\n");
+					 System.exit(-1);
+				}
+				T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+				if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
+					 System.out.println("Error: divergence in remove() between t and m.\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after removal.\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after removal.\n");
+
+
+		  /* Now we check that m actually holds the same data. */
+		  
+		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		      if (!valEquals(e.getValue(), m.get(e.getKey()))) {
+					 System.out.println("Error: m and t differ on an entry ("+e+") after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+				Entry e = (Entry)i.next();
+		      if (!valEquals(e.getValue(), t.get(e.getKey()))) {
+					 System.out.println("Error: m and t differ on an entry ("+e+") after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys. */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsKey(o)) {
+					 System.out.println("Error: m and t differ on a key ("+o+") after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.keySet().contains(o)) {
+					 System.out.println("Error: m and t differ on a key ("+o+", in keySet()) after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys, but iterating on m. */
+		  
+		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsKey(o)) {
+					 System.out.println("Error: m and t differ on a key after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.keySet().contains(o)) {
+					 System.out.println("Error: m and t differ on a key (in keySet()) after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we check that m actually hold the same values. */
+		  
+		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsValue(o)) {
+					 System.out.println("Error: m and t differ on a value after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.values().contains(o)) {
+					 System.out.println("Error: m and t differ on a value (in values()) after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually hold the same values, but iterating on m. */
+		  
+		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsValue(o)) {
+					 System.out.println("Error: m and t differ on a value after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.values().contains(o)) {
+					 System.out.println("Error: m and t differ on a value (in values()) after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  int h = m.hashCode();
+
+
+		  /* Now we save and read m. */
+		  /*
+		  try {
+				java.io.File ff = new java.io.File("regressionTest");
+				java.io.OutputStream os = new java.io.FileOutputStream(ff);
+				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+				oos.writeObject(m);
+				oos.close();
+				
+				java.io.InputStream is = new java.io.FileInputStream(ff);
+				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+				m = (TREEMAP)ois.readObject();
+				ois.close();
+				ff.delete();
+		  }
+		  catch(Exception e) {
+				e.printStackTrace();
+				System.exit(-1);
+		  }
+
+		  if (m.hashCode() != h) System.out.println("Error: hashCode() changed after save/read.\n");
+		  */
+		  /* Now we check that m actually holds that data. */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!valEquals(m.get(o),t.get(o))) {
+					 System.out.println("Error: m and t differ on an entry after save/read.\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we take out of m everything, and check that it is empty. */
+
+		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
+
+		  if (!m.isEmpty())  {
+				System.out.println("Error: m is not empty (as it should be).\n");
+				System.exit(-1);
+		  }
+
+
+		  System.out.println("Regression test OK.\n");
+		  System.exit(0);
+	 }
+
+
+	 public static void main( String args[] ) {
+		  int n  = Integer.parseInt(args[1]);
+		  
+		  if (args[0].equals("speedTest")) speedTest(n);
+		  else if (args[0].equals("regressionTest")) regressionTest(n);
+	 }
+
+#endif
+
+
+}
+
+// Local Variables:
+// mode: java
+// End:

@@ -8,7 +8,7 @@
 DIR="src/it/unimi/dsi/fastUtil"
 
 # Names of driver files.
-FILE=(Map SortedMap AbstractMap HashMap TreapMap AbstractCollection AbstractSet Collection Set SortedSet HashSet TreapSet Iterator)
+FILE=(Map SortedMap AbstractMap HashMap TreeMap AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet Iterator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
