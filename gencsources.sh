@@ -15,7 +15,7 @@ DIR="java/it/unimi/dsi/fastutil"
 MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap LinkedOpenHashMap)
 
 # Driver files for lists.
-LIST=(BulkCopyList List AbstractList ArrayList)
+LIST=(List AbstractList ArrayList)
 
 # Driver files for sets.
 SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet LinkedOpenHashSet AVLTreeSet RBTreeSet)

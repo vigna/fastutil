@@ -48,7 +48,7 @@ import java.util.ArrayList;
  * @see ArrayList
  */
 
-public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomAccess, Cloneable, java.io.Serializable {
+public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable, java.io.Serializable {
 
 	/** The initial default capacity of an array list. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
@@ -68,10 +68,12 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 	/** Creates a new array list using a given array.
 	 *
+	 * <P>This constructor is only meant to be used by the wrapping methods.
+	 *
 	 * @param a the array that will be used to back this array list.
 	 */
 
-	protected ARRAY_LIST( KEY_TYPE a[] ) {
+	protected ARRAY_LIST( final KEY_TYPE a[], boolean dummy ) {
 		this.a = a;
 	}
 
@@ -98,7 +100,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @param c a collection that will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( Collection c ) {
+	public ARRAY_LIST( final Collection c ) {
 		this( c.size() );
 		size = Iterators.unwrap( Iterators.AS_KEY_ITERATOR( c.iterator() ), a );
 	}
@@ -108,7 +110,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @param c a type-specific collection that will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( COLLECTION c ) {
+	public ARRAY_LIST( final COLLECTION c ) {
 		this( c.size() );
 		size = Iterators.unwrap( c.KEY_ITERATOR_METHOD(), a );
 	}
@@ -118,9 +120,30 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @param l a bulk-copy list that will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( BULK_COPY_LIST l ) {
+	public ARRAY_LIST( final LIST l ) {
 		this( l.size() );
 		l.getElements( 0, a, 0, size = l.size() );
+	}
+
+	/** Creates a new array list and fills it with the elements of a given array.
+	 *
+	 * @param c an array whose elements will be used to fill the array list.
+	 */
+	 
+	public ARRAY_LIST( final KEY_TYPE a[] ) {
+		this( a, 0, a.length );
+	}
+
+	/** Creates a new array list and fills it with the elements of a given array.
+	 *
+	 * @param c an array whose elements will be used to fill the array list.
+	 */
+	 
+	public ARRAY_LIST( final KEY_TYPE a[], final int offset, final int length ) {
+		this( length );
+		if ( length > a.length ) throw new IllegalArgumentException( "The specified length (" + length + ") is greater than the array size (" + a.length + ")" );
+		System.arraycopy( a, offset, this.a, 0, length );
+		size = length;
 	}
 
 	/** Creates a new array list and fills it with the elements returned by an iterator..
@@ -128,7 +151,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @param i an iterator whose returned elements will fill the array list.
 	 */
 	 
-	public ARRAY_LIST( Iterator i ) {
+	public ARRAY_LIST( final Iterator i ) {
 		this( Iterators.AS_KEY_ITERATOR( i ) );
 	}
 
@@ -137,7 +160,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @param i a type-specific iterator whose returned elements will fill the array list.
 	 */
 	 
-	public ARRAY_LIST( KEY_ITERATOR i ) {
+	public ARRAY_LIST( final KEY_ITERATOR i ) {
 		this();
 		while( i.hasNext() ) this.add( i.NEXT_KEY() );
 	}
@@ -159,9 +182,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @return a new array list of the given size, wrapping the given array.
 	 */
 
-	public ARRAY_LIST wrap( KEY_TYPE a[], int length ) {
-		final ARRAY_LIST l = new ARRAY_LIST( a );
-		l.size = size;
+	public static ARRAY_LIST wrap( final KEY_TYPE a[], final int length ) {
+		if ( length > a.length ) throw new IllegalArgumentException( "The specified length (" + length + ") is greater than the array size (" + a.length + ")" );
+		final ARRAY_LIST l = new ARRAY_LIST( a, false );
+		l.size = length;
 		return l;
 	}
 
@@ -171,7 +195,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 * @return a new array list wrapping the given array.
 	 */
 
-	public ARRAY_LIST wrap( KEY_TYPE a[] ) {
+	public static ARRAY_LIST wrap( final KEY_TYPE a[] ) {
 		return wrap( a, a.length );
 	}
 
@@ -236,7 +260,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		return true;
 	}
 
-	public boolean addAll( int index, final BULK_COPY_LIST l ) {
+	public boolean addAll( int index, final LIST l ) {
 		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
 		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
 		final int n = l.size();
@@ -249,7 +273,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		return true;
 	}
 
-	public boolean addAll( final BULK_COPY_LIST l ) {
+	public boolean addAll( final LIST l ) {
 		return addAll( size, l );
 	}
 
@@ -348,19 +372,23 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		if ( asserts ) assert size <= a.length;
 	}
 
+	
 	public void getElements( int from, KEY_TYPE[] a, int offset, int length ) {
+		if ( from + length > size ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than size (" + size + ")" );
 		System.arraycopy( this.a, from, a, offset, length );
 	}
 
 	public void removeElements( final int from, final int to ) {
-		System.arraycopy( a, to, a, from, to - from );
+		if ( from > size ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than size (" + size + ")" );
+		if ( to > size ) throw new IndexOutOfBoundsException( "End index (" + to + ") is greater than size (" + size + ")" );
+		System.arraycopy( a, to, a, from, size - to );
 		size -= ( to - from );
 #if #keyclass(Object) || #keyclass(Reference)
 		int i = to - from;
 		while( i-- != 0 ) a[ size + i ] = null;
 #endif
 	}
-
+	
 #if ! #keyclass(Object) && ! #keyclass(Reference)
 	
 	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
@@ -404,11 +432,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	}
 
 
-	private class SubList extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomAccess, Cloneable, java.io.Serializable {
-		private BULK_COPY_LIST l; // The list this sublist restricts.
+	private class SubList extends ABSTRACT_LIST implements RandomAccess, Cloneable, java.io.Serializable {
+		private LIST l; // The list this sublist restricts.
 		private int from, to; // Initial (inclusive) and final (exclusive) indices of this sublist.
 
-		public SubList( final BULK_COPY_LIST l, final int from, final int to ) {
+		public SubList( final LIST l, final int from, final int to ) {
 			this.l = l;
 			this.from = from;
 			this.to = to;
@@ -442,7 +470,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 			return l.addAll( from + index, c );
 		}
 
-		public boolean addAll( int index, final BULK_COPY_LIST l ) {
+		public boolean addAll( int index, final LIST l ) {
 			checkIndex( index );
 			to += l.size();
 			return l.addAll( from + index, l );
@@ -481,18 +509,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 			return to - from; 
 		}
 
+		
 		public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
 			checkIndex( from );
-			if ( this.from + from + length > to )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than array size" );
+			if ( this.from + from + length > to )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than size (" + size() + ")" );
 			l.getElements( this.from + from, a, offset, length );
 		}
 
 		public void removeElements( final int from, final int to ) {
 			checkIndex( from );
+			checkIndex( to );
 			l.removeElements( this.from + from, this.from + to );
 			this.to -= ( to - from );
 		}
-
 
 		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
 			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
@@ -906,7 +935,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 		for(int i=0; i<n;  i++ ) {
 			int p = r.nextInt() % ( 2 * n + 1 );
-			BULK_COPY_LIST m1 = new ARRAY_LIST();
+			LIST m1 = new ARRAY_LIST();
 			Collection t1 = new ArrayList();
 			int s = r.nextInt( n / 2 + 1 );
 			for( int j = 0; j < s; j++ ) {
@@ -994,17 +1023,28 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 		/* Now we play with constructors. */
 		ensure( m.equals( new ARRAY_LIST( (Collection)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( Collection m )" );
+		ensure( ( new ARRAY_LIST( (Collection)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( Collection m )does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( (COLLECTION)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific Collection m )" );
-		ensure( m.equals( new ARRAY_LIST( (BULK_COPY_LIST)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( BulkCopyList m )" );
+		ensure( ( new ARRAY_LIST( (COLLECTION)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific Collection m ) does not equal m" );
+		ensure( m.equals( new ARRAY_LIST( (LIST)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( BulkCopyList m )" );
+		ensure( ( new ARRAY_LIST( (LIST)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( BulkCopyList m ) does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( m.iterator() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.iterator() )" );
+		ensure( ( new ARRAY_LIST( m.iterator() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.iterator() ) does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( m.KEY_ITERATOR_METHOD() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.type_specific_iterator() )" );
+		ensure( ( new ARRAY_LIST( m.KEY_ITERATOR_METHOD() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.type_specific_iterator() ) does not equal m" );
 
+		/* Now we play with conversion to array, wrapping and copying. */
+		ensure( m.equals( new ARRAY_LIST( m.TO_KEY_ARRAY() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( toArray( m ) )" );
+		ensure( ( new ARRAY_LIST( m.TO_KEY_ARRAY() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( toArray( m ) ) does not equal m" );
+		ensure( m.equals( wrap( m.TO_KEY_ARRAY() ) ), "Error (" + level + ", " + seed + "): m does not equal wrap ( toArray( m ) )" );
+		ensure( ( wrap( m.TO_KEY_ARRAY() ) ).equals( m ), "Error (" + level + ", " + seed + "): wrap ( toArray( m ) ) does not equal m" );
+		
 
 		int h = m.hashCode();
 
 		/* Now we save and read m. */
 
-		BULK_COPY_LIST m2 = null;
+		LIST m2 = null;
 		  
 		try {
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
@@ -1017,7 +1057,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 			java.io.InputStream is = new java.io.FileInputStream(ff);
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-			m2 = (BULK_COPY_LIST)ois.readObject();
+			m2 = (LIST)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
