@@ -32,1406 +32,1406 @@ import java.io.*;
  */
 
 public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Hash, MAP {
-	 /** The array of keys. */
-	 transient KEY_TYPE key[];
+    /** The array of keys. */
+    transient KEY_TYPE key[];
 
-	 /** The array of values. */
-	 transient VALUE_TYPE value[];
+    /** The array of values. */
+    transient VALUE_TYPE value[];
 	 
-	 /** The array of occupancy states. */
-	 transient byte state[];
+    /** The array of occupancy states. */
+    transient byte state[];
 
-	 /** The acceptable load factor. */
-	 final float f;
+    /** The acceptable load factor. */
+    final float f;
 	 
-	 /** Index into the prime list, giving the current table size. */
-	 int p;
+    /** Index into the prime list, giving the current table size. */
+    int p;
 
-	 /** Table size. It must be the {@link #p}-th item of {@link Hash#primes}. */
-	 transient int n;
+    /** Table size. It must be the {@link #p}-th item of {@link Hash#primes}. */
+    transient int n;
 
-	 /** Threshold after which we rehash. It must be {@link #n} times {@link #f}. */
-	 transient int maxFill;
+    /** Threshold after which we rehash. It must be {@link #n} times {@link #f}. */
+    transient int maxFill;
 
-	 /** Number of free entries in the table (may be less than {@link #n}-{@link #count} because of deleted entries). */
-	 transient int free;
+    /** Number of free entries in the table (may be less than {@link #n}-{@link #count} because of deleted entries). */
+    transient int free;
 
-	 /** Number of entries in the map. */
-	 int count;
+    /** Number of entries in the map. */
+    int count;
 
-	 /** Cached set of entries and keys. */
-	 transient volatile Set entries, keys;
+    /** Cached set of entries and keys. */
+    transient volatile Set entries, keys;
 
-	 /** Cached collection of values. */
-	 transient volatile Collection values;
+    /** Cached collection of values. */
+    transient volatile Collection values;
 
 
-	 /** Creates a new hash map.
-	  *
-	  * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
-	  *
-	  * @param n the expected number of elements in the hash map.
-	  * @param f the load factor.
-	  * @see Hash#primes
-	  */
+    /** Creates a new hash map.
+     *
+     * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+     *
+     * @param n the expected number of elements in the hash map.
+     * @param f the load factor.
+     * @see Hash#primes
+     */
 	 
-	 public OPENHASHMAP( int n, float f ) {
-		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
-		  if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
+    public OPENHASHMAP( int n, float f ) {
+	if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
+	if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
-		  int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
-		  if ( l < 0 ) l = -l - 1;
+	int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
+	if ( l < 0 ) l = -l - 1;
 
-		  this.f = f;
-		  this.n = free = primes[ l ];
-		  this.maxFill = (int)( n * f );
-		  p = l;
-		  key = new KEY_TYPE[ this.n ];
-		  value = new VALUE_TYPE[ this.n ];
-		  state = new byte[ this.n ];
-	 }
+	this.f = f;
+	this.n = free = primes[ l ];
+	this.maxFill = (int)( n * f );
+	p = l;
+	key = new KEY_TYPE[ this.n ];
+	value = new VALUE_TYPE[ this.n ];
+	state = new byte[ this.n ];
+    }
 	 
 	 
-	 /** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
-	  *
-	  * @param n the expected number of elements in the hash map.
-	  */
+    /** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+     *
+     * @param n the expected number of elements in the hash map.
+     */
 	 
-	 public OPENHASHMAP(int n) {
-		  this(n, DEFAULT_LOAD_FACTOR);
-	 }
+    public OPENHASHMAP(int n) {
+	this(n, DEFAULT_LOAD_FACTOR);
+    }
 
 
 
-	 /** Creates a new hash map with {@link Hash#DEFAULT_INITIAL_SIZE} entries
-	  * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
-	  */
+    /** Creates a new hash map with {@link Hash#DEFAULT_INITIAL_SIZE} entries
+     * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+     */
 	 
-	 public OPENHASHMAP() {
-		  this(DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR);
-	 }
+    public OPENHASHMAP() {
+	this(DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR);
+    }
 
 
-	 /** Creates a new hash map copying a given one.
-	  *
-	  * @param m a {@link Map} to be copied into the new hash map. 
-	  * @param f the load factor.
-	  */
+    /** Creates a new hash map copying a given one.
+     *
+     * @param m a {@link Map} to be copied into the new hash map. 
+     * @param f the load factor.
+     */
 	 
-	 public OPENHASHMAP( Map m, float f ) {
-		  this(m.size(), f);
-		  putAll(m);
-	 }
+    public OPENHASHMAP( Map m, float f ) {
+	this(m.size(), f);
+	putAll(m);
+    }
 
-	 /** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given one.
-	  *
-	  * @param m a {@link Map} to be copied into the new hash map. 
-	  */
+    /** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given one.
+     *
+     * @param m a {@link Map} to be copied into the new hash map. 
+     */
 	 
-	 public OPENHASHMAP( Map m ) {
-		  this(m, DEFAULT_LOAD_FACTOR);
-	 }
+    public OPENHASHMAP( Map m ) {
+	this(m, DEFAULT_LOAD_FACTOR);
+    }
 
-	 /*
-	  * The following methods implements some basic building blocks used by
-	  * all accessors.  They are (and should be maintained) identical to those used in HashSet.drv.
-	  */
+    /*
+     * The following methods implements some basic building blocks used by
+     * all accessors.  They are (and should be maintained) identical to those used in HashSet.drv.
+     */
 
-	 /** Searches for a key, keeping track of a possible insertion point.
-	  *
-	  * @param k the key.
-	  * @return the index of the correct insertion point, if the key is not found; otherwise,
-	  * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
-	  */
+    /** Searches for a key, keeping track of a possible insertion point.
+     *
+     * @param k the key.
+     * @return the index of the correct insertion point, if the key is not found; otherwise,
+     * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
+     */
 
-	 private int findInsertionPoint( final KEY_TYPE k ) {
-		  final KEY_TYPE key[] = this.key;
-		  final byte state[] = this.state;
+    private int findInsertionPoint( final KEY_TYPE k ) {
+	final KEY_TYPE key[] = this.key;
+	final byte state[] = this.state;
 
-		  // First of all, we make the key into a positive integer.
-		  final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
-		  // The primary hash, a.k.a. starting point.
-		  int h1 = k2i % n;
-		  // The secondary hash.
-		  final int h2 = (k2i % (n - 2)) + 1;
+	// First of all, we make the key into a positive integer.
+	final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
+	// The primary hash, a.k.a. starting point.
+	int h1 = k2i % n;
+	// The secondary hash.
+	final int h2 = (k2i % (n - 2)) + 1;
 
-		  while( state[h1] == OCCUPIED && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	while( state[h1] == OCCUPIED && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
 
-		  if (state[h1] == FREE) return h1;
-		  if (state[h1] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[h1], k).
+	if (state[h1] == FREE) return h1;
+	if (state[h1] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[h1], k).
 
-		  /* Tables without deletions will never use code beyond this point. */
+	/* Tables without deletions will never use code beyond this point. */
 
-		  final int i = h1; // Remember first available bucket for later.
+	final int i = h1; // Remember first available bucket for later.
 		  
-		  /** See the comments in the documentation of the interface Hash. */
-		  while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
+	/** See the comments in the documentation of the interface Hash. */
+	while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a FREE entry.
 		  
-		  return state[h1] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
-	 }
+	return state[h1] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+    }
 
 
-	 /** Searches for a key.
-	  *
-	  * @param k the key.
-	  * @return the index of the entry containing the key, or -1 if the key wasn't found.
-	  */
+    /** Searches for a key.
+     *
+     * @param k the key.
+     * @return the index of the entry containing the key, or -1 if the key wasn't found.
+     */
 
-	 private int findKey( final KEY_TYPE k ) {
-		  final KEY_TYPE key[] = this.key;
-		  final byte state[] = this.state;
+    private int findKey( final KEY_TYPE k ) {
+	final KEY_TYPE key[] = this.key;
+	final byte state[] = this.state;
 
-		  // First of all, we make the key into a positive integer.
-		  final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
-		  // The primary hash, a.k.a. starting point.
-		  int h1 = k2i % n;
-		  // The secondary hash.
-		  final int h2 = (k2i % (n - 2)) + 1;
+	// First of all, we make the key into a positive integer.
+	final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
+	// The primary hash, a.k.a. starting point.
+	int h1 = k2i % n;
+	// The secondary hash.
+	final int h2 = (k2i % (n - 2)) + 1;
 		  
-		  /** See the comments in the documentation of the interface Hash. */
-		  while( state[h1] != FREE && ! KEY_EQUAL(key[h1], k) ) h1 = ( h1 + h2 ) % n;  // There's always a FREE entry.
+	/** See the comments in the documentation of the interface Hash. */
+	while( state[h1] != FREE && ! KEY_EQUAL(key[h1], k) ) h1 = ( h1 + h2 ) % n;  // There's always a FREE entry.
 
-		  return state[h1] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[h1], k).
-	 }
-
-
+	return state[h1] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+    }
 
 
-	 public Object put(final Object ok, final Object ov) {
-		  final VALUE_TYPE v = VALUE2TYPE(ov);
-		  final KEY_TYPE k = KEY2TYPE(ok);
 
-		  final int i = findInsertionPoint( k );
+
+    public Object put(final Object ok, final Object ov) {
+	final VALUE_TYPE v = VALUE2TYPE(ov);
+	final KEY_TYPE k = KEY2TYPE(ok);
+
+	final int i = findInsertionPoint( k );
 		  
-		  if (i < 0) {
-				final VALUE_TYPE oldValue = value[-i-1];
-				value[-i-1] = v;
-				return VALUE2OBJ(oldValue);
-		  }
+	if (i < 0) {
+	    final VALUE_TYPE oldValue = value[-i-1];
+	    value[-i-1] = v;
+	    return VALUE2OBJ(oldValue);
+	}
 
-		  if ( state[i] == FREE ) free--;
-		  state[i] = OCCUPIED;
-		  key[i] = k;
-		  value[i] = v;
-		  if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
-		  if ( free == 0 ) rehash( p );
-		  return null;
-	 }
+	if ( state[i] == FREE ) free--;
+	state[i] = OCCUPIED;
+	key[i] = k;
+	value[i] = v;
+	if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+	if ( free == 0 ) rehash( p );
+	return null;
+    }
 	 
 
 #if ! ( #valueclass(Object) && #keyclass(Object) )
 
 
-	 public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
-		  final int i = findInsertionPoint( k );
+    public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+	final int i = findInsertionPoint( k );
 		  
-		  if (i < 0) {
-				final VALUE_TYPE oldValue = value[-i-1];
-				value[-i-1] = v;
-				return oldValue;
-		  }
+	if (i < 0) {
+	    final VALUE_TYPE oldValue = value[-i-1];
+	    value[-i-1] = v;
+	    return oldValue;
+	}
 
-		  if ( state[i] == FREE ) free--;
-		  state[i] = OCCUPIED;
-		  key[i] = k;
-		  value[i] = v;
-		  if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
-		  if ( free == 0 ) rehash( p );
-		  return defRetValue;
-	 }
+	if ( state[i] == FREE ) free--;
+	state[i] = OCCUPIED;
+	key[i] = k;
+	value[i] = v;
+	if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+	if ( free == 0 ) rehash( p );
+	return defRetValue;
+    }
 
 
 #endif
 
-	 public Object remove(final Object ok) {
-		  final KEY_TYPE k = KEY2TYPE(ok);
-		  final int i = findKey(k);
-		  if (i < 0) return null;
+    public Object remove(final Object ok) {
+	final KEY_TYPE k = KEY2TYPE(ok);
+	final int i = findKey(k);
+	if (i < 0) return null;
 
-		  state[i] = REMOVED;
+	state[i] = REMOVED;
 
 #if #keyclass(Object)
-		  key[i] = HashCommon.removed;
+	key[i] = HashCommon.removed;
 #endif
 #if #valueclass(Object)
-		  final Object v = value[i];
-		  value[i] = HashCommon.removed;
+	final Object v = value[i];
+	value[i] = HashCommon.removed;
 #endif
 
-		  count--;
+	count--;
 
 #if #valueclass(Object)
-		  return v;
+	return v;
 #else
-		  return VALUE2OBJ( value[i] );
+	return VALUE2OBJ( value[i] );
 #endif
-	 }
+    }
 
 #if ! #valueclass(Object) 
 	 
-	 public boolean containsValue(final Object v) {
-		  return containsValue(VALUE2TYPE(v));
-	 }
+    public boolean containsValue(final Object v) {
+	return containsValue(VALUE2TYPE(v));
+    }
 
 #endif
 
 
 
-	 public boolean containsValue(final VALUE_TYPE v) {
-		  final VALUE_TYPE value[] = this.value;
-		  final byte state[] = this.state;
+    public boolean containsValue(final VALUE_TYPE v) {
+	final VALUE_TYPE value[] = this.value;
+	final byte state[] = this.state;
 
-		  int i = 0, j = count;
+	int i = 0, j = count;
 
-		  while(j-- != 0) {
-				while(state[i] != OCCUPIED ) i++;
-				if (VALUE_EQUAL(value[i], v)) return true;
-				i++;
-		  }
-		  return false;
-	 }
+	while(j-- != 0) {
+	    while(state[i] != OCCUPIED ) i++;
+	    if (VALUE_EQUAL(value[i], v)) return true;
+	    i++;
+	}
+	return false;
+    }
 
 
-	 public void clear() {
-		  count = 0;
-		  free = n;
-		  Arrays.fill(state, FREE);
-		  // We null all object entries so that the garbage collector can do its work.
+    public void clear() {
+	count = 0;
+	free = n;
+	Arrays.fill(state, FREE);
+	// We null all object entries so that the garbage collector can do its work.
 #if #keyclass(Object)
-		  Arrays.fill(key, null);
+	Arrays.fill(key, null);
 #endif
 #if #valueclass(Object)
-		  Arrays.fill(value, null);
+	Arrays.fill(value, null);
 #endif
-	 }
+    }
     private static final class Entry implements MAP.Entry {
-		  KEY_TYPE key;
-		  VALUE_TYPE value;
+	KEY_TYPE key;
+	VALUE_TYPE value;
 
-		  Entry(Object key, Object value) {
-				this.key = KEY2TYPE(key);
-				this.value = VALUE2TYPE(value);
-		  }
+	Entry(Object key, Object value) {
+	    this.key = KEY2TYPE(key);
+	    this.value = VALUE2TYPE(value);
+	}
 
 #if ! #keyclass(Object) || ! #valueclass(Object) 
 		  
-		  Entry(KEY_TYPE key, VALUE_TYPE value) {
-				this.key = key;
-				this.value = value;
-		  }
+	Entry(KEY_TYPE key, VALUE_TYPE value) {
+	    this.key = key;
+	    this.value = value;
+	}
 		  
 #endif
 
-		  public Object getKey() {
-				return KEY2OBJ(key);
-		  }
+	public Object getKey() {
+	    return KEY2OBJ(key);
+	}
 		  
 #if ! #keyclass(Object)
-		  public KEY_TYPE ENTRY_GET_KEY() {
-				return key;
-		  }
+	public KEY_TYPE ENTRY_GET_KEY() {
+	    return key;
+	}
 #endif
 
-		  public Object getValue() {
-				return VALUE2OBJ(value);
-		  }
+	public Object getValue() {
+	    return VALUE2OBJ(value);
+	}
 		  
 #if ! #valueclass(Object)
-		  public VALUE_TYPE ENTRY_GET_VALUE() {
-				return value;
-		  }
+	public VALUE_TYPE ENTRY_GET_VALUE() {
+	    return value;
+	}
 #endif
 
-		  public VALUE_TYPE setValue(final VALUE_TYPE value) {
-				final VALUE_TYPE oldValue = this.value;
-				this.value = value;
-				return oldValue;
-		  }
+	public VALUE_TYPE setValue(final VALUE_TYPE value) {
+	    final VALUE_TYPE oldValue = this.value;
+	    this.value = value;
+	    return oldValue;
+	}
 		  
 #if ! #valueclass(Object)
 		  
-		  public Object setValue(final Object value) {
-				return VALUE2OBJ(setValue(VALUE2TYPE(value)));
-		  }
+	public Object setValue(final Object value) {
+	    return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+	}
 
 #endif
 
 
-		  public boolean equals(Object o) {
-				if (!(o instanceof Entry)) return false;
-				Entry e = (Entry)o;
+	public boolean equals(Object o) {
+	    if (!(o instanceof Entry)) return false;
+	    Entry e = (Entry)o;
 				
-				return KEY_EQUAL(key, e.key) && VALUE_EQUAL(value, e.value);
-		  }
+	    return KEY_EQUAL(key, e.key) && VALUE_EQUAL(value, e.value);
+	}
 		  
-		  public int hashCode() {
-				return KEY2INT(key) ^ VALUE2INT(value);
-		  }
+	public int hashCode() {
+	    return KEY2INT(key) ^ VALUE2INT(value);
+	}
 		  
 		  
-		  public String toString() {
-				return key + "->" + value;
-		  }
+	public String toString() {
+	    return key + "->" + value;
+	}
     }
 	 
 
     public Set entrySet() {
-		  if (entries == null) entries = new AbstractSet() {
+	if (entries == null) entries = new AbstractSet() {
 					 
-					 public Iterator iterator() {
-						  return new Iterator() {
-									 int pos = 0, last = -1, c = count;
+		public Iterator iterator() {
+		    return new Iterator() {
+			    int pos = 0, last = -1, c = count;
 						  
-									 { 
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    { 
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 
-										  if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-									 }
+				if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
+			    }
 						  
-									 public boolean hasNext() {
-										  return c != 0 && pos < n;
-									 }
+			    public boolean hasNext() {
+				return c != 0 && pos < n;
+			    }
 						  
-									 public Object next() {
-										  Entry retVal;
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    public Object next() {
+				Entry retVal;
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 		  
-										  if (!hasNext()) throw new NoSuchElementException();
-										  retVal = new Entry(key[last = pos], value[pos]);
-										  if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
+				if (!hasNext()) throw new NoSuchElementException();
+				retVal = new Entry(key[last = pos], value[pos]);
+				if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
 								
-										  return retVal;
-									 }
+				return retVal;
+			    }
 						  
-									 public void remove() {
-										  if (last == -1) throw new IllegalStateException();
-										  state[last] = REMOVED;
+			    public void remove() {
+				if (last == -1) throw new IllegalStateException();
+				state[last] = REMOVED;
 #if #keyclass(Object)
-										  key[last] = HashCommon.removed;
+				key[last] = HashCommon.removed;
 #endif
 #if #valueclass(Object)
-										  value[last] = HashCommon.removed;
+				value[last] = HashCommon.removed;
 #endif
 
-										  count--;
-									 }
-								};
+				count--;
+			    }
+			};
 
-					 }
+		}
 					 
-					 public boolean contains(Object o) {
-						  if (!(o instanceof Map.Entry)) return false;
-						  final Map.Entry e = (Map.Entry)o;
-						  final int i = findKey( KEY2TYPE( e.getKey() ) );
-						  return i >= 0 && VALUE_EQUAL( value[ i ], VALUE2TYPE( e.getValue() ) );
-					 }
+		public boolean contains(Object o) {
+		    if (!(o instanceof Map.Entry)) return false;
+		    final Map.Entry e = (Map.Entry)o;
+		    final int i = findKey( KEY2TYPE( e.getKey() ) );
+		    return i >= 0 && VALUE_EQUAL( value[ i ], VALUE2TYPE( e.getValue() ) );
+		}
 					 
-					 public boolean remove(Object o) {
-						  if (!(o instanceof Map.Entry)) return false;
-						  final Map.Entry e = (Map.Entry)o;
-						  final int i = findKey( KEY2TYPE( e.getKey() ) );
-						  if ( i >= 0 ) OPENHASHMAP.this.remove( e.getKey() );
-						  return i >= 0;
-					 }
+		public boolean remove(Object o) {
+		    if (!(o instanceof Map.Entry)) return false;
+		    final Map.Entry e = (Map.Entry)o;
+		    final int i = findKey( KEY2TYPE( e.getKey() ) );
+		    if ( i >= 0 ) OPENHASHMAP.this.remove( e.getKey() );
+		    return i >= 0;
+		}
 					 
-					 public int size() {
-						  return count;
-					 }
+		public int size() {
+		    return count;
+		}
 					 
-					 public void clear() {
-						  OPENHASHMAP.this.clear();
-					 }
-				};
+		public void clear() {
+		    OPENHASHMAP.this.clear();
+		}
+	    };
 	 
-		  return entries;
-	 }
+	return entries;
+    }
 
 
     public Set keySet() {
-		  if (keys == null) keys = new KEY_ABSTRACT_SET() {
+	if (keys == null) keys = new KEY_ABSTRACT_SET() {
 
-					 public Iterator iterator() {
-						  return new KEY_ITERATOR() {
-									 int pos = 0, last = -1, c = count;
+		public Iterator iterator() {
+		    return new KEY_ITERATOR() {
+			    int pos = 0, last = -1, c = count;
 		  
-									 { 
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    { 
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 										  
-										  if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-									 }
+				if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
+			    }
 									 
-									 public boolean hasNext() {
-										  return c != 0 && pos < n;
-									 }
+			    public boolean hasNext() {
+				return c != 0 && pos < n;
+			    }
 									 
 #if !#keyclass(Object)
-									 public KEY_TYPE NEXT_KEY() {
-										  KEY_TYPE retVal;
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    public KEY_TYPE NEXT_KEY() {
+				KEY_TYPE retVal;
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 										  
-										  if (!hasNext()) throw new NoSuchElementException();
-										  retVal = key[last = pos];
-										  if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
+				if (!hasNext()) throw new NoSuchElementException();
+				retVal = key[last = pos];
+				if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
 										  
-										  return retVal;
-									 }
+				return retVal;
+			    }
 
 #endif									 
 
-									 public Object next() {
-										  Object retVal;
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    public Object next() {
+				Object retVal;
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 										  
-										  if (!hasNext()) throw new NoSuchElementException();
-										  retVal = KEY2OBJ(key[last = pos]);
-										  if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
+				if (!hasNext()) throw new NoSuchElementException();
+				retVal = KEY2OBJ(key[last = pos]);
+				if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
 										  
-										  return retVal;
-									 }
+				return retVal;
+			    }
 									 
-									 public void remove() {
-										  if (last == -1) throw new IllegalStateException();
-										  state[last] = REMOVED;
+			    public void remove() {
+				if (last == -1) throw new IllegalStateException();
+				state[last] = REMOVED;
 #if #keyclass(Object)
-										  key[last] = HashCommon.removed;
+				key[last] = HashCommon.removed;
 #endif
 #if #valueclass(Object)
-										  value[last] = HashCommon.removed;
+				value[last] = HashCommon.removed;
 #endif
 
-										  count--;
-									 }
-								};
-					 }
+				count--;
+			    }
+			};
+		}
 
-					 public int size() {
-						  return count;
-					 }
+		public int size() {
+		    return count;
+		}
 
 
 #if ! #keyclass(Object)
-					 public boolean contains(KEY_TYPE k) {
-						  return containsKey(k);
-					 }
+		public boolean contains(KEY_TYPE k) {
+		    return containsKey(k);
+		}
 					 
-					 public boolean remove(KEY_TYPE k) {
-						  int oldCount = count;
-						  OPENHASHMAP.this.remove(k);
-						  return count != oldCount;
-					 }
+		public boolean remove(KEY_TYPE k) {
+		    int oldCount = count;
+		    OPENHASHMAP.this.remove(k);
+		    return count != oldCount;
+		}
 					 
 #endif
-					 public boolean contains(Object ok) {
-						  return containsKey(ok);
-					 }
+		public boolean contains(Object ok) {
+		    return containsKey(ok);
+		}
 
-					 public boolean remove(Object ok) {
-						  int oldCount = count;
-						  OPENHASHMAP.this.remove(ok);
-						  return count != oldCount;
-					 }
+		public boolean remove(Object ok) {
+		    int oldCount = count;
+		    OPENHASHMAP.this.remove(ok);
+		    return count != oldCount;
+		}
 
-					 public void clear() {
-						  OPENHASHMAP.this.clear();
-					 }
-				};
-		  return keys;
+		public void clear() {
+		    OPENHASHMAP.this.clear();
+		}
+	    };
+	return keys;
     }
 
 
     public Collection values() {
-		  if (values == null) values = new VALUE_ABSTRACT_COLLECTION() {
+	if (values == null) values = new VALUE_ABSTRACT_COLLECTION() {
 
-					 public Iterator iterator() {
-						  return new VALUE_ITERATOR() {
-									 int pos = 0, last = -1, c = count;
+		public Iterator iterator() {
+		    return new VALUE_ITERATOR() {
+			    int pos = 0, last = -1, c = count;
 									 
-									 { 
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    { 
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 										  
-										  if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-									 }
+				if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
+			    }
 		  
-									 public boolean hasNext() {
-										  return c != 0 && pos < n;
-									 }
+			    public boolean hasNext() {
+				return c != 0 && pos < n;
+			    }
 		  
 #if !#valueclass(Object)
-									 public VALUE_TYPE NEXT_VALUE() {
-										  VALUE_TYPE retVal;
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    public VALUE_TYPE NEXT_VALUE() {
+				VALUE_TYPE retVal;
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 		  
-										  if (!hasNext()) throw new NoSuchElementException();
-										  retVal = value[pos];
-										  if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
+				if (!hasNext()) throw new NoSuchElementException();
+				retVal = value[pos];
+				if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
 
-										  return retVal;
-									 }
+				return retVal;
+			    }
 #endif
 		  
-									 public Object next() {
-										  Object retVal;
-										  final byte state[] = OPENHASHMAP.this.state;
-										  final int n = OPENHASHMAP.this.n;
+			    public Object next() {
+				Object retVal;
+				final byte state[] = OPENHASHMAP.this.state;
+				final int n = OPENHASHMAP.this.n;
 		  
-										  if (!hasNext()) throw new NoSuchElementException();
-										  retVal = VALUE2OBJ(value[pos]);
-										  if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
+				if (!hasNext()) throw new NoSuchElementException();
+				retVal = VALUE2OBJ(value[pos]);
+				if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
 
-										  return retVal;
-									 }
+				return retVal;
+			    }
 		  
-									 public void remove() {
-										  throw new UnsupportedOperationException();
-									 }
-								};
-					 }
+			    public void remove() {
+				throw new UnsupportedOperationException();
+			    }
+			};
+		}
 
-					 public int size() {
-						  return count;
-					 }
+		public int size() {
+		    return count;
+		}
 
-					 public boolean contains(Object ok) {
-						  return containsValue(ok);
-					 }
+		public boolean contains(Object ok) {
+		    return containsValue(ok);
+		}
 
 #if ! #valueclass(Object)
-					 public boolean contains(VALUE_TYPE v) {
-						  return containsValue(v);
-					 }
+		public boolean contains(VALUE_TYPE v) {
+		    return containsValue(v);
+		}
 #endif
 
-					 public void clear() {
-						  OPENHASHMAP.this.clear();
-					 }
-				};
+		public void clear() {
+		    OPENHASHMAP.this.clear();
+		}
+	    };
 
-		  return values;
+	return values;
     }
 
 
-	 /** Rehashes the map, keeping the same size.
-	  * This method should be called when the map underwent numerous deletions and insertions.
-	  * In this case, free entries become rare, and unsuccessful searches
-	  * require probing <em>all</em> entries. For reasonable load factors this method is linear in the number of entries.
-	  * You will need as much additional free memory as
-	  * that occupied by the table.
-	  * @return <code>true</code> if there was enough memory to rehash the map, <code>false</code> otherwise.
-	  */
+    /** Rehashes the map, keeping the same size.
+     * This method should be called when the map underwent numerous deletions and insertions.
+     * In this case, free entries become rare, and unsuccessful searches
+     * require probing <em>all</em> entries. For reasonable load factors this method is linear in the number of entries.
+     * You will need as much additional free memory as
+     * that occupied by the table.
+     * @return <code>true</code> if there was enough memory to rehash the map, <code>false</code> otherwise.
+     */
 
-	 public boolean rehash() {
-		  try {
-				rehash(p);
-		  }
-		  catch(OutOfMemoryError cantDoIt) { return false; }
-		  return true;
-	 }
+    public boolean rehash() {
+	try {
+	    rehash(p);
+	}
+	catch(OutOfMemoryError cantDoIt) { return false; }
+	return true;
+    }
 
 
-	 /** Rehashes the map, making it as small as possible.
-	  * 
-	  * <P>This method rehashes to the smallest size satisfying
-	  * the load factor. It can be used when the map will not be
-	  * changed anymore, so to optimise access speed (by collecting
-	  * deleted entries) and size.
-	  *
-	  * @return true if there was enough memory to trim the map.
-	  */
+    /** Rehashes the map, making it as small as possible.
+     * 
+     * <P>This method rehashes to the smallest size satisfying
+     * the load factor. It can be used when the map will not be
+     * changed anymore, so to optimise access speed (by collecting
+     * deleted entries) and size.
+     *
+     * @return true if there was enough memory to trim the map.
+     */
 
-	 public boolean trim() {
-		  int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
-		  if ( l < 0 ) l = -l - 1;
-		  try {
-				rehash( l );
-		  }
-		  catch(OutOfMemoryError cantDoIt) { return false; }
-		  return true;
-	 }
+    public boolean trim() {
+	int l = Arrays.binarySearch( primes, (int)( n / f ) + 1 );
+	if ( l < 0 ) l = -l - 1;
+	try {
+	    rehash( l );
+	}
+	catch(OutOfMemoryError cantDoIt) { return false; }
+	return true;
+    }
 
-	 /** Resizes the map.
-	  * @param newP the new size as an index in {@link Hash#primes}.
-	  */
+    /** Resizes the map.
+     * @param newP the new size as an index in {@link Hash#primes}.
+     */
 
-	 private void rehash( final int newP ) {
-		  int i = 0, j = count, k2i, h1, h2;
+    private void rehash( final int newP ) {
+	int i = 0, j = count, k2i, h1, h2;
 
-		  KEY_TYPE k;
-		  VALUE_TYPE v;
+	KEY_TYPE k;
+	VALUE_TYPE v;
 
-		  final int newN = primes[newP];
-		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
-		  final VALUE_TYPE value[] = this.value, newValue[] = new VALUE_TYPE[newN];
-		  final byte state[] = this.state, newState[] = new byte[newN];
+	final int newN = primes[newP];
+	final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
+	final VALUE_TYPE value[] = this.value, newValue[] = new VALUE_TYPE[newN];
+	final byte state[] = this.state, newState[] = new byte[newN];
 
-		  while(j-- != 0) {
+	while(j-- != 0) {
 
-				while(state[i] != OCCUPIED ) i++;
+	    while(state[i] != OCCUPIED ) i++;
 
-				k = key[i];
-				v = value[i];
-				k2i = KEY2INT(k) & 0x7FFFFFFF;
+	    k = key[i];
+	    v = value[i];
+	    k2i = KEY2INT(k) & 0x7FFFFFFF;
 
-				h1 = k2i % newN;
-				h2 = (k2i % (newN - 2)) + 1;
+	    h1 = k2i % newN;
+	    h2 = (k2i % (newN - 2)) + 1;
 
-				while( newState[h1] != FREE ) h1 = ( h1 + h2 ) % newN;
+	    while( newState[h1] != FREE ) h1 = ( h1 + h2 ) % newN;
 				
-				newState[h1] = OCCUPIED;
-				newKey[h1] = k;
-				newValue[h1] = v;
-				i++;
-		  }
+	    newState[h1] = OCCUPIED;
+	    newKey[h1] = k;
+	    newValue[h1] = v;
+	    i++;
+	}
 
-		  n = newN;
-		  p = newP;
-		  free = n - count;
-		  maxFill = (int)( this.n * f );
-		  this.key = newKey;
-		  this.value = newValue;
-		  this.state = newState;
-	 }
+	n = newN;
+	p = newP;
+	free = n - count;
+	maxFill = (int)( this.n * f );
+	this.key = newKey;
+	this.value = newValue;
+	this.state = newState;
+    }
 	 
-	 public boolean containsKey(KEY_TYPE k) {
-		  return findKey(k) >= 0;
-	 }
+    public boolean containsKey(KEY_TYPE k) {
+	return findKey(k) >= 0;
+    }
 	 
-	 public int size() {
-		  return count;
-	 }
+    public int size() {
+	return count;
+    }
 
-	 public boolean isEmpty() {
-		  return count == 0;
-	 }
+    public boolean isEmpty() {
+	return count == 0;
+    }
 
 
-	 public Object get(final Object ok) {
-		  final int i = findKey(KEY2TYPE(ok));
+    public Object get(final Object ok) {
+	final int i = findKey(KEY2TYPE(ok));
 
-		  return i < 0 ? null : VALUE2OBJ(value[i]);
-	 }
+	return i < 0 ? null : VALUE2OBJ(value[i]);
+    }
 
 
 #if !#keyclass(Object)
 
-	 public VALUE_TYPE get(final KEY_TYPE k) {
-		  final int i = findKey(k);
+    public VALUE_TYPE get(final KEY_TYPE k) {
+	final int i = findKey(k);
 
-		  return i < 0 ? defRetValue : value[i];
-	 }
+	return i < 0 ? defRetValue : value[i];
+    }
 
-	 public VALUE_TYPE remove(final KEY_TYPE k) {
-		  final int i = findKey(k);
-		  if (i < 0) return defRetValue;
+    public VALUE_TYPE remove(final KEY_TYPE k) {
+	final int i = findKey(k);
+	if (i < 0) return defRetValue;
 
-		  state[i] = REMOVED;
+	state[i] = REMOVED;
 
 #if #valueclass(Object)
-		  final Object v = value[i];
-		  value[i] = HashCommon.removed;
+	final Object v = value[i];
+	value[i] = HashCommon.removed;
 #endif
 
-		  count--;
+	count--;
 
 #if #valueclass(Object)
-		  return v;
+	return v;
 #else
-		  return value[i];
+	return value[i];
 #endif
-	 }
+    }
 	 
 
-	 public boolean containsKey(final Object ok) {
-		  return findKey(KEY2TYPE(ok)) >= 0;
-	 }
+    public boolean containsKey(final Object ok) {
+	return findKey(KEY2TYPE(ok)) >= 0;
+    }
 
 #else
 #if !#valueclass(Object)
 
-	 public VALUE_TYPE GET_VALUE(final Object k) {
-		  final int i = findKey(k);
+    public VALUE_TYPE GET_VALUE(final Object k) {
+	final int i = findKey(k);
 
-		  return i < 0 ? defRetValue : value[i];
-	 }
+	return i < 0 ? defRetValue : value[i];
+    }
 
-	 public VALUE_TYPE REMOVE_VALUE(final Object ok) {
-		  final byte state[] = this.state;
+    public VALUE_TYPE REMOVE_VALUE(final Object ok) {
+	final byte state[] = this.state;
 
-		  final int i = findKey(KEY2TYPE(ok));
-		  if (i < 0) return defRetValue;
+	final int i = findKey(KEY2TYPE(ok));
+	if (i < 0) return defRetValue;
 
-		  state[i] = REMOVED;
+	state[i] = REMOVED;
 
 #if #keyclass(Object)
-		  key[i] = HashCommon.removed;
+	key[i] = HashCommon.removed;
 #endif
 
-		  count--;
-		  return value[i];
-	 }
+	count--;
+	return value[i];
+    }
 	 
 #endif
 #endif
 
-	 /** Returns a deep copy of this map. 
-	  *
-	  * <P>This method performs a deep copy of this hash map; the data stored in the
-	  * map, however, is not cloned. Note that this makes a difference only for object keys.
-	  *
-	  *  @return a deep copy of this map.
-	  */
+    /** Returns a deep copy of this map. 
+     *
+     * <P>This method performs a deep copy of this hash map; the data stored in the
+     * map, however, is not cloned. Note that this makes a difference only for object keys.
+     *
+     *  @return a deep copy of this map.
+     */
 
-	 public Object clone() {
-		  OPENHASHMAP c;
-		  try {
-				c = (OPENHASHMAP)super.clone();
-		  }
-		  catch(CloneNotSupportedException cantHappen) {
-				throw new InternalError();
-		  }
-		  c.key = (KEY_TYPE[])key.clone();
-		  c.value = (VALUE_TYPE[])value.clone();
-		  c.state = (byte[])state.clone();
-		  return c;
-	 }
+    public Object clone() {
+	OPENHASHMAP c;
+	try {
+	    c = (OPENHASHMAP)super.clone();
+	}
+	catch(CloneNotSupportedException cantHappen) {
+	    throw new InternalError();
+	}
+	c.key = (KEY_TYPE[])key.clone();
+	c.value = (VALUE_TYPE[])value.clone();
+	c.state = (byte[])state.clone();
+	return c;
+    }
 
 
-	 /** Returns a hash code for this map.
-	  *
-	  * This method overrides the generic method provided by the superclass. 
-	  * Since <code>equals()</code> is not overriden, it is important
-	  * that the value returned by this method is the same value as
-	  * the one returned by the overriden method.
-	  *
-	  * @return a hash code for this map.
-	  */
+    /** Returns a hash code for this map.
+     *
+     * This method overrides the generic method provided by the superclass. 
+     * Since <code>equals()</code> is not overriden, it is important
+     * that the value returned by this method is the same value as
+     * the one returned by the overriden method.
+     *
+     * @return a hash code for this map.
+     */
 
-	 public int hashCode() {
-		  int h = 0, t, i = 0, j = count;
-		  while(j-- != 0) {
-				while(state[i] != OCCUPIED ) i++;
-				t = 0;
+    public int hashCode() {
+	int h = 0, t, i = 0, j = count;
+	while(j-- != 0) {
+	    while(state[i] != OCCUPIED ) i++;
+	    t = 0;
 #if #keyclass(Object)
-				if (this != key[i])
+	    if (this != key[i])
 #endif
-				t = KEY2INT(key[i]);
+		t = KEY2INT(key[i]);
 #if #valueclass(Object)
-				if (this != value[i])
+	    if (this != value[i])
 #endif
-				t ^=  VALUE2INT(value[i]);
-				h += t;
-				i++;
-		  }
-		  return h;
-	 }
+		t ^=  VALUE2INT(value[i]);
+	    h += t;
+	    i++;
+	}
+	return h;
+    }
 
 
 
     private void writeObject(java.io.ObjectOutputStream s) throws IOException {
-		  final KEY_TYPE key[] = this.key;
-		  final VALUE_TYPE value[] = this.value;
-		  final byte state[] = this.state;
-		  int i = 0, j = count;
+	final KEY_TYPE key[] = this.key;
+	final VALUE_TYPE value[] = this.value;
+	final byte state[] = this.state;
+	int i = 0, j = count;
 
-		  s.defaultWriteObject();
+	s.defaultWriteObject();
 
-		  while(j-- != 0) {
-				while(state[i] != OCCUPIED ) i++;
-				s.WRITE_KEY(key[i]);
-				s.WRITE_VALUE(value[i]);
-				i++;
-		  }
+	while(j-- != 0) {
+	    while(state[i] != OCCUPIED ) i++;
+	    s.WRITE_KEY(key[i]);
+	    s.WRITE_VALUE(value[i]);
+	    i++;
+	}
     }
 
     private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
-		  s.defaultReadObject();
-		  free = n = primes[p];
-		  maxFill = (int)( n * f );
+	s.defaultReadObject();
+	free = n = primes[p];
+	maxFill = (int)( n * f );
 
-		  key = new KEY_TYPE[n];
-		  value = new VALUE_TYPE[n];
-		  state = new byte[n];
+	key = new KEY_TYPE[n];
+	value = new VALUE_TYPE[n];
+	state = new byte[n];
 
-		  int count = this.count;
-		  this.count = 0;
+	int count = this.count;
+	this.count = 0;
 
-		  while(count-- != 0) put(s.READ_KEY(), s.READ_VALUE());
+	while(count-- != 0) put(s.READ_KEY(), s.READ_VALUE());
     }
 
 #ifdef TEST
 
-	 private static long seed = System.currentTimeMillis(); 
-	 private static Random r = new Random( seed );
+    private static long seed = System.currentTimeMillis(); 
+    private static Random r = new Random( seed );
 
-	 private static KEY_TYPE genKey() {
+    private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-		  return (KEY_TYPE)(r.nextInt());
+	return (KEY_TYPE)(r.nextInt());
 #elif ! #keyclass(Object)
-		  return r.NEXT_KEY(); 
+	return r.NEXT_KEY(); 
 #else
-		  return Integer.toBinaryString( r.nextInt() );
+	return Integer.toBinaryString( r.nextInt() );
 #endif
-	 }
+    }
 
-	 private static VALUE_TYPE genValue() {
+    private static VALUE_TYPE genValue() {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-		  return (VALUE_TYPE)(r.nextInt());
+	return (VALUE_TYPE)(r.nextInt());
 #elif ! #valueclass(Object)
-		  return r.NEXT_VALUE();
+	return r.NEXT_VALUE();
 #else
-		  return Integer.toBinaryString( r.nextInt() );
+	return Integer.toBinaryString( r.nextInt() );
 #endif
-	 }
+    }
 
 
-	 private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
-	 private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
+    private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+    private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
 
-	 private static String format( double d ) {
-		  StringBuffer s = new StringBuffer();
-		  return format.format( d, s, fp ).toString();
-	 }
+    private static String format( double d ) {
+	StringBuffer s = new StringBuffer();
+	return format.format( d, s, fp ).toString();
+    }
 
 
-	 private static void speedTest( int n, float f, boolean comp ) {
-		  int i, j;
-		  MAP m;
-		  Map t;
-		  KEY_TYPE k[] = new KEY_TYPE[n];
-		  KEY_TYPE nk[] = new KEY_TYPE[n];
-		  VALUE_TYPE v[] = new VALUE_TYPE[n];
-		  long ms;
+    private static void speedTest( int n, float f, boolean comp ) {
+	int i, j;
+	MAP m;
+	Map t;
+	KEY_TYPE k[] = new KEY_TYPE[n];
+	KEY_TYPE nk[] = new KEY_TYPE[n];
+	VALUE_TYPE v[] = new VALUE_TYPE[n];
+	long ms;
 
-		  for( i = 0; i < n; i++ ) {
-				k[i] = genKey();
-				nk[i] = genKey();
-				v[i] = genValue();
-		  }
+	for( i = 0; i < n; i++ ) {
+	    k[i] = genKey();
+	    nk[i] = genKey();
+	    v[i] = genValue();
+	}
 
-		  double totPut = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
+	double totPut = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
 
-		  if ( comp ) { for( j = 0; j < 20; j++ ) {
+	if ( comp ) { for( j = 0; j < 20; j++ ) {
 
-				t = new HashMap( 16 );
+	    t = new HashMap( 16 );
 
-				/* We put pairs to t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totPut += d; 				
-				System.out.print("Put: " + format( d ) +" K/s " );
+	    /* We put pairs to t. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] ) );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totPut += d; 				
+	    System.out.print("Put: " + format( d ) +" K/s " );
 
-				/* We check for pairs in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totYes += d; 				
-				System.out.print("Yes: " + format( d ) +" K/s " );
+	    /* We check for pairs in t. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totYes += d; 				
+	    System.out.print("Yes: " + format( d ) +" K/s " );
 
-				/* We check for pairs not in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( nk[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totNo += d; 				
-				System.out.print("No: " + format( d ) +" K/s " );
+	    /* We check for pairs not in t. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( nk[i] ) );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totNo += d; 				
+	    System.out.print("No: " + format( d ) +" K/s " );
 
-				/* We iterate on t. */
-				ms = System.currentTimeMillis();
-				for( Iterator it = t.entrySet().iterator(); it.hasNext(); it.next() );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totIter += d; 				
-				System.out.print("Iter: " + format( d ) +" K/s " );
+	    /* We iterate on t. */
+	    ms = System.currentTimeMillis();
+	    for( Iterator it = t.entrySet().iterator(); it.hasNext(); it.next() );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totIter += d; 				
+	    System.out.print("Iter: " + format( d ) +" K/s " );
 				
-				/* We delete pairs not in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemNo += d; 				
-				System.out.print("RemNo: " + format( d ) +" K/s " );
+	    /* We delete pairs not in t. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totRemNo += d; 				
+	    System.out.print("RemNo: " + format( d ) +" K/s " );
 				
-				/* We delete pairs in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemYes += d; 				
-				System.out.print("RemYes: " + format( d ) +" K/s " );
+	    /* We delete pairs in t. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totRemYes += d; 				
+	    System.out.print("RemYes: " + format( d ) +" K/s " );
 				
-				System.out.println();
-		  }
+	    System.out.println();
+	}
 
-		  System.out.println();
-		  System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + "K/s" );
+	System.out.println();
+	System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + "K/s" );
 
-		  System.out.println();
+	System.out.println();
 
-		  totPut = totYes = totNo = totIter = totRemYes = totRemNo = 0;
+	totPut = totYes = totNo = totIter = totRemYes = totRemNo = 0;
 
-		  }
+	}
 
-		  for( j = 0; j < 20; j++ ) {
+	for( j = 0; j < 20; j++ ) {
 
-				m = new OPENHASHMAP( 16, f );
+	    m = new OPENHASHMAP( 16, f );
 
-				/* We put pairs to m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.put( k[i], v[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totPut += d; 				
-				System.out.print("Put: " + format( d ) +" K/s " );
+	    /* We put pairs to m. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) m.put( k[i], v[i] );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totPut += d; 				
+	    System.out.print("Put: " + format( d ) +" K/s " );
 
-				/* We check for pairs in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totYes += d; 				
-				System.out.print("Yes: " + format( d ) +" K/s " );
+	    /* We check for pairs in m. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totYes += d; 				
+	    System.out.print("Yes: " + format( d ) +" K/s " );
 
-				/* We check for pairs not in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.containsKey( nk[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totNo += d; 				
-				System.out.print("No: " + format( d ) +" K/s " );
+	    /* We check for pairs not in m. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) m.containsKey( nk[i] );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totNo += d; 				
+	    System.out.print("No: " + format( d ) +" K/s " );
 
-				/* We iterate on m. */
-				ms = System.currentTimeMillis();
-				for( Iterator it = m.entrySet().iterator(); it.hasNext(); it.next() );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totIter += d; 	 
-				System.out.print("Iter: " + format( d ) +" K/s " );
+	    /* We iterate on m. */
+	    ms = System.currentTimeMillis();
+	    for( Iterator it = m.entrySet().iterator(); it.hasNext(); it.next() );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totIter += d; 	 
+	    System.out.print("Iter: " + format( d ) +" K/s " );
 
-				/* We delete pairs not in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( nk[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemNo += d; 	
-				System.out.print("RemNo: " + format( d ) +" K/s " );
+	    /* We delete pairs not in m. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) m.remove( nk[i] );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totRemNo += d; 	
+	    System.out.print("RemNo: " + format( d ) +" K/s " );
 
-				/* We delete pairs in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( k[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemYes += d; 				
-				System.out.print("RemYes: " + format( d ) +" K/s " );	 
+	    /* We delete pairs in m. */
+	    ms = System.currentTimeMillis();
+	    for( i = 0; i < n;  i++ ) m.remove( k[i] );
+	    d = 1.0 * n / (System.currentTimeMillis() - ms );
+	    if ( j > 2 ) totRemYes += d; 				
+	    System.out.print("RemYes: " + format( d ) +" K/s " );	 
 
-				System.out.println();
-		  }
-
-
-		  System.out.println();
-		  System.out.println( "fastUtil  Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
-
-		  System.out.println();
-
-	 }
-
-	 private static boolean valEquals(Object o1, Object o2) {
-		  return o1 == null ? o2 == null : o1.equals(o2);
-	 }
+	    System.out.println();
+	}
 
 
-	 private static void regressionTest( int n, float f ) {
-		  OPENHASHMAP m = new OPENHASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
-		  Map t = new HashMap();
+	System.out.println();
+	System.out.println( "fastUtil  Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
 
-		  /* First of all, we fill t with random data. */
+	System.out.println();
 
-		  for(int i=0; i<n;  i++ ) {
-				t.put( 
+    }
+
+    private static boolean valEquals(Object o1, Object o2) {
+	return o1 == null ? o2 == null : o1.equals(o2);
+    }
+
+
+    private static void regressionTest( int n, float f ) {
+	OPENHASHMAP m = new OPENHASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
+	Map t = new HashMap();
+
+	/* First of all, we fill t with random data. */
+
+	for(int i=0; i<n;  i++ ) {
+	    t.put( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+		  new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY()) 
+		  new KEY_CLASS(r.NEXT_KEY()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+		  r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
-						,
+		  ,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+		  new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-						new VALUE_CLASS(r.NEXT_VALUE()) 
+		  new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+		  r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
-						);
-		  }
+		  );
+	}
 		  
-		  /* Now we add to m the same data */
+	/* Now we add to m the same data */
 		  
-		  m.putAll(t);
+	m.putAll(t);
 
-		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion");
-		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion");
+	if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion");
+	if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion");
 
-		  /* Now we check that m actually holds that data. */
+	/* Now we check that m actually holds that data. */
 		  
-		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
-				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      if (!valEquals(e.getValue(), m.get(e.getKey()))) 
-					 System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t)");
-		  }
+	for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+	    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+	    if (!valEquals(e.getValue(), m.get(e.getKey()))) 
+		System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t)");
+	}
 
-		  /* Now we check that m actually holds that data, but iterating on m. */
+	/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
-				Entry e = (Entry)i.next();
-		      if (!valEquals(e.getValue(), t.get(e.getKey()))) 
-					 System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m)");
-		  }
+	for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+	    Entry e = (Entry)i.next();
+	    if (!valEquals(e.getValue(), t.get(e.getKey()))) 
+		System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m)");
+	}
 
-		  /* Now we check that m actually holds the same keys. */
+	/* Now we check that m actually holds the same keys. */
 		  
-		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!m.containsKey(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)");
-					 System.exit(-1);
-				}
-		      if (!m.keySet().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!m.containsKey(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)");
+		System.exit(-1);
+	    }
+	    if (!m.keySet().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that m actually holds the same keys, but iterating on m. */
+	/* Now we check that m actually holds the same keys, but iterating on m. */
 		  
-		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!t.containsKey(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key after insertion (iterating on m)");
-					 System.exit(-1);
-				}
-		      if (!t.keySet().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!t.containsKey(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key after insertion (iterating on m)");
+		System.exit(-1);
+	    }
+	    if (!t.keySet().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)");
+		System.exit(-1);
+	    }
+	}
 
 
-		  /* Now we check that m actually hold the same values. */
+	/* Now we check that m actually hold the same values. */
 		  
-		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!m.containsValue(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on t)");
-					 System.exit(-1);
-				}
-		      if (!m.values().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=t.values().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!m.containsValue(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on t)");
+		System.exit(-1);
+	    }
+	    if (!m.values().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that m actually hold the same values, but iterating on m. */
+	/* Now we check that m actually hold the same values, but iterating on m. */
 		  
-		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!t.containsValue(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on m)");
-					 System.exit(-1);
-				}
-		      if (!t.values().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=m.values().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!t.containsValue(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on m)");
+		System.exit(-1);
+	    }
+	    if (!t.values().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that inquiries about random data give the same answer in m and t. For
-			  m we use the polymorphic method. */
+	/* Now we check that inquiries about random data give the same answer in m and t. For
+	   m we use the polymorphic method. */
 
-		  for(int i=0; i<n;  i++ ) {
-				KEY_TYPE T =
+	for(int i=0; i<n;  i++ ) {
+	    KEY_TYPE T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 (KEY_TYPE)r.nextInt()
+		(KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY()
+		r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+		r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-					 ;
+		;
 
-				if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
-					 System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
-					 System.exit(-1);
-				}
+	    if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
+		System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
+		System.exit(-1);
+	    }
 
 #if #keyclass(Object) && ! #valueclass(Object)
-				if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
-					 t.get(KEY2OBJ(T)) != null && 
-					 ! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
+	    if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+		t.get(KEY2OBJ(T)) != null && 
+		! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
 #else
-					 if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
-						  t.get(KEY2OBJ(T)) != null && 
-						  ! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
+		if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+		    t.get(KEY2OBJ(T)) != null && 
+		    ! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
 #endif
-						  {
-								System.out.println("Error (" + seed + "): divergence between t and m (polymorphic method)");
-								System.exit(-1);
-						  }
-		  }
+		    {
+			System.out.println("Error (" + seed + "): divergence between t and m (polymorphic method)");
+			System.exit(-1);
+		    }
+	}
 
-		  /* Again, we check that inquiries about random data give the same answer in m and t, but
-			  for m we use the standard method. */
+	/* Again, we check that inquiries about random data give the same answer in m and t, but
+	   for m we use the standard method. */
 
-		  for(int i=0; i<n;  i++ ) {
-				KEY_TYPE T =
+	for(int i=0; i<n;  i++ ) {
+	    KEY_TYPE T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 (KEY_TYPE)r.nextInt()
+		(KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY()
+		r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+		r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-					 ;
-				if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
-					 System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
-					 System.exit(-1);
-				}
-		  }
+		;
+	    if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
+		System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we put and remove random data in m and t, checking that the result is the same. */
+	/* Now we put and remove random data in m and t, checking that the result is the same. */
 
-		  for(int i=0; i<20*n;  i++ ) {
-				KEY_TYPE T =
+	for(int i=0; i<20*n;  i++ ) {
+	    KEY_TYPE T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 (KEY_TYPE)r.nextInt()
+		(KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY()
+		r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+		r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-					 ;
-				VALUE_TYPE U =
+		;
+	    VALUE_TYPE U =
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-					 (VALUE_TYPE)r.nextInt()
+		(VALUE_TYPE)r.nextInt()
 #elif ! #valueclass(Object)
-					 r.NEXT_VALUE()
+		r.NEXT_VALUE()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+		r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-					 ;
-				if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
-					 System.out.println("Error (" + seed + "): divergence in put() between t and m");
-					 System.exit(-1);
-				}
-				T =
+		;
+	    if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
+		System.out.println("Error (" + seed + "): divergence in put() between t and m");
+		System.exit(-1);
+	    }
+	    T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 (KEY_TYPE)r.nextInt()
+		(KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-					 r.NEXT_KEY()
+		r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+		r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-					 ;
-				if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
-					 System.out.println("Error (" + seed + "): divergence in remove() between t and m");
-					 System.exit(-1);
-				}
-		  }
+		;
+	    if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
+		System.out.println("Error (" + seed + "): divergence in remove() between t and m");
+		System.exit(-1);
+	    }
+	}
 
-		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
-		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
+	if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
+	if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
 
 
-		  /* Now we check that m actually holds the same data. */
+	/* Now we check that m actually holds the same data. */
 		  
-		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
-				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      if (!valEquals(e.getValue(), m.get(e.getKey()))) {
-					 System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+	    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+	    if (!valEquals(e.getValue(), m.get(e.getKey()))) {
+		System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that m actually holds that data, but iterating on m. */
+	/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
-				Entry e = (Entry)i.next();
-		      if (!valEquals(e.getValue(), t.get(e.getKey()))) {
-					 System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+	    Entry e = (Entry)i.next();
+	    if (!valEquals(e.getValue(), t.get(e.getKey()))) {
+		System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that m actually holds the same keys. */
+	/* Now we check that m actually holds the same keys. */
 		  
-		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!m.containsKey(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
-					 System.exit(-1);
-				}
-		      if (!m.keySet().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!m.containsKey(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
+		System.exit(-1);
+	    }
+	    if (!m.keySet().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that m actually holds the same keys, but iterating on m. */
+	/* Now we check that m actually holds the same keys, but iterating on m. */
 		  
-		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!t.containsKey(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key after removal (iterating on m)");
-					 System.exit(-1);
-				}
-		      if (!t.keySet().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!t.containsKey(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key after removal (iterating on m)");
+		System.exit(-1);
+	    }
+	    if (!t.keySet().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
+		System.exit(-1);
+	    }
+	}
 
 
-		  /* Now we check that m actually hold the same values. */
+	/* Now we check that m actually hold the same values. */
 		  
-		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!m.containsValue(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on t)");
-					 System.exit(-1);
-				}
-		      if (!m.values().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=t.values().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!m.containsValue(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on t)");
+		System.exit(-1);
+	    }
+	    if (!m.values().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we check that m actually hold the same values, but iterating on m. */
+	/* Now we check that m actually hold the same values, but iterating on m. */
 		  
-		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!t.containsValue(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on m)");
-					 System.exit(-1);
-				}
-		      if (!t.values().contains(o)) {
-					 System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=m.values().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!t.containsValue(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on m)");
+		System.exit(-1);
+	    }
+	    if (!t.values().contains(o)) {
+		System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
+		System.exit(-1);
+	    }
+	}
 
 
-		  int h = m.hashCode();
+	int h = m.hashCode();
 
 
-		  /* Now we save and read m. */
+	/* Now we save and read m. */
 
-		  try {
-				java.io.File ff = new java.io.File("regressionTest");
-				java.io.OutputStream os = new java.io.FileOutputStream(ff);
-				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+	try {
+	    java.io.File ff = new java.io.File("regressionTest");
+	    java.io.OutputStream os = new java.io.FileOutputStream(ff);
+	    java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
-				oos.writeObject(m);
-				oos.close();
+	    oos.writeObject(m);
+	    oos.close();
 				
-				java.io.InputStream is = new java.io.FileInputStream(ff);
-				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+	    java.io.InputStream is = new java.io.FileInputStream(ff);
+	    java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (OPENHASHMAP)ois.readObject();
-				ois.close();
-				ff.delete();
-		  }
-		  catch(Exception e) {
-				e.printStackTrace();
-				System.exit(-1);
-		  }
+	    m = (OPENHASHMAP)ois.readObject();
+	    ois.close();
+	    ff.delete();
+	}
+	catch(Exception e) {
+	    e.printStackTrace();
+	    System.exit(-1);
+	}
 
-		  if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read");
+	if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read");
 
-		  /* Now we check that m actually holds that data. */
+	/* Now we check that m actually holds that data. */
 		  
-		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
-				Object o = i.next();
-		      if (!valEquals(m.get(o),t.get(o))) {
-					 System.out.println("Error (" + seed + "): m and t differ on an entry after save/read");
-					 System.exit(-1);
-				}
-		  }
+	for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+	    Object o = i.next();
+	    if (!valEquals(m.get(o),t.get(o))) {
+		System.out.println("Error (" + seed + "): m and t differ on an entry after save/read");
+		System.exit(-1);
+	    }
+	}
 
-		  /* Now we take out of m everything, and check that it is empty. */
+	/* Now we take out of m everything, and check that it is empty. */
 
-		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
+	for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
 
-		  if (!m.isEmpty())  {
-				System.out.println("Error (" + seed + "): m is not empty (as it should be)");
-				System.exit(-1);
-		  }
+	if (!m.isEmpty())  {
+	    System.out.println("Error (" + seed + "): m is not empty (as it should be)");
+	    System.exit(-1);
+	}
 
 #if (#keyclass(Integer) || #keyclass(Long)) && (#valueclass(Integer) || #valueclass(Long))
-		  m = new OPENHASHMAP(n, f);
-		  t.clear();
-		  int x;
+	m = new OPENHASHMAP(n, f);
+	t.clear();
+	int x;
 
-		  /* Now we torture-test the hash table. This part is implemented only for integers and longs. */
+	/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-		  int p = m.n;
+	int p = m.n;
 
-		  for(int i=0; i<p; i++) {
-				for (int j=0; j<20; j++) {
-					 m.put(i+(r.nextInt() % 10)*p, 1);
-					 m.remove(i+(r.nextInt() % 10)*p);
-				}
+	for(int i=0; i<p; i++) {
+	    for (int j=0; j<20; j++) {
+		m.put(i+(r.nextInt() % 10)*p, 1);
+		m.remove(i+(r.nextInt() % 10)*p);
+	    }
 
-				for (int j=-10; j<10; j++) m.remove(i+j*p);
-		  }
+	    for (int j=-10; j<10; j++) m.remove(i+j*p);
+	}
 		  
-		  t.putAll(m);
+	t.putAll(m);
 
-		  /* Now all table entries are REMOVED. */
+	/* Now all table entries are REMOVED. */
 
-		  for(int i=0; i<(p*f)/10; i++) {
-				for (int j=0; j<10; j++) {
-					 if (!valEquals(m.put(KEY2OBJ(x = i+(r.nextInt() % 10)*p), VALUE2OBJ(1)), t.put(KEY2OBJ(x), VALUE2OBJ(1))))
-						  System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test insertion.");
-				}
-		  }
+	for(int i=0; i<(p*f)/10; i++) {
+	    for (int j=0; j<10; j++) {
+		if (!valEquals(m.put(KEY2OBJ(x = i+(r.nextInt() % 10)*p), VALUE2OBJ(1)), t.put(KEY2OBJ(x), VALUE2OBJ(1))))
+		    System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test insertion.");
+	    }
+	}
 
-		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion");
-		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion");
+	if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion");
+	if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion");
 
-		  for(int i=0; i<p/10; i++) {
-				for (int j=0; j<10; j++) {
-					 if (!valEquals(m.remove(KEY2OBJ(x = i+(r.nextInt() % 10)*p)), t.remove(KEY2OBJ(x))))
-						  System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test removal.");
-				}
-		  }
+	for(int i=0; i<p/10; i++) {
+	    for (int j=0; j<10; j++) {
+		if (!valEquals(m.remove(KEY2OBJ(x = i+(r.nextInt() % 10)*p)), t.remove(KEY2OBJ(x))))
+		    System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test removal.");
+	    }
+	}
 
-		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal");
-		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
+	if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal");
+	if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
 
-		  if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
-		  if (!((OPENHASHMAP)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
+	if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
+	if (!((OPENHASHMAP)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
 
-		  m.rehash();
+	m.rehash();
 
-		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after rehash()");
-		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after rehash()");
+	if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after rehash()");
+	if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after rehash()");
 
-		  m.trim();
+	m.trim();
 
-		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after trim()");
-		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
+	if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after trim()");
+	if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
 #endif
 
-		  System.out.println("Regression test OK");
-		  System.exit(0);
-	 }
+	System.out.println("Regression test OK");
+	System.exit(0);
+    }
 
 
-	 public static void main( String args[] ) {
-		  float f = Hash.DEFAULT_LOAD_FACTOR;
-		  int n  = Integer.parseInt(args[1]);
-		  if (args.length>2) f = Float.parseFloat(args[2]);
+    public static void main( String args[] ) {
+	float f = Hash.DEFAULT_LOAD_FACTOR;
+	int n  = Integer.parseInt(args[1]);
+	if (args.length>2) f = Float.parseFloat(args[2]);
 		  
-		  if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
-		  else if ( "regressionTest".equals( args[0] ) ) regressionTest(n, f);
-	 }
+	if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
+	else if ( "regressionTest".equals( args[0] ) ) regressionTest(n, f);
+    }
 
 #endif
 

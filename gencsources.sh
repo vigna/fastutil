@@ -98,6 +98,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define REMOVE_VALUE remove\n"\
 "#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
+"#define FIRST first${TYPE_CAP[$k]}\n"\
+"#define LAST last${TYPE_CAP[$k]}\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#else\n"\
@@ -219,13 +221,6 @@ for ((f=0; f<${#SET[*]}; f++)); do
 	  done
 done
 
-rm -f $DIR/BooleanAbstractSet.c
-rm -f $DIR/BooleanSortedSet.c
-rm -f $DIR/BooleanSet.c
-rm -f $DIR/BooleanOpenHashSet.c
-rm -f $DIR/BooleanAVLTreeSet.c
-rm -f $DIR/BooleanRBTreeSet.c
-
 
 #
 # This loop generates iterator and comparator interfaces. Note that we need
@@ -255,4 +250,13 @@ for ((f=0; f<t; f++)); do
 
 	  done
 done
+
+rm -f $DIR/BooleanAbstractSet.c
+rm -f $DIR/BooleanSortedSet.c
+rm -f $DIR/BooleanSet.c
+rm -f $DIR/BooleanComparator.c
+rm -f $DIR/BooleanAbstractComparator.c
+rm -f $DIR/BooleanOpenHashSet.c
+rm -f $DIR/BooleanAVLTreeSet.c
+rm -f $DIR/BooleanRBTreeSet.c
 

@@ -38,18 +38,18 @@ import java.util.ListIterator;
 public interface BidirectionalIterator extends Iterator {
 
     /** Returns the previous element from the collection.
-	  *
-	  * @return the previous element from the collection.
+     *
+     * @return the previous element from the collection.
      * @see ListIterator#previous()
-	  */
+     */
 
     Object previous();
 
     /** Returns whether there is a previous element.
-	  *
-	  * @return whether there is a previous element.
+     *
+     * @return whether there is a previous element.
      * @see ListIterator#hasPrevious()
-	  */
+     */
 
     boolean hasPrevious();
 
