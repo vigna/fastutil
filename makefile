@@ -45,8 +45,12 @@ explain:
 	@echo -e "\nTo build fastutil, you must first use \"make sources\""
 	@echo -e "to obtain the actual Java files. Then, you can build the jar"
 	@echo -e "file using \"ant jar\", or the documentation using \"ant javadoc\".\n"
-	@echo -e "If you set the make variable TEST (e.g., make jar TEST=1), you"
-	@echo -e "will compile behavioral and speed tests into the classes.\n\n"
+	@echo -e "If you set the make variable TEST (e.g., make sources TEST=1), you"
+	@echo -e "will compile behavioral and speed tests into the classes.\n"
+	@echo -e "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1), you"
+	@echo -e "will compile assertions into the classes.\n"
+	@echo -e "The special target \"sources13\" will create sources that"
+	@echo -e "can be compiled with JDK 1.3 using \"ant jar -Dsource=1.3\".\n\n"
 
 source:
 	-rm -f fastutil-$(VERSION)
@@ -59,6 +63,7 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/makefile \
+		fastutil-$(VERSION)/make-1.3-compatible.sh \
 		$(foreach f, $(SOURCES), fastutil-$(VERSION)/$(f)) \
 		fastutil-$(VERSION)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(VERSION)/java/overview.html
@@ -460,6 +465,9 @@ clean:
 
 
 sources: $(JSOURCES)
+
+sources13: sources
+	sh make-1.3-compatible.sh
 
 csources: $(CSOURCES)
 

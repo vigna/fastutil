@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        4.0
-Release:        1jpp
+Version:        4.1
+Release:        0
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.0-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.1-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -76,6 +76,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Sun Jan 25 2004 Sebastiano Vigna <vigna at acm.org> - 4.1-1jpp
+- New custom hash classes.
+
 * Sun Jan 18 2004 Sebastiano Vigna <vigna at acm.org> - 4.0-1jpp
 - Several implementations of priority queues.
 
