@@ -1,4 +1,4 @@
-VERSION=4.2
+VERSION=4.2.1
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
