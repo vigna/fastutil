@@ -1,7 +1,7 @@
 /*		 
  * fastUtil 2.0: Fast & compact specialized utility classes for Java
  *
- * Copyright (C) 2002 Sebastiano Vigna 
+ * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -37,24 +37,25 @@ import java.util.ListIterator;
 
 public interface BidirectionalIterator extends Iterator {
 
-    /** Returns the previous element from the collection.
-     *
-     * @return the previous element from the collection.
-     * @see ListIterator#previous()
-     */
+	/** Returns the previous element from the collection.
+	 *
+	 * @return the previous element from the collection.
+	 * @see ListIterator#previous()
+	 */
 
-    Object previous();
+	Object previous();
 
-    /** Returns whether there is a previous element.
-     *
-     * @return whether there is a previous element.
-     * @see ListIterator#hasPrevious()
-     */
+	/** Returns whether there is a previous element.
+	 *
+	 * @return whether there is a previous element.
+	 * @see ListIterator#hasPrevious()
+	 */
 
-    boolean hasPrevious();
+	boolean hasPrevious();
 
 }
 
 // Local Variables:
-// mode: java
+// mode: jde
+// tab-width: 4
 // End:

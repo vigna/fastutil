@@ -1,6 +1,6 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=2.11
+VERSION=2.20
 
 .SUFFIXES: .java .class
 
