@@ -1060,9 +1060,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	/** Rehashes this set if the table is too large.
 	 * 
 	 * <P>Let <var>N</var> be the smallest table size that can hold
-	 * <code>n</code> entries, still satisfying the load factor. If the current
-	 * table size is smaller than or equal to <var>N</var>, or if the number of
-	 * elements of this set is larger than <code>n</code>, this method does
+	 * <code>max(n,{@link #size()})</code> entries, still satisfying the load factor. If the current
+	 * table size is smaller than or equal to <var>N</var>, this method does
 	 * nothing. Otherwise, it rehashes this set in a table of size
 	 * <var>N</var>.
 	 *
@@ -1078,14 +1077,14 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @see #rehash()
 	 */
 
-	public boolean trim( int n ) {
-		int l = Arrays.binarySearch( PRIMES, (int)( n / f ) + 1 );
+	public boolean trim( final int n ) {
+		int l = Arrays.binarySearch( PRIMES, (int)( Math.min( Integer.MAX_VALUE - 1, Math.max( n, count ) / f ) ) + 1 );
 		if ( l < 0 ) l = -l - 1;
-		if ( n < count || l >= p ) return true;
+		if ( p <= l ) return true;
 		try {
 			rehash( l );
 		}
-		catch(OutOfMemoryError cantDoIt) { return false; }
+		catch( OutOfMemoryError cantDoIt ) { return false; }
 		return true;
 	}
 
