@@ -21,7 +21,7 @@
 
 package it.unimi.dsi.fastutil;
 
-/** A class providing static methods that do useful things with type-specific sorted sets.
+/** A class providing static methods that do useful things with sorted sets.
  *
  * @see java.util.Collections
  */

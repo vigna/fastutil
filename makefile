@@ -298,10 +298,10 @@ $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): HeapSesquiIndirectDoublePriority
 
 CSOURCES += $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
-ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArraySesquiIndirectDoublePriorityQueue.c)
-$(ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): ArraySesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayIndirectDoublePriorityQueue.c)
+$(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES): ArrayIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
-CSOURCES += $(ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
+CSOURCES += $(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 #
 # Static containers
