@@ -32,8 +32,6 @@ for ((f=0; f<2; f++)); do
 				echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
-"#define START_COMMENT /\n"\
-"#define END_COMMENT /\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
@@ -114,8 +112,6 @@ for ((f=2; f<7; f++)); do
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
-"#define START_COMMENT /\n"\
-"#define END_COMMENT /\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
@@ -172,8 +168,6 @@ for ((f=7; f<8; f++)); do
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
-"#define START_COMMENT /\n"\
-"#define END_COMMENT /\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
