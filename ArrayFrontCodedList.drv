@@ -49,7 +49,10 @@ import java.util.NoSuchElementException;
  * often this happens (once every {@link #ratio()} arrays). A higher ratio
  * means more compression, but means also a longer access time, as more arrays
  * have to be probed to build the result. Note that we must build an array
- * every time {@link #get(int) get()} is called.
+ * every time {@link #get(int)} is called, but this class provides also methods
+ * that extract one of the stored arrays in a given array, reducing garbage
+ * collection. See the documentation of the family of <code>get()</code>
+ * methods.
  *
  * <P>By setting the ratio to 1 we actually disable front coding: however, we
  * still have a data structure storing large list of arrays with a reduced
@@ -58,13 +61,13 @@ import java.util.NoSuchElementException;
  * <P>Note that the typical usage of front-coded lists is under the form of
  * serialized objects; usually, the data that has to be compacted is processed
  * offline, and the resulting structure is stored permanently. Since the
- * offset array is not stored, the serialized format is very small.
+ * pointer array is not stored, the serialized format is very small.
  *
  * <H2>Implementation Details</H2>
  * 
- * <P>All arrays are stored in a large array. A separate array of offsets
+ * <P>All arrays are stored in a large array. A separate array of pointers
  * indexes arrays whose position is a multiple of the ratio: thus, a higher ratio
- * means also less offsets.
+ * means also less pointers.
  * 
  * <P>More in detail, an array whose position is a multiple of the ratio is
  * stored as the array length, followed by the elements of the array. The array
@@ -87,8 +90,8 @@ import java.util.NoSuchElementException;
  * 
  * <P>All arrays are stored in a large array: thus, the compressed list must
  * not exceed {@link java.lang.Integer#MAX_VALUE} elements. Moreover,
- * iterators cannot move back ({@link java.util.ListIterator#previous()} will
- * just throw an {@link UnsupportedOperationException}).
+ * iterators are less efficient when they move back, as ({@link java.util.ListIterator#previous()} cannot
+ * build incrementally the previous array (whereas ({@link java.util.ListIterator#next()} can).
  */
 
 public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable {
@@ -102,7 +105,9 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 	/** The array containing the compressed arrays. */
 	protected KEY_TYPE[] array;
 	/** The pointers to entire arrays in the list. */
-	transient protected int[] offset;
+	transient protected int[] p;
+
+	private final static boolean asserts = true;
 
 	/** Creates a new front-coded list containing the arrays returned by the given iterator.
 	 * 
@@ -115,7 +120,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 		if ( ratio < 1 ) throw new IllegalArgumentException( "Illegal ratio (" + ratio + ")" );
 
 		KEY_TYPE[] array = ARRAYS.EMPTY_ARRAY;
-		int[] offset = IntArrays.EMPTY_ARRAY;
+		int[] p = IntArrays.EMPTY_ARRAY;
 
 		KEY_TYPE[][] a = new KEY_TYPE[ 2 ][];
 		int curSize = 0, b = 0, common, length, minLength;
@@ -125,8 +130,8 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 			length = a[ b ].length;
 			
 			if ( n % ratio == 0 ) {
-				offset = IntArrays.grow( offset, n / ratio + 1 );
-				offset[ n / ratio ] = curSize;
+				p = IntArrays.grow( p, n / ratio + 1 );
+				p[ n / ratio ] = curSize;
 
 				array = ARRAYS.grow( array, curSize + count( length ) + length );
 				curSize += writeInt( array, length, curSize );
@@ -152,7 +157,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 
 		this.ratio = ratio;
 		this.array = ARRAYS.trim( array, curSize );
-		this.offset = IntArrays.trim( offset, n / ratio );
+		this.p = IntArrays.trim( p, n / ratio );
 
 	}
 
@@ -289,55 +294,110 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 		return ratio;
 	}
 
-	public Object get( int k ) {
-		if ( k < 0 || k >= n ) throw new IndexOutOfBoundsException( k + "" );
 
+	/** Computes the length of the array at the given index.
+	 *
+	 * @param index an index.
+	 * @return the length of the <code>index</code>-th array.
+	 */
+	private int length( final int index ) {
 		final KEY_TYPE[] array = this.array;
-		final int delta = k % ratio; // The index into the offset array, and the delta inside the block.
-		final int startPos = offset[ k / ratio ]; // The position into the array of the first entire word before the k-th.
-		int length = readInt( array, startPos );
+		final int delta = index % ratio; // The index into the p array, and the delta inside the block.
 
-		if ( delta == 0 ) {
-			final KEY_TYPE a[] = new KEY_TYPE[ length ];
-			System.arraycopy( array, startPos + count( length ), a, 0, length );
-			return a;
-		}
+		int pos = p[ index / ratio ]; // The position into the array of the first entire word before the index-th.
+		int length = readInt( array, pos );
+
+		if ( delta == 0 ) return length;
 		
 		// First of all, we recover the array length and the maximum amount of copied elements.
-		int i, maxCopy, common, pos = startPos + count( length ) + length;
-		length = readInt( array, pos );
-		maxCopy = common = readInt( array, pos + count( length ) );
-
-		for( i = 0; i < delta - 1; i++ ) {
-			pos += count( length ) + count( common ) + length;
-			length = readInt( array, pos );
-			common = readInt( array, pos + count( length ) );
-			maxCopy = Math.max( maxCopy, common );
-		}
-
-		length += common;
-		maxCopy = Math.min( maxCopy, length );
-
-		// Now we rebuild the array.
-		final KEY_TYPE a[] = new KEY_TYPE[ length ];
-
-		length = readInt( array, startPos );
-		System.arraycopy( array, startPos + count( length ), a, 0, Math.min( length, maxCopy ) );
-
-		pos = startPos + count( length ) + length;
+		int common;
+		pos += count( length ) + length;
 		length = readInt( array, pos );
 		common = readInt( array, pos + count( length ) );
-		
-		for( i = 0; i < delta - 1; i++ ) {
-			if ( common < maxCopy ) System.arraycopy( array, pos + count( length ) + count( common ), a, common, maxCopy - common );
+
+		for( int i = 0; i < delta - 1; i++ ) {
 			pos += count( length ) + count( common ) + length;
 			length = readInt( array, pos );
 			common = readInt( array, pos + count( length ) );
 		}
+
+		return length + common;
+	}
+
+
+
+	/** Extracts the array at the given index.
+	 *
+	 * @param index an index.
+	 * @param a the array that will store the result (we assume that it can hold the result).
+	 * @param offset an offset into <code>a</code> where elements will be store.
+	 * @param length a maximum number of elements to store in <code>a</code>.
+	 */
+	private void extract( final int index, final KEY_TYPE a[], final int offset, final int length ) {
+		final int delta = index % ratio; // The delta inside the block.
+		final int startPos = p[ index / ratio ]; // The position into the array of the first entire word before the index-th.
+		int pos, strLen = readInt( array, pos = startPos ), prevArrayPos, currLen = 0, actualCommon;
+
+		if ( delta == 0 ) {
+			System.arraycopy( array, p[ index / ratio ] + count( strLen ), a, offset, Math.min( length, strLen ) );
+			return;
+		}
 		
-		if ( length != 0 ) System.arraycopy( array, pos + count( length ) + count( common ), a, common, length );
-		
+		int common = 0;
+
+		for( int i = 0; i < delta; i++ ) {
+			prevArrayPos = pos + count( strLen ) + ( i != 0 ? count( common ) : 0 );
+			pos = prevArrayPos + strLen;
+
+			strLen = readInt( array, pos );
+			common = readInt( array, pos + count( strLen ) );
+
+			actualCommon = Math.min( common, length );
+			if ( actualCommon <= currLen ) currLen = actualCommon;
+			else {
+				System.arraycopy( array, prevArrayPos, a, currLen + offset, actualCommon - currLen );
+				currLen = actualCommon;
+			}
+		}
+
+		if ( currLen < length ) System.arraycopy( array, pos + count( strLen ) + count( common ), a, currLen + offset, length - currLen );
+	}
+
+	public Object get( final int index ) {
+		if ( index < 0 || index >= n ) throw new IndexOutOfBoundsException( index + "" );
+		final int length = length( index );
+		final KEY_TYPE a[] = new KEY_TYPE[ length ];
+		extract( index, a, 0, length );
 		return a;
+	}
+
+	/** Stores in the given array elements from an array stored in this front-coded list.
+	 *
+	 * @param index an index.
+	 * @param a the array that will store the result (we assume that it can hold the result).
+	 * @param offset an offset into <code>a</code> where elements will be store.
+	 * @param length a maximum number of elements to store in <code>a</code>.
+	 * @return if <code>a</code> can hold the extracted elements, the number of extracted elements;
+	 * otherwise, the number of remaining elements with the sign changed.
+	 */
+	private int get( final int index, final KEY_TYPE[] a, final int offset, final int length ) {
+		if ( index < 0 || index >= n ) throw new IndexOutOfBoundsException( index + "" );
+		if ( length > a.length ) throw new ArrayIndexOutOfBoundsException( "Maximum number of elements(" + length +") is greater than array length (" + a.length + ")" );
+		final int strLen = length( index );
+		extract( index, a, offset, Math.min( strLen, length ) );
+		if ( length >= strLen ) return strLen;
+		else return length - strLen;
+	}
+
+	/** Stores in the given array an array stored in this front-coded list.
+	 *
+	 * @param index an index.
+	 * @param a the array that will store the content of the result (we assume that it can hold the result).
+	 * @return if <code>a</code> can hold the extracted elements, the number of extracted elements;
+	 * otherwise, the number of remaining elements with the sign changed.
+	 */
+	private int get( final int index, final KEY_TYPE[] a ) {
+		return get( index, a, 0, Integer.MAX_VALUE );
 	}
 
 	public int size() {
@@ -353,7 +413,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 
 				{
 					if ( start != 0 ) {
-						pos = offset[ start / ratio ];
+						pos = p[ start / ratio ];
 						int j = start % ratio;
 						i = start - j;
 						while( j-- != 0 ) next();
@@ -409,15 +469,15 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
-		// Rebuild offset array
-		final int[] offset = new int[ ( n + ratio - 1 ) / ratio ];
+		// Rebuild pointer array
+		final int[] p = new int[ ( n + ratio - 1 ) / ratio ];
 		final KEY_TYPE a[] = array;
 		int i = 0, pos = 0, length, common;
 
 		for( i = 0; i < n; i++ ) {
 			length = readInt( a, pos );
 			if ( i % ratio == 0 ) {
-				offset[ i / ratio ] = pos;
+				p[ i / ratio ] = pos;
 				pos += count( length ) + length;
 			}
 			else {
@@ -426,7 +486,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 			}
 		}
 
-		this.offset = offset;
+		this.p = p;
 	}
 }
 
