@@ -63,7 +63,7 @@ for ((t=1; t<10000; t*=10)); do
     for ((f=0; f<${#SINGLETONS[*]}; f++)); do
 	l=${#TYPE[*]}
 	for ((k=0; k<l; k++)); do
-		if [[ ${SINGLETON[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi.
+		if [[ ${SINGLETON[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi
 		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${LIST[$f]}
 		echo "Testing ${TYPE_CAP[$k]} ${SINGLETONS[$f]} singleton..."
 		java -ea -server it.unimi.dsi.fastutil.${SINGLETONS[$f]} ${TYPE_CAP[$k]}
