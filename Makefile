@@ -1,5 +1,5 @@
 DOCSDIR=doc
-APIURL=http://java.sun.com/j2se/1.4/docs/api/ # External URLs in the docs will point here
+APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
 
 .SUFFIXES: .java .class
 
@@ -36,4 +36,4 @@ docs: jsources
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
-	gcc -I. -DNDEBUG -E -C -P $< > $@
+	gcc -I. -E -C -P $< > $@

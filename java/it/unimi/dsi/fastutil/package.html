@@ -8,7 +8,7 @@
 
 	 <P>Provides type-specialized hash maps and sets with a small memory
 	 footprint, much (2 to 10 times) faster access and insertion, but
-	 (relatively) slow enumeration and deletion. It is <A
+	 (relatively) slow enumeration. It is <A
 	 HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
 	 distributed under the <A
 	 HREF="http://www.gnu.org/copyleft/gpl.html"><ACRONYM TITLE="GNU's not
@@ -29,21 +29,22 @@
 		  <var>keytype</var> 2 <var>valuetype</var> <var>maptype</var>
 		</div>
 		<p>for maps.Thus, an <code>IntHashSet</code> stores integers efficiently,
-		whereas a <code>Long2IntTreeMap</code> does the same for maps from ordered long
-		integers to integers. By "type" here we mean a capitalized primitive type,
+		whereas a <code>Long2IntHashMap</code> does the same for maps from long
+		integers to integers. By "type" here I mean a capitalized primitive type,
 		or <code>Object</code>.</p>
 	 
-	 <p>Since there are eight primitive types in Java, we get 158 (!) classes
+	 <p>Since there are eight primitive types in Java, we get 193 (!) classes
 	 (some nonsensical class, such as <code>Boolean2BooleanHashMap</code>, are
-	 not generated).</p>
+	 not generated). Many classes are generated just to mimick the hierarchy of
+	 <samp>java.util</samp> so to redistribute common code in a similar way.</p>
 	 
 	 <p><b>All classes are not synchronized</b>. If multiple threads access one
 	 of these classes concurrently, and at least one of the threads modifies it,
 	 it must be synchronized externally. Iterators will behave unpredictably in
 	 the presence of concurrent modifications.
 
-	 <h3>Interfaces Implemented</h3>
-
+	 <h3>Interfaces implemented</h3>
+	 
 	 <p>All maps and sets in <code>fastUtil</code> implement their standard
 	 counterpart interface (e.g., <code>Map</code> for maps). Thus, they can be
 	 just plugged in existing code, using the standard access (of course, any
@@ -53,61 +54,80 @@
 	 avoid the tedious "type juggling" that is well known to Java
 	 programmers. In doing so, they implement more stringent interfaces that
 	 extend the standard ones.</p>
-
-	 <p>This new interface adds some methods, which are rather obvious, and I
+	 
+	 <p>These new interfaces add some methods, which are rather obvious, and I
 	 suggest you to have a look at some of them. There are just a few
 	 <i>caveat</i>, mainly due to some arbitrary restriction of Java:
-		<ul>
+
+	 <ul>
+		
+		<li>The versions of the <code>get()</code>, <code>put()</code> and
+		<code>remove()</code> methods that return a primitive type cannot, of
+		course, rely on returning <code>null</code> to denote the absence of a
+		certain pair. Rather, they return a <em>default return value</em>, which
+		is set to 0 cast to the return type(or <code>false</code> for booleans)
+		at creation, but can be changed using the <code>setDefRetValue()</code>
+		method. Note that changing the default return value does not change
+		anything about the data structure; it is just a way to return a
+		reasonably meaningful result, and it can be changed at any time.</li>
 		  
-		  <li>The versions of the <code>get()</code>, <code>put()</code> and
-		  <code>remove()</code> methods that return a primitive type cannot, of
-		  course, rely on returning <code>null</code> to denote the absence of a
-		  certain pair. Rather, they return a <em>default return value</em>,
-		  which is set to 0 cast to the return type(or <code>false</code> for
-		  booleans) at creation, but can be changed using the
-		  <code>setDefRetValue()</code> method. Note that changing the default
-		  return value does not change anything about the data structure; it is
-		  just a way to return a reasonably meaningful result, and it can be
-			 changed at any time.</li>
-		  
-		  <li>For all maps that have object as keys, the <code>get()</code> and
-			 <code>remove()</code> methods do not admit polymorphic versions, as Java
-			 does not allow return-value polymorphism. Rather, the extended
-			 interfaces introduce new methods of the form
-			 <code>get<var>valuetype</var>()</code> and
-			 <code>remove<var>valuetype</var>()</code>. 
+		<li>For all maps that have object as keys, the <code>get()</code> and
+		<code>remove()</code> methods do not admit polymorphic versions, as Java
+		does not allow return-value polymorphism. Rather, the extended interfaces
+		introduce new methods of the form <code>get<var>valuetype</var>()</code>
+		and <code>remove<var>valuetype</var>()</code>.
 
-		</ul>
+	 </ul>
 
-		<h2>Performance</h2>
+	 <h3>Additional methods</h3>
+ 
+	 <p>Again, due to some limitation of Java (you cannot override an interface
+	 method with a method returning a more specific value) there are some
+	 features of <code>fastUtil</code> that are available only by means of type
+	 casting. In particular, key and value sets from a map are of the
+	 <code>fastUtil</code> type you expect (e.g., the key set of an
+	 <code>Int2LongMap</code> is an <code>IntSet</code>), but you must
+	 explicitly cast the object returned by <code>keySet()</code> to the
+	 appropriate type.
 
-		<p>The main reason behind <code>fastUtil</code> is performance, both in
-		time and in space. The relevant methods are something like 2 to 10 times
-		faster than those of the standard classes. The memory footprint for a
-		table of size <var>n</var> is exactly the memory required for the related
-		types times <var>n</var> bytes, plus a overhead of <var>n</var> bytes to
-		store the state of each entry. The absence of wrappers around primitive
-		types can reduce space occupancy by several times (this applies even more
-		to serialized data, e.g., when you save such a data structure in a
-		file). Moreover, by using closed hashing, we do not require creation and
-		garbage collection of table entries (but we have to rehash the table
-		whenever it is filled by more than 3/4). These data can greatly vary with
-		your virtual machine, JVM versions, CPU etc.</P>
+	 <p>Similarly, all iterators have a suitable method returning directly a
+	 primitive type: however, you must cast explicitly the object returned by
+	 <code>iterator()</code> to the appropriate type.
 
-	   <p>To minimize the memory footprint, the classes do not keep any
-		additional information about elements. In particular, this means that
-		deletions are made simply by tagging suitably an entry, and that
-		enumerations are always linear in the size of the table (rather than in
-		the number of entries).</p>
+	 <h2>Performance</h2>
+	 
+	 <p>The main reason behind <code>fastUtil</code> is performance, both in
+	 time and in space. The relevant methods are something like 2 to 10 times
+	 faster than those of the standard classes. The memory footprint for a table
+	 of size <var>n</var> is exactly the memory required for the related types
+	 times <var>n</var> bytes, plus a overhead of <var>n</var> bytes to store
+	 the state of each entry. The absence of wrappers around primitive types can
+	 reduce space occupancy by several times (this applies even more to
+	 serialized data, e.g., when you save such a data structure in a file).
+	 These data can greatly vary with your virtual machine, JVM versions, CPU
+	 etc.
 
-	   <p>Note that since deletions are handled simply by tagging, they are very
-	   fast <i>per se</i>, but they tend to slow down subsequent accesses.
+	 <p><code>fastUtil</code> reduces enormously the creation and collection of
+	 objects. First of all, if you use the polymorphic methods and iterators no
+	 wrapper objects have to be created. Moreover, since <code>fastUtil</code>
+	 uses closed hashing, creation and garbage collection of table entries are
+	 avoided (but tables have to be rehashed whenever they are is filled
+	 by more than 3/4).
 
-		<h2>Robustness</h2>
+	 <p>To minimize the memory footprint, I keep no additional
+	 information about elements. In particular, this means that deletions are
+	 made simply by tagging suitably an entry, and that enumerations are always
+	 linear in the size of the table (rather than in the number of entries).</p>
 
-		<p>The code in <code>fastUtil</code> has passed intensive regression
-		tests. You can trust it much in the same way you trust the standard
-		classes.</p>
+	 <p>Note that since deletions are handled simply by tagging, they are very
+	 fast <i>per se</i>, but they tend to slow down subsequent accesses (with
+	 respect to a set with the same number of element, but no deleted entries).
+
+	 <h2>Robustness</h2>
+	 
+	 <p>The code in <code>fastUtil</code> has passed intensive regression
+	 tests. You can trust it much in the same way you trust the standard
+	 classes.</p>
 
   </body>
 </html>

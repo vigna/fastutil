@@ -1,5 +1,4 @@
- /**
- *		 
+ /*	 
  * Copyright (C) 2002 Sebastiano Vigna 
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -18,10 +17,6 @@
  * 02111-1307, USA.
  *
  *
- * Provides a hash map with a very fast, small-footprint implementation.
- *
- * Hashing is done through modulo a prime.
- *
  */
 
 package it.unimi.dsi.fastUtil;
@@ -29,7 +24,10 @@ package it.unimi.dsi.fastUtil;
 import java.util.*;
 import java.io.*;
 
-public final class HASHMAP_NAME implements Serializable, MAP_NAME {
+/** A type-specific hash map with a very fast, small-footprint implementation.
+ */
+
+public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
@@ -39,22 +37,13 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 /** The array of occupancy states. */
 	 private transient byte state[];
 
-	 /** The possible states. */
-	 private static final byte FREE = 0;
-	 private static final byte BUSY = -1;
-	 private static final byte REMOVED = 1;
-	 
-	 /** The i-th element is the greatest prime smaller than or equal to 2^i. */
-	 private static final int primeSizes[] = {  1, 2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 4194301, 8388593, 16777213, 33554393, 67108859, 134217689, 268435399, 536870909, 1073741789, 2147483647 };
-	 /** The i-th element is the greatest prime smaller than the greatest prime smaller than or equal to 2^i. */
-	 private static final int primeSizes2[] = { 1, 1, 2, 5, 11, 29, 59, 113, 241, 503, 1019, 2029, 4091, 8179, 16369, 32719, 65519, 131063, 262133, 524269, 1048571, 2097133, 4194287, 8388587, 16777199, 33554383, 67108837, 134217649, 268435367, 536870879, 1073741783, 2147483629 };
-	 /** Index into the previous list, giving the current table size. */
-	 private int log2n;
+	 /** Index into the prime list, giving the current table size. */
+	 private int p;
 
-	 /** Table size. Must be the log2n-th item of the previous list. */
+	 /** Table size. Must be the p-th item of {@link Hash#primes}. */
 	 private transient int n;
 
-	 /** Secondary jump for conflict resolution. Must be the (log2n-1)-th item of the previous list. */
+	 /** Secondary jump for conflict resolution. Must be the p-th item of {@link Hash#prevPrimes}. */
 	 private transient int n2;
 
 	 /** Number of entries in the map. */
@@ -79,19 +68,19 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 #endif
 
 
-	 /** Creates a new map.
+	 /** Creates a new hash map.
 	  *
-	  * The actual table size is the least prime greater than n/0.75.
+	  * The actual table size is the least available prime greater than n/0.75.
 	  *
-	  * @param n the expected number of elements in the map. 
+	  * @param n the expected number of elements in the hash map. 
 	  */
 	 
 	 public HASHMAP_NAME( int n ) {
-		  int l = 3;
-		  while( primeSizes[++l] < (int)(n / 0.75) );
-		  this.n = primeSizes[l];
-		  n2 = primeSizes2[l];
-		  log2n = l;
+		  int l = 0;
+		  while( primes[++l] < (int)(n / 0.75) );
+		  this.n = primes[l];
+		  n2 = prevPrimes[l];
+		  p = l;
 		  key = new KEY_TYPE[this.n];
 		  value = new VALUE_TYPE[this.n];
 		  state = new byte[this.n];
@@ -99,7 +88,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 
 
 
-	 /** Creates a new map.
+	 /** Creates a new hash map.
 	  */
 	 
 	 public HASHMAP_NAME() {
@@ -107,7 +96,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 }
 
 
-	 /** Creates a new map copying an old one.
+	 /** Creates a new map copying a given one.
 	  *
 	  * @param m a {@link Map} to be copied into the new hash map. 
 	  */
@@ -118,12 +107,6 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 }
 
 
-
-	 /** Adds a pair to the map.
-	  *
-	  * @param k the key.
-	  * @param v the value.
-	  */
 
 	 public Object put(Object ok, Object ov) {
 		  VALUE_TYPE oldValue;
@@ -154,8 +137,8 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 				count++;
 				key[h] = k;
 				value[h] = v;
-				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
 		  }
 
 		  //System.err.println("done.");
@@ -165,11 +148,6 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 #if ! ( #valueclass(Object) && #keyclass(Object) )
 
-	 /** Adds a pair to the map.
-	  *
-	  * @param k the key.
-	  * @param v the value.
-	  */
 
 	 public VALUE_TYPE put(KEY_TYPE k, VALUE_TYPE v) {
 		  VALUE_TYPE oldValue;
@@ -199,8 +177,8 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 				count++;
 				key[h] = k;
 				value[h] = v;
-				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
 		  }
 
 		  //System.err.println("done.");
@@ -211,10 +189,6 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 #endif
 
 
-	 /** Removes the entry with the given key from the map.
-	  *
-	  * @param k the key.
-	  */
 
 	 public Object remove(Object ok) {
 		  VALUE_TYPE oldValue;
@@ -241,21 +215,10 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 #if ! #valueclass(Object) 
 	 
-    /**
-     * Sets the default return value.
-     *
-     * @param rv the new default return value.
-     */
-
 	 public void setDefRetValue( VALUE_TYPE rv ) {
 		  defRetValue = rv;
 	 }
 
-    /**
-     * Gets the default return value.
-     *
-     * @return the current default return value.
-     */
 	 public VALUE_TYPE getDefRetValue() {
 		  return defRetValue;
 	 }
@@ -282,6 +245,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  this.count = 0;
 		  this.used = 0;
 		  Arrays.fill(state, FREE);
+		  // We null all object entries so that the garbage collector can do its work.
 #if #keyclass(Object)
 		  Arrays.fill(key, null);
 #endif
@@ -291,17 +255,20 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 }
 
 
+#if ! #keyclass(Object) || ! #valueclass(Object) 
 	 public void putAll(Map m) {
-		  Entry e;
-
-		  for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-				e = (Entry)i.next();
-				put(e.getKey(), e.getValue());
+		  if (m instanceof MAP_NAME) {
+				MAP_NAME.Entry e;
+				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+					 e = (MAP_NAME.Entry)i.next();
+					 put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
+				}
 		  }
+		  else ((Map)this).putAll(m);
 	 }
+#endif
 
-
-    private static class Entry implements MAP_NAME.ENTRY_NAME {
+    private static class Entry implements MAP_NAME.Entry {
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
 
@@ -323,10 +290,22 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 				return KEY2OBJ(key);
 		  }
 		  
+#if ! #keyclass(Object)
+		  public KEY_TYPE ENTRY_GET_KEY() {
+				return key;
+		  }
+#endif
+
 		  public Object getValue() {
 				return VALUE2OBJ(value);
 		  }
 		  
+#if ! #valueclass(Object)
+		  public VALUE_TYPE ENTRY_GET_VALUE() {
+				return value;
+		  }
+#endif
+
 		  public VALUE_TYPE setValue(VALUE_TYPE value) {
 				VALUE_TYPE oldValue = this.value;
 				this.value = value;
@@ -428,7 +407,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 
     public Set keySet() {
-		  if (keys == null) keys = new AbstractSet() {
+		  if (keys == null) keys = new ABSTRACT_KEY_SET() {
 
 					 public Iterator iterator() {
 						  return new KEY_ITERATOR_NAME() {
@@ -457,6 +436,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 										  
 										  return retVal;
 									 }
+
 #endif									 
 
 									 public Object next() {
@@ -483,13 +463,30 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 						  return count;
 					 }
 
-					 public boolean contains(Object o) {
-						  return containsKey(o);
+
+#if ! #keyclass(Object)
+					 public boolean add(KEY_TYPE k) {
+						  throw new UnsupportedOperationException();
+					 }
+					 
+					 public boolean contains(KEY_TYPE k) {
+						  return containsKey(k);
+					 }
+					 
+					 public boolean remove(KEY_TYPE k) {
+						  int oldCount = count;
+						  HASHMAP_NAME.this.remove(k);
+						  return count != oldCount;
+					 }
+					 
+#endif
+					 public boolean contains(Object ok) {
+						  return containsKey(ok);
 					 }
 
-					 public boolean remove(Object o) {
+					 public boolean remove(Object ok) {
 						  int oldCount = count;
-						  HASHMAP_NAME.this.remove(o);
+						  HASHMAP_NAME.this.remove(ok);
 						  return count != oldCount;
 					 }
 
@@ -502,7 +499,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 
     public Collection values() {
-		  if (values == null) values = new AbstractCollection() {
+		  if (values == null) values = new ABSTRACT_VALUE_COLLECTION() {
 
 					 public Iterator iterator() {
 						  return new VALUE_ITERATOR_NAME() {
@@ -555,10 +552,23 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 						  return count;
 					 }
 
-					 public boolean contains(Object o) {
-						  return containsValue(o);
+					 public boolean contains(Object ok) {
+						  return containsValue(ok);
 					 }
 
+#if ! #valueclass(Object)
+					 public boolean add(VALUE_TYPE k) {
+						  throw new UnsupportedOperationException();
+					 }
+
+					 public boolean contains(VALUE_TYPE v) {
+						  return containsValue(v);
+					 }
+					 
+					 public boolean remove(VALUE_TYPE k) {
+						  throw new UnsupportedOperationException();
+					 }
+#endif
 					 public void clear() {
 						  HASHMAP_NAME.this.clear();
 					 }
@@ -571,16 +581,17 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 
 
-	 /** Resizes the map to the next prime.
+	 /** Resizes the map.
+	  * @param newP the new approximate logarithm of the size.
 	  */
 
-	 private void enlarge( int newLog2n ) {
+	 private void rehash( int newP ) {
 		  int i, count = 0, used = 0, h, m;
 
 		  KEY_TYPE k;
 		  VALUE_TYPE v;
 
-		  final int n = this.n, newN = primeSizes[newLog2n], newN2 = primeSizes2[newLog2n];
+		  final int n = this.n, newN = primes[newP], newN2 = prevPrimes[newP];
 		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		  final VALUE_TYPE value[] = this.value, newValue[] = new VALUE_TYPE[newN];
 		  final byte state[] = this.state, newState[] = new byte[newN];
@@ -607,7 +618,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 		  this.n = newN;
 		  this.n2 = newN2;
-		  log2n = newLog2n;
+		  p = newP;
 		  this.key = newKey;
 		  this.value = newValue;
 		  this.state = newState;
@@ -672,6 +683,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 /** Removes the entry with the given key from the map.
 	  *
 	  * @param k the key.
+	  * @return the old value, or the default return value if no value was present for the given key.
 	  */
 
 	 public VALUE_TYPE remove(KEY_TYPE k) {
@@ -719,6 +731,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  return value[h];
 	 }
 
+	 /** Removes the entry with the given key from the map.
+	  *
+	  * @param k the key.
+	  * @return the old value, or the default return value if no value was present for the given key.
+	  */
+
 	 public VALUE_TYPE REMOVE_VALUE_TYPE_CAP(Object k) {
 		  VALUE_TYPE oldValue;
 
@@ -765,8 +783,8 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  int count;
 
 		  s.defaultReadObject();
-		  this.n = primeSizes[log2n];
-		  this.n2 = primeSizes2[log2n];
+		  this.n = primes[p];
+		  this.n2 = prevPrimes[p];
 		  count = this.count;
 
 		  this.key = new KEY_TYPE[n];
@@ -967,10 +985,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  
 		  /* Now we add to m the same data */
 		  
-		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) {
-				Object o = i.next();
-				m.put(o, t.get(o)); 
-		  }
+		  m.putAll(t);
 
 		  /* Now we check that m actually holds that data. */
 		  

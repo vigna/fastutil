@@ -1,5 +1,4 @@
-/**
- *		 
+/*
  * Copyright (C) 2002 Sebastiano Vigna 
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -17,11 +16,6 @@
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
  * 02111-1307, USA.
  *
- *
- * Provides a hash set with with a very fast, small-footprint implementation.
- *
- * Hashing is done through modulo a prime.
- *
  */
 
 package it.unimi.dsi.fastUtil;
@@ -29,30 +23,23 @@ package it.unimi.dsi.fastUtil;
 import java.util.*;
 import java.io.*;
 
+/**  A type-specific hash set with with a very fast, small-footprint implementation.
+ */
 
-public final class HASHSET_NAME extends AbstractSet implements Serializable, SET_NAME {
+public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializable, Hash, SET_NAME {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
 	 /** The array of occupancy states. */
 	 private transient byte state[];
 
-	 /** The possible states. */
-	 private static final byte FREE = 0;
-	 private static final byte BUSY = -1;
-	 private static final byte REMOVED = 1;
-	 
-	 /** The i-th element is the greatest prime smaller than or equal to 2^i. */
-	 private static final int primeSizes[] = {  1, 2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 4194301, 8388593, 16777213, 33554393, 67108859, 134217689, 268435399, 536870909, 1073741789, 2147483647 };
-	 /** The i-th element is the greatest prime smaller than the greatest prime smaller than or equal to 2^i. */
-	 private static final int primeSizes2[] = { 1, 1, 2, 5, 11, 29, 59, 113, 241, 503, 1019, 2029, 4091, 8179, 16369, 32719, 65519, 131063, 262133, 524269, 1048571, 2097133, 4194287, 8388587, 16777199, 33554383, 67108837, 134217649, 268435367, 536870879, 1073741783, 2147483629 };
-	 /** Index into the previous list, giving the current table size. */
-	 private int log2n;
+	 /** Index into the prime list, giving the current table size. */
+	 private int p;
 
-	 /** Table size. Must be the log2n-th item of the previous list. */
+	 /** Table size. Must be the p-th item of {@link Hash#primes}. */
 	 private transient int n;
 
-	 /** Secondary jump for conflict resolution. Must be the (log2n-1)-th item of the previous list. */
+	 /** Secondary jump for conflict resolution. Must be the p-th item of {@link Hash#prevPrimes}. */
 	 private transient int n2;
 
 	 /** Number of entries in the set. */
@@ -63,25 +50,25 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 
 
 
-	 /** Creates a new set.
+	 /** Creates a new hash set.
 	  *
-	  * The actual table size is the least prime greater than n/0.75.
+	  * The actual table size is the least available prime greater than n/0.75.
 	  *
-	  * @param n the expected number of elements in the set. 
+	  * @param n the expected number of elements in the hash set. 
 	  */
 	 
 	 public HASHSET_NAME( int n ) {
-		  int l = 3;
-		  while( primeSizes[++l] < (int)(n / 0.75) );
-		  this.n = primeSizes[l];
-		  n2 = primeSizes2[l];
-		  log2n = l;
+		  int l = 0;
+		  while( primes[++l] < (int)(n / 0.75) );
+		  this.n = primes[l];
+		  n2 = prevPrimes[l];
+		  p = l;
 		  key = new KEY_TYPE[this.n];
 		  state = new byte[this.n];
 	 }
 	 
 
-	 /** Creates a new set.
+	 /** Creates a new hash set.
 	  *
 	  */
 	 
@@ -90,9 +77,9 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 }
 	 
 
-	 /** Creates a new set copying an old one.
+	 /** Creates a new hash set copying a given collection.
 	  *
-	  * @param c a collection to be copied into the new hash set. 
+	  * @param c a {@link Collection} to be copied into the new hash set. 
 	  */
 	 
 	 public HASHSET_NAME( Collection c ) {
@@ -101,10 +88,17 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 }
 
 
-	 /** Adds a key to the set.
+	 /** Creates a new set copying the elements of an array.
 	  *
-	  * @param ok the key.
+	  * @param a an array to be copied into the new hash set. 
 	  */
+	 
+	 public HASHSET_NAME( KEY_TYPE[] a ) {
+		  this( a.length );
+		  int i = a.length;
+		  while(i-- != 0) add(a[i]);
+	 }
+
 
 	 public boolean add(Object ok) {
 
@@ -126,8 +120,8 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
-				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
 				return true;
 		  }
 
@@ -137,10 +131,6 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 
 #if ! ( #keyclass(Object) )
 
-	 /** Adds a key to the set.
-	  *
-	  * @param k the key.
-	  */
 
 	 public boolean add(KEY_TYPE k) {
 		  final int n = this.n;
@@ -161,8 +151,8 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
-				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
 				return true;
 		  }
 
@@ -172,11 +162,6 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 
 #endif
 
-
-	 /** Removes the given key from the set.
-	  *
-	  * @param ok the key.
-	  */
 
 	 public boolean remove(Object ok) {
 
@@ -209,37 +194,51 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 #endif
 	 }
 
-	 /** Adds a all elements of the given collection to the set.
+
+#if !#keyclass(Object)
+	 /** Adds all elements of the given collection to the set.
 	  * If the collection implements the interface of this set,
 	  * it uses the faster iterators.
 	  *
-	  * @param k the key.
+	  * @param c a collection.
 	  */
 
-	 public addAll(Collection c) {
-		  if (c istanceof MAP_NAME) {
-				for(ITERATOR_NAME i = (ITERATOR_NAME)c.iterator(); i.hasNext(); ) add(i.NEXT_KEY_TYPE_CAP());
+	 public boolean addAll(Collection c) {
+		  if (c instanceof SET_NAME) {
+				boolean retVal = false;
+				for(KEY_ITERATOR_NAME i = (KEY_ITERATOR_NAME)c.iterator(); i.hasNext(); ) if (add(i.NEXT_KEY_TYPE_CAP())) retVal = true;
+				return retVal;
 		  }
-		  else super.addAll(c);
+		  else return super.addAll(c);
 	 }
 
 
-	 public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		  return TO_KEY_TYPE_CAP_ARRAY(a);
-	 }
+	 /** Checks whether the set contains all elements from the given collection.
+	  * If the collection implements the interface of this set,
+	  * it uses the faster iterators.
+	  *
+	  * @param c a collection.
+	  */
 
-    public KEY_TYPE[] TO_KEY_TYPE_CAP_ARRAY() {
-		  return TO_KEY_TYPE_CAP_ARRAY(null);
+	 public boolean containsAll(Collection c) {
+		  if (c instanceof SET_NAME) {
+				for(KEY_ITERATOR_NAME i = (KEY_ITERATOR_NAME)c.iterator(); i.hasNext(); ) if (!contains(i.NEXT_KEY_TYPE_CAP())) return false;
+				return true;
+		  }
+		  else return super.containsAll(c);
 	 }
+#endif
 
-	 
+	 /* We override the method in the type-specific {@link AbstractCollection}
+		 with a faster version without iterators. */
+
     public KEY_TYPE[] TO_KEY_TYPE_CAP_ARRAY( KEY_TYPE a[] ) {
 		  final KEY_TYPE key[] = this.key, result[];
 		  final int n = this.n, count = this.count;
 		  final byte state[] = this.state;
 		  int i, j, pos = 0;
 
-		  if (a == null || a.length < count) result = new KEY_TYPE[size()];
+		  if (a == null || a.length < count) result = new KEY_TYPE[count];
 		  else result = a;
 
 		  for(i=j=0; i<count; i++) {
@@ -250,6 +249,10 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 		  return result;
     }
 
+
+	 /** Returns an iterator on this set. 
+	  * The iterator can be safely cast to a type-specific iterator.
+	  */
 
 	 public Iterator iterator() {
 		  return new KEY_ITERATOR_NAME() {
@@ -303,15 +306,16 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 
 
 
-	 /** Resizes the set to the next prime.
+	 /** Resizes the set.
+	  * @param newP the new approximate logarithm of the size.
 	  */
 
-	 private void enlarge( int newLog2n ) {
+	 private void rehash( int newP ) {
 		  int i, count = 0, used = 0, h, m;
 
 		  KEY_TYPE k;
 
-		  final int n = this.n, newN = primeSizes[newLog2n], newN2 = primeSizes2[newLog2n];
+		  final int n = this.n, newN = primes[newP], newN2 = prevPrimes[newP];
 		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		  final byte state[] = this.state, newState[] = new byte[newN];
 
@@ -335,7 +339,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 
 		  this.n = newN;
 		  this.n2 = newN2;
-		  log2n = newLog2n;
+		  p = newP;
 		  this.key = newKey;
 		  this.state = newState;
 		  this.count = count;
@@ -381,10 +385,6 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 }
 
 
-	 /** Removes the entry with the given key from the set.
-	  *
-	  * @param k the key.
-	  */
 
 	 public boolean remove(KEY_TYPE k) {
 
@@ -424,8 +424,8 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 		  int count;
 
 		  s.defaultReadObject();
-		  this.n = primeSizes[log2n];
-		  this.n2 = primeSizes2[log2n];
+		  this.n = primes[p];
+		  this.n2 = prevPrimes[p];
 		  count = this.count;
 
 		  this.key = new KEY_TYPE[n];
@@ -587,9 +587,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 		  
 		  /* Now we add to m the same data */
 		  
-		  for(Iterator i=t.iterator(); i.hasNext(); ) {
-				m.add(i.next()); 
-		  }
+		  m.addAll(t); 
 
 		  /* Now we check that m actually holds that data. */
 		  
@@ -667,15 +665,13 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 		  }
 
 
-		  /* Now we make m into an array and we check it is OK. */
+		  /* Now we make m into an array, make it again a set and check it is OK. */
 		  KEY_TYPE a[] = m.TO_KEY_TYPE_CAP_ARRAY();
 
 		  
-		  for(int i=0; i<a.length; i++) {
-		      if (!m.contains(a[i])) {
-					 System.err.println("Error: toArray() output is not OK ("+a[i]+").\n");
-					 System.exit(-1);
-				}
+		  if (!new HASHSET_NAME(a).equals(m)) {
+				System.err.println("Error: toArray() output (or array-based constructor) is not OK.\n");
+				System.exit(-1);
 		  }
 
 
