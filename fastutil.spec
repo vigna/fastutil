@@ -15,85 +15,71 @@ BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.5, /bin/bash
 BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
-%description
 
+%description
 fastutil provides type-specific maps, sets and lists with a small memory
 footprint and much faster access and insertion. The classes implement their
 standard counterpart interface (e.g., Map for maps) and can be plugged into
 existing code. Moreover, they provide additional features (such as
 bidirectional iterators) that are not available in the standard classes.
 
+
 %package javadoc
 Summary:        Javadoc for %{name}
 Group:          Development/Documentation
 
+
 %description javadoc
 Javadoc for %{name}.
 
-# -----------------------------------------------------------------------------
 
 %prep
 %setup -q
 
-# -----------------------------------------------------------------------------
 
 %build
-
-. %{_datadir}/java-utils/java-functions
-set_jvm
-
-export PATH=$JAVA_HOME/bin:$PATH
-export APIURL=http://java.sun.com/j2se/1.4.1/docs/api/
-#export ANT_ARGS="$ANT_ARGS -Dbuild.compiler=jikes"
-
 make sources
 ant \
   -Dj2se.apiurl=%{_javadocdir}/java \
   jar javadoc
 
-# -----------------------------------------------------------------------------
 
 %install
 rm -rf $RPM_BUILD_ROOT
-
 # jars
-mkdir -p $RPM_BUILD_ROOT%{_javadir}
-cp -p %{name}-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/%{name}-%{version}.jar
-(cd $RPM_BUILD_ROOT%{_javadir} && for jar in *-%{version}*; do ln -sf ${jar} `echo $jar| sed "s|-%{version}||g"`; done)
-
+install -dm 755 $RPM_BUILD_ROOT%{_javadir}
+install -pm 644 %{name}-%{version}.jar $RPM_BUILD_ROOT%{_javadir}
+ln -s %{name}-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/%{name}.jar
 # javadoc
-mkdir -p $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
+install -dm 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
 cp -pr docs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-rm -fr docs
+ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name} # ghost symlink
 
-# -----------------------------------------------------------------------------
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-# -----------------------------------------------------------------------------
 
 %post javadoc
 rm -f %{_javadocdir}/%{name}
 ln -s %{name}-%{version} %{_javadocdir}/%{name}
  
-%postun javadoc
-if [ "$1" = "0" ]; then
-    rm -f %{_javadocdir}/%{name}
-fi
- 
-# -----------------------------------------------------------------------------
 
 %files
 %defattr(0644,root,root,0755)
 %doc README CHANGES COPYING.LIB
-%{_javadir}/*
+%{_javadir}/*.jar
 
 %files javadoc
 %defattr(0644,root,root,0755)
 %{_javadocdir}/%{name}-%{version}
+%ghost %doc %{_javadocdir}/%{name}
 
 # -----------------------------------------------------------------------------
+
+%changelog
+* Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.1.0-1jpp
+- Several new static containers.
 
 %changelog
 * Wed Jul 04 2003 Sebastiano Vigna <vigna at acm.org> - 3.0.1-1jpp
