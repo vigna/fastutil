@@ -669,11 +669,12 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 
 	public boolean containsValue( final VALUE_TYPE v ) {
-		final TreeIterator i = new TreeIterator();
+		final ValueIterator i = new ValueIterator();
 		VALUE_TYPE ev;
 		  
-		while( i.hasNext() ) {
-			ev = ((Entry)i.next()).value;
+		int j = count;
+		while( j-- != 0 ) {
+			ev = i.NEXT_VALUE();
 			if ( VALUE_EQUAL( ev, v ) ) return true;
 		}
 		  
@@ -704,9 +705,9 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		/** The the bit in this mask is true, the node is black. */
 		private final static int BLACK_MASK = 1;
 		/** If the bit in this mask is true, {@link #right} points to a successor. */
-		private final static int SUCC_MASK = 1 << 1;
+		private final static int SUCC_MASK = 1 << 31;
 		/** If the bit in this mask is true, {@link #left} points to a predecessor. */
-		private final static int PRED_MASK = 1 << 2;
+		private final static int PRED_MASK = 1 << 30;
 		/** The key of this entry. */
 		KEY_TYPE key;
 		/** The value of this entry. */
@@ -1103,7 +1104,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 			next = prev = curr;
 			updatePrevious();
 			updateNext();
-			delete( curr.key );
+			RBTREEMAP.this.delete( curr.key );
 			curr = null;
 		}
 
@@ -1571,24 +1572,18 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 			return storedComparator;
 		}
 		  
-		public SortedMap headMap( final Object oto ) {
-			final KEY_TYPE to = KEY2TYPE( oto );
 
+		public STDSORTEDMAP headMap( final KEY_TYPE to ) {
 			if ( top ) return new Submap( from, bottom, to, false );
 			return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
 		}
 		  
-		public SortedMap tailMap( final Object ofrom ) {
-			final KEY_TYPE from = KEY2TYPE( ofrom );
-
+		public STDSORTEDMAP tailMap( final KEY_TYPE from ) {
 			if ( bottom ) return new Submap( from, false, to, top );
 			return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
 		}
 		  
-		public SortedMap subMap( final Object ofrom, final Object oto ) {
-			KEY_TYPE to = KEY2TYPE( oto );
-			KEY_TYPE from = KEY2TYPE( ofrom );
-
+		public STDSORTEDMAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
 			if ( top && bottom ) return new Submap( from, false, to, false );
 			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
 			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
@@ -1597,23 +1592,9 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		}
 
 #if !#keyclass(Object)
-		public SORTEDMAP headMap( final KEY_TYPE to ) {
-			if ( top ) return new Submap( from, bottom, to, false );
-			return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
-		}
-		  
-		public SORTEDMAP tailMap( final KEY_TYPE from ) {
-			if ( bottom ) return new Submap( from, false, to, top );
-			return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
-		}
-		  
-		public SORTEDMAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
-			if ( top && bottom ) return new Submap( from, false, to, false );
-			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
-			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
-			if ( from == this.from && to == this.to ) return this;
-			return new Submap( from, false, to, false );
-		}
+		public SortedMap headMap( final Object oto ) { return headMap( KEY2TYPE( oto ) ); }
+		public SortedMap tailMap( final Object ofrom ) { return tailMap( KEY2TYPE( ofrom ) ); }
+		public SortedMap subMap( final Object ofrom, final Object oto ) { return subMap( KEY2TYPE( ofrom ), KEY2TYPE( oto ) ); }
 #endif
 
 		/** Locates the first entry.
@@ -1669,18 +1650,8 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		}
 	 
 #if !#keyclass(Object)
-		public Object firstKey() {
-			RBTREEMAP.Entry e = firstEntry();
-			if ( e == null ) throw new NoSuchElementException();
-			return e.getKey();
-		}
-	 
-		public Object lastKey() {
-			RBTREEMAP.Entry e = lastEntry();
-			if ( e == null ) throw new NoSuchElementException();
-			return e.getKey();
-		}
-
+		public Object firstKey() { return KEY2OBJ( FIRST_KEY() ); }
+		public Object lastKey() { return KEY2OBJ( LAST_KEY() ); }
 #endif
 
 		/** An iterator for subranges.
@@ -1712,7 +1683,12 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 					}
 				}			
 			}
-				
+
+			void updatePrevious() {
+				prev = prev.prev();
+				if ( ! bottom && prev != null && RBTREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
+			}
+
 			void updateNext() {
 				next = next.next();
 				if ( ! top && next != null && RBTREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
@@ -1775,6 +1751,11 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
 		}
+
+		c.keys = null;
+		c.values = null;
+		c.entries = null;
+		c.allocatePaths();
 
 		if ( count != 0 ) {
 			// Also this apparently unfathomable code is derived from GNU libavl.
