@@ -51,22 +51,20 @@ public class SORTEDSETS {
 
 	private SORTEDSETS() {}
 
-#if ! #keyclass(Reference)
-
 	/** A class representing a sorted singleton. */
 
-	protected static class SINGLETON extends SETS.Singleton implements SORTEDSET, java.io.Serializable, Cloneable {
+	protected static class Singleton extends SETS.Singleton implements SORTEDSET, java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 
 		KEY_COMPARATOR comparator;
 
-		private SINGLETON( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
+		private Singleton( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
 			super( element );
 			this.comparator = comparator;
 		}
 
-		private SINGLETON( final KEY_TYPE element ) {
+		private Singleton( final KEY_TYPE element ) {
 			this( element, null );
 		}
 
@@ -109,7 +107,7 @@ public class SORTEDSETS {
 	 */
 
 	public static SORTEDSET singleton( final KEY_TYPE element ) {
-		return new SINGLETON( element );
+		return new Singleton( element );
 	}
 
 	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serializable and cloneable.
@@ -120,10 +118,10 @@ public class SORTEDSETS {
 	 */
 
 	public static SORTEDSET singleton( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
-		return new SINGLETON( element, comparator );
+		return new Singleton( element, comparator );
 	}
 
-#if ! #keyclass(Object) 
+#if ! #keyclass(Object) && ! #keyclass(Reference) 
 
 	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serializable and cloneable.
 	 *
@@ -132,7 +130,7 @@ public class SORTEDSETS {
 	 */
 
 	public static SORTEDSET singleton( final Object element ) {
-		return new SINGLETON( KEY2TYPE( element ) );
+		return new Singleton( KEY2TYPE( element ) );
 	}
 
 	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serializable and cloneable.
@@ -143,12 +141,9 @@ public class SORTEDSETS {
 	 */
 
 	public static SORTEDSET singleton( final Object element, final KEY_COMPARATOR comparator ) {
-		return new SINGLETON( KEY2TYPE( element ), comparator );
+		return new Singleton( KEY2TYPE( element ), comparator );
 	}
 #endif
-
-#endif
-
 
 
 	protected static class SynchronizedSortedSet extends SETS.SynchronizedSet implements SORTEDSET, java.io.Serializable {
@@ -229,32 +224,30 @@ public class SORTEDSETS {
 	}
 
 
-	private static void KEY_TEST() {
+	protected static void testSets( KEY_TYPE k, SORTEDSET m, SortedSet t, int level ) {
 		int n = 100;
 		int c;
-		KEY_TYPE k = GEN_KEY();
-		SINGLETON m = new SINGLETON( k );
-		SortedSet t = java.util.Collections.singleton( KEY2OBJ( k ) );
 
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsIndex, tThrowsIndex, mThrowsUnsupp, tThrowsUnsupp;
 		boolean rt = false, rm = false;
 
+		if ( level == 0 ) return;
 
 		/* Now we check that m and t are equal. */
 		if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
-		ensure( m.equals( t ), "Error (" + seed + "): ! m.equals( t ) at start" );
-		ensure( t.equals( m ), "Error (" + seed + "): ! t.equals( m ) at start" );
+		ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start" );
+		ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start" );
 
 		/* Now we check that m actually holds that data. */
 		for(Iterator i=t.iterator(); i.hasNext();  ) {
-			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on t)" );
+			ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on t)" );
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		for(Iterator i=m.iterator(); i.hasNext();  ) {
-			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on m)" );
+			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m)" );
 		}
 
 		/* Now we check that inquiries about random data give the same answer in m and t. For
@@ -279,10 +272,10 @@ public class SORTEDSETS {
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method) " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method) " + m );
 		}
 
 		/* Again, we check that inquiries about random data give the same answer in m and t, but
@@ -309,11 +302,11 @@ public class SORTEDSETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence between t and m (standard method) " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence between t and m (standard method) " + m );
 		}
 
 		/* Now we add and remove random data in m and t, checking that the result is the same. */
@@ -341,11 +334,11 @@ public class SORTEDSETS {
 
 			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in add() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in add() between t and m " + m );
 
 			T = GEN_KEY();
 
@@ -367,16 +360,15 @@ public class SORTEDSETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in remove() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in remove() between t and m " + m );
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after removal " + m );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal " + m );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal " + m );
 
 		/* Now we add and remove random collections in m and t, checking that the result is the same. */
 
@@ -403,11 +395,11 @@ public class SORTEDSETS {
 
 			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in addAll() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in addAll() between t and m " + m );
 
 			T = GEN_KEY();
 
@@ -430,30 +422,30 @@ public class SORTEDSETS {
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
-			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
-			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
-			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
-			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in removeAll() between t and m " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + level + ", " + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in removeAll() between t and m " + m );
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after set removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after set removal " + m );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after set removal " + m );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after set removal " + m );
 
 		/* Now we check that m actually holds the same data. */
 		  
 		for(Iterator i=t.iterator(); i.hasNext();  ) {
-			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on t)");
+			ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
 		for(Iterator i=m.iterator(); i.hasNext();  ) {
-			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on m)" );
+			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		}
 
-		ensure( m.equals( ((SINGLETON)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
-		ensure( ((SINGLETON)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+		ensure( m.equals( ((Singleton)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
+		ensure( ((Singleton)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
 
 		int h = m.hashCode();
 
@@ -483,29 +475,51 @@ public class SORTEDSETS {
 
 #if ! #keyclass(Reference)
 
-		ensure( m2.hashCode() == h, "Error (" + seed + "): hashCode() changed after save/read" );
+		ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read" );
 		  
 		/* Now we check that m2 actually holds that data. */
 		  
-		ensure( m2.equals(t), "Error (" + seed + "): ! m2.equals( t ) after save/read" );
-		ensure( t.equals(m2), "Error (" + seed + "): ! t.equals( m2 ) after save/read" );
+		ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read" );
+		ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read" );
 #endif
+
+		/* Now we select a pair of keys and create a subset. */
+
+		java.util.ListIterator i;
+		Object start = m.first(), end = m.first();
+		if ( r.nextBoolean() ) start = KEY2OBJ( GEN_KEY() );
+		if ( r.nextBoolean() ) end = KEY2OBJ( GEN_KEY() );
+		
+		//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+		testSets( k, (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), level + 1 );
+
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet" );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet" );
+		
+		//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
+		testSets( k, (SORTEDSET)m.headSet( end ), t.headSet( end ), level + 1 );
+		
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet" );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet" );
+		
+		//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
+		testSets( k, (SORTEDSET)m.tailSet( start ), t.tailSet( start ), level + 1 );
+		
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet" );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet" );
 
 		System.out.println("Test OK");
 		return;
 	}
 
+	private static void test() {
+		KEY_TYPE k = GEN_KEY();
+		Singleton m = new Singleton( k );
+		SortedSet u = new java.util.TreeSet();
+		u.add( KEY2OBJ( k ) );
+		testSets( k, m, java.util.Collections.unmodifiableSortedSet( u ), 2 );
+	}
 
-
-#endif
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
-
-
-#ifdef TEST
 	
 	private static long seed = System.currentTimeMillis(); 
 	private static java.util.Random r = new java.util.Random( seed );
@@ -535,7 +549,7 @@ public class SORTEDSETS {
 		if ( arg.length > 1 ) r = new java.util.Random( seed = Long.parseLong( arg[ 1 ] ) );
 		  
 		try {
-			SORTEDSETS.class.getDeclaredMethod( "test" + arg[ 0 ], new Class[] {} ).invoke( SORTEDSETS.class, new Object[] {} ); 
+			test();
 		} catch( AssertionError e ) {
 			System.err.println( e );
 			System.err.println( "seed: " + seed );

@@ -58,7 +58,7 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
-    SINGLETONS=(Sets Lists)
+    SINGLETONS=(Sets SortedSets Lists)
 
     for ((f=0; f<${#SINGLETONS[*]}; f++)); do
 	l=${#TYPE[*]}
