@@ -28,20 +28,15 @@ jar: jsources
 	export ANT_OPTS="-Xmx128M -Xms128M"
 	ant jar
 
-tar: jar
+bin: jar docs
 	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
-	tar zcvf fastutil-$(VERSION).tar.gz --owner=root --group=root \
-		fastutil-$(VERSION)/*.drv \
-		fastutil-$(VERSION)/build.xml \
-		fastutil-$(VERSION)/gencsources.sh \
+	tar zcvf fastutil-$(VERSION)-bin.tar.gz --owner=root --group=root \
 		fastutil-$(VERSION)/CHANGES \
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
-		fastutil-$(VERSION)/Makefile \
 		fastutil-$(VERSION)/docs \
-		fastutil-$(VERSION)/fastutil-$(VERSION).jar \
-		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+		fastutil-$(VERSION)/fastutil-$(VERSION).jar
 	rm fastutil-$(VERSION)
 
 source:
@@ -55,7 +50,7 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/Makefile \
-		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,SkippableIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
 jsources: $(SOURCES)
@@ -84,7 +79,7 @@ docs: jsources
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv java/it/unimi/dsi/fastutil/Hash.java java/it/unimi/dsi/fastutil/BidirectionalIterator.java java/it/unimi/dsi/fastutil/HashCommon.java java/it/unimi/dsi/fastutil/package.html
+	etags build.xml Makefile README gencsources.sh *.drv java/it/unimi/dsi/fastutil/Hash.java java/it/unimi/dsi/fastutil/BidirectionalIterator.java java/it/unimi/dsi/fastutil/SkippableIterator.java java/it/unimi/dsi/fastutil/HashCommon.java java/it/unimi/dsi/fastutil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
