@@ -233,7 +233,7 @@ done
 
 t=${#INTERFACE[*]}
 for ((f=0; f<t; f++)); do
-	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
+	 for ((k=0; k<$((${#TYPE[*]}-2)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${INTERFACE[$f]}.c
 					 rm -f $FILENAME
 					 echo -e \
