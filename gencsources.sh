@@ -18,7 +18,7 @@ MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap LinkedOpenHashMa
 SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet LinkedOpenHashSet AVLTreeSet RBTreeSet)
 
 # Driver files for interfaces.
-INTERFACE=(Comparator AbstractComparator Iterator ListIterator BidirectionalIterator)
+INTERFACE=(Comparator AbstractComparator Iterator IteratorsFragment AbstractIterator ListIterator BidirectionalIterator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object Object)
@@ -299,11 +299,15 @@ for ((f=0; f<t; f++)); do
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
+"#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
+"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_ARRAY_ITERATOR ${TYPE_CAP[$k]}ArrayIterator\n\n"\
+"#define KEY_ABSTRACT_ITERATOR ${TYPE_CAP[$k]}AbstractIterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
@@ -315,6 +319,9 @@ for ((f=0; f<t; f++)); do
 
 	  done
 done
+
+
+cp Iterators.drv $DIR/Iterators.c
 
 rm -f $DIR/BooleanAbstractSet.c
 rm -f $DIR/BooleanSortedSet.c

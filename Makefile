@@ -5,6 +5,7 @@ VERSION=2.52
 .SUFFIXES: .java .class
 
 CSOURCES = $(wildcard java/it/unimi/dsi/fastutil/*.c)	# The list of C source files
+FRAGMENTS = $(wildcard java/it/unimi/dsi/fastutil/*Fragment*.java)	# The list of Java fragments
 SOURCES = $(CSOURCES:.c=.java)	# The list of Java generated source files
 CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 
@@ -54,7 +55,9 @@ source:
 		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
-jsources: $(SOURCES)
+jsources: $(FRAGMENTS) 
+
+$(FRAGMENTS): $(SOURCES)
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
