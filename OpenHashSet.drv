@@ -498,7 +498,6 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  
 				ct = System.currentTimeMillis() - v;
 		  
-				System.gc();
 				v = System.currentTimeMillis();
 		  
 
@@ -516,10 +515,9 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 							 );
 				}
 
-				System.out.println("Added "+n+" pairs in old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
+				System.out.println("Added "+n+" pairs in old HashSet (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-				System.gc();
-				System.gc();
+
 
 				v = System.currentTimeMillis();
 
@@ -541,8 +539,25 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
 				t = null;
-				System.gc();
-				System.gc();
+
+				/* Again, we measure the time that is necessary to produce the inputs. */
+		  
+				v = System.currentTimeMillis();
+		  
+				for( i=0; i<n;  i++ ) {
+				
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextLong()
+#endif
+						  ;
+				}
+		  
+				ct = System.currentTimeMillis() - v;
+		  
 
 				v = System.currentTimeMillis();
 
@@ -560,10 +575,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 							 );
 				}
 		  
-				System.out.println("Added "+n+" pairs in new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+				System.out.println("Added "+n+" pairs in new HashSet (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-				System.gc();
-				System.gc();
 
 				v = System.currentTimeMillis();
 
@@ -579,6 +592,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 									r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
 									);
+
 				}
 		  
 				System.out.println("Examined "+n+" pairs in new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
