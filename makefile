@@ -289,6 +289,12 @@ $(MAPS_STATIC): Maps.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(MAPS_STATIC)
 
 
+SORTEDMAPS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)SortedMaps.c))
+$(SORTEDMAPS_STATIC): SortedMaps.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SORTEDMAPS_STATIC)
+
+
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
 
