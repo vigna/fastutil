@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        4.2
-Release:        2jpp
+Version:        4.2.1
+Release:        0jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.2-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.2.1-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -77,6 +77,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Tue Jun 22 2004 Sebastiano Vigna <vigna at acm.org> - 4.2.1-1jpp
+- Fixes to trim() methods.
+
 * Tue May 04 2004 Sebastiano Vigna <vigna at acm.org> - 4.2-1jpp
 - Fixes to array classes.
 
