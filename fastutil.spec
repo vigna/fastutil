@@ -1,6 +1,6 @@
 %define name            fastutil
-%define version         2.51
-%define release         3jpp
+%define version         2.52
+%define release         1jpp
 %define javadir         %{_datadir}/java
 %define javadocdir      %{_datadir}/javadoc
 %define section         free
@@ -10,11 +10,12 @@ Version:        %{version}
 Release:        %{release}
 Summary:        fastUtil: Fast & compact type-specific utility classes
 License:        LGPL
-Source0:        http://vigna.dsi.unimi.it/fastUtil/fastUtil-2.51.tar.gz
+Source0:        http://vigna.dsi.unimi.it/fastUtil/fastUtil-2.52.tar.gz
 URL:            http://vigna.dsi.unimi.it/fastUtil/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
+Provides:	fastUtil fastutil
 BuildRequires:  ant, make, gcc, jpackage-utils, /bin/bash
 BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -89,6 +90,12 @@ rm -rf $RPM_BUILD_ROOT
 # -----------------------------------------------------------------------------
 
 %changelog
+* Wed Mar 12 2003 Sebastiano Vigna <vigna at acm.org> - 2.52-1jpp
+- IMPORTANT: The package name has changed. Please remove manually
+  the old package.
+- Deleted docs from source tar.
+- Merged in patches to Makefile.
+
 * Sun Mar  9 2003 Ville Skyttä <ville.skytta at iki.fi> - 2.51-2jpp
 - First official JPackage release.
 - Fix Group tags.
