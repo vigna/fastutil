@@ -43,7 +43,8 @@ import java.util.Comparator;
  * <P>Optionally, an indirect priority queue may even provide methods to notify
  * {@linkplain #changed(int) the change of <em>any</em> element of the
  * reference list}, and to {@linkplain #remove(int) remove from the queue} any
- * element of the reference list presently in the queue.
+ * element of the reference list presently in the queue. It may even allow to
+ * notify that {@linkplain #allChanged() all elements have changed}.
  *
  * <P>It is always possible to enqueue two distinct indices corresponding to
  * equal elements of the reference list. However, depending on the
@@ -121,11 +122,16 @@ public interface IndirectPriorityQueue {
 	 *
 	 * <P>Note that the specified element must belong to the queue.
 	 *
-	 * @param index the element to be removed.
+	 * @param index the element that has changed.
 	 * @throws NoSuchElementException if the specified element is not in the queue.
 	 */
 
 	public void changed( int index );
+
+	/** Notifies the queue that the all elements have changed (optional operation).
+	 */
+
+	public void allChanged();
 
 	/** Removes the specified element from the queue (optional operation).
 	 *

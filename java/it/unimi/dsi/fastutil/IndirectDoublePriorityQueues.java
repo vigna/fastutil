@@ -84,6 +84,7 @@ public class IndirectDoublePriorityQueues {
 		public int size() { synchronized( sync ) { return q.size(); } }
 		public void clear() { synchronized( sync ) { q.clear(); } }
 		public void changed() { synchronized( sync ) { q.changed(); } }
+		public void allChanged() { synchronized( sync ) { q.allChanged(); } }
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
 		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
 		public Comparator comparator() { synchronized( sync ) { return q.comparator(); } }

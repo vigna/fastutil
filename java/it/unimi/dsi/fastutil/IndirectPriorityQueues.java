@@ -51,6 +51,7 @@ public class IndirectPriorityQueues {
 		public int first() { throw new NoSuchElementException(); }
 		public int last() { throw new NoSuchElementException(); }
 		public void changed() { throw new NoSuchElementException(); }
+		public void allChanged() {}
 		public Comparator comparator() { return null; }
 		public void changed( final int i ) { throw new IllegalArgumentException( "Index " + i + " is not in the queue" ); }
 		public void remove( final int i ) { throw new IllegalArgumentException( "Index " + i + " is not in the queue" ); }
@@ -90,6 +91,7 @@ public class IndirectPriorityQueues {
 		public int size() { synchronized( sync ) { return q.size(); } }
 		public void clear() { synchronized( sync ) { q.clear(); } }
 		public void changed() { synchronized( sync ) { q.changed(); } }
+		public void allChanged() { synchronized( sync ) { q.allChanged(); } }
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
 		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
 		public Comparator comparator() { synchronized( sync ) { return q.comparator(); } }
