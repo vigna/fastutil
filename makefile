@@ -66,6 +66,7 @@ source:
 		fastutil-$(VERSION)/make-1.3-compatible.sh \
 		$(foreach f, $(SOURCES), fastutil-$(VERSION)/$(f)) \
 		fastutil-$(VERSION)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
+		fastutil-$(VERSION)/$(SOURCEDIR)/io/package.html \
 		fastutil-$(VERSION)/java/overview.html
 	rm fastutil-$(VERSION)
 
