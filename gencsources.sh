@@ -335,6 +335,8 @@ for ((f=0; f<t; f++)); do
 "#assert keyclass(${CLASS[$k]})\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
+"#define SET ${TYPE_CAP[$k]}Set\n\n"\
+"#define LINKEDOPENHASHSET ${TYPE_CAP[$k]}LinkedOpenHashSet\n\n"\
 "#define KEY_ITERATOR_CONCATENATOR ${TYPE_CAP[$k]}IteratorConcatenator\n\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
 "#define KEY2TYPE(x) (x)\n"\

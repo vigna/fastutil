@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.51: Fast & compact specialized utility classes for Java
+ * fastUtil 2.61: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
