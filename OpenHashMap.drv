@@ -29,6 +29,8 @@ import java.util.*;
 import java.io.*;
 
 /** A type-specific hash map with a very fast, small-footprint implementation.
+ * @see Hash
+ * @see HashCommon
  */
 
 public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Hash, MAP {
@@ -42,7 +44,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneab
 	 private transient byte state[];
 
 	 /** The acceptable load factor. */
-	 private final float loadFactor;
+	 private final float f;
 	 
 	 /** Index into the prime list, giving the current table size. */
 	 private int p;
@@ -88,7 +90,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneab
 		  int l = Arrays.binarySearch(primes, (int)(n/f)+1);
 		  if (l < 0) l = -l-1;
 
-		  this.loadFactor = f;
+		  this.f = f;
 		  this.n = primes[l];
 		  n2 = this.n - 2;
 		  p = l;
@@ -172,12 +174,12 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneab
 
 		  /* Tables without deletions will never use code beyond this point. */
 
-		  final int f = h1; // Remember first available bucket for later.
+		  final int i = h1; // Remember first available bucket for later.
 		  
 		  /** See the comments in the documentation of the interface Hash. */
-		  while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) if ( (h1 = ( h1 + h2 ) % n) == s ) return f;
+		  while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) if ( (h1 = ( h1 + h2 ) % n) == s ) return i;
 		  
-		  return state[h1] == OCCUPIED ? -h1-1 : f; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+		  return state[h1] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
 	 }
 
 
@@ -226,7 +228,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneab
 		  state[i] = OCCUPIED;
 		  key[i] = k;
 		  value[i] = v;
-		  if ( ++count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return null;
 	 }
 	 
@@ -250,7 +252,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneab
 		  state[i] = OCCUPIED;
 		  key[i] = k;
 		  value[i] = v;
-		  if ( ++count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return DEF_RET_VALUE;
 	 }
 

@@ -30,6 +30,8 @@ import java.io.*;
 
 
 /**  A type-specific hash set with with a very fast, small-footprint implementation.
+ * @see Hash
+ * @see HashCommon
  */
 
 public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SET {
@@ -40,7 +42,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneab
 	 private transient byte state[];
 
 	 /** The acceptable load factor. */
-	 private final float loadFactor;
+	 private final float f;
 	 
 	 /** Index into the prime list, giving the current table size. */
 	 private int p;
@@ -74,7 +76,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneab
 
 		  //System.err.println("Allocation dimension: " + primes[l]);
 
-		  this.loadFactor = f;
+		  this.f = f;
 		  this.n = primes[l];
 		  n2 = this.n - 2;
 		  p = l;
@@ -105,18 +107,31 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneab
 	 /** Creates a new hash set copying a given collection.
 	  *
 	  * @param c a {@link Collection} to be copied into the new hash set. 
+	  * @param f the load factor.
+	  */
+	 
+	 public HASHSET( Collection c, float f ) {
+		  this(c.size(), f);
+		  addAll(c);
+	 }
+
+
+
+	 /** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	  * copying a given collection.
+	  *
+	  * @param c a {@link Collection} to be copied into the new hash set. 
 	  */
 	 
 	 public HASHSET( Collection c ) {
-		  this(c.size());
-		  addAll(c);
+		  this(c, DEFAULT_LOAD_FACTOR);
 	 }
 
 
 	 /** Creates a new set copying the elements of an array and 
 	  *
-	  * @param f the load factor.
 	  * @param a an array to be copied into the new hash set. 
+	  * @param f the load factor.
 	  */
 	 
 	 public HASHSET( KEY_TYPE[] a, float f ) {
@@ -170,12 +185,12 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneab
 
 		  /* Tables without deletions will never use code beyond this point. */
 
-		  final int f = h1; // Remember first available bucket for later.
+		  final int i = h1; // Remember first available bucket for later.
 		  
 		  /** See the comments in the documentation of the interface Hash. */
-		  while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) if ( (h1 = ( h1 + h2 ) % n) == s ) return f;
+		  while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) if ( (h1 = ( h1 + h2 ) % n) == s ) return i;
 		  
-		  return state[h1] == OCCUPIED ? -h1-1 : f; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
+		  return state[h1] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
 	 }
 
 
@@ -218,7 +233,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneab
 
 		  state[i] = OCCUPIED;
 		  key[i] = k;
-		  if ( ++count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return true;
 	 }
 	 
@@ -234,7 +249,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Cloneab
 
 		  state[i] = OCCUPIED;
 		  key[i] = k;
-		  if ( ++count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return true;
 	 }
 
