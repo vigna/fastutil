@@ -79,6 +79,7 @@ private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_LIST_ITERATOR {
  * @param length the number of elements to return.
  */
 public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
+	if ( length < 0 ) throw new IllegalArgumentException( "The length (" + length + ") is negative" );
 	if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
 	return new KEY_ARRAY_ITERATOR( array, offset, length );
 }
@@ -99,20 +100,21 @@ public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[] ) {
  *
  * <P>This method iterates over the given type-specific iterator and stores the elements
  * returned, up to a maximum of <code>length</code>, in the given array starting at <code>offset</code>.
- * The number of actually unwrapped elements is returned (it may be less than <code>length</code> if
- * the iterator emits less than <code>length</code> elements).
+ * The number of actually unwrapped elements is returned (it may be less than <code>max</code> if
+ * the iterator emits less than <code>max</code> elements).
  *
  * @param i a type-specific iterator.
  * @param array an array to contain the output of the iterator.
  * @param offset the first element of the array to be returned.
- * @param length the maximum number of elements to unwrap.
+ * @param max the maximum number of elements to unwrap.
  * @return the number of elements unwrapped.
  */
-public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[], int offset, final int length ) {
-	if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
-	int j = length;
+public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[], int offset, final int max ) {
+	if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
+	if ( offset < 0 || offset + max > array.length ) throw new IllegalArgumentException();
+	int j = max;
 	while( j-- != 0 && i.hasNext() ) array[ offset++ ] = i.NEXT_KEY();
-	return length - j - 1;
+	return max - j - 1;
 }
 
 /** Unwraps an iterator into an array.
@@ -140,6 +142,7 @@ public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[] ) {
  * @return an array containing the elements returned by the iterator (at most <ocde>max</code>).
  */
 public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i, int max ) {
+	if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
 	KEY_TYPE array[] = new KEY_TYPE[ 16 ];
 	int j = 0;
 
@@ -176,6 +179,49 @@ public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i ) {
 }
 
 
+/** Unwraps an iterator into a type-specific collection,  with a limit on the number of elements.
+ *
+ * <P>This method iterates over the given type-specific iterator and stores the elements
+ * returned, up to a maximum of <code>max</code>, in the given type-specific collection.
+ * The number of actually unwrapped elements is returned (it may be less than <code>max</code> if
+ * the iterator emits less than <code>max</code> elements).
+ *
+ * @param i a type-specific iterator.
+ * @param c a type-specific collection array to contain the output of the iterator.
+ * @param max the maximum number of elements to unwrap.
+ * @return the number of elements unwrapped. Note that
+ * this is the number of elements returned by the iterator, which is not necessarily the number
+ * of elements that have been added to the collection (because of duplicates).
+ */
+public static int unwrap( final STD_KEY_ITERATOR i, final COLLECTION c, final int max ) {
+	if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
+	int j = max;
+	while( j-- != 0 && i.hasNext() ) c.add( i.NEXT_KEY() );
+	return max - j - 1;
+}
+
+/** Unwraps an iterator into a type-specific collection.
+ *
+ * <P>This method iterates over the given type-specific iterator and stores the
+ * elements returned in the given type-specific collection. The returned count on the number
+ * unwrapped elements is a long, so that it will work also with very large collections.
+ *
+ * @param i a type-specific iterator.
+ * @param c a type-specific collection to contain the output of the iterator.
+ * @return the number of elements unwrapped. Note that
+ * this is the number of elements returned by the iterator, which is not necessarily the number
+ * of elements that have been added to the collection (because of duplicates).
+ */
+public static long unwrap( final STD_KEY_ITERATOR i, final COLLECTION c ) {
+	long n = 0;
+	while( i.hasNext() ) {
+		c.add( i.NEXT_KEY() );
+		n++;
+	}
+	return n;
+}
+
+
 #if ! #keyclass(Boolean)
 
 /** Pours an iterator into a type-specific set, with a limit on the number of elements.
@@ -186,10 +232,13 @@ public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i ) {
  * @param i a type-specific iterator.
  * @param s a type-specific set.
  * @param max the maximum number of elements to be poured.
- * @return the number of elements poured.
+ * @return the number of elements poured. Note that
+ * this is the number of elements returned by the iterator, which is not necessarily the number
+ * of elements that have been added to the set (because of duplicates).
  */
 
 public static int pour( final STD_KEY_ITERATOR i, final SET s, final int max ) {
+	if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
 	int j = max;
 	while( j-- != 0 && i.hasNext() ) s.add( i.NEXT_KEY() );
 	return max - j - 1;
@@ -202,7 +251,9 @@ public static int pour( final STD_KEY_ITERATOR i, final SET s, final int max ) {
  *
  * @param i a type-specific iterator.
  * @param s a type-specific set.
- * @return the number of elements poured.
+ * @return the number of elements poured. Note that
+ * this is the number of elements returned by the iterator, which is not necessarily the number
+ * of elements that have been added to the set (because of duplicates).
  */
 
 public static int pour( final STD_KEY_ITERATOR i, final SET s ) {
