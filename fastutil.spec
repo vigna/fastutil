@@ -6,7 +6,7 @@ Release:        0jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.3-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.3.1-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project

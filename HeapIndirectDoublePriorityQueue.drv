@@ -439,37 +439,11 @@ public class HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_INDIRECT_PRIORITY_
 			while( size() != 0 ) remove();
 		}
 
-		public void remove( int index ) {
-			if ( n == 0 ) throw new NoSuchElementException();
-			int result = primary[index];
-			int ins = inSec[result];
-			inSec[ result ] = -1;
-			// Copy a leaf 
-			primary[index] = primary[n-1];
-			if ( ins == n-1 ) {
-				n--;
-				swimPrimary( index );	
-				return;
-			}
-			secondary[ins] = secondary[n-1]; 
-			inSec[secondary[ins]] = ins;
-			// Heapify
-			n--;
-			swimPrimary( index );
-			swimSecondary( ins );
-		}
-
 		/** Signals that the minimum element with respect to the comparator has changed.
 		 */
 		public void change() {
 			int ins = inSec[primary[0]];
 			heapifyPrimary( 0 );
-			swimSecondary( ins );
-		}
-
-		public void change(int index) {
-			int ins = inSec[primary[index]];
-			swimPrimary( index );
 			swimSecondary( ins );
 		}
 
@@ -631,10 +605,9 @@ public class HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_INDIRECT_PRIORITY_
 			ensure( heapEqual( m.secondaryQueue.heap, t.secondary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in secondary heap after dequeue (" + m + ", " + t + ")" );
 			ensure( invEqual( m.secondaryQueue.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after dequeue (" + cern.colt.Arrays.toString( m.secondaryQueue.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
 
-			if ( m.size() != 0 ) {
-				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after dequeue (" + m.first() + ", " + t.top() + ")");
-				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after dequeue (" + m.secondaryFirst() + ", " + t.secTop() + ")");
-			}
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
 
 			if ( m.size() != 0 ) {
 				refArray[ m.first() ] = genKey();
@@ -648,17 +621,6 @@ public class HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_INDIRECT_PRIORITY_
 				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after change (" + m.secondaryFirst() + ", " + t.secTop() + ")");
 			}
 
-			if ( m.size() != 0 ) {
-				refArray[ m.secondaryfirst() ] = genKey();
-				
-				m.changed( m.secondaryfirst() );
-				t.change( m.secondaryfirst() );
-				
-				ensure( m.size() == t.size(), "Error (" + seed + "): m and t differ in size after change of secondary first (" + m.size() + ", " + t.size() + ")");
-				
-				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after change of secondary first (" + m.first() + ", " + t.top() + ")");
-				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after change of secondary first (" + m.secondaryFirst() + ", " + t.secTop() + ")");
-			}
 		}
 
 
