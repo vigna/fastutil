@@ -20,7 +20,7 @@
 
 /** Loads elements from a given fast buffered reader, storing them in a given array fragment.
  *
- * @param reader a fast buffered reader.
+ * @param reader a buffered reader.
  * @param array an array which will be filled with data from <code>reader</code>.
  * @param offset the index of the first element of <code>array</code> to be filled.
  * @param length the number of elements of <code>array</code> to be filled.
@@ -39,9 +39,9 @@ public static int LOAD_KEYS( final BufferedReader reader, final KEY_TYPE[] array
 	return i;
 }
 
-/** Loads elements from a given fast buffered reader, storing them in a given array.
+/** Loads elements from a given buffered reader, storing them in a given array.
  *
- * @param reader a fast buffered reader.
+ * @param reader a buffered reader.
  * @param array an array which will be filled with data from <code>reader</code>.
  * @return the number of elements actually read from <code>reader</code> (it might be less than the array length if <code>reader</code> ends).
  */
@@ -121,7 +121,7 @@ public static void STORE_KEYS( final KEY_TYPE array[], final CharSequence filena
 /** Stores the element returned by an iterator to a given print stream.
  *
  * @param i an iterator whose output will be written to <code>stream</code>.
- * @param stream a file name.
+ * @param stream a print stream.
  */
 public static void STORE_KEYS( final KEY_ITERATOR i, final PrintStream stream ) throws IOException {
 	while( i.hasNext() ) stream.println( i.NEXT_KEY() );
@@ -136,6 +136,63 @@ public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename
 	final PrintStream stream = new PrintStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
 	STORE_KEYS( i, stream );
 	stream.close();
+}
+
+
+/** A wrapper that exhibits the content of a reader as a type-specific iterator. */
+
+final private static class KEY_READER_WRAPPER extends KEY_ABSTRACT_ITERATOR {
+	final private BufferedReader reader;
+	private boolean toAdvance = true;
+	private String s;
+	private KEY_TYPE next;
+
+	public KEY_READER_WRAPPER( final BufferedReader reader ) {
+		this.reader = reader;
+	}
+
+	public boolean hasNext() {
+		if ( ! toAdvance ) return s != null;
+
+		toAdvance = false;
+
+		try {
+			s = reader.readLine();
+		}
+		catch( EOFException itsOk ) {}
+		catch( IOException rethrow ) { throw new RuntimeException( rethrow ); }
+
+		if ( s == null ) return false;
+
+		next = KEY_CLASS.PARSE_KEY( s );
+		return true;
+	}
+
+	public KEY_TYPE NEXT_KEY() {
+		if (! hasNext()) throw new NoSuchElementException();
+		toAdvance = true;
+		return next;
+	}
+}
+
+
+
+/** Wraps the given buffered reader into an iterator.
+ *
+ * @param i an iterator which will return the elements represented by the content of <code>reader</code>.
+ * @param reader a buffered reader.
+ */
+public static KEY_ITERATOR WRAP_KEY_READER( final BufferedReader reader ) throws IOException {
+	return new KEY_READER_WRAPPER( reader );
+}
+
+/** Wraps the given filename into an iterator.
+ *
+ * @param i an iterator which will return the elements represented by the content of <code>filename</code>.
+ * @param filename a file name.
+ */
+public static KEY_ITERATOR WRAP_KEY_READER( final CharSequence filename ) throws IOException {
+	return new KEY_READER_WRAPPER( new BufferedReader( new FileReader( filename.toString() ) ) );
 }
 
 
