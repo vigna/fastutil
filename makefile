@@ -244,104 +244,66 @@ $(ARRAY_LISTS): ArrayList.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ARRAY_LISTS)
 
 #
-# Fragments
+# Static containers
 #
 
-ITERATORS_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(k)Iterators-Fragment.h)
-$(ITERATORS_FRAGMENTS): Iterators-Fragment.drv; ./gencsource.sh $< $@ >$@
+ITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Iterators.c)
+$(ITERATORS_STATIC): Iterators.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(ITERATORS_FRAGMENTS)
-
-$(SOURCEDIR)/Iterators.c: Iterators.drv $(ITERATORS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/Iterators.java: $(ITERATORS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/Iterators.c
+CSOURCES += $(ITERATORS_STATIC)
 
 
-COLLECTIONS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Collections-Fragment.h)
-$(COLLECTIONS_FRAGMENTS): Collections-Fragment.drv; ./gencsource.sh $< $@ >$@
+COLLECTIONS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Collections.c)
+$(COLLECTIONS_STATIC): Collections.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(COLLECTIONS_FRAGMENTS)
-
-$(SOURCEDIR)/Collections.c: Collections.drv $(COLLECTIONS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/Collections.java: $(COLLECTIONS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/Collections.c
+CSOURCES += $(COLLECTIONS_STATIC)
 
 
-SETS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Sets-Fragment.h)
-$(SETS_FRAGMENTS): Sets-Fragment.drv; ./gencsource.sh $< $@ >$@
+SETS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Sets.c)
+$(SETS_STATIC): Sets.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(SETS_FRAGMENTS)
-
-$(SOURCEDIR)/Sets.c: Sets.drv $(SETS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/Sets.java: $(SETS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/Sets.c
+CSOURCES += $(SETS_STATIC)
 
 
-SORTEDSETS_FRAGMENTS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(k)SortedSets-Fragment.h)
-$(SORTEDSETS_FRAGMENTS): SortedSets-Fragment.drv; ./gencsource.sh $< $@ >$@
+SORTEDSETS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)SortedSets.c)
+$(SORTEDSETS_STATIC): SortedSets.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(SORTEDSETS_FRAGMENTS)
-
-$(SOURCEDIR)/SortedSets.c: SortedSets.drv $(SORTEDSETS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/SortedSets.java: $(SORTEDSETS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/SortedSets.c
+CSOURCES += $(SORTEDSETS_STATIC)
 
 
-LISTS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Lists-Fragment.h)
-$(LISTS_FRAGMENTS): Lists-Fragment.drv; ./gencsource.sh $< $@ >$@
+LISTS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Lists.c)
+$(LISTS_STATIC): Lists.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(LISTS_FRAGMENTS)
-
-$(SOURCEDIR)/Lists.c: Lists.drv $(LISTS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/Lists.java: $(LISTS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/Lists.c
+CSOURCES += $(LISTS_STATIC)
 
 
-ARRAYS_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(k)Arrays-Fragment.h)
-$(ARRAYS_FRAGMENTS): Arrays-Fragment.drv; ./gencsource.sh $< $@ >$@
+ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Arrays.c)
+$(ARRAYS_STATIC): Arrays.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(ARRAYS_FRAGMENTS)
-
-$(SOURCEDIR)/Arrays.c: Arrays.drv $(ARRAYS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/Arrays.java: $(ARRAYS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/Arrays.c
+CSOURCES += $(ARRAYS_STATIC)
 
 
-MAPS_FRAGMENTS := $(foreach k, $(TYPE_NOBOOL), $(foreach v, $(TYPE), $(SOURCEDIR)/$(k)2$(v)Maps-Fragment.h))
-$(MAPS_FRAGMENTS): Maps-Fragment.drv; ./gencsource.sh $< $@ >$@
+MAPS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Maps.c)
+$(MAPS_STATIC): Maps.drv; ./gencsource.sh $< $@ >$@
 
-CFRAGMENTS += $(MAPS_FRAGMENTS)
-
-$(SOURCEDIR)/Maps.c: Maps.drv $(MAPS_FRAGMENTS)
-	cp $< $@
-
-$(SOURCEDIR)/Maps.java: $(MAPS_FRAGMENTS:.h=.j)
-
-CSOURCES += $(SOURCEDIR)/Maps.c
+CSOURCES += $(MAPS_STATIC)
 
 
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
 
-SOURCES = $(SOURCEDIR)/Hash.java $(SOURCEDIR)/BidirectionalIterator.java $(SOURCEDIR)/HashCommon.java $(SOURCEDIR)/Stack.java $(SOURCEDIR)/AbstractStack.java # These are True Java Sources instead
+SOURCES = 
+	$(SOURCEDIR)/Hash.java \
+	$(SOURCEDIR)/BidirectionalIterator.java \
+	$(SOURCEDIR)/HashCommon.java $(SOURCEDIR)/Stack.java \
+	$(SOURCEDIR)/AbstractStack.java \
+	$(SOURCEDIR)/Iterators.java \
+	$(SOURCEDIR)/Collections.java \
+	$(SOURCEDIR)/Sets.java \
+	$(SOURCEDIR)/Sets.java \
+	$(SOURCEDIR)/SortedSets.java \
+	$(SOURCEDIR)/Lists.java \
+	$(SOURCEDIR)/Maps.java # These are True Java Sources instead
 
 ifdef ASSERTS
 	ASSERTS_VALUE = true

@@ -47,31 +47,462 @@ import java.util.NoSuchElementException;
  * @see Collections
  */
 
-public class SortedSets {
+public class SORTEDSETS {
 
-	private SortedSets() {}
+	private SORTEDSETS() {}
 
-	/** An empty sorted set (immutable). It is serialisable and cloneable.
+#if ! #keyclass(Reference)
+
+	/** A class representing a sorted singleton. */
+
+	protected static class SINGLETON extends Sets.SINGLETON implements SORTEDSET, java.io.Serializable, Cloneable {
+	
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		KEY_COMPARATOR comparator;
+
+		private SINGLETON( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
+			super( element );
+			this.comparator = comparator;
+		}
+
+		private SINGLETON( final KEY_TYPE element ) {
+			this( element, null );
+		}
+
+		final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
+			return comparator == null ? KEY_CMP( k1, k2 ) : comparator.compare( k1, k2 );
+		}
+
+		public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) { 
+			KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)KEY_ITERATOR_METHOD(); 
+			if ( compare( element, from ) <= 0 ) i.next();
+			return i;
+		}
+
+		public Comparator comparator() { return comparator; }
+
+		public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) { if ( compare( from, element ) <= 0 && compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+		public STDSORTEDSET headSet( KEY_TYPE to ) { if ( compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+		public STDSORTEDSET tailSet( KEY_TYPE from ) { if ( compare( from, element ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+
+		public KEY_TYPE FIRST() { return element; }
+		public KEY_TYPE LAST() { return element; }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+		public Object first() { return KEY2OBJ( element ); }
+		public Object last() { return KEY2OBJ( element ); }
+
+		public Iterator iterator( Object from ) { return iterator( KEY2TYPE( from ) ); }
+
+		public SortedSet subSet( Object from, Object to ) { return subSet( KEY2TYPE( from ), KEY2TYPE( to ) ); }
+		public SortedSet headSet( Object to ) { return headSet( KEY2TYPE( to ) ); }
+		public SortedSet tailSet( Object from ) { return tailSet( KEY2TYPE( from ) ); }
+#endif
+	}
+
+
+	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serializable and cloneable.
 	 *
-	 * <P>The class of this objects represent an abstract empty sorted set
-	 * that is a subset of any type of sorted set. Thus, {@link #EMPTY_SET}
-	 * may be assigned a variable of any (sorted) type-specific set.
-	 *
-	 * <P>Note that this is just a useful copy of {@link Sets#EMPTY_SET}.
+	 * @param element the only element of the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
 	 */
 
-	public static final Sets.EmptySet EMPTY_SET = Sets.EMPTY_SET;
-	
-	
-#include "ByteSortedSets-Fragment.j"
-#include "ShortSortedSets-Fragment.j"
-#include "IntSortedSets-Fragment.j"
-#include "LongSortedSets-Fragment.j"
-#include "CharSortedSets-Fragment.j"
-#include "FloatSortedSets-Fragment.j"
-#include "DoubleSortedSets-Fragment.j"
-#include "ObjectSortedSets-Fragment.j"
-#include "ReferenceSortedSets-Fragment.j"
+	public static SORTEDSET singleton( final KEY_TYPE element ) {
+		return new SINGLETON( element );
+	}
+
+	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned sorted set.
+	 * @param comparator the comparator to use in the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
+	 */
+
+	public static SORTEDSET singleton( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
+		return new SINGLETON( element, comparator );
+	}
+
+#if ! #keyclass(Object) 
+
+	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
+	 */
+
+	public static SORTEDSET singleton( Object element ) {
+		return new SINGLETON( KEY2TYPE( element ) );
+	}
+
+	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned sorted set.
+	 * @param comparator the comparator to use in the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
+	 */
+
+	public static SORTEDSET singleton( final Object element, final KEY_COMPARATOR comparator ) {
+		return new SINGLETON( KEY2TYPE( element ), comparator );
+	}
+#endif
+
+#endif
+
+
+
+	protected static class SynchronizedSortedSet extends Sets.SYNCHRONIZED_SET implements SORTEDSET, java.io.Serializable {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		SORTEDSET sortedset;
+
+		SynchronizedSortedSet( SORTEDSET s, Object sync ) {
+			super( s, sync );
+			sortedset = s;
+		}
+
+		SynchronizedSortedSet( SORTEDSET s ) {
+			this( s, null );
+		}
+
+		public Comparator comparator() { synchronized( sync ) { return sortedset.comparator(); } }
+
+		public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.subSet( from, to ), sync ); }
+		public STDSORTEDSET headSet( KEY_TYPE to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.headSet( to ), sync ); }
+		public STDSORTEDSET tailSet( KEY_TYPE from ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.tailSet( from ), sync ); }
+
+		public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) { return sortedset.iterator( from ); }
+
+		public KEY_TYPE FIRST() {  synchronized( sync ) { return sortedset.FIRST(); } }
+		public KEY_TYPE LAST() {  synchronized( sync ) { return sortedset.LAST(); } }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+		public Object first() {  synchronized( sync ) { return sortedset.first(); } }
+		public Object last() {  synchronized( sync ) { return sortedset.last(); } }
+
+		public Iterator iterator( Object from ) { return sortedset.iterator( KEY2TYPE( from ) ); }
+
+		public SortedSet subSet( Object from, Object to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.subSet( from, to ), sync ); }
+		public SortedSet headSet( Object to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.headSet( to ), sync ); }
+		public SortedSet tailSet( Object from ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.tailSet( from ), sync ); }
+#endif
+	}
+
+
+	/** Returns a synchronized sorted set backed by the specified sorted set.
+	 *
+	 * @param s the sorted set to be "wrapped" in a synchronized sorted set.
+	 * @return a synchronized view of the specified sorted set.
+	 * @see java.util.Collections#synchronizedSortedSet(SortedSet)
+	 */
+	public static SORTEDSET synchronize( SORTEDSET s ) {	return new SynchronizedSortedSet( s ); }
+
+	/** Returns a synchronized sorted set backed by the specified sorted set, using an assigned object to synchronize.
+	 *
+	 * @param s the sorted set to be "wrapped" in a synchronized sorted set.
+	 * @param sync an object that will be used to synchronize the list access.
+	 * @return a synchronized view of the specified sorted set.
+	 * @see java.util.Collections#synchronizedSortedSet(SortedSet)
+	 */
+
+	public static SORTEDSET synchronize( SORTEDSET s, Object sync ) { return new SynchronizedSortedSet( s, sync ); }
+
+
+
+
+
+
+#ifdef TEST
+
+	private static KEY_TYPE GEN_KEY() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif !#keyclass(Object) && !#keyclass(Reference)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else
+		return new java.io.Serializable() {};
+#endif
+	}
+
+
+	private static void KEY_TEST() {
+		int n = 100;
+		int c;
+		KEY_TYPE k = GEN_KEY();
+		SINGLETON m = new SINGLETON( k );
+		SortedSet t = java.util.Collections.singleton( KEY2OBJ( k ) );
+
+		long ms;
+		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsIndex, tThrowsIndex, mThrowsUnsupp, tThrowsUnsupp;
+		boolean rt = false, rm = false;
+
+
+		/* Now we check that m and t are equal. */
+		if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
+
+		ensure( m.equals( t ), "Error (" + seed + "): ! m.equals( t ) at start" );
+		ensure( t.equals( m ), "Error (" + seed + "): ! t.equals( m ) at start" );
+
+		/* Now we check that m actually holds that data. */
+		for(Iterator i=t.iterator(); i.hasNext();  ) {
+			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on t)" );
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		for(Iterator i=m.iterator(); i.hasNext();  ) {
+			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on m)" );
+		}
+
+		/* Now we check that inquiries about random data give the same answer in m and t. For
+		   m we use the polymorphic method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+				
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				m.contains(T);
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+
+			try {
+				t.contains(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method) " + m );
+		}
+
+		/* Again, we check that inquiries about random data give the same answer in m and t, but
+		   for m we use the standard method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				m.contains(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				t.contains(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence between t and m (standard method) " + m );
+		}
+
+		/* Now we add and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.add(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.add(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in add() between t and m " + m );
+
+			T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.remove(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.remove(KEY2OBJ(T));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in remove() between t and m " + m );
+		}
+
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after removal " + m );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after removal " + m );
+
+		/* Now we add and remove random collections in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.addAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.addAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in addAll() between t and m " + m );
+
+			T = GEN_KEY();
+
+			mThrowsIndex = tThrowsIndex = mThrowsNoElement = tThrowsNoElement = mThrowsIllegal = tThrowsIllegal = mThrowsUnsupp = tThrowsUnsupp = false;
+
+			try {
+				rm = m.removeAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
+
+			try {
+				rt = t.removeAll(java.util.Collections.singleton(KEY2OBJ(T)));
+			}
+			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
+			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
+			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
+			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
+			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in removeAll() between t and m " + m );
+		}
+
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after set removal " + m );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after set removal " + m );
+
+		/* Now we check that m actually holds the same data. */
+		  
+		for(Iterator i=t.iterator(); i.hasNext();  ) {
+			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on t)");
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(Iterator i=m.iterator(); i.hasNext();  ) {
+			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on m)" );
+		}
+
+		ensure( m.equals( ((SINGLETON)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+		ensure( ((SINGLETON)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+
+		int h = m.hashCode();
+
+		/* Now we save and read m. */
+
+		SORTEDSET m2 = null;
+		  
+		try {
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+			oos.writeObject(m);
+			oos.close();
+				
+			java.io.InputStream is = new java.io.FileInputStream(ff);
+			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+			m2 = (SORTEDSET)ois.readObject();
+			ois.close();
+			ff.delete();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+
+#if ! #keyclass(Reference)
+
+		ensure( m2.hashCode() == h, "Error (" + seed + "): hashCode() changed after save/read" );
+		  
+		/* Now we check that m2 actually holds that data. */
+		  
+		ensure( m2.equals(t), "Error (" + seed + "): ! m2.equals( t ) after save/read" );
+		ensure( t.equals(m2), "Error (" + seed + "): ! t.equals( m2 ) after save/read" );
+#endif
+
+		System.out.println("Test OK");
+		return;
+	}
+
+
+
+#endif
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:
+
 
 #ifdef TEST
 	
@@ -103,7 +534,7 @@ public class SortedSets {
 		if ( arg.length > 1 ) r = new java.util.Random( seed = Long.parseLong( arg[ 1 ] ) );
 		  
 		try {
-			SortedSets.class.getDeclaredMethod( "test" + arg[ 0 ], new Class[] {} ).invoke( SortedSets.class, new Object[] {} ); 
+			SORTEDSETS.class.getDeclaredMethod( "test" + arg[ 0 ], new Class[] {} ).invoke( SORTEDSETS.class, new Object[] {} ); 
 		} catch( AssertionError e ) {
 			System.err.println( e );
 			System.err.println( "seed: " + seed );

@@ -87,12 +87,19 @@ echo -e \
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
 \
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
+"#define COLLECTIONS ${TYPE_CAP[$k]}Collections\n\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
+"#define SETS ${TYPE_CAP[$k]}Sets\n\n"\
 "#define SORTEDSET ${TYPE_CAP[$k]}SortedSet\n\n"\
+"#define SORTEDSETS ${TYPE_CAP[$k]}SortedSets\n\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
+"#define LISTS ${TYPE_CAP[$k]}Lists\n\n"\
+"#define ARRAYS ${TYPE_CAP[$k]}Arrays\n\n"\
 \
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
+"#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
 "#define SORTEDMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
+"#define SORTEDMAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMaps\n"\
 "#define ABSTRACT_MAP Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 \
 "#define ABSTRACT_COLLECTION Abstract${TYPE_CAP[$k]}Collection\n\n"\
