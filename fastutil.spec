@@ -2,7 +2,7 @@
 
 Name:           fastutil
 Version:        3.2
-Release:        1ubi
+Release:        3ubi
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
