@@ -56,34 +56,28 @@ public class SETS {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
-		protected KEY_TYPE element;
+		protected final KEY_TYPE element;
 	
 		protected Singleton( final KEY_TYPE element ) {
 			this.element = element;
 		}
 	
-		/** This function differs in behaviour from {@link Collections.singleton()}: if <code>k</code>
-		 * is the singleton element, it just returns false, whereas {@link Collections.singleton()} would
-		 * throw an {@link UnsupportedOperationException}. This behaviour is, however, not coherent
-		 * with that of <code>remove()</code>, which does not throw an exception if its argument
-		 * is not the singleton element 
-		 */
-		public boolean add( final KEY_TYPE k ) { if ( KEY_EQUAL( k, element ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean rem( final KEY_TYPE k ) { return remove( k ); }
-		public boolean remove( final KEY_TYPE k ) { if ( ! KEY_EQUAL( k, element ) ) return false; else throw new UnsupportedOperationException(); }
+		public boolean add( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
 
 		public boolean contains( final KEY_TYPE k ) { return KEY_EQUAL( k, element ); }
 	
-		public boolean addAll( final List l ) { if ( containsAll( l ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( final Collection c ) { if ( containsAll( c ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean removeAll( final Collection c ) { if ( ! c.contains( KEY2OBJ( element ) ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean retainAll( final Collection c ) { if ( c.contains( KEY2OBJ( element ) ) ) return false; else throw new UnsupportedOperationException(); }
+		public boolean addAll( final List l ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( final Collection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( final Collection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( final Collection c ) { throw new UnsupportedOperationException(); }
 
 #if ! #keyclass(Object) && ! #keyclass(Reference)
-		public boolean addAll( final LIST l ) { if ( containsAll( l ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( final COLLECTION c ) { if ( containsAll( c ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean removeAll( final COLLECTION c ) { if ( ! c.contains( element ) ) return false; else throw new UnsupportedOperationException(); }
-		public boolean retainAll( final COLLECTION c ) { if ( c.contains( element ) ) return false; else throw new UnsupportedOperationException(); }
+		public boolean addAll( final LIST l ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
 #endif
 
 		/* Slightly optimised w.r.t. the one in ABSTRACT_SET. */
@@ -296,8 +290,6 @@ public class SETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
-
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
@@ -324,6 +316,7 @@ public class SETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
+			if ( ! KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
@@ -357,8 +350,6 @@ public class SETS {
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
-
-			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );

@@ -33,6 +33,26 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 
 	protected ABSTRACT_MAP() {}
 
+#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+
+	public VALUE_TYPE put( KEY_TYPE key, VALUE_TYPE value ) {
+		throw new UnsupportedOperationException();
+	}
+
+	public VALUE_TYPE REMOVE_VALUE( KEY_TYPE key ) {
+		throw new UnsupportedOperationException();
+	}
+
+#endif
+
+	public Object put( Object ok, Object ov ) {
+		return VALUE2OBJ( put( KEY2TYPE( ok ), VALUE2TYPE( ov ) ) );
+	}
+
+	public Object remove( Object ok ) {
+		return VALUE2OBJ( REMOVE_VALUE( KEY2TYPE( ok ) ) );
+	}
+
 #if !#keyclass(Object) && !#keyclass(Reference)
 	/** Delegates to the corresponding type-specific method. */
 	public boolean containsKey( Object ok ) {
@@ -100,6 +120,9 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		} 
 	}
 
+	public boolean isEmpty() {
+		return size() == 0;
+	}
 
 	/** Returns a hash code for this map.
 	 *
@@ -120,10 +143,8 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		if ( o == this ) return true;
 		if ( ! ( o instanceof Map ) ) return false;
 
-		Map m = (Map)o;
-		if ( m.size() != size() ) return false;
-		return entrySet().containsAll( m.entrySet() );
-	}
+		Map m = (Map)o; if ( m.size() != size() ) return false; return
+		entrySet().containsAll( m.entrySet() ); }
 
 
 	public String toString() {

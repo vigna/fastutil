@@ -61,32 +61,32 @@ public class Collections {
 		public boolean add( float k ) { throw new UnsupportedOperationException(); }
 		public boolean add( double k ) { throw new UnsupportedOperationException(); }
            
-		public boolean addAll( BooleanList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( ByteList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( CharList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( ShortList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( IntList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( LongList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( FloatList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( DoubleList c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
+		public boolean addAll( BooleanList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( ByteList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( CharList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( ShortList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( IntList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( LongList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( FloatList c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( DoubleList c ) { throw new UnsupportedOperationException(); }
            
-		public boolean addAll( BooleanCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( ByteCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( CharCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( ShortCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( IntCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( LongCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( FloatCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
-		public boolean addAll( DoubleCollection c ) { if ( c.isEmpty() ) return false; else throw new UnsupportedOperationException(); }
+		public boolean addAll( BooleanCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( ByteCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( CharCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( ShortCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( IntCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( LongCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( FloatCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean addAll( DoubleCollection c ) { throw new UnsupportedOperationException(); }
            
-		public boolean removeAll( BooleanCollection c ) { return false; }
-		public boolean removeAll( ByteCollection c ) { return false; }
-		public boolean removeAll( CharCollection c ) { return false; }
-		public boolean removeAll( ShortCollection c ) { return false; }
-		public boolean removeAll( IntCollection c ) { return false; }
-		public boolean removeAll( LongCollection c ) { return false; }
-		public boolean removeAll( FloatCollection c ) { return false; }
-		public boolean removeAll( DoubleCollection c ) { return false; }
+		public boolean removeAll( BooleanCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( ByteCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( CharCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( ShortCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( IntCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( LongCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( FloatCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( DoubleCollection c ) { throw new UnsupportedOperationException(); }
            
 		public boolean containsAll( BooleanCollection c ) { return c.isEmpty(); }
 		public boolean containsAll( ByteCollection c ) { return c.isEmpty(); }
@@ -97,23 +97,23 @@ public class Collections {
 		public boolean containsAll( FloatCollection c ) { return c.isEmpty(); }
 		public boolean containsAll( DoubleCollection c ) { return c.isEmpty(); }
            
-		public boolean retainAll( BooleanCollection c ) { return false; }
-		public boolean retainAll( ByteCollection c ) { return false; }
-		public boolean retainAll( CharCollection c ) { return false; }
-		public boolean retainAll( ShortCollection c ) { return false; }
-		public boolean retainAll( IntCollection c ) { return false; }
-		public boolean retainAll( LongCollection c ) { return false; }
-		public boolean retainAll( FloatCollection c ) { return false; }
-		public boolean retainAll( DoubleCollection c ) { return false; }
+		public boolean retainAll( BooleanCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( ByteCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( CharCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( ShortCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( IntCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( LongCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( FloatCollection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( DoubleCollection c ) { throw new UnsupportedOperationException(); }
            
-		public boolean rem( boolean k ) { return false; }
-		public boolean rem( byte k ) { return false; }
-		public boolean rem( char k ) { return false; }
-		public boolean rem( short k ) { return false; }
-		public boolean rem( int k ) { return false; }
-		public boolean rem( long k ) { return false; }
-		public boolean rem( float k ) { return false; }
-		public boolean rem( double k ) { return false; }
+		public boolean rem( boolean k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( byte k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( char k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( short k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( int k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( long k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( float k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( double k ) { throw new UnsupportedOperationException(); }
            
 		public boolean contains( Object k ) { return false; }
 

@@ -57,7 +57,7 @@ public class SORTEDSETS {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		KEY_COMPARATOR comparator;
+		final KEY_COMPARATOR comparator;
 
 		private Singleton( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
 			super( element );
@@ -150,7 +150,7 @@ public class SORTEDSETS {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		SORTEDSET sortedSet;
+		final SORTEDSET sortedSet;
 
 		SynchronizedSortedSet( final SORTEDSET s, final Object sync ) {
 			super( s, sync );
@@ -332,8 +332,6 @@ public class SORTEDSETS {
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
-
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + level + ", " + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
@@ -359,6 +357,8 @@ public class SORTEDSETS {
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
+
+			if ( ! KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
@@ -392,8 +392,6 @@ public class SORTEDSETS {
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
-
-			if ( KEY_EQUAL( T, k ) && ! mThrowsUnsupp && tThrowsUnsupp ) tThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
 			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
@@ -489,21 +487,22 @@ public class SORTEDSETS {
 		Object start = m.first(), end = m.first();
 		if ( r.nextBoolean() ) start = KEY2OBJ( GEN_KEY() );
 		if ( r.nextBoolean() ) end = KEY2OBJ( GEN_KEY() );
+		if ( KEY_CMP( KEY2TYPE( start), KEY2TYPE( end ) ) > 0 ) start = end;
 		
 		//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
-		testSets( k, (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), level + 1 );
+		testSets( k, (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), level - 1 );
 
 		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet" );
 		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet" );
 		
 		//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
-		testSets( k, (SORTEDSET)m.headSet( end ), t.headSet( end ), level + 1 );
+		testSets( k, (SORTEDSET)m.headSet( end ), t.headSet( end ), level - 1 );
 		
 		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet" );
 		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet" );
 		
 		//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
-		testSets( k, (SORTEDSET)m.tailSet( start ), t.tailSet( start ), level + 1 );
+		testSets( k, (SORTEDSET)m.tailSet( start ), t.tailSet( start ), level - 1 );
 		
 		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet" );
 		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet" );
@@ -517,7 +516,7 @@ public class SORTEDSETS {
 		Singleton m = new Singleton( k );
 		SortedSet u = new java.util.TreeSet();
 		u.add( KEY2OBJ( k ) );
-		testSets( k, m, java.util.Collections.unmodifiableSortedSet( u ), 2 );
+		testSets( k, m, java.util.Collections.unmodifiableSortedSet( u ), 3 );
 	}
 
 	

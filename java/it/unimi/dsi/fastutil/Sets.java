@@ -58,16 +58,16 @@ public class Sets {
 
 		private EmptySet() {}
 
-		public boolean remove( Object ok ) { return false; }
+		public boolean remove( Object ok ) { throw new UnsupportedOperationException(); }
 
-		public boolean remove( boolean k ) { return false; }
-		public boolean remove( byte k ) { return false; }
-		public boolean remove( char k ) { return false; }
-		public boolean remove( short k ) { return false; }
-		public boolean remove( int k ) { return false; }
-		public boolean remove( long k ) { return false; }
-		public boolean remove( float k ) { return false; }
-		public boolean remove( double k ) { return false; }
+		public boolean remove( boolean k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( byte k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( char k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( short k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( int k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( long k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( float k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( double k ) { throw new UnsupportedOperationException(); }
 
 		public ByteBidirectionalIterator iterator( byte from ) { return Iterators.EMPTY_ITERATOR; }
 		public CharBidirectionalIterator iterator( char from ) { return Iterators.EMPTY_ITERATOR; }

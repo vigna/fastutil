@@ -52,6 +52,134 @@ public class SORTEDMAPS {
 
 	private SORTEDMAPS() {}
 
+
+	/** A class representing an empty sorted map. */
+
+	protected static class EmptySortedMap extends MAPS.EmptyMap implements SORTEDMAP, java.io.Serializable, Cloneable {
+		
+		public static final long serialVersionUID = -7046029254386353129L;
+		
+		protected EmptySortedMap() {}
+		
+		public Comparator comparator() { return null; } 
+		
+		public STDSORTEDMAP subMap( final KEY_TYPE from, final KEY_TYPE to ) { return EMPTY_MAP; }
+		public STDSORTEDMAP headMap( final KEY_TYPE to ) { return EMPTY_MAP; }
+		public STDSORTEDMAP tailMap( final KEY_TYPE from ) { return EMPTY_MAP; }
+
+		public KEY_TYPE FIRST_KEY() { throw new NoSuchElementException(); }
+		public KEY_TYPE LAST_KEY() { throw new NoSuchElementException(); }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+		public Object firstKey() { throw new NoSuchElementException(); }
+		public Object lastKey() { throw new NoSuchElementException(); }
+
+		public SortedMap subMap( final Object from, final Object to ) { return EMPTY_MAP; }
+		public SortedMap headMap( final Object to ) { return EMPTY_MAP; }
+		public SortedMap tailMap( final Object from ) { return EMPTY_MAP; }
+#endif
+
+	}
+
+
+
+	/** An empty type-specific sorted map (immutable). It is serializable and cloneable. */
+	 
+	public static final EmptySortedMap EMPTY_MAP = new EmptySortedMap();
+
+
+	/** A class representing a singleton sorted map. */
+
+	protected static class Singleton extends MAPS.Singleton implements SORTEDMAP, java.io.Serializable, Cloneable {
+	
+		public static final long serialVersionUID = -7046029254386353129L;
+	
+		final KEY_COMPARATOR comparator;
+
+		protected Singleton( final KEY_TYPE key, final VALUE_TYPE value, KEY_COMPARATOR comparator ) {
+			super( key, value );
+			this.comparator = comparator;
+		}
+
+		private Singleton( final KEY_TYPE key, final VALUE_TYPE value ) {
+			this( key, value, null );
+		}
+
+		final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
+			return comparator == null ? KEY_CMP( k1, k2 ) : comparator.compare( k1, k2 );
+		}
+
+		public Comparator comparator() { return comparator; } 
+
+	
+		public STDSORTEDMAP subMap( final KEY_TYPE from, final KEY_TYPE to ) { if ( compare( from, key ) <= 0 && compare( key, to ) <= 0 ) return this; else return EMPTY_MAP; }
+		public STDSORTEDMAP headMap( final KEY_TYPE to ) { if ( compare( key, to ) <= 0 ) return this; else return EMPTY_MAP; }
+		public STDSORTEDMAP tailMap( final KEY_TYPE from ) { if ( compare( from, key ) <= 0 ) return this; else return EMPTY_MAP; }
+
+		public KEY_TYPE FIRST_KEY() { return key; }
+		public KEY_TYPE LAST_KEY() { return key; }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+		public Object firstKey() { return KEY2OBJ( key ); }
+		public Object lastKey() { return KEY2OBJ( key ); }
+
+		public SortedMap subMap( final Object from, final Object to ) { return subMap( KEY2TYPE( from ), KEY2TYPE( to ) ); }
+		public SortedMap headMap( final Object to ) { return headMap( KEY2TYPE( to ) ); }
+		public SortedMap tailMap( final Object from ) { return tailMap( KEY2TYPE( from ) ); }
+#endif
+	}
+
+	/** Returns a type-specific immutable sorted map containing only the specified pair. The returned sorted map is serializable and cloneable.
+	 *
+	 * @param key the only key of the returned sorted map.
+	 * @param value the only value of the returned sorted map.
+	 * @return a type-specific immutable sorted map containing just the pair <code>&lt;key,value></code>.
+	 */
+
+	public static SORTEDMAP singleton( final KEY_TYPE key, VALUE_TYPE value ) {
+		return new Singleton( key, value );
+	}
+
+	/** Returns a type-specific immutable sorted map containing only the specified pair. The returned sorted map is serializable and cloneable.
+	 *
+	 * @param key the only key of the returned sorted map.
+	 * @param value the only value of the returned sorted map.
+	 * @param comparator the comparator to use in the returned sorted map.
+	 * @return a type-specific immutable sorted map containing just the pair <code>&lt;key,value></code>.
+	 */
+
+	public static SORTEDMAP singleton( final KEY_TYPE key, VALUE_TYPE value, KEY_COMPARATOR comparator ) {
+		return new Singleton( key, value, comparator );
+	}
+
+#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
+
+	/** Returns a type-specific immutable sorted map containing only the specified pair. The returned sorted map is serializable and cloneable.
+	 *
+	 * @param key the only key of the returned sorted map.
+	 * @param value the only value of the returned sorted map.
+	 * @return a type-specific immutable sorted map containing just the pair <code>&lt;key,value></code>.
+	 */
+
+	public static SORTEDMAP singleton( final Object key, final Object value ) {
+		return new Singleton( KEY2TYPE( key ), VALUE2TYPE( value ) );
+	}
+
+	/** Returns a type-specific immutable sorted map containing only the specified pair. The returned sorted map is serializable and cloneable.
+	 *
+	 * @param key the only key of the returned sorted map.
+	 * @param value the only value of the returned sorted map.
+	 * @param comparator the comparator to use in the returned sorted map.
+	 * @return a type-specific immutable sorted map containing just the pair <code>&lt;key,value></code>.
+	 */
+
+	public static SORTEDMAP singleton( final Object key, final Object value, KEY_COMPARATOR comparator ) {
+		return new Singleton( KEY2TYPE( key ), VALUE2TYPE( value ), comparator );
+	}
+
+#endif
+
+
 	protected static class SynchronizedSortedMap extends MAPS.SynchronizedMap implements SORTEDMAP, java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;

@@ -90,6 +90,7 @@ echo -e \
 "#define COLLECTIONS ${TYPE_CAP[$k]}Collections\n\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
 "#define SETS ${TYPE_CAP[$k]}Sets\n\n"\
+"#define VALUE_SETS ${TYPE_CAP[$v]}Sets\n\n"\
 "#define SORTEDSET ${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define SORTEDSETS ${TYPE_CAP[$k]}SortedSets\n\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
