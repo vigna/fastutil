@@ -249,6 +249,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#define UNMODIFIABLE_KEY_LIST_ITERATOR Unmodifiable${TYPE_CAP[$k]}ListIterator\n\n"\
 \
 \
+"/* Other wrappers */\n"\
+\
+\
+"#define KEY_READER_WRAPPER ${TYPE_CAP[$k]}ReaderWrapper\n\n"\
+\
+\
 "/* Methods (keys) */\n"\
 \
 \
@@ -277,6 +283,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#define PARSE_KEY parse${TYPE_STD[$k]}\n"\
 "#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
 "#define STORE_KEYS store${TYPE_STD[$k]}s\n"\
+"#define WRAP_KEY_READER wrap${TYPE_CAP[$k]}Reader\n\n"\
 \
 \
 "/* Methods (values) */\n"\
