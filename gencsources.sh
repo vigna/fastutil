@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # This script generates from driver files fake C sources to be passed
