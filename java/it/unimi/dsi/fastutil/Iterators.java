@@ -21,15 +21,17 @@
 
 package it.unimi.dsi.fastutil;
 
-import it.unimi.dsi.fastutil.booleans.*;
-import it.unimi.dsi.fastutil.bytes.*;
-import it.unimi.dsi.fastutil.shorts.*;
-import it.unimi.dsi.fastutil.chars.*;
-import it.unimi.dsi.fastutil.ints.*;
-import it.unimi.dsi.fastutil.longs.*;
-import it.unimi.dsi.fastutil.floats.*;
-import it.unimi.dsi.fastutil.doubles.*;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.booleans.BooleanListIterator;
+import it.unimi.dsi.fastutil.bytes.ByteListIterator;
+import it.unimi.dsi.fastutil.shorts.ShortListIterator;
+import it.unimi.dsi.fastutil.ints.IntListIterator;
+import it.unimi.dsi.fastutil.longs.LongListIterator;
+import it.unimi.dsi.fastutil.chars.CharListIterator;
+import it.unimi.dsi.fastutil.floats.FloatListIterator;
+import it.unimi.dsi.fastutil.doubles.DoubleListIterator;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+
+import it.unimi.dsi.fastutil.objects.AbstractObjectListIterator;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

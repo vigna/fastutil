@@ -348,10 +348,7 @@ echo -e \
 "#endif\n\n"\
 \
 "#define PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$k]}\n"\
-"#define IMPORT_VALUES import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_COLLECTION;\\\\\n"\
-"import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_ABSTRACT_COLLECTION;\\\\\n"\
-"import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_ITERATOR;\\\\\n"\
-"import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_LIST_ITERATOR;\n"\
+"#define VALUE_PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$v]}\n"\
 "#define KEY_TEST test${TYPE_CAP[$k]}\n"\
 \
 \

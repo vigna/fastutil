@@ -21,29 +21,9 @@
 
 package it.unimi.dsi.fastutil;
 
-import it.unimi.dsi.fastutil.booleans.*;
-import it.unimi.dsi.fastutil.bytes.*;
-import it.unimi.dsi.fastutil.shorts.*;
-import it.unimi.dsi.fastutil.chars.*;
-import it.unimi.dsi.fastutil.ints.*;
-import it.unimi.dsi.fastutil.longs.*;
-import it.unimi.dsi.fastutil.floats.*;
-import it.unimi.dsi.fastutil.doubles.*;
-import it.unimi.dsi.fastutil.objects.*;
-
-import it.unimi.dsi.fastutil.Iterators;
-
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.NoSuchElementException;
-
 /** A class providing static methods that do useful things with type-specific sorted sets.
  *
- * @see Collections
+ * @see java.util.Collections
  */
 
 public class SortedSets {
