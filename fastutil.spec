@@ -6,15 +6,15 @@ Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-%{version}-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-3.1-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
-BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.5, /bin/bash
 BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
+BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.5, /bin/bash
 
 %description
 fastutil provides type-specific maps, sets and lists with a small memory
@@ -24,12 +24,12 @@ existing code. Moreover, they provide additional features (such as
 bidirectional iterators) that are not available in the standard classes.
 
 
-%package javadoc
+%package        javadoc
 Summary:        Javadoc for %{name}
 Group:          Development/Documentation
+BuildRequires:  java-javadoc
 
-
-%description javadoc
+%description    javadoc
 Javadoc for %{name}.
 
 
@@ -79,7 +79,7 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 
 %changelog
 * Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.1-1jpp
-- Several new static containers.
+- Update to 3.1: Several new static containers.
 
 * Wed Jul 04 2003 Sebastiano Vigna <vigna at acm.org> - 3.0.1-1jpp
 - A small but important serialisation bug fix.
@@ -90,10 +90,10 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 * Sun Apr 06 2003 Sebastiano Vigna <vigna at acm.org> - 2.60-1jpp
 - Improved iterators.
 
-* Fri Apr  4 2003 Ville Skytt‰ <ville.skytta at iki.fi> - 0:2.52-2jpp
+* Fri Apr  4 2003 Ville Skytt√§ <ville.skytta at iki.fi> - 0:2.52-2jpp
 - Rebuilt for JPackage 1.5.
 
-* Thu Mar 13 2003 Ville Skytt‰ <ville.skytta at iki.fi> - 2.52-1jpp
+* Thu Mar 13 2003 Ville Skytt√§ <ville.skytta at iki.fi> - 2.52-1jpp
 - Updated to 2.52.
 - Comments from upstream (thanks to Sebastiano Vigna):
   - IMPORTANT: The package name has changed. Please remove manually
@@ -102,7 +102,7 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
   - Deleted docs from source tar.
   - Merged in patches to Makefile.
 
-* Sun Mar  9 2003 Ville Skytt‰ <ville.skytta at iki.fi> - 2.51-2jpp
+* Sun Mar  9 2003 Ville Skytt√§ <ville.skytta at iki.fi> - 2.51-2jpp
 - First official JPackage release.
 - Fix Group tags.
 - No manual subpackage (there's no manual... :)
