@@ -253,7 +253,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 \
 \
 "#define KEY_READER_WRAPPER ${TYPE_CAP[$k]}ReaderWrapper\n\n"\
-"#define KEY_STREAM_WRAPPER ${TYPE_CAP[$k]}StreamWrapper\n\n"\
+"#define KEY_DATA_INPUT_WRAPPER ${TYPE_CAP[$k]}DataInputWrapper\n\n"\
 \
 \
 "/* Methods (keys) */\n"\

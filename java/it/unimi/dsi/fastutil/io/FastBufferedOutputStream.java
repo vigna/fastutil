@@ -45,8 +45,8 @@ import java.io.OutputStream;
 
 public class FastBufferedOutputStream extends OutputStream {
 
-	/** The default size of the internal buffer in bytes (16Ki). */
-	public final static int DEFAULT_BUFFER_SIZE = 16 * 1024;
+	/** The default size of the internal buffer in bytes (8Ki). */
+	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
 
 	/** The internal buffer. */
 	protected byte buffer[];

@@ -53,8 +53,8 @@ import java.nio.channels.FileChannel;
 
 public class FastBufferedInputStream extends InputStream implements RepositionableStream {
 
-	/** The default size of the internal buffer in bytes (16Ki). */
-	public final static int DEFAULT_BUFFER_SIZE = 16 * 1024;
+	/** The default size of the internal buffer in bytes (8Ki). */
+	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
 
 	/** The underlying input stream. */
 	protected InputStream is;

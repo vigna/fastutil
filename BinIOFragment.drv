@@ -64,7 +64,7 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
 
 	final FileInputStream fis = new FileInputStream( filename.toString() );
-	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis, BUFFER_SIZE ) );
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	int i = 0;
 	try {
@@ -85,7 +85,7 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
  */
 public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array ) throws IOException {
 	final FileInputStream fis = new FileInputStream( filename.toString() );
-	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis, BUFFER_SIZE ) );
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	int i = 0;
 	try {
@@ -110,7 +110,7 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
  */
 public static KEY_TYPE[] LOAD_KEYS( final CharSequence filename ) throws IOException {
 	final FileInputStream fis = new FileInputStream( filename.toString() );
-	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis, BUFFER_SIZE ) );
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	final int length = (int)(fis.getChannel().size() / KEY_SIZE);
 	final KEY_TYPE[] array = new KEY_TYPE[ length ];
@@ -152,7 +152,7 @@ public static void STORE_KEYS( final KEY_TYPE array[], final DataOutput dataOutp
  */
 public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final CharSequence filename ) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
 	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ offset + i ] );
 	dos.close();
 }
@@ -163,7 +163,7 @@ public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final i
  * @param filename a file name.
  */
 public static void STORE_KEYS( final KEY_TYPE array[], final CharSequence filename ) throws IOException {
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
 	final int length = array.length;
 	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ i ] );
 	dos.close();
@@ -184,21 +184,21 @@ public static void STORE_KEYS( final KEY_ITERATOR i, final DataOutput dataOutput
  * @param filename a file name.
  */
 public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename ) throws IOException {
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
 	while( i.hasNext() ) dos.WRITE_KEY( i.NEXT_KEY() );
 	dos.close();
 }
 
 /** A wrapper that exhibits the content of a data input stream as a type-specific iterator. */
 
-final private static class KEY_STREAM_WRAPPER extends KEY_ABSTRACT_ITERATOR {
-	final private DataInputStream stream;
+final private static class KEY_DATA_INPUT_WRAPPER extends KEY_ABSTRACT_ITERATOR {
+	final private DataInput dataInput;
 	private boolean toAdvance = true;
 	private boolean endOfProcess = false;
 	private KEY_TYPE next;
 
-	public KEY_STREAM_WRAPPER( final DataInputStream stream ) {
-		this.stream = stream;
+	public KEY_DATA_INPUT_WRAPPER( final DataInput dataInput ) {
+		this.dataInput = dataInput;
 	}
 
 	public boolean hasNext() {
@@ -207,7 +207,7 @@ final private static class KEY_STREAM_WRAPPER extends KEY_ABSTRACT_ITERATOR {
 		toAdvance = false;
 
 		try {
-			next = stream.READ_KEY();
+			next = dataInput.READ_KEY();
 		}
 		catch( EOFException eof ) {
 			endOfProcess = true;
@@ -226,12 +226,12 @@ final private static class KEY_STREAM_WRAPPER extends KEY_ABSTRACT_ITERATOR {
 
 
 
-/** Wraps the given data input stream stream into an iterator.
+/** Wraps the given data input stream into an iterator.
  *
- * @param stream a data input stream.
+ * @param dataInput a data input.
  */
-public static KEY_ITERATOR AS_KEY_ITERATOR( final DataInputStream stream ) throws IOException {
-	return new KEY_STREAM_WRAPPER( stream );
+public static KEY_ITERATOR AS_KEY_ITERATOR( final DataInput dataInput ) throws IOException {
+	return new KEY_DATA_INPUT_WRAPPER( dataInput );
 }
 
 /** Wraps the given filename into an iterator.
@@ -239,7 +239,7 @@ public static KEY_ITERATOR AS_KEY_ITERATOR( final DataInputStream stream ) throw
  * @param filename a file name.
  */
 public static KEY_ITERATOR AS_KEY_ITERATOR( final CharSequence filename ) throws IOException {
-	return new KEY_STREAM_WRAPPER( new DataInputStream( new FastBufferedInputStream( new FileInputStream( filename.toString() ) ) ) );
+	return new KEY_DATA_INPUT_WRAPPER( new DataInputStream( new FastBufferedInputStream( new FileInputStream( filename.toString() ) ) ) );
 }
 
 
