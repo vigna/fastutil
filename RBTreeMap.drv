@@ -167,7 +167,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
 	  */
 	 
-    private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+    protected int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
 		  return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
     }
 
@@ -418,22 +418,15 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 	 
 	 public Object put( final Object ok, final Object ov ) {
-		  if ( ok == null ) throw new IllegalArgumentException();
 		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
 		  return ! modified ? VALUE2OBJ( oldValue ) : null;
 	 }
 
 
 #if ! ( #valueclass(Object) && #keyclass(Object) )
-
 	 public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
-#if #keyclass( Object )
-		  if ( k == null ) throw new IllegalArgumentException();
-#endif
 		  return insert( k, v );
 	 }
-	 
-	 
 #endif
 
    public Object remove(final Object ok) {
@@ -464,9 +457,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 
 
-	 public synchronized void clear() {
-		  tree = null;
+	 public void clear() {
 		  count = 0;
+		  tree = null;
+		  entries = null;
+		  values = null;
+		  keys = null;
+		  firstEntry = lastEntry = null;
 	 }
 
 	 
@@ -690,7 +687,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 	 
 	 public Object get( final Object ok ) {
-		  if ( ok == null ) throw new IllegalArgumentException();
 		  final Entry e = findKey( KEY2TYPE( ok ) );
 		  return e == null ? (VALUE_CLASS)null : e.getValue();
 	 }
@@ -701,7 +697,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 public VALUE_TYPE get(final KEY_TYPE k) {
 		  final Entry e = findKey( k );
 		  
-		  return e == null ? DEF_RET_VALUE : e.value;
+		  return e == null ? defRetValue : e.value;
 	 }
 	 
 
@@ -721,7 +717,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 public VALUE_TYPE GET_VALUE( final Object k ) {
 		  if ( k == null ) throw new IllegalArgumentException();
 		  final Entry e = findKey( k );
-		  return e == null ? DEF_RET_VALUE : e.value;
+		  return e == null ? defRetValue : e.value;
 	 }
 
 
@@ -772,8 +768,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  int index = 0;
 		  
 		  TreeIterator() {
-				next = first = firstEntry;
-				last = lastEntry;
+				next = firstEntry;
 		  }
 
 		  public boolean hasNext() { return next != null; }
@@ -1030,6 +1025,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 
 	 public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
+		  return null; // TODO
 	 }
 #endif
 
@@ -1045,41 +1041,37 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				this.top = top;
 		  }
 
-		  public SortedMap headMap(Object toKey) {
-				return null; // TODO
-		  }
-		  
-		  public SortedMap tailMap(Object fromKey) {
-		  return null; // TODO
-		  }
-
-		  public SortedMap subMap(Object fromKey, Object toKey) {
-				return null; // TODO
+		  public void clear() {
+				final SubmapIterator i = new SubmapIterator( from, bottom, to, top );
+				while( i.hasNext() ) {
+					 i.next();
+					 i.remove();
+				}
 		  }
 
-		  private in( KEY_TYPE k ) {
+		  private boolean in( KEY_TYPE k ) {
 				return ( bottom || TREEMAP.this.compare( k, from ) >= 0 ) &&
-					 ( top || TREEMAP.this.compare( k, to < 0 ) );
+					 ( top || TREEMAP.this.compare( k, to ) < 0 );
 		  }
 
 		  public Set entrySet() {
 				if ( entries == null ) entries = new AbstractSet() {
 						  public Iterator iterator() {
-								return SubmapIterator( from, bottom, to, top );
+								return new SubmapIterator( from, bottom, to, top );
 						  }
 
 						  public boolean contains(Object o) {
 								if (!(o instanceof Map.Entry)) return false;
 								final Map.Entry e = (Map.Entry)o;
-								final Entry f = findKey( KEY2TYPE( e.getKey() ) );
-								return f != null && in( KEY2TYPE( f.key ) ) && e.equals( f );
+								final TREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+								return f != null && in( f.key ) && e.equals( f );
 						  }					 
 
 						  public boolean remove(Object o) {
 								if (!(o instanceof Map.Entry)) return false;
 								final Map.Entry e = (Map.Entry)o;
-								final Entry f = findKey( KEY2TYPE( e.getKey() ) );
-								if ( f != null && in( KEY2TYPE( f.key ) ) ) TREEMAP.this.remove( f.key );
+								final TREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+								if ( f != null && in( f.key ) ) TREEMAP.this.remove( f.key );
 								change = deleted = null;
 								return f != null;
 						  }
@@ -1110,6 +1102,155 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  public Collection values() {
 				return null; // TODO
 		  }
+
+		  public boolean containsKey( final KEY_TYPE k ) {
+				return in( k ) && TREEMAP.this.containsKey( k );
+		  }
+
+#if !#keyclass(Object) 
+		  public boolean containsKey( final Object ok ) {
+				return containsKey( KEY2TYPE( ok ) );
+		  }
+#endif
+
+
+#if ! #valueclass(Object) 
+		  
+		  public boolean containsValue(final Object v) {
+				return containsValue( VALUE2TYPE( v ) );
+		  }
+		  
+#endif
+
+		  public boolean containsValue(final VALUE_TYPE v) {
+				final SubmapIterator i = new SubmapIterator( from, bottom, to, top );
+				VALUE_TYPE ev;
+				
+				while( i.hasNext() ) {
+					 ev = ((TREEMAP.Entry)i.next()).value;
+					 if ( VALUE_EQUAL( ev, v ) ) return true;
+				}
+				
+				return false;
+		  }
+		  
+
+
+		  public Object get( final Object ok ) {
+				return ! in( KEY2TYPE( ok ) ) ? null : TREEMAP.this.get( ok );
+		  }
+		  
+		  
+#if ! #keyclass(Object)
+		  public VALUE_TYPE get(final KEY_TYPE k) {
+				return ! in( k ) ? defRetValue : TREEMAP.this.get( k );
+		  }
+#elif ! #valueclass(Object)
+		  public VALUE_TYPE GET_VALUE(final Object k) {
+				return ! in( k ) ? defRetValue: TREEMAP.this.GET_VALUE( k );
+		  }
+#endif
+		  
+		  
+		  public Object put( final Object ok, final Object ov ) {
+				if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
+				return put( ok, ov );
+		  }
+
+		  
+#if ! ( #valueclass(Object) && #keyclass(Object) )
+		  public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+				if ( ! in( k ) ) throw new IllegalArgumentException(); 
+				return put( k, v );
+		  }
+#endif
+
+
+		  public Object remove( final Object ok ) {
+				if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
+				return TREEMAP.this.remove( ok );
+		  }
+
+#if ! #keyclass(Object)
+		  public VALUE_TYPE remove( final KEY_TYPE k ) {
+				if ( ! in( k ) ) throw new IllegalArgumentException(); 
+				return TREEMAP.this.remove( k );
+		  }
+#elif ! #valueclass(Object)
+		  public VALUE_TYPE REMOVE_VALUE( final Object k ) {
+				if ( ! in( k ) ) throw new IllegalArgumentException(); 
+				return TREEMAP.this.REMOVE_VALUE( k );
+		  }
+#endif
+
+		  public int size() {
+				final SubmapIterator i = new SubmapIterator( from, bottom, to, top );
+				int n = 0;
+				
+				while( i.hasNext() ) {
+					 n++;
+					 i.next();
+				}
+				
+				return n;
+		  }
+
+
+		  public boolean isEmpty() {
+				return entrySet().iterator().hasNext();
+		  }
+
+		  
+		  public Comparator comparator() {
+				return storedComparator;
+		  }
+		  
+		  public SortedMap headMap(Object toKey) {
+				return null; // TODO
+		  }
+		  
+		  public SortedMap tailMap(Object fromKey) {
+				return null; // TODO
+		  }
+		  
+		  public SortedMap subMap(Object fromKey, Object toKey) {
+				return null; // TODO
+		  }
+
+#if !#keyclass(Object)
+		  public SORTEDMAP headMap(KEY_TYPE toKey) {
+				return null; // TODO
+		  }
+		  
+		  public SORTEDMAP tailMap(KEY_TYPE fromKey) {
+				return null; // TODO
+		  }
+		  
+		  public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
+				return null; // TODO
+		  }
+#endif
+
+
+		  public KEY_TYPE FIRST_KEY() {
+				return firstEntry.key; // TODO
+		  }
+	 
+		  public KEY_TYPE LAST_KEY() {
+				return lastEntry.key; // TODO
+		  }
+	 
+#if !#keyclass(Object)
+		  public Object firstKey() {
+				return KEY2OBJ( FIRST_KEY() );
+		  }
+	 
+		  public Object lastKey() {
+				return KEY2OBJ( LAST_KEY() );
+		  }
+
+#endif
+
 	 }
 	 
 
@@ -1136,6 +1277,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  int count = this.count;
 		  this.count = 0;
+
+		  /* This is not very good. There are linear-time ways of rebuilding a
+		  tree.  Maybe in the next release... */
 
 		  while(count-- != 0) put(s.READ_KEY(), s.READ_VALUE());
     }

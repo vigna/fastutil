@@ -101,7 +101,6 @@ for ((f=0; f<5; f++)); do
 "#define ENTRY_GET_VALUE getValue\n"\
 "#define VALUE_NULL (null)\n"\
 "#define VALUE2INT(x) (x == null ? 0 : x.hashCode())\n"\
-"#define DEF_RET_VALUE null\n"\
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define VALUE_ITERATOR Iterator\n\n"\
 "#define VALUE_LIST_ITERATOR ListIterator\n\n"\
@@ -128,7 +127,6 @@ for ((f=0; f<5; f++)); do
 "#else\n"\
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\
 "#endif\n"\
-"#define DEF_RET_VALUE defRetValue\n"\
 "#endif\n\n"\
 "#include \"${FILE[$f]}.drv\"\n" >$FILENAME
 			 done
