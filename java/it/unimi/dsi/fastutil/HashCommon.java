@@ -31,6 +31,11 @@ package it.unimi.dsi.fastUtil;
 
 public class HashCommon {
 
+	 /** This reference is used to fill keys and values of removed entries (if
+	 they are objects). <code>null</code> cannot be used as it would confuse the
+	 search algorithm in the presence of an actual <code>null</code> key. */ 
+	 protected static Object removed = new Integer( 0 );
+
 	 private HashCommon() {};
 
 	 /* To get an integer from a integer type smaller than long, we just cast.
