@@ -1,8 +1,19 @@
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+/** Returns an empty type-specific list iterator.
+ *
+ * <P>The iterator provided by this method returns no elements. The
+ * implementation uses the singleton pattern (i.e., it will always return the
+ * same instance), so it is very efficient.
+ *
+ * @return an empty type-specific list iterator.
+ */
+public static KEY_LIST_ITERATOR KEY_EMPTY_ITERATOR_METHOD() {
+	return EmptyIterator.getInstance();
+}
 
-private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_ITERATOR {
+private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_LIST_ITERATOR {
 	private final KEY_TYPE array[];
-	private int offset, length;
+	private final int offset, length;
+	private int curr;
 
 	public KEY_ARRAY_ITERATOR( final KEY_TYPE array[], final int offset, final int length ) {
 		this.array = array;
@@ -10,39 +21,76 @@ private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_ITERATOR {
 		this.length = length;
 	}
 	
-	public boolean hasNext() { return length != 0; }
+	public boolean hasNext() { return curr < length; }
+	public boolean hasPrevious() { return curr > 0; }
 
 	public KEY_TYPE NEXT_KEY() {
 		if ( ! hasNext() ) throw new NoSuchElementException();
-		length--;
-		return array[ offset++ ];
+		return array[ offset + curr++ ];
+	}
+
+	public KEY_TYPE PREV_KEY() {
+		if ( ! hasPrevious() ) throw new NoSuchElementException();
+		return array[ offset + --curr ];
+	}
+
+	public int skip( int n ) {
+		if ( n <= length - curr ) {
+			curr += n;
+			return n;
+		}
+		else {
+			n = length - curr;
+			curr = length;
+			return n;
+		}
+	}
+
+	public int back( int n ) {
+		if ( n <= curr ) {
+			curr -= n;
+			return n;
+		}
+		else {
+			n = curr;
+			curr = 0;
+			return n;
+		}
+	}
+
+	public int nextIndex() {
+		return curr;
+	}
+
+	public int previousIndex() {
+		return curr - 1;
 	}
 }
 
 
-/** Wraps the given part of an array into an iterator.
+/** Wraps the given part of an array into a type-specific list iterator.
  *
- * <P>The type-specific iterator returned by this method will iterate
+ * <P>The type-specific list iterator returned by this method will iterate
  * <code>length</code> times, returning consecutive elements of the given
  * array starting from the one with index <code>offset</code>.
  *
- * @param array an array to wrap into an iterator.
+ * @param array an array to wrap into a type-specific list iterator.
  * @param offset the first element of the array to be returned.
  * @param length the number of elements to return.
  */
-public static KEY_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
+public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
 	if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
 	return new KEY_ARRAY_ITERATOR( array, offset, length );
 }
 
-/** Wraps the given array into an iterator.
+/** Wraps the given array into a type-specific list iterator.
  *
- * <P>The type-specific iterator returned by this method will return
+ * <P>The type-specific list iterator returned by this method will return
  * all elements of the given array.
  *
- * @param array an array to wrap into an iterator.
+ * @param array an array to wrap into a type-specific list iterator.
  */
-public static KEY_ITERATOR wrap( final KEY_TYPE array[] ) {
+public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[] ) {
 	return new KEY_ARRAY_ITERATOR( array, 0, array.length );
 }
 
@@ -114,20 +162,35 @@ public static KEY_TYPE[] unwrap( final KEY_ITERATOR i, int max ) {
 }
 
 
-private static class KEY_ITERATOR_WRAPPER implements KEY_ITERATOR {
+/** Unwraps an iterator.
+ *
+ * <P>This method iterates over the given type-specific iterator and returns an array
+ * containing the elements returned by the iterator.
+ *
+ * @param i a type-specific iterator.
+ * @return an array containing the elements returned by the iterator.
+ */
+
+public static KEY_TYPE[] unwrap( final KEY_ITERATOR i ) {
+	return unwrap( i, Integer.MAX_VALUE );
+}
+
+private static class KEY_ITERATOR_WRAPPER extends KEY_ABSTRACT_ITERATOR {
 	final Iterator i;
 
 	public KEY_ITERATOR_WRAPPER( final Iterator i ) {
 		this.i = i;
 	}
 
-	public Object next() { return next(); };
-	public boolean hasNext() { return hasNext(); };
-	public void remove() { remove(); };
-	public KEY_TYPE NEXT_KEY() { return KEY2TYPE( next() ); };
+	public boolean hasNext() { return i.hasNext(); };
+	public void remove() { i.remove(); };
+#if ! #keyclass(Object)
+	public Object next() { return i.next(); };
+#endif
+	public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); };
 }
 
-/** Wraps a genearal iterator into a type-specific iterator.
+/** Wraps a standard iterator into a type-specific iterator.
  *
  * <P>This method wraps a standard iterator into a type-specific one which will handle the
  * type conversions for you. Of course, any attempt to wrap an iterator returning the
@@ -144,45 +207,81 @@ public static KEY_ITERATOR AS_KEY_ITERATOR( final Iterator i ) {
 	return new KEY_ITERATOR_WRAPPER( i );
 }
 
-#if ! #keyclass(Boolean)
 
-private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_ITERATOR {
-	private KEY_TYPE curr;
-	private KEY_TYPE max;
+#if #keyclass(Integer) || #keyclass(Byte) || #keyclass(Character) || #keyclass(Long)
+
+#if #keyclass(Long)
+private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_BIDI_ITERATOR  {
+#else
+private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_LIST_ITERATOR {
+#endif
+
+	private final KEY_TYPE from, to;
+	KEY_TYPE curr;
 
 	public KEY_INTERVAL_ITERATOR( final KEY_TYPE from, final KEY_TYPE to ) {
-		this.curr = from;
-		this.max = to;
+		this.from = this.curr = from;
+		this.to = to;
 	}
 
-	public boolean hasNext() { return curr < max; };
-	public KEY_TYPE NEXT_KEY() { return curr++; };
+	public boolean hasNext() { return curr < to; };
+	public boolean hasPrevious() { return curr > from; };
+
+	public KEY_TYPE NEXT_KEY() { 
+		if ( ! hasNext() ) throw new NoSuchElementException();
+		return curr++; 
+	};
+	public KEY_TYPE PREV_KEY() { 
+		if ( ! hasPrevious() ) throw new NoSuchElementException();
+		return --curr; 
+	};
+
+#if ! #keyclass(Long)
+	public int nextIndex() { return curr - from; }
+	public int previousIndex() { return curr - from - 1; }
+#endif
+
+	public int skip( int n ) {
+		if ( curr + n <= to ) {
+			curr += n;
+			return n;
+		}
+		else {
+			n = (int)( to - curr );
+			curr = to;
+			return n;
+		}
+	}
+
+	public int back( int n ) {
+		if ( curr - n >= from ) {
+			curr -= n;
+			return n;
+		}
+		else {
+			n = (int)( curr - from );
+			curr = from;
+			return n;
+		}
+	}
 }
 
-/** Creates a type-specific iterator over an interval.
+/** Creates a type-specific bidirectional iterator over an interval.
  *
- * <P>The type-specific iterator returned by this method will return the
+ * <P>The type-specific bidirectional iterator returned by this method will return the
  * elements <code>from</code>, <code>from+1</code>,&hellip;, <code>to-1</code>.
  *
  * @param from the starting element (inclusive).
  * @param to the ending element (exclusive).
- * @return a type-specific iterator enumerating the elements from <code>from</code> to <code>to</code>.
+ * @return a type-specific bidirectional iterator enumerating the elements from <code>from</code> to <code>to</code>.
  */
-public static KEY_ITERATOR fromTo( final KEY_TYPE from, final KEY_TYPE to ) {
+public static KEY_BIDI_ITERATOR fromTo( final KEY_TYPE from, final KEY_TYPE to ) {
 	return new KEY_INTERVAL_ITERATOR( from, to );
 }
 
 #endif
 
-#endif
-
-#if ! #keyclass(Reference)
-
-#if #keyclass(Object)
-private static class KEY_ITERATOR_CONCATENATOR implements Iterator {
-#else
 private static class KEY_ITERATOR_CONCATENATOR extends KEY_ABSTRACT_ITERATOR {
-#endif
 	final KEY_ITERATOR a[];
 	int offset, length, lastOffset = -1;
 
@@ -199,6 +298,8 @@ private static class KEY_ITERATOR_CONCATENATOR extends KEY_ABSTRACT_ITERATOR {
 			length--;
 			offset++;
 		}
+
+		return;
 	}
 
 	public boolean hasNext() {
@@ -215,6 +316,21 @@ private static class KEY_ITERATOR_CONCATENATOR extends KEY_ABSTRACT_ITERATOR {
 	public void remove() {
 		if ( lastOffset == -1 ) throw new IllegalStateException();
 		a[ lastOffset ].remove();
+	}
+
+	public int skip( int n ) {
+		lastOffset = -1;
+
+		int skipped = 0;
+
+		while( skipped < n && length != 0 ) {
+			skipped += a[ offset ].skip( n - skipped );
+			if ( a[ offset ].hasNext() ) break;
+			length--;
+			offset++;
+		}
+			
+		return skipped;
 	}
 
 }
@@ -250,8 +366,6 @@ public static KEY_ITERATOR concat( final KEY_ITERATOR a[] ) {
 public static KEY_ITERATOR concat( final KEY_ITERATOR a[], final int offset, final int length ) {
 	return new KEY_ITERATOR_CONCATENATOR( a, offset, length );
 }
-
-#endif
 
 // Local Variables:
 // mode: jde

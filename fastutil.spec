@@ -1,5 +1,5 @@
 %define name            fastutil
-%define version         2.52
+%define version         2.60
 %define release         1jpp
 %define javadir         %{_datadir}/java
 %define javadocdir      %{_datadir}/javadoc

@@ -505,7 +505,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 * constant time. The one-argoument constructor needs to search for the given element, but it is 
 	 * optimised for the case of {@link #last()}, in which case runs in constant time, too.
 	 */
-	private class SetIterator implements BidirectionalIterator, KEY_LIST_ITERATOR {
+	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR {
 		/** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
 		int prev = -1;
 		/** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
@@ -560,12 +560,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			return key[ curr ];
 		}
 
-#if !#keyclass(Object) && !#keyclass(Reference)
-		public Object next() { return KEY2OBJ( NEXT_KEY() ); }
-		public Object previous() { return KEY2OBJ( PREV_KEY() ); }
-#endif
-		
-
 		public int nextIndex() {
 			return index;
 		}
@@ -597,14 +591,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			if ( next == -1 ) last = prev;
 			else link[ next ] ^= curr ^ prev;
 			curr = -1;
-		}
-
-		public void set( Object o ) {
-			throw new UnsupportedOperationException();
-		}
-
-		public void add( Object o ) {
-			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -645,7 +631,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 	/** An iterator over a hash set. */
 
-	private class SetIterator implements KEY_ITERATOR {
+	private class SetIterator extends KEY_ABSTRACT_ITERATOR {
 		/** The index of the next entry to be returned. */
 		int pos = 0;
 		/** The index of the last entry that has been returned. */
@@ -675,12 +661,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			
 			return retVal;
 		}
-		
-#if !#keyclass(Object) && !#keyclass(Reference)
-		public Object next() {
-			return KEY2OBJ( NEXT_KEY() );
-		}
-#endif
 		
 		public void remove() {
 			if ( last == -1 || state[ last ] != OCCUPIED ) throw new IllegalStateException();

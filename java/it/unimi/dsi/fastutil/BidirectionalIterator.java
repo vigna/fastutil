@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.0: Fast & compact specialized utility classes for Java
+ * fastUtil 2.52: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -31,6 +31,10 @@ import java.util.ListIterator;
  * java.util.ListIterator#nextIndex()}. It is useful for those maps that can easily
  * provide bidirectional iteration, but provide no index.
  *
+ * <P>Note that iterators returned by <code>fastutil</code> classes are more
+ * specific, and support skipping. This class serves the purpose of organising
+ * in a cleaner way the relationships between various iterators.
+ *
  * @see Iterator
  * @see ListIterator
  */
@@ -52,7 +56,6 @@ public interface BidirectionalIterator extends Iterator {
 	 */
 
 	boolean hasPrevious();
-
 }
 
 // Local Variables:

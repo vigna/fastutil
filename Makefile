@@ -1,6 +1,6 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=2.52
+VERSION=2.60
 
 .SUFFIXES: .java .class
 
@@ -50,7 +50,7 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/Makefile \
-		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,SkippableIterator.java,HashCommon.java,Hash.java,package.html}
+		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
 jsources: $(SOURCES)
@@ -63,7 +63,7 @@ clean:
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*ListIterator.java */*/*/*/*/{Boolean,Byte,Short,Int,Long,Char,Float,Double}*Iterator.java */*/*/*/*/*Comparator.java */*/*/*/*/*Iterators*.java
+	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*{Boolean,Byte,Short,Int,Long,Char,Float,Double,Object,Reference}*Iterator.java */*/*/*/*/*Comparator.java */*/*/*/*/*Iterators*.java
 	@rm -f */*/*/*/*/*.c
 	@rm -fr $(DOCSDIR)/*
 
@@ -79,7 +79,7 @@ docs: jsources
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv java/it/unimi/dsi/fastutil/Hash.java java/it/unimi/dsi/fastutil/BidirectionalIterator.java java/it/unimi/dsi/fastutil/SkippableIterator.java java/it/unimi/dsi/fastutil/HashCommon.java java/it/unimi/dsi/fastutil/package.html
+	etags build.xml Makefile README gencsources.sh *.drv java/it/unimi/dsi/fastutil/Hash.java java/it/unimi/dsi/fastutil/BidirectionalIterator.java java/it/unimi/dsi/fastutil/HashCommon.java java/it/unimi/dsi/fastutil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
