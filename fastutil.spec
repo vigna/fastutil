@@ -2,7 +2,7 @@
 
 Name:           fastutil
 Version:        4.4.0
-Release:        1ubi
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
