@@ -32,7 +32,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 /** A reference to the root entry. */
 	 public transient Entry tree;
 
-	 /** Number of entries in the map. */
+	 /** Number of entries in this map. */
 	 private int count;
 
 	 /** The first key in this map. */
@@ -58,15 +58,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * has been modified. */
 	 private transient boolean modified;
 
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, the entry that during the operation we
-	  * possibly created or removed. */
-	 private transient Entry change;
+	 /** The value of this variable remembers the entry that was removed by a <code>delete()</code>. */
+	 private transient Entry removed;
 
 	 /** The value of this variable remembers, after a <code>delete()</code>,
 	  * the entry that during the operation was deleted. Note that 
-	  * if {@link #change} != {@link deleted}, then this entry is still in the
-	  * map, but it contains the key and value previously stored in {@link #change}. */
+	  * if {@link #removed} != {@link deleted}, then this entry is still in the
+	  * map, but it contains the key and value previously stored in {@link #removed}. */
 	 private transient Entry deleted;
 
 	 /** This variable is used by <code>insert()</code> 
@@ -189,15 +187,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		 return e;
    }
 
-	 /** The value of this variable remembers during an <code>insert()</code> 
-	  * whether we ever turned left. */
-	 private transient boolean turnedLeft;
-
-	 /** The value of this variable remembers during an <code>insert()</code> 
-	  * whether we ever turned right. */
-	 private transient boolean turnedRight;
-
-
 	 /** Inserts a new pair in the map.
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff a new
@@ -212,7 +201,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 	 private VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
 		  oldValue = defRetValue; // This will hold the old value.
-		  modified = turnedLeft = turnedRight = false;
+		  modified = false;
 		  key = k;
 		  value = v;
 
@@ -255,7 +244,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		 final int cmp = compare( key, e.key );
 		 
 		 if ( cmp < 0 ) {
-			  turnedLeft = true;
 			  if ( e.left() != null ) e.left = insertRec( e.left );
 			  else {
 					/* <P>This method we create a new {@link Entry} (marked as a leaf) and
@@ -266,7 +254,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					final Entry l = new Entry( key, value );
 					
 					modified = true;
-					if ( ! turnedRight ) firstEntry = l;
+					if ( e.left == null ) firstEntry = l;
 
 					l.right = e;
 					l.left = e.left;
@@ -276,7 +264,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			  }
 		 } 
 		 else if ( cmp > 0 ) {
-			  turnedRight = true;
 			  if ( e.right() != null ) e.right = insertRec( e.right );
 			  else {
 					/* <P>We create a new {@link Entry} (marked as a leaf) and
@@ -284,10 +271,10 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
 					 * is the {@link Entry#right} pointer of <code>e</code>. */
 					count++;
-					final Entry r = change = new Entry( key, value );
+					final Entry r = new Entry( key, value );
 					
 					modified = true;
-					if ( ! turnedLeft ) lastEntry = r;
+					if ( e.right == null ) lastEntry = r;
 
 					r.left = e;
 					r.right = e.right;
@@ -315,10 +302,10 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff an 
 	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
-	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  * the deleted key and {@link #removed} is the entry actually removed from the tree.
 	  *
 	  * <P>Note that if values are not primitive it is a good idea to clear the
-	  * content {@link #change} and {@link #deleted} after calling this method.
+	  * content {@link #removed} and {@link #deleted} after calling this method.
 	  *
 	  * @param k a key.
 	  * @return the value previously associated to the key (or the default return value, if there 
@@ -327,7 +314,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 	 private VALUE_TYPE delete( final KEY_TYPE k ) {
 		  oldValue = defRetValue;
-		  change = deleted = null;
+		  removed = deleted = null;
 		  modified = false;
 		  key = k;
 
@@ -353,7 +340,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * <P>After execution of this method, {@link #modified} is true iff an 
 	  * entry has been deleted. In this case, {@link #oldValue} contains the value
 	  * previously associated with the key, {@link #deleted} is the entry that contained
-	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  * the deleted key and {@link #removed} is the entry actually removed from the tree.
 	  *
 	  * @param p the parent of the second argument (i.e., an {@link Entry}.
 	  * @param e a tree (i.e., an {@link Entry}.
@@ -361,7 +348,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  */
 
 	 private Entry deleteRec( Entry p, Entry e ) {
-		  change = e;
+		  removed = e;
 
 		  if ( compare( key, e.key ) < 0 ) {
 				if ( e.left() != null ) e.left = deleteRec( e, e.left );
@@ -371,7 +358,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				if ( e.right() != null ) e.right = deleteRec( e, e.right );
 		  }
 				
-		  if ( e == change && deleted != null && compare( key, deleted.key ) == 0 ) {
+		  if ( e == removed && deleted != null && compare( key, deleted.key ) == 0 ) {
 
 				oldValue = deleted.value;
 				//System.err.println("Deleted entry is " + deleted + "; pred=" + deleted.pred() + "; succ="+ deleted.succ() + "; left=" + deleted.left + "; right=" + deleted.right );
@@ -409,11 +396,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  if ( ! modified ) return e;
 
 		  Entry l, r;
-		  final int level = e.level();
+		  final int level = e.level() - 1;
 
-		  if ( ( r = e.right() ) == null && level > 1 || r != null && r.level() < level - 1 || ( l = e.left() ) == null && level > 1 || l != null && l.level() < level - 1 ) {
+		  if ( ( ( r = e.right() ) == null ? level > 0 : level > r.level() ) ||
+				 ( ( l = e.left() ) == null ? level > 0 : level > l.level() ) ) {
 				e.decLevel();
-				if ( r != null && r.level() > e.level() ) r.level( e.level() );
+				if ( r != null && r.level() > level ) r.level( level );
 				e = e.skew();
 				if ( ( r = e.right() ) != null ) {
 					 r = e.right = r.skew();
@@ -441,7 +429,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
    public Object remove(final Object ok) {
 		 final VALUE_TYPE oldValue = delete( KEY2TYPE( ok ) );
-		 deleted = change = null;
+		 deleted = removed = null;
 		 return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
    }
 
@@ -759,7 +747,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 	 public VALUE_TYPE remove(final KEY_TYPE k) {
 		  final VALUE_TYPE oldValue = delete( k );
-		  change = deleted = null;
+		  removed = deleted = null;
 		  return oldValue;
 	 }
 	 
@@ -778,7 +766,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 	 public VALUE_TYPE REMOVE_VALUE( final Object k ) {
 		  final VALUE_TYPE oldValue = delete( k );
-		  deleted = change = null;
+		  deleted = removed = null;
 		  return oldValue;
 	 }
 
@@ -828,7 +816,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  protected void updateNext() {
 				next = next.right;
-				if ( next != null && ! curr.pred() ) while ( next.left() != null ) next = next.left;
+				if ( next != null && ! curr.succ() ) while ( next.left() != null ) next = next.left;
 		  }
 
 		  protected Entry nextEntry() {
@@ -880,11 +868,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				one that gets deleted (as deletion is performed by copying a
 				suitable entry over the one to be deleted and then removing the
 				source of the copy).  In this case, next will point to a removed
-				entry (change); it should instead point to the destination of the
+				entry (removed); it should instead point to the destination of the
 				copy (deleted), which is certainly the entry immediately after the
 				deleted one. */
-				if ( next == change ) next = deleted;
-				change = deleted = curr = null;
+				if ( next == removed ) next = deleted;
+				removed = deleted = curr = null;
 		  }
 
 		  public void set( Object o ) {
@@ -917,7 +905,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 						  final Map.Entry e = (Map.Entry)o;
 						  final Entry f = findKey( KEY2TYPE( e.getKey() ) );
 						  if ( f != null ) TREEMAP.this.remove( f.key );
-						  change = deleted = null;
+						  removed = deleted = null;
 						  return f != null;
 					 }
 
@@ -1143,7 +1131,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 								final Map.Entry e = (Map.Entry)o;
 								final TREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
 								if ( f != null && in( f.key ) ) Submap.this.remove( f.key );
-								change = deleted = null;
+								removed = deleted = null;
 								return f != null;
 						  }
 
@@ -1304,7 +1292,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  public Object remove( final Object ok ) {
 				if ( ! in( KEY2TYPE( ok ) ) ) return null;
 				final VALUE_TYPE oldValue = delete( KEY2TYPE( ok ) );
-				deleted = change = null;
+				deleted = removed = null;
 				return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
 		  }
 
@@ -1312,14 +1300,14 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  public VALUE_TYPE remove( final KEY_TYPE k ) {
 				if ( ! in( k ) ) return this.defRetValue;
 				final VALUE_TYPE oldValue = delete( k );
-				deleted = change = null;
+				deleted = removed = null;
 				return modified ? oldValue : this.defRetValue;
 		  }
 #elif ! #valueclass(Object)
 		  public VALUE_TYPE REMOVE_VALUE( final Object k ) {
 				if ( ! in( k ) ) return this.defRetValue; 
 				final VALUE_TYPE oldValue = delete( k );
-				deleted = change = null;
+				deleted = removed = null;
 				return modified ? oldValue : this.defRetValue;
 		  }
 #endif
@@ -1694,7 +1682,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 
 		  System.out.println();
-		  System.out.println( "java.util Put: " + format( totPut/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + "K/s" );
+		  System.out.println( "java.util Put: " + format( totPut/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + "K/s" );
 
 		  System.out.println();
 
@@ -1751,7 +1739,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 
 		  System.out.println();
-		  System.out.println( "fastUtil  Put: " + format( totPut/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s" );
+		  System.out.println( "fastUtil  Put: " + format( totPut/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s" );
 
 		  System.out.println();
 

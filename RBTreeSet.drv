@@ -32,13 +32,13 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 /** A reference to the root entry. */
 	 public transient Entry tree;
 
-	 /** Number of entries in the set. */
+	 /** Number of elements in this set. */
 	 private int count;
 
-	 /** The first key in this set. */
+	 /** The entry of the first element of this set. */
 	 private transient Entry firstEntry;
 
-	 /** The last key in this set. */
+	 /** The entry of the last element of this set. */
 	 private transient Entry lastEntry;
 
 	 /** Temporary place to keep a key during recursive operations. */
@@ -48,15 +48,13 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * or a <code>delete()</code>, whether the set has been modified. */
 	 private transient boolean modified;
 
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, the entry that during the operation we
-	  * possibly created or removed. */
-	 private transient Entry change;
+	 /** The value of this variable remembers the entry that was removed by a <code>delete()</code>. */
+	 private transient Entry removed;
 
 	 /** The value of this variable remembers, after a <code>delete()</code>,
 	  * the entry that during the operation was deleted. Note that 
-	  * if {@link #change} != {@link deleted}, then this entry is still in the
-	  * set, but it contains the key and value previously stored in {@link #change}. */
+	  * if {@link #removed} != {@link deleted}, then this entry is still in the
+	  * set, but it contains the key and value previously stored in {@link #removed}. */
 	 private transient Entry deleted;
 
 	 /** This set's comparator, as provided in the constructor. */
@@ -174,15 +172,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		 return e;
    }
 
-	 /** The value of this variable remembers during an <code>insert()</code> 
-	  * whether we ever turned left. */
-	 private transient boolean turnedLeft;
-
-	 /** The value of this variable remembers during an <code>insert()</code> 
-	  * whether we ever turned right. */
-	 private transient boolean turnedRight;
-
-
 	 /** Inserts a new element in the set.
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff a new
@@ -194,7 +183,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 
 	 private boolean insert( final KEY_TYPE k ) {
-		  modified = turnedLeft = turnedRight = false;
+		  modified = false;
 		  key = k;
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
@@ -227,7 +216,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		 final int cmp = compare( key, e.key );
 		 
 		 if ( cmp < 0 ) {
-			  turnedLeft = true;
 			  if ( e.left() != null ) e.left = insertRec( e.left );
 			  else {
 					/* <P>This method we create a new {@link Entry} (marked as a leaf) and
@@ -235,10 +223,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					 * of the new entry is <code>e</code>, whereas its {@link Entry#left} pointer
 					 * is the {@link Entry#left} pointer of <code>e</code>. */
 					count++;
-					final Entry l = change = new Entry( key );
+					final Entry l = new Entry( key );
 					
 					modified = true;
-					if ( ! turnedRight ) firstEntry = l;
+					if ( e.left == null ) firstEntry = l;
 					
 					l.right = e;
 					l.left = e.left;
@@ -246,11 +234,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					e.pred( false );
 					e.left = l;
 			  }
-
-			  if ( ! modified ) return e; // Fast exit.
 		 } 
 		 else if ( cmp > 0 ) {
-			  turnedRight = true;
 			  if ( e.right() != null ) e.right = insertRec( e.right );
 			  else {
 					/* <P>We create a new {@link Entry} (marked as a leaf) and
@@ -258,10 +243,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					 * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
 					 * is the {@link Entry#right} pointer of <code>e</code>. */
 					count++;
-					final Entry r = change = new Entry( key );
+					final Entry r = new Entry( key );
 					
 					modified = true;
-					if ( ! turnedLeft ) lastEntry = r;
+					if ( e.right == null ) lastEntry = r;
 					
 					r.left = e;
 					r.right = e.right;
@@ -269,13 +254,13 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					e.succ( false );
 					e.right = r;
 			  }
-
-			  if ( ! modified ) return e; // Fast exit.
 		 }
 		 else return e;
 
-		 e = e.skew();
-		 e = e.split();
+		 if ( modified ) {
+			  e = e.skew();
+			  e = e.split();
+		 }
 
 		 return e;
    }
@@ -285,14 +270,14 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff an 
 	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
-	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  * the deleted key and {@link #removed} is the entry actually removed from the tree.
 	  *
 	  * @param k a key.
 	  * @return true if the deletion modified the set.
 	  */
 	 
 	 private boolean delete( final KEY_TYPE k ) {
-		  change = deleted = null;
+		  removed = deleted = null;
 		  modified = false;
 		  key = k;
 
@@ -311,7 +296,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff an 
 	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
-	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  * the deleted key and {@link #removed} is the entry actually removed from the tree.
 	  *
 	  * @param p the parent of the second argument (i.e., an {@link Entry}.
 	  * @param e a tree (i.e., an {@link Entry}.
@@ -319,7 +304,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  */
 
 	 private Entry deleteRec( Entry p, Entry e ) {
-		  change = e;
+		  removed = e;
 
 		  if ( compare( key, e.key ) < 0 ) {
 				if ( e.left() != null ) e.left = deleteRec( e, e.left );
@@ -329,7 +314,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				if ( e.right() != null ) e.right = deleteRec( e, e.right );
 		  }
 				
-		  if ( e == change && deleted != null && compare( key, deleted.key ) == 0 ) {
+		  if ( e == removed && deleted != null && compare( key, deleted.key ) == 0 ) {
 
 				deleted.key = e.key;
 
@@ -363,11 +348,12 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  if ( ! modified ) return e;
 
 		  Entry l, r;
-		  final int level = e.level();
+		  final int level = e.level() - 1;
 
-		  if ( ( r = e.right() ) == null && level > 1 || r != null && r.level() < level - 1 || ( l = e.left() ) == null && level > 1 || l != null && l.level() < level - 1 ) {
+		  if ( ( ( r = e.right() ) == null ? level > 0 : level > r.level() ) ||
+				 ( ( l = e.left() ) == null ? level > 0 : level > l.level() ) ) {
 				e.decLevel();
-				if ( r != null && r.level() > e.level() ) r.level( e.level() );
+				if ( r != null && r.level() > level ) r.level( level );
 				e = e.skew();
 				if ( ( r = e.right() ) != null ) {
 					 r = e.right = r.skew();
@@ -388,7 +374,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
    public boolean remove( final KEY_TYPE k ) {
 		 delete( k );
-		 deleted = change = null;
+		 deleted = removed = null;
 		 return modified;
    }
 
@@ -403,7 +389,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 
 	 public boolean remove( final Object ok ) {
 		  delete( KEY2TYPE( ok ) );
-		  deleted = change = null;
+		  deleted = removed = null;
 		  return modified;
 	 }
 	 
@@ -694,7 +680,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  protected void updateNext() {
 				next = next.right;
-				if ( next != null && ! curr.pred() ) while ( next.left() != null ) next = next.left;
+				if ( next != null && ! curr.succ() ) while ( next.left() != null ) next = next.left;
 		  }
 
 		  protected Entry nextEntry() {
@@ -749,11 +735,11 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				one that gets deleted (as deletion is performed by copying a
 				suitable entry over the one to be deleted and then removing the
 				source of the copy).  In this case, next will point to a removed
-				entry (change); it should instead point to the destination of the
+				entry (removed); it should instead point to the destination of the
 				copy (deleted), which is certainly the entry immediately after the
 				deleted one. */
-				if ( next == change ) next = deleted;
-				change = deleted = curr = null;
+				if ( next == removed ) next = deleted;
+				removed = deleted = curr = null;
 		  }
 
 		  public void set( Object o ) {
@@ -882,7 +868,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  public boolean remove( final Object ok ) {
 				if ( ! in( KEY2TYPE( ok ) ) ) return false;
 				delete( KEY2TYPE( ok ) );
-				deleted = change = null;
+				deleted = removed = null;
 				return modified;
 		  }
 
@@ -890,7 +876,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  public boolean remove( final KEY_TYPE k ) {
 				if ( ! in( k ) ) return false;
 				delete( k );
-				deleted = change = null;
+				deleted = removed = null;
 				return modified;
 		  }
 #endif
@@ -1210,7 +1196,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  }
 
 		  System.out.println();
-		  System.out.println( "java.util Add: " + format( totAdd/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + "K/s" );
+		  System.out.println( "java.util Add: " + format( totAdd/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + "K/s" );
 
 		  System.out.println();
 
@@ -1267,7 +1253,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 
 		  System.out.println();
-		  System.out.println( "fastUtil  Add: " + format( totAdd/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s" );
+		  System.out.println( "fastUtil  Add: " + format( totAdd/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s" );
 
 		  System.out.println();
 	 }
