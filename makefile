@@ -71,7 +71,7 @@ TYPE_LC=boolean byte short int long char float double object reference
 CLASS=Boolean Byte Short Integer Long Character Float Double Object Reference
 
 CSOURCE:=$(foreach m,$(ABSTRACT_MAP), $(foreach k,$(TYPE_CAP), $(foreach v,$(TYPE_CAP), Abstract$(k)2$(v)$(m).c)))
-CSOURCE:=$(foreach m,$(UNSORTED_MAP), $(foreach k,$(TYPE_CAP), $(foreach v,$(TYPE_CAP), $(k)2$(v)$(m).c)))
+CSOURCE+=$(foreach m,$(UNSORTED_MAP), $(foreach k,$(TYPE_CAP), $(foreach v,$(TYPE_CAP), $(k)2$(v)$(m).c)))
 CSOURCE+=$(foreach m,$(SORTED_MAP), $(foreach k,$(TYPE_CAP_NOBOOL_NOREF), $(foreach v,$(TYPE_CAP), $(k)2$(v)$(m).c)))
 
 CSOURCE+=$(foreach s,$(ABSTRACT_COLLECTION), $(foreach k,$(TYPE_CAP), Abstract$(k)$(s).c))
