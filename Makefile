@@ -24,7 +24,7 @@ jar: jsources
 	ant dist
 
 tar: jar
-	tar zhcvf fastUtil-$(VERSION).tgz fastUtil-*.*/
+	tar zhcvf fastUtil-$(VERSION).tar.gz fastUtil-*.*/
 
 jsources: $(SOURCES)
 
