@@ -25,9 +25,9 @@ import java.util.Comparator;
 
 /** A priority queue.
  *
- * <P>A priority queue provides a way to {@linkplain #enqueue(int) enqueue}
+ * <P>A priority queue provides a way to {@linkplain #enqueue(Object) enqueue}
  * elements, and to {@linkplain #dequeue() dequeue} them in some specified
- * order.  It is also possible to get the {@linkolain #first() first element},
+ * order.  It is also possible to get the {@linkplain #first() first element},
  * that is, the element that would be dequeued next.
  *
  * <P>Additionally, the queue may provide a method to peek at 
@@ -50,7 +50,7 @@ public interface PriorityQueue {
 	/** Dequeues the {@link #first()} element from the queue.
 	 *
 	 * @return the dequeued element.
-	 * @throw NoSuchElementException if the queue is empty.
+	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
 	Object dequeue();

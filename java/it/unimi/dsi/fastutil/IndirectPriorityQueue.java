@@ -24,7 +24,7 @@ package it.unimi.dsi.fastutil;
 /** An indirect priority queue.
  *
  * <P>An indirect priority queue is an extension of a semi-indirect queue
- * providing also methods to notify {@linkplain #change(int) the change of
+ * providing also methods to notify {@linkplain #changed(int) the change of
  * <em>any</em> element of the reference list}, and to {@linkplain #remove(int)
  * remove any element}.
  *
