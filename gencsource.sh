@@ -96,15 +96,11 @@ echo -e \
 "/* Assertions (useful to generate conditional code) */\n"\
 \
 \
-"#if ${CLASS[$k]}\n"\
-"#assert keyclass(${CLASS[$k]})\n"\
-"#endif\n"\
-"#if ${CLASS[$v]}\n"\
-"#assert valueclass(${CLASS[$v]})\n"\
-"#endif\n"\
+$(if [[ "${CLASS[$k]}" != "" ]]; then echo "#assert keyclass(${CLASS[$k]})\\n"; fi)\
+$(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"; fi)\
 \
 \
-"/* Current types and classes (and size, if applicable) */\n"\
+"/* Current type and class (and size, if applicable) */\n"\
 \
 \
 "#define KEY_TYPE ${TYPE[$k]}\n"\
