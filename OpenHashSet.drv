@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.20: Fast & compact specialized utility classes for Java
+ * fastUtil 2.50: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -27,12 +27,40 @@ import java.util.*;
 import java.io.*;
 
 
+#ifdef linked
+
+/**  A type-specific linked hash set with with a very fast, small-footprint implementation.
+ *
+ * <P>This class implements the interface of a sorted set, so to allow easy
+ * access of the iteration order: for instance, you can get the first element
+ * in iteration order with <code>first()</code> without having to create an
+ * iterator; however, this class partially violates the {@link java.util.SortedSet}
+ * contract because all subset methods throw an exception and {@link
+ * #comparator()} returns always <code>null</code>.
+ *
+ * <P>The iterators provided by this class are type-specific {@link
+ * java.util.ListIterator list iterators}.  However, creation of an iterator
+ * using a starting point is going to be very expensive, as the chosen starting
+ * point must be linearly searched for, unless it is {@link #last()}, in which
+ * case the iterator is created in constant time.
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SORTEDSET {
+
+#else
+
 /**  A type-specific hash set with with a very fast, small-footprint implementation.
  * @see Hash
  * @see HashCommon
  */
 
 public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SET {
+
+#endif
+
 	/** The array of keys. */
 	protected transient KEY_TYPE key[];
 	 
@@ -55,12 +83,15 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	protected int count;
 
 #ifdef linked
-	/** The index of the first entry in iteration order. */
-	protected int first = -1;
-	/** The index of the last entry in iteration order. */
-	protected int last = -1;
-	/** For each entry, the next entry in iteration order. */
-	protected transient int next[];
+	/** The index of the first entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
+	protected transient int first = -1;
+	/** The index of the last entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
+	protected transient int last = -1;
+	/** For each entry, the next and the previous entry in iteration order
+	exclusive-or'd together. It is valid only on {@link Hash#OCCUPIED}
+	entries. The first and the last entry contain the actual successor and
+	predecessor, respectively, exclusived-or'd with -1. */
+	protected transient int link[];
 #endif
 
 	/** Creates a new hash set.
@@ -85,7 +116,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		key = new KEY_TYPE[ free ];
 		state = new byte[ free ];
 #ifdef linked
-		next = new int[ free ];
+		link = new int[ free ];
 #endif
 	}
 	 
@@ -96,7 +127,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHSET( final int n ) {
-		this(n, DEFAULT_LOAD_FACTOR);
+		this( n, DEFAULT_LOAD_FACTOR );
 	}
 
 
@@ -105,7 +136,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHSET() {
-		this(DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR);
+		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR );
 	}
  
 
@@ -116,8 +147,8 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHSET( final Collection c, final float f ) {
-		this(c.size(), f);
-		addAll(c);
+		this( c.size(), f );
+		addAll( c );
 	}
 
 
@@ -129,7 +160,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHSET( final Collection c ) {
-		this(c, DEFAULT_LOAD_FACTOR);
+		this( c, DEFAULT_LOAD_FACTOR );
 	}
 
 
@@ -142,8 +173,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	public OPENHASHSET( final KEY_TYPE[] a, final float f ) {
 		this( a.length, f );
 		int i = a.length;
-		while(i-- != 0) add(a[i]);
+		while( i-- != 0 ) add( a[ i ] );
 	}
+
 
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
 	 * copying the elements of an array.
@@ -238,214 +270,381 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
  
 
 
-	public boolean add(final Object ok) {
-		final KEY_TYPE k = KEY2TYPE(ok);
-
+	public boolean add( final KEY_TYPE k ) {
 		final int i = findInsertionPoint( k );
-		if (i < 0) return false;
+		if ( i < 0 ) return false;
 
-		if ( state[i] == FREE ) free--;
-		state[i] = OCCUPIED;
-		key[i] = k;
+		if ( state[ i ] == FREE ) free--;
+		state[ i ] = OCCUPIED;
+		key[ i ] = k;
+
 #ifdef linked
-		if ( first == -1 ) first = last = i;
+		if ( count == 0 ) {
+			first = last = i;
+			link[ i ] = 0;
+		}
 		else {
-			next[ last ] = i;
+			link[ last ] ^= i ^ -1;
+			link[ i ] = last ^ -1;
 			last = i;
 		}
 #endif
-		if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+
+		if ( ++count >= maxFill ) rehash( Math.min( p + 16, primes.length - 1 ) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
-		System.err.println( cern.colt.Arrays.toString( key ) );
-		System.err.println( cern.colt.Arrays.toString( next ) );
-		System.err.println( "first: " + first + " last: " + last );
+		return true;
+	}
+
+
+
+#ifdef linked
+
+	/** Modifies the {@link #link} vector so that the given entry is removed.
+	 *
+	 * <P>If the given entry is the first or the last one, this method will complete
+	 * in constant time; otherwise, it will have to search for the given entry.
+	 *
+	 * @param the index of an entry. 
+	 */
+	private void fixPointers( int i ) {
+		if ( count == 0 ) {
+			first = last = -1;
+			return;
+		}
+
+		if ( first == i ) {
+			first = link[ i ] ^ -1;
+			link[ first ] ^= i ^ -1;
+			return;
+		}
+
+		if ( last == i ) {
+			last = link[ i ] ^ -1;
+			link[ last ] ^= i ^ -1;
+			return;
+		}
+
+		int j = first, prev = -1, next;
+		while( ( next = link[ j ] ^ prev ) != i ) {
+			prev = j;
+			j = next;
+		}
+		link[ j ] ^= link[ i ] ^ i ^ j;
+		link[ link[ i ] ^ j ] ^= i ^ j;
+	}
+
+#endif
+
+
+
+	public boolean remove( final KEY_TYPE k ) {
+		final int i = findKey( k );
+		if ( i < 0 ) return false;
+		state[ i ] = REMOVED;
+		count--;
+
+#if #keyclass(Object) || #keyclass(Reference)
+		key[ i ] = HashCommon.removed;
+#endif
+
+#ifdef linked
+		fixPointers( i );
+#endif
+
 		return true;
 	}
 	 
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-
-	public boolean add(final KEY_TYPE k) {
-		final int i = findInsertionPoint(k);
-		if (i < 0) return false;
-
-		if ( state[i] == FREE ) free--;
-		state[i] = OCCUPIED;
-		key[i] = k;
-#ifdef linked
-		if ( first == -1 ) first = last = i;
-		else {
-			next[ last ] = i;
-			last = i;
-		}
-#endif
-		if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
-		if ( free == 0 ) rehash( p );
-		System.err.println( cern.colt.Arrays.toString( key ) );
-		System.err.println( cern.colt.Arrays.toString( next ) );
-		System.err.println( "first: " + first + " last: " + last );
-
-
-		return true;
+	public boolean contains( final KEY_TYPE k ) {
+		return findKey( k ) >= 0;
 	}
-
-
-#endif
-
-
-#ifdef linked
-	private void fixPointers( int i ) {
-		final int[] next = this.next;
-		if ( first == i ) {
-			first = next[ i ];
-			if ( last == i ) first = last = -1;
-			return;
-		}
-		
-		int j = first;
-		while( next[ j ] != i ) j = next[ j ];
-		next[ j ] = next[ i ];
-		if ( last == i ) last = j;
-	}
-#endif
-
-	public boolean remove( final Object ok ) {
-		final int i = findKey(KEY2TYPE(ok));
-		if (i < 0) return false;
-		  
-		state[i] = REMOVED;
-#if #keyclass(Object) || #keyclass(Reference)
-		key[i] = HashCommon.removed;
-#endif
-#ifdef linked
-		fixPointers( i );
-#endif
-		count--;
-		return true;
-	}
-
-
 
 	public void clear() {
 		count = 0;
 		free = state.length;
 		Arrays.fill(state, FREE);
+
 #if #keyclass(Object) || #keyclass(Reference)
 		Arrays.fill(key, null);
 #endif
+
 #ifdef linked
 		first = last = -1;
 #endif
+
 	}
 
 
-	/* We override the method in the type-specific {@link AbstractCollection}
-	   with a faster version without iterators. */
 
-	public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE a[] ) {
-		final KEY_TYPE key[] = this.key, result[];
-		final byte state[] = this.state;
-		int i, j, pos = 0;
+#ifdef linked
 
-		if (a == null || a.length < count) result = new KEY_TYPE[count];
-		else result = a;
+	/** Returns the first element of this set in iteration order.
+	 *
+	 * @return the first element in iteration order.
+	 */
+	final public KEY_TYPE FIRST() {
+		if ( count == 0 ) throw new NoSuchElementException();
+		return key[ first ];
+	}
 
-		i = count; 
-		j = 0;
 
-		while(i-- != 0) {
-			while( state[pos] != OCCUPIED ) pos++;
-			result[j++] = key[pos++];
+	/** Returns the last element of this set in iteration order.
+	 *
+	 * @return the last element in iteration order.
+	 */
+	final public KEY_TYPE LAST() {
+		if ( count == 0 ) throw new NoSuchElementException();
+		return key[ last ];
+	}
+
+	final public STDSORTEDSET tailSet( KEY_TYPE ofrom ) { throw new UnsupportedOperationException(); }
+	final public STDSORTEDSET headSet( KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
+	final public STDSORTEDSET subSet( KEY_TYPE ofrom, KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
+	final public Comparator comparator() { return null; }
+
+#if !#keyclass(Object) && !#keyclass(Reference)
+
+	/** Returns the first element of this set in iteration order wrapped in an object.
+	 *
+	 * @return the first element in iteration order wrapped in an object.
+	 */
+	final public Object first() {
+		return KEY2OBJ( FIRST() );
+	}
+
+
+	/** Returns the last element of this set in iteration order wrapped in an object.
+	 *
+	 * @return the last element in iteration order wrapped in an object.
+	 */
+	final public Object last() {
+		return KEY2OBJ( LAST() );
+	}
+
+	final public SortedSet tailSet( Object ofrom ) { throw new UnsupportedOperationException(); }
+	final public SortedSet headSet( Object oto ) { throw new UnsupportedOperationException(); }
+	final public SortedSet subSet( Object ofrom, Object oto ) { throw new UnsupportedOperationException(); }
+
+#endif
+
+	/** A list iterator over a linked set.
+	 *
+	 * <P>This class provides a list iterator over a linked hash set. The empty constructor runs in 
+	 * constant time. The one-argoument constructor needs to search for the given element, but it is 
+	 * optimised for the case of {@link #last()}, in which case runs in constant time, too.
+	 */
+	private class SetIterator implements BidirectionalIterator, KEY_LIST_ITERATOR {
+		/** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
+		int prev = -1;
+		/** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
+		int next = -1;
+		/** The last entry that was returned (or -1 if we did not iterate or used {@link #remove()}). */
+		int curr = -1;
+		/** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link SetIterator} has been created using the nonempty constructor.*/
+		int index = 0;
+
+		SetIterator() {
+			next = first;
 		}
 
-		return result;
-	}
-
-
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-	/** Returns an iterator on this set. 
-	 * The iterator can be safely cast to a type-specific iterator.
-	 * @return a type-specific iterator.
-	 */
-	public Iterator iterator() {
-		return KEY_ITERATOR_METHOD();
-	}
-#endif
-
-	/** Returns a type-specific iterator on this set. 
-	 * @return a type-specific iterator.
-	 */
-	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
-		return new KEY_ITERATOR() {
-				int pos = 0, last = -1, c = count;
+		SetIterator( KEY_TYPE from ) {
+			if ( KEY_EQUAL( key[ last ], from ) ) {
+				prev = last;
+				index = count;
+			}
+			else {
+				if ( ! contains( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
+				next = first;
+				KEY_TYPE k;
+				do k = NEXT_KEY(); while( ! KEY_EQUAL( k, from ) );
+				curr = -1;
+			}
+		}
 					 
-				{ 
-					final byte state[] = OPENHASHSET.this.state;
-					final int n = state.length;
+		public boolean hasNext() { return next != -1; }
+		public boolean hasPrevious() { return prev != -1; }
+					 
+		public KEY_TYPE NEXT_KEY() {
+			if ( ! hasNext() ) throw new NoSuchElementException();
 
-					if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-				}
-					 
-				public boolean hasNext() {
-					return c != 0 && pos < OPENHASHSET.this.state.length;
-				}
-					 
-					 
+			curr = next;
+			next = link[ curr ] ^ prev;
+			prev = curr;
+
+			index++;
+
+			return key[ curr ];
+		}
+
+		public KEY_TYPE PREV_KEY() {
+			if ( ! hasPrevious() ) throw new NoSuchElementException();
+
+			curr = prev;
+			prev = link[ curr ] ^ next;
+			next = curr;
+
+			index--;
+
+			return key[ curr ];
+		}
+
 #if !#keyclass(Object) && !#keyclass(Reference)
-				public KEY_TYPE NEXT_KEY() {
-					KEY_TYPE retVal;
-					final byte state[] = OPENHASHSET.this.state;
-					final int n = state.length;
-						  
-					if (!hasNext()) throw new NoSuchElementException();
-					retVal = key[last = pos];
-					if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
-						  
-					return retVal;
-				}
+		public Object next() { return KEY2OBJ( NEXT_KEY() ); }
+		public Object previous() { return KEY2OBJ( PREV_KEY() ); }
+#endif
+		
+
+		public int nextIndex() {
+			return index;
+		}
+
+		public int previousIndex() {
+			return index - 1;
+		}
+
+		
+		public void remove() {
+			if ( curr == -1 ) throw new IllegalStateException();
+			state[ curr ] = REMOVED;
+#if #keyclass(Object) || #keyclass(Reference)
+			key[ curr ] = HashCommon.removed;
+#endif
+			if ( curr == prev ) {
+				/* If the last operation was a next(), we are removing an entry that preceeds
+				   the current index, and thus we must decrement it. */
+				index--;
+				prev = link[ curr ] ^ next;
+			}
+			else next = link[ curr ] ^ prev; // curr == next
+
+			count--;
+			/* Now we manually fix the pointers. Because of our knowledge of next
+			   and prev, this is going to be faster than calling fixPointers(). */
+			if ( prev == -1 ) first = next;
+			else link[ prev ] ^= curr ^ next;
+			if ( next == -1 ) last = prev;
+			else link[ next ] ^= curr ^ prev;
+			curr = -1;
+		}
+
+		public void set( Object o ) {
+			throw new UnsupportedOperationException();
+		}
+
+		public void add( Object o ) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+
+	/** Returns a type-specific list iterator on the elements in this set, starting from a given element of the set.
+	 *
+	 * <P>This method provides an iterator positioned immediately after the
+	 * given element. That is, the next call to <code>previous()</code> will
+	 * return <code>from</code>, whereas the next call to <code>next()</code>
+	 * will return the element immediately after <code>from</code>. This
+	 * allows to call <code>iterator(last())</code> and obtain an iterator starting
+	 * from the end of the iteration order.
+	 *
+	 * <P>Because of the way linking is implemented, generating an iterator using this method
+	 * requires constant time only if the argument is <code>last()</code>. In all other cases,
+	 * a linear search for the given element will be necessary.
+	 *
+	 * <P>Note that this method returns a bidirectional iterator, which, however, can be safely cast to 
+	 * a type-specific list iterator.
+	 *
+	 * @param from an element to start from.
+	 * @return a type-specific list iterator starting at the given element.
+	 * @throws IllegalArgumentException if <code>from</code> does not belong to the set.
+	 */
+	public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+		return new SetIterator( from );
+	}
+
+	/** Returns a type-specific list iterator on the elements in this set, starting from the first element.
+	 *
+	 * <P>Note that this method returns a bidirectional iterator, which, however, can be safely cast to 
+	 * a type-specific list iterator.
+	 *
+	 * @return a type-specific list iterator.
+	 */
+
+#else	 
+
+	/** An iterator over a hash set. */
+
+	private class SetIterator implements KEY_ITERATOR {
+		/** The index of the next entry to be returned. */
+		int pos = 0;
+		/** The index of the last entry that has been returned. */
+		int last = -1;
+		/** A downward counter measuring how many entries have been returned. */
+		int c = count;
+		
+		{ 
+			final byte state[] = OPENHASHSET.this.state;
+			final int n = state.length;
+			
+			if ( c != 0 ) while( pos < n && state[pos] != OCCUPIED ) pos++;
+		}
+		
+		public boolean hasNext() {
+			return c != 0 && pos < OPENHASHSET.this.state.length;
+		}
+		
+		public KEY_TYPE NEXT_KEY() {
+			KEY_TYPE retVal;
+			final byte state[] = OPENHASHSET.this.state;
+			final int n = state.length;
+			
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			retVal = key[ last = pos ];
+			if ( --c != 0 ) do pos++; while( pos < n && state[ pos ] != OCCUPIED );
+			
+			return retVal;
+		}
+		
+#if !#keyclass(Object) && !#keyclass(Reference)
+		public Object next() {
+			return KEY2OBJ( NEXT_KEY() );
+		}
+#endif
+		
+		public void remove() {
+			if ( last == -1 || state[ last ] != OCCUPIED ) throw new IllegalStateException();
+			state[last] = REMOVED;
+#if #keyclass(Object) || #keyclass(Reference)
+			key[ last ] = HashCommon.removed;
+#endif
+			count--;
+		}
+	}
+
 #endif
 
-				public Object next() {
-					Object retVal;
-					final byte state[] = OPENHASHSET.this.state;
-					final int n = state.length;
-						  
-					if (!hasNext()) throw new NoSuchElementException();
-					retVal = KEY2OBJ(key[last = pos]);
-					if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
-						  
-					return retVal;
-				}
-					 
-				public void remove() {
-					if (last == -1) throw new IllegalStateException();
-					state[last] = REMOVED;
-#if #keyclass(Object) || #keyclass(Reference)
-					key[last] = HashCommon.removed;
-#endif
-#ifdef linked
-					fixPointers( last );
-#endif
-					count--;
-				}
-			};
+	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+		return new SetIterator();
 	}
-	 
+
+
 
 	/** Rehashes the set, keeping the same size.
-	 * This method should be called when the set underwent numerous deletions and insertions.
-	 * In this case, free entries become rare, and unsuccessful searches
-	 * require probing <em>all</em> entries.  For reasonable load factors this method is linear in the number of entries.
-	 * You will need as much additional free memory as
-	 * that occupied by the table.
-	 * @return <code>true</code> if there was enough memory to rehash the set, <code>false</code> otherwise.
+	 *
+	 * <P>This method should be called when the set underwent numerous
+	 * deletions and insertions.  In this case, free entries become rare, and
+	 * unsuccessful searches require probing <em>all</em> entries.  For
+	 * reasonable load factors this method is linear in the number of entries.
+	 * You will need as much additional free memory as that occupied by the
+	 * table.
+	 *
+	 * @return true if there was enough memory to rehash the set, false otherwise.
 	 */
 
 	public boolean rehash() {
 		try {
-			rehash(p);
+			rehash( p );
 		}
-		catch(OutOfMemoryError cantDoIt) { return false; }
+		catch( OutOfMemoryError cantDoIt ) { return false; }
 		return true;
 	}
 
@@ -476,45 +675,56 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 	private void rehash( final int newP ) {
 #ifdef linked
-		int i = first, j = count, last = -1, k2i, h1, h2;
+		int i = first, j = count, prev = -1, newPrev = -1, t, k2i, h1, h2;
 #else
 		int i = 0, j = count, k2i, h1, h2;
 #endif
 
-		System.err.println("Rehashing to size " +  primes[newP] + "...");
+		//System.err.println("Rehashing to size " +  primes[newP] + "...");
 
 		KEY_TYPE k;
 
-		final int newN = primes[newP];
-		final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
-		final byte state[] = this.state, newState[] = new byte[newN];
+		final int newN = primes[ newP ];
+		final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[ newN ];
+		final byte state[] = this.state, newState[] = new byte[ newN ];
 #ifdef linked
-		final int next[] = this.next, newNext[] = new int[newN];
+		final int link[] = this.link, newLink[] = new int[ newN ];
+		first = -1;
 #endif
 
-		while(j-- != 0) {
+		while( j-- != 0 ) {
 
 #ifndef linked
-			while(state[i] != OCCUPIED ) i++;
+			while( state[ i ] != OCCUPIED ) i++;
 #endif
 
-			k = key[i];
-			k2i = KEY2INT(k) & 0x7FFFFFFF;
+			k = key[ i ];
+			k2i = KEY2INT( k ) & 0x7FFFFFFF;
 
 			h1 = k2i % newN;
 
-			if ( newState[h1] != FREE ) {
-				h2 = (k2i % (newN - 2)) + 1;
-				do h1 = ( h1 + h2 ) % newN; while( newState[h1] != FREE );
+			if ( newState[ h1 ] != FREE ) {
+				h2 = ( k2i % ( newN - 2 ) ) + 1;
+				do h1 = ( h1 + h2 ) % newN; while( newState[ h1 ] != FREE );
 			}
 				
-			newState[h1] = OCCUPIED;
-			newKey[h1] = k;
+			newState[ h1 ] = OCCUPIED;
+			newKey[ h1 ] = k;
 
 #ifdef linked
-			if ( last != -1 ) last = newNext[ last ] = h1;
-			else last = this.first = h1;
-			i = next[ i ];
+			t = i;
+			i = link[ i ] ^ prev;
+			prev = t;
+
+			if ( first != -1 ) {
+				newLink[ newPrev ] ^= h1;
+				newLink[ h1 ] = newPrev;
+				newPrev = h1;
+			}
+			else {
+				newPrev = first = h1;
+				newLink[ h1 ] = -1;
+			}
 #else
 			i++;
 #endif
@@ -526,11 +736,12 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		this.key = newKey;
 		this.state = newState;
 #ifdef linked
-		this.next = newNext;
-		this.last = last;
+		this.link = newLink;
+		this.last = newPrev;
+		if ( newPrev != -1 ) newLink[ newPrev ] ^= -1; 
 #endif
 	}
-	 
+
 	public int size() {
 		return count;
 	}
@@ -540,34 +751,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
-	public boolean contains(final Object ok) {
-		return findKey(KEY2TYPE(ok)) >= 0;
-	}
-
-
-#if !#keyclass(Object) && !#keyclass(Reference)
-
-	public boolean contains(final KEY_TYPE k) {
-		return findKey(k) >= 0;
-	}
-
-
-	public boolean remove(final KEY_TYPE k) {
-		final int i = findKey(k);
-		if (i < 0) return false;
-		state[i] = REMOVED;
-#if #keyclass(Object) || #keyclass(Reference)
-		key[i] = HashCommon.removed;
-#endif
-		count--;
-#ifdef linked
-		fixPointers( i );
-#endif
-		return true;
-	}
-	 
-
-#endif
 
 	/** Returns a deep copy of this set. 
 	 *
@@ -588,7 +771,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		c.key = (KEY_TYPE[])key.clone();
 		c.state = (byte[])state.clone();
 #ifdef linked
-		c.next = (int[])next.clone();
+		c.link = (int[])link.clone();
 #endif
 		return c;
 	}
@@ -619,30 +802,28 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 	private void writeObject(java.io.ObjectOutputStream s) throws IOException {
-		final KEY_TYPE key[] = this.key;
-		final byte state[] = this.state;
-		final KEY_ITERATOR i = (KEY_ITERATOR)iterator();
-
+		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		int j = count;
 		s.defaultWriteObject();
-
-		while( i.hasNext() ) s.WRITE_KEY( i.NEXT_KEY() );
+		while( j-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
 	}
 
 	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		free = primes[p];
+		free = primes[ p ];
 		maxFill = (int)( free * f );
 
 		key = new KEY_TYPE[ free ];
 		state = new byte[ free ];
 #ifdef linked
-		next = new int[ free ];
+		link = new int[ free ];
+		first = last = -1;
 #endif
 
 		int count = this.count;
 		this.count = 0;
 
-		while(count-- != 0) add(s.READ_KEY());
+		while( count-- != 0 ) add( s.READ_KEY() );
 	}
 
 
@@ -659,7 +840,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
 #else
-		return new Serializable() { };
+		return new Serializable() {};
 #endif
 	}
 
@@ -689,7 +870,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 		if ( comp ) { for( j = 0; j < 20; j++ ) {
 
+#ifdef linked
+			t = new LinkedHashSet( 16 );
+#else
 			t = new HashSet( 16 );
+#endif
 
 			/* We add pairs to t. */
 			ms = System.currentTimeMillis();
@@ -801,14 +986,24 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
 
 
 	private static void regressionTest( int n, float f ) {
+		int c;
 		OPENHASHSET m = new OPENHASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
 #ifdef linked
-		Set t = new HashSet();
-#else
 		Set t = new LinkedHashSet();
+#else
+		Set t = new HashSet();
 #endif
 
 		/* First of all, we fill t with random data. */
@@ -841,7 +1036,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 				System.exit(-1);
 			}
 		}
-
 
 		/* Now we check that inquiries about random data give the same answer in m and t. For
 		   m we use the polymorphic method. */
@@ -881,7 +1075,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			}
 		}
 
-
 		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
 		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
 
@@ -905,12 +1098,17 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			}
 		}
 
-
 		/* Now we make m into an array, make it again a set and check it is OK. */
 		KEY_TYPE a[] = m.TO_KEY_ARRAY();
 		  
 		if (!new OPENHASHSET(a).equals(m))
 			System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
+
+
+		/* Now we check cloning. */
+
+		ensure( m.equals( ((OPENHASHSET)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+		ensure( ((OPENHASHSET)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
 
 		int h = m.hashCode();
 
@@ -951,6 +1149,97 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #else
 		m.clear();
 		m.addAll( t );
+#endif
+
+
+#ifdef linked
+
+				 
+		/* Now we play with iterators, but only in the linked case. */
+
+		{
+			ListIterator i, j;
+			Object J;
+			i = (ListIterator)m.iterator(); 
+			j = new LinkedList( t ).listIterator(); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( i.next().equals( J = j.next() ), "Error (" + seed + "): divergence in next()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( i.previous().equals( J = j.previous() ), "Error (" + seed + "): divergence in previous()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()" );
+
+			}
+
+		}
+
+		if ( t.size() > 0 ) {
+			ListIterator i, j;
+			Object J;
+			j = new LinkedList( t ).listIterator(); 
+			int e = r.nextInt( t.size() );
+			Object from;
+			do from = j.next(); while( e-- != 0 );
+
+			i = (ListIterator)m.iterator( KEY2TYPE( from ) ); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( i.next().equals( J = j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( i.previous().equals( J = j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex() (iterator with starting point " + from + ")" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex() (iterator with starting point " + from + ")" );
+
+			}
+
+		}
+
+		/* Now we check that m actually holds that data. */
+		  
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after iteration" );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after iteration" );
+
+
+
 #endif
 
 		/* Now we take out of m everything, and check that it is empty. */

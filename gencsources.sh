@@ -5,13 +5,17 @@
 # through a C preprocessor to get the actual Java sources.
 #
 
+# Generate links for fake source files.
+ln -sf OpenHashSet.drv LinkedOpenHashSet.drv
+ln -sf OpenHashMap.drv LinkedOpenHashMap.drv
+
 DIR="src/it/unimi/dsi/fastUtil"
 
 # Driver files for maps.
-MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap)
+MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap LinkedOpenHashMap)
 
 # Driver files for sets.
-SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet AVLTreeSet RBTreeSet)
+SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet LinkedOpenHashSet AVLTreeSet RBTreeSet)
 
 # Driver files for interfaces.
 INTERFACE=(Comparator AbstractComparator Iterator ListIterator BidirectionalIterator)
@@ -36,12 +40,16 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 	l=${#TYPE[*]}
 	if [[ ${MAP[$f]} != "Map" 
 		&& ${MAP[$f]} != "AbstractMap" 
-		&& ${MAP[$f]} != "OpenHashMap" ]]; then l=$((l-1)); fi # Only hash maps may have reference keys.
+		&& ${MAP[$f]} != "SortedMap" 
+		&& ${MAP[$f]} != "OpenHashMap" 
+		&& ${MAP[$f]} != "LinkedOpenHashMap" ]]; then l=$((l-1)); fi # Only hash maps may have reference keys.
 	for ((k=1; k<l; k++)); do
 		for ((v=0; v<${#TYPE[*]}; v++)); do
 			FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}.c
 			rm -f $FILENAME
+			if [[ ${MAP[$f]} == "LinkedOpenHashMap" ]]; then linked=linked; else linked=unlinked; fi
 			echo -e \
+"#define $linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
@@ -56,10 +64,16 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define ABSTRACT_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AbstractMap\n"\
 "#define KEY_ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION ${TYPE_CAP[$v]}AbstractCollection\n\n"\
+"#ifdef linked\n"\
+"#define OPENHASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}LinkedOpenHashMap\n\n"\
+"#else\n"\
 "#define OPENHASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}OpenHashMap\n\n"\
+"#endif\n"\
 "#define AVLTREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AVLTreeMap\n\n"\
 "#define RBTREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}RBTreeMap\n\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define STDSORTEDSET SortedSet\n\n"\
+"#define STDSORTEDMAP SortedMap\n\n"\
 "#define WRITE_KEY writeObject\n"\
 "#define READ_KEY readObject\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
@@ -71,6 +85,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define PREV_KEY previous\n"\
 "#define FIRST_KEY firstKey\n"\
 "#define LAST_KEY lastKey\n"\
+"#define FIRST first\n"\
+"#define LAST last\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
@@ -80,6 +96,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
+"#define STDSORTEDSET SORTEDSET\n\n"\
+"#define STDSORTEDMAP SORTEDMAP\n\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\
@@ -91,6 +109,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
+"#define FIRST first${TYPE_CAP[$k]}\n"\
+"#define LAST last${TYPE_CAP[$k]}\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
@@ -108,8 +128,6 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#endif\n"\
 "#define GET_VALUE get\n"\
 "#define REMOVE_VALUE remove\n"\
-"#define FIRST first${TYPE_CAP[$k]}\n"\
-"#define LAST last${TYPE_CAP[$k]}\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#endif\n"\
 "#if #keyclass(Object)\n"\
@@ -129,6 +147,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define OBJDEFRETVALUE (this.defRetValue)\n"\
 "#define VALUE2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define VALUE_ITERATOR Iterator\n\n"\
+"#define VALUE_ITERATOR_METHOD iterator\n\n"\
 "#define VALUE_LIST_ITERATOR ListIterator\n\n"\
 "#define NEXT_VALUE next\n"\
 "#define PREV_VALUE previous\n"\
@@ -146,6 +165,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define VALUE2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP[$v]}Iterator\n\n"\
+"#define VALUE_ITERATOR_METHOD ${TYPE[$v]}Iterator\n\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP[$v]}ListIterator\n\n"\
 "#define NEXT_VALUE next${TYPE_CAP[$v]}\n"\
 "#define PREV_VALUE previous${TYPE_CAP[$v]}\n"\
@@ -178,13 +198,16 @@ for ((f=0; f<${#SET[*]}; f++)); do
 	if [[ ${SET[$f]} != "Collection" 
 		&& ${SET[$f]} != "AbstractCollection" 
 		&& ${SET[$f]} != "Set" 
+		&& ${SET[$f]} != "SortedSet" 
 		&& ${SET[$f]} != "AbstractSet" 
-		&& ${SET[$f]} != "OpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
+		&& ${SET[$f]} != "OpenHashSet" 
+		&& ${SET[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
 	for ((k=0; k<l; k++)); do
 		 FILENAME=$DIR/${TYPE_CAP[$k]}${SET[$f]}.c
 		 rm -f $FILENAME
+		 if [[ ${SET[$f]} == "LinkedOpenHashSet" ]]; then linked=linked; else linked=unlinked; fi
 		 echo -e \
-"#define linked\n"\
+"#define $linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
@@ -194,13 +217,19 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
 "#define ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define ABSTRACT_COLLECTION ${TYPE_CAP[$k]}AbstractCollection\n\n"\
+"#ifdef linked\n"\
+"#define OPENHASHSET ${TYPE_CAP[$k]}LinkedOpenHashSet\n\n"\
+"#else\n"\
 "#define OPENHASHSET ${TYPE_CAP[$k]}OpenHashSet\n\n"\
+"#endif\n"\
 "#define AVLTREESET ${TYPE_CAP[$k]}AVLTreeSet\n\n"\
 "#define RBTREESET ${TYPE_CAP[$k]}RBTreeSet\n\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define STDSORTEDSET SortedSet\n\n"\
 "#define WRITE_KEY writeObject\n"\
 "#define READ_KEY readObject\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
+"#define KEY_ITERATOR_METHOD iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR Comparator\n\n"\
@@ -216,9 +245,11 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
+"#define STDSORTEDSET SORTEDSET\n\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
@@ -291,6 +322,6 @@ rm -f $DIR/BooleanSet.c
 rm -f $DIR/BooleanComparator.c
 rm -f $DIR/BooleanAbstractComparator.c
 rm -f $DIR/BooleanOpenHashSet.c
+rm -f $DIR/BooleanLinkedOpenHashSet.c
 rm -f $DIR/BooleanAVLTreeSet.c
 rm -f $DIR/BooleanRBTreeSet.c
-

@@ -1,6 +1,6 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=2.20
+VERSION=2.50
 
 .SUFFIXES: .java .class
 
@@ -53,7 +53,7 @@ PACKAGES = it.unimi.dsi.fastUtil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -J-Xmx256M -d $(DOCSDIR) -windowtitle "fastUtil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
+	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastUtil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 

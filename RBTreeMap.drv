@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.20: Fast & compact specialized utility classes for Java
+ * fastUtil 2.50: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -26,6 +26,12 @@ import java.util.Map;
 import java.io.*;
 
 /** A type-specific red-black tree map with a fast, small-footprint implementation.
+ *
+ * <P>The iterators provided by the views of this class are type-specific {@linkplain
+ * it.unimi.dsi.fastUtil.BidirectionalIterator bidirectional iterators}.
+ * Moreover, the iterator returned by <code>iterator()</code> can be safely cast
+ * to a type-specific {@linkplain java.util.ListIterator list iterator}.
+ *
  */
 
 public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, SORTEDMAP {
@@ -661,15 +667,8 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
 	}
 
-#if ! #valueclass(Object) && ! #valueclass(Reference) 
-	 
-	public boolean containsValue(final Object v) {
-		return containsValue( VALUE2TYPE( v ) );
-	}
 
-#endif
-
-	public boolean containsValue(final VALUE_TYPE v) {
+	public boolean containsValue( final VALUE_TYPE v ) {
 		final TreeIterator i = new TreeIterator();
 		VALUE_TYPE ev;
 		  
@@ -991,10 +990,6 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		return delete( k );
 	}
 	 
-	public boolean containsKey(final Object ok) {
-		return containsKey( KEY2TYPE( ok ) );
-	}
-	 
 #else
 #if !#valueclass(Object) && ! #valueclass(Reference)
 
@@ -1186,7 +1181,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 	public Set keySet() {
 		class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
 				
-			public Iterator iterator() {
+			public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 				return new KeyIterator();
 			}
 				
@@ -1206,19 +1201,6 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 				RBTREEMAP.this.remove( k );
 				return modified;
 			}					 
-
-#if ! #keyclass(Object)
-
-			public boolean contains( final Object ok ) {
-				return containsKey( ok );
-			}					 
-
-			public boolean remove( final Object ok ) {
-				RBTREEMAP.this.remove( KEY2TYPE( ok ) );
-				return modified;
-			}
-
-#endif
 
 			public int size() {
 				return count;
@@ -1272,19 +1254,13 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 	public Collection values() {
 		if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
-				public Iterator iterator() {
+				public VALUE_ITERATOR VALUE_ITERATOR_METHOD() {
 					return new ValueIterator();
 				}
 
 				public boolean contains( final VALUE_TYPE k ) {
 					return containsValue( k );
 				} 
-
-#if ! #valueclass(Object) && ! #valueclass(Reference)
-				public boolean contains( final Object ok ) {
-					return containsValue( ok );
-				}					 
-#endif
 
 				public int size() {
 					return count;
@@ -1431,7 +1407,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 		public Set keySet() {
 			class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
-				public Iterator iterator() {
+				public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 					return new SubmapKeyIterator();
 				}
 
@@ -1452,17 +1428,6 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 					return modified;
 				}					 
 
-#if ! #keyclass(Object)
-				public boolean contains( final Object ok ) {
-					return containsKey( ok );
-				}					 
-						  
-				public boolean remove( final Object ok ) {
-					Submap.this.remove( KEY2TYPE( ok ) );
-					return modified;
-				}
-#endif
-						  
 				public int size() {
 					return Submap.this.size();
 				}
@@ -1492,19 +1457,13 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		  
 		public Collection values() {
 			if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
-					public Iterator iterator() {
+					public VALUE_ITERATOR VALUE_ITERATOR_METHOD() {
 						return new SubmapValueIterator();
 					}
 
 					public boolean contains( final VALUE_TYPE k ) {
 						return containsValue( k );
 					} 
-
-#if ! #valueclass(Object) && ! #valueclass(Reference)
-					public boolean contains( final Object ok ) {
-						return containsValue( ok );
-					}					 
-#endif
 
 					public int size() {
 						return Submap.this.size();
@@ -1523,20 +1482,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 			return in( k ) && RBTREEMAP.this.containsKey( k );
 		}
 
-#if !#keyclass(Object)
-		public boolean containsKey( final Object ok ) {
-			return containsKey( KEY2TYPE( ok ) );
-		}
-#endif
-
-
-#if ! #valueclass(Object) && ! #valueclass(Reference) 
-		public boolean containsValue(final Object v) {
-			return containsValue( VALUE2TYPE( v ) );
-		}
-#endif
-
-		public boolean containsValue(final VALUE_TYPE v) {
+		public boolean containsValue( final VALUE_TYPE v ) {
 			final SubmapIterator i = new SubmapIterator();
 			VALUE_TYPE ev;
 				

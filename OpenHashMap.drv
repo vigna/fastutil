@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.20: Fast & compact specialized utility classes for Java
+ * fastUtil 2.50: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -26,42 +26,81 @@ import it.unimi.dsi.fastUtil.Hash; // workaround to force @see/@link
 import java.util.*;
 import java.io.*;
 
+#ifdef linked
+
+/**  A type-specific linked hash map with with a very fast, small-footprint implementation.
+ *
+ * <P>This class implements the interface of a sorted map, so to allow easy
+ * access of the iteration order: for instance, you can get the first key
+ * in iteration order with <code>firstKey()</code> without having to create an
+ * iterator; however, this class partially violates the {@link java.util.SortedMap}
+ * contract because all submap methods throw an exception and {@link
+ * #comparator()} returns always <code>null</code>.
+ *
+ * <P>The iterators provided by the views of this class using are type-specific
+ * {@link java.util.ListIterator list iterators}. However, creation of an
+ * iterator using a starting point is going to be very expensive, as the chosen
+ * starting point must be linearly searched for, unless it is {@link #lastKey()},
+ * in which case the iterator is created in constant time.
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Hash, SORTEDMAP {
+
+#else
+
 /** A type-specific hash map with a very fast, small-footprint implementation.
  * @see Hash
  * @see HashCommon
  */
 
 public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Hash, MAP {
+
+#endif
+
 	/** The array of keys. */
-	transient KEY_TYPE key[];
+	protected transient KEY_TYPE key[];
 
 	/** The array of values. */
-	transient VALUE_TYPE value[];
+	protected transient VALUE_TYPE value[];
 	 
 	/** The array of occupancy states. */
-	transient byte state[];
+	protected transient byte state[];
 
 	/** The acceptable load factor. */
-	final float f;
+	protected final float f;
 	 
 	/** Index into the prime list, giving the current table size. */
-	int p;
+	protected int p;
 
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
-	transient int maxFill;
+	protected transient int maxFill;
 
 	/** Number of free entries in the table (may be less than the table size - {@link #count} because of deleted entries). */
-	transient int free;
+	protected transient int free;
 
 	/** Number of entries in the map. */
-	int count;
+	protected int count;
 
 	/** Cached set of entries and keys. */
-	transient volatile Set entries, keys;
+	protected transient volatile Set entries, keys;
 
 	/** Cached collection of values. */
-	transient volatile Collection values;
+	protected transient volatile Collection values;
 
+#ifdef linked
+	/** The index of the first entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
+	protected transient int first = -1;
+	/** The index of the last entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
+	protected transient int last = -1;
+	/** For each entry, the next and the previous entry in iteration order
+	exclusive-or'd together. It is valid only on {@link Hash#OCCUPIED}
+	entries. The first and the last entry contain the actual successor and
+	predecessor, respectively, exclusived-or'd with -1. */
+	protected transient int link[];
+#endif
 
 	/** Creates a new hash map.
 	 *
@@ -85,6 +124,9 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		key = new KEY_TYPE[ free ];
 		value = new VALUE_TYPE[ free ];
 		state = new byte[ free ];
+#ifdef linked
+		link = new int[ free ];
+#endif
 	}
 	 
 	 
@@ -94,7 +136,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHMAP( final int n ) {
-		this(n, DEFAULT_LOAD_FACTOR);
+		this( n, DEFAULT_LOAD_FACTOR );
 	}
 
 
@@ -104,7 +146,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHMAP() {
-		this(DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR);
+		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR );
 	}
 
 
@@ -115,8 +157,8 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHMAP( final Map m, final float f ) {
-		this(m.size(), f);
-		putAll(m);
+		this( m.size(), f );
+		putAll( m );
 	}
 
 	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given one.
@@ -125,7 +167,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 */
 	 
 	public OPENHASHMAP( final Map m ) {
-		this(m, DEFAULT_LOAD_FACTOR);
+		this( m, DEFAULT_LOAD_FACTOR );
 	}
 
 	/*
@@ -226,6 +268,19 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		state[i] = OCCUPIED;
 		key[i] = k;
 		value[i] = v;
+
+#ifdef linked
+		if ( count == 0 ) {
+			first = last = i;
+			link[ i ] = 0;
+		}
+		else {
+			link[ last ] ^= i ^ -1;
+			link[ i ] = last ^ -1;
+			last = i;
+		}
+#endif
+
 		if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
 		return null;
@@ -248,6 +303,19 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		state[i] = OCCUPIED;
 		key[i] = k;
 		value[i] = v;
+
+#ifdef linked
+		if ( count == 0 ) {
+			first = last = i;
+			link[ i ] = 0;
+		}
+		else {
+			link[ last ] ^= i ^ -1;
+			link[ i ] = last ^ -1;
+			last = i;
+		}
+#endif
+
 		if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
 		return defRetValue;
@@ -256,22 +324,65 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 #endif
 
+
+
+#ifdef linked
+	/** Modifies the {@link #link} vector so that the given entry is removed.
+	 *
+	 * <P>If the given entry is the first or the last one, this method will complete
+	 * in constant time; otherwise, it will have to search for the given entry.
+	 *
+	 * @param the index of an entry. 
+	 */
+	private void fixPointers( int i ) {
+		if ( count == 0 ) {
+			first = last = -1;
+			return;
+		}
+
+		if ( first == i ) {
+			first = link[ i ] ^ -1;
+			link[ first ] ^= i ^ -1;
+			return;
+		}
+
+		if ( last == i ) {
+			last = link[ i ] ^ -1;
+			link[ last ] ^= i ^ -1;
+			return;
+		}
+
+		int j = first, prev = -1, next;
+		while( ( next = link[ j ] ^ prev ) != i ) {
+			prev = j;
+			j = next;
+		}
+		link[ j ] ^= link[ i ] ^ i ^ j;
+		link[ link[ i ] ^ j ] ^= i ^ j;
+	}
+#endif
+
+
 	public Object remove(final Object ok) {
 		final KEY_TYPE k = KEY2TYPE(ok);
 		final int i = findKey(k);
 		if (i < 0) return null;
 
 		state[i] = REMOVED;
+		count--;
 
 #if #keyclass(Object) || #keyclass(Reference)
 		key[i] = HashCommon.removed;
 #endif
+
 #if #valueclass(Object) || #valueclass(Reference)
 		final Object v = value[i];
 		value[i] = HashCommon.removed;
 #endif
 
-		count--;
+#ifdef linked
+		fixPointers( i );
+#endif
 
 #if #valueclass(Object) || #valueclass(Reference)
 		return v;
@@ -280,25 +391,16 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 #endif
 	}
 
-#if ! #valueclass(Object) && ! #valueclass(Reference) 
-	 
-	public boolean containsValue(final Object v) {
-		return containsValue(VALUE2TYPE(v));
-	}
 
-#endif
-
-
-
-	public boolean containsValue(final VALUE_TYPE v) {
+	public boolean containsValue( final VALUE_TYPE v ) {
 		final VALUE_TYPE value[] = this.value;
 		final byte state[] = this.state;
 
 		int i = 0, j = count;
 
 		while(j-- != 0) {
-			while(state[i] != OCCUPIED ) i++;
-			if (VALUE_EQUAL(value[i], v)) return true;
+			while(state[ i ] != OCCUPIED ) i++;
+			if ( VALUE_EQUAL(value[ i ], v ) ) return true;
 			i++;
 		}
 		return false;
@@ -309,14 +411,337 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		count = 0;
 		free = state.length;
 		Arrays.fill(state, FREE);
+
 		// We null all object entries so that the garbage collector can do its work.
 #if #keyclass(Object) || #keyclass(Reference)
 		Arrays.fill(key, null);
 #endif
+
 #if #valueclass(Object) || #valueclass(Reference)
 		Arrays.fill(value, null);
 #endif
+
+#ifdef linked
+		first = last = -1;
+#endif
 	}
+
+
+
+#ifdef linked
+
+	/** Returns the first key of this map in iteration order.
+	 *
+	 * @return the first key in iteration order.
+	 */
+	final public KEY_TYPE FIRST_KEY() {
+		if ( count == 0 ) throw new NoSuchElementException();
+		return key[ first ];
+	}
+
+
+	/** Returns the last key of this map in iteration order.
+	 *
+	 * @return the last key in iteration order.
+	 */
+	final public KEY_TYPE LAST_KEY() {
+		if ( count == 0 ) throw new NoSuchElementException();
+		return key[ last ];
+	}
+
+#if !#keyclass(Object) && !#keyclass(Reference)
+
+	/** Returns the first key of this map in iteration order as an object.
+	 *
+	 * @return the first key in iteration order as an object.
+	 */
+	final public Object firstKey() {
+		return KEY2OBJ( FIRST_KEY() );
+	}
+
+
+	/** Returns the last key of this map in iteration order as an object.
+	 *
+	 * @return the last key in iteration order as an object.
+	 */
+	final public Object lastKey() {
+		return KEY2OBJ( LAST_KEY() );
+	}
+
+	final public SortedMap tailMap( Object ofrom ) { throw new UnsupportedOperationException(); }
+	final public SortedMap headMap( Object oto ) { throw new UnsupportedOperationException(); }
+	final public SortedMap subMap( Object ofrom, Object oto ) { throw new UnsupportedOperationException(); }
+
+#endif
+
+	final public STDSORTEDMAP tailMap( KEY_TYPE ofrom ) { throw new UnsupportedOperationException(); }
+	final public STDSORTEDMAP headMap( KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
+	final public STDSORTEDMAP subMap( KEY_TYPE ofrom, KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
+	final public Comparator comparator() { return null; }
+
+
+	/** A list iterator over a linked map.
+	 *
+	 * <P>This class provides a list iterator over a linked hash map. The empty constructor runs in 
+	 * constant time. The one-argoument constructor needs to search for the given key, but it is 
+	 * optimised for the case of {@link #lastKey()}, in which case runs in constant time, too.
+	 */
+
+	private class MapIterator implements BidirectionalIterator, ListIterator {
+		/** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
+		int prev = -1;
+		/** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
+		int next = -1;
+		/** The last entry that was returned (or -1 if we did not iterate or used {@link #remove()}). */
+		int curr = -1;
+		/** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link SetIterator} has been created using the nonempty constructor.*/
+		int index = 0;
+
+		MapIterator() {
+			next = first;
+		}
+
+		MapIterator( KEY_TYPE from ) {
+			if ( KEY_EQUAL( key[ last ], from ) ) {
+				prev = last;
+				index = count;
+			}
+			else {
+				if ( ! OPENHASHMAP.this.containsKey( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
+				next = first;
+				int e;
+				do e = nextEntry(); while( ! KEY_EQUAL( key[ e ], from ) );
+				curr = -1;
+			}
+		}
+					 
+		public boolean hasNext() { return next != -1; }
+		public boolean hasPrevious() { return prev != -1; }
+					 
+		int nextEntry() {
+			if ( ! hasNext() ) throw new NoSuchElementException();
+
+			curr = next;
+			next = link[ curr ] ^ prev;
+			prev = curr;
+
+			index++;
+
+			return curr;
+		}
+
+		int previousEntry() {
+			if ( ! hasPrevious() ) throw new NoSuchElementException();
+
+			curr = prev;
+			prev = link[ curr ] ^ next;
+			next = curr;
+
+			index--;
+
+			return curr;
+		}
+
+		public Object next() {
+			final int e = nextEntry();
+			return new Entry( key[ e ], value[ e ] );
+		}
+
+		public Object previous() {
+			final int e = previousEntry();
+			return new Entry( key[ e ], value[ e ] );
+		}
+		
+		public int nextIndex() {
+			return index;
+		}
+
+		public int previousIndex() {
+			return index - 1;
+		}
+
+		
+		public void remove() {
+			if ( curr == -1 ) throw new IllegalStateException();
+			state[ curr ] = REMOVED;
+
+#if #keyclass(Object) || #keyclass(Reference)
+			key[ curr ] = HashCommon.removed;
+#endif
+
+#if #valueclass(Object) || #valueclass(Reference)
+			value[ curr ] = HashCommon.removed;
+#endif
+
+			if ( curr == prev ) {
+				/* If the last operation was a next(), we are removing an entry that preceeds
+				   the current index, and thus we must decrement it. */
+				index--;
+				prev = link[ curr ] ^ next;
+			}
+			else next = link[ curr ] ^ prev; // curr == next
+
+			count--;
+			/* Now we manually fix the pointers. Because of our knowledge of next
+			   and prev, this is going to be faster than calling fixPointers(). */
+			if ( prev == -1 ) first = next;
+			else link[ prev ] ^= curr ^ next;
+			if ( next == -1 ) last = prev;
+			else link[ next ] ^= curr ^ prev;
+			curr = -1;
+		}
+
+		public void set( Object o ) {
+			throw new UnsupportedOperationException();
+		}
+
+		public void add( Object o ) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+
+#else	 
+
+	/** An iterator over a hash map. */
+
+	private class MapIterator implements Iterator {
+		/** The index of the next entry to be returned. */
+		int pos = 0;
+		/** The index of the last entry that has been returned. */
+		int last = -1;
+		/** A downward counter measuring how many entries have been returned. */
+		int c = count;
+		
+		{ 
+			final byte state[] = OPENHASHMAP.this.state;
+			final int n = state.length;
+			
+			if ( c != 0 ) while( pos < n && state[ pos ] != OCCUPIED ) pos++;
+		}
+		
+		public boolean hasNext() {
+			return c != 0 && pos < OPENHASHMAP.this.state.length;
+		}
+		
+		public int nextEntry() {
+			Entry retVal;
+			final byte state[] = OPENHASHMAP.this.state;
+			final int n = state.length;
+			
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			last = pos;
+			if ( --c != 0 ) do pos++; while( pos < n && state[ pos ] != OCCUPIED );
+			
+			return last;
+		}
+						  
+		public Object next() {
+			final int e = nextEntry();
+			return new Entry( key[ e ], value[ e ] );
+		}
+
+		public void remove() {
+			if (last == -1) throw new IllegalStateException();
+			state[last] = REMOVED;
+#if #keyclass(Object) && !#keyclass(Reference)
+			key[last] = HashCommon.removed;
+#endif
+#if #valueclass(Object) || #valueclass(Reference)
+			value[last] = HashCommon.removed;
+#endif
+			
+			count--;
+		}
+	}
+
+
+#endif
+
+
+	public boolean containsKey( KEY_TYPE k ) {
+		return findKey( k ) >= 0;
+	}
+	 
+	public int size() {
+		return count;
+	}
+
+	public boolean isEmpty() {
+		return count == 0;
+	}
+
+
+	public Object get(final Object ok) {
+		final int i = findKey(KEY2TYPE(ok));
+
+		return i < 0 ? OBJDEFRETVALUE : VALUE2OBJ(value[i]);
+	}
+
+
+#if !#keyclass(Object) && !#keyclass(Reference)
+
+	public VALUE_TYPE get(final KEY_TYPE k) {
+		final int i = findKey(k);
+
+		return i < 0 ? defRetValue : value[i];
+	}
+
+	public VALUE_TYPE remove(final KEY_TYPE k) {
+		final int i = findKey(k);
+		if (i < 0) return defRetValue;
+
+		state[i] = REMOVED;
+		count--;
+
+#if #valueclass(Object) || #valueclass(Reference)
+		final Object v = value[i];
+		value[i] = HashCommon.removed;
+#endif
+
+#ifdef linked
+		fixPointers( i );
+#endif
+#if #valueclass(Object) || #valueclass(Reference)
+		return v;
+#else
+		return value[i];
+#endif
+	}
+	 
+#else
+
+#if !#valueclass(Object) && !#valueclass(Reference)
+
+	public VALUE_TYPE GET_VALUE(final Object k) {
+		final int i = findKey(k);
+
+		return i < 0 ? defRetValue : value[i];
+	}
+
+	public VALUE_TYPE REMOVE_VALUE(final Object ok) {
+		final byte state[] = this.state;
+
+		final int i = findKey(KEY2TYPE(ok));
+		if (i < 0) return defRetValue;
+
+		state[i] = REMOVED;
+		count--;
+
+#if #keyclass(Object) || #keyclass(Reference)
+		key[i] = HashCommon.removed;
+#endif
+
+#ifdef linked
+		fixPointers( i );
+#endif
+		return value[i];
+	}
+	 
+#endif
+#endif
+
+
 	private static final class Entry implements MAP.Entry {
 		KEY_TYPE key;
 		VALUE_TYPE value;
@@ -389,49 +814,10 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 
 
 	public Set entrySet() {
-		if (entries == null) entries = new AbstractSet() {
+		if ( entries == null ) entries = new AbstractSet() {
 					 
 				public Iterator iterator() {
-					return new Iterator() {
-							int pos = 0, last = -1, c = count;
-						  
-							{ 
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-
-								if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-							}
-						  
-							public boolean hasNext() {
-								return c != 0 && pos < OPENHASHMAP.this.state.length;
-							}
-						  
-							public Object next() {
-								Entry retVal;
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-		  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = new Entry(key[last = pos], value[pos]);
-								if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
-								
-								return retVal;
-							}
-						  
-							public void remove() {
-								if (last == -1) throw new IllegalStateException();
-								state[last] = REMOVED;
-#if #keyclass(Object) && !#keyclass(Reference)
-								key[last] = HashCommon.removed;
-#endif
-#if #valueclass(Object) || #valueclass(Reference)
-								value[last] = HashCommon.removed;
-#endif
-
-								count--;
-							}
-						};
-
+					return new MapIterator();
 				}
 					 
 				public boolean contains( final Object o ) {
@@ -461,165 +847,138 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		return entries;
 	}
 
+	/** An iterator on keys.
+	 *
+	 * <P>We simply override the {@link #next()}/{@link #previous()} methods
+	 * (and possibly their type-specific counterparts) so that they return keys
+	 * instead of entries.
+	 */
+
+#ifdef linked
+	private final class KeyIterator extends MapIterator implements KEY_LIST_ITERATOR {
+		public KeyIterator( final KEY_TYPE k ) { super( k ); }
+		public KEY_TYPE PREV_KEY() { return key[ previousEntry() ]; }
+#if !#keyclass(Object) && !#keyclass(Reference)
+		public Object previous() { return KEY2OBJ( key[ previousEntry() ] ); }
+#endif									
+#else
+	private final class KeyIterator extends MapIterator implements KEY_ITERATOR {
+#endif
+		public KeyIterator() { super(); }
+		public KEY_TYPE NEXT_KEY() { return key[ nextEntry() ]; }
+#if !#keyclass(Object) && !#keyclass(Reference)
+		public Object next() { return KEY2OBJ( key[ nextEntry() ] ); }
+#endif									
+	}
+
+
+
+#ifdef linked
+	private final class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
+
+		public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
+			return new KeyIterator( from );
+		}
+#else
+	private final class KeySet extends KEY_ABSTRACT_SET {
+#endif
+
+		public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+			return new KeyIterator();
+		}
+
+		public int size() {
+			return count;
+		}
+
+		public boolean contains( KEY_TYPE k ) {
+			return containsKey( k );
+		}
+					 
+		public boolean remove( KEY_TYPE k ) {
+			int oldCount = count;
+			OPENHASHMAP.this.remove( k );
+			return count != oldCount;
+		}
+					 
+		public void clear() {
+			OPENHASHMAP.this.clear();
+		}
+
+
+#ifdef linked
+		final public KEY_TYPE FIRST() {
+			if ( count == 0 ) throw new NoSuchElementException();
+			return key[ first ];
+		}
+
+		final public KEY_TYPE LAST() {
+			if ( count == 0 ) throw new NoSuchElementException();
+			return key[ last ];
+		}
+
+#if !#keyclass(Object) && !#keyclass(Reference)
+
+		final public Object first() { return KEY2OBJ( FIRST() ); }
+		final public Object last() { return KEY2OBJ( LAST() ); }
+
+		final public SortedSet tailSet( Object ofrom ) { throw new UnsupportedOperationException(); }
+		final public SortedSet headSet( Object oto ) { throw new UnsupportedOperationException(); }
+		final public SortedSet subSet( Object ofrom, Object oto ) { throw new UnsupportedOperationException(); }
+		
+#endif
+
+		final public STDSORTEDSET tailSet( KEY_TYPE ofrom ) { throw new UnsupportedOperationException(); }
+		final public STDSORTEDSET headSet( KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
+		final public STDSORTEDSET subSet( KEY_TYPE ofrom, KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
+		final public Comparator comparator() { return null; }
+
+#endif
+	}
 
 	public Set keySet() {
-		if (keys == null) keys = new KEY_ABSTRACT_SET() {
-
-				public Iterator iterator() {
-					return new KEY_ITERATOR() {
-							int pos = 0, last = -1, c = count;
-		  
-							{ 
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-										  
-								if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-							}
-									 
-							public boolean hasNext() {
-								return c != 0 && pos < OPENHASHMAP.this.state.length;
-							}
-									 
-#if !#keyclass(Object) && !#keyclass(Reference)
-							public KEY_TYPE NEXT_KEY() {
-								KEY_TYPE retVal;
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-										  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = key[last = pos];
-								if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
-										  
-								return retVal;
-							}
-
-#endif									 
-
-							public Object next() {
-								Object retVal;
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-										  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = KEY2OBJ(key[last = pos]);
-								if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
-										  
-								return retVal;
-							}
-									 
-							public void remove() {
-								if (last == -1) throw new IllegalStateException();
-								state[last] = REMOVED;
-#if #keyclass(Object) && !#keyclass(Reference)
-								key[last] = HashCommon.removed;
-#endif
-#if #valueclass(Object) || #valueclass(Reference)
-								value[last] = HashCommon.removed;
-#endif
-
-								count--;
-							}
-						};
-				}
-
-				public int size() {
-					return count;
-				}
-
-
-#if ! #keyclass(Object) && !#keyclass(Reference)
-				public boolean contains(KEY_TYPE k) {
-					return containsKey(k);
-				}
-					 
-				public boolean remove(KEY_TYPE k) {
-					int oldCount = count;
-					OPENHASHMAP.this.remove(k);
-					return count != oldCount;
-				}
-					 
-#endif
-				public boolean contains( final Object ok) {
-					return containsKey(ok);
-				}
-
-				public boolean remove( final Object ok) {
-					int oldCount = count;
-					OPENHASHMAP.this.remove(ok);
-					return count != oldCount;
-				}
-
-				public void clear() {
-					OPENHASHMAP.this.clear();
-				}
-			};
+		if ( keys == null ) keys = new KeySet();
 		return keys;
 	}
 
 
-	public Collection values() {
-		if (values == null) values = new VALUE_ABSTRACT_COLLECTION() {
+	/** An iterator on values.
+	 *
+	 * <P>We simply override the {@link #next()}/{@link #previous()} methods
+	 * (and possibly their type-specific counterparts) so that they return values
+	 * instead of entries.
+	 */
 
-				public Iterator iterator() {
-					return new VALUE_ITERATOR() {
-							int pos = 0, last = -1, c = count;
-									 
-							{ 
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-										  
-								if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
-							}
-		  
-							public boolean hasNext() {
-								return c != 0 && pos < OPENHASHMAP.this.state.length;
-							}
-		  
-#if !#valueclass(Object) && ! #valueclass(Reference)
-							public VALUE_TYPE NEXT_VALUE() {
-								VALUE_TYPE retVal;
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-		  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = value[pos];
-								if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
-
-								return retVal;
-							}
+#ifdef linked
+	private final class ValueIterator extends MapIterator implements VALUE_LIST_ITERATOR {
+		public VALUE_TYPE PREV_VALUE() { return value[ previousEntry() ]; }
+#if !#valueclass(Object) && !#valueclass(Reference)
+		public Object previous() { return VALUE2OBJ( value[ previousEntry() ] ); }
+#endif									
+#else
+	private final class ValueIterator extends MapIterator implements VALUE_ITERATOR {
 #endif
-		  
-							public Object next() {
-								Object retVal;
-								final byte state[] = OPENHASHMAP.this.state;
-								final int n = state.length;
-		  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = VALUE2OBJ(value[pos]);
-								if (--c != 0) do pos++; while( pos < n && state[pos] != OCCUPIED );
+		public ValueIterator() { super(); }
+		public VALUE_TYPE NEXT_VALUE() { return value[ nextEntry() ]; }
+#if !#valueclass(Object) && !#valueclass(Reference)
+		public Object next() { return VALUE2OBJ( value[ nextEntry() ] ); }
+#endif									
+	}
 
-								return retVal;
-							}
-		  
-							public void remove() {
-								throw new UnsupportedOperationException();
-							}
-						};
+	public Collection values() {
+		if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
+
+				public VALUE_ITERATOR VALUE_ITERATOR_METHOD() {
+					return new ValueIterator();
 				}
 
 				public int size() {
 					return count;
 				}
 
-				public boolean contains( final Object ok) {
-					return containsValue(ok);
+				public boolean contains( VALUE_TYPE v ) {
+					return containsValue( v );
 				}
-
-#if ! #valueclass(Object) && ! #valueclass(Reference)
-				public boolean contains(VALUE_TYPE v) {
-					return containsValue(v);
-				}
-#endif
 
 				public void clear() {
 					OPENHASHMAP.this.clear();
@@ -673,7 +1032,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 */
 
 	private void rehash( final int newP ) {
+#ifdef linked
+		int i = first, j = count, prev = -1, newPrev = -1, t, k2i, h1, h2;
+#else
 		int i = 0, j = count, k2i, h1, h2;
+#endif
 
 		KEY_TYPE k;
 		VALUE_TYPE v;
@@ -682,10 +1045,15 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		final VALUE_TYPE value[] = this.value, newValue[] = new VALUE_TYPE[newN];
 		final byte state[] = this.state, newState[] = new byte[newN];
-
+#ifdef linked
+		final int link[] = this.link, newLink[] = new int[ newN ];
+		first = -1;
+#endif
 		while(j-- != 0) {
 
+#ifndef linked
 			while(state[i] != OCCUPIED ) i++;
+#endif
 
 			k = key[i];
 			v = value[i];
@@ -702,7 +1070,24 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			newState[h1] = OCCUPIED;
 			newKey[h1] = k;
 			newValue[h1] = v;
+
+#ifdef linked
+			t = i;
+			i = link[ i ] ^ prev;
+			prev = t;
+
+			if ( first != -1 ) {
+				newLink[ newPrev ] ^= h1;
+				newLink[ h1 ] = newPrev;
+				newPrev = h1;
+			}
+			else {
+				newPrev = first = h1;
+				newLink[ h1 ] = -1;
+			}
+#else
 			i++;
+#endif
 		}
 
 		p = newP;
@@ -711,88 +1096,13 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		this.key = newKey;
 		this.value = newValue;
 		this.state = newState;
-	}
-	 
-	public boolean containsKey(KEY_TYPE k) {
-		return findKey(k) >= 0;
-	}
-	 
-	public int size() {
-		return count;
-	}
-
-	public boolean isEmpty() {
-		return count == 0;
-	}
-
-
-	public Object get(final Object ok) {
-		final int i = findKey(KEY2TYPE(ok));
-
-		return i < 0 ? OBJDEFRETVALUE : VALUE2OBJ(value[i]);
-	}
-
-
-#if !#keyclass(Object) && !#keyclass(Reference)
-
-	public VALUE_TYPE get(final KEY_TYPE k) {
-		final int i = findKey(k);
-
-		return i < 0 ? defRetValue : value[i];
-	}
-
-	public VALUE_TYPE remove(final KEY_TYPE k) {
-		final int i = findKey(k);
-		if (i < 0) return defRetValue;
-
-		state[i] = REMOVED;
-
-#if #valueclass(Object) || #valueclass(Reference)
-		final Object v = value[i];
-		value[i] = HashCommon.removed;
-#endif
-
-		count--;
-
-#if #valueclass(Object) || #valueclass(Reference)
-		return v;
-#else
-		return value[i];
+#ifdef linked
+		this.link = newLink;
+		this.last = newPrev;
+		if ( newPrev != -1 ) newLink[ newPrev ] ^= -1; 
 #endif
 	}
 	 
-
-	public boolean containsKey(final Object ok) {
-		return findKey(KEY2TYPE(ok)) >= 0;
-	}
-
-#else
-#if !#valueclass(Object) && ! #valueclass(Reference)
-
-	public VALUE_TYPE GET_VALUE(final Object k) {
-		final int i = findKey(k);
-
-		return i < 0 ? defRetValue : value[i];
-	}
-
-	public VALUE_TYPE REMOVE_VALUE(final Object ok) {
-		final byte state[] = this.state;
-
-		final int i = findKey(KEY2TYPE(ok));
-		if (i < 0) return defRetValue;
-
-		state[i] = REMOVED;
-
-#if #keyclass(Object) || #keyclass(Reference)
-		key[i] = HashCommon.removed;
-#endif
-
-		count--;
-		return value[i];
-	}
-	 
-#endif
-#endif
 
 	/** Returns a deep copy of this map. 
 	 *
@@ -813,6 +1123,9 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		c.key = (KEY_TYPE[])key.clone();
 		c.value = (VALUE_TYPE[])value.clone();
 		c.state = (byte[])state.clone();
+#ifdef linked
+		c.link = (int[])link.clone();
+#endif
 		return c;
 	}
 
@@ -852,15 +1165,15 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		final KEY_TYPE key[] = this.key;
 		final VALUE_TYPE value[] = this.value;
 		final byte state[] = this.state;
-		int i = 0, j = count;
+		final MapIterator i = new MapIterator();
+		int e, j = count;
 
 		s.defaultWriteObject();
 
-		while(j-- != 0) {
-			while(state[i] != OCCUPIED ) i++;
-			s.WRITE_KEY(key[i]);
-			s.WRITE_VALUE(value[i]);
-			i++;
+		while( j-- != 0 ) {
+			e = i.nextEntry();
+			s.WRITE_KEY( key[ e ] );
+			s.WRITE_VALUE( value[ e ] );
 		}
 	}
 
@@ -872,6 +1185,10 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		key = new KEY_TYPE[ free ];
 		value = new VALUE_TYPE[ free ];
 		state = new byte[ free ];
+#ifdef linked
+		link = new int[ free ];
+		first = last = -1;
+#endif
 
 		int count = this.count;
 		this.count = 0;
@@ -889,7 +1206,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		return (KEY_TYPE)(r.nextInt());
 #elif !#keyclass(Object) && !#keyclass(Reference)
 		return r.NEXT_KEY(); 
-#elif !#keyclass(Reference) || #valueclass(Reference)
+#elif !#keyclass(Reference)
 		return Integer.toBinaryString( r.nextInt() );
 #else
 		return new Serializable() {};
@@ -901,7 +1218,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		return (VALUE_TYPE)(r.nextInt());
 #elif !#valueclass(Object) && !#valueclass(Reference)
 		return r.NEXT_VALUE();
-#elif !#valueclass(Reference) || #keyclass(Reference)
+#elif !#valueclass(Reference)
 		return Integer.toBinaryString( r.nextInt() );
 #else
 		return new Serializable() {};
@@ -937,7 +1254,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		if ( comp ) { for( j = 0; j < 20; j++ ) {
 
+#ifdef linked
+			t = new LinkedHashMap( 16 );
+#else
 			t = new HashMap( 16 );
+#endif
 
 			/* We put pairs to t. */
 			ms = System.currentTimeMillis();
@@ -1054,12 +1375,21 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		return o1 == null ? o2 == null : o1.equals(o2);
 	}
 
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
 
 	private static void regressionTest( int n, float f ) {
 		OPENHASHMAP m = new OPENHASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
 
-#if #keyclass(Reference) && #valueclass(Reference)
-		Map t = new IdentityHashMap();
+#ifdef linked
+		Map t = new LinkedHashMap();
 #else
 		Map t = new HashMap();
 #endif
@@ -1324,6 +1654,97 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		m.clear();
 		m.putAll( t );
 #endif
+
+#ifdef linked
+
+
+		/* Now we play with iterators. */
+
+		{
+			ListIterator i, j;
+			Object J;
+			i = (ListIterator)m.entrySet().iterator(); 
+			j = new LinkedList( t.entrySet() ).listIterator(); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( ((Entry)i.next()).getKey().equals( J = ((Map.Entry)j.next()).getKey() ), "Error (" + seed + "): divergence in next()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( ((Entry)i.previous()).getKey().equals( J = ((Map.Entry)j.previous()).getKey() ), "Error (" + seed + "): divergence in previous()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()" );
+
+			}
+
+		}
+		  
+		if ( t.size() > 0 ) {
+			ListIterator i, j;
+			Object J;
+			j = new LinkedList( t.keySet() ).listIterator();
+			int e = r.nextInt( t.size() );
+			Object from;
+			do from = j.next(); while( e-- != 0 );
+
+			i = (ListIterator)((SORTEDSET)m.keySet()).iterator( KEY2TYPE( from ) ); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( i.next().equals( J = j.next() ), "Error (" + seed + "): divergence in next()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( ((Entry)i.previous()).getKey().equals( J = ((Map.Entry)j.previous()).getKey() ), "Error (" + seed + "): divergence in previous()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()" );
+
+			}
+
+		}
+		  
+
+
+		/* Now we check that m actually holds that data. */
+		  
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after iteration" );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after iteration" );
+
+#endif
+
 
 		/* Now we take out of m everything, and check that it is empty. */
 

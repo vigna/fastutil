@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.20: Fast & compact specialized hash-based utility classes for Java
+ * fastUtil 2.50: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *

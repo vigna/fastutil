@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.20: Fast & compact specialized utility classes for Java
+ * fastUtil 2.50: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -50,7 +50,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 		else result = a;
 
 		j = 0;
-		i = (KEY_ITERATOR)iterator();
+		i = KEY_ITERATOR_METHOD();
 		n = size();
 
 		while(n-- != 0) result[j++] = i.NEXT_KEY();
@@ -82,7 +82,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	}
 
 	/** Adds all elements of the given collection to this collection.
-	 * If the collection is an instance of this class, it uses the faster iterators.
+	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection changed as a result of the call.
@@ -93,7 +93,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 		final Iterator i = c.iterator();
 		int n = c.size();
 
-		if (i instanceof KEY_ITERATOR) {
+		if ( i instanceof KEY_ITERATOR ) {
 			final KEY_ITERATOR j = (KEY_ITERATOR)i;
 			while(n-- != 0) if (add(j.NEXT_KEY())) retVal = true;
 		}
@@ -104,27 +104,42 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	}
 
 
+#if !#keyclass(Object) && !#keyclass(Reference)
+	/** Returns an iterator by wrapping the result of a call to a type-specific iterator-creation method.
+	 *
+	 * @return an iterator on the set, derived from a type-specific iterator.
+	 */
 
-	public boolean add(Object o) {
+	public Iterator iterator() {
+		return KEY_ITERATOR_METHOD();
+	}
+#endif
+
+
+	public boolean add( KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
-
-	public boolean remove( final Object o ) {
+	 
+	public boolean remove( KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 
 #if ! #keyclass(Object) && ! #keyclass(Reference)
-	public boolean add(KEY_TYPE k) {
-		throw new UnsupportedOperationException();
+	public boolean add( Object o ) {
+		return add( KEY2TYPE( o ) );
 	}
-	 
-	public boolean remove(KEY_TYPE k) {
-		throw new UnsupportedOperationException();
+
+	public boolean remove( final Object o ) {
+		return remove( KEY2TYPE( o ) );
+	}
+
+	public boolean contains( final Object o ) {
+		return contains( KEY2TYPE( o ) );
 	}
 #endif
 
 	/** Checks whether this collection contains all elements from the given collection.
-	 * If the collection is an instance of this class, it uses the faster iterators.
+	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection contains all elements of the argument.
@@ -147,7 +162,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 
 	/** Retains in this collection only elements from the given collection.
-	 * If the collection is an instance of this class, it uses the faster iterators.
+	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection changed as a result of the call.
@@ -159,7 +174,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 		if (c instanceof COLLECTION) {
 			final COLLECTION d = (COLLECTION)c;
-			final KEY_ITERATOR i = (KEY_ITERATOR)iterator();
+			final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
 
 			while(n-- != 0) {
 				if (!d.contains(i.NEXT_KEY())) {
@@ -181,7 +196,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	}
 
 	/** Remove from this collection all elements in the given collection.
-	 * If the collection is an instance of this class, it uses the faster iterators.
+	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection changed as a result of the call.
@@ -193,7 +208,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 		if (c instanceof COLLECTION) {
 			final COLLECTION d = (COLLECTION)c;
-			final KEY_ITERATOR i = (KEY_ITERATOR)iterator();
+			final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
 
 			while(n-- != 0) {
 				if (d.contains(i.NEXT_KEY())) {
@@ -220,7 +235,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 	public String toString() {
 		final StringBuffer s = new StringBuffer();
-		final KEY_ITERATOR i = (KEY_ITERATOR)iterator();
+		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
 		int n = size();
 		KEY_TYPE k;
 		boolean first = true;

@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.20: Fast & compact specialized utility classes for Java
+ * fastUtil 2.50: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -25,6 +25,11 @@ import java.util.*;
 import java.io.*;
 
 /** A type-specific red-black tree set with a fast, small-footprint implementation.
+ *
+ * <P>The iterators provided by this class are type-specific {@link
+ * it.unimi.dsi.fastUtil.BidirectionalIterator bidirectional iterators}.
+ * Moreover, the iterator returned by <code>iterator()</code> can be safely cast
+ * to a type-specific {@linkplain java.util.ListIterator list iterator}.
  */
 
 public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, SORTEDSET {
@@ -637,9 +642,6 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		return true;
 	}
 
-	 
-
-#if ! #keyclass(Object)
 	public boolean add( final KEY_TYPE k ) {
 		return insert( k );
 	}
@@ -651,20 +653,6 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	public boolean contains( final KEY_TYPE k ) {
 		return findKey( k ) != null;
 	}
-#endif
-
-	public boolean add( final Object ok ) {
-		return insert( KEY2TYPE(ok) );
-	}
-	 
-	public boolean remove( final Object ok ) {
-		return delete( KEY2TYPE( ok ) );
-	}
-	 
-	public boolean contains( final Object ok ) {
-		return findKey( KEY2TYPE( ok ) ) != null;
-	}
-
 
 	public void clear() {
 		count = 0;
@@ -1033,7 +1021,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	}
 
 
-	public Iterator iterator() {
+	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 		return new SetIterator();
 	}
 
@@ -1045,30 +1033,22 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		return storedComparator;
 	}
 
-	public SortedSet headSet( final Object to  ) {
-		return new Subset( KEY_NULL, true, KEY2TYPE( to ), false );
-	}
-
-	public SortedSet tailSet( final Object from ) {
-		return new Subset( KEY2TYPE( from ), false, KEY_NULL, true );
-	}
-
-	public SortedSet subSet( final Object from, final Object to ) {
-		return new Subset( KEY2TYPE( from ), false, KEY2TYPE( to ), false );
-	}
-
-#if !#keyclass(Object)
-	public SORTEDSET headSet( final KEY_TYPE to ) {
+	public STDSORTEDSET headSet( final KEY_TYPE to ) {
 		return new Subset( KEY_NULL, true, to, false );
 	}
 
-	public SORTEDSET tailSet( final KEY_TYPE from ) {
+	public STDSORTEDSET tailSet( final KEY_TYPE from ) {
 		return new Subset( from, false, KEY_NULL, true );
 	}
 
-	public SORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) {
+	public STDSORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) {
 		return new Subset( from, false, to, false );
 	}
+
+#if !#keyclass(Object)
+		public SortedSet headSet( final Object oto ) { return headSet( KEY2TYPE( oto ) ); }
+		public SortedSet tailSet( final Object ofrom ) { return tailSet( KEY2TYPE( ofrom ) ); }
+		public SortedSet subSet( final Object ofrom, final Object oto ) { return subSet( KEY2TYPE( ofrom ), KEY2TYPE( oto ) ); }
 #endif
 
 	/** A subset with given range.
@@ -1129,38 +1109,17 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 			return in( k ) && RBTREESET.this.contains( k );
 		}
 
-#if !#keyclass(Object)
-		public boolean contains( final Object ok ) {
-			return contains( KEY2TYPE( ok ) );
-		}
-#endif
 
-
-		public boolean add( final Object ok ) {
-			if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
-			return insert( KEY2TYPE(ok) );
-		}
-
-		  
-#if ! #keyclass(Object)
 		public boolean add( final KEY_TYPE  k ) {
 			if ( ! in( k ) ) throw new IllegalArgumentException(); 
 			return insert( k );
 		}
-#endif
 
 
-		public boolean remove( final Object ok ) {
-			if ( ! in( KEY2TYPE( ok ) ) ) return false;
-			return delete( KEY2TYPE( ok ) );
-		}
-
-#if ! #keyclass(Object)
 		public boolean remove( final KEY_TYPE k ) {
 			if ( ! in( k ) ) return false;
 			return delete( k );
 		}
-#endif
 
 		public int size() {
 			final SubsetIterator i = new SubsetIterator();
@@ -1183,7 +1142,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 			return storedComparator;
 		}
 
-		public Iterator iterator() {
+		public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 			return new SubsetIterator();
 		}
 		  
@@ -1191,24 +1150,17 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 			return new SubsetIterator( from );
 		}
 		  
-		public SortedSet headSet( final Object oto ) {
-			final KEY_TYPE to = KEY2TYPE( oto );
-
+		public STDSORTEDSET headSet( final KEY_TYPE to ) {
 			if ( top ) return new Subset( from, bottom, to, false );
 			return compare( to, this.to ) < 0 ? new Subset( from, bottom, to, false ) : this;
 		}
 		  
-		public SortedSet tailSet( final Object ofrom ) {
-			final KEY_TYPE from = KEY2TYPE( ofrom );
-
+		public STDSORTEDSET tailSet( final KEY_TYPE from ) {
 			if ( bottom ) return new Subset( from, false, to, top );
 			return compare( from, this.from ) > 0 ? new Subset( from, false, to, top ) : this;
 		}
 		  
-		public SortedSet subSet( final Object ofrom, final Object oto ) {
-			KEY_TYPE to = KEY2TYPE( oto );
-			KEY_TYPE from = KEY2TYPE( ofrom );
-
+		public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) {
 			if ( top && bottom ) return new Subset( from, false, to, false );
 			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
 			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
@@ -1217,23 +1169,9 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		}
 
 #if !#keyclass(Object)
-		public SORTEDSET headSet( final KEY_TYPE to ) {
-			if ( top ) return new Subset( from, bottom, to, false );
-			return compare( to, this.to ) < 0 ? new Subset( from, bottom, to, false ) : this;
-		}
-		  
-		public SORTEDSET tailSet( final KEY_TYPE from ) {
-			if ( bottom ) return new Subset( from, false, to, top );
-			return compare( from, this.from ) > 0 ? new Subset( from, false, to, top ) : this;
-		}
-		  
-		public SORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) {
-			if ( top && bottom ) return new Subset( from, false, to, false );
-			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
-			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
-			if ( from == this.from && to == this.to ) return this;
-			return new Subset( from, false, to, false );
-		}
+		public SortedSet headSet( final Object oto ) { return headSet( KEY2TYPE( oto ) ); }
+		public SortedSet tailSet( final Object ofrom ) { return tailSet( KEY2TYPE( ofrom ) ); }
+		public SortedSet subSet( final Object ofrom, final Object oto ) { return subSet( KEY2TYPE( ofrom ), KEY2TYPE( oto ) ); }
 #endif
 
 
@@ -1290,18 +1228,8 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		}
 	 
 #if !#keyclass(Object)
-		public Object first() {
-			RBTREESET.Entry e = firstEntry();
-			if ( e == null ) throw new NoSuchElementException();
-			return e.getKey();
-		}
-	 
-		public Object last() {
-			RBTREESET.Entry e = lastEntry();
-			if ( e == null ) throw new NoSuchElementException();
-			return e.getKey();
-		}
-
+		public Object first() { return KEY2OBJ( FIRST() ); }
+	 	public Object last() { return KEY2OBJ( LAST() ); }
 #endif
 
 		/** An iterator for subranges.
