@@ -383,7 +383,13 @@ public class OPEN_HASH_MAP extends ABSTRACT_MAP implements java.io.Serializable,
 		}
 #endif
 
-		if ( ++count >= maxFill ) rehash( Math.min(p+16, PRIMES.length-1) ); // Table too filled, let's rehash
+
+		if ( ++count >= maxFill ) {
+			int newP = Math.min( p + growthFactor, PRIMES.length - 1 );
+			// Just to be sure that size changes when p is very small.
+			while( PRIMES[ newP ] == PRIMES[ p ] ) newP++;
+			rehash( newP ); // Table too filled, let's rehash
+		}
 		if ( free == 0 ) rehash( p );
 		if ( asserts ) checkTable();
 		return defRetValue;
@@ -1239,7 +1245,8 @@ public class OPEN_HASH_MAP extends ABSTRACT_MAP implements java.io.Serializable,
 
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
-
+		// We restore the default growth factor.
+		growthFactor = Hash.DEFAULT_GROWTH_FACTOR;
 		// Note that we DO NOT USE the stored p. See CHANGES.
 		p = Arrays.binarySearch( PRIMES, (int)( count / f ) + 1 );
 		if ( p < 0 ) p = -p - 1;
