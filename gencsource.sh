@@ -13,7 +13,7 @@ TYPE=(boolean byte short int long char float double Object Object)
 # The same types, but in lower case and plural (to build package names; singular forms are reserved keywords).
 PACKAGE=(booleans bytes shorts ints longs chars floats doubles objects objects)
 
-# The capitalised types used to build class and method names (now references appear as Reference).
+# The capitalized types used to build class and method names (now references appear as Reference).
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
 # The upper case types used to build class and method names.

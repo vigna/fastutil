@@ -11,25 +11,25 @@ APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will po
 
 .SECONDARY: $(JSOURCES)
 
-#  The capitalised types used to build class and method names; boolean and object types are not listed.
+#  The capitalized types used to build class and method names; boolean and object types are not listed.
 TYPE_NOBOOL_NOOBJ=Byte Short Int Long Char Float Double
 
-#  The capitalised types used to build class and method names; boolean and reference are not listed.
+#  The capitalized types used to build class and method names; boolean and reference are not listed.
 TYPE_NOBOOL_NOREF=$(TYPE_NOBOOL_NOOBJ) Object
 
-#  The capitalised types used to build class and method names; object types are not listed.
+#  The capitalized types used to build class and method names; object types are not listed.
 TYPE_NOOBJ=Boolean $(TYPE_NOBOOL_NOOBJ)
 
-#  The capitalised types used to build class and method names; references are not listed.
+#  The capitalized types used to build class and method names; references are not listed.
 TYPE_NOREF=$(TYPE_NOOBJ) Object
 
-#  The capitalised types used to build class and method names; boolean is not listed.
+#  The capitalized types used to build class and method names; boolean is not listed.
 TYPE_NOBOOL=$(TYPE_NOBOOL_NOREF) Reference
 
-# The capitalised types used to build class and method names; now references appear as Reference.
+# The capitalized types used to build class and method names; now references appear as Reference.
 TYPE=$(TYPE_NOREF) Reference
 
-# These variables are used as an associative array (using variable variable names).
+# These variables are used as an associative array (using computed names).
 PACKAGE_Boolean = booleans
 PACKAGE_Byte = bytes
 PACKAGE_Short = shorts
@@ -46,7 +46,7 @@ explain:
 	@echo -e "to obtain the actual Java files. Then, you can build the jar"
 	@echo -e "file using \"ant jar\", or the documentation using \"ant javadoc\".\n"
 	@echo -e "If you set the make variable TEST (e.g., make jar TEST=1), you"
-	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
+	@echo -e "will compile behavioral and speed tests into the classes.\n\n"
 
 source:
 	-rm -f fastutil-$(VERSION)
@@ -65,7 +65,8 @@ source:
 	rm fastutil-$(VERSION)
 
 bin:
-	ant jar docs
+	make clean sources
+	ant jar javadoc
 	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
 	tar zcvf fastutil-$(VERSION)-bin.tar.gz --owner=root --group=root \
@@ -84,7 +85,6 @@ LinkedOpenHashMap.drv: OpenHashMap.drv
 	ln -s OpenHashMap.drv LinkedOpenHashMap.drv
 
 CSOURCES := 
-CFRAGMENTS := 
 
 #
 # Interfaces
@@ -296,12 +296,12 @@ CSOURCES += $(SORTEDMAPS_STATIC)
 
 
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
-JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
 
 SOURCES = \
 	$(SOURCEDIR)/Hash.java \
+	$(SOURCEDIR)/HashCommon.java \
 	$(SOURCEDIR)/BidirectionalIterator.java \
-	$(SOURCEDIR)/HashCommon.java $(SOURCEDIR)/Stack.java \
+	$(SOURCEDIR)/Stack.java \
 	$(SOURCEDIR)/AbstractStack.java \
 	$(SOURCEDIR)/Iterators.java \
 	$(SOURCEDIR)/Collections.java \
@@ -309,25 +309,12 @@ SOURCES = \
 	$(SOURCEDIR)/SortedSets.java \
 	$(SOURCEDIR)/Lists.java # These are True Java Sources instead
 
-ifdef ASSERTS
-	ASSERTS_VALUE = true
-else
-	ASSERTS_VALUE = false
-endif
+# We pass each generated Java source through the preprocessor. TEST compiles in the test code,
+# whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-ifdef TEST
-	gcc -I. -ftabstop=4 -DTEST -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
-else
-	gcc -I. -ftabstop=4 -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
-endif
+	gcc -I. -ftabstop=4 $(if $(TEST),-DTEST,) -DASSERTS=$(if $(ASSERTS),true,false) -E -C -P $< > $@
 
-$(JFRAGMENTS): %.j: %.h
-ifdef TEST
-	gcc -I. -ftabstop=4 -DTEST -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
-else
-	gcc -I. -ftabstop=4 -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
-endif
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
@@ -338,9 +325,9 @@ clean:
 	@rm -fr $(DOCSDIR)/*
 
 
-sources: $(JSOURCES) $(JFRAGMENTS)
+sources: $(JSOURCES)
 
-csources: $(CSOURCES) $(CFRAGMENTS)
+csources: $(CSOURCES)
 
 tags:
 	etags build.xml makefile README gencsource.sh *.drv java/overview.html $(SOURCES)
