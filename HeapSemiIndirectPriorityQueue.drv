@@ -1,0 +1,135 @@
+/*		 
+ * fastdata: Fast & compact type-specific data structures for Java
+ *
+ * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.AbstractSemiIndirectPriorityQueue;
+
+import java.util.NoSuchElementException;
+import java.util.Comparator;
+
+/** A type-specific {@link it.unimi.dsi.fastutil.SemiIndirectPriorityQueue}; provides some additional methods that use polymorphism to reduce type juggling. 
+ *
+ * <P>Instances of this class use as reference list a <em>reference array</em>,
+ * which must be provided with each contructor.
+ *
+ */
+
+public class HEAP_SEMI_INDIRECT_PRIORITY_QUEUE extends AbstractSemiIndirectPriorityQueue {
+
+	/** The reference array. */
+	protected KEY_TYPE refArray[];
+
+	/** The semi-indirect heap. */
+	protected int heap[] = IntArrays.EMPTY_ARRAY;
+
+	/** The number of elements in this heap. */
+	protected int size;
+	
+	/** The type-specific comparator used in this heap. */
+	protected KEY_COMPARATOR c;
+
+	/** Creates a new empty heap without elements with a given capacity and comparator.
+	 *
+	 * @param refArray the reference array.
+	 * @param capacity the initial capacity of this heap.
+	 * @param c the comparator used in this heap, or <code>null</code> for the natural order.
+	 */
+	public HEAP_SEMI_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c ) {
+		if ( capacity > 0 ) this.heap = new int[ capacity ];
+		this.refArray = refArray;
+		this.c = c;
+	}
+
+	/** Creates a new empty heap without elements and a given capacity.
+	 *
+	 * @param refArray the reference array.
+	 * @param capacity the initial capacity of this heap.
+	 */
+	public HEAP_SEMI_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
+		this( refArray, capacity, null );
+	}
+
+	/** Creates a heap without elements, capacity equal to the length of the reference array, and a given comparator.
+	 *
+	 * @param refArray the reference array.
+	 * @param c the comparator used in this heap, or <code>null</code> for the natural order.
+	 */
+	public HEAP_SEMI_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
+		this( refArray, refArray.length, c );
+	}
+
+	/** Creates a new heap and capacity equal to the length of the reference array. 
+	 * @param refArray the reference array.
+	 */
+	public HEAP_SEMI_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray ) {
+		this( refArray, refArray.length, null );
+	}
+
+	protected final void ensureNonEmpty() {
+		if ( size == 0 ) throw new NoSuchElementException();
+	}
+
+	public void enqueue( int x ) {
+		if ( size == heap.length ) heap = IntArrays.grow( heap, size + 1 );
+
+		heap[ size++ ] = x;
+		SEMI_INDIRECT_HEAPS.upHeap( refArray, heap, size, size - 1, c );
+	}
+
+	public int dequeue() {
+		ensureNonEmpty();
+
+		final int result = heap[ 0 ];
+		heap[ 0 ] = heap[ --size ];
+		SEMI_INDIRECT_HEAPS.downHeap( refArray, heap, size, 0, c );
+		return result;
+	}
+
+	public int first() {
+		ensureNonEmpty();
+		return heap[ 0 ];
+	}
+
+	public void changed() {
+		ensureNonEmpty();
+		SEMI_INDIRECT_HEAPS.downHeap( refArray, heap, size, 0, c );
+	}
+
+	public int size() { return size; }
+
+	public void clear() { size = 0; }
+
+	/** Trims the backing array so that it has exactly {@link #size()} elements.
+	 */
+
+	public void trim() {
+		heap = IntArrays.trim( heap, size );
+	}
+
+	public Comparator comparator() { return c; }
+}
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

@@ -140,13 +140,21 @@ echo -e \
 "#define STDSORTEDMAP SortedMap\n\n"\
 "#define STDARRAYLIST ArrayList\n\n"\
 "#define ARRAYS ObjectArrays\n\n"\
+"#define HEAPS ObjectHeaps\n\n"\
+"#define SEMI_INDIRECT_HEAPS ObjectSemiIndirectHeaps\n\n"\
+"#define INDIRECT_HEAPS ObjectIndirectHeaps\n\n"\
 "#define STD_KEY_ITERATOR Iterator\n\n"\
 "#define STACK Stack\n\n"\
-"#define DOUBLEINDIRECTPRIORITYQUEUE ObjectDoubleIndirectPriorityQueue\n\n"\
-"#define INDIRECTPRIORITYQUEUE IndirectPriorityQueue\n\n"\
-"#define PRIORITYQUEUE PriorityQueue\n\n"\
+"#define SEMI_INDIRECT_PRIORITY_QUEUE SemiIndirectPriorityQueue\n\n"\
+"#define PRIORITY_QUEUE PriorityQueue\n\n"\
+"#define ABSTRACT_PRIORITY_QUEUE AbstractPriorityQueue\n\n"\
+"#define HEAP_PRIORITY_QUEUE ObjectHeapPriorityQueue\n\n"\
+"#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ObjectHeapSemiIndirectPriorityQueue\n\n"\
+"#define HEAP_INDIRECT_PRIORITY_QUEUE ObjectHeapIndirectPriorityQueue\n\n"\
+"#define HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ObjectHeapSesquiIndirectDoublePriorityQueue\n\n"\
 "#define ABSTRACT_STACK AbstractStack\n\n"\
 "#define ITERATORS ObjectIterators\n\n"\
+"#define COMPARATORS ObjectComparators\n\n"\
 \
 "#define REMOVE remove\n"\
 "#define REMOVE_KEY remove\n"\
@@ -157,8 +165,10 @@ echo -e \
 "#define PREV_KEY previous\n"\
 "#define FIRST_KEY firstKey\n"\
 "#define LAST_KEY lastKey\n"\
+"#define DEQUEUE dequeue\n"\
 \
 "#define KEY_COMPARATOR Comparator\n\n"\
+"#define KEY_ABSTRACT_COMPARATOR Comparator\n\n"\
 \
 "#define KEY_ITERATOR ObjectIterator\n\n"\
 "#define KEY_BIDI_ITERATOR ObjectBidirectionalIterator\n\n"\
@@ -216,17 +226,26 @@ echo -e \
 "#define STDSORTEDMAP SORTEDMAP\n\n"\
 "#define STDARRAYLIST ARRAY_LIST\n\n"\
 "#define ARRAYS ${TYPE_CAP[$k]}Arrays\n\n"\
+"#define HEAPS ${TYPE_CAP[$k]}Heaps\n\n"\
+"#define SEMI_INDIRECT_HEAPS ${TYPE_CAP[$k]}SemiIndirectHeaps\n\n"\
+"#define INDIRECT_HEAPS ${TYPE_CAP[$k]}IndirectHeaps\n\n"\
 "#define KEY_EMPTY_SET ${TYPE_UC[$k]}_EMPTY_SET\n\n"\
 "#define KEY_EMPTY_LIST ${TYPE_UC[$k]}_EMPTY_LIST\n\n"\
 "#define KEY_EMPTY_ARRAY ${TYPE_UC[$k]}_EMPTY_ARRAY\n\n"\
 "#define KEY_EMPTY_ITERATOR ${TYPE_UC[$k]}_EMPTY_ITERATOR\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define STACK ${TYPE_CAP[$k]}Stack\n\n"\
-"#define DOUBLEINDIRECTPRIORITYQUEUE ${TYPE_CAP[$k]}DoubleIndirectPriorityQueue\n\n"\
-"#define INDIRECTPRIORITYQUEUE ${TYPE_CAP[$k]}IndirectPriorityQueue\n\n"\
-"#define PRIORITYQUEUE ${TYPE_CAP[$k]}PriorityQueue\n\n"\
+"#define SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}SemiIndirectPriorityQueue\n\n"\
+"#define PRIORITY_QUEUE ${TYPE_CAP[$k]}PriorityQueue\n\n"\
+"#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_CAP[$k]}PriorityQueue\n\n"\
+"#define HEAP_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapPriorityQueue\n\n"\
+"#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapSemiIndirectPriorityQueue\n\n"\
+"#define HEAP_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapIndirectPriorityQueue\n\n"\
+"#define HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapSesquiIndirectDoublePriorityQueue\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\
+"#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_CAP[$k]}PriorityQueue\n\n"\
 "#define ITERATORS ${TYPE_CAP[$k]}Iterators\n\n"\
+"#define COMPARATORS ${TYPE_CAP[$k]}Comparators\n\n"\
 \
 "#define REMOVE_KEY remove${TYPE_CAP[$k]}\n"\
 "#define REMOVE rem\n"\
@@ -237,6 +256,7 @@ echo -e \
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
+"#define DEQUEUE dequeue${TYPE_CAP[$k]}\n"\
 \
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#define KEY_ABSTRACT_COMPARATOR Abstract${TYPE_CAP[$k]}Comparator\n\n"\

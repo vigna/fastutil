@@ -1,7 +1,7 @@
 /*		 
  * fastdata: Fast & compact type-specific data structures for Java
  *
- * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -21,20 +21,21 @@
 
 package it.unimi.dsi.fastutil;
 
+import java.util.Comparator;
+
 /** A priority queue.
  *
- * <P>A priority queue provides a way to {@linkplain #enqueue(int)
- * enqueue} elements,
- * and to {@linkplain #dequeue() dequeue} them in some specified order.  It
- * is also possible to get the {@linkolain #front() front element}, that
- * is, the element that would be dequeued next.
+ * <P>A priority queue provides a way to {@linkplain #enqueue(int) enqueue}
+ * elements, and to {@linkplain #dequeue() dequeue} them in some specified
+ * order.  It is also possible to get the {@linkolain #first() first element},
+ * that is, the element that would be dequeued next.
  *
  * <P>Additionally, the queue may provide a method to peek at 
- * element that would be dequeued {@linkplain #rear() last}.
+ * element that would be dequeued {@linkplain #last() last}.
  *
  * <P>Relative comparisons should not change during queue operations. Nonetheless,
  * some implementations may give the caller a way to notify the queue that 
- * the {@linkplain #changed() front element has changed}.
+ * the {@linkplain #changed() first element has changed}.
  */
 
 public interface PriorityQueue {
@@ -44,9 +45,9 @@ public interface PriorityQueue {
 	 * @param x the element to enqueue..
 	 */
 
-	void enqueue( KEY_TYPE x );
+	void enqueue( Object x );
 
-	/** Dequeues the {@link #front()} element from the queue.
+	/** Dequeues the {@link #first()} element from the queue.
 	 *
 	 * @return the dequeued element.
 	 * @throw NoSuchElementException if the queue is empty.
@@ -61,28 +62,35 @@ public interface PriorityQueue {
 
 	boolean isEmpty();
 
+	/** Returns the number of elements in this queue.
+	 *
+	 * @return the number of elements in this queue.
+	 */
+
+	int size();
+
 	/** Removes all elements from this queue.
 	 */
 
 	void clear();
 
-	/** Returns the front element of the queue.
+	/** Returns the first element of the queue.
 	 *
-	 * @return the front element.
+	 * @return the first element.
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
-	Object front();
+	Object first();
 
-	/** Returns the rear element of the queue, that is, the element the would be dequeued last (optional operation).
+	/** Returns the last element of the queue, that is, the element the would be dequeued last (optional operation).
 	 *
-	 * @return the rear element.
+	 * @return the last element.
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
-	Object rear();
+	Object last();
 
-	/** Notifies the queue that the {@linkplain #front() front element} has changed (optional operation).
+	/** Notifies the queue that the {@linkplain #first() first element} has changed (optional operation).
 	 */
 
 	void changed();
