@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import it.unimi.dsi.fastutil.Iterators;
-import it.unimi.dsi.fastutil.Arrays;
 
 
 /** A class providing static methods that do useful things with collections.
@@ -107,14 +106,14 @@ public class Collections {
 		public boolean retainAll( FloatCollection c ) { return false; }
 		public boolean retainAll( DoubleCollection c ) { return false; }
            
-		public boolean remove( boolean k ) { return false; }
-		public boolean remove( byte k ) { return false; }
-		public boolean remove( char k ) { return false; }
-		public boolean remove( short k ) { return false; }
+		public boolean rem( boolean k ) { return false; }
+		public boolean rem( byte k ) { return false; }
+		public boolean rem( char k ) { return false; }
+		public boolean rem( short k ) { return false; }
 		public boolean rem( int k ) { return false; }
-		public boolean remove( long k ) { return false; }
-		public boolean remove( float k ) { return false; }
-		public boolean remove( double k ) { return false; }
+		public boolean rem( long k ) { return false; }
+		public boolean rem( float k ) { return false; }
+		public boolean rem( double k ) { return false; }
            
 		public boolean contains( Object k ) { return false; }
 
@@ -127,7 +126,7 @@ public class Collections {
 		public boolean contains( float k ) { return false; }
 		public boolean contains( double k ) { return false; }
            
-		public Object[] toArray() { return Arrays.EMPTY_ARRAY; }
+		public Object[] toArray() { return ObjectArrays.EMPTY_ARRAY; }
 
 		public boolean[] toBooleanArray() { return BooleanArrays.EMPTY_ARRAY; }
 		public byte[] toByteArray() { return ByteArrays.EMPTY_ARRAY; }

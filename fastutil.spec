@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        3.0.1
+Version:        3.1
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-3.0.1-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-%{version}-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -46,8 +46,10 @@ export PATH=$JAVA_HOME/bin:$PATH
 export APIURL=http://java.sun.com/j2se/1.4.1/docs/api/
 #export ANT_ARGS="$ANT_ARGS -Dbuild.compiler=jikes"
 
-./gencsources.sh
-make jar docs APIURL=/usr/share/javadoc/java
+make sources
+ant \
+  -Dj2se.apiurl=%{_javadocdir}/java \
+  jar javadoc
 
 # -----------------------------------------------------------------------------
 

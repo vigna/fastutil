@@ -32,7 +32,6 @@ import it.unimi.dsi.fastutil.doubles.*;
 import it.unimi.dsi.fastutil.objects.*;
 
 import it.unimi.dsi.fastutil.Iterators;
-import it.unimi.dsi.fastutil.Arrays;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -51,7 +50,7 @@ public class SortedSets {
 
 	private SortedSets() {}
 
-	/** An empty sorted set (immutable). It is serialisable and cloneable.
+	/** An empty sorted set (immutable). It is serializable and cloneable.
 	 *
 	 * <P>The class of this objects represent an abstract empty sorted set
 	 * that is a subset of any type of sorted set. Thus, {@link #EMPTY_SET}

@@ -147,6 +147,7 @@ echo -e \
 "#define ABSTRACT_STACK AbstractStack\n\n"\
 "#define ITERATORS ObjectIterators\n\n"\
 \
+"#define REMOVE remove\n"\
 "#define REMOVE_KEY remove\n"\
 "#define GET_KEY get\n"\
 "#define WRITE_KEY writeObject\n"\
@@ -223,6 +224,7 @@ echo -e \
 "#define ITERATORS ${TYPE_CAP[$k]}Iterators\n\n"\
 \
 "#define REMOVE_KEY remove${TYPE_CAP[$k]}\n"\
+"#define REMOVE rem\n"\
 "#define GET_KEY get${TYPE_CAP[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
@@ -333,10 +335,5 @@ echo -e \
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
-"#endif\n\n"\
-"#if #keyclass(Integer)\n"\
-"#define REMOVE rem\n"\
-"#else\n"\
-"#define REMOVE remove\n"\
 "#endif\n\n"\
 "#include \"$1\"\n"

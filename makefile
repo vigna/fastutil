@@ -54,7 +54,7 @@ source:
 	tar zcvf fastutil-$(VERSION)-src.tar.gz --owner=root --group=root \
 		fastutil-$(VERSION)/*.drv \
 		fastutil-$(VERSION)/build.xml \
-		fastutil-$(VERSION)/gencsources.sh \
+		fastutil-$(VERSION)/gencsource.sh \
 		fastutil-$(VERSION)/CHANGES \
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
@@ -306,7 +306,6 @@ SOURCES = \
 	$(SOURCEDIR)/Iterators.java \
 	$(SOURCEDIR)/Collections.java \
 	$(SOURCEDIR)/Sets.java \
-	$(SOURCEDIR)/Sets.java \
 	$(SOURCEDIR)/SortedSets.java \
 	$(SOURCEDIR)/Lists.java # These are True Java Sources instead
 
@@ -344,4 +343,4 @@ sources: $(JSOURCES) $(JFRAGMENTS)
 csources: $(CSOURCES) $(CFRAGMENTS)
 
 tags:
-	etags build.xml Makefile README gencsource.sh *.drv java/overview.html $(SOURCES)
+	etags build.xml makefile README gencsource.sh *.drv java/overview.html $(SOURCES)

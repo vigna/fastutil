@@ -32,7 +32,6 @@ import it.unimi.dsi.fastutil.doubles.*;
 import it.unimi.dsi.fastutil.objects.*;
 
 import it.unimi.dsi.fastutil.Iterators;
-import it.unimi.dsi.fastutil.Arrays;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -59,7 +58,16 @@ public class Sets {
 
 		private EmptySet() {}
 
+		public boolean remove( Object ok ) { return false; }
+
+		public boolean remove( boolean k ) { return false; }
+		public boolean remove( byte k ) { return false; }
+		public boolean remove( char k ) { return false; }
+		public boolean remove( short k ) { return false; }
 		public boolean remove( int k ) { return false; }
+		public boolean remove( long k ) { return false; }
+		public boolean remove( float k ) { return false; }
+		public boolean remove( double k ) { return false; }
 
 		public ByteBidirectionalIterator iterator( byte from ) { return Iterators.EMPTY_ITERATOR; }
 		public CharBidirectionalIterator iterator( char from ) { return Iterators.EMPTY_ITERATOR; }
@@ -135,7 +143,7 @@ public class Sets {
 	}
 
 
-	/** An empty set (immutable). It is serialisable and cloneable.
+	/** An empty set (immutable). It is serializable and cloneable.
 	 *
 	 * <P>The class of this objects represent an abstract empty set
 	 * that is a subset of any type of set. Thus, {@link #EMPTY_SET}

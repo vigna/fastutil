@@ -102,7 +102,7 @@ public class Iterators {
 	
 	}
 
-	/** An empty iterator (immutable). It is serialisable and cloneable.
+	/** An empty iterator (immutable). It is serializable and cloneable.
 	 *
 	 * <P>The class of this objects represent an abstract empty iterator
 	 * that can iterate as any type-specific (list) iterator. Thus, {@link #EMPTY_ITERATOR}
