@@ -14,7 +14,7 @@ jar: jsources
 	ant dist
 
 tar: jar
-	tar zhcvf fastUtil-1.1.tgz fastUtil-1.1/
+	tar zhcvf fastUtil-1.11.tgz fastUtil-1.11/
 
 jsources: $(SOURCES)
 
@@ -32,12 +32,12 @@ PACKAGES = it.unimi.dsi.fastUtil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -d $(DOCSDIR)  -windowtitle "fastUtil 1.1" -link $(APIURL) $(PACKAGES)
+	javadoc -d $(DOCSDIR)  -windowtitle "fastUtil 1.11" -link $(APIURL) $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
 tags:
-	etags gendrivers.sh *.drv it/unimi/dsi/fastUtil/Hash.java
+	etags Makefile README gencsources.sh *.drv it/unimi/dsi/fastUtil/Hash.java it/unimi/dsi/fastUtil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
