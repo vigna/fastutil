@@ -20,7 +20,7 @@
  *
  * Provides a hash set with with a very fast, small-footprint implementation.
  *
- * Hashing done through modulo a prime.
+ * Hashing is done through modulo a prime.
  *
  */
 
@@ -55,10 +55,10 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 /** Secondary jump for conflict resolution. Must be the (log2n-1)-th item of the previous list. */
 	 private transient int n2;
 
-	 /** Number of entries in the map. */
+	 /** Number of entries in the set. */
 	 private int count;
 
-	 /** Number of used buckets in the map. May be larger than {@link #count} if there are items in state {@link #REMOVED}.  */
+	 /** Number of used buckets in the set. May be larger than {@link #count} if there are items in state {@link #REMOVED}.  */
 	 private transient int used;
 
 
@@ -81,13 +81,25 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 }
 	 
 
-
 	 /** Creates a new set.
+	  *
 	  */
 	 
 	 public HASHSET_NAME() {
 		  this(32);
 	 }
+	 
+
+	 /** Creates a new set copying an old one.
+	  *
+	  * @param c a collection to be copied into the new hash set. 
+	  */
+	 
+	 public HASHSET_NAME( Collection c ) {
+		  this( c.size() );
+		  addAll(c);
+	 }
+
 
 	 /** Adds a key to the set.
 	  *
@@ -125,7 +137,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 
 #if ! ( #keyclass(Object) )
 
-	 /** Adds a key to the map.
+	 /** Adds a key to the set.
 	  *
 	  * @param k the key.
 	  */
@@ -161,7 +173,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 #endif
 
 
-	 /** Removes the given key from the map.
+	 /** Removes the given key from the set.
 	  *
 	  * @param ok the key.
 	  */
@@ -223,7 +235,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 
 
 	 public Iterator iterator() {
-		  return new Iterator() {
+		  return new KEY_ITERATOR_NAME() {
 					 int pos = 0, last = -1;
 					 
 					 { 
@@ -237,6 +249,21 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 						  return pos < n;
 					 }
 					 
+					 
+#if !#keyclass(Object)
+					 public KEY_TYPE NEXT_KEY_TYPE_CAP() {
+						  KEY_TYPE retVal;
+						  final byte state[] = HASHSET_NAME.this.state;
+						  final int n = HASHSET_NAME.this.n;
+						  
+						  if (!hasNext()) throw new NoSuchElementException();
+						  retVal = key[last = pos];
+						  do pos++; while( pos < n && state[pos] != BUSY );
+						  
+						  return retVal;
+					 }
+#endif
+
 					 public Object next() {
 						  Object retVal;
 						  final byte state[] = HASHSET_NAME.this.state;
@@ -259,7 +286,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 
 
 
-	 /** Resizes the map to the next prime.
+	 /** Resizes the set to the next prime.
 	  */
 
 	 private void enlarge( int newLog2n ) {
@@ -337,7 +364,7 @@ public final class HASHSET_NAME extends AbstractSet implements Serializable, SET
 	 }
 
 
-	 /** Removes the entry with the given key from the map.
+	 /** Removes the entry with the given key from the set.
 	  *
 	  * @param k the key.
 	  */

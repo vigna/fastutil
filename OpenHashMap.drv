@@ -20,7 +20,7 @@
  *
  * Provides a hash map with a very fast, small-footprint implementation.
  *
- * Hashing done through modulo a prime.
+ * Hashing is done through modulo a prime.
  *
  */
 
@@ -105,6 +105,19 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 public HASHMAP_NAME() {
 		  this(32);
 	 }
+
+
+	 /** Creates a new map copying an old one.
+	  *
+	  * @param m a {@link Map} to be copied into the new hash map. 
+	  */
+	 
+	 public HASHMAP_NAME( Map m ) {
+		  this( m.size() );
+		  putAll(m);
+	 }
+
+
 
 	 /** Adds a pair to the map.
 	  *
@@ -412,7 +425,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  if (keys == null) keys = new AbstractSet() {
 
 					 public Iterator iterator() {
-						  return new Iterator() {
+						  return new KEY_ITERATOR_NAME() {
 									 int pos = 0, last = -1;
 		  
 									 { 
@@ -426,6 +439,20 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 										  return pos < n;
 									 }
 									 
+#if !#keyclass(Object)
+									 public KEY_TYPE NEXT_KEY_TYPE_CAP() {
+										  KEY_TYPE retVal;
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+										  
+										  if (!hasNext()) throw new NoSuchElementException();
+										  retVal = key[last = pos];
+										  do pos++; while( pos < n && state[pos] != BUSY );
+										  
+										  return retVal;
+									 }
+#endif									 
+
 									 public Object next() {
 										  Object retVal;
 										  final byte state[] = HASHMAP_NAME.this.state;
@@ -472,7 +499,7 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  if (values == null) values = new AbstractCollection() {
 
 					 public Iterator iterator() {
-						  return new Iterator() {
+						  return new VALUE_ITERATOR_NAME() {
 									 int pos = 0, last = -1;
 									 
 									 { 
@@ -485,6 +512,20 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 									 public boolean hasNext() {
 										  return pos < n;
 									 }
+		  
+#if !#valueclass(Object)
+									 public VALUE_TYPE NEXT_VALUE_TYPE_CAP() {
+										  VALUE_TYPE retVal;
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+		  
+										  if (!hasNext()) throw new NoSuchElementException();
+										  retVal = value[pos];
+										  do pos++; while( pos < n && state[pos] != BUSY );
+
+										  return retVal;
+									 }
+#endif
 		  
 									 public Object next() {
 										  Object retVal;

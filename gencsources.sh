@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DIR="it/unimi/dsi/fastUtil"
-FILE=(Map HashMap Set HashSet)
+FILE=(Map HashMap Set HashSet Iterator)
 TYPE=(boolean byte short int long char float double Object)
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object)
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
@@ -43,11 +43,13 @@ for ((f=0; f<2; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
+"#define KEY_ITERATOR_NAME Iterator\n\n"\
 "#else\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_TYPE_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define HASH(x) (x)\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
+"#define KEY_ITERATOR_NAME ${TYPE_CAP[$k]}Iterator\n\n"\
 "#endif\n\n"\
 "#if #valueclass(Object)\n"\
 "#define VALUE2TYPE(x) (x)\n"\
@@ -55,10 +57,12 @@ for ((f=0; f<2; f++)); do
 "#define NULL (null)\n"\
 "#define DEF_RET_VALUE null\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
+"#define VALUE_ITERATOR_NAME Iterator\n\n"\
 "#else\n"\
 "#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_TYPE_VALUE())\n"\
 "#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
+"#define VALUE_ITERATOR_NAME ${TYPE_CAP[$v]}Iterator\n\n"\
 "#if #valueclass(Boolean)\n"\
 "#define NULL (false)\n"\
 "#else\n"\
@@ -89,17 +93,35 @@ for ((f=2; f<4; f++)); do
 "#define SET_NAME ${TYPE_CAP[$k]}Set\n\n"\
 "#define HASHSET_NAME ${TYPE_CAP[$k]}HashSet\n\n"\
 "#if #keyclass(Object)\n"\
+"#define KEY_ITERATOR_NAME Iterator\n\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
 "#else\n"\
+"#define KEY_ITERATOR_NAME ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_TYPE_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define HASH(x) (x)\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#endif\n\n"\
 "#include \"${FILE[$f]}.drv\"\n" >$FILENAME
+	  done
+done
+
+for ((f=4; f<5; f++)); do
+	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
+					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
+					 rm -f $FILENAME
+					 echo -e \
+"#assert keyclass(${CLASS[$k]})\n"\
+"#define KEY_TYPE ${TYPE[$k]}\n"\
+"#define KEY_TYPE_CAP ${TYPE_CAP[$k]}\n"\
+"#define KEY_CLASS ${CLASS[$k]}\n"\
+"#define NEXT_KEY_TYPE_CAP next${TYPE_CAP[$k]}\n"\
+"#define KEY_ITERATOR_NAME ${TYPE_CAP[$k]}Iterator\n\n"\
+"#include \"${FILE[$f]}.drv\"\n" >$FILENAME
+
 	  done
 done
 
