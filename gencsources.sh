@@ -62,7 +62,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define ENTRY_GET_KEY getKey\n"\
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
-"#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
+"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (y) != null && (x).hashCode() == (y).hashCode() && (x).equals((y))))\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
@@ -180,7 +180,7 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define LAST_KEY lastKey\n"\
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
-"#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
+"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (y) != null && (x).hashCode() == (y).hashCode() && (x).equals((y))))\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
