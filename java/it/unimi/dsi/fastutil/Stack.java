@@ -1,4 +1,4 @@
-/*		 
+ /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
