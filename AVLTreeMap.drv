@@ -30,34 +30,34 @@ import java.io.*;
 public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
-	 public transient Entry tree;
+	 transient Entry tree;
 
 	 /** Number of entries in this map. */
-	 private int count;
+	 int count;
 
 	 /** The first key in this map. */
-	 private transient Entry firstEntry;
+	 transient Entry firstEntry;
 
 	 /** The last key in this map. */
-	 private transient Entry lastEntry;
+	 transient Entry lastEntry;
 
 	 /** Cached set of entries and keys. */
-	 private transient volatile Set entries, keys;
+	 transient volatile Set entries, keys;
 
 	 /** Cached collection of values. */
-	 private transient volatile Collection values;
+	 transient volatile Collection values;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
 	  * or a <code>delete()</code>, whether the <em>domain</em> of the map
 	  * has been modified. */
-	 private transient boolean modified;
+	 transient boolean modified;
 
 	 /** This map's comparator, as provided in the constructor. */
-	 private Comparator storedComparator;
+	 Comparator storedComparator;
 
 	 /** This map's actual comparator; it may differ from {@link #storedComparator} because it is
 		  always a type-specific comparator, so it could be derived from the former by wrapping. */
-	 private transient KEY_COMPARATOR actualComparator;
+	 transient KEY_COMPARATOR actualComparator;
 
 	 {
 		  allocatePaths();
@@ -132,8 +132,13 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 
 
 	 /*
-	  * The following private methods implements some basic building blocks used by
-	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
+	  * The following protected methods implements some basic building blocks used by
+	  * all accessors.  They are (and should be maintained) identical to those used in AVLTreeSet.drv.
+	  *
+	  * The insert()/delete() code is derived from Ben Pfaff's GNU libavl
+	  * (http://www.msu.edu/~pfaffben/avl/). If you want to understand what's
+	  * going on, you should have a look at the literate code contained therein
+	  * first.  
 	  */
 
 
@@ -148,7 +153,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 	  * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
 	  */
 	 
-	 private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+	 protected int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
 		  return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
     }
 
@@ -160,7 +165,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 	  * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
 	  */
 
-   private Entry findKey( KEY_TYPE k ) {
+   protected Entry findKey( KEY_TYPE k ) {
 		 Entry e = tree;
 		 int cmp;
 		 
@@ -191,7 +196,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 	  */
 
 	 
-	 private VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
+	 protected VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
 		  modified = false;
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
@@ -423,7 +428,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 	  * was no existing entry with the given key).
 	  */
 	 
-	 private VALUE_TYPE delete( final KEY_TYPE k ) {
+	 protected VALUE_TYPE delete( final KEY_TYPE k ) {
 		  modified = false;
 
 		  if ( tree == null ) return defRetValue;
@@ -444,15 +449,8 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 				}
 		  }
 
-		  if ( p.left == null ) {
-				firstEntry = p.right;
-				if ( ! p.succ()  ) while( ! firstEntry.pred() ) firstEntry = firstEntry.left;
-		  }
-
-		  if ( p.right == null ) {
-				lastEntry = p.left;
-				if ( ! p.pred() ) while( ! lastEntry.succ() ) lastEntry = lastEntry.right;
-		  }
+		  if ( p.left == null ) firstEntry = p.next();
+		  if ( p.right == null ) lastEntry = p.prev();
 
 		  if ( p.succ() ) {
 				if ( p.pred() ) {
@@ -463,10 +461,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 					 else tree = dir ? p.right : p.left;
 				}
 				else {
-					 Entry l = p.left;
-					 while( ! l.succ() ) l = l.right;
-
-					 l.right = p.right;
+					 p.prev().right = p.right;
 
 					 if ( q != null ) {
 						  if ( dir ) q.right = p.left;
@@ -481,11 +476,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 				if ( r.pred() ) {
 					 r.left = p.left;
 					 r.pred( p.pred() );
-					 if ( ! r.pred() ) {
-						  Entry l = r.left;
-						  while( ! l.succ() ) l = l.right;
-						  l.right = r;
-					 }
+					 if ( ! r.pred() ) r.prev().right = r;
 					 if ( q != null ) {
 						  if ( dir ) q.right = r;
 						  else q.left = r;
@@ -512,10 +503,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 					 s.left = p.left;
 
 					 if ( ! p.pred() ) {
-						  Entry l = p.left;
-						  while( ! l.succ() ) l = l.right;
-						  l.right = s;
-
+						  p.prev().right = s;
 						  s.pred( false );
 					 }
 
@@ -785,12 +773,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 		  /** The pointers to the left and right subtrees. */
 		  protected Entry left, right;
 		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
-		  private int info;
-
-		  /** Creates a new entry with no explicitly set key/value and <code>null</code> subtrees.
-			*/
-
-		  protected Entry() {}
+		  protected int info;
 
 		  /** Creates a new entry with the given key and value.
 			*
@@ -922,7 +905,29 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 		  protected	void decBalance() {
 				info = info & ~BALANCE_MASK | ( (byte)info - 1 ) & 0xFF;
 		  }
-		  
+
+		  /** Computes the next entry in the set order.
+			*
+			* @return the next entry (<code>null</code>) if this is the last entry).
+			*/
+
+		  protected Entry next() {
+				Entry next = this.right;
+				if ( ( info & SUCC_MASK ) == 0 ) while ( ( next.info & PRED_MASK ) == 0 ) next = next.left;
+				return next;
+		  }
+
+		  /** Computes the previous entry in the set order.
+			*
+			* @return the previous entry (<code>null</code>) if this is the first entry).
+			*/
+
+		  protected Entry prev() {
+				Entry prev = this.left;
+				if ( ( info & PRED_MASK ) == 0 ) while ( ( prev.info & SUCC_MASK ) == 0 ) prev = prev.right;
+				return prev;
+		  }
+
 		  public Object getKey() {
 				return KEY2OBJ(key);
 		  }
@@ -1098,8 +1103,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 		  public boolean hasPrevious() { return prev != null; }
 
 		  protected void updateNext() {
-				next = next.right;
-				if ( next != null && ! curr.succ() ) while ( ! next.pred() ) next = next.left;
+				next = next.next();
 		  }
 
 		  protected Entry nextEntry() {
@@ -1113,8 +1117,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 		  public Object next() { return nextEntry(); }
 
 		  protected void updatePrevious() {
-				prev = prev.left;
-				if ( prev != null && ! curr.pred() ) while ( ! prev.succ() ) prev = prev.right;
+				prev = prev.prev();
 		  }
 
 		  protected Entry previousEntry() {
@@ -1336,17 +1339,17 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 	  */
 	 private class Submap extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 		  /** The start of the submap range, unless {@link #bottom} is true. */
-		  private KEY_TYPE from;
+		  KEY_TYPE from;
 		  /** The end of the submap range, unless {@link #top} is true. */
-		  private KEY_TYPE to;
+		  KEY_TYPE to;
 		  /** If true, the submap range starts from -&infin;. */
-		  private boolean bottom;
+		  boolean bottom;
 		  /** If true, the submap range goes to &infin;. */
-		  private boolean top;
+		  boolean top;
 		  /** Cached set of entries and keys. */
-		  private transient volatile Set entries, keys;
+		  transient volatile Set entries, keys;
 		  /** Cached collection of values. */
-		  private transient volatile Collection values;
+		  transient volatile Collection values;
 		  
 		  /** Creates a new submap with given key range.
 			*
@@ -1677,18 +1680,10 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 				else {
 					 e = locateKey( from );
 					 // If we find either the start or something greater we're OK.
-					 if ( compare( e.key, from ) < 0 ) {
-						  // Otherwise, we look for a successor.
-						  boolean succ = e.succ();
-						  e = e.right;
-						  // Oops, it's already the last element.
-						  if ( e == null ) return null;
-						  // If we did not follow a thread we descend the tree on the left.
-						  if ( ! succ ) while ( ! e.pred() ) e = e.left;
-					 }
+					 if ( compare( e.key, from ) < 0 ) e = e.next();
 				}
-				// Finally, if this submap doesn't go to infinity, we check that the resulting key isn't greater than the end.
-				if ( ! top && compare( e.key, to ) >= 0 ) return null;
+				// Finally, if this subset doesn't go to infinity, we check that the resulting key isn't greater than the end.
+				if ( e == null || ! top && compare( e.key, to ) >= 0 ) return null;
 				return e;
 		  }
 	 
@@ -1705,20 +1700,11 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 				else {
 					 e = locateKey( to );
 					 // If we find something smaller than the end we're OK.
-					 if ( compare( e.key, to ) >= 0 ) {
-						  // Otherwise, we look for a predecessor.
-						  boolean pred = e.pred();
-						  e = e.left;
-						  // Oops, it's already the first element.
-						  if ( e == null ) return null;
-						  // If we did not follow a thread we descend the tree on the right.
-						  if ( ! pred ) while ( ! e.succ() ) e = e.right;
-					 }
+					 if ( compare( e.key, to ) >= 0 ) e = e.prev();
 				}
-				// Finally, if this submap doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
-				if ( ! bottom && compare( e.key, from ) < 0 ) return null;
-				return e;
-		  }
+				// Finally, if this subset doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
+				if ( e == null || ! bottom && compare( e.key, from ) < 0 ) return null;
+				return e;		  }
 
 
 		  public KEY_TYPE FIRST_KEY() {
@@ -1759,12 +1745,12 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 					 next = firstEntry();
 				}
 				protected void updatePrevious() {
-					 super.updatePrevious();
+					 prev = prev.prev();
 					 if ( ! bottom && prev != null && AVLTREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
 				}
 				
 				protected void updateNext() {
-					 super.updateNext();
+					 next = next.next();
 					 if ( ! top && next != null && AVLTREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
 				}
 		  }
@@ -1891,7 +1877,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 
 		  double totPut = 0, totYes = 0, totNo = 0, totIterFor = 0, totIterBack = 0, totRemYes = 0, d, dd;
 
-		  for( j = 0; j < 20; j++ ) {
+		  if ( comp ) { for( j = 0; j < 20; j++ ) {
 
 				t = new TreeMap();
 
@@ -1956,7 +1942,9 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP 
 		  System.out.println();
 
 		  t = null;
-		  totPut = totYes = totNo = totIterFor = totIterBack = totRemYes;
+		  totPut = totYes = totNo = totIterFor = totIterBack = totRemYes = 0;
+
+	     }
 
 		  for( j = 0; j < 20; j++ ) {
 

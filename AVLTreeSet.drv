@@ -30,23 +30,23 @@ import java.io.*;
 public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
 
 	 /** A reference to the root entry. */
-	 public transient Entry tree;
+	 transient Entry tree;
 
 	 /** Number of elements in this set. */
-	 private int count;
+	 int count;
 
 	 /** The entry of the first element of this set. */
-	 private transient Entry firstEntry;
+	 transient Entry firstEntry;
 
 	 /** The entry of the last element of this set. */
-	 private transient Entry lastEntry;
+	 transient Entry lastEntry;
 
 	 /** This set's comparator, as provided in the constructor. */
-	 private Comparator storedComparator;
+	 Comparator storedComparator;
 
 	 /** This set's actual comparator; it may differ from {@link #storedComparator} because it is
 		  always a type-specific comparator, so it could be derived from the former by wrapping. */
-	 private transient KEY_COMPARATOR actualComparator;
+	 transient KEY_COMPARATOR actualComparator;
 
 	 {
 		  allocatePaths();
@@ -121,8 +121,13 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 
 
 	 /*
-	  * The following private methods implements some basic building blocks used by
-	  * all accessors.  They are (and should be maintained) identical to those used in TreeMap.drv.
+	  * The following protected methods implements some basic building blocks used by
+	  * all accessors.  They are (and should be maintained) identical to those used in AVLTreeMap.drv.
+	  *
+	  * The insert()/delete() code is derived from Ben Pfaff's GNU libavl
+	  * (http://www.msu.edu/~pfaffben/avl/). If you want to understand what's
+	  * going on, you should have a look at the literate code contained therein
+	  * first.  
 	  */
 
 
@@ -137,7 +142,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 	  * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
 	  */
 	 
-	 private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+	 protected int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
 		  return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
     }
 
@@ -149,7 +154,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 	  * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
 	  */
 
-   private Entry findKey( KEY_TYPE k ) {
+   protected Entry findKey( KEY_TYPE k ) {
 		 Entry e = tree;
 		 int cmp;
 
@@ -175,7 +180,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 	  */
 
 	 
-	 private boolean insert( final KEY_TYPE k ) {
+	 protected boolean insert( final KEY_TYPE k ) {
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
@@ -398,7 +403,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 	  * @return true if the deletion modified the set.
 	  */
 	 
-	 private boolean delete( final KEY_TYPE k ) {
+	 protected boolean delete( final KEY_TYPE k ) {
 		  if ( tree == null ) return false;
 
 		  int cmp;
@@ -417,15 +422,8 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 				}
 		  }
 
-		  if ( p.left == null ) {
-				firstEntry = p.right;
-				if ( ! p.succ()  ) while( ! firstEntry.pred() ) firstEntry = firstEntry.left;
-		  }
-
-		  if ( p.right == null ) {
-				lastEntry = p.left;
-				if ( ! p.pred() ) while( ! lastEntry.succ() ) lastEntry = lastEntry.right;
-		  }
+		  if ( p.left == null ) firstEntry = p.next();
+		  if ( p.right == null ) lastEntry = p.prev();
 
 		  if ( p.succ() ) {
 				if ( p.pred() ) {
@@ -436,10 +434,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 					 else tree = dir ? p.right : p.left;
 				}
 				else {
-					 Entry l = p.left;
-					 while( ! l.succ() ) l = l.right;
-
-					 l.right = p.right;
+					 p.prev().right = p.right;
 
 					 if ( q != null ) {
 						  if ( dir ) q.right = p.left;
@@ -454,11 +449,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 				if ( r.pred() ) {
 					 r.left = p.left;
 					 r.pred( p.pred() );
-					 if ( ! r.pred() ) {
-						  Entry l = r.left;
-						  while( ! l.succ() ) l = l.right;
-						  l.right = r;
-					 }
+					 if ( ! r.pred() ) r.prev().right = r;
 					 if ( q != null ) {
 						  if ( dir ) q.right = r;
 						  else q.left = r;
@@ -485,10 +476,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 					 s.left = p.left;
 
 					 if ( ! p.pred() ) {
-						  Entry l = p.left;
-						  while( ! l.succ() ) l = l.right;
-						  l.right = s;
-
+						  p.prev().right = s;
 						  s.pred( false );
 					 }
 
@@ -742,12 +730,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 		  /** The pointers to the left and right subtrees. */
 		  protected Entry left, right;
 		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
-		  private int info;
-
-		  /** Creates a new entry with no explicitly set key and <code>null</code> subtrees.
-			*/
-
-		  protected Entry() {}
+		  protected int info;
 
 		  /** Creates a new entry with the given key.
 			*
@@ -876,6 +859,28 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 				info = info & ~BALANCE_MASK | ( (byte)info - 1 ) & 0xFF;
 		  }
 		  
+		  /** Computes the next entry in the set order.
+			*
+			* @return the next entry (<code>null</code>) if this is the last entry).
+			*/
+
+		  protected Entry next() {
+				Entry next = this.right;
+				if ( ( info & SUCC_MASK ) == 0 ) while ( ( next.info & PRED_MASK ) == 0 ) next = next.left;
+				return next;
+		  }
+
+		  /** Computes the previous entry in the set order.
+			*
+			* @return the previous entry (<code>null</code>) if this is the first entry).
+			*/
+
+		  protected Entry prev() {
+				Entry prev = this.left;
+				if ( ( info & PRED_MASK ) == 0 ) while ( ( prev.info & SUCC_MASK ) == 0 ) prev = prev.right;
+				return prev;
+		  }
+
 		  public Object getKey() {
 				return KEY2OBJ(key);
 		  }
@@ -987,8 +992,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 		  public boolean hasPrevious() { return prev != null; }
 
 		  protected void updateNext() {
-				next = next.right;
-				if ( next != null && ! curr.succ() ) while ( next.left() != null ) next = next.left;
+				next = next.next();
 		  }
 
 		  protected Entry nextEntry() {
@@ -1007,8 +1011,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 #endif									
 
 		  protected void updatePrevious() {
-				prev = prev.left;
-				if ( prev != null && ! curr.pred() ) while ( prev.right() != null ) prev = prev.right;
+				prev = prev.prev();
 		  }
 
 		  protected Entry previousEntry() {
@@ -1094,13 +1097,13 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 	  */
 	 private class Subset extends ABSTRACT_SET implements Serializable, SORTEDSET {
 		  /** The start of the subset range, unless {@link #bottom} is true. */
-		  private KEY_TYPE from;
+		  KEY_TYPE from;
 		  /** The end of the subset range, unless {@link #top} is true. */
-		  private KEY_TYPE to;
+		  KEY_TYPE to;
 		  /** If true, the subset range starts from -&infin;. */
-		  private boolean bottom;
+		  boolean bottom;
 		  /** If true, the subset range goes to &infin;. */
-		  private boolean top;
+		  boolean top;
 		  
 		  /** Creates a new subset with given key range.
 			*
@@ -1276,18 +1279,10 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 				else {
 					 e = locateKey( from );
 					 // If we find either the start or something greater we're OK.
-					 if ( compare( e.key, from ) < 0 ) {
-						  // Otherwise, we look for a successor.
-						  boolean succ = e.succ();
-						  e = e.right;
-						  // Oops, it's already the last element.
-						  if ( e == null ) return null;
-						  // If we did not follow a thread we descend the tree on the left.
-						  if ( ! succ ) while ( e.left() != null ) e = e.left;
-					 }
+					 if ( compare( e.key, from ) < 0 ) e = e.next();
 				}
 				// Finally, if this subset doesn't go to infinity, we check that the resulting key isn't greater than the end.
-				if ( ! top && compare( e.key, to ) >= 0 ) return null;
+				if ( e == null || ! top && compare( e.key, to ) >= 0 ) return null;
 				return e;
 		  }
 	 
@@ -1304,18 +1299,10 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 				else {
 					 e = locateKey( to );
 					 // If we find something smaller than the end we're OK.
-					 if ( compare( e.key, to ) >= 0 ) {
-						  // Otherwise, we look for a predecessor.
-						  boolean pred = e.pred();
-						  e = e.left;
-						  // Oops, it's already the first element.
-						  if ( e == null ) return null;
-						  // If we did not follow a thread we descend the tree on the right.
-						  if ( ! pred ) while ( e.right() != null ) e = e.right;
-					 }
+					 if ( compare( e.key, to ) >= 0 ) e = e.prev();
 				}
 				// Finally, if this subset doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
-				if ( ! bottom && compare( e.key, from ) < 0 ) return null;
+				if ( e == null || ! bottom && compare( e.key, from ) < 0 ) return null;
 				return e;
 		  }
 
@@ -1358,12 +1345,12 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 					 next = firstEntry();
 				}
 				protected void updatePrevious() {
-					 super.updatePrevious();
+					 prev = prev.prev();
 					 if ( ! bottom && prev != null && AVLTREESET.this.compare( prev.key, from ) < 0 ) prev = null;
 				}
 				
 				protected void updateNext() {
-					 super.updateNext();
+					 next = next.next();
 					 if ( ! top && next != null && AVLTREESET.this.compare( next.key, to ) >= 0 ) next = null;
 				}
 		  }
@@ -1500,7 +1487,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 
 		  System.out.println();
 
-		  totAdd = totYes = totNo = totIterFor = totIterBack = totRemYes;
+		  totAdd = totYes = totNo = totIterFor = totIterBack = totRemYes = 0;
 
 		  }
 
