@@ -43,10 +43,11 @@ import java.util.NoSuchElementException;
  * they are delayed as much as possible. The backing array is exposed by the
  * {@link #elements()} method.
  *
- * <p>This class implements the bulk methods <code>removeElements()</code>
- * and <code>getElements()</code> using high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead
- * of expensive loops.
+ * <p>This class implements the bulk methods <code>removeElements()</code>,
+ * <code>addElements()</code> and <code>getElements()</code> using
+ * high-performance system calls (e.g., {@link
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * expensive loops.
  *
  * @see java.util.ArrayList
  */
@@ -57,7 +58,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
 
 	/** The inverse of the golden ratio times 2<sup>16</sup>. */
-	private static final long ONEOVERPHI = 106039;
+	protected static final long ONEOVERPHI = 106039;
 
 	/** The backing array. */
 	protected transient KEY_TYPE a[];
@@ -210,34 +211,13 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param capacity the new minimum capacity for this array list.
 	 */
 	public void ensureCapacity( final int capacity ) {
-		if ( capacity > a.length ) {
-			KEY_TYPE t[] = new KEY_TYPE[ capacity ];
-			System.arraycopy( a, 0, t, 0, size );
-			a = t;
-		}
-		if ( asserts ) assert size <= a.length;
-	}
-
-	/** Enlarges this array list to the maximum between the given capacity and
-	* the current capacity divided by the golden ratio, provided that the given
-	* capacity is larger than the current capacity.
-	 *
-	 * @param capacity the new minimum capacity for this array list.
-	 */
-
-	private void enlarge( final int capacity ) {
-		final int length = a.length;
-		if ( capacity > length ) {
-			KEY_TYPE t[] = new KEY_TYPE[ (int)Math.min( Math.max( ( ONEOVERPHI * length ) >>> 16, capacity ), Integer.MAX_VALUE ) ];
-			System.arraycopy( a, 0, t, 0, size );
-			a = t;
-		}
+		a = ARRAYS.ensureCapacity( a, capacity, size );
 		if ( asserts ) assert size <= a.length;
 	}
 
 	public void add( final int index, final KEY_TYPE k ) {
 		ensureIndex( index );
-		enlarge( size + 1 );
+		a = ARRAYS.grow( a, size + 1, size );
 		if ( index != size ) System.arraycopy( a, index, a, index + 1, size - index );
 		a[ index ] = k;
 		size++;
@@ -245,7 +225,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 	public boolean add( final KEY_TYPE k ) {
-		enlarge( size + 1 );
+		a = ARRAYS.grow( a, size + 1, size );
 		a[ size++ ] = k;
 		if ( asserts ) assert size <= a.length;
 		return true;
@@ -255,7 +235,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		ensureIndex( index );
 		int n = c.size();
 		if ( n == 0 ) return false;
-		enlarge( size + n );
+		a = ARRAYS.grow( a, size + n, size );
 		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
 		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
 		size += n;
@@ -268,7 +248,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		ensureIndex( index );
 		final int n = l.size();
 		if ( n == 0 ) return false;
-		enlarge( size + n );
+		a = ARRAYS.grow( a, size + n, size );
 		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
 		l.getElements( 0, a, index, n );
 		size += n;
@@ -419,6 +399,26 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 #endif
 	}
 	
+
+	/** Adds elements to this type-specific list using optimized system calls.
+	 *
+	 * @param index the index at which to add elements.
+	 * @param a the array containing the elements.
+	 * @param offset the offset of the first element to add.
+	 * @param length the number of elements to add.
+	 */
+	public void addElements( final int index, final KEY_TYPE a[], final int offset, final int length ) {
+		ensureIndex( index );
+		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
+		if ( offset + length > a.length ) throw new ArrayIndexOutOfBoundsException( "End index (" + ( offset + length ) + ") is greater than array length (" + a.length + ")" );
+		this.a = ARRAYS.grow( this.a, size + length, size );
+		System.arraycopy( this.a, index, this.a, index + length, size - index );
+		System.arraycopy( a, offset, this.a, index, length );
+		size += length;
+	}
+
+
+
 #if ! #keyclass(Object) && ! #keyclass(Reference)
 	
 	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {

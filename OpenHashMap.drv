@@ -660,12 +660,12 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 
 		public Object next() {
 			final int e = nextEntry();
-			return new Entry( key[ e ], value[ e ] );
+			return new BasicEntry( key[ e ], value[ e ] );
 		}
 
 		public Object previous() {
 			final int e = previousEntry();
-			return new Entry( key[ e ], value[ e ] );
+			return new BasicEntry( key[ e ], value[ e ] );
 		}
 		
 		public int nextIndex() {
@@ -741,7 +741,6 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		}
 		
 		public int nextEntry() {
-			Entry retVal;
 			final byte state[] = OPENHASHMAP.this.state;
 			final int n = state.length;
 			
@@ -754,7 +753,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 						  
 		public Object next() {
 			final int e = nextEntry();
-			return new Entry( key[ e ], value[ e ] );
+			return new BasicEntry( key[ e ], value[ e ] );
 		}
 
 		public void remove() {
@@ -857,77 +856,6 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 #endif
 #endif
 
-
-	private static final class Entry implements MAP.Entry {
-		KEY_TYPE key;
-		VALUE_TYPE value;
-
-		Entry( final Object key, final Object value ) {
-			this.key = KEY2TYPE(key);
-			this.value = VALUE2TYPE(value);
-		}
-
-#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
-		  
-		Entry( final KEY_TYPE key, final VALUE_TYPE value ) {
-			this.key = key;
-			this.value = value;
-		}
-		  
-#endif
-
-		public Object getKey() {
-			return KEY2OBJ(key);
-		}
-		  
-#if ! #keyclass(Object) && !#keyclass(Reference)
-		public KEY_TYPE ENTRY_GET_KEY() {
-			return key;
-		}
-#endif
-
-		public Object getValue() {
-			return VALUE2OBJ(value);
-		}
-		  
-#if ! #valueclass(Object) && ! #valueclass(Reference)
-		public VALUE_TYPE ENTRY_GET_VALUE() {
-			return value;
-		}
-#endif
-
-		public VALUE_TYPE setValue( final VALUE_TYPE value ) {
-			final VALUE_TYPE oldValue = this.value;
-			this.value = value;
-			return oldValue;
-		}
-		  
-#if ! #valueclass(Object) && ! #valueclass(Reference)
-		  
-		public Object setValue( final Object value ) {
-			return VALUE2OBJ(setValue(VALUE2TYPE(value)));
-		}
-
-#endif
-
-
-		public boolean equals( final Object o ) {
-			if (!(o instanceof Map.Entry)) return false;
-			Map.Entry e = (Map.Entry)o;
-				
-			return KEY_EQUAL( key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE2TYPE( e.getValue() ) );
-		}
-		  
-		public int hashCode() {
-			return KEY2INT(key) ^ VALUE2INT(value);
-		}
-		  
-		  
-		public String toString() {
-			return key + "->" + value;
-		}
-	}
-	 
 
 	public Set entrySet() {
 		if ( entries == null ) entries = new AbstractObjectSet() {

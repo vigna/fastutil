@@ -21,6 +21,9 @@
 
 package PACKAGE;
 
+import VALUE_PACKAGE.VALUE_COLLECTION;
+import it.unimi.dsi.fastutil.HashCommon;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -28,6 +31,11 @@ import java.util.Map;
  *
  * <P>In particular, this class provide {@link #containsKey(Object)} and
  * {@link #containsValue(Object)} methods that just call the type-specific counterpart. 
+ *
+ * <P>As a further help, this class provides a {@link BasicEntry BasicEntry} inner class
+ * that implements a type-specific version of {@link java.util.Map.Entry}; it
+ * is particularly useful for those classes that do not implement their own
+ * entries (e.g., most immutable maps).
  */
 
 public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
@@ -35,6 +43,20 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	protected ABSTRACT_MAP() {}
 
 #if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+
+	/** Delegates to the corresponding type-specific method. */
+	public Object get( Object ok ) {
+		return VALUE2OBJ( GET_VALUE( KEY2TYPE( ok ) ) );
+	}
+
+	public Object put( Object ok, Object ov ) {
+		return VALUE2OBJ( put( KEY2TYPE( ok ), VALUE2TYPE( ov ) ) );
+	}
+
+	public Object remove( Object ok ) {
+		return VALUE2OBJ( REMOVE_VALUE( KEY2TYPE( ok ) ) );
+	}
+#endif
 
 	public VALUE_TYPE put( KEY_TYPE key, VALUE_TYPE value ) {
 		throw new UnsupportedOperationException();
@@ -44,15 +66,10 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		throw new UnsupportedOperationException();
 	}
 
-#endif
-
-	public Object put( Object ok, Object ov ) {
-		return VALUE2OBJ( put( KEY2TYPE( ok ), VALUE2TYPE( ov ) ) );
+	public void clear() {
+		throw new UnsupportedOperationException();
 	}
 
-	public Object remove( Object ok ) {
-		return VALUE2OBJ( REMOVE_VALUE( KEY2TYPE( ok ) ) );
-	}
 
 #if !#keyclass(Object) && !#keyclass(Reference)
 	/** Delegates to the corresponding type-specific method. */
@@ -67,6 +84,17 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		return containsValue( VALUE2TYPE( ov ) );
 	}
 #endif
+
+	/** Checks whether the given value is contained in {@link #values()}. */
+	public boolean containsValue( VALUE_TYPE v ) {
+		return ((VALUE_COLLECTION)values()).contains( v );
+	}
+
+	/** Checks whether the given value is contained in {@link #keySet()}. */
+	public boolean containsKey( KEY_TYPE k ) {
+		return ((SET)keySet()).contains( k );
+	}
+
 
 	/**
 	 * The default return value for <code>get()</code>, <code>put()</code> and
@@ -124,6 +152,80 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	public boolean isEmpty() {
 		return size() == 0;
 	}
+
+	/** This class provides a basic but complete type-specific entry class for all those maps implementations
+	 * that do not have entries on their own (e.g., most immutable maps). */
+
+	public static class BasicEntry implements MAP.Entry {
+		protected KEY_TYPE key;
+		protected VALUE_TYPE value;
+
+		public BasicEntry( final Object key, final Object value ) {
+			this.key = KEY2TYPE(key);
+			this.value = VALUE2TYPE(value);
+		}
+
+#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+		  
+		public BasicEntry( final KEY_TYPE key, final VALUE_TYPE value ) {
+			this.key = key;
+			this.value = value;
+		}
+		  
+#endif
+
+		public Object getKey() {
+			return KEY2OBJ(key);
+		}
+		  
+#if ! #keyclass(Object) && !#keyclass(Reference)
+		public KEY_TYPE ENTRY_GET_KEY() {
+			return key;
+		}
+#endif
+
+		public Object getValue() {
+			return VALUE2OBJ(value);
+		}
+		  
+#if ! #valueclass(Object) && ! #valueclass(Reference)
+		public VALUE_TYPE ENTRY_GET_VALUE() {
+			return value;
+		}
+#endif
+
+		public VALUE_TYPE setValue( final VALUE_TYPE value ) {
+			final VALUE_TYPE oldValue = this.value;
+			this.value = value;
+			return oldValue;
+		}
+		  
+#if ! #valueclass(Object) && ! #valueclass(Reference)
+		  
+		public Object setValue( final Object value ) {
+			return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+		}
+
+#endif
+
+		public boolean equals( final Object o ) {
+			if (!(o instanceof Map.Entry)) return false;
+			Map.Entry e = (Map.Entry)o;
+				
+			return KEY_EQUAL( key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE2TYPE( e.getValue() ) );
+		}
+		  
+		public int hashCode() {
+			return KEY2INT(key) ^ VALUE2INT(value);
+		}
+		  
+		  
+		public String toString() {
+			return key + "->" + value;
+		}
+	}
+
+
 
 	/** Returns a hash code for this map.
 	 *

@@ -366,14 +366,13 @@ public class ITERATORS {
 	}
 
 
-#if #keyclass(Integer) || #keyclass(Byte) || #keyclass(Character) || #keyclass(Long)
+#if #keyclass(Integer) || #keyclass(Byte) || #keyclass(Short) || #keyclass(Character) || #keyclass(Long)
 
 #if #keyclass(Long)
-	private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_BIDI_ITERATOR  {
+	private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_BIDI_ITERATOR {
 #else
 	private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_LIST_ITERATOR {
 #endif
-
 		private final KEY_TYPE from, to;
 		KEY_TYPE curr;
 
@@ -424,10 +423,16 @@ public class ITERATORS {
 		}
 	}
 		
+#if #keyclass(Long)
 	/** Creates a type-specific bidirectional iterator over an interval.
 	 *
 	 * <P>The type-specific bidirectional iterator returned by this method will return the
 	 * elements <code>from</code>, <code>from+1</code>,&hellip;, <code>to-1</code>.
+	 *
+	 * <P>Note that all other type-specific interval iterator are <em>list</em>
+	 * iterators. Of course, this is not possible with longs as the index
+	 * returned by {@link java.util.ListIterator#nextIndex() nextIndex()}/{@link
+	 * java.util.ListIterator#previousIndex() previousIndex()} would exceed an integer.
 	 *
 	 * @param from the starting element (inclusive).
 	 * @param to the ending element (exclusive).
@@ -436,6 +441,22 @@ public class ITERATORS {
 	public static KEY_BIDI_ITERATOR fromTo( final KEY_TYPE from, final KEY_TYPE to ) {
 		return new KEY_INTERVAL_ITERATOR( from, to );
 	}
+#else
+
+	/** Creates a type-specific list iterator over an interval.
+	 *
+	 * <P>The type-specific list iterator returned by this method will return the
+	 * elements <code>from</code>, <code>from+1</code>,&hellip;, <code>to-1</code>.
+	 *
+	 * @param from the starting element (inclusive).
+	 * @param to the ending element (exclusive).
+	 * @return a type-specific list iterator enumerating the elements from <code>from</code> to <code>to</code>.
+	 */
+	public static KEY_LIST_ITERATOR fromTo( final KEY_TYPE from, final KEY_TYPE to ) {
+		return new KEY_INTERVAL_ITERATOR( from, to );
+	}
+
+#endif
 
 #endif
 

@@ -1,0 +1,436 @@
+/*
+ * fastutil: Fast & compact type-specific collections for Java
+ *
+ * Copyright (C) 2002, 2003 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+import it.unimi.dsi.fastutil.objects.AbstractObjectListIterator;
+import it.unimi.dsi.fastutil.objects.AbstractObjectList;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+import it.unimi.dsi.fastutil.ints.IntArrays;
+
+import java.io.Serializable;
+import java.util.Iterator;
+import java.util.Collection;
+import java.util.NoSuchElementException;
+
+/** Compact storage of lists of arrays using front coding.
+ * 
+ * <P>This class stores immutably a list of arrays in a single large array
+ * using front coding (of course, the compression will be reasonable only if
+ * the list is sorted lexicographically&mdash;see below). It implements an
+ * immutable type-specific list that returns the <var>i</var>-th array when
+ * calling {@link #get(int) get(<var>i</var>)}. The returned array may be
+ * freely modified.
+ *
+ * <P>Front coding is based on the idea that if the <var>i</var>-th and the
+ * (<var>i</var>+1)-th array have a common prefix, we might store the length
+ * of the common prefix, and then the rest of the second array.
+ *
+ * <P>This approach, of course, requires that once in a while an array is
+ * stored entirely.  The <def>ratio</def> of a front-coded list defines how
+ * often this happens (once every {@link #ratio()} arrays). A higher ratio
+ * means more compression, but means also a longer access time, as more arrays
+ * have to be probed to build the result. Note that we must build an array
+ * every time {@link #get(int) get()} is called.
+ *
+ * <P>By setting the ratio to 1 we actually disable front coding: however, we
+ * still have a data structure storing large list of arrays with a reduced
+ * overhead (just one integer per array, plus the space required for lengths).
+ *
+ * <P>Note that the typical usage of front-coded lists is under the form of
+ * serialized objects; usually, the data that has to be compacted is processed
+ * offline, and the resulting structure is stored permanently. Since the
+ * offset array is not stored, the serialized format is very small.
+ *
+ * <H2>Implementation Details</H2>
+ * 
+ * <P>All arrays are stored in a large array. A separate array of offsets
+ * indexes arrays whose position is a multiple of the ratio: thus, a higher ratio
+ * means also less offsets.
+ * 
+ * <P>More in detail, an array whose position is a multiple of the ratio is
+ * stored as the array length, followed by the elements of the array. The array
+ * length is coded by a simple variable-length list of <var>k</var>-1 bit
+ * blocks, where <var>k</var> is the number of bits of the underlying primitive
+ * type.  All other arrays are stored as follows: let <code>common</code> the
+ * length of the maximum common prefix between the array and its predecessor.
+ * Then we store the array length decremented by <code>common</code>, followed
+ * by <code>common</code>, followed by the array elements whose index is
+ * greater than or equal to <code>common</code>. For instance, if we store
+ * <samp>foo</samp>, <samp>foobar</samp>, <samp>football</samp> and
+ * <samp>fool</samp> in a front-coded character-array list with ratio 3, the
+ * character array will contain
+ *
+ * <pre>
+ * <b>3</b> f o o <b>3</b> <b>3</b> b a r <b>5</b> <b>3</b> t b a l l <b>4</b> f o o l 
+ * </pre>
+ * 
+ * <H2>Limitations</H2>
+ * 
+ * <P>All arrays are stored in a large array: thus, the compressed list must
+ * not exceed {@link java.lang.Integer#MAX_VALUE} elements. Moreover,
+ * iterators cannot move back ({@link java.util.ListIterator#previous()} will
+ * just throw an {@link UnsupportedOperationException}).
+ */
+
+public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable {
+
+	public static final long serialVersionUID = -7046029254386353130L;
+
+	/** The number of arrays in the list. */
+	protected int n;
+	/** The ratio of this front-coded list. */
+	protected int ratio;
+	/** The array containing the compressed arrays. */
+	protected KEY_TYPE[] array;
+	/** The pointers to entire arrays in the list. */
+	transient protected int[] offset;
+
+	/** Creates a new front-coded list containing the arrays returned by the given iterator.
+	 * 
+	 * @param arrays an iterator returning arrays.
+	 * @param ratio the desired ratio.
+	 */
+
+	public FRONT_CODED_LIST( final Iterator arrays, final int ratio ) {
+
+		if ( ratio < 1 ) throw new IllegalArgumentException( "Illegal ratio (" + ratio + ")" );
+
+		KEY_TYPE[] array = ARRAYS.EMPTY_ARRAY;
+		int[] offset = IntArrays.EMPTY_ARRAY;
+
+		KEY_TYPE[][] a = new KEY_TYPE[ 2 ][];
+		int curSize = 0, b = 0, common, length, minLength;
+
+		while( arrays.hasNext() ) {
+			a[ b ] = (KEY_TYPE[])arrays.next();
+			length = a[ b ].length;
+			
+			if ( n % ratio == 0 ) {
+				offset = IntArrays.grow( offset, n / ratio + 1 );
+				offset[ n / ratio ] = curSize;
+
+				array = ARRAYS.grow( array, curSize + count( length ) + length );
+				curSize += writeInt( array, length, curSize );
+				System.arraycopy( a[ b ], 0, array, curSize, length );
+				curSize += length;
+			}
+			else {
+				minLength = a[ 1 - b ].length;
+				if ( length < minLength ) minLength = length;
+				for( common = 0; common < minLength; common++ ) if ( a[ 0 ][ common ] != a[ 1 ][ common ] ) break;
+				length -= common;
+
+				array = ARRAYS.grow( array, curSize + count( length ) + count( common ) + length );
+				curSize += writeInt( array, length, curSize );
+				curSize += writeInt( array, common, curSize );
+				System.arraycopy( a[ b ], common, array, curSize, length );
+				curSize += length;
+			}
+
+			b = 1 - b;
+			n++;
+		}
+
+		this.ratio = ratio;
+		this.array = ARRAYS.trim( array, curSize );
+		this.offset = IntArrays.trim( offset, n / ratio );
+
+	}
+
+	/** Creates a new front-coded list containing the arrays in the given collection.
+	 * 
+	 * @param c a collection containing arrays.
+	 * @param ratio the desired ratio.
+	 */
+
+	public FRONT_CODED_LIST( final Collection c, final int ratio ) {
+		this( c.iterator(), ratio );
+	}
+
+
+
+	/* The following (rather messy) methods implements the encoding of arbitrary integers inside an array.
+	 * Unfortunately, we have to specify different codes for almost every type. */
+
+	/** Reads a coded length.
+	 * @param a the data array.
+	 * @param pos the starting position.
+	 * @return the length coded at <code>pos</code>.
+	 */
+	private static int readInt( final KEY_TYPE a[], int pos ) {
+#if #keyclass(Integer) || #keyclass(Long)
+		return (int)a[ pos ];
+#elif #keyclass(Character)
+		return a[ pos ] < 0x8000 ? a[ pos ] : ( a[ pos ] & 0x7FFF ) << 16 | a[ pos + 1 ];
+#elif #keyclass(Short)
+		return a[ pos ] >= 0 ? a[ pos ] : ( -a[ pos ] - 1 ) << 16  | ( a[ pos + 1 ] & 0xFFFF );
+#else
+		if ( a[ pos ] >= 0 ) return a[ pos ];
+		if ( a[ pos + 1 ] >= 0 ) return ( - a[ pos ] - 1 ) << 7 | a[ pos + 1 ];
+		if ( a[ pos + 2 ] >= 0 ) return ( - a[ pos ] - 1 ) << 14 | ( - a[ pos + 1 ] - 1 ) << 7 | a[ pos + 2 ];
+		if ( a[ pos + 3 ] >= 0 ) return ( - a[ pos ] - 1 ) << 21 | ( - a[ pos + 1 ] - 1 ) << 14 | ( - a[ pos + 2 ] - 1 ) << 7 | a[ pos + 3 ];
+		return ( - a[ pos ] - 1 ) << 28 | ( - a[ pos + 1 ] - 1 ) << 21 | ( - a[ pos + 2 ] - 1 ) << 14 | ( - a[ pos + 3 ] - 1 ) << 7 | a[ pos + 4 ];
+#endif
+	}
+
+	/** Computes the number of elements coding the length at a given position.
+	 * @param a the data array.
+	 * @param pos the starting position.
+	 * @return the number of elements coding the length stored at <code>pos</code>.
+	 */
+	private static int readCount( final KEY_TYPE a[], int pos ) {
+#if #keyclass(Integer) || #keyclass(Long)
+		return 1;
+#elif #keyclass(Character)
+		return a[ pos ] < ( 1 << 15 ) ? 1 : 2;
+#elif #keyclass(Short)
+		return a[ pos ] >= 0 ? 1 : 2;
+#else
+		if ( a[ pos++ ] >= 0 ) return 1;
+		if ( a[ pos++ ] >= 0 ) return 2;
+		if ( a[ pos++ ] >= 0 ) return 3;
+		if ( a[ pos++ ] >= 0 ) return 4;
+		return 5;
+#endif
+	}
+
+
+	/** Computes the number of elements coding a given length.
+	 * @param length the length to be coded.
+	 * @return the number of elements coding <code>length</code>.
+	 */
+	private static int count( final int length ) {
+#if #keyclass(Integer) || #keyclass(Long)
+		return 1;
+#elif #keyclass(Character) || #keyclass(Short)
+		return length < ( 1 << 15 ) ? 1 : 2;
+#else
+		if ( length < ( 1 << 7 ) ) return 1;
+		if ( length < ( 1 << 14 ) ) return 2;
+		if ( length < ( 1 << 21 ) ) return 3;
+		if ( length < ( 1 << 28 ) ) return 4;
+		return 5;
+#endif
+	}
+
+	/** Writes a length.
+	 * @param a the data array.
+	 * @param length the length to be written.
+	 * @param pos the starting position.
+	 * @return the number of elements coding <code>length</code>.
+	 */
+	private static int writeInt( final KEY_TYPE a[], int length, int pos ) {
+#if #keyclass(Integer) || #keyclass(Long)
+		a[ pos ] = length;
+		return 1;
+#elif #keyclass(Character)
+		if ( length < ( 1 << 15 ) ) {
+			a[ pos ] = (char)length;
+			return 1;
+		}
+		else {
+			a[ pos++ ] =  (char)( length >>> 16 | 0x8000 );
+			a[ pos ] = (char)( length & 0xFFFF );
+			return 2;
+		}
+#elif #keyclass(Short)
+		if ( length < ( 1 << 15 ) ) {
+			a[ pos ] = (short)length;
+			return 1;
+		}
+		else {
+			a[ pos++ ] =  (short)( - ( length >>> 16 ) - 1 );
+			a[ pos ] = (short)( length & 0xFFFF );
+			return 2;
+		}
+#else
+		final int count = count( length );
+		a[ pos + count - 1 ] = (byte)( length & 0x7F );
+
+		if ( count != 1 ) {
+			int i = count - 1;
+			while( i-- != 0 ) {
+				length >>>= 7;
+				a[ pos + i ] = (byte)( - ( length  & 0x7F ) - 1 );
+			}
+		}
+
+		return count;
+#endif
+	}
+
+
+
+	/** Returns the ratio of this list.
+	 *
+	 * @return the ratio of this list.
+	 */
+
+	public int ratio() {
+		return ratio;
+	}
+
+	public Object get( int k ) {
+		if ( k < 0 || k >= n ) throw new IndexOutOfBoundsException( k + "" );
+
+		final KEY_TYPE[] array = this.array;
+		final int delta = k % ratio; // The index into the offset array, and the delta inside the block.
+		final int startPos = offset[ k / ratio ]; // The position into the array of the first entire word before the k-th.
+		int length = readInt( array, startPos );
+
+		if ( delta == 0 ) {
+			final KEY_TYPE a[] = new KEY_TYPE[ length ];
+			System.arraycopy( array, startPos + count( length ), a, 0, length );
+			return a;
+		}
+		
+		// First of all, we recover the array length and the maximum amount of copied elements.
+		int i, maxCopy, common, pos = startPos + count( length ) + length;
+		length = readInt( array, pos );
+		maxCopy = common = readInt( array, pos + count( length ) );
+
+		for( i = 0; i < delta - 1; i++ ) {
+			pos += count( length ) + count( common ) + length;
+			length = readInt( array, pos );
+			common = readInt( array, pos + count( length ) );
+			maxCopy = Math.max( maxCopy, common );
+		}
+
+		length += common;
+		maxCopy = Math.min( maxCopy, length );
+
+		// Now we rebuild the array.
+		final KEY_TYPE a[] = new KEY_TYPE[ length ];
+
+		length = readInt( array, startPos );
+		System.arraycopy( array, startPos + count( length ), a, 0, Math.min( length, maxCopy ) );
+
+		pos = startPos + count( length ) + length;
+		length = readInt( array, pos );
+		common = readInt( array, pos + count( length ) );
+		
+		for( i = 0; i < delta - 1; i++ ) {
+			if ( common < maxCopy ) System.arraycopy( array, pos + count( length ) + count( common ), a, common, maxCopy - common );
+			pos += count( length ) + count( common ) + length;
+			length = readInt( array, pos );
+			common = readInt( array, pos + count( length ) );
+		}
+		
+		if ( length != 0 ) System.arraycopy( array, pos + count( length ) + count( common ), a, common, length );
+		
+		return a;
+	}
+
+	public int size() {
+		return n;
+	}
+
+	public ObjectListIterator objectListIterator( final int start ) {
+		if ( start < 0 || start > n ) throw new IndexOutOfBoundsException( start + "" );
+
+		return new AbstractObjectListIterator() {
+				KEY_TYPE a[] = ARRAYS.EMPTY_ARRAY;
+				int i = 0, pos = 0;
+
+				{
+					if ( start != 0 ) {
+						pos = offset[ start / ratio ];
+						int j = start % ratio;
+						i = start - j;
+						while( j-- != 0 ) next();
+					}
+				}
+				
+				public boolean hasNext() {
+					return i < n;
+				}
+
+				public boolean hasPrevious() {
+					return i > 0;
+				}
+
+				public int previousIndex() {
+					return i - 1;
+				}
+
+				public int nextIndex() {
+					return i;
+				}
+				
+				public Object next() {
+					int length, common;
+
+					if ( ! hasNext() ) throw new NoSuchElementException();
+					length = readInt( array, pos );
+
+					if ( i % ratio == 0 ) {
+						a = ARRAYS.ensureCapacity( a, length, 0 );
+						System.arraycopy( array, pos + count( length ), a, 0, length );
+						pos += length + count( length );
+					}
+					else {
+						common = readInt( array, pos + count( length ) );
+						a = ARRAYS.ensureCapacity( a, length + common, common );
+						System.arraycopy( array, pos + count( length ) + count ( common ), a, common, length );
+						pos += count( length ) + count( common ) + length;
+						length += common;
+					}
+
+					i++;
+					return ARRAYS.copy( a, 0, length );
+				}
+
+				public Object previous() {
+					throw new UnsupportedOperationException();
+				}
+			};
+	}
+	
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+
+		// Rebuild offset array
+		final int[] offset = new int[ ( n + ratio - 1 ) / ratio ];
+		final KEY_TYPE a[] = array;
+		int i = 0, pos = 0, length, common;
+
+		for( i = 0; i < n; i++ ) {
+			length = readInt( a, pos );
+			if ( i % ratio == 0 ) {
+				offset[ i / ratio ] = pos;
+				pos += count( length ) + length;
+			}
+			else {
+				common = readInt( a, pos + count( length ) );
+				pos += count( length ) + count ( common ) + length;
+			}
+		}
+
+		this.offset = offset;
+	}
+}
+
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

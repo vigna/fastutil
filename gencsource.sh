@@ -90,8 +90,8 @@ echo -e \
 "#define SORTEDSET ${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define SORTEDSETS ${TYPE_CAP[$k]}SortedSets\n\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
+"#define FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n\n"\
 "#define LISTS ${TYPE_CAP[$k]}Lists\n\n"\
-"#define ARRAYS ${TYPE_CAP[$k]}Arrays\n\n"\
 \
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 "#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
@@ -139,6 +139,7 @@ echo -e \
 "#define STDSORTEDSET SortedSet\n\n"\
 "#define STDSORTEDMAP SortedMap\n\n"\
 "#define STDARRAYLIST ArrayList\n\n"\
+"#define ARRAYS ObjectArrays\n\n"\
 "#define STD_KEY_ITERATOR Iterator\n\n"\
 "#define STACK Stack\n\n"\
 "#define ABSTRACT_STACK AbstractStack\n\n"\
@@ -211,6 +212,7 @@ echo -e \
 "#define STDSORTEDSET SORTEDSET\n\n"\
 "#define STDSORTEDMAP SORTEDMAP\n\n"\
 "#define STDARRAYLIST ARRAY_LIST\n\n"\
+"#define ARRAYS ${TYPE_CAP[$k]}Arrays\n\n"\
 "#define KEY_EMPTY_SET ${TYPE_UC[$k]}_EMPTY_SET\n\n"\
 "#define KEY_EMPTY_LIST ${TYPE_UC[$k]}_EMPTY_LIST\n\n"\
 "#define KEY_EMPTY_ARRAY ${TYPE_UC[$k]}_EMPTY_ARRAY\n\n"\

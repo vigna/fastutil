@@ -206,9 +206,28 @@ public class Lists {
 		public void getElements( int from, double[] a, int offset, int length ) { if ( from == 0 && length == 0 && offset >= 0 && offset <= a.length ) return; else throw new IndexOutOfBoundsException(); }
 		public void getElements( int from, Object[] a, int offset, int length ) { if ( from == 0 && length == 0 && offset >= 0 && offset <= a.length ) return; else throw new IndexOutOfBoundsException(); }
 
-		public void removeElements( int from, int to ) { if ( from == 0 && from == to ) return; else throw new IndexOutOfBoundsException(); }
+		public void removeElements( int from, int to ) { throw new UnsupportedOperationException(); }
 
-		public void size( int s )  { if ( s != 0 ) throw new UnsupportedOperationException(); }
+		public void addElements( int index, final boolean a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final boolean a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final byte a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final byte a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final char a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final char a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final short a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final short a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final int a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final int a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final long a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final long a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final float a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final float a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final double a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final double a[] ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final Object a[], int offset, int length ) { throw new UnsupportedOperationException(); }
+		public void addElements( int index, final Object a[] ) { throw new UnsupportedOperationException(); }
+
+		public void size( int s )  { throw new UnsupportedOperationException(); }
 
 		public int compareTo( final Object o ) {
 			if ( o == this ) return 0;

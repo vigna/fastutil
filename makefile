@@ -243,6 +243,11 @@ $(ARRAY_LISTS): ArrayList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAY_LISTS)
 
+FRONT_CODED_LISTS := $(foreach k, Byte Short Int Long Char, $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
+$(FRONT_CODED_LISTS): ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(FRONT_CODED_LISTS)
+
 #
 # Static containers
 #
