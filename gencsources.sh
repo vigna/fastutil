@@ -63,7 +63,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define ENTRY_GET_KEY getKey\n"\
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
-"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (y) != null && (x).hashCode() == (y).hashCode() && (x).equals((y))))\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ((x) == (y) || ((y) != null && h == (y).hashCode() && (y).equals((x))))\n"\
+"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
@@ -82,10 +83,11 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
 "#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
 "#elif #keyclass(Boolean)\n"\
-"#define KEY2INT(x) (x ? 1 : 0)\n"\
+"#define KEY2INT(x) (x ? 1231 : 1237)\n"\
 "#else\n"\
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ((x) == (y))\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -187,7 +189,8 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define LAST last\n"\
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
-"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (y) != null && (x).hashCode() == (y).hashCode() && (x).equals((y))))\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ((x) == (y) || ((y) != null && h == (y).hashCode() && (y).equals((x))))\n"\
+"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -205,10 +208,11 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
 "#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
 "#elif #keyclass(Boolean)\n"\
-"#define KEY2INT(x) ((x) ? 1 : 0)\n"\
+"#define KEY2INT(x) ((x) ? 1231 : 1237)\n"\
 "#else\n"\
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ((x) == (y))\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#if #keyclass(Boolean)\n"\
