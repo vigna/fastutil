@@ -48,34 +48,92 @@
 	 
 	 <p>All maps and sets in <code>fastUtil</code> implement their standard
 	 counterpart interface (e.g., {@link java.util.Map} for maps). Thus, they
-	 can be just plugged in existing code, using the standard access (of course,
-	 any attempt to use the wrong type for keys or values will produce a {@link
-	 java.lang.ClassCastException}). However, they also provide (whenever
-	 possible) many polymorphic versions of the most used methods that allow to
-	 avoid the tedious "type juggling" that is well known to Java
+	 can be just plugged into existing code, using the standard access methods
+	 (of course, any attempt to use the wrong type for keys or values will
+	 produce a {@link java.lang.ClassCastException}). However, they also provide
+	 (whenever possible) many polymorphic versions of the most used methods that
+	 allow to avoid the tedious "type juggling" that is well known to Java
 	 programmers. In doing so, they implement more stringent interfaces that
 	 extend the standard ones (e.g., {@link
 	 it.unimi.dsi.fastUtil.Int2IntSortedMap} or {@link
 	 it.unimi.dsi.fastUtil.IntListIterator}.</p>
 	 
-	 <p>These new interfaces add some methods, which are rather obvious, and I
-	 suggest you to have a look at some of them. There are just a few
-	 <i>caveat</i>, mainly due to some arbitrary restriction of Java:
+	 <h3>Additional Features and Methods</h3>
+
+	 <p>The new interfaces add some very natural methods. Moreover, whenever
+	 possible, the object returned is type-specific, or even implements a more
+		powerful interface.
+
+	 <p>Due to some limitation of Java (you cannot override covariantly the
+	 return value of an interface, i.e., with a method returning a more
+	 type-specific value), however, sometimes these features
+	 are available only by means of type casting.
+
+	 <P>More in detail:
+	 <UL>
+		
+		<LI>Keys and values of a map are of the <code>fastUtil</code> type you
+		would expect (e.g., the keys of an {@link
+		it.unimi.dsi.fastUtil.Int2LongSortedMap} are an {@link
+		it.unimi.dsi.fastUtil.IntSortedSet} and the values are a {@link
+		it.unimi.dsi.fastUtil.LongCollection}), but you must explicitly cast the
+		objects returned by {@link java.util.Map#keySet()} and {@link
+		java.util.Map#values()} to the appropriate type.
+
+		<LI>Submaps of a sorted map and subsets of a sorted sets are of the
+		<code>fastUtil</code> type you would expect, too. The standard
+		constructors return a {@link java.util.SortedMap} or a {@link
+		java.util.SortedSet}, respectively, which of course can be safely cast to
+		the right type-specific interface. However, if you use extended
+		interfaces and keys are not objects, then there are new methods accepting
+		primitive keys and returning a type-specific sorted structure directly
+		(see, e.g., {@link it.unimi.dsi.fastUtil.Int2IntSortedMap}).
+
+		<LI>Iterators returned by {@link java.util.Set#iterator()} can be cast to
+		the obvious type (e.g., {@link it.unimi.dsi.fastUtil.CharIterator} for a
+		{@link it.unimi.dsi.fastUtil.CharSet}), too.
+
+		<LI>Sorted structures in <code>fastUtil</code> return type-specific
+		{@link java.util.ListIterator}s. This means that you can move back and
+		forth among entries, keys or values. Again, you must manually cast the
+		result of a call to <code>iterator()</code> to {@link
+		java.util.ListIterator} or, even better, to a type-specific list iterator
+		such as {@link it.unimi.dsi.fastUtil.IntListIterator}.
+
+		<LI>Finally, there are constructors that allows you to build easily a set
+		from an array. This means, for instance, that you can create quickly a
+		set of strings with a statement like
+		  <blockquote>
+			 <code>new ObjectHashSet(new String[] { "foo", "bar" })</code>
+		  </blockquote>
+
+	 </UL>
+
+
+	 <P>There are a few quirks, however, that you should be aware of:
 
 	 <ul>
-		
+
 		<li>The versions of the {@link java.util.Map#get(Object)}, {@link
 		java.util.Map#put(Object,Object)} and {@link
 		java.util.Map#remove(Object)} methods that return a primitive type
 		cannot, of course, rely on returning <code>null</code> to denote the
 		absence of a certain pair. Rather, they return a <em>default return
 		value</em>, which is set to 0 cast to the return type(or
-		<code>false</code> for booleans) at creation, but can be changed using
-		the <code>setDefRetValue()</code> method. Note that changing the default
-		return value does not change anything about the data structure; it is
-		just a way to return a reasonably meaningful result, and it can be
-		changed at any time. As a commodity, even maps returning objects can use
-		<code>setDefRetValue()</code> to change their default return value.</li>
+		<code>false</code> for booleans and <code>null</code> for objects) at
+		creation, but can be changed using the <code>setDefRetValue()</code>
+		method. Note that changing the default return value does not change
+		anything about the data structure; it is just a way to return a
+		reasonably meaningful result&mdash;it can be changed at any time. As a
+		commodity, even maps and sets returning objects can use
+		<code>setDefRetValue()</code>. A submap or subset has an independent
+		default return value (which however is initialised to the default return
+		value of the originator).</li>
+
+		<LI>Similarly, all iterators have a suitable method
+		<code>next<var>type</var>()</code> returning directly a primitive type.
+		And, of course, you have a type-specific version of {@link
+		java.util.ListIterator#previous()}.
 
 		<li>For all maps that have object as keys, the {@link
 		java.util.Map#get(Object)} and {@link java.util.Map#remove(Object)}
@@ -83,54 +141,14 @@
 		return-value polymorphism. Rather, the extended interfaces introduce new
 		methods of the form <code>get<var>valuetype</var>()</code> and
 		<code>remove<var>valuetype</var>()</code>. Similar problems occur with
-		<code>firstKey()</code>, <code>lastKey()</code> and so on.
+		<code>firstKey()</code>, <code>lastKey()</code> and so on.</li>
 
 		<li>For the same reason, the method {@link java.util.Collection#toArray}
 		has a polymorphic version accepting a type-specific array, but there are
-		also explicitly typed methods <code>to<var>keytype</var>Array()</code>.
+		also explicitly typed methods
+		<code>to<var>keytype</var>Array()</code>.</li>
 
 	 </ul>
-
-	 <h3>Additional Methods</h3>
- 
-	 <p>Again, due to some limitation of Java (you cannot override covariantly
-	 the return value of an interface, i.e., with a method returning a more
-	 type-specific value) there are some features of <code>fastUtil</code> that
-	 are available only by means of type casting. In particular, keys and values
-	 of a map are of the <code>fastUtil</code> type you expect (e.g., the keys
-	 of an {@link it.unimi.dsi.fastUtil.Int2LongSortedMap} are an {@link
-	 it.unimi.dsi.fastUtil.IntSortedSet} and the values are a {@link
-	 it.unimi.dsi.fastUtil.LongCollection}), but you must explicitly cast the
-	 objects returned by {@link java.util.Map#keySet()} and {@link
-	 java.util.Map#values()} to the appropriate type. 
-
-	 <P>Analogously, the standard version of the submap constructors of the
-	 classes specialising tree maps returns a {@link java.util.SortedMap}, which
-	 of course can be safely cast to the right type-specific interface. However,
-	 if you use extended interfaces and keys are not objects, then there are new
-	 methods accepting primitive keys and returning a type-specific sorted submap
-	 directly.
-
-	 <p>Similarly, all iterators have a suitable method
-	 <code>next<var>type</var>()</code> returning directly a primitive type:
-	 however, you must cast explicitly the object returned by {@link
-	 java.util.Set#iterator()} to the appropriate type (e.g., {@link
-	 it.unimi.dsi.fastUtil.CharIterator} for a {@link
-	 it.unimi.dsi.fastUtil.CharSet}).
-
-	 <p>Sorted maps in <code>fastUtil</code> return type-specific {@link
-	 java.util.ListIterator}s. This means that you can move back and forth among
-	 entries, keys or values. Again, you must manually cast the result of a call
-	 to <code>iterator()</code> to the right type-specific {@link
-	 java.util.ListIterator}. And, of course, you have a type-specific
-	 version of {@link java.util.ListIterator#previous()}.
-
-	 <p>Finally, there are constructors that allows you to build easily a set
-	 from an array. This means, for instance, that you can create quickly a set
-	 of strings with a statement like 
-					 <blockquote>
-					 <code>new ObjectHashSet(new String[] { "foo", "bar" })</code>
-					 </blockquote>
 
 	
 	 <h2>Performance</h2>
@@ -146,7 +164,7 @@
 	 objects. First of all, if you use the polymorphic methods and iterators no
 	 wrapper objects have to be created. Moreover, since <code>fastUtil</code>
 	 uses open-addressing hashing techniques, creation and garbage collection of
-	 table entries are avoided (but tables have to be rehashed whenever they are
+	 hash-table entries are avoided (but tables have to be rehashed whenever they are
 	 filled beyond the load factor).
 
     <p>Whenever possible, <code>fastUtil</code> tries to gain some speed by
@@ -158,16 +176,17 @@
 
 	 <h3>Deletions in Hash Tables</h3>
 
-	 <p>Since deletions are handled simply by tagging, they are very fast <i>per
-	 se</i>, but they tend to slow down subsequent accesses (with respect to a
-	 set with no deleted entries). In highly dynamical situations, where entries
-	 are continuously created and deleted, unsuccessful searches may take linear
-	 time (as <em>all</em> entries must be probed).
+	 <p>Since deletions in hash tables are handled simply by tagging, they are
+	 very fast <i>per se</i>, but they tend to slow down subsequent accesses
+	 (with respect to a table with no deleted entries). In highly dynamical
+	 situations, where entries are continuously created and deleted,
+	 unsuccessful searches may take linear time (as <em>all</em> entries must be
+	 probed).
 
 	 <p>A partial solution to this problem (which has no known complete solution
 	 if you use open addressing with double hashing&mdash;cfr. Knuth's
-	 section on hashing in the third volume of <em>The Art of Computer
-	 Programming</em>) is to call the <code>rehash()</code> method, which will
+	 section on hashing in the third volume of <i>The Art of Computer
+	 Programming</i>) is to call the <code>rehash()</code> method, which will
 	 try to rebuild the table remapping all keys.
 
 	 <p>In other words, if your application requires inextricably interleaved
@@ -183,7 +202,7 @@
 
 	 <h3>Hash Tables</h3>
 
-	 <p>To avoid memory waste, the classes in <code>fastUtil</code> keep no
+	 <p>To avoid memory waste, the hash tables in <code>fastUtil</code> keep no
 	 additional information about elements (such as a list of keys). In
 	 particular, this means that enumerations are always linear in the size of
 	 the table (rather than in the number of keys). In general, this would imply
@@ -201,13 +220,13 @@
 	 your virtual machine, JVM versions, CPU etc.
 
 	 <p>More precisely, when you ask for a map that will hold <var>n</var>
-	 elements with load factor 0&lt;<var>f</var>&le;1, <var>p</var> entries are
+	 elements with load factor 0&nbsp;&lt;&nbsp;<var>f</var>&nbsp;&le;&nbsp;1, <var>p</var> entries are
 	 allocated, where <var>p</var> is first prime in {@link
 	 it.unimi.dsi.fastUtil.Hash#primes} larger than
-	 <var>n</var>/<var>f</var>. Primes in {@link
+	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. Primes in {@link
 	 it.unimi.dsi.fastUtil.Hash#primes} are roughly multiplicatively spaced by
 	 2<sup>1/16</sup>, so you lose on average about 2% with respect to
-	 <var>n</var>/<var>f</var>. When the table is filled up beyond the load
+	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. When the table is filled up beyond the load
 	 factor, it is rehashed to a roughly doubled size.
 
 	 <p>An important downside of this design is that <em>hash codes are not
@@ -224,10 +243,14 @@
 	 Springer-Verlag, 1993, and combines it with <em>threads</em>. As a result,
 	 the overhead per entry is two pointers and one integer, which compares well
 	 to three pointers plus one boolean of the standard tree maps. The trick is
-	 that Andersson's code requires just <i>o</i>(log log <var>n</var> per entry
-	 to store level information, so we can use a couple of bits to store thread
-	 information in each entry. As a result, we get bidirectional iterators in
-	 constant space and amortised constant time.
+	 that Andersson's code requires just <i>o</i>(log log <var>n</var>) bits per
+	 entry to store level information, so we can safely use a couple of other
+	 bits to store thread information in each entry, and still fit into an
+	 integer. As a result, we get bidirectional iterators in constant space and
+	 amortised constant time without having to store references to parent nodes
+	 (red-black trees are very nice in theory, but I know no language that
+	 allows one to store <em>exactly one</em> bit in a data structure, without
+	 alignment losses).
 
 
 	 <h2>Robustness</h2>
