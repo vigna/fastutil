@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with lists.
+/** A class providing static methods and objects that do useful things with lists.
  *
  * @see Lists
  */
@@ -48,14 +48,19 @@ public class Lists {
 
 	private Lists() {}
 
+	/** An immutable class representing the empty list and implementing all type-specific list interfaces.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific list.
+	 */
 
-	protected static class EmptyList extends Collections.EmptyCollection implements 
+	public static class EmptyList extends Collections.EmptyCollection implements 
 	   BooleanList, ByteList, ShortList, IntList, LongList, CharList,
 	   FloatList, DoubleList, ObjectList, ReferenceList, java.io.Serializable, Cloneable {
 		
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		private EmptyList() {}
+		protected EmptyList() {}
 
 		public boolean add( Object k ) { throw new UnsupportedOperationException(); }
 		public boolean remove( Object k ) { throw new UnsupportedOperationException(); }
@@ -244,7 +249,7 @@ public class Lists {
 	 *
 	 * <P>The class of this objects represent an abstract empty list
 	 * that is a sublist of any type of list. Thus, {@link #EMPTY_LIST}
-	 * may be assigned a variable of any (sorted) type-specific list.
+	 * may be assigned to a variable of any (sorted) type-specific list.
 	 */
 
 	public static final EmptyList EMPTY_LIST = new EmptyList();

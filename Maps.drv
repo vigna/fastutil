@@ -45,8 +45,9 @@ import java.util.SortedSet;
 import java.util.SortedMap;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with type-specific maps.
+/** A class providing static methods and objects that do useful things with type-specific maps.
  *
+ * @see it.unimi.dsi.fastutil.Maps
  * @see java.util.Collections
  */
 
@@ -55,9 +56,13 @@ public class MAPS {
 	private MAPS() {}
 
 
-	/** A class representing an empty map. */
+	/** An immutable class representing an empty type-specific map.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific map.
+	 */
 
-	protected static class EmptyMap extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
+	public static class EmptyMap extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
@@ -111,9 +116,13 @@ public class MAPS {
 	public static final EmptyMap EMPTY_MAP = new EmptyMap();
 
 
-	/** An immutable class representing a type-specific singleton map. */
+	/** An immutable class representing a type-specific singleton map.	 
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific map.
+	 */
 
-	protected static class Singleton extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
+	public static class Singleton extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
@@ -202,7 +211,9 @@ public class MAPS {
 #endif
 
 
-	protected static class SynchronizedMap extends ABSTRACT_MAP implements MAP, java.io.Serializable {
+	/** A synchronized wrapper class for maps. */
+
+	public static class SynchronizedMap extends ABSTRACT_MAP implements MAP, java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
@@ -212,13 +223,13 @@ public class MAPS {
 		protected transient volatile Set entries, keys;
 		protected transient volatile Collection values;
 
-		SynchronizedMap( final MAP m, final Object sync ) {
+		protected SynchronizedMap( final MAP m, final Object sync ) {
 			if ( m == null ) throw new NullPointerException();
 			this.map = m;
 			this.sync = sync;
 		}
 
-		SynchronizedMap( final MAP m ) {
+		protected SynchronizedMap( final MAP m ) {
 			if ( m == null ) throw new NullPointerException();
 			this.map = m;
 			this.sync = this;
@@ -266,7 +277,7 @@ public class MAPS {
 
 	}
 
-	/** Returns a synchronized type-specific map backed by the specified type-specific map.
+	/** Returns a synchronized type-specific map backed by the given type-specific map.
 	 *
 	 * @param m the map to be wrapped in a synchronized map.
 	 * @return a synchronized view of the specified map.
@@ -274,7 +285,7 @@ public class MAPS {
 	 */
 	public static MAP synchronize( final MAP m ) { return new SynchronizedMap( m ); }
 
-	/** Returns a synchronized type-specific map backed by the specified type-specific map, using an assigned object to synchronize.
+	/** Returns a synchronized type-specific map backed by the given type-specific map, using an assigned object to synchronize.
 	 *
 	 * @param m the map to be wrapped in a synchronized map.
 	 * @param sync an object that will be used to synchronize the access to the map.

@@ -36,7 +36,7 @@ import it.unimi.dsi.fastutil.objects.AbstractObjectListIterator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with iterators.
+/** A class providing static methods and objects that do useful things with iterators.
  *
  * @see Iterator
  */
@@ -44,15 +44,21 @@ import java.util.NoSuchElementException;
 public class Iterators {
 
 	private Iterators() {}
+
+	/** A class returning no elements and implementing all type-specific iterator interfaces.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific iterator.
+	 */
 	
-	protected static class EmptyIterator extends AbstractObjectListIterator implements 
+	public static class EmptyIterator extends AbstractObjectListIterator implements 
 		BooleanListIterator, ByteListIterator, ShortListIterator, IntListIterator,
 		LongListIterator, CharListIterator, FloatListIterator, DoubleListIterator,
 		ObjectListIterator {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		private EmptyIterator() {}
+		protected EmptyIterator() {}
 
 		public boolean hasNext() { return false; }
 		public boolean hasPrevious() { return false; }

@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with sets.
+/** A class providing static methods and objects that do useful things with sets.
  *
  * @see Collections
  */
@@ -50,13 +50,19 @@ public class Sets {
 
 	private Sets() {}
 
-	protected static class EmptySet extends Collections.EmptyCollection implements 
+	/** An immutable class representing the empty (sorted) set and implementing all type-specific set interfaces.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific set.
+	 */
+
+	public static class EmptySet extends Collections.EmptyCollection implements 
 	   BooleanSet, ByteSortedSet, ShortSortedSet, IntSortedSet, LongSortedSet, CharSortedSet,
 	   FloatSortedSet, DoubleSortedSet, ObjectSortedSet, ReferenceSortedSet, java.io.Serializable, Cloneable {
 		
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		private EmptySet() {}
+		protected EmptySet() {}
 
 		public boolean remove( Object ok ) { throw new UnsupportedOperationException(); }
 
@@ -147,7 +153,7 @@ public class Sets {
 	 *
 	 * <P>The class of this objects represent an abstract empty set
 	 * that is a subset of any type of set. Thus, {@link #EMPTY_SET}
-	 * may be assigned a variable of any (sorted) type-specific set.
+	 * may be assigned to a variable of any (sorted) type-specific set.
 	 */
 
 	public static final EmptySet EMPTY_SET = new EmptySet();

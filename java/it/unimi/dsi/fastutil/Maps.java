@@ -21,7 +21,7 @@
 
 package it.unimi.dsi.fastutil;
 
-/** A class providing static methods that do useful things with maps.
+/** A class providing static methods and objects that do useful things with maps.
  *
  * @see Collections
  */

@@ -1,0 +1,96 @@
+/*		 
+ * fastutil: Fast & compact type-specific collections for Java
+ *
+ * Copyright (C) 2003 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+import it.unimi.dsi.fastutil.PriorityQueue;
+
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+
+/** A class providing static methods and objects that do useful things with type-specific priority queues.
+ *
+ * @see it.unimi.dsi.fastutil.PriorityQueues
+ */
+
+public class PRIORITY_QUEUES {
+
+	private PRIORITY_QUEUES() {}
+
+	/** A synchronized wrapper class for priority queues. */
+
+	public static class SynchronizedPriorityQueue implements PRIORITY_QUEUE {
+		
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		final protected PRIORITY_QUEUE q;
+		final protected Object sync;
+
+		protected SynchronizedPriorityQueue( final PRIORITY_QUEUE q, final Object sync ) {
+			this.q = q;
+			this.sync = sync;
+		}
+
+		protected SynchronizedPriorityQueue( final PRIORITY_QUEUE q ) {
+			this.q = q;
+			this.sync = this;
+		}
+
+		public void enqueue( KEY_TYPE x ) { synchronized( sync ) { q.enqueue( x ); } }
+		public KEY_TYPE DEQUEUE() { synchronized( sync ) { return q.DEQUEUE(); } }
+		public KEY_TYPE FIRST() { synchronized( sync ) { return q.FIRST(); } }
+		public KEY_TYPE LAST() { synchronized( sync ) { return q.LAST(); } }
+		public boolean isEmpty() { synchronized( sync ) { return q.isEmpty(); } }
+		public int size() { synchronized( sync ) { return q.size(); } }
+		public void clear() { synchronized( sync ) { q.clear(); } }
+		public void changed() { synchronized( sync ) { q.changed(); } }
+		public Comparator comparator() { synchronized( sync ) { return q.comparator(); } }
+#if !#keyclass(Object)
+		public void enqueue( Object x ) { synchronized( sync ) { q.enqueue( x ); } }
+		public Object dequeue() { synchronized( sync ) { return q.dequeue(); } }
+		public Object first() { synchronized( sync ) { return q.first(); } }
+		public Object last() { synchronized( sync ) { return q.last(); } }
+
+#endif
+	}
+
+
+	/** Returns a synchronized type-specific priority queue backed by the specified type-specific priority queue.
+	 *
+	 * @param q the priority queue to be wrapped in a synchronized priority queue.
+	 * @return a synchronized view of the specified priority queue.
+	 */
+	public static PRIORITY_QUEUE synchronize( final PRIORITY_QUEUE q ) {	return new SynchronizedPriorityQueue( q ); }
+
+	/** Returns a synchronized type-specific priority queue backed by the specified type-specific priority queue, using an assigned object to synchronize.
+	 *
+	 * @param q the priority queue to be wrapped in a synchronized priority queue.
+	 * @param sync an object that will be used to synchronize the access to the priority queue.
+	 * @return a synchronized view of the specified priority queue.
+	 */
+
+	public static PRIORITY_QUEUE synchronize( final PRIORITY_QUEUE q, final Object sync ) { return new SynchronizedPriorityQueue( q, sync ); }
+}
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

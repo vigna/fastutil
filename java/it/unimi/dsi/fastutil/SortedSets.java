@@ -21,7 +21,7 @@
 
 package it.unimi.dsi.fastutil;
 
-/** A class providing static methods that do useful things with sorted sets.
+/** A class providing static methods and objects that do useful things with sorted sets.
  *
  * @see java.util.Collections
  */
@@ -34,7 +34,7 @@ public class SortedSets {
 	 *
 	 * <P>The class of this objects represent an abstract empty sorted set
 	 * that is a subset of any type of sorted set. Thus, {@link #EMPTY_SET}
-	 * may be assigned a variable of any (sorted) type-specific set.
+	 * may be assigned to a variable of any (sorted) type-specific set.
 	 *
 	 * <P>Note that this is just a useful copy of {@link Sets#EMPTY_SET}.
 	 */

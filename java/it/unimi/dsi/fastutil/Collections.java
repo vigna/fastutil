@@ -37,7 +37,7 @@ import java.util.Iterator;
 import it.unimi.dsi.fastutil.Iterators;
 
 
-/** A class providing static methods that do useful things with collections.
+/** A class providing static methods and objects that do useful things with collections.
  *
  * @see Collections
  */
@@ -46,7 +46,13 @@ public class Collections {
 
 	private Collections() {}
 
-	protected abstract static class EmptyCollection extends AbstractObjectCollection implements 
+	/** An immutable class representing an empty collection and implementing all type-specific collection interfaces.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific collection.
+	 */
+
+	public abstract static class EmptyCollection extends AbstractObjectCollection implements 
 	   BooleanCollection, ByteCollection, ShortCollection, IntCollection, LongCollection, CharCollection,
 	   FloatCollection, DoubleCollection, ObjectCollection, ReferenceCollection {
 		

@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with arrays.
+/** A class providing static methods and objects that do useful things with arrays.
  *
  * @see Arrays
  */

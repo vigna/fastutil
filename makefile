@@ -343,6 +343,12 @@ $(ARRAYS_STATIC): Arrays.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ARRAYS_STATIC)
 
 
+PRIORITY_QUEUES_STATIC := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)PriorityQueues.c)
+$(PRIORITY_QUEUES_STATIC): PriorityQueues.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(PRIORITY_QUEUES_STATIC)
+
+
 HEAPS_STATIC := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Heaps.c)
 $(HEAPS_STATIC): Heaps.drv; ./gencsource.sh $< $@ >$@
 
@@ -397,6 +403,9 @@ SOURCES = \
 	$(SOURCEDIR)/SortedSets.java \
 	$(SOURCEDIR)/Lists.java \
 	$(SOURCEDIR)/Arrays.java \
+	$(SOURCEDIR)/PriorityQueues.java \
+	$(SOURCEDIR)/IndirectPriorityQueues.java \
+	$(SOURCEDIR)/DoubleIndirectPriorityQueues.java \
 	$(SOURCEDIR)/AbstractPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java \

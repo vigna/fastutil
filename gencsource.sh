@@ -169,6 +169,7 @@ echo -e \
 \
 \
 "#define VALUE_ABSTRACT_COLLECTION Abstract${TYPE_CAP[$v]}Collection\n\n"\
+"#define VALUE_ABSTRACT_ITERATOR Abstract${TYPE_CAP2[$v]}Iterator\n\n"\
 \
 \
 "/* Static containers (keys) */\n"\
@@ -180,6 +181,7 @@ echo -e \
 "#define LISTS ${TYPE_CAP[$k]}Lists\n\n"\
 "#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
 "#define SORTED_MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMaps\n"\
+"#define PRIORITY_QUEUES ${TYPE_CAP2[$k]}PriorityQueues\n\n"\
 "#define HEAPS ${TYPE_CAP2[$k]}Heaps\n\n"\
 "#define SEMI_INDIRECT_HEAPS ${TYPE_CAP2[$k]}SemiIndirectHeaps\n\n"\
 "#define INDIRECT_HEAPS ${TYPE_CAP2[$k]}IndirectHeaps\n\n"\

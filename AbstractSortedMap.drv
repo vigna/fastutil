@@ -21,7 +21,11 @@
 
 package PACKAGE;
 
+import it.unimi.dsi.fastutil.BidirectionalIterator;
+import java.util.Set;
+import java.util.Comparator;
 import java.util.SortedMap;
+import java.util.SortedSet;
 
 /** An abstract class providing basic methods for sorted maps implementing a type-specific interface.
  *
@@ -54,6 +58,57 @@ public abstract class ABSTRACT_SORTED_MAP extends ABSTRACT_MAP implements SORTED
 	/** Delegates to the corresponding type-specific method. */
 	public Object lastKey() {
 		return KEY2OBJ( LAST_KEY() );
+	}
+
+
+
+	/** Returns a type-specific-sorted-set view of the keys of this map.
+	 *
+	 * <P>The view is backed by the sorted set returned by {@link #entrySet()}. Note that
+	 * <em>no attempt is made at caching the result of this method</em>, as this would
+	 * require adding some attributes that lightweight implementations would
+	 * not need. Subclasses may easily override this policy by calling
+	 * this method and caching the result, but implementors are encouraged to
+	 * write more efficient ad-hoc implementations.
+	 *
+	 * @return a sorted set view of the keys of this map; it may be safely cast to a type-specific interface.
+	 */
+
+
+	public Set keySet() {
+		return new ABSTRACT_SORTED_SET() {
+
+				public boolean contains( final KEY_TYPE k ) { return containsKey( k ); }
+
+				public int size() { return ABSTRACT_SORTED_MAP.this.size(); }
+
+				public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+					return new KEY_ABSTRACT_BIDI_ITERATOR() {
+							final BidirectionalIterator i = (BidirectionalIterator)entrySet().iterator();
+
+							public KEY_TYPE NEXT_KEY() { return ((MAP.Entry)i.next()).ENTRY_GET_KEY(); };
+
+							public KEY_TYPE PREV_KEY() { return ((MAP.Entry)i.previous()).ENTRY_GET_KEY(); };
+
+							public boolean hasNext() { return i.hasNext(); }
+
+							public boolean hasPrevious() { return i.hasPrevious(); }
+						};
+				}
+
+
+				public Comparator comparator() { return ABSTRACT_SORTED_MAP.this.comparator(); }
+
+				public KEY_TYPE FIRST() { return ABSTRACT_SORTED_MAP.this.FIRST_KEY(); }
+
+				public KEY_TYPE LAST() { return ABSTRACT_SORTED_MAP.this.LAST_KEY(); }
+
+				public STD_SORTED_SET headSet( final KEY_TYPE to  ) { return (STD_SORTED_SET)ABSTRACT_SORTED_MAP.this.headMap( to ).keySet(); }
+
+				public STD_SORTED_SET tailSet( final KEY_TYPE from ) { return  (STD_SORTED_SET)ABSTRACT_SORTED_MAP.this.tailMap( from ).keySet(); }
+
+				public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (STD_SORTED_SET)ABSTRACT_SORTED_MAP.this.subMap( from, to ).keySet(); }
+			};
 	}
 
 }

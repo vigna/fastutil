@@ -33,7 +33,7 @@ import java.util.SortedSet;
 import java.util.SortedMap;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with type-specific sorted maps.
+/** A class providing static methods and objects that do useful things with type-specific sorted maps.
  *
  * @see java.util.Collections
  */
@@ -43,9 +43,13 @@ public class SORTED_MAPS {
 	private SORTED_MAPS() {}
 
 
-	/** A class representing an empty sorted map. */
+	/** An immutable class representing an empty type-specific sorted map. 
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific sorted map.
+	 */
 
-	protected static class EmptySortedMap extends MAPS.EmptyMap implements SORTED_MAP, java.io.Serializable, Cloneable {
+	public static class EmptySortedMap extends MAPS.EmptyMap implements SORTED_MAP, java.io.Serializable, Cloneable {
 		
 		public static final long serialVersionUID = -7046029254386353129L;
 		
@@ -78,20 +82,24 @@ public class SORTED_MAPS {
 	public static final EmptySortedMap EMPTY_MAP = new EmptySortedMap();
 
 
-	/** An immutable class representing a type-specific singleton sorted map. */
+	/** An immutable class representing a type-specific singleton sorted map. 
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific sorted map.
+	 */
 
-	protected static class Singleton extends MAPS.Singleton implements SORTED_MAP, java.io.Serializable, Cloneable {
+	public static class Singleton extends MAPS.Singleton implements SORTED_MAP, java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
-		final KEY_COMPARATOR comparator;
+		protected final KEY_COMPARATOR comparator;
 
 		protected Singleton( final KEY_TYPE key, final VALUE_TYPE value, KEY_COMPARATOR comparator ) {
 			super( key, value );
 			this.comparator = comparator;
 		}
 
-		private Singleton( final KEY_TYPE key, final VALUE_TYPE value ) {
+		protected Singleton( final KEY_TYPE key, final VALUE_TYPE value ) {
 			this( key, value, null );
 		}
 
@@ -179,19 +187,20 @@ public class SORTED_MAPS {
 #endif
 
 
-	protected static class SynchronizedSortedMap extends MAPS.SynchronizedMap implements SORTED_MAP, java.io.Serializable {
+		/** A synchronized wrapper class for sorted maps. */
+
+	public static class SynchronizedSortedMap extends MAPS.SynchronizedMap implements SORTED_MAP, java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		SORTED_MAP sortedMap;
-		Object sync;
+		protected final SORTED_MAP sortedMap;
 
-		SynchronizedSortedMap( final SORTED_MAP m, final Object sync ) {
+		protected SynchronizedSortedMap( final SORTED_MAP m, final Object sync ) {
 			super( m, sync );
 			sortedMap = m;
 		}
 
-		SynchronizedSortedMap( final SORTED_MAP m ) {
+		protected SynchronizedSortedMap( final SORTED_MAP m ) {
 			super( m );
 			sortedMap = m;
 		}
@@ -217,7 +226,7 @@ public class SORTED_MAPS {
 
 	}
 
-	/** Returns a synchronized type-specific sorted map backed by the specified type-specific sorted map.
+	/** Returns a synchronized type-specific sorted map backed by the given type-specific sorted map.
 	 *
 	 * @param m the sorted map to be wrapped in a synchronized sorted map.
 	 * @return a synchronized view of the specified sorted map.
@@ -225,7 +234,7 @@ public class SORTED_MAPS {
 	 */
 	public static SORTED_MAP synchronize( final SORTED_MAP m ) { return new SynchronizedSortedMap( m ); }
 
-	/** Returns a synchronized type-specific sorted map backed by the specified type-specific sorted map, using an assigned object to synchronize.
+	/** Returns a synchronized type-specific sorted map backed by the given type-specific sorted map, using an assigned object to synchronize.
 	 *
 	 * @param m the sorted map to be wrapped in a synchronized sorted map.
 	 * @param sync an object that will be used to synchronize the access to the sorted sorted map.
