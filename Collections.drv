@@ -76,8 +76,8 @@ public class COLLECTIONS {
 		public boolean removeAll( final Collection c ) { synchronized( sync ) { return collection.removeAll( c ); } }
 		public boolean retainAll( final Collection c ) { synchronized( sync ) { return collection.retainAll( c ); } }
 
-		public boolean containsAll( final COLLECTION c ) { synchronized( sync ) { return collection.containsAll( c ); } }
 		public boolean addAll( final COLLECTION c ) { synchronized( sync ) { return collection.addAll( c ); } }
+		public boolean containsAll( final COLLECTION c ) { synchronized( sync ) { return collection.containsAll( c ); } }
 		public boolean removeAll( final COLLECTION c ) { synchronized( sync ) { return collection.removeAll( c ); } }
 		public boolean retainAll( final COLLECTION c ) { synchronized( sync ) { return collection.retainAll( c ); } }
 
@@ -100,7 +100,7 @@ public class COLLECTIONS {
 	 * @return a synchronized view of the specified collection.
 	 * @see java.util.Collections#synchronizedCollection(Collection)
 	 */
-	public static COLLECTION synchronize( final COLLECTION c ) {	return new SynchronizedCollection( c ); }
+	public static COLLECTION synchronize( final COLLECTION c ) { return new SynchronizedCollection( c ); }
 
 	/** Returns a synchronized collection backed by the specified collection, using an assigned object to synchronize.
 	 *
@@ -113,7 +113,64 @@ public class COLLECTIONS {
 	public static COLLECTION synchronize( final COLLECTION c, final Object sync ) { return new SynchronizedCollection( c, sync ); }
 
 
-	
+	/** An unmodifiable wrapper class for collections. */
+
+	public static class UnmodifiableCollection implements COLLECTION, java.io.Serializable {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		protected final COLLECTION collection;
+
+		protected UnmodifiableCollection( final COLLECTION c ) {
+			if ( c == null ) throw new NullPointerException();
+			this.collection = c;
+		}
+
+		public int size() { return collection.size(); }
+		public boolean isEmpty() { return collection.isEmpty(); }
+		public boolean contains( final KEY_TYPE o ) { return collection.contains( o ); }
+
+		public KEY_TYPE[] TO_KEY_ARRAY() { return collection.TO_KEY_ARRAY(); }
+		public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE[] a ) { return collection.TO_KEY_ARRAY( a ); }
+
+		// TODO: make iterator unmodifiable.
+		public Iterator iterator() { return ITERATORS.unmodifiable( (KEY_ITERATOR)collection.iterator() ); }
+		public KEY_ITERATOR KEY_ITERATOR_METHOD() { return ITERATORS.unmodifiable( collection.KEY_ITERATOR_METHOD() ); }
+
+		public boolean add( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		public boolean rem( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		public boolean remove( final Object ok ) { throw new UnsupportedOperationException(); }
+
+		public boolean addAll( final Collection c ) { throw new UnsupportedOperationException(); }
+		public boolean containsAll( final Collection c ) { return collection.containsAll( c ); }
+		public boolean removeAll( final Collection c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( final Collection c ) { throw new UnsupportedOperationException(); }
+
+		public boolean addAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+		public boolean containsAll( final COLLECTION c ) { return collection.containsAll( c ); }
+		public boolean removeAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+
+		public void clear() { throw new UnsupportedOperationException(); }
+		public String toString() { return collection.toString(); }
+
+#if !#keyclass( Object ) && !#keyclass( Reference )
+		public boolean add( final Object k ) { throw new UnsupportedOperationException(); }
+		public boolean contains( final Object k ) { return collection.contains( k ); }
+		public Object[] toArray() { return collection.toArray(); }
+		public Object[] toArray( final Object[] a ) { return collection.toArray( a ); }
+		public KEY_TYPE[] toArray( final KEY_TYPE[] a ) { return collection.TO_KEY_ARRAY( a ); }
+#endif
+	}
+
+
+	/** Returns an unmodifiable collection backed by the specified collection.
+	 *
+	 * @param c the collection to be wrapped in an unmodifiable collection.
+	 * @return an unmodifiable view of the specified collection.
+	 * @see java.util.Collections#unmodifiableCollection(Collection)
+	 */
+	public static COLLECTION unmodifiable( final COLLECTION c ) { return new UnmodifiableCollection( c ); }
 }
 
 // Local Variables:

@@ -248,6 +248,7 @@ public class MAPS {
 		public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) { synchronized( sync ) { return map.put( k, v ); } }
 
 		public void putAll( final MAP c ) { synchronized( sync ) { map.putAll( c ); } }
+		public void putAll( final Map m ) { synchronized( sync ) { map.putAll( m ); } }
 
 		public Set entrySet() { if ( entries == null ) entries = ObjectSets.synchronize( (ObjectSet)map.entrySet(), sync ); return entries; }
 		public Set keySet() { if ( keys == null ) keys = SETS.synchronize( (SET)map.keySet(), sync ); return keys; }
@@ -294,6 +295,75 @@ public class MAPS {
 	 */
 
 	public static MAP synchronize( final MAP m, final Object sync ) { return new SynchronizedMap( m, sync ); }
+
+
+
+	/** An unmodifiable wrapper class for maps. */
+
+	public static class UnmodifiableMap extends ABSTRACT_MAP implements MAP, java.io.Serializable {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		protected final MAP map;
+
+		protected transient volatile Set entries, keys;
+		protected transient volatile Collection values;
+
+		protected UnmodifiableMap( final MAP m ) {
+			if ( m == null ) throw new NullPointerException();
+			this.map = m;
+		}
+
+		public Object remove( final Object ok ) { throw new UnsupportedOperationException(); }
+		public Object get( final Object ok ) { return map.get( ok ); }
+
+		public int size() { return map.size(); }
+		public boolean containsKey( final KEY_TYPE k ) { return map.containsKey( k ); }
+		public boolean containsValue( final VALUE_TYPE v ) { return map.containsValue( v ); }
+
+		public VALUE_TYPE defaultReturnValue()  { throw new UnsupportedOperationException(); }
+		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
+
+		public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
+
+		public void putAll( final MAP c ) { throw new UnsupportedOperationException(); }
+		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
+
+		public Set entrySet() { if ( entries == null ) entries = ObjectSets.unmodifiable( (ObjectSet)map.entrySet() ); return entries; }
+		public Set keySet() { if ( keys == null ) keys = SETS.unmodifiable( (SET)map.keySet() ); return keys; }
+		public Collection values() { if ( values == null ) return VALUE_COLLECTIONS.unmodifiable( (VALUE_COLLECTION)map.values() ); return values; }
+
+		public void clear() { throw new UnsupportedOperationException(); }
+		public String toString() { return map.toString(); }
+
+#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
+		public Object put( final Object k, final Object v ) { throw new UnsupportedOperationException(); }
+#endif
+
+#if ! #keyclass( Object ) && ! #keyclass( Reference )
+		public VALUE_TYPE remove( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		public VALUE_TYPE get( final KEY_TYPE k ) { return map.get( k ); }
+		public boolean containsKey( final Object ok ) { return map.containsKey( ok ); }
+#endif
+
+#if ! #valueclass( Object ) && ! #valueclass( Reference )
+		public boolean containsValue( final Object ov ) { return map.containsValue( ov ); }
+#endif
+
+#if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
+		public VALUE_TYPE REMOVE_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
+		public VALUE_TYPE GET_VALUE( final Object k ) { return map.GET_VALUE( k ); }
+#endif
+
+	}
+
+	/** Returns an unmodifiable type-specific map backed by the given type-specific map.
+	 *
+	 * @param m the map to be wrapped in an unmodifiable map.
+	 * @return an unmodifiable view of the specified map.
+	 * @see java.util.Collections#unmodifiableMap(Map)
+	 */
+	public static MAP unmodifiable( final MAP m ) { return new UnmodifiableMap( m ); }
 
 
 

@@ -230,6 +230,19 @@ echo -e \
 "#define SYNCHRONIZED_LIST Synchronized${TYPE_CAP[$k]}List\n\n"\
 \
 \
+"/* Unmodifiable wrappers */\n"\
+\
+\
+"#define UNMODIFIABLE_COLLECTION Unmodifiable${TYPE_CAP[$k]}Collection\n\n"\
+"#define UNMODIFIABLE_SET Unmodifiable${TYPE_CAP[$k]}Set\n\n"\
+"#define UNMODIFIABLE_SORTED_SET Unmodifiable${TYPE_CAP[$k]}SortedSet\n\n"\
+"#define UNMODIFIABLE_MAP Unmodifiable${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n\n"\
+"#define UNMODIFIABLE_LIST Unmodifiable${TYPE_CAP[$k]}List\n\n"\
+"#define UNMODIFIABLE_KEY_ITERATOR Unmodifiable${TYPE_CAP[$k]}Iterator\n\n"\
+"#define UNMODIFIABLE_KEY_BIDI_ITERATOR Unmodifiable${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
+"#define UNMODIFIABLE_KEY_LIST_ITERATOR Unmodifiable${TYPE_CAP[$k]}ListIterator\n\n"\
+\
+\
 "/* Methods (keys) */\n"\
 \
 \
