@@ -34,6 +34,9 @@ TYPE_LC2=(boolean byte short int long char float double object object)
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
 
+# The corresponding byte size or 0 for unknown.
+SIZE=(0 1 2 4 8 2 4 8 0 0)
+
 # We perform some basic parsing on the filename.
 
 export LC_ALL=C
@@ -93,17 +96,23 @@ echo -e \
 "/* Assertions (useful to generate conditional code) */\n"\
 \
 \
+"#if ${CLASS[$k]}\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
+"#endif\n"\
+"#if ${CLASS[$v]}\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
+"#endif\n"\
 \
 \
-"/* Current types and corresponding classes */\n"\
+"/* Current types and classes (and size, if applicable) */\n"\
 \
 \
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_CLASS ${CLASS[$v]}\n"\
+"#define KEY_SIZE ${SIZE[$k]}\n"\
+"#define VALUE_SIZE ${SIZE[$v]}\n"\
 \
 \
 "/* Value methods */\n"\
@@ -269,6 +278,8 @@ echo -e \
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
+"#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
+"#define STORE_KEYS store${TYPE_STD[$k]}s\n"\
 \
 \
 "/* Methods (values) */\n"\
