@@ -42,7 +42,7 @@ PACKAGES = it.unimi.dsi.fastUtil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -J-Xmx512m -d $(DOCSDIR) -windowtitle "fastUtil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
+	javadoc -J-Xmx256M -d $(DOCSDIR) -windowtitle "fastUtil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
