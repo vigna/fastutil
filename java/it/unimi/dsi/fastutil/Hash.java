@@ -39,13 +39,17 @@ package it.unimi.dsi.fastUtil;
  * the indices of any {@link #REMOVED} entries with key <var>k</var>.
  * </blockquote>
  * 
- * <p>When we search for the key <var>k</var> we scan the entries in the sequence 
- * <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip, <var>i</var><sub><var>p</var>-1</sub>
- * and stop when <var>k</var> is found, when we finished the sequence or when we find a {@link #FREE} entry. 
- * Note that the correctness of this procedure it is not completely trivial. Indeed, when we stop at
- * a {@link #REMOVED} entry with key <var>k</var> we must rely on the invariant to be
- * sure that no {@link #OCCUPIED} entry with the same key can appear later. If we insert and remove frequently the same
- * entries, this optimization can be very effective.
+ * <p>When we search for the key <var>k</var> we scan the entries in the
+ * sequence <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip,
+ * <var>i</var><sub><var>p</var>-1</sub> and stop when <var>k</var> is found,
+ * when we finished the sequence or when we find a {@link #FREE} entry. Note
+ * that the correctness of this procedure it is not completely trivial. Indeed,
+ * when we stop at a {@link #REMOVED} entry with key <var>k</var> we must rely
+ * on the invariant to be sure that no {@link #OCCUPIED} entry with the same
+ * key can appear later. If we insert and remove frequently the same entries,
+ * this optimization can be very effective (note, however, that when using
+ * objects as keys or values deleted entries are <code>null</code>'d to
+ * optimize garbage collection).
  *
  * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet. 
  * If we actually have to insert a new element, we use that 
