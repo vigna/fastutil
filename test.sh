@@ -77,7 +77,7 @@ for ((t=1; t<10000; t*=10)); do
 		if [[ ${STATIC[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi
 		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${STATIC[$f]}
 		echo "Testing ${TYPE_CAP[$k]} ${STATIC[$f]} singleton..."
-		java -ea -server $CLASSNAME ${TYPE_CAP[$k]}
+		java -ea -server $CLASSNAME
 	done
     done
 
@@ -89,7 +89,7 @@ for ((t=1; t<10000; t*=10)); do
 		if [[ ${STATIC[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi
 		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${STATIC[$f]}
 		echo "Testing ${TYPE_CAP[$k]} ${STATIC[$f]} singleton..."
-		java -ea -server $CLASSNAME ${TYPE_CAP[$k]}
+		java -ea -server $CLASSNAME
 	done
     done
 
@@ -100,8 +100,8 @@ for ((t=1; t<10000; t*=10)); do
 	for ((k=1; k<l-1; k++)); do
 	    for ((v=1; v<${#TYPE[*]}; v++)); do
 		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${STATIC[$f]}
-		echo "Testing ${TYPE_CAP[$k]} ${STATIC[$f]} singleton..."
-		java -ea -server $CLASSNAME ${TYPE_CAP[$k]}
+		echo "Testing ${TYPE_CAP[$k]}2${TYPE_CAP[$v]} ${STATIC[$f]} singleton..."
+		java -ea -server $CLASSNAME
 	    done
 	done
     done
