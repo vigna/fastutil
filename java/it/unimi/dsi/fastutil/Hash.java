@@ -34,7 +34,7 @@ package it.unimi.dsi.fastUtil;
  * <blockquote>
  * Let <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip, <var>i</var><sub><var>p</var>-1</sub> be
  * the permutation of the table indices induced by the key <var>k</var>, that is, <var>i</var><sub>0</sub> is the hash
- * of <var>k</var> and the following indices are obtained by adding (modulo <var>p</var>) the secondary hashing plus one.
+ * of <var>k</var> and the following indices are obtained by adding (modulo <var>p</var>) the secondary hash plus one.
  * If there is a {@link #OCCUPIED} entry with key <var>k</var>, its index in the sequence above comes <em>before</em>
  * the indices of any {@link #REMOVED} entries with key <var>k</var>.
  * </blockquote>
@@ -48,7 +48,7 @@ package it.unimi.dsi.fastUtil;
  * on the invariant to be sure that no {@link #OCCUPIED} entry with the same
  * key can appear later. If we insert and remove frequently the same entries,
  * this optimization can be very effective (note, however, that when using
- * objects as keys or values deleted entries are <code>null</code>'d to
+ * objects as keys or values deleted entries are set to a special fixed value to
  * optimize garbage collection).
  *
  * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet. 

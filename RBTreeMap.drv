@@ -1175,48 +1175,53 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 	 };
 
 	 public Set keySet() {
-		  if ( keys == null ) keys = new KEY_ABSTRACT_SET() {
+		  class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
+				
+				public Iterator iterator() {
+					 return new KeyIterator();
+				}
+				
+				public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+					 return new KeyIterator( from );
+				}
 
-					 public Iterator iterator() {
-						  return new KeyIterator();
-					 }
+				public boolean contains( KEY_TYPE k ) {
+					 return containsKey( k );
+				}					 
 
-					 public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
-						  return new KeyIterator( from );
-					 }
-
-					 public boolean contains( KEY_TYPE k ) {
-						  return containsKey( k );
-					 }					 
-
-					 public boolean remove( KEY_TYPE k ) {
-						  RBTREEMAP.this.remove( k );
-						  return modified;
-					 }					 
+				public boolean remove( KEY_TYPE k ) {
+					 AVLTREEMAP.this.remove( k );
+					 return modified;
+				}					 
 
 #if ! #keyclass( Object )
 
-					 public boolean contains( Object ok ) {
-						  return containsKey( ok );
-					 }					 
+				public boolean contains( Object ok ) {
+					 return containsKey( ok );
+				}					 
 
-					 public boolean remove( Object ok ) {
-						  RBTREEMAP.this.remove( KEY2TYPE( ok ) );
-						  return modified;
-					 }
+				public boolean remove( Object ok ) {
+					 AVLTREEMAP.this.remove( KEY2TYPE( ok ) );
+					 return modified;
+				}
 
 #endif
 
-					 public int size() {
-						  return count;
-					 }
+				public int size() {
+					 return count;
+				}
 					 
-					 public void clear() {
-						  RBTREEMAP.this.clear();
-					 }
+				public void clear() {
+					 AVLTREEMAP.this.clear();
+				}
 					 
-				};
+				public Object last() { return KEY2OBJ( lastEntry.key ); }
+				public Object first() { return KEY2OBJ( firstEntry.key ); }
+				public KEY_TYPE LAST() { return lastEntry.key; }
+				public KEY_TYPE FIRST() { return firstEntry.key; }
+		  };
 
+		  if ( keys == null ) keys = new KeySet();
 		  return keys;
 	 }
 
