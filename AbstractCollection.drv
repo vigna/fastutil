@@ -32,33 +32,92 @@ import java.util.AbstractCollection; // workaround to force @see/@link
 
 public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
+	protected ABSTRACT_COLLECTION() {};
 
 #if ! #keyclass(Object) && ! #keyclass(Reference)
-	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		return TO_KEY_ARRAY(a);
+
+	public KEY_TYPE[] toArray( KEY_TYPE a[] ) {
+		return TO_KEY_ARRAY( a );
 	}
 
 
 	public KEY_TYPE[] TO_KEY_ARRAY() {
-		return TO_KEY_ARRAY(null);
+		return TO_KEY_ARRAY( null );
 	}
-	 
 
 	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
-		final KEY_TYPE result[];
-		final KEY_ITERATOR i;
-		int j, n;
+		if ( a == null || a.length < size() ) a = new KEY_TYPE[ size() ];
+		Iterators.unwrap( KEY_ITERATOR_METHOD(), a );
+		return a;
+	}
 
-		if ( a == null || a.length < size() ) result = new KEY_TYPE[ size() ];
-		else result = a;
+	/** Adds all elements of the given type-specific collection to this collection.
+	 *
+	 * @param c a type-specific collection.
+	 * @return <code>true</code> if this collection changed as a result of the call.
+	 */
 
-		j = 0;
-		i = KEY_ITERATOR_METHOD();
-		n = size();
+	public boolean addAll( COLLECTION c ) {
+		boolean retVal = false;
+		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+		int n = c.size();
 
-		while( n-- != 0 ) result[ j++ ] = i.NEXT_KEY();
+		while( n-- != 0 ) if ( add( i.NEXT_KEY() ) ) retVal = true;
+		return retVal;
+	}
 
-		return result;
+	/** Checks whether this collection contains all elements from the given type-specific collection.
+	 *
+	 * @param c a type-specific collection.
+	 * @return <code>true</code> if this collection contains all elements of the argument.
+	 */
+
+	public boolean containsAll( COLLECTION c ) {
+		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+		int n = c.size();
+
+		while( n-- != 0 ) if ( ! contains( i.NEXT_KEY() ) ) return false;
+
+		return true;
+	}
+
+	/** Retains in this collection only elements from the given type-specific collection.
+	 *
+	 * @param c a type-specific collection.
+	 * @return <code>true</code> if this collection changed as a result of the call.
+	 */
+
+	public boolean retainAll( COLLECTION c ) {
+		boolean retVal = false;
+		int n = size();
+
+		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+
+		while( n-- != 0 ) {
+			if ( ! c.contains( i.NEXT_KEY() ) ) {
+				i.remove();
+				retVal = true;
+			}
+		}
+
+		return retVal;
+	}
+
+	/** Remove from this collection all elements in the given type-specific collection.
+	 *
+	 * @param c a type-specific collection.
+	 * @return <code>true</code> if this collection changed as a result of the call.
+	 */
+
+	public boolean removeAll( COLLECTION c ) {
+		boolean retVal = false;
+		int n = c.size();
+
+		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+
+		while( n-- != 0 ) if ( REMOVE( i.NEXT_KEY() ) ) retVal = true;
+
+		return retVal;
 	}
 
 #endif
@@ -68,24 +127,13 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	}
 
 	public Object[] toArray( Object a[] ) {
-		final Object result[];
-		final Iterator i;
-		int j, n;
-
-		if ( a == null || a.length < size() ) result = new Object[ size() ];
-		else result = a;
-
-		j = 0;
-		i = iterator();
-		n = size();
-
-		while( n-- != 0 ) result[ j++ ] = i.next();
-
-		return result;
+		if ( a == null ) a = new Object[ size() ];
+		else if ( a.length < size() ) a = (Object[])java.lang.reflect.Array.newInstance( a.getClass().getComponentType(), size() );
+		Iterators.unwrap( iterator(), a );
+		return a;
 	}
 
 	/** Adds all elements of the given collection to this collection.
-	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection changed as a result of the call.
@@ -96,21 +144,17 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 		final Iterator i = c.iterator();
 		int n = c.size();
 
-		if ( i instanceof KEY_ITERATOR ) {
-			final KEY_ITERATOR j = (KEY_ITERATOR)i;
-			while( n-- != 0 ) if ( add( j.NEXT_KEY() ) ) retVal = true;
-		}
-		else {
-			while( n-- != 0 ) if ( add( i.next() ) ) retVal = true;
-		}
+		while( n-- != 0 ) if ( add( i.next() ) ) retVal = true;
 		return retVal;
 	}
+
+
 
 	public boolean add( KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 	 
-	public boolean remove( KEY_TYPE k ) {
+	public boolean REMOVE( KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -129,7 +173,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 	/** A commodity method that delegates to the corresponding type-specific method. */
 	public boolean remove( final Object o ) {
-		return remove( KEY2TYPE( o ) );
+		return REMOVE( KEY2TYPE( o ) );
 	}
 
 	/** A commodity method that delegates to the corresponding type-specific method. */
@@ -139,59 +183,39 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 #endif
 
 	/** Checks whether this collection contains all elements from the given collection.
-	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection contains all elements of the argument.
 	 */
 
-	public boolean containsAll(Collection c) {
-		final Iterator i = c.iterator();
+	public boolean containsAll( Collection c ) {
 		int n = c.size();
 
-		if (i instanceof KEY_ITERATOR) {
-			final KEY_ITERATOR j = (KEY_ITERATOR)i;
-			while(n-- != 0) if (!contains(j.NEXT_KEY())) return false;
-		}
-		else {
-			while(n-- != 0) if (!contains(i.next())) return false;
-		}
+		final Iterator i = c.iterator();
+		while( n-- != 0 ) if ( ! contains( i.next() ) ) return false;
 
 		return true;
 	}
 
 
 	/** Retains in this collection only elements from the given collection.
-	 * If the collection is an instance of this class, it uses faster iterators.
 	 *
 	 * @param c a collection.
 	 * @return <code>true</code> if this collection changed as a result of the call.
 	 */
 
-	public boolean retainAll(Collection c) {
+	public boolean retainAll( Collection c ) {
 		boolean retVal = false;
 		int n = size();
 
-		if (c instanceof COLLECTION) {
-			final COLLECTION d = (COLLECTION)c;
-			final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		final Iterator i = iterator();
+		while( n-- != 0 ) {
+			if ( ! c.contains( i.next() ) ) {
+				i.remove(); 
+				retVal = true;
+			}
+		}
 
-			while(n-- != 0) {
-				if (!d.contains(i.NEXT_KEY())) {
-					i.remove();
-					retVal = true;
-				}
-			}
-		}
-		else {
-			final Iterator i = iterator();
-			while(n-- != 0) {
-				if (!c.contains(i.next())) {
-					i.remove();
-					retVal = true;
-				}
-			}
-		}
 		return retVal;
 	}
 
@@ -202,35 +226,18 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	 * @return <code>true</code> if this collection changed as a result of the call.
 	 */
 
-	public boolean removeAll(Collection c) {
+	public boolean removeAll( Collection c ) {
 		boolean retVal = false;
-		int n = size();
+		int n = c.size();
 
-		if (c instanceof COLLECTION) {
-			final COLLECTION d = (COLLECTION)c;
-			final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		final Iterator i = c.iterator();
+		while( n-- != 0 ) if ( remove( i.next() ) ) retVal = true;
 
-			while(n-- != 0) {
-				if (d.contains(i.NEXT_KEY())) {
-					i.remove();
-					retVal = true;
-				}
-			}
-		}
-		else {
-			final Iterator i = iterator();
-			while(n-- != 0) {
-				if (c.contains(i.next())) {
-					i.remove();
-					retVal = true;
-				}
-			}
-		}
 		return retVal;
 	}
 
 	public boolean isEmpty() {
-		return size() != 0;
+		return size() == 0;
 	}
 
 	public String toString() {

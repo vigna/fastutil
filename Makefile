@@ -1,16 +1,21 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=2.62
+VERSION=2.61
 
 .SUFFIXES: .java .class
 
 SRC = java/it/unimi/dsi/fastutil
-CSOURCES = $(wildcard $(SRC)/*Set.c $(SRC)/*Collection.c $(SRC)/*Map.c $(SRC)/*Iterator.c $(SRC)/*Comparator.c $(SRC)/*Iterators.c) # The list of C source files
+CSOURCES = $(wildcard $(SRC)/*Set.c $(SRC)/*Collection.c $(SRC)/*Map.c $(SRC)/*List.c $(SRC)/*Iterator.c $(SRC)/*Comparator.c $(SRC)/*Iterators.c) # The list of C source files
 CFRAGMENTS = $(wildcard java/it/unimi/dsi/fastutil/*Fragment*.c) # The list of fragments
 SOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 FRAGMENTS = $(CFRAGMENTS:.c=.java) # The list of generated Java fragments
 CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 
+ifdef ASSERTS
+	ASSERTS_VALUE = true
+else
+	ASSERTS_VALUE = false
+endif
 
 .PHONY: all clean depend install docs jar tar jsources
 .SECONDARY: $(SOURCES)
@@ -22,7 +27,7 @@ explain:
 	@echo -e "file using \"make jar\", or the documentation using \"make docs\".\n"
 	@echo -e "Note that you need ant (http://jakarta.apache.org/ant).\n"
 	@echo -e "If you set the make variable TEST (e.g., make jar TEST=1), you"
-	@echo -e "will compile regression and speed tests into the classes.\n\n"
+	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
 
 jar: jsources
 	export ANT_OPTS="-Xmx128M -Xms128M"
@@ -63,7 +68,7 @@ clean:
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*{Boolean,Byte,Short,Int,Long,Char,Float,Double,Object,Reference}*Iterator.java */*/*/*/*/*Comparator.java */*/*/*/*/*Iterators*.java
+	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*List.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*{Boolean,Byte,Short,Int,Long,Char,Float,Double,Object,Reference}*Iterator.java */*/*/*/*/*Comparator.java */*/*/*/*/*Iterators*.java
 	@rm -f */*/*/*/*/*.c
 	@rm -fr $(DOCSDIR)/*
 
@@ -74,7 +79,7 @@ docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
 	-rm $(FRAGMENTS)
-	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath java $(PACKAGES)
+	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath java $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
@@ -85,7 +90,7 @@ tags:
 # source files. 
 .c.java:
 ifdef TEST
-	gcc -I. -DTEST -E -C -P $< > $@
+	gcc -I. -ftabstop=4 -DTEST -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
 else
-	gcc -I. -E -C -P $< > $@
+	gcc -I. -ftabstop=4 -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
 endif

@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.61: Fast & compact specialized hash-based utility classes for Java
+ * fastutil 2.61: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -23,7 +23,7 @@ package it.unimi.dsi.fastutil;
 
 /** Common code for all hash-based classes.
  *
- * All hashing in <code>fastUtil</code> is performed starting from a 32-bit integer
+ * All hashing in <code>fastutil</code> is performed starting from a 32-bit integer
  * associated to a key or value. For all integer types smaller than <code>long</code>, we
  * just cast. In all other cases, we do some conversion using static code in this
  * class.

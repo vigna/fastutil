@@ -18,7 +18,7 @@ for ((t=1; t<10000; t*=10)); do
 	for ((k=1; k<l; k++)); do
 		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_CAP[$k]}${SET[$f]}
 		echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
-		java -server $CLASSNAME regressionTest $t $lf
+		java -ea -server $CLASSNAME test $t $lf
 	done
     done
 
@@ -31,8 +31,19 @@ for ((t=1; t<10000; t*=10)); do
 	    for ((v=1; v<${#TYPE[*]}; v++)); do
 		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}
 		echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
-		java -server $CLASSNAME regressionTest $t $lf
+		java -ea -server $CLASSNAME test $t $lf
 	    done
+	done
+    done
+
+    LIST=(ArrayList)
+
+    for ((f=0; f<${#LIST[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=1; k<l; k++)); do
+		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_CAP[$k]}${LIST[$f]}
+		echo "Testing $CLASSNAME ($t elements)..."
+		java -ea -server $CLASSNAME test $t $lf
 	done
     done
 

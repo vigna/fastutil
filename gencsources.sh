@@ -14,6 +14,9 @@ DIR="java/it/unimi/dsi/fastutil"
 # Driver files for maps.
 MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap LinkedOpenHashMap)
 
+# Driver files for lists.
+LIST=(BulkCopyList List AbstractList ArrayList)
+
 # Driver files for sets.
 SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet LinkedOpenHashSet AVLTreeSet RBTreeSet)
 
@@ -97,9 +100,18 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
 "#define KEY_NULL (null)\n"\
+"#if #keyclass(Object)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
+"#else\n"\
+"#define KEY2INT(x) (System.identityHashCode(x))\n"\
+"#endif\n"\
+"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#define GET_VALUE get\n"\
+"#define REMOVE_VALUE remove\n"\
+"#else\n"\
 "#define GET_VALUE get${TYPE_CAP[$v]}\n"\
 "#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
+"#endif\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define STDSORTEDSET SORTEDSET\n\n"\
@@ -189,6 +201,11 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#else\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
 "#endif\n\n"\
+"#if #keyclass(Integer)\n"\
+"#define REMOVE rem\n"\
+"#else\n"\
+"#define REMOVE remove\n"\
+"#endif\n\n"\
 "#include \"${MAP[$f]}.drv\"\n" >$FILENAME
 			 done
 	  done
@@ -258,7 +275,11 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define ENTRY_GET_KEY getKey\n"\
 "#define TO_KEY_ARRAY toArray\n"\
 "#define KEY_NULL (null)\n"\
+"#if #keyclass(Object)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
+"#else\n"\
+"#define KEY2INT(x) (System.identityHashCode(x))\n"\
+"#endif\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define STDSORTEDSET SORTEDSET\n\n"\
@@ -302,7 +323,123 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define KEY_EQUAL_HASH(x,h,y) ((x) == (y))\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#endif\n\n"\
+"#if #keyclass(Integer)\n"\
+"#define REMOVE rem\n"\
+"#else\n"\
+"#define REMOVE remove\n"\
+"#endif\n\n"\
 "#include \"${SET[$f]}.drv\"\n" >$FILENAME
+	  done
+done
+
+#
+# This loop generates lists.
+#
+
+for ((f=0; f<${#LIST[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=0; k<l; k++)); do
+		if [[ ${LIST[$f]:0:8} == "Abstract" ]]; then
+		    FILENAME=$DIR/Abstract${TYPE_CAP[$k]}${LIST[$f]:8}.c
+		else
+		    FILENAME=$DIR/${TYPE_CAP[$k]}${LIST[$f]}.c
+		fi
+		rm -f $FILENAME
+		echo -e \
+"#assert keyclass(${CLASS[$k]})\n"\
+"#define KEY_TYPE ${TYPE[$k]}\n"\
+"#define KEY_CLASS ${CLASS[$k]}\n"\
+"#define KEY_VALUE ${TYPE[$k]}Value\n"\
+"#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
+"#define ABSTRACT_COLLECTION Abstract${TYPE_CAP[$k]}Collection\n\n"\
+"#define LIST ${TYPE_CAP[$k]}List\n\n"\
+"#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n\n"\
+"#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
+"#define BULK_COPY_LIST ${TYPE_CAP[$k]}BulkCopyList\n\n"\
+"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define STDARRAYLIST ArrayList\n\n"\
+"#define REMOVE_KEY remove\n"\
+"#define WRITE_KEY writeObject\n"\
+"#define READ_KEY readObject\n"\
+"#define GET_KEY get\n"\
+"#if #keyclass(Object)\n"\
+"#define SUBLIST objectSubList\n"\
+"#else\n"\
+"#define SUBLIST referenceSubList\n"\
+"#endif\n"\
+"#define KEY_ITERATOR ObjectIterator\n\n"\
+"#define KEY_ABSTRACT_ITERATOR AbstractObjectIterator\n\n"\
+"#define KEY_ITERATOR_METHOD objectIterator\n\n"\
+"#define KEY_LIST_ITERATOR ObjectListIterator\n\n"\
+"#define KEY_LIST_ITERATOR_METHOD objectListIterator\n\n"\
+"#define KEY_ABSTRACT_LIST_ITERATOR AbstractObjectListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR ObjectBidirectionalIterator\n\n"\
+"#define KEY_ABSTRACT_BIDI_ITERATOR AbstractObjectBidirectionalIterator\n\n"\
+"#define AS_KEY_ITERATOR asObjectIterator\n\n"\
+"#define NEXT_KEY next\n"\
+"#define PREV_KEY previous\n"\
+"#define INDEXOF_KEY indexOf\n"\
+"#define LASTINDEXOF_KEY lastIndexOf\n"\
+"#define KEY2TYPE(x) (x)\n"\
+"#define KEY2OBJ(x) (x)\n"\
+"#define TO_KEY_ARRAY toArray\n"\
+"#define KEY_NULL (null)\n"\
+"#if #keyclass(Object)\n"\
+"#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
+"#else\n"\
+"#define KEY2INT(x) (System.identityHashCode(x))\n"\
+"#endif\n"\
+"#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
+"#else\n"\
+"#define STDARRAYLIST ARRAY_LIST\n\n"\
+"#define REMOVE_KEY remove${TYPE_CAP[$k]}\n"\
+"#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
+"#define READ_KEY read${TYPE_CAP[$k]}\n"\
+"#define GET_KEY get${TYPE_CAP[$k]}\n"\
+"#define SUBLIST ${TYPE[$k]}SubList\n"\
+"#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\
+"#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_LIST_ITERATOR_METHOD ${TYPE[$k]}ListIterator\n\n"\
+"#define KEY_ABSTRACT_LIST_ITERATOR Abstract${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
+"#define KEY_ABSTRACT_BIDI_ITERATOR Abstract${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
+"#define AS_KEY_ITERATOR as${TYPE_CAP[$k]}Iterator\n\n"\
+"#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
+"#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
+"#define INDEXOF_KEY indexOf${TYPE_CAP[$k]}\n"\
+"#define LASTINDEXOF_KEY lastIndexOf${TYPE_CAP[$k]}\n"\
+"#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
+"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
+"#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
+"#if #keyclass(Boolean)\n"\
+"#define KEY_NULL (false)\n"\
+"#else\n"\
+"#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#endif\n"\
+"#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
+"#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
+"#elif #keyclass(Boolean)\n"\
+"#define KEY2INT(x) (x ? 1231 : 1237)\n"\
+"#else\n"\
+"#define KEY2INT(x) ((int)(x))\n"\
+"#endif\n"\
+"#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#endif\n\n"\
+"#if #keyclass(Object)\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ((x) == (y) || ((y) != null && h == (y).hashCode() && (y).equals((x))))\n"\
+"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
+"#else\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ((x) == (y))\n"\
+"#define KEY_EQUAL(x,y) ((x) == (y))\n"\
+"#endif\n\n"\
+"#if #keyclass(Integer)\n"\
+"#define REMOVE rem\n"\
+"#else\n"\
+"#define REMOVE remove\n"\
+"#endif\n\n"\
+"#include \"${LIST[$f]}.drv\"\n" >$FILENAME
 	  done
 done
 
@@ -343,6 +480,7 @@ for ((f=0; f<t; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define NEXT_KEY next\n"\
 "#define PREV_KEY previous\n"\
+"#define STD_KEY_ITERATOR Iterator\n\n"\
 "#define KEY_ITERATOR ObjectIterator\n\n"\
 "#define KEY_ABSTRACT_ITERATOR AbstractObjectIterator\n\n"\
 "#define KEY_ABSTRACT_BIDI_ITERATOR AbstractObjectBidirectionalIterator\n\n"\
@@ -358,6 +496,7 @@ for ((f=0; f<t; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
+"#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ABSTRACT_BIDI_ITERATOR Abstract${TYPE_CAP[$k]}BidirectionalIterator\n\n"\

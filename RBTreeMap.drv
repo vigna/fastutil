@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.61: Fast & compact specialized utility classes for Java
+ * fastutil 2.61: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -54,8 +54,8 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 	/** Cached collection of values. */
 	protected transient volatile Collection values;
 
-	/** The value of this variable remembers, after an <code>insert()</code> 
-	 * or a <code>delete()</code>, whether the <em>domain</em> of the map
+	/** The value of this variable remembers, after a <code>put()</code> 
+	 * or a <code>remove()</code>, whether the <em>domain</em> of the map
 	 * has been modified. */
 	protected transient boolean modified;
 
@@ -67,6 +67,8 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 	protected transient KEY_COMPARATOR actualComparator;
 
     public static final long serialVersionUID = -7046029254386353130L;
+
+	private static final boolean asserts = ASSERTS;
 
 	{
 		allocatePaths();
@@ -139,12 +141,32 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		putAll( m );
 	}
 
+	/** Creates a new tree map copying a given map.
+	 *
+	 * @param m a type-specific map to be copied into the new tree map. 
+	 */
+	 
+	public RBTREEMAP( final MAP m ) {
+		this();
+		putAll( m );
+	}
+
+	/** Creates a new tree map copying a given sorted map (and its {@link Comparator}).
+	 *
+	 * @param m a type-specific sorted map to be copied into the new tree map. 
+	 */
+	 
+	public RBTREEMAP( final SORTEDMAP m ) {
+		this( m.comparator() );
+		putAll( m );
+	}
+
 
 	/*
 	 * The following methods implements some basic building blocks used by
 	 * all accessors.  They are (and should be maintained) identical to those used in RBTreeSet.drv.
 	 *
-	 * The insert()/delete() code is derived from Ben Pfaff's GNU libavl
+	 * The put()/remove() code is derived from Ben Pfaff's GNU libavl
 	 * (http://www.msu.edu/~pfaffben/avl/). If you want to understand what's
 	 * going on, you should have a look at the literate code contained therein
 	 * first.  
@@ -212,20 +234,10 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		nodePath = new Entry[ 64 ];
 	}
 
-	/** Inserts a new pair in the map.
-	 *
-	 * <P>After execution of this method, {@link #modified} is true iff a new
-	 * entry has been inserted.
-	 *
-	 * @param k a key.
-	 * @param v a value.
-	 * @return the previous value associated to the key (or the default return value, if there 
-	 * was no existing entry with the same key).
-	 */
-
+	/* After execution of this method, modified is true iff a new entry has
+	been inserted. */
 	 
-	 
-	final VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
+	public final VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) {
 		modified = false;
 
 		if ( tree == null ) { // The case of the empty tree is treated separately.
@@ -380,23 +392,15 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 			}
 		}
 		tree.black( true );
+		if ( asserts ) checkTree( tree, 0, -1 );
 		return defRetValue;
 	}
 
 	 
+	/* After execution of this method, {@link #modified} is true iff an entry
+	has been deleted. */
 	 
-	/** Deletes an entry from the map.
-	 *
-	 * <P>After execution of this method, {@link #modified} is true iff an 
-	 * entry has been deleted.
-	 *
-	 * @param k a key.
-	 * @return the value previously associated to the key (or the default return value, if there 
-	 * was no existing entry with the given key).
-	 */
-	 
-	 	 
-	final VALUE_TYPE delete( final KEY_TYPE k ) {
+	public final VALUE_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
 		modified = false;
 		  
 		if ( tree == null ) return defRetValue;
@@ -647,27 +651,25 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 		modified = true;
 		count--;
+		if ( asserts ) checkTree( tree, 0, -1 );
 		return p.value;
 	}
 
 
 
+#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
 	public Object put( final Object ok, final Object ov ) {
-		final VALUE_TYPE oldValue = insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
+		final VALUE_TYPE oldValue = put( KEY2TYPE(ok), VALUE2TYPE(ov) );
 		return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
-	}
-
-
-#if ! #valueclass(Object) && ! #valueclass(Reference) || ! #keyclass(Object)
-	public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
-		return insert( k, v );
 	}
 #endif
 
-	public Object remove(final Object ok) {
-		final VALUE_TYPE oldValue = delete( KEY2TYPE( ok ) );
+#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
+	public Object remove( final Object ok ) {
+		final VALUE_TYPE oldValue = REMOVE_VALUE( KEY2TYPE( ok ) );
 		return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
 	}
+#endif
 
 
 	public boolean containsValue( final VALUE_TYPE v ) {
@@ -989,21 +991,12 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		return e == null ? defRetValue : e.value;
 	}
 
-	public VALUE_TYPE remove(final KEY_TYPE k) {
-		return delete( k );
-	}
-	 
 #else
 #if !#valueclass(Object) && ! #valueclass(Reference)
 
 	public VALUE_TYPE GET_VALUE( final Object k ) {
 		final Entry e = findKey( k );
 		return e == null ? defRetValue : e.value;
-	}
-
-
-	public VALUE_TYPE REMOVE_VALUE( final Object k ) {
-		return delete( k );
 	}
 
 #endif
@@ -1106,7 +1099,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 			next = prev = curr;
 			updatePrevious();
 			updateNext();
-			RBTREEMAP.this.delete( curr.key );
+			RBTREEMAP.this.REMOVE_VALUE( curr.key );
 			curr = null;
 		}
 	}
@@ -1129,7 +1122,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 					if (!(o instanceof Map.Entry)) return false;
 					final Map.Entry e = (Map.Entry)o;
 					final Entry f = findKey( KEY2TYPE( e.getKey() ) );
-					if ( f != null ) RBTREEMAP.this.remove( f.key );
+					if ( f != null ) RBTREEMAP.this.REMOVE_VALUE( f.key );
 					return f != null;
 				}
 
@@ -1193,10 +1186,13 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 			}					 
 
 			public boolean remove( final KEY_TYPE k ) {
-				RBTREEMAP.this.remove( k );
+				RBTREEMAP.this.REMOVE_VALUE( k );
 				return modified;
 			}					 
 
+#if #keyclass(Integer)
+			public boolean rem( final KEY_TYPE k ) { return remove( k ); }
+#endif
 			public int size() {
 				return count;
 			}
@@ -1333,9 +1329,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		 * @param top if true, the third parameter is ignored and the range goes to &infin;.
 		 */
 		public Submap( final KEY_TYPE from, final boolean bottom, final KEY_TYPE to, final boolean top ) {
-			if ( ! bottom && ! top && RBTREEMAP.this.compare( from, to ) > 0 ) {
-				throw new IllegalArgumentException( "fromKey > toKey" );
-			}
+			if ( ! bottom && ! top && RBTREEMAP.this.compare( from, to ) > 0 ) throw new IllegalArgumentException( "Start key (" + from  + ") is larger than end key (" + to + ")" );
 
 			this.from = from;
 			this.bottom = bottom;
@@ -1378,7 +1372,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 						if (!(o instanceof Map.Entry)) return false;
 						final Map.Entry e = (Map.Entry)o;
 						final RBTREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
-						if ( f != null && in( f.key ) ) Submap.this.remove( f.key );
+						if ( f != null && in( f.key ) ) Submap.this.REMOVE_VALUE( f.key );
 						return f != null;
 					}
 
@@ -1421,10 +1415,13 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 				}					 
 
 				public boolean remove( final KEY_TYPE k ) {
-					Submap.this.remove( k );
+					Submap.this.REMOVE_VALUE( k );
 					return modified;
 				}					 
 
+#if #keyclass(Integer)
+				public boolean rem( final KEY_TYPE k ) { return remove( k ); }
+#endif
 				public int size() {
 					return Submap.this.size();
 				}
@@ -1511,41 +1508,33 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 #endif
 		  
 		  
-		public Object put( final Object ok, final Object ov ) {
-			if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
-			final VALUE_TYPE oldValue = insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
-			return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
+		public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+			if ( ! in( k ) ) throw new IllegalArgumentException( "Key (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
+			final VALUE_TYPE oldValue = RBTREEMAP.this.put( k, v );
+			return modified ? this.defRetValue : oldValue;
 		}
 
 		  
-#if ! #valueclass(Object) && ! #valueclass(Reference) || ! #keyclass(Object)
-		public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
-			if ( ! in( k ) ) throw new IllegalArgumentException(); 
-			final VALUE_TYPE oldValue = insert( k, v );
-			return modified ? this.defRetValue : oldValue;
+#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
+		public Object put( final Object ok, final Object ov ) {
+			final VALUE_TYPE oldValue = put( KEY2TYPE(ok), VALUE2TYPE(ov) );
+			return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
 		}
 #endif
 
+		public VALUE_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
+			if ( ! in( k ) ) return this.defRetValue;
+			final VALUE_TYPE oldValue = RBTREEMAP.this.REMOVE_VALUE( k );
+			return modified ? oldValue : this.defRetValue;
+		}
 
+#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
 		public Object remove( final Object ok ) {
-			if ( ! in( KEY2TYPE( ok ) ) ) return null;
-			final VALUE_TYPE oldValue = delete( KEY2TYPE( ok ) );
+			final VALUE_TYPE oldValue = REMOVE_VALUE( KEY2TYPE( ok ) );
 			return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
 		}
-
-#if ! #keyclass(Object)
-		public VALUE_TYPE remove( final KEY_TYPE k ) {
-			if ( ! in( k ) ) return this.defRetValue;
-			final VALUE_TYPE oldValue = delete( k );
-			return modified ? oldValue : this.defRetValue;
-		}
-#elif ! #valueclass(Object) && ! #valueclass(Reference)
-		public VALUE_TYPE REMOVE_VALUE( final Object k ) {
-			if ( ! in( k ) ) return this.defRetValue; 
-			final VALUE_TYPE oldValue = delete( k );
-			return modified ? oldValue : this.defRetValue;
-		}
 #endif
+
 
 		public int size() {
 			final SubmapIterator i = new SubmapIterator();
@@ -1826,21 +1815,89 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		}
 	}
 
-	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
+
+	/** Reads the given number of entries from the input stream, returning the corresponding tree. 
+	 *
+	 * @param s the input stream.
+	 * @param n the (positive) number of entries to read.
+	 * @param pred the entry containing the key that preceeds the first key in the tree.
+	 * @param succ the entry containing the key that follows the last key in the tree.
+	 */
+	private Entry readTree( final java.io.ObjectInputStream s, final int n, final Entry pred, final Entry succ ) throws IOException, ClassNotFoundException {
+		if ( n == 1 ) {
+			final Entry top = new Entry( s.READ_KEY(), s.READ_VALUE() );
+			top.pred( pred );
+			top.succ( succ );
+			top.black( true );
+
+			return top;
+		}
+
+		if ( n == 2 ) {
+			/* We handle separately this case so that recursion will
+			 *always* be on nonempty subtrees. */
+			final Entry top = new Entry( s.READ_KEY(), s.READ_VALUE() );
+			top.black( true );
+			top.right( new Entry( s.READ_KEY(), s.READ_VALUE() ) );
+			top.right.pred( top );
+			top.pred( pred );
+			top.right.succ( succ );
+			
+			return top;
+		}
+
+		// The right subtree is the largest one.
+		final int rightN = n / 2, leftN = n - rightN - 1;
+
+		final Entry top = new Entry();
+
+		top.left( readTree( s, leftN, pred, top ) );
+		
+		top.key = s.READ_KEY();
+		top.value = s.READ_VALUE();
+		top.black( true );
+
+		top.right( readTree( s, rightN, top, succ ) );
+
+		if ( n + 2 == ( ( n + 2 )  & -( n + 2 ) ) ) top.right.black( false ); // Quick test for determining whether n + 2 is a power of 2.
+
+		return top;
+	}
+
+	private int checkTree( Entry e, int d, int D ) {
+		if ( e == null ) return 0;
+		if ( e.black() ) d++;
+		if ( e.left() != null ) D = checkTree( e.left(), d, D );
+		if ( e.right() != null ) D = checkTree( e.right(), d, D );
+		if ( e.left() == null && e.right() == null ) {
+			if ( D == -1 ) D = d;
+			else if ( D != d ) throw new AssertionError( "Mismatch between number of black nodes (" + D + " and " + d + ")" );
+		}
+		return D;
+	}
+
+	private void readObject( java.io.ObjectInputStream s ) throws IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		tree = null;
 		/* The storedComparator is now correctly set, but we must restore
 		   on-the-fly the actualComparator. */
 		setActualComparator();
 		allocatePaths();
 
-		int count = this.count;
-		this.count = 0;
+		if ( count != 0 ) {
+			tree = readTree( s, count, null, null );
+			Entry e;
 
-		/* This is not very good. There are linear-time ways of rebuilding a
-		   tree.  Maybe in the next release... */
+			e = tree;
+			while( e.left() != null ) e = e.left();
+			firstEntry = e;
 
-		while( count-- != 0 ) put( s.READ_KEY(), s.READ_VALUE() );
+			e = tree;
+			while( e.right() != null ) e = e.right();
+			lastEntry = e;
+		}
+
+		if ( asserts ) checkTree( tree, 0, -1 );
+
 	}
 
 
@@ -1883,8 +1940,8 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 	private static void speedTest( int n, boolean comp ) {
 		int i, j;
-		MAP m;
-		SortedMap t;
+		RBTREEMAP m;
+		TreeMap t;
 		KEY_TYPE k[] = new KEY_TYPE[n];
 		KEY_TYPE nk[] = new KEY_TYPE[n];
 		VALUE_TYPE v[] = new VALUE_TYPE[n];
@@ -2038,7 +2095,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 
 		System.out.println();
-		System.out.println( "fastUtil  Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) ) + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
+		System.out.println( "fastutil  Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) ) + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
 
 		System.out.println();
 
@@ -2191,7 +2248,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 #endif
 						{
 							System.out.println("Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method)");
-							System.exit(-1);
+							System.exit( 1 );
 						}
 			}
 		}
@@ -2365,7 +2422,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		SORTEDMAP m2 = null;
 		  
 		try {
-			java.io.File ff = new java.io.File("regressionTest");
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
@@ -2381,7 +2438,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			System.exit(-1);
+			System.exit( 1 );
 		}
 
 #if !#valueclass(Reference)
@@ -2525,7 +2582,7 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 	}
 
 
-	private static void regressionTest( int n ) {
+	private static void test( int n ) {
 		RBTREEMAP m = new RBTREEMAP();
 		SortedMap t = new TreeMap();
 		topMap = m;
@@ -2559,16 +2616,21 @@ public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable, 
 
 		testMaps( m, t, n, 0 );
 
-		System.out.println("Regression test OK");
-		System.exit(0);
+		System.out.println("Test OK");
+		return;
 	}
 
 
 	public static void main( String args[] ) {
 		int n  = Integer.parseInt(args[1]);
 		  
-		if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
-		else if ( "regressionTest".equals( args[0] ) ) regressionTest(n);
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
 	}
 
 #endif

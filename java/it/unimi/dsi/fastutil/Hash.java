@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.61: Fast & compact specialized utility classes for Java
+ * fastutil 2.61: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -22,7 +22,7 @@
 package it.unimi.dsi.fastutil;
 
 /** Basic data for all hash-based classes.
- * <p>The classes in <code>fastUtil</code> are built around open-addressing hashing
+ * <p>The classes in <code>fastutil</code> are built around open-addressing hashing
  * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
  * Programming</em>, we use for the table size a prime <var>p</var> such that
  * <var>p</var>-2 is also prime. In this way hashing is implemented with modulo <var>p</var>,
@@ -30,7 +30,7 @@ package it.unimi.dsi.fastutil;
  *
  * <p>Entries in a table can be in three states: {@link #FREE}, {@link #OCCUPIED} or {@link #REMOVED}.
  * The naive handling of removed entries requires that you search for a free entry as if they were occupied. However,
- * <code>fastUtil</code> implements two useful optimizations, based on the following invariant:
+ * <code>fastutil</code> implements two useful optimizations, based on the following invariant:
  * <blockquote>
  * Let <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip, <var>i</var><sub><var>p</var>-1</sub> be
  * the permutation of the table indices induced by the key <var>k</var>, that is, <var>i</var><sub>0</sub> is the hash
@@ -63,6 +63,8 @@ public interface Hash {
 	final public int DEFAULT_INITIAL_SIZE = 16;
 	/** The default load factor of a hash table. */
 	final public float DEFAULT_LOAD_FACTOR = .75f;
+	/** The default growth factor of a hash table. */
+	final public int DEFAULT_GROWTH_FACTOR = 16;
 	/** The state of a free hash table entry. */
 	final public byte FREE = 0;
 	/** The state of a occupied hash table entry. */

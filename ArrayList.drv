@@ -1,0 +1,1061 @@
+/*		 
+ * fastutil 2.61: Fast & compact specialized utility classes for Java
+ *
+ * Copyright (C) 2002, 2003 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package it.unimi.dsi.fastutil;
+
+import java.util.*;
+import java.util.ArrayList;
+
+/** A type-specific {@link ArrayList}; provides some additional methods that use polymorphism to reduce type juggling. 
+ *
+ * <P>Instances of this class use an array to represent a list. The array is
+ * enlarged as needed when new entries are created (by dividing the current
+ * length by the golden ratio), but is <em>never</em> made smaller (even on a
+ * {@link #clear()}). A family of {@linkplain #trim() trimming methods} lets
+ * you control the size of the array; this is particularly useful if you reuse
+ * instances of this class.
+ *
+ * <P>This class implements a lightweight, fast, open, optimised, reuse-oriented
+ * version of array-based lists.  Range checks are equivalent to those of
+ * {@link java.util}'s classes, but they are delayed as much as possible. The backing array is 
+ * exposed by the {@link #elements()} method.
+ *
+ * <p>This class implement the bulk-copy list interface, and the same happens
+ * for sublists, so that operation like inserting into an array, appending and
+ * so on are always performed using high-performance system calls (e.g., {@link
+ * System#arraycopy(Object[],int,Object[],int,int)} System.arraycopy()) instead
+ * of expensive loops. However, as usual, you must manually cast sublists to
+ * the type-specific bulk-copy list interface.
+ *
+ * @see ArrayList
+ */
+
+public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomAccess, Cloneable, java.io.Serializable {
+
+	/** The initial default capacity of an array list. */
+	public final static int DEFAULT_INITIAL_CAPACITY = 16;
+
+	/** The inverse of the golden ratio times 2<sup>16</sup>. */
+	private static final long ONEOVERPHI = 106039;
+
+	/** The backing array. */
+	protected transient KEY_TYPE a[];
+
+	/** The current actual size of the array (never greater than {@link #a}'s length). */
+	protected int size;
+
+	public static final long serialVersionUID = -7046029254386353130L;
+
+	private static final boolean asserts = ASSERTS;
+
+	/** Creates a new array list with given capacity.
+	 *
+	 * @param capacity the initial capacity of the array list (may be 0).
+	 */
+	 
+	public ARRAY_LIST( final int capacity ) {
+		if ( capacity < 0 ) throw new IllegalArgumentException( "Array-list initial capacity must be nonnegative" );
+
+		a = new KEY_TYPE[ capacity ];
+	}
+
+	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity.
+	 */
+	 
+	public ARRAY_LIST() {
+		this( DEFAULT_INITIAL_CAPACITY );
+	}
+
+	/** Creates a new array list and fills it with a given collection.
+	 *
+	 * @param c a collection that will be used to fill the array list.
+	 */
+	 
+	public ARRAY_LIST( Collection c ) {
+		this( c.size() );
+		Iterators.unwrap( Iterators.AS_KEY_ITERATOR( c.iterator() ), a );
+	}
+
+	/** Creates a new array list and fills it with a given type-specific collection.
+	 *
+	 * @param c a type-specific collection that will be used to fill the array list.
+	 */
+	 
+	public ARRAY_LIST( COLLECTION c ) {
+		this( c.size() );
+		Iterators.unwrap( c.KEY_ITERATOR_METHOD(), a );
+	}
+
+	/** Creates a new array list and fills it with a given bulk-copy list.
+	 *
+	 * @param l a bulk-copy list that will be used to fill the array list.
+	 */
+	 
+	public ARRAY_LIST( BULK_COPY_LIST l ) {
+		this( l.size() );
+		l.getElements( 0, a, 0, l.size() );
+	}
+
+	/** Creates a new array list and fills it with the elements returned by an iterator..
+	 *
+	 * @param i an iterator whose returned elements will fill the array list.
+	 */
+	 
+	public ARRAY_LIST( Iterator i ) {
+		this();
+		while( i.hasNext() ) this.add( i.next() );
+	}
+
+	/** Creates a new array list and fills it with the elements returned by a type-specific iterator..
+	 *
+	 * @param i a type-specific iterator whose returned elements will fill the array list.
+	 */
+	 
+	public ARRAY_LIST( KEY_ITERATOR i ) {
+		this();
+		while( i.hasNext() ) this.add( i.NEXT_KEY() );
+	}
+
+
+	/** Returns the backing array of this list.
+	 *
+	 * @return the backing array.
+	 */
+
+	public KEY_TYPE[] elements() {
+		return a;
+	}
+
+	/** Ensures that this array list can contain the given number of entries without resizing.
+	 *
+	 * @param capacity the new minimum capacity for this array list.
+	 */
+	public void ensureCapacity( final int capacity ) {
+		if ( capacity > a.length ) {
+			KEY_TYPE t[] = new KEY_TYPE[ capacity ];
+			System.arraycopy( a, 0, t, 0, size );
+			a = t;
+		}
+		if ( asserts ) assert size <= a.length;
+	}
+
+	/** Enlarges this array list to the maximum between the given capacity and
+	* the current capacity divided by the golden ratio, provided that the given
+	* capacity is larger than the current capacity.
+	 *
+	 * @param capacity the new minimum capacity for this array list.
+	 */
+
+	private void enlarge( final int capacity ) {
+		final int length = a.length;
+		if ( capacity > length ) {
+			KEY_TYPE t[] = new KEY_TYPE[ (int)Math.min( Math.max( ( ONEOVERPHI * length ) >>> 16, capacity ), Integer.MAX_VALUE ) ];
+			System.arraycopy( a, 0, t, 0, size );
+			a = t;
+		}
+		if ( asserts ) assert size <= a.length;
+	}
+
+	public void add( final int index, final KEY_TYPE k ) {
+		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
+		enlarge( size + 1 );
+		if ( index != size ) System.arraycopy( a, index, a, index + 1, size - index );
+		a[ index ] = k;
+		size++;
+		if ( asserts ) assert size <= a.length;
+	}
+
+	public boolean add( final KEY_TYPE k ) {
+		enlarge( size + 1 );
+		a[ size++ ] = k;
+		if ( asserts ) assert size <= a.length;
+		return true;
+	}
+
+	public boolean addAll( int index, final COLLECTION c ) {
+		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
+		if ( index < 0 ) throw new IndexOutOfBoundsException( "Index (" + index + ") is  size (" + size + ")" );
+		int n = c.size();
+		if ( n == 0 ) return false;
+		enlarge( size + n );
+		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
+		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+		size += n;
+		while( n-- != 0 ) a[ index++ ] = i.NEXT_KEY();
+		if ( asserts ) assert size <= a.length;
+		return true;
+	}
+
+	public boolean addAll( int index, final BULK_COPY_LIST l ) {
+		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
+		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+		final int n = l.size();
+		if ( n == 0 ) return false;
+		enlarge( size + n );
+		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
+		l.getElements( 0, a, index, n );
+		size += n;
+		if ( asserts ) assert size <= a.length;
+		return true;
+	}
+
+	public boolean addAll( final BULK_COPY_LIST l ) {
+		return addAll( size, l );
+	}
+
+	public KEY_TYPE GET_KEY( final int index ) {
+		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + size + ")" );
+		return a[ index ];
+	}
+
+	public int indexOf( KEY_TYPE k ) {
+#if #keyclass(Object)
+		int h = KEY2INT( k );
+#endif
+		for( int i = 0; i < size; i++ ) if ( KEY_EQUAL_HASH( k, h, a[ i ] ) ) return i;
+		return -1;
+	}
+
+
+	public int lastIndexOf( KEY_TYPE k ) {
+#if #keyclass(Object)
+		int h = KEY2INT( k );
+#endif
+		int i = size;
+		while( i-- != 0 ) if ( KEY_EQUAL_HASH( k, h, a[ i ] ) ) return i;
+		return -1;
+	}
+
+	public KEY_TYPE REMOVE_KEY( int index ) {
+		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + size + ")" );
+
+		final KEY_TYPE old = a[ index ];
+		size--;
+		if ( index != size ) System.arraycopy( a, index + 1, a, index, size - index );
+#if #keyclass(Object) || #keyclass(Reference)
+		a[ size ] = null;
+#endif
+		if ( asserts ) assert size <= a.length;
+		return old;
+	}
+
+	public boolean REMOVE( KEY_TYPE k ) {
+		int index = indexOf( k );
+		if ( index == -1 ) return false;
+		REMOVE_KEY( index );
+		if ( asserts ) assert size <= a.length;
+		return true;
+	}
+
+	public KEY_TYPE set( int index, KEY_TYPE k ) {
+		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + size + ")" );
+
+		KEY_TYPE old = a[ index ];
+		a[ index ] = k;
+		return old;
+	}
+
+	public void clear() {
+#if #keyclass(Object) || #keyclass(Reference)
+		int i = size;
+		while( i-- != 0 ) a[ i ] = null;
+#endif
+		size = 0;
+		if ( asserts ) assert size <= a.length;
+	}
+
+	public int size() {
+		return size;
+	}		
+
+	public boolean isEmpty() {
+		return size == 0;
+	}		
+
+	/** Trims this array list so that the capacity is equal to the size. 
+	 *
+	 * @see ArrayList#trimToSize()
+	 */
+	public void trim() {
+		trim( 0 );
+	}
+
+	/** Trims this array list so that the capacity is equal to maximum between the size and the provided capacity.
+	 *
+	 * @param capacity the trimmed array will have at least this capacity.
+	 */
+
+	public void trim( int capacity ) {
+		KEY_TYPE t[] = new KEY_TYPE[ Math.max( capacity, size )  ];
+		System.arraycopy( a, 0, t, 0, size );
+		a = t;
+		if ( asserts ) assert size <= a.length;
+	}
+
+	public void getElements( int from, KEY_TYPE[] a, int offset, int length ) {
+		System.arraycopy( this.a, from, a, offset, length );
+	}
+
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+	
+	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
+		if ( a == null || a.length < size ) a = new KEY_TYPE[ size ];
+		System.arraycopy( this.a, 0, a, 0, size );
+		return a;
+	}
+
+#endif
+
+	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
+
+		return new KEY_ABSTRACT_LIST_ITERATOR() {
+				int pos = index, last = -1;
+
+				public boolean hasNext() { return pos < size; }
+				public boolean hasPrevious() { return pos > 0; }
+				public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return a[ last = pos++ ]; }
+				public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return a[ last = --pos ]; }
+				public int nextIndex() { return pos; }
+				public int previousIndex() { return pos - 1; }
+				public void add( KEY_TYPE k ) { 
+					if ( last == -1 ) throw new IllegalStateException();
+					ARRAY_LIST.this.add( pos++, k ); 
+				}
+				public void set( KEY_TYPE k ) { 
+					if ( last == -1 ) throw new IllegalStateException();
+					ARRAY_LIST.this.set( last, k );
+				}
+				public void remove() { 
+					if ( last == -1 ) throw new IllegalStateException();
+					ARRAY_LIST.this.REMOVE_KEY( last ); 
+					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+					if ( last < pos ) pos--;
+				}
+			};
+	}
+
+
+	private class SubList extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomAccess, Cloneable, java.io.Serializable {
+		private BULK_COPY_LIST l; // The list this sublist restricts.
+		private int from, to; // Initial (inclusive) and final (exclusive) indices of this sublist.
+
+		public SubList( final BULK_COPY_LIST l, final int from, final int to ) {
+			this.l = l;
+			this.from = from;
+			this.to = to;
+		}
+
+		private void checkIndex( final int index ) {
+			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+			if ( index > size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + ( size() ) + ")" );
+		}
+
+		private void checkRestrictedIndex( final int index ) {
+			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+			if ( index >= size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + ( size() ) + ")" );
+		}
+
+		public boolean add( KEY_TYPE k ) {
+			l.add( to, k );
+			to++;
+			return true;
+		}
+
+		public void add( int index, KEY_TYPE k ) {
+			checkIndex( index );
+			l.add( from + index, k );
+			to++;
+		}
+
+		public boolean addAll( int index, final COLLECTION c ) {
+			checkIndex( index );
+			to += c.size();
+			return l.addAll( from + index, c );
+		}
+
+		public boolean addAll( int index, final BULK_COPY_LIST l ) {
+			checkIndex( index );
+			to += l.size();
+			return l.addAll( from + index, l );
+		}
+
+		public KEY_TYPE GET_KEY( int index ) {
+			checkRestrictedIndex( index );
+			return l.GET_KEY( from + index );
+		}
+
+		public KEY_TYPE REMOVE_KEY( int index ) {
+			checkRestrictedIndex( index );
+			to--;
+			return l.REMOVE_KEY( from + index );
+		}
+
+		public boolean REMOVE( KEY_TYPE k ) {
+			int index = indexOf( k );
+			if ( index == -1 ) return false;
+			to--;
+			l.REMOVE_KEY( from + index );
+			if ( asserts ) assert size <= a.length;
+			return true;
+		}
+
+		public KEY_TYPE set( int index, KEY_TYPE k ) {
+			checkRestrictedIndex( index );
+			return l.set( from + index, k );
+		}
+
+		public void clear() {
+			KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD();
+			while( i.hasNext() ) {
+				i.NEXT_KEY();
+				i.remove();
+			}
+		}
+
+		public int size() { return to - from; }
+
+		public void getElements( int from, KEY_TYPE[] a, int offset, int length ) {
+			checkIndex( from );
+			if ( from + length > to )  throw new IndexOutOfBoundsException( "Length (" + length + ") is greater than array size" );
+			l.getElements( from, a, offset, length );
+		}
+
+		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+			if ( index > size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size() + ")" );
+
+			return new KEY_ABSTRACT_LIST_ITERATOR() {
+					int pos = index, last = -1;
+							
+					public boolean hasNext() { return pos < size(); }
+					public boolean hasPrevious() { return pos > 0; }
+					public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
+					public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
+					public int nextIndex() { return pos; }
+					public int previousIndex() { return pos - 1; }
+					public void add( KEY_TYPE k ) { 
+						if ( last == -1 ) throw new IllegalStateException();
+						SubList.this.add( pos++, k ); 
+					}
+					public void set( KEY_TYPE k ) { 
+						if ( last == -1 ) throw new IllegalStateException();
+						SubList.this.set( last, k ); 
+					}
+					public void remove() { 
+						if ( last == -1 ) throw new IllegalStateException();
+						SubList.this.REMOVE_KEY( last );
+						/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+						if ( last < pos ) pos--;
+					}
+				};
+		}
+
+		public LIST SUBLIST( final int from, final int to ) {
+			if ( from > size() ) throw new IndexOutOfBoundsException( "Starting index (" + from + ") is greater than size (" + size() + ")" );
+			if ( to > size() ) throw new IndexOutOfBoundsException( "Ending index (" + to + ") is greater than size (" + size() + ")" );
+			if ( from > to ) throw new IndexOutOfBoundsException( "Starting Index (" + from + ") is greater than ending index (" + to + ")" );
+			
+			return new SubList( this, from, to );
+		}
+
+		/** Return a shallow copy of this array list (the entries are not copied).
+		 *
+		 * @return a shallow copy of this array list.
+		 */
+		public Object clone() {
+			ARRAY_LIST c = new ARRAY_LIST( size() );
+			System.arraycopy( a, from, c.a, 0, size() );
+			c.size = size();
+			return c;
+		}
+	}
+
+	public LIST SUBLIST( final int from, final int to ) {
+		if ( from > size ) throw new IndexOutOfBoundsException( "Starting index (" + from + ") is greater than size (" + size + ")" );
+		if ( to > size ) throw new IndexOutOfBoundsException( "Ending index (" + to + ") is greater than size (" + size + ")" );
+		if ( from > to ) throw new IndexOutOfBoundsException( "Starting Index (" + from + ") is greater than ending index (" + to + ")" );
+
+		return new SubList( this, from, to );
+	}
+
+	public Object clone() {
+		ARRAY_LIST c = new ARRAY_LIST( size );
+		System.arraycopy( a, 0, c.a, 0, size );
+		c.size = size;
+		return c;
+	}
+
+	public boolean equals( ARRAY_LIST l ) {
+		if ( l == this ) return true;
+		int s = size();
+		if ( s != l.size() ) return false;
+		final KEY_TYPE[] a1 = a;
+		final KEY_TYPE[] a2 = l.a;
+
+#if #keyclass(Object)
+		while( s-- !=  0 ) if ( ! valEquals( a1[ s ], a2[ s ] ) ) return false;
+#else
+		while( s-- !=  0 ) if ( a1[ s ] != a2[ s ] ) return false;
+#endif
+		return true;
+	}
+
+
+	private void writeObject( java.io.ObjectOutputStream s ) throws java.io.IOException {
+		s.defaultWriteObject();
+		for( int i = 0; i < size; i++ ) s.WRITE_KEY( a[ i ] );
+	}
+
+	private void readObject( java.io.ObjectInputStream s ) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		a = new KEY_TYPE[ size ];
+		for( int i = 0; i < size; i++ ) a[ i ] = s.READ_KEY();
+	}
+
+
+#ifdef TEST
+
+	private static long seed = System.currentTimeMillis(); 
+	private static Random r = new Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif !#keyclass(Object) && !#keyclass(Reference)
+		return r.NEXT_KEY(); 
+#else
+		return Integer.toBinaryString( r.nextInt() );
+#endif
+	}
+
+	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	private static java.text.FieldPosition p = new java.text.FieldPosition( 0 );
+
+	private static String format( double d ) {
+		StringBuffer s = new StringBuffer();
+		return format.format( d, s, p ).toString();
+	}
+
+	private static void speedTest( int n, boolean comp ) {
+		int i, j;
+		ARRAY_LIST m;
+		ArrayList t;
+		KEY_TYPE k[] = new KEY_TYPE[n];
+		KEY_TYPE nk[] = new KEY_TYPE[n];
+		long ms;
+
+		for( i = 0; i < n; i++ ) {
+			k[i] = genKey();
+			nk[i] = genKey();
+		}
+		  
+		double totAdd = 0, totYes = 0, totNo = 0, totIterFor = 0, totIterBack = 0, totRemYes = 0, d, dd;
+
+		if ( comp ) {
+			for( j = 0; j < 20; j++ ) {
+
+				t = new ArrayList();
+
+			}
+
+			System.out.println();
+			System.out.println( "java.util Add: " + format( totAdd/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s"  );
+
+			System.out.println();
+
+			totAdd = totYes = totNo = totIterFor = totIterBack = totRemYes = 0;
+
+		}
+
+		for( j = 0; j < 20; j++ ) {
+
+			m = new ARRAY_LIST();
+
+			System.out.println();
+		}
+
+
+		System.out.println();
+		System.out.println( "fastutil  Add: " + format( totAdd/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
+
+		System.out.println();
+	}
+
+
+	private static boolean valEquals(Object o1, Object o2) {
+		return o1 == null ? o2 == null : o1.equals(o2);
+	}
+
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
+
+	private static Object[] k, v, nk;
+	private static KEY_TYPE kt[];
+	private static KEY_TYPE nkt[];
+	private static ARRAY_LIST topList;
+
+	private static void testLists( LIST m, List t, int n, int level ) {
+		long ms;
+		boolean mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
+		Object rt = null;
+		KEY_TYPE rm = KEY_NULL;
+
+		if ( level > 4 ) return;
+				
+
+		/* Now we check that both sets agree on random keys. For m we use the polymorphic method. */
+
+		for( int i = 0; i < n; i++ ) {
+			int p = r.nextInt() % ( n * 2 );
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			
+			try {
+				m.GET_KEY( p );
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			try {
+				t.get( p );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( KEY2OBJ( m.GET_KEY( p ) ) ), "Error (" + level + ", " + seed + "): m and t differ at start on position " + p + " (" + m.GET_KEY( p ) + ", " + t.get( p ) + ")" );
+			
+		}
+		
+		/* Now we check that both sets agree on random keys. For m we use the standard method. */
+
+		for( int i = 0; i < n; i++ ) {
+			int p = r.nextInt() % ( n * 2 );
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			
+			try {
+				m.get( p );
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			try {
+				t.get( p );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( m.get( p ) ), "Error (" + level + ", " + seed + "): m and t differ at start on position " + p + " (" + m.get( p ) + ", " + t.get( p ) + ")" );
+			
+		}
+		
+		/* Now we check that m and t are equal. */
+		if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
+		
+		ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start" );
+		ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start" );
+
+			
+
+		/* Now we check that m actually holds that data. */
+		for(Iterator i=t.iterator(); i.hasNext();  ) {
+			ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on t)" );
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		for(Iterator i=m.iterator(); i.hasNext();  ) {
+			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m)" );
+		}
+
+		/* Now we check that inquiries about random data give the same answer in m and t. For
+		   m we use the polymorphic method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = genKey();
+			ensure( m.contains(T) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in content between t and m (polymorphic method)" );
+		}
+
+		/* Again, we check that inquiries about random data give the same answer in m and t, but
+		   for m we use the standard method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = genKey();
+			ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in content between t and m (polymorphic method)" );
+		}
+
+		/* Now we add and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			int p = r.nextInt() % ( 2 * n + 1 );
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+
+			try {
+				m.add(p, KEY2OBJ(T));
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+
+			try {
+				t.add(p, KEY2OBJ(T));
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+
+
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): add() divergence in IndexOutOfBoundsException for index " + p + " for " + T + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+
+			p = r.nextInt() % ( 2 * n + 1 );
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+
+			try {
+				rm = m.REMOVE_KEY(p);
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+
+			try {
+				rt = t.remove(p);
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+
+
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): remove() divergence in IndexOutOfBoundsException for index " + p + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( !mThrowsOutOfBounds ) ensure( rt.equals( KEY2OBJ( rm ) ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ")" );
+		}
+
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal" );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal" );
+
+		/* Now we add and remove random data in m and t using addAll on a type-specific colelction, checking that the result is the same. */
+
+		for(int i=0; i<n;  i++ ) {
+			int p = r.nextInt() % ( 2 * n + 1 );
+			COLLECTION m1 = new ARRAY_LIST();
+			Collection t1 = new ArrayList();
+			int s = r.nextInt( n / 2 + 1 );
+			for( int j = 0; j < s; j++ ) {
+				KEY_TYPE x = genKey();
+				m1.add( x );
+				t1.add( KEY2OBJ( x ) );
+			}
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+
+			try {
+				m.addAll(p, m1);
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+
+			try {
+				t.addAll(p, t1);
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): polymorphic addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+
+			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after polymorphic addAll" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals( m ) after polymorphic addAll" );
+		}
+
+		/* Now we add and remove random data in m and t using addAll on a bulk-copy list, checking that the result is the same. */
+
+		for(int i=0; i<n;  i++ ) {
+			int p = r.nextInt() % ( 2 * n + 1 );
+			BULK_COPY_LIST m1 = new ARRAY_LIST();
+			Collection t1 = new ArrayList();
+			int s = r.nextInt( n / 2 + 1 );
+			for( int j = 0; j < s; j++ ) {
+				KEY_TYPE x = genKey();
+				m1.add( x );
+				t1.add( KEY2OBJ( x ) );
+			}
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+
+			try {
+				m.addAll(p, m1);
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+
+			try {
+				t.addAll(p, t1);
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): copy-list addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after copy-list addAll" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after copy-list addAll" );
+		}
+
+
+		/* Now we check that m actually holds the same data. */
+		  
+		for(Iterator i=t.iterator(); i.hasNext();  ) {
+			ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on t)");
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(Iterator i=m.iterator(); i.hasNext();  ) {
+			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m)" );
+		}
+
+		/* Now we check that both sets agree on random keys. For m we use the standard method. */
+
+		for( int i = 0; i < n; i++ ) {
+			int p = r.nextInt() % ( n * 2 );
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			
+			try {
+				m.get( p );
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			try {
+				t.get( p );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): get() divergence in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( m.get( p ) ), "Error (" + level + ", " + seed + "): m and t differ on position " + p + " (" + m.get( p ) + ", " + t.get( p ) +")" );
+			
+		}
+
+		/* Now we inquiry about the content with indexOf()/lastIndexOf(). */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			ensure( m.indexOf( KEY2OBJ( T ) ) == t.indexOf( KEY2OBJ( T ) ),
+					"Error (" + level + ", " + seed + "): indexOf() divergence for " + T + "  (" + m.indexOf( KEY2OBJ( T ) ) + ", " + t.indexOf( KEY2OBJ( T ) ) + ")" );
+			ensure( m.lastIndexOf( KEY2OBJ( T ) ) == t.lastIndexOf( KEY2OBJ( T ) ),
+					"Error (" + level + ", " + seed + "): lastIndexOf() divergence for " + T + "  (" + m.lastIndexOf( KEY2OBJ( T ) ) + ", " + t.lastIndexOf( KEY2OBJ( T ) ) + ")" );
+			ensure( m.indexOf( T ) == t.indexOf( KEY2OBJ( T ) ),
+					"Error (" + level + ", " + seed + "): polymorphic indexOf() divergence for " + T + "  (" + m.indexOf( T ) + ", " + t.indexOf( KEY2OBJ( T ) ) + ")" );
+			ensure( m.lastIndexOf( T ) == t.lastIndexOf( KEY2OBJ( T ) ),
+					"Error (" + level + ", " + seed + "): polymorphic lastIndexOf() divergence for " + T + "  (" + m.lastIndexOf( T ) + ", " + t.lastIndexOf( KEY2OBJ( T ) ) + ")" );
+		}
+
+		/* Now we check cloning. */
+
+		if ( level == 0 ) {
+			ensure( m.equals( ((ARRAY_LIST)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
+			ensure( ((ARRAY_LIST)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
+		}
+
+		int h = m.hashCode();
+
+		/* Now we save and read m. */
+
+		BULK_COPY_LIST m2 = null;
+		  
+		try {
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+			oos.writeObject(m);
+			oos.close();
+				
+			java.io.InputStream is = new java.io.FileInputStream(ff);
+			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+			m2 = (BULK_COPY_LIST)ois.readObject();
+			ois.close();
+			ff.delete();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+
+#if ! #keyclass(Reference)
+		ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read" );
+
+		/* Now we check that m2 actually holds that data. */
+		  
+		ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read" );
+		ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read" );
+		/* Now we take out of m everything, and check that it is empty. */
+
+		for(Iterator i=t.iterator(); i.hasNext(); ) m2.remove(i.next());
+
+		ensure( m2.isEmpty(), "Error (" + level + ", " + seed + "): m2 is not empty (as it should be)" );
+#endif		  
+				 
+		/* Now we play with iterators. */
+
+		{
+			ListIterator i, j;
+			Object J;
+			i = m.listIterator(); 
+			j = t.listIterator(); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext()" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious()" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex()" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex()" );
+
+			}
+
+		}
+
+		{
+			boolean badPrevious = false;
+			Object previous = null;
+			ListIterator i;
+			ListIterator j;
+			Object I, J;
+			int from = r.nextInt( m.size() +1 );
+			j = t.listIterator( from ); 
+			i = m.listIterator( from ); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
+				ensure( i.hasPrevious() == j.hasPrevious() || badPrevious && ( i.hasPrevious() == ( previous != null ) ), "Error (" + level + ", " + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( ( I = i.next() ).equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next() (" + I + ", " + J + ", iterator with starting point " + from + ")" );
+					//System.err.println("Done next " + I + " " + J + "  " + badPrevious);
+
+					badPrevious = false;
+
+					if ( r.nextFloat() < 0.5 ) {
+						//System.err.println("Removing in next");
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( !badPrevious && r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( ( I = i.previous() ).equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous() (" + I + ", " + J + ", iterator with starting point " + from + ")" );
+
+					if ( r.nextFloat() < 0.5 ) {
+						//System.err.println("Removing in prev");
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+			}
+
+		}
+
+		/* Now we check that m actually holds that data. */
+		  
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration" );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after iteration" );
+
+		/* Now we select a pair of keys and create a subset. */
+
+		if ( ! m.isEmpty() ) {
+			int start = r.nextInt( m.size() );
+			int end = start + r.nextInt( m.size() - start );
+			//System.err.println("Checking subList from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+			testLists( m.SUBLIST( start, end ), t.subList( start, end ), n, level + 1 );
+
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subList" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subList" );
+
+		}
+	}
+
+
+	private static void test( int n ) {
+		ARRAY_LIST m = new ARRAY_LIST();
+		ArrayList t = new ArrayList();
+		topList = m;
+		k = new Object[n];
+		nk = new Object[n];
+		kt = new KEY_TYPE[n];
+		nkt = new KEY_TYPE[n];
+
+		for( int i = 0; i < n; i++ ) {
+#if #keyclass(Object) || #keyclass(Reference)
+			k[i] = kt[i] = genKey();
+			nk[i] = nkt[i] = genKey();
+#else
+			k[i] = new KEY_CLASS( kt[i] = genKey() );
+			nk[i] = new KEY_CLASS( nkt[i] = genKey() );
+#endif
+		}
+		  
+		/* We add pairs to t. */
+		for( int i = 0; i < n;  i++ ) t.add( k[i] );
+		  
+		/* We add to m the same data */
+		m.addAll(t);
+
+		testLists( m, t, n, 0 );
+
+		System.out.println("Test OK");
+		return;
+	}
+
+
+	public static void main( String args[] ) {
+		int n  = Integer.parseInt(args[1]);
+		  
+
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
+	}
+
+#endif
+
+}
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

@@ -1,0 +1,257 @@
+/* 
+ * fastutil 2.61: Fast & compact specialized utility classes for Java
+ *
+ * Copyright (C) 2002, 2003 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package it.unimi.dsi.fastutil;
+
+import java.util.*;
+import java.util.AbstractList;
+
+/**  An abstract class providing basic methods for lists implementing a type-specific list interface.
+ */
+
+public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST {
+
+	public void add( int index, KEY_TYPE k ) {
+		throw new UnsupportedOperationException();
+	}
+
+	public KEY_TYPE set( int index, KEY_TYPE k ) {
+		throw new UnsupportedOperationException();
+	}
+
+	public boolean addAll( int index, Collection c ) {
+		if ( index > size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size() + ")" );
+		if ( index < 0 ) throw new IndexOutOfBoundsException( "Index (" + index + ") is  size (" + size() + ")" );
+		int n = c.size();
+		if ( n == 0 ) return false;
+		Iterator i = c.iterator();
+		while( n-- != 0 ) add( i.next() );
+		return true;
+	}
+
+	public boolean addAll( Collection c ) {
+		return addAll( size(), c );
+	}
+
+	public boolean addAll( COLLECTION c ) {
+		return ((LIST)this).addAll( size(), c ); // Without casting the invocation is ambiguous, as it may also refer to ((ABSTRACT_LIST)this).addAll(int,Collection)
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public ListIterator listIterator() {
+		return KEY_LIST_ITERATOR_METHOD();
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public ListIterator listIterator( int index ) {
+		return KEY_LIST_ITERATOR_METHOD( index );
+	}
+
+	/** A commodity method that delegates to the corresponding list-iterator method. */
+	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+		return KEY_LIST_ITERATOR_METHOD();
+	}
+
+	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD() {
+		return KEY_LIST_ITERATOR_METHOD( 0 );
+	}
+
+	public boolean contains( KEY_TYPE k ) {
+		return indexOf( k ) >= 0;
+	}
+
+	public int indexOf( KEY_TYPE k ) {
+#if #keyclass(Object)
+		int h = KEY2INT( k );
+#endif
+		final KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD();
+		KEY_TYPE e;
+		while( i.hasNext() ) {
+			e = i.NEXT_KEY();
+			if ( KEY_EQUAL_HASH( k, h, e ) ) return i.previousIndex(); 
+		}
+		return -1;
+	}
+
+	public int lastIndexOf( KEY_TYPE k ) {
+#if #keyclass(Object)
+		int h = KEY2INT( k );
+#endif
+		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( size() );
+		KEY_TYPE e;
+		while( i.hasPrevious() ) {
+			e = i.PREV_KEY();
+			if ( KEY_EQUAL_HASH( k, h, e ) ) return i.nextIndex(); 
+		}
+		return -1;
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public List subList( int from, int to ) {
+		return SUBLIST( from, to );
+	}
+
+	private boolean valEquals( Object a, Object b ) {
+		return a == null ? b == null : a.equals( b );
+	}
+
+	public boolean equals( Object o ) {
+		if ( o == this ) return true;
+		if ( ! ( o instanceof List ) ) return false;
+		final List l = (List)o;
+		int s = size();
+		if ( s != l.size() ) return false;
+
+		ListIterator i1 = listIterator(), i2 = l.listIterator();
+
+#if #keyclass(Reference)
+		while( s-- !=  0 ) if ( i1.next() != i2.next() ) return false;
+#else
+		while( s-- !=  0 ) if ( ! valEquals( i1.next(), i2.next() ) ) return false;
+#endif
+		return true;
+	}
+
+#if ! #keyclass(Reference) && ! #keyclass(Boolean)
+    /** Compares this list to another object. If the
+     * argument is a list, this method performs a lexicographical comparison; otherwise,
+     * it throws a <code>ClassCastException</code>.
+     *
+     * @param o an object.
+     * @return if the argument is a list, a negative integer,
+     * zero, or a positive integer as this list is lexicographically less than, equal
+     * to, or greater than the argument.
+     * @throws ClassCastException if the argument is not a list.
+     */
+
+	public int compareTo( Object o ) {
+		if ( o == this ) return 0;
+		if ( o instanceof LIST ) {
+			LIST l = (LIST)o;
+			
+			KEY_LIST_ITERATOR i1 = KEY_LIST_ITERATOR_METHOD(), i2 = ((LIST)l).KEY_LIST_ITERATOR_METHOD();
+			int r;
+			KEY_TYPE e1, e2;
+			
+			while( i1.hasNext() && i2.hasNext() ) {
+				e1 = i1.NEXT_KEY();
+				e2 = i2.NEXT_KEY();
+				if ( ( r = KEY_CMP( e1, e2 ) ) != 0 ) return r;
+			}
+			return i2.hasNext() ? -1 : ( i1.hasNext() ? 1 : 0 );
+		}
+		
+		List l = (List)o;
+		
+		ListIterator i1 = listIterator(), i2 = ((List)l).listIterator();
+		int r;
+
+		while( i1.hasNext() && i2.hasNext() ) 
+			if ( ( r = ((Comparable)i1.next()).compareTo( i2.next() ) ) != 0 ) return r;
+		return i2.hasNext() ? -1 : ( i1.hasNext() ? 1 : 0 );
+	}
+#endif
+
+	/** Returns the hash code for this list, which is identical to {@link java.util.List#hashCode()}.
+	 *
+	 * @return the hash code for this list.
+	 */
+	public int hashCode() {
+		int h = 1;
+		KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		int s = size();
+#if #keyclass(Object)
+		int t;
+		while ( s-- != 0 ) {
+			Object o = i.next(); 
+			h = 31 * h + KEY2INT( o );
+		}
+#else
+		while ( s-- != 0 ) h = 31 * h + KEY2INT( i.NEXT_KEY() );
+#endif
+		return h;
+	}
+
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public void add( int index, Object ok) {
+		add( index, KEY2TYPE( ok) );
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public Object set( int index, Object ok) {
+		return KEY2OBJ( set( index, KEY2TYPE( ok) ) );
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public Object get( int index ) {
+		return KEY2OBJ( GET_KEY( index ) );
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public int indexOf( Object ok) {
+		return indexOf( KEY2TYPE( ok) );
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public int lastIndexOf( Object ok ) {
+		return lastIndexOf( KEY2TYPE( ok) );
+	}
+
+	/** A commodity method that delegates to the corresponding type-specific method. */
+	public Object remove( int index ) {
+		return KEY2OBJ( REMOVE_KEY( index ) );
+	}
+
+
+#endif
+
+	public String toString() {
+		final StringBuffer s = new StringBuffer();
+		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		int n = size();
+		KEY_TYPE k;
+		boolean first = true;
+
+		s.append("[");
+
+		while( n-- != 0 ) {
+			if (first) first = false;
+			else s.append(", ");
+			k = i.NEXT_KEY();
+#if #keyclass(Object) || #keyclass(Reference)
+			if (this == k) s.append("(this list)"); else
+#endif
+				s.append( String.valueOf( k ) );
+		}
+
+		s.append("]");
+		return s.toString();
+	}
+
+}
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

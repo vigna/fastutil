@@ -14,12 +14,21 @@
 	 Unix">GNU</ACRONYM> Lesser General Public License</A>.
 
     <blockquote>
-      <p><strong>Warning:</strong> The package name has changed from
-	<samp>it.unimi.dsi.fastUtil</samp> to <samp>it.unimi.dsi.fastutil</samp> as
-	of 2.52. Also the RPM and the jar file name have changed, so you can get a
-	smooth transition by leaving both of them around for a while. However, you
-	should modify your sources and erase the old package and jar file as soon
-	as possible. 
+      <p><strong>Warning:</strong> 
+	<P>As of 3.0, the introduction of the new type-specific lists required
+	a tweak in the naming scheme: the type-specific version of {@link
+	java.util.Collection#remove(Object)} for integers is now named
+	{@link it.unimi.dsi.fastutil.IntCollection#rem(int)}, albeit as a
+	commodity the set <em>implementations</em> actually provide also
+	<code>remove(int)</code>. We are sorry for this inconvenience, but
+	there is no other way to work around the problem. 
+
+	<P>As of 2.52, the package name has changed from
+	<samp>it.unimi.dsi.fastUtil</samp> to
+	<samp>it.unimi.dsi.fastutil</samp>. Also the RPM and the jar file name
+	have changed, so you can get a smooth transition by leaving both of
+	them around for a while. However, you should modify your sources and
+	erase the old package and jar file as soon as possible.
 	
 	<P>As of 2.60, there was a major overhaul of iterators. Now iterators
 	must be skippable, so previous implementation of type-specific iterator
@@ -40,31 +49,31 @@
 	 <p>The classes of this package specialise the most useful {@link
 	 java.util.HashSet}, {@link java.util.HashMap}, {@link
 	 java.util.LinkedHashSet}, {@link java.util.LinkedHashMap}, {@link
-	 java.util.TreeSet}, {@link java.util.TreeMap} and {@link
-	 java.util.IdentityHashMap} classes to versions that accept a specific
-	 kind of key or value. Moreover, the techniques used in the available
-	 implementations are quite different: open-addressing hash tables,
-	 threaded AVL trees, threaded red-black trees and exclusive-or
-	 lists. Class names adhere to the general pattern</p>
+	 java.util.TreeSet}, {@link java.util.TreeMap}, {@link
+	 java.util.IdentityHashMap} and {@link java.util.ArrayList} classes to
+	 versions that accept a specific kind of key or value. Moreover, the
+	 techniques used in the available implementations are quite different:
+	 open-addressing hash tables, threaded AVL trees, threaded red-black
+	 trees and exclusive-or lists. Class names adhere to the general
+	 pattern</p>
 
 	 <div style="padding: 1em">
-		<var>valuetype</var> <var>settype</var>
+		<var>valuetype</var> <var>collectiontype</var>
 	 </div>
 	 
-	 <p>for sets, and</p>
+	 <p>for collections, and</p>
 	 
 	 <div style="padding: 1em">
 		<var>keytype</var> 2 <var>valuetype</var> <var>maptype</var>
 	 </div>
 	 
-	 <p>for maps. Presently, the possible values for <var>settype</var> are
-	 <code>OpenHashSet</code>, <code>LinkedOpenHashSet</code>,
-	 <code>AVLTreeSet</code> and <code>RBTreeSet</code>; correspondingly,
+	 <p>for maps. Presently, the possible values for
+	 <var>collectiontype</var> are <code>OpenHashSet</code>,
+	 <code>LinkedOpenHashSet</code>, <code>AVLTreeSet</code>,
+	 <code>RBTreeSet</code> and <code>ArrayList</code>; correspondingly,
 	 you can use <code>OpenHashMap</code>, <code>LinkedOpenHashMap</code>,
 	 <code>AVLTreeMap</code> and <code>RBTreeMap</code> for
-	 <var>maptype</var> (note that this represents a radical change with
-	 respect to versions &lt;2.0, which featured <code>HashMap</code>,
-	 <code>TreeMap</code>, etc.).
+	 <var>maptype</var>.
 
          <P>By "type" here I mean a capitalised primitive type, {@link
          java.lang.Object} or <code>Reference</code>. In the latter case, we
@@ -82,7 +91,7 @@
 	 table, but provides a predictable iteration order (the insertion
 	 order) and access to first/last elements of the order. A {@link
 	 it.unimi.dsi.fastutil.Reference2ReferenceOpenHashMap} is similar to an
-	 {@link java.util.IdentityHashMap}.      
+	 {@link java.util.IdentityHashMap}.
 	 
 	 <p>Since there are eight primitive types in Java, and we support
 	 reference-based containers, we get 763 (!) classes (some nonsensical
@@ -153,6 +162,17 @@
 		primitive keys and returning a type-specific sorted structure directly
 		(see, e.g., {@link it.unimi.dsi.fastutil.Int2IntSortedMap}).
 
+      		<li>Analogously, array-based lists implement the bulk-copy list
+      		interface, which allows to extract efficiently blocks of
+      		contiguous elements. The sublists returned by
+      		<code>subList()</code> can be safely cast to a type-specific
+      		bulk-copy list (e.g., the result of {@link
+      		it.unimi.dsi.fastutil.CharArrayList#subList(int,int) subList()} or
+      		{@link
+      		it.unimi.dsi.fastutil.CharArrayList#charSubList(int,int) charSubList()} can
+      		be cast to {@link it.unimi.dsi.fastutil.CharBulkCopyList}).
+	
+
 		<LI>Iterators returned by {@link java.util.Set#iterator()
 		iterator()} can be cast to the obvious type (e.g., {@link
 		it.unimi.dsi.fastutil.CharIterator} for a {@link
@@ -222,6 +242,21 @@
 		And, of course, you have a type-specific version of {@link
 		java.util.ListIterator#previous() previous()}.
 
+		<li>A name clash between the list and collection interfaces
+		forces the deletion method of an {@link
+		it.unimi.dsi.fastutil.IntCollection} to be named {@link
+		it.unimi.dsi.fastutil.IntCollection#rem(int)}. At the risk of
+		creating some confusion, as a commodity set
+		<em>implementations</em> actually provide also
+		<code>remove(int)</code>, which means that, for instance, if
+		you declare a variable of type {@link
+		it.unimi.dsi.fastutil.IntOpenHashSet} you can invoke {@link
+		it.unimi.dsi.fastutil.IntOpenHashSet#remove(int)} on it, albeit
+		this would not be true of a variable of type {@link
+		it.unimi.dsi.fastutil.IntCollection} that contains an {@link
+		it.unimi.dsi.fastutil.IntOpenHashSet} or an {@link
+		it.unimi.dsi.fastutil.IntArrayList}.
+	
 		<li>There are type-specific versions of {@link java.util.Comparator} that
 		require specifying both a type-specific comparator and an object-based
 		one; this is necessary as the type-specific version must implement {@link
@@ -239,8 +274,8 @@
 		polymorphism. Rather, the extended interfaces introduce new
 		methods of the form <code>get<var>valuetype</var>()</code> and
 		<code>remove<var>valuetype</var>()</code>. Similar problems
-		occur with <code>firstKey()</code>, <code>lastKey()</code> and
-		so on.</li>
+		occur with <code>firstKey()</code>, <code>lastKey()</code>,
+		<code>indexOf()</code> and so on.</li>
 
 		<li>For the same reason, the method {@link java.util.Collection#toArray}
 		has a polymorphic version accepting a type-specific array, but there are
@@ -382,6 +417,13 @@
 	 2<sup>1/16</sup>, so you lose on average about 2% with respect to
 	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. When the table is filled up beyond the load
 	 factor, it is rehashed to a roughly doubled size.
+
+      	 <p>Of course, if you do not know in advance the final size of your
+      	 table, the size has to grow. The growth behaviour is controlled by the
+      	 <em>growth factor</em>, which can be set at any time. By default, the
+      	 table size is doubled (for more information, see {@link
+	 it.unimi.dsi.fastutil.IntOpenHashSet}), but you can trade speed for
+         memory occupancy by setting a slower growth rate.
 
       	 <p>In the case of linked hash tables, there is an additional vector of
       	 <var>p</var> integers that is used to store link information. Each

@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.61: Fast & compact specialized utility classes for Java
+ * fastutil 2.61: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -36,6 +36,14 @@ import java.io.*;
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialised:
+ * deserialised tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
  * <P>This class implements the interface of a sorted map, so to allow easy
  * access of the iteration order: for instance, you can get the first key
  * in iteration order with {@link #firstKey()} without having to create an
@@ -68,6 +76,14 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
  * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
+ *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialised:
+ * deserialised tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
  *
  * @see Hash
  * @see HashCommon
@@ -106,6 +122,9 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	/** Cached collection of values. */
 	protected transient volatile Collection values;
 
+	/** The growth factor of the table. The next table size will be <code>{@link Hash#PRIMES}[{@link #p}+growthFactor</code>. */
+	protected transient int growthFactor = Hash.DEFAULT_GROWTH_FACTOR;
+
 #ifdef linked
 	/** The index of the first entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
 	protected transient int first = -1;
@@ -119,6 +138,8 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 #endif
 
     public static final long serialVersionUID = -7046029254386353130L;
+
+	private static final boolean asserts = ASSERTS;
 
 	/** Creates a new hash map.
 	 *
@@ -187,6 +208,47 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	public OPENHASHMAP( final Map m ) {
 		this( m, DEFAULT_LOAD_FACTOR );
 	}
+
+	/** Creates a new hash map copying a given type-specific one.
+	 *
+	 * @param m a type-specific map to be copied into the new hash map. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPENHASHMAP( final MAP m, final float f ) {
+		this( m.size(), f );
+		putAll( m );
+	}
+
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given type-specific one.
+	 *
+	 * @param m a type-specific map to be copied into the new hash map. 
+	 */
+	 
+	public OPENHASHMAP( final MAP m ) {
+		this( m, DEFAULT_LOAD_FACTOR );
+	}
+
+	/** Sets the growth factor. Subsequent enlargements will increase the table
+	 * size roughly by a multiplicative factor of 2<sup>p/16</sup>.
+	 * 
+	 * @param growthFactor the new growth factor; it must be positive.
+	 */
+
+	public void growthFactor( int growthFactor ) {
+		if ( growthFactor <= 0 ) throw new IllegalArgumentException( "Illegal growth factor " + growthFactor );
+		this.growthFactor = growthFactor;
+	}
+
+	/** Gets the growth factor.
+	 *
+	 * @return the growth factor of this set.
+	 */
+
+	public int growthFactor() {
+		return growthFactor;
+	}
+
 
 	/*
 	 * The following methods implements some basic building blocks used by
@@ -301,6 +363,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		if ( ++count >= maxFill ) rehash( Math.min(p+16, PRIMES.length-1) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
+		if ( asserts ) checkTable();
 		return null;
 	}
 	 
@@ -336,6 +399,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		if ( ++count >= maxFill ) rehash( Math.min(p+16, PRIMES.length-1) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
+		if ( asserts ) checkTable();
 		return defRetValue;
 	}
 
@@ -364,6 +428,8 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 #ifdef linked
 		fixPointers( i );
 #endif
+
+		if ( asserts ) checkTable();
 
 #if #valueclass(Object) || #valueclass(Reference)
 		return v;
@@ -930,6 +996,9 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			return count != oldCount;
 		}
 					 
+#if #keyclass(Integer)
+		public boolean rem( final KEY_TYPE k ) { return remove( k ); }
+#endif
 		public void clear() {
 			OPENHASHMAP.this.clear();
 		}
@@ -1256,6 +1325,35 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		}
 	}
 
+	private void checkTable() {
+		int n = state.length;
+		while( n-- != 0 ) 
+			if ( state[ n ] == OCCUPIED && ! containsKey( key[ n ] ) ) 
+				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
+
+#ifdef linked
+		KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)keySet().iterator();
+		KEY_TYPE k;
+		n = size();
+		while( n-- != 0 ) 
+			if ( ! containsKey( k = i.NEXT_KEY() ) ) 
+				throw new AssertionError( "Linked hash table forward enumerates key " + k + ", but the key does not belong to the table" );
+
+		if ( i.hasNext() ) throw new AssertionError( "Forward iterator not exhausted" );
+
+		n = size();
+		if ( n > 0 ) {
+			i = ((SORTEDSET)keySet()).iterator( LAST_KEY() );
+			while( n-- != 0 ) 
+				if ( ! containsKey( k = i.PREV_KEY() ) ) 
+					throw new AssertionError( "Linked hash table backward enumerates key " + k + ", but the key does not belong to the table" );
+			
+			if ( i.hasPrevious() ) throw new AssertionError( "Previous iterator not exhausted" );
+		}
+#endif
+	}
+
+
 	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
@@ -1263,22 +1361,62 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		p = Arrays.binarySearch( PRIMES, (int)( count / f ) + 1 );
 		if ( p < 0 ) p = -p - 1;
 
-		free = PRIMES[ p ];
-		maxFill = (int)( free * f );
-
-		key = new KEY_TYPE[ free ];
-		value = new VALUE_TYPE[ free ];
-		state = new byte[ free ];
+		final int n = PRIMES[ p ];
+		maxFill = (int)( n * f );
+		free = n - count;;
+		
+		final KEY_TYPE key[] = this.key = new KEY_TYPE[ n ];
+		final VALUE_TYPE value[] = this.value = new VALUE_TYPE[ n ];
+		final byte state[] = this.state = new byte[ n ];
 #ifdef linked
-		link = new int[ free ];
+		final int link[] = this.link = new int[ n ];
+		int prev = -1;
 		first = last = -1;
 #endif
 
-		int count = this.count;
-		this.count = 0;
+		int i, k2i, h1, h2;
+		KEY_TYPE k;
+		VALUE_TYPE v;
 
-		while(count-- != 0) put(s.READ_KEY(), s.READ_VALUE());
+		i = count;
+		while( i-- != 0 ) {
+
+			k = s.READ_KEY();
+			v = s.READ_VALUE();
+			k2i = KEY2INT( k ) & 0x7FFFFFFF;
+
+			h1 = k2i % n;
+
+			if ( state[ h1 ] != FREE ) {
+				h2 = ( k2i % ( n - 2 ) ) + 1;
+				do h1 = ( h1 + h2 ) % n; while( state[ h1 ] != FREE );
+			}
+
+			state[ h1 ] = OCCUPIED;
+			key[ h1 ] = k;
+			value[ h1 ] = v;
+
+#ifdef linked
+			if ( first != -1 ) {
+				link[ prev ] ^= h1;
+				link[ h1 ] = prev;
+				prev = h1;
+			}
+			else {
+				prev = first = h1;
+				link[ h1 ] = -1;
+			}
+#endif
+		}
+
+#ifdef linked
+		last = prev;
+		if ( prev != -1 ) link[ prev ] ^= -1; 
+#endif
+
+		if ( asserts ) checkTable();
 	}
+
 
 #ifdef TEST
 
@@ -1321,8 +1459,12 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 	private static void speedTest( int n, float f, boolean comp ) {
 		int i, j;
-		MAP m;
-		Map t;
+		OPENHASHMAP m;
+#ifdef linked
+		LinkedHashMap t;
+#else
+		HashMap t;
+#endif
 		KEY_TYPE k[] = new KEY_TYPE[n];
 		KEY_TYPE nk[] = new KEY_TYPE[n];
 		VALUE_TYPE v[] = new VALUE_TYPE[n];
@@ -1449,7 +1591,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 
 		System.out.println();
-		System.out.println( "fastUtil  Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
+		System.out.println( "fastutil  Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
 
 		System.out.println();
 
@@ -1469,7 +1611,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		fatal( msg );
 	}
 
-	private static void regressionTest( int n, float f ) {
+	private static void test( int n, float f ) {
 		OPENHASHMAP m = new OPENHASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
 
 #ifdef linked
@@ -1511,11 +1653,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!m.containsKey(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!m.keySet().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1525,11 +1667,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!t.containsKey(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key after insertion (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!t.keySet().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1540,11 +1682,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!m.containsValue(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!m.values().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1554,11 +1696,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!t.containsValue(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!t.values().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1569,7 +1711,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			KEY_TYPE T = genKey();
 			if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
 				System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 
 #if ( #keyclass(Object) || #keyclass(Reference) ) && ! ( #valueclass(Object) || #valueclass(Reference) )
@@ -1583,7 +1725,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 #endif
 					{
 						System.out.println("Error (" + seed + "): divergence between t and m (polymorphic method)");
-						System.exit(-1);
+						System.exit( 1 );
 					}
 		}
 
@@ -1594,7 +1736,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			KEY_TYPE T = genKey();
 			if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
 				System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1605,12 +1747,12 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			VALUE_TYPE U = genValue();
 			if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
 				System.out.println("Error (" + seed + "): divergence in put() between t and m");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			T = genKey();
 			if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
 				System.out.println("Error (" + seed + "): divergence in remove() between t and m");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1624,7 +1766,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			if (!valEquals(e.getValue(), m.get(e.getKey()))) {
 				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1634,7 +1776,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Entry e = (Entry)i.next();
 			if (!valEquals(e.getValue(), t.get(e.getKey()))) {
 				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1644,11 +1786,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!m.containsKey(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!m.keySet().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1658,11 +1800,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!t.containsKey(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key after removal (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!t.keySet().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1673,11 +1815,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!m.containsValue(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!m.values().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1687,11 +1829,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!t.containsValue(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			if (!t.values().contains(o)) {
 				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1702,7 +1844,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		/* Now we save and read m. */
 
 		try {
-			java.io.File ff = new java.io.File("regressionTest");
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
@@ -1718,7 +1860,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			System.exit(-1);
+			System.exit( 1 );
 		}
 
 
@@ -1731,7 +1873,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 			Object o = i.next();
 			if (!valEquals(m.get(o),t.get(o))) {
 				System.out.println("Error (" + seed + "): m and t differ on an entry after save/read");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 #else
@@ -1836,7 +1978,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		if (!m.isEmpty())  {
 			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
-			System.exit(-1);
+			System.exit( 1 );
 		}
 
 #if (#keyclass(Integer) || #keyclass(Long)) && (#valueclass(Integer) || #valueclass(Long))
@@ -1895,8 +2037,8 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
 #endif
 
-		System.out.println("Regression test OK");
-		System.exit(0);
+		System.out.println("Test OK");
+		return;
 	}
 
 
@@ -1905,8 +2047,14 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		int n  = Integer.parseInt(args[1]);
 		if (args.length>2) f = Float.parseFloat(args[2]);
 		  
-		if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
-		else if ( "regressionTest".equals( args[0] ) ) regressionTest(n, f);
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n, f);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
+			
 	}
 
 #endif

@@ -55,6 +55,8 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 
     public static final long serialVersionUID = -7046029254386353130L;
 
+	private static final boolean asserts = ASSERTS;
+
 	{
 		allocatePaths();
 	}
@@ -127,6 +129,26 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	}
 
 
+	/** Creates a new tree set copying a given type-specific set.
+	 *
+	 * @param s a type-specific set to be copied into the new tree set. 
+	 */
+	 
+	public AVLTREESET( final SET s ) {
+		this();
+		addAll( s );
+	}
+
+	/** Creates a new tree set copying a given type-specific sorted set (and its {@link Comparator}).
+	 *
+	 * @param s a type-specific sorted set to be copied into the new tree set. 
+	 */
+	 
+	public AVLTREESET( final SORTEDSET s ) {
+		this( s.comparator() );
+		addAll( s );
+	}
+
 	/** Creates a new tree set using elements provided by a type-specific iterator.
 	 *
 	 * @param i a type-specific iterator whose elements will fill the set.
@@ -178,7 +200,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	 * The following methods implements some basic building blocks used by
 	 * all accessors.  They are (and should be maintained) identical to those used in AVLTreeMap.drv.
 	 *
-	 * The insert()/delete() code is derived from Ben Pfaff's GNU libavl
+	 * The add()/remove() code is derived from Ben Pfaff's GNU libavl
 	 * (http://www.msu.edu/~pfaffben/avl/). If you want to understand what's
 	 * going on, you should have a look at the literate code contained therein
 	 * first.  
@@ -247,14 +269,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	}
 
 
-	/** Inserts a new element in the set.
-	 *
-	 * @param k a key.
-	 * @return true if the insertion modified the set.
-	 */
-
-	 
-	final boolean insert( final KEY_TYPE k ) {
+	public final boolean add( final KEY_TYPE k ) {
 
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
@@ -428,6 +443,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 			}
 		}
 
+		if ( asserts ) checkTree( tree );
 		return true;
 	}
 	 
@@ -471,13 +487,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 
 	 
 	 
-	/** Deletes an entry from the set.
-	 *
-	 * @param k a key.
-	 * @return true if the deletion modified the set.
-	 */
-	 
-	final boolean delete( final KEY_TYPE k ) {
+	public final boolean remove( final KEY_TYPE k ) {
 		if ( tree == null ) return false;
 
 		int cmp;
@@ -744,18 +754,13 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		}
 
 		count--;
+		if ( asserts ) checkTree( tree );
 		return true;
 	}
 
-	 
-
-	public boolean add( final KEY_TYPE k ) {
-		return insert( k );
-	}
-
-	public boolean remove( final KEY_TYPE k ) {
-		return delete( k );
-	}
+#if #keyclass(Integer)
+	public boolean REMOVE( final int k ) { return remove( k ); }
+#endif
 
 	public boolean contains( final KEY_TYPE k ) {
 		return findKey( k ) != null;
@@ -1120,7 +1125,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 			next = prev = curr;
 			updatePrevious();
 			updateNext();
-			AVLTREESET.this.delete( curr.key );
+			AVLTREESET.this.remove( curr.key );
 			curr = null;
 		}
 	}
@@ -1184,9 +1189,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		 * @param top if true, the third parameter is ignored and the range goes to &infin;.
 		 */
 		public Subset( final KEY_TYPE from, final boolean bottom, final KEY_TYPE to, final boolean top ) {
-			if ( ! bottom && ! top && AVLTREESET.this.compare( from, to ) > 0 ) {
-				throw new IllegalArgumentException( "fromKey > toKey" );
-			}
+			if ( ! bottom && ! top && AVLTREESET.this.compare( from, to ) > 0 ) throw new IllegalArgumentException( "Start element (" + from  + ") is larger than end element (" + to + ")" );
 
 			this.from = from;
 			this.bottom = bottom;
@@ -1216,14 +1219,18 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		}
 
 		public boolean add( final KEY_TYPE  k ) {
-			if ( ! in( k ) ) throw new IllegalArgumentException(); 
-			return insert( k );
+			if ( ! in( k ) ) throw new IllegalArgumentException( "Element (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
+			return AVLTREESET.this.add( k );
 		}
 
 		public boolean remove( final KEY_TYPE k ) {
 			if ( ! in( k ) ) return false;
-			return delete( k );
+			return AVLTREESET.this.remove( k );
 		}
+
+#if #keyclass(Integer)
+		public boolean rem( final KEY_TYPE k ) { return remove( k ); }
+#endif
 
 		public int size() {
 			final SubsetIterator i = new SubsetIterator();
@@ -1463,23 +1470,85 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		while( n-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
 	}
 
-	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
+
+	/** Reads the given number of entries from the input stream, returning the corresponding tree. 
+	 *
+	 * @param s the input stream.
+	 * @param n the (positive) number of entries to read.
+	 * @param pred the entry containing the key that preceeds the first key in the tree.
+	 * @param succ the entry containing the key that follows the last key in the tree.
+	 */
+	private Entry readTree( final java.io.ObjectInputStream s, final int n, final Entry pred, final Entry succ ) throws IOException, ClassNotFoundException {
+		if ( n == 1 ) {
+			final Entry top = new Entry( s.READ_KEY() );
+			top.pred( pred );
+			top.succ( succ );
+
+			return top;
+		}
+
+		if ( n == 2 ) {
+			/* We handle separately this case so that recursion will
+			 *always* be on nonempty subtrees. */
+			final Entry top = new Entry( s.READ_KEY() );
+			top.right( new Entry( s.READ_KEY() ) );
+			top.right.pred( top );
+			top.balance( 1 );
+			top.pred( pred );
+			top.right.succ( succ );
+			
+			return top;
+		}
+
+		// The right subtree is the largest one.
+		final int rightN = n / 2, leftN = n - rightN - 1;
+
+		final Entry top = new Entry();
+
+		top.left( readTree( s, leftN, pred, top ) );
+		
+		top.key = s.READ_KEY();
+
+		top.right( readTree( s, rightN, top, succ ) );
+
+		if ( n == ( n & -n ) ) top.balance( 1 ); // Quick test for determining whether n is a power of 2.
+
+		return top;
+	}
+
+
+	private static int checkTree( Entry e ) {
+		if ( e == null ) return 0;
+
+		final int leftN = checkTree( e.left() ), rightN = checkTree( e.right() );
+		if ( leftN + e.balance() != rightN )
+			throw new AssertionError( "Mismatch between left tree size (" + leftN + "), right tree size (" + rightN + ") and balance (" + e.balance() + ")" );
+
+		return Math.max( leftN , rightN ) + 1;
+	}
+
+	private void readObject( java.io.ObjectInputStream s ) throws IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		tree = null;
 		/* The storedComparator is now correctly set, but we must restore
 		   on-the-fly the actualComparator. */
 		setActualComparator();
 		allocatePaths();
 
-		int count = this.count;
-		this.count = 0;
+		if ( count != 0 ) {
+			tree = readTree( s, count, null, null );
+			Entry e;
 
-		/* This is not very good. There are linear-time ways of rebuilding a
-		   tree.  Maybe in the next release... */
+			e = tree;
+			while( e.left() != null ) e = e.left();
+			firstEntry = e;
 
-		while( count-- != 0 ) add( s.READ_KEY() );
+			e = tree;
+			while( e.right() != null ) e = e.right();
+			lastEntry = e;
+		}
+
+		if ( asserts ) checkTree( tree );
 	}
-
 
 
 #ifdef TEST
@@ -1507,8 +1576,8 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 
 	private static void speedTest( int n, boolean comp ) {
 		int i, j;
-		SORTEDSET m;
-		SortedSet t;
+		AVLTREESET m;
+		TreeSet t;
 		KEY_TYPE k[] = new KEY_TYPE[n];
 		KEY_TYPE nk[] = new KEY_TYPE[n];
 		long ms;
@@ -1658,7 +1727,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 
 
 		System.out.println();
-		System.out.println( "fastUtil  Add: " + format( totAdd/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
+		System.out.println( "fastutil  Add: " + format( totAdd/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
 
 		System.out.println();
 	}
@@ -1751,7 +1820,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 			mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 
 			try {
-				m.contains(KEY2OBJ(T));
+				m.contains(T);
 			}
 			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
@@ -1899,7 +1968,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		SORTEDSET m2 = null;
 		  
 		try {
-			java.io.File ff = new java.io.File("regressionTest");
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
@@ -1915,7 +1984,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			System.exit(-1);
+			System.exit( 1 );
 		}
 
 		ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read" );
@@ -2055,7 +2124,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	}
 
 
-	private static void regressionTest( int n ) {
+	private static void test( int n ) {
 		AVLTREESET m = new AVLTREESET();
 		SortedSet t = new TreeSet();
 		topSet = m;
@@ -2082,16 +2151,22 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 
 		testSets( m, t, n, 0 );
 
-		System.out.println("Regression test OK");
-		System.exit(0);
+		System.out.println("Test OK");
+		return;
 	}
 
 
 	public static void main( String args[] ) {
 		int n  = Integer.parseInt(args[1]);
 		  
-		if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
-		else if ( "regressionTest".equals( args[0] ) ) regressionTest(n);
+
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
 	}
 
 #endif

@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 2.61: Fast & compact specialized utility classes for Java
+ * fastutil 2.61: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002, 2003 Sebastiano Vigna 
  *
@@ -37,6 +37,13 @@ import java.io.*;
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialised:
+ * deserialised tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
  *
  * <P>This class implements the interface of a sorted set, so to allow easy
  * access of the iteration order: for instance, you can get the first element
@@ -71,6 +78,15 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialised:
+ * deserialised tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
+ *
  * @see Hash
  * @see HashCommon
  */
@@ -100,6 +116,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	/** Number of entries in the set. */
 	protected int count;
 
+	/** The growth factor of the table. The next table size will be <code>{@link Hash#PRIMES}[{@link #p}+growthFactor</code>. */
+	protected transient int growthFactor = Hash.DEFAULT_GROWTH_FACTOR;
+
 #ifdef linked
 	/** The index of the first entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
 	protected transient int first = -1;
@@ -113,6 +132,8 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #endif
 
     public static final long serialVersionUID = -7046029254386353130L;
+
+	private static final boolean asserts = ASSERTS;
 
 	/** Creates a new hash set.
 	 *
@@ -184,6 +205,30 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
+	/** Creates a new hash set copying a given type-specific collection.
+	 *
+	 * @param c a type-specific collection to be copied into the new hash set. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPENHASHSET( final COLLECTION c, final float f ) {
+		this( c.size(), f );
+		addAll( c );
+	}
+
+
+
+	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying a given type-specific collection.
+	 *
+	 * @param c a type-specific collection to be copied into the new hash set. 
+	 */
+	 
+	public OPENHASHSET( final COLLECTION c ) {
+		this( c, DEFAULT_LOAD_FACTOR );
+	}
+
+
 	/** Creates a new hash set using elements provided by a type-specific iterator.
 	 *
 	 * @param i a type-specific iterator whose elements will fill the set.
@@ -250,6 +295,27 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 
 	public OPENHASHSET( final KEY_TYPE[] a ) {
 		this( a, DEFAULT_LOAD_FACTOR );
+	}
+
+
+	/** Sets the growth factor. Subsequent enlargements will increase the table
+	 * size roughly by a multiplicative factor of 2<sup>p/16</sup>.
+	 * 
+	 * @param growthFactor the new growth factor; it must be positive.
+	 */
+
+	public void growthFactor( int growthFactor ) {
+		if ( growthFactor <= 0 ) throw new IllegalArgumentException( "Illegal growth factor " + growthFactor );
+		this.growthFactor = growthFactor;
+	}
+
+	/** Gets the growth factor.
+	 *
+	 * @return the growth factor of this set.
+	 */
+
+	public int growthFactor() {
+		return growthFactor;
 	}
 
 
@@ -355,11 +421,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		}
 #endif
 
-		if ( ++count >= maxFill ) rehash( Math.min( p + 16, PRIMES.length - 1 ) ); // Table too filled, let's rehash
+		if ( ++count >= maxFill ) rehash( Math.min( p + growthFactor, PRIMES.length - 1 ) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
+		if ( asserts ) checkTable();
 		return true;
 	}
-
 
 
 
@@ -377,9 +443,14 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		fixPointers( i );
 #endif
 
+		if ( asserts ) checkTable();
 		return true;
 	}
 	 
+#if #keyclass(Integer)
+	public boolean REMOVE( final int k ) { return remove( k ); }
+#endif
+
 
 	public boolean contains( final KEY_TYPE k ) {
 		return findKey( k ) >= 0;
@@ -900,6 +971,35 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		while( j-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
 	}
 
+	private void checkTable() {
+		int n = state.length;
+		while( n-- != 0 ) 
+			if ( state[ n ] == OCCUPIED && ! contains( key[ n ] ) ) 
+				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
+
+#ifdef linked
+		KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)iterator();
+		KEY_TYPE k;
+		n = size();
+		while( n-- != 0 ) 
+			if ( ! contains( k = i.NEXT_KEY() ) ) 
+				throw new AssertionError( "Linked hash table forward enumerates key " + k + ", but the key does not belong to the table" );
+
+		if ( i.hasNext() ) throw new AssertionError( "Forward iterator not exhausted" );
+
+		n = size();
+		if ( n > 0 ) {
+			i = iterator( LAST() );
+			while( n-- != 0 ) 
+				if ( ! contains( k = i.PREV_KEY() ) ) 
+					throw new AssertionError( "Linked hash table backward enumerates key " + k + ", but the key does not belong to the table" );
+			
+			if ( i.hasPrevious() ) throw new AssertionError( "Previous iterator not exhausted" );
+		}
+#endif
+	}
+
+
 	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
@@ -907,20 +1007,56 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		p = Arrays.binarySearch( PRIMES, (int)( count / f ) + 1 );
 		if ( p < 0 ) p = -p - 1;
 
-		free = PRIMES[ p ];
-		maxFill = (int)( free * f );
-
-		key = new KEY_TYPE[ free ];
-		state = new byte[ free ];
+		final int n = PRIMES[ p ];
+		maxFill = (int)( n * f );
+		free = n - count;;
+		
+		final KEY_TYPE key[] = this.key = new KEY_TYPE[ n ];
+		final byte state[] = this.state = new byte[ n ];
 #ifdef linked
-		link = new int[ free ];
+		final int link[] = this.link = new int[ n ];
+		int prev = -1;
 		first = last = -1;
 #endif
 
-		int count = this.count;
-		this.count = 0;
+		int i, k2i, h1, h2;
+		KEY_TYPE k;
 
-		while( count-- != 0 ) add( s.READ_KEY() );
+		i = count;
+		while( i-- != 0 ) {
+
+			k = s.READ_KEY();
+			k2i = KEY2INT( k ) & 0x7FFFFFFF;
+
+			h1 = k2i % n;
+
+			if ( state[ h1 ] != FREE ) {
+				h2 = ( k2i % ( n - 2 ) ) + 1;
+				do h1 = ( h1 + h2 ) % n; while( state[ h1 ] != FREE );
+			}
+
+			state[ h1 ] = OCCUPIED;
+			key[ h1 ] = k;
+
+#ifdef linked
+			if ( first != -1 ) {
+				link[ prev ] ^= h1;
+				link[ h1 ] = prev;
+				prev = h1;
+			}
+			else {
+				prev = first = h1;
+				link[ h1 ] = -1;
+			}
+#endif
+		}
+
+#ifdef linked
+		last = prev;
+		if ( prev != -1 ) link[ prev ] ^= -1; 
+#endif
+
+		if ( asserts ) checkTable();
 	}
 
 
@@ -952,8 +1088,13 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 	private static void speedTest( int n, float f, boolean comp ) {
 		int i, j;
-		SET m;
-		Set t;
+		OPENHASHSET m;
+#ifdef linked
+		LinkedHashSet t;
+#else
+		HashSet t;
+#endif
+
 		KEY_TYPE k[] = new KEY_TYPE[n];
 		KEY_TYPE nk[] = new KEY_TYPE[n];
 		long ms;
@@ -1077,7 +1218,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 		System.out.println();
-		System.out.println( "fastUtil  Add: " + format( totAdd/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
+		System.out.println( "fastutil  Add: " + format( totAdd/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
 
 		System.out.println();
 	}
@@ -1094,7 +1235,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
-	private static void regressionTest( int n, float f ) {
+	private static void test( int n, float f ) {
 		int c;
 		OPENHASHSET m = new OPENHASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
 #ifdef linked
@@ -1120,7 +1261,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			Object e = i.next();
 			if (!m.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1130,7 +1271,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			Object e = i.next();
 			if (!t.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1141,7 +1282,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			KEY_TYPE T = genKey();
 			if (m.contains(T) != t.contains(KEY2OBJ(T))) {
 				System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1152,7 +1293,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			KEY_TYPE T = genKey();
 			if (m.contains(KEY2OBJ(T)) != t.contains(KEY2OBJ(T))) {
 				System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1163,12 +1304,12 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			KEY_TYPE T = genKey();
 			if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
 				System.out.println("Error (" + seed + "): divergence in add() between t and m");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 			T = genKey();
 			if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
 				System.out.println("Error (" + seed + "): divergence in remove() between t and m");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1181,7 +1322,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			Object e = i.next();
 			if (!m.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on t)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1191,7 +1332,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			Object e = i.next();
 			if (!t.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on m)");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 
@@ -1212,7 +1353,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		/* Now we save and read m. */
 
 		try {
-			java.io.File ff = new java.io.File("regressionTest");
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
@@ -1228,7 +1369,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			System.exit(-1);
+			System.exit( 1 );
 		}
 
 #if !#keyclass(Reference)
@@ -1240,7 +1381,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 			Object e = i.next();
 			if (!t.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after save/read");
-				System.exit(-1);
+				System.exit( 1 );
 			}
 		}
 #else
@@ -1345,7 +1486,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 		if (!m.isEmpty())  {
 			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
-			System.exit(-1);
+			System.exit( 1 );
 		}
 
 #if #keyclass(Integer) || #keyclass(Long)
@@ -1408,8 +1549,8 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
 #endif
 
-		System.out.println("Regression test OK");
-		System.exit(0);
+		System.out.println("Test OK");
+		return;
 	}
 
 
@@ -1418,8 +1559,13 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		int n  = Integer.parseInt(args[1]);
 		if (args.length>2) f = Float.parseFloat(args[2]);
 		  
-		if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
-		else if ( "regressionTest".equals( args[0] ) ) regressionTest(n, f);
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n, f);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
 	}
 
 #endif
