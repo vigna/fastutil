@@ -26,7 +26,7 @@ import java.util.ListIterator;
 
 /** A bidirectional {@link Iterator}.
  *
- * <P>This kind of iterator is esssentially a {@link ListIterator} that
+ * <P>This kind of iterator is essentially a {@link ListIterator} that
  * does not support {@link ListIterator#previousIndex()} and {@link
  * ListIterator#nextIndex()}. It is useful for those maps that can easily
  * provide bidirectional iteration, but provide no index.
