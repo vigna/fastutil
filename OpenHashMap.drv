@@ -47,8 +47,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 /** Index into the prime list, giving the current table size. */
 	 int p;
 
-	 /** Table size. Must be the {@link #p}-th item of {@link Hash#primes}. */
+	 /** Table size. It must be the {@link #p}-th item of {@link Hash#primes}. */
 	 transient int n;
+
+	 /** Threshold after which we rehash. It must be {@link #n} times {@link #f}. */
+	 transient int maxFill;
 
 	 /** Number of entries in the map. */
 	 int count;
@@ -78,6 +81,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		  this.f = f;
 		  this.n = primes[l];
+		  this.maxFill = (int)( n * f );
 		  p = l;
 		  key = new KEY_TYPE[this.n];
 		  value = new VALUE_TYPE[this.n];
@@ -126,21 +130,18 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 }
 
 	 /*
-	  * The following private methods implements some basic building blocks used by
+	  * The following methods implements some basic building blocks used by
 	  * all accessors.  They are (and should be maintained) identical to those used in HashSet.drv.
 	  */
 
 	 /** Searches for a key, keeping track of a possible insertion point.
-	  *
-	  * The instance variables used by the search are to be passed as parameters to
-	  * increase access speed.
 	  *
 	  * @param k the key.
 	  * @return the index of the correct insertion point, if the key is not found; otherwise,
 	  * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
 	  */
 
-	 private int findInsertionPoint( final KEY_TYPE k ) {
+	 final int findInsertionPoint( final KEY_TYPE k ) {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
@@ -170,14 +171,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 	 /** Searches for a key.
 	  *
-	  * The instance variables used by the search are to be passed as parameters to
-	  * increase access speed.
-	  *
 	  * @param k the key.
 	  * @return the index of the entry containing the key, or -1 if the key wasn't found.
 	  */
 
-	 int findKey( final KEY_TYPE k ) {
+	 final int findKey( final KEY_TYPE k ) {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
@@ -198,14 +196,13 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 
 	 public Object put(final Object ok, final Object ov) {
-		  final VALUE_TYPE oldValue, v = VALUE2TYPE(ov);
-		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
-		  final byte state[] = this.state;
+		  final VALUE_TYPE v = VALUE2TYPE(ov);
+		  final KEY_TYPE k = KEY2TYPE(ok);
 
 		  final int i = findInsertionPoint( k );
 		  
 		  if (i < 0) {
-				oldValue = value[-i-1];
+				final VALUE_TYPE oldValue = value[-i-1];
 				value[-i-1] = v;
 				return VALUE2OBJ(oldValue);
 		  }
@@ -213,7 +210,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		  state[i] = OCCUPIED;
 		  key[i] = k;
 		  value[i] = v;
-		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return null;
 	 }
 	 
@@ -222,14 +219,10 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 
 	 public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
-		  final VALUE_TYPE oldValue;
-		  final KEY_TYPE key[] = this.key;
-		  final byte state[] = this.state;
-
 		  final int i = findInsertionPoint( k );
 		  
 		  if (i < 0) {
-				oldValue = value[-i-1];
+				final VALUE_TYPE oldValue = value[-i-1];
 				value[-i-1] = v;
 				return oldValue;
 		  }
@@ -237,7 +230,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 		  state[i] = OCCUPIED;
 		  key[i] = k;
 		  value[i] = v;
-		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return defRetValue;
 	 }
 
@@ -246,8 +239,6 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 	 public Object remove(final Object ok) {
 		  final KEY_TYPE k = KEY2TYPE(ok);
-		  final byte state[] = this.state;
-
 		  final int i = findKey(k);
 		  if (i < 0) return null;
 
@@ -673,6 +664,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		  this.n = newN;
 		  this.p = newP;
+		  this.maxFill = (int)( this.n * f );
 		  this.key = newKey;
 		  this.value = newValue;
 		  this.state = newState;
@@ -707,8 +699,6 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 	 }
 
 	 public VALUE_TYPE remove(final KEY_TYPE k) {
-		  final byte state[] = this.state;
-
 		  final int i = findKey(k);
 		  if (i < 0) return defRetValue;
 
@@ -833,6 +823,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable
 
 		  s.defaultReadObject();
 		  this.n = primes[p];
+		  this.maxFill = (int)( n * f );
 
 		  this.key = new KEY_TYPE[n];
 		  this.value = new VALUE_TYPE[n];

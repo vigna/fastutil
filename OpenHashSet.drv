@@ -45,8 +45,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 /** Index into the prime list, giving the current table size. */
 	 int p;
 
-	 /** Table size. Must be the {@link #p}-th item of {@link Hash#primes}. */
+	 /** Table size. It must be the {@link #p}-th item of {@link Hash#primes}. */
 	 transient int n;
+
+	 /** Threshold after which we rehash. It must be {@link #n} times {@link #f}. */
+	 transient int maxFill;
 
 	 /** Number of entries in the set. */
 	 int count;
@@ -73,6 +76,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 		  this.f = f;
 		  this.n = primes[l];
+		  this.maxFill = (int)( n * f );
 		  p = l;
 		  key = new KEY_TYPE[this.n];
 		  state = new byte[this.n];
@@ -146,23 +150,18 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 	 /*
-	  * The following private methods implements some basic building blocks used by
+	  * The following methods implements some basic building blocks used by
 	  * all accessors. They are (and should be maintained) identical to those used in HashMap.drv.
 	  */
 
 	 /** Searches for a key, keeping track of a possible insertion point.
 	  *
-	  * The instance variables used by the search are to be passed as parameters to
-	  * increase access speed.
-	  *
 	  * @param k the key.
-	  * @param key the key array.
-	  * @param state the state array.
 	  * @return the index of the correct insertion point, if the key is not found; otherwise,
 	  * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
 	  */
 
-	 private int findInsertionPoint( final KEY_TYPE k ) {
+	 final int findInsertionPoint( final KEY_TYPE k ) {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
@@ -192,16 +191,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 	 /** Searches for a key.
 	  *
-	  * The instance variables used by the search are to be passed as parameters to
-	  * increase access speed.
-	  *
 	  * @param k the key.
-	  * @param key the key array.
-	  * @param state the state array.
 	  * @return the index of the entry containing the key, or -1 if the key wasn't found.
 	  */
 
-	 int findKey( final KEY_TYPE k ) {
+	 final int findKey( final KEY_TYPE k ) {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
@@ -223,15 +217,14 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 	 public boolean add(final Object ok) {
-		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
-		  final byte state[] = this.state;
+		  final KEY_TYPE k = KEY2TYPE(ok);
 
-		  final int i = findInsertionPoint(k);
+		  final int i = findInsertionPoint( k );
 		  if (i < 0) return false;
 
 		  state[i] = OCCUPIED;
 		  key[i] = k;
-		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return true;
 	 }
 	 
@@ -239,15 +232,12 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #if ! ( #keyclass(Object) )
 
 	 public boolean add(final KEY_TYPE k) {
-		  final KEY_TYPE key[] = this.key;
-		  final byte state[] = this.state;
-
 		  final int i = findInsertionPoint(k);
 		  if (i < 0) return false;
 
 		  state[i] = OCCUPIED;
 		  key[i] = k;
-		  if ( ++count >= n * f ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return true;
 	 }
 
@@ -256,8 +246,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 	 public boolean remove(final Object ok) {
-		  final byte state[] = this.state;
-
 		  final int i = findKey(KEY2TYPE(ok));
 		  if (i < 0) return false;
 		  
@@ -413,6 +401,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 		  this.n = newN;
 		  this.p = newP;
+		  this.maxFill = (int)( this.n * f );
 		  this.key = newKey;
 		  this.state = newState;
 	 }
@@ -512,6 +501,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 		  s.defaultReadObject();
 		  this.n = primes[p];
+		  this.maxFill = (int)( n * f );
 
 		  this.key = new KEY_TYPE[n];
 		  this.state = new byte[n];
