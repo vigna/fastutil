@@ -29,8 +29,16 @@ import java.util.Map;
 
 /** An abstract class providing basic methods for maps implementing a type-specific interface.
  *
- * <P>In particular, this class provide {@link #containsKey(Object)} and
- * {@link #containsValue(Object)} methods that just call the type-specific counterpart. 
+ * <P>This class handles directly a default return
+ * value} (including {@linkplain #defaultReturnValue() methods to access
+ * it}). Instances of classes inheriting from this class have just to return
+ * <code>defRetValue</code> to denote lack of a key in type-specific methods. The value
+ * is serialized.
+ *
+ * <P>Optional operations just throw an {@link
+ * UnsupportedOperationException}. Generic versions of accessors delegate to
+ * the corresponding type-specific counterparts following the interface rules
+ * (they take care of returning <code>null</code> on a missing key).
  *
  * <P>As a further help, this class provides a {@link BasicEntry BasicEntry} inner class
  * that implements a type-specific version of {@link java.util.Map.Entry}; it
@@ -41,60 +49,6 @@ import java.util.Map;
 public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 
 	protected ABSTRACT_MAP() {}
-
-#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
-
-	/** Delegates to the corresponding type-specific method. */
-	public Object get( Object ok ) {
-		return VALUE2OBJ( GET_VALUE( KEY2TYPE( ok ) ) );
-	}
-
-	public Object put( Object ok, Object ov ) {
-		return VALUE2OBJ( put( KEY2TYPE( ok ), VALUE2TYPE( ov ) ) );
-	}
-
-	public Object remove( Object ok ) {
-		return VALUE2OBJ( REMOVE_VALUE( KEY2TYPE( ok ) ) );
-	}
-#endif
-
-	public VALUE_TYPE put( KEY_TYPE key, VALUE_TYPE value ) {
-		throw new UnsupportedOperationException();
-	}
-
-	public VALUE_TYPE REMOVE_VALUE( KEY_TYPE key ) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void clear() {
-		throw new UnsupportedOperationException();
-	}
-
-
-#if !#keyclass(Object) && !#keyclass(Reference)
-	/** Delegates to the corresponding type-specific method. */
-	public boolean containsKey( Object ok ) {
-		return containsKey( KEY2TYPE( ok ) );
-	}
-#endif
-
-#if !#valueclass(Object) && !#valueclass(Reference)
-	/** Delegates to the corresponding type-specific method. */
-	public boolean containsValue( Object ov ) {
-		return containsValue( VALUE2TYPE( ov ) );
-	}
-#endif
-
-	/** Checks whether the given value is contained in {@link #values()}. */
-	public boolean containsValue( VALUE_TYPE v ) {
-		return ((VALUE_COLLECTION)values()).contains( v );
-	}
-
-	/** Checks whether the given value is contained in {@link #keySet()}. */
-	public boolean containsKey( KEY_TYPE k ) {
-		return ((SET)keySet()).contains( k );
-	}
-
 
 	/**
 	 * The default return value for <code>get()</code>, <code>put()</code> and
@@ -121,6 +75,73 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		return defRetValue;
 	}
 
+#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+                                                                                                                                             
+	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key.
+	 *
+	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
+	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
+	 */
+	public Object get( Object ok ) {
+		KEY_TYPE k = KEY2TYPE( ok );
+		return containsKey( k ) ? null : VALUE2OBJ( GET_VALUE( k ) );
+	}
+                                                                                                                                             
+	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key. 
+	 *
+	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
+	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
+	 */
+	public Object put( Object ok, Object ov ) {
+		KEY_TYPE k = KEY2TYPE( ok );
+		return containsKey( k ) ? null : VALUE2OBJ( put( k, VALUE2TYPE( ov ) ) );
+	}
+                                                                                                                                             
+	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key. 
+	 *
+	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
+	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
+	 */
+	public Object remove( Object ok ) {
+		KEY_TYPE k = KEY2TYPE( ok );
+		return containsKey( k ) ? null : VALUE2OBJ( REMOVE_VALUE( k ) );
+	}
+#endif
+                                                                                                                                             
+	public VALUE_TYPE put( KEY_TYPE key, VALUE_TYPE value ) {
+		throw new UnsupportedOperationException();
+	}
+
+	public VALUE_TYPE REMOVE_VALUE( KEY_TYPE key ) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
+#if ! #valueclass(Object) && ! #valueclass(Reference)
+	public boolean containsValue( Object ov ) {
+		return containsValue( VALUE2TYPE( ov ) );
+	}
+#endif
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+	public boolean containsKey( Object ok ) {
+		return containsKey( KEY2TYPE( ok ) );
+	}
+#endif
+
+
+	/** Checks whether the given value is contained in {@link #values()}. */
+	public boolean containsValue( VALUE_TYPE v ) {
+		return ((VALUE_COLLECTION)values()).contains( v );
+	}
+
+	/** Checks whether the given value is contained in {@link #keySet()}. */
+	public boolean containsKey( KEY_TYPE k ) {
+		return ((SET)keySet()).contains( k );
+	}
 
 	/** Puts all pairs in the given map.
 	 * If the map implements the interface of this map,

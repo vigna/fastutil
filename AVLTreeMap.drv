@@ -49,7 +49,7 @@ import java.util.NoSuchElementException;
  * to a type-specific {@linkplain java.util.ListIterator list iterator}.
  */
 
-public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cloneable, SORTEDMAP {
+public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Serializable, Cloneable, SORTED_MAP {
 
 	/** A reference to the root entry. */
 	protected transient Entry tree;
@@ -95,7 +95,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	/** Creates a new empty tree map. 
 	 */
 
-	public AVLTREEMAP() {
+	public AVL_TREE_MAP() {
 		tree = null;
 		count = 0;
 	}
@@ -132,7 +132,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * @param c a {@link Comparator}.
 	 */
 
-	public AVLTREEMAP( final Comparator c ) {
+	public AVL_TREE_MAP( final Comparator c ) {
 		this();
 		storedComparator = c;
 		setActualComparator();
@@ -144,7 +144,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * @param m a {@link Map} to be copied into the new tree map. 
 	 */
 	 
-	public AVLTREEMAP( final Map m ) {
+	public AVL_TREE_MAP( final Map m ) {
 		this();
 		putAll( m );
 	}
@@ -154,7 +154,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * @param m a {@link SortedMap} to be copied into the new tree map. 
 	 */
 	 
-	public AVLTREEMAP( final SortedMap m ) {
+	public AVL_TREE_MAP( final SortedMap m ) {
 		this( m.comparator() );
 		putAll( m );
 	}
@@ -165,7 +165,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * @param m a type-specific map to be copied into the new tree map. 
 	 */
 	 
-	public AVLTREEMAP( final MAP m ) {
+	public AVL_TREE_MAP( final MAP m ) {
 		this();
 		putAll( m );
 	}
@@ -175,7 +175,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * @param m a type-specific sorted map to be copied into the new tree map. 
 	 */
 	 
-	public AVLTREEMAP( final SORTEDMAP m ) {
+	public AVL_TREE_MAP( final SORTED_MAP m ) {
 		this( m.comparator() );
 		putAll( m );
 	}
@@ -757,7 +757,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 #if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
 	public Object put( final Object ok, final Object ov ) {
 		final VALUE_TYPE oldValue = put( KEY2TYPE(ok), VALUE2TYPE(ov) );
-		return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
+		return modified ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ( oldValue );
 	}
 #endif
 
@@ -766,7 +766,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 #if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
 	public Object remove( final Object ok ) {
 		final VALUE_TYPE oldValue = REMOVE_VALUE( KEY2TYPE( ok ) );
-		return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
+		return modified ? VALUE2OBJ( oldValue ) : OBJECT_DEFAULT_RETURN_VALUE;
 	}
 #endif
 
@@ -1088,29 +1088,19 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	}
 	 
 	 
+	public VALUE_TYPE GET_VALUE(final KEY_TYPE k) {
+		final Entry e = findKey( k );
+		return e == null ? defRetValue : e.value;
+	}
+
+
+#if !#keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
+
 	public Object get( final Object ok ) {
 		final Entry e = findKey( KEY2TYPE( ok ) );
-		return e == null ? OBJDEFRETVALUE : e.getValue();
-	}
-	 
-
-#if !#keyclass(Object)
-
-	public VALUE_TYPE get(final KEY_TYPE k) {
-		final Entry e = findKey( k );
-		return e == null ? defRetValue : e.value;
+		return e == null ? OBJECT_DEFAULT_RETURN_VALUE : e.getValue();
 	}
 
-#else
-#if !#valueclass(Object) && ! #valueclass(Reference)
-
-	public VALUE_TYPE GET_VALUE( final Object k ) {
-		final Entry e = findKey( k );
-		return e == null ? defRetValue : e.value;
-	}
-
-
-#endif
 #endif
 
 	public KEY_TYPE FIRST_KEY() {
@@ -1210,7 +1200,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			next = prev = curr;
 			updatePrevious();
 			updateNext();
-			AVLTREEMAP.this.REMOVE_VALUE( curr.key );
+			AVL_TREE_MAP.this.REMOVE_VALUE( curr.key );
 			curr = null;
 		}
 	}
@@ -1235,7 +1225,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 					if (!(o instanceof Map.Entry)) return false;
 					final Map.Entry e = (Map.Entry)o;
 					final Entry f = findKey( KEY2TYPE( e.getKey() ) );
-					if ( f != null ) AVLTREEMAP.this.REMOVE_VALUE( f.key );
+					if ( f != null ) AVL_TREE_MAP.this.REMOVE_VALUE( f.key );
 					return f != null;
 				}
 
@@ -1244,7 +1234,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 				}
 					 
 				public void clear() {
-					AVLTREEMAP.this.clear();
+					AVL_TREE_MAP.this.clear();
 				}
 					 
 			};
@@ -1280,7 +1270,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * @return a type-specific sorted set view of the keys contained in this map.
 	 */
 	public Set keySet() {
-		class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
+		class KeySet extends ABSTRACT_SORTED_SET {
 
 			public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 				return new KeyIterator();
@@ -1299,7 +1289,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			}					 
 
 			public boolean remove( final KEY_TYPE k ) {
-				AVLTREEMAP.this.REMOVE_VALUE( k );
+				AVL_TREE_MAP.this.REMOVE_VALUE( k );
 				return modified;
 			}					 
 
@@ -1312,21 +1302,14 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			}
 					 
 			public void clear() {
-				AVLTREEMAP.this.clear();
+				AVL_TREE_MAP.this.clear();
 			}
 			
-			public Object first() { return KEY2OBJ( firstEntry.key ); }
-			public Object last() { return KEY2OBJ( lastEntry.key ); }
-			public SortedSet headSet( final Object to  ) { return (SortedSet)AVLTREEMAP.this.headMap( to ).keySet(); }
-			public SortedSet tailSet( final Object from ) { return (SortedSet)AVLTREEMAP.this.tailMap( from ).keySet(); }
-			public SortedSet subSet( final Object from, final Object to ) { return (SortedSet)AVLTREEMAP.this.subMap( from, to ).keySet(); }
-#if !#keyclass(Object)
 			public KEY_TYPE FIRST() { return firstEntry.key; }
 			public KEY_TYPE LAST() { return lastEntry.key; }
-			public SORTEDSET headSet( final KEY_TYPE to  ) { return (SORTEDSET)AVLTREEMAP.this.headMap( to ).keySet(); }
-			public SORTEDSET tailSet( final KEY_TYPE from ) { return  (SORTEDSET)AVLTREEMAP.this.tailMap( from ).keySet(); }
-			public SORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (SORTEDSET)AVLTREEMAP.this.subMap( from, to ).keySet(); }
-#endif
+			public STD_SORTED_SET headSet( final KEY_TYPE to  ) { return (SORTED_SET)AVL_TREE_MAP.this.headMap( to ).keySet(); }
+			public STD_SORTED_SET tailSet( final KEY_TYPE from ) { return  (SORTED_SET)AVL_TREE_MAP.this.tailMap( from ).keySet(); }
+			public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (SORTED_SET)AVL_TREE_MAP.this.subMap( from, to ).keySet(); }
 		};
 
 		if ( keys == null ) keys = new KeySet();
@@ -1375,7 +1358,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 				}
 					 
 				public void clear() {
-					AVLTREEMAP.this.clear();
+					AVL_TREE_MAP.this.clear();
 				}
 					 
 			};
@@ -1387,31 +1370,17 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		return storedComparator;
 	}
 
-	public SortedMap headMap( Object to  ) {
-		return new Submap( KEY_NULL, true, KEY2TYPE( to ), false );
-	}
-
-	public SortedMap tailMap( Object from ) {
-		return new Submap( KEY2TYPE( from ), false, KEY_NULL, true );
-	}
-
-	public SortedMap subMap( Object from, Object to ) {
-		return new Submap( KEY2TYPE( from ), false, KEY2TYPE( to ), false );
-	}
-
-#if !#keyclass(Object)
-	public SORTEDMAP headMap( KEY_TYPE to ) {
+	public STD_SORTED_MAP headMap( KEY_TYPE to ) {
 		return new Submap( KEY_NULL, true, to, false );
 	}
 
-	public SORTEDMAP tailMap( KEY_TYPE from ) {
+	public STD_SORTED_MAP tailMap( KEY_TYPE from ) {
 		return new Submap( from, false, KEY_NULL, true );
 	}
 
-	public SORTEDMAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
+	public STD_SORTED_MAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
 		return new Submap( from, false, to, false );
 	}
-#endif
 
 	/** A submap with given range.
 	 *
@@ -1422,7 +1391,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 * {@link #firstKey()} or {@link #size()} must be always computed
 	 * on-the-fly.  
 	 */
-	private final class Submap extends ABSTRACT_MAP implements java.io.Serializable, SORTEDMAP {
+	private final class Submap extends ABSTRACT_SORTED_MAP implements java.io.Serializable, SORTED_MAP {
 		/** The start of the submap range, unless {@link #bottom} is true. */
 		KEY_TYPE from;
 		/** The end of the submap range, unless {@link #top} is true. */
@@ -1446,13 +1415,13 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		 * @param top if true, the third parameter is ignored and the range goes to &infin;.
 		 */
 		public Submap( final KEY_TYPE from, final boolean bottom, final KEY_TYPE to, final boolean top ) {
-			if ( ! bottom && ! top && AVLTREEMAP.this.compare( from, to ) > 0 ) throw new IllegalArgumentException( "Start key (" + from  + ") is larger than end key (" + to + ")" );
+			if ( ! bottom && ! top && AVL_TREE_MAP.this.compare( from, to ) > 0 ) throw new IllegalArgumentException( "Start key (" + from  + ") is larger than end key (" + to + ")" );
 
 			this.from = from;
 			this.bottom = bottom;
 			this.to = to;
 			this.top = top;
-			this.defRetValue = AVLTREEMAP.this.defRetValue;
+			this.defRetValue = AVL_TREE_MAP.this.defRetValue;
 		}
 
 		public void clear() {
@@ -1468,8 +1437,8 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		 * @return true if is the key is in the submap range.
 		 */
 		final boolean in( final KEY_TYPE k ) {
-			return ( bottom || AVLTREEMAP.this.compare( k, from ) >= 0 ) &&
-				( top || AVLTREEMAP.this.compare( k, to ) < 0 );
+			return ( bottom || AVL_TREE_MAP.this.compare( k, from ) >= 0 ) &&
+				( top || AVL_TREE_MAP.this.compare( k, to ) < 0 );
 		}
 
 		public Set entrySet() {
@@ -1481,14 +1450,14 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 					public boolean contains( final Object o ) {
 						if (!(o instanceof Map.Entry)) return false;
 						final Map.Entry e = (Map.Entry)o;
-						final AVLTREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						final AVL_TREE_MAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
 						return f != null && in( f.key ) && e.equals( f );
 					}					 
 
 					public boolean remove( final Object o ) {
 						if (!(o instanceof Map.Entry)) return false;
 						final Map.Entry e = (Map.Entry)o;
-						final AVLTREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						final AVL_TREE_MAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
 						if ( f != null && in( f.key ) ) Submap.this.REMOVE_VALUE( f.key );
 						return f != null;
 					}
@@ -1514,7 +1483,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		}
 
 		public Set keySet() {
-			class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
+			class KeySet extends ABSTRACT_SORTED_SET implements SORTED_SET {
 				public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 					return new SubmapKeyIterator();
 				}
@@ -1548,19 +1517,11 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 					Submap.this.clear();
 				}
 
-				public Object first() { return KEY2OBJ( firstEntry().key ); }
-				public Object last() { return KEY2OBJ( lastEntry().key ); }
-				public SortedSet headSet( final Object to  ) { return (SortedSet)Submap.this.headMap( to ).keySet(); }
-				public SortedSet tailSet( final Object from ) { return (SortedSet)Submap.this.tailMap( from ).keySet(); }
-				public SortedSet subSet( final Object from, final Object to ) { return (SortedSet)Submap.this.subMap( from, to ).keySet(); }
-#if !#keyclass(Object)
 				public KEY_TYPE FIRST() { return firstEntry().key; }
 				public KEY_TYPE LAST() { return lastEntry().key; }
-				public SORTEDSET headSet( final KEY_TYPE to  ) { return (SORTEDSET)Submap.this.headMap( to ).keySet(); }
-				public SORTEDSET tailSet( final KEY_TYPE from ) { return  (SORTEDSET)Submap.this.tailMap( from ).keySet(); }
-				public SORTEDSET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (SORTEDSET)Submap.this.subMap( from, to ).keySet(); }
-#endif
-			 
+				public STD_SORTED_SET headSet( final KEY_TYPE to  ) { return (SORTED_SET)Submap.this.headMap( to ).keySet(); }
+				public STD_SORTED_SET tailSet( final KEY_TYPE from ) { return  (SORTED_SET)Submap.this.tailMap( from ).keySet(); }
+				public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (SORTED_SET)Submap.this.subMap( from, to ).keySet(); }
 			};
 
 			if ( keys == null ) keys = new KeySet();
@@ -1591,7 +1552,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		}
 		  
 		public boolean containsKey( final KEY_TYPE k ) {
-			return in( k ) && AVLTREEMAP.this.containsKey( k );
+			return in( k ) && AVL_TREE_MAP.this.containsKey( k );
 		}
 
 		public boolean containsValue( final VALUE_TYPE v ) {
@@ -1599,7 +1560,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			VALUE_TYPE ev;
 				
 			while( i.hasNext() ) {
-				ev = ((AVLTREEMAP.Entry)i.next()).value;
+				ev = ((AVL_TREE_MAP.Entry)i.next()).value;
 				if ( VALUE_EQUAL( ev, v ) ) return true;
 			}
 				
@@ -1607,29 +1568,23 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		}
 		  
 
+		public VALUE_TYPE GET_VALUE(final KEY_TYPE k) {
+			final AVL_TREE_MAP.Entry e;
+			return in( k ) && ( e = findKey( k ) ) != null ? e.value : this.defRetValue;
+		}
+		  
+		  
+#if ! #keyclass(Object) || ! #valueclass(Object) && ! #valueclass(Reference)
 		public Object get( final Object ok ) {
-			final AVLTREEMAP.Entry e;
-			return in( KEY2TYPE( ok ) ) &&  ( e = findKey( KEY2TYPE( ok ) ) ) != null ? e.getValue() : OBJDEFRETVALUE;
-		}
-		  
-		  
-#if ! #keyclass(Object)
-		public VALUE_TYPE get(final KEY_TYPE k) {
-			final AVLTREEMAP.Entry e;
-			return in( k ) && ( e = findKey( k ) ) != null ? e.value : this.defRetValue;
-		}
-#elif ! #valueclass(Object) && ! #valueclass(Reference)
-		public VALUE_TYPE GET_VALUE(final Object k) {
-			final AVLTREEMAP.Entry e;
-			return in( k ) && ( e = findKey( k ) ) != null ? e.value : this.defRetValue;
+			final AVL_TREE_MAP.Entry e;
+			return in( KEY2TYPE( ok ) ) &&  ( e = findKey( KEY2TYPE( ok ) ) ) != null ? e.getValue() : OBJECT_DEFAULT_RETURN_VALUE;
 		}
 #endif
-		  
 		  
 		public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
 			modified = false;
 			if ( ! in( k ) ) throw new IllegalArgumentException( "Key (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
-			final VALUE_TYPE oldValue = AVLTREEMAP.this.put( k, v );
+			final VALUE_TYPE oldValue = AVL_TREE_MAP.this.put( k, v );
 			return modified ? this.defRetValue : oldValue;
 		}
 
@@ -1637,21 +1592,21 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 #if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
 		public Object put( final Object ok, final Object ov ) {
 			final VALUE_TYPE oldValue = put( KEY2TYPE(ok), VALUE2TYPE(ov) );
-			return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
+			return modified ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ( oldValue );
 		}
 #endif
 
 		public VALUE_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
 			modified = false;
 			if ( ! in( k ) ) return this.defRetValue;
-			final VALUE_TYPE oldValue = AVLTREEMAP.this.REMOVE_VALUE( k );
+			final VALUE_TYPE oldValue = AVL_TREE_MAP.this.REMOVE_VALUE( k );
 			return modified ? oldValue : this.defRetValue;
 		}
 
 #if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
 		public Object remove( final Object ok ) {
 			final VALUE_TYPE oldValue = REMOVE_VALUE( KEY2TYPE( ok ) );
-			return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
+			return modified ? VALUE2OBJ( oldValue ) : OBJECT_DEFAULT_RETURN_VALUE;
 		}
 #endif
 
@@ -1676,60 +1631,33 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			return storedComparator;
 		}
 		  
-		public SortedMap headMap( final Object oto ) {
-			final KEY_TYPE to = KEY2TYPE( oto );
-
+		public STD_SORTED_MAP headMap( final KEY_TYPE to ) {
 			if ( top ) return new Submap( from, bottom, to, false );
 			return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
 		}
 		  
-		public SortedMap tailMap( final Object ofrom ) {
-			final KEY_TYPE from = KEY2TYPE( ofrom );
-
+		public STD_SORTED_MAP tailMap( final KEY_TYPE from ) {
 			if ( bottom ) return new Submap( from, false, to, top );
 			return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
 		}
 		  
-		public SortedMap subMap( final Object ofrom, final Object oto ) {
-			KEY_TYPE to = KEY2TYPE( oto );
-			KEY_TYPE from = KEY2TYPE( ofrom );
-
-			if ( top && bottom ) return new Submap( from, false, to, false );
-			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
-			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
-			if ( ! top && ! bottom && from == this.from && to == this.to ) return this;
-			return new Submap( from, false, to, false );
-		}
-
-#if !#keyclass(Object)
-		public SORTEDMAP headMap( final KEY_TYPE to ) {
-			if ( top ) return new Submap( from, bottom, to, false );
-			return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
-		}
-		  
-		public SORTEDMAP tailMap( final KEY_TYPE from ) {
-			if ( bottom ) return new Submap( from, false, to, top );
-			return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
-		}
-		  
-		public SORTEDMAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
+		public STD_SORTED_MAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
 			if ( top && bottom ) return new Submap( from, false, to, false );
 			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
 			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
 	 		if ( ! top && ! bottom && from == this.from && to == this.to ) return this;
 			return new Submap( from, false, to, false );
 		}
-#endif
 
 		/** Locates the first entry.
 		 *
 		 * @param k a key.
 		 * @return the first entry of this submap, or <code>null</code> if the submap is empty.
 		 */
-		public AVLTREEMAP.Entry firstEntry() {
+		public AVL_TREE_MAP.Entry firstEntry() {
 			if ( tree == null ) return null;
 			// If this submap goes to -infinity, we return the main map first entry; otherwise, we locate the start of the map.
-			AVLTREEMAP.Entry e;
+			AVL_TREE_MAP.Entry e;
 			if ( bottom ) e = firstEntry;
 			else {
 				e = locateKey( from );
@@ -1746,10 +1674,10 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		 * @param k a key.
 		 * @return the last entry of this submap, or <code>null</code> if the submap is empty.
 		 */
-		public AVLTREEMAP.Entry lastEntry() {
+		public AVL_TREE_MAP.Entry lastEntry() {
 			if ( tree == null ) return null;
 			// If this submap goes to infinity, we return the main map last entry; otherwise, we locate the end of the map.
-			AVLTREEMAP.Entry e;
+			AVL_TREE_MAP.Entry e;
 			if ( top ) e = lastEntry;
 			else {
 				e = locateKey( to );
@@ -1762,25 +1690,25 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 
 
 		public KEY_TYPE FIRST_KEY() {
-			AVLTREEMAP.Entry e = firstEntry();
+			AVL_TREE_MAP.Entry e = firstEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
 		public KEY_TYPE LAST_KEY() {
-			AVLTREEMAP.Entry e = lastEntry();
+			AVL_TREE_MAP.Entry e = lastEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
 	 
 #if !#keyclass(Object)
 		public Object firstKey() {
-			AVLTREEMAP.Entry e = firstEntry();
+			AVL_TREE_MAP.Entry e = firstEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.getKey();
 		}
 	 
 		public Object lastKey() {
-			AVLTREEMAP.Entry e = lastEntry();
+			AVL_TREE_MAP.Entry e = lastEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.getKey();
 		}
@@ -1819,12 +1747,12 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 
 			void updatePrevious() {
 				prev = prev.prev();
-				if ( ! bottom && prev != null && AVLTREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
+				if ( ! bottom && prev != null && AVL_TREE_MAP.this.compare( prev.key, from ) < 0 ) prev = null;
 			}
 				
 			void updateNext() {
 				next = next.next();
-				if ( ! top && next != null && AVLTREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
+				if ( ! top && next != null && AVL_TREE_MAP.this.compare( next.key, to ) >= 0 ) next = null;
 			}
 		}
 
@@ -1881,9 +1809,9 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	 */
 
 	public Object clone() {
-		AVLTREEMAP c;
+		AVL_TREE_MAP c;
 		try {
-			c = (AVLTREEMAP)super.clone();
+			c = (AVL_TREE_MAP)super.clone();
 		}
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
@@ -2085,7 +2013,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 
 	private static void speedTest( int n, boolean comp ) {
 		int i, j;
-		AVLTREEMAP m;
+		AVL_TREE_MAP m;
 		java.util.TreeMap t;
 		KEY_TYPE k[] = new KEY_TYPE[n];
 		KEY_TYPE nk[] = new KEY_TYPE[n];
@@ -2171,7 +2099,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 
 		for( j = 0; j < 20; j++ ) {
 
-			m = new AVLTREEMAP();
+			m = new AVL_TREE_MAP();
 
 			/* We first add all pairs to m. */
 			for( i = 0; i < n;  i++ ) m.put( k[i], v[i] );
@@ -2264,9 +2192,9 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 	private static KEY_TYPE kt[];
 	private static KEY_TYPE nkt[];
 	private static VALUE_TYPE vt[];
-	private static AVLTREEMAP topMap;
+	private static AVL_TREE_MAP topMap;
 
-	protected static void testMaps( SORTEDMAP m, SortedMap t, int n, int level ) {
+	protected static void testMaps( SORTED_MAP m, SortedMap t, int n, int level ) {
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement;
 		Object rt = null, rm = null;
@@ -2553,8 +2481,8 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		/* Now we check cloning. */
 
 		if ( level == 0 ) {
-			ensure( m.equals( ((AVLTREEMAP)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
-			ensure( ((AVLTREEMAP)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
+			ensure( m.equals( ((AVL_TREE_MAP)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
+			ensure( ((AVL_TREE_MAP)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
 		}
 
 		int h = m.hashCode();
@@ -2562,7 +2490,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 
 		/* Now we save and read m. */
 
-		SORTEDMAP m2 = null;
+		SORTED_MAP m2 = null;
 		  
 		try {
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
@@ -2575,7 +2503,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			java.io.InputStream is = new java.io.FileInputStream(ff);
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-			m2 = (SORTEDMAP)ois.readObject();
+			m2 = (SORTED_MAP)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
@@ -2659,7 +2587,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 				previous = k;
 			}
 
-			i = (it.unimi.dsi.fastutil.BidirectionalIterator)((SORTEDSET)m.keySet()).iterator( from ); 
+			i = (it.unimi.dsi.fastutil.BidirectionalIterator)((SORTED_SET)m.keySet()).iterator( from ); 
 
 			for( int k = 0; k < 2*n; k++ ) {
 				ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
@@ -2706,19 +2634,19 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 			for( ; i.hasNext() && r.nextFloat() < .95; end = i.next() );
 				
 			//System.err.println("Checking subMap from " + start + " to " + end + " (level=" + (level+1) + ")..." );
-			testMaps( (SORTEDMAP)m.subMap( start, end ), t.subMap( start, end ), n, level + 1 );
+			testMaps( (SORTED_MAP)m.subMap( start, end ), t.subMap( start, end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subMap" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subMap" );
 
 			//System.err.println("Checking headMap to " + end + " (level=" + (level+1) + ")..." );
-			testMaps( (SORTEDMAP)m.headMap( end ), t.headMap( end ), n, level + 1 );
+			testMaps( (SORTED_MAP)m.headMap( end ), t.headMap( end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headMap" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headMap" );
 
 			//System.err.println("Checking tailMap from " + start + " (level=" + (level+1) + ")..." );
-			testMaps( (SORTEDMAP)m.tailMap( start ), t.tailMap( start ), n, level + 1 );
+			testMaps( (SORTED_MAP)m.tailMap( start ), t.tailMap( start ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailMap" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailMap" );
@@ -2729,7 +2657,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 
 
 	private static void test( int n ) {
-		AVLTREEMAP m = new AVLTREEMAP();
+		AVL_TREE_MAP m = new AVL_TREE_MAP();
 		SortedMap t = new java.util.TreeMap();
 		topMap = m;
 		k = new Object[n];
@@ -2774,8 +2702,8 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements java.io.Serializable, Cl
 		try {
 			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
 			else if ( "test".equals( args[0] ) ) test(n);
-		} catch( AssertionError e ) {
-			System.err.println( e );
+		} catch( Throwable e ) {
+			e.printStackTrace( System.err );
 			System.err.println( "seed: " + seed );
 		}
 	}

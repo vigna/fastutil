@@ -164,10 +164,20 @@ $(ABSTRACT_SETS): AbstractSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_SETS)
 
+ABSTRACT_SORTED_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)SortedSet.c)
+$(ABSTRACT_SORTED_SETS): AbstractSortedSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_SORTED_SETS)
+
 ABSTRACT_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Map.c))
 $(ABSTRACT_MAPS): AbstractMap.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_MAPS)
+
+ABSTRACT_SORTED_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)2$(v)SortedMap.c))
+$(ABSTRACT_SORTED_MAPS): AbstractSortedMap.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_SORTED_MAPS)
 
 ABSTRACT_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)List.c)
 $(ABSTRACT_LISTS): AbstractList.drv; ./gencsource.sh $< $@ >$@
@@ -315,10 +325,10 @@ $(SETS_STATIC): Sets.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(SETS_STATIC)
 
 
-SORTEDSETS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)SortedSets.c)
-$(SORTEDSETS_STATIC): SortedSets.drv; ./gencsource.sh $< $@ >$@
+SORTED_SETS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)SortedSets.c)
+$(SORTED_SETS_STATIC): SortedSets.drv; ./gencsource.sh $< $@ >$@
 
-CSOURCES += $(SORTEDSETS_STATIC)
+CSOURCES += $(SORTED_SETS_STATIC)
 
 
 LISTS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Lists.c)
@@ -357,10 +367,10 @@ $(MAPS_STATIC): Maps.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(MAPS_STATIC)
 
 
-SORTEDMAPS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)SortedMaps.c))
-$(SORTEDMAPS_STATIC): SortedMaps.drv; ./gencsource.sh $< $@ >$@
+SORTED_MAPS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)SortedMaps.c))
+$(SORTED_MAPS_STATIC): SortedMaps.drv; ./gencsource.sh $< $@ >$@
 
-CSOURCES += $(SORTEDMAPS_STATIC)
+CSOURCES += $(SORTED_MAPS_STATIC)
 
 
 COMPARATORS_STATIC := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Comparators.c)
@@ -383,6 +393,7 @@ SOURCES = \
 	$(SOURCEDIR)/Iterators.java \
 	$(SOURCEDIR)/Collections.java \
 	$(SOURCEDIR)/Sets.java \
+	$(SOURCEDIR)/Maps.java \
 	$(SOURCEDIR)/SortedSets.java \
 	$(SOURCEDIR)/Lists.java \
 	$(SOURCEDIR)/Arrays.java \

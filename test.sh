@@ -69,16 +69,51 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
-    SINGLETON=(Sets SortedSets Lists)
+    STATIC=(Sets Lists)
 
-    for ((f=0; f<${#SINGLETONS[*]}; f++)); do
+    for ((f=0; f<${#STATIC[*]}; f++)); do
 	l=${#TYPE[*]}
 	for ((k=0; k<l; k++)); do
-		if [[ ${SINGLETON[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi
-		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${SINGLETON[$f]}
-		echo "Testing ${TYPE_CAP[$k]} ${SINGLETON[$f]} singleton..."
+		if [[ ${STATIC[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${STATIC[$f]}
+		echo "Testing ${TYPE_CAP[$k]} ${STATIC[$f]} singleton..."
 		java -ea -server $CLASSNAME ${TYPE_CAP[$k]}
 	done
     done
 
+    STATIC=(SortedSets)
+
+    for ((f=0; f<${#STATIC[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=1; k<l-1; k++)); do
+		if [[ ${STATIC[$f]} == "SortedSets" && $k == 0 ]]; then k=1; fi
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${STATIC[$f]}
+		echo "Testing ${TYPE_CAP[$k]} ${STATIC[$f]} singleton..."
+		java -ea -server $CLASSNAME ${TYPE_CAP[$k]}
+	done
+    done
+
+    STATIC=(SortedMaps)
+
+    for ((f=0; f<${#STATIC[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=1; k<l-1; k++)); do
+	    for ((v=1; v<${#TYPE[*]}; v++)); do
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${STATIC[$f]}
+		echo "Testing ${TYPE_CAP[$k]} ${STATIC[$f]} singleton..."
+		java -ea -server $CLASSNAME ${TYPE_CAP[$k]}
+	    done
+	done
+    done
+
+    FRONT=(ArrayFrontCodedList)
+
+    for ((f=0; f<${#FRONT[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=1; k<6; k++)); do
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${FRONT[$f]}
+		echo "Testing $CLASSNAME ($t elements)..."
+		java -ea -server $CLASSNAME test $t
+	done
+    done
 done

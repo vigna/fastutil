@@ -23,7 +23,31 @@ package PACKAGE;
 
 import java.util.Map;
 
-/** A type-specific {@link Map}; provides some additional methods that use polymorphism to reduce type juggling.
+/** A type-specific {@link Map}; provides some additional methods that use polymorphism to reduce type juggling, and handling of a default return value.
+ *
+ * <P>Type-specific versions of <code>get()</code>, <code>put()</code> and
+ * <code>remove()</code> cannot rely on <code>null</code> to denote absence of
+ * a key.  Rather, they return a {@linkplain #defaultReturnValue() default
+ * return value}, which is set to 0 cast to the return type (<code>false</code>
+ * for booleans) at creation, but can be changed using the
+ * <code>defaultReturnValue()</code> method. 
+ *
+ * <P>For uniformity reasons, even maps returning objects implement the default
+ * return value (of course, in this case the default return value is
+ * initialized to <code>null</code>). This very useful for {@linkplain
+ * it.unimi.dsi.fastutil.Maps#MISSING maps containing <code>null</code> keys}.
+ *
+ * <P>A submap or subset may or may not have an
+ * independent default return value (which however must be initialized to the
+ * default return value of the originator).
+ *
+ * <P><strong>Warning:</strong> to fall in line as much as possible with the
+ * {@linkplain java.util.Map standard map interface}, it is strongly suggested
+ * that standard versions of <code>get()</code>, <code>put()</code> and
+ * <code>remove()</code> for maps with primitive-type values <em>return
+ * <code>null</code> to denote missing keys</em> rather than wrap the default
+ * return value in an object (of course, for maps with object keys and values
+ * this is not possible, as there is no type-specific version).
  *
  * @see Map
  */
@@ -85,14 +109,7 @@ public interface MAP extends Map {
 #endif
 
 
-
-
 	/**
-	 * Sets the default return value. This value is returned 
-	 * by <code>get()</code>, <code>put()</code> and <code>remove()</code> to denote
-	 * that the map does not contain the specified key. It is 0/<code>false</code>/<code>null</code>
-	 * by default.
-	 *
 	 * @param rv the new default return value.
 	 * @see #getDefRetValue()
 	 * @see #defaultReturnValue()
@@ -103,8 +120,6 @@ public interface MAP extends Map {
 
 	 
 	/**
-	 * Gets the default return value.
-	 *
 	 * @return the current default return value.
 	 * @see #defaultReturnValue()
 	 * @deprecated As of <code>fastutil</code> 2.0, replaced by {@link #defaultReturnValue()}.
@@ -115,9 +130,10 @@ public interface MAP extends Map {
 	 
 	/*** Sets the default return value. 
 	 *
-	 * This value is returned by <code>get()</code>, <code>put()</code> and
-	 * <code>remove()</code> to denote that the map does not contain the
-	 * specified key. It is 0/<code>false</code>/<code>null</code> by default.
+	 * This value must be returned by type-specific versions of
+	 * <code>get()</code>, <code>put()</code> and <code>remove()</code> to
+	 * denote that the map does not contain the specified key. It must be
+	 * 0/<code>false</code>/<code>null</code> by default.
 	 *
 	 * @param rv the new default return value.
 	 * @see #defaultReturnValue()

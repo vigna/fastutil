@@ -94,7 +94,7 @@ import java.util.NoSuchElementException;
  * build incrementally the previous array (whereas ({@link java.util.ListIterator#next() next()} can).
  */
 
-public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable {
+public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serializable, Cloneable {
 
 	public static final long serialVersionUID = -7046029254386353130L;
 
@@ -115,7 +115,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 	 * @param ratio the desired ratio.
 	 */
 
-	public FRONT_CODED_LIST( final Iterator arrays, final int ratio ) {
+	public ARRAY_FRONT_CODED_LIST( final Iterator arrays, final int ratio ) {
 
 		if ( ratio < 1 ) throw new IllegalArgumentException( "Illegal ratio (" + ratio + ")" );
 
@@ -157,7 +157,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 
 		this.ratio = ratio;
 		this.array = ARRAYS.trim( array, curSize );
-		this.p = IntArrays.trim( p, n / ratio );
+		this.p = IntArrays.trim( p, ( n + ratio - 1 ) / ratio );
 
 	}
 
@@ -167,7 +167,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 	 * @param ratio the desired ratio.
 	 */
 
-	public FRONT_CODED_LIST( final Collection c, final int ratio ) {
+	public ARRAY_FRONT_CODED_LIST( final Collection c, final int ratio ) {
 		this( c.iterator(), ratio );
 	}
 
@@ -498,6 +498,38 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 				}
 			};
 	}
+
+
+	/** Returns a copy of this list. 
+	 *
+	 *  @return a copy of this list.
+	 */
+
+	public Object clone() {
+		ARRAY_FRONT_CODED_LIST c;
+		try {
+			c = (ARRAY_FRONT_CODED_LIST)super.clone();
+		}
+		catch( CloneNotSupportedException cantHappen ) {
+			throw new InternalError();
+		}
+		c.array = (KEY_TYPE[]) array.clone();
+		c.p = (int[]) p.clone();
+		return c;
+	}
+
+
+	public String toString() {
+		final StringBuffer s = new StringBuffer();
+		s.append( "[ " );
+		for( int i = 0; i < n; i++ ) {
+			if ( i != 0 ) s.append( ", " );
+			s.append( ARRAY_LIST.wrap( getArray( i ) ).toString() );
+		}
+		s.append( " ]" );
+		return s.toString();
+	}
+
 	
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
@@ -521,6 +553,126 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 
 		this.p = p;
 	}
+
+
+#ifdef TEST
+
+	private static long seed = System.currentTimeMillis(); 
+	private static java.util.Random r = new java.util.Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif !#keyclass(Object) && !#keyclass(Reference)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else
+		return new java.io.Serializable() {};
+#endif
+	}
+
+
+	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
+
+	private static String format( double d ) {
+		StringBuffer s = new StringBuffer();
+		return format.format( d, s, fp ).toString();
+	}
+
+	private static void speedTest( int n, boolean comp ) {
+		System.out.println( "There are presently no speed tests for this class." );
+	}
+
+
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
+
+	private static boolean contentEquals( java.util.List x, java.util.List y ) {
+		if ( x.size() != y.size() ) return false;
+		for( int i = 0; i < x.size(); i++ ) if ( ! java.util.Arrays.equals( (KEY_TYPE[])x.get( i ), (KEY_TYPE[])y.get( i ) ) ) return false;
+		return true;
+	}
+
+	private static int l[];
+	private static KEY_TYPE[][] a; 
+
+
+	private static void test( int n ) {
+		int c, i, j;
+
+		l = new int[ n ];
+		a = new KEY_TYPE[n][];
+
+		for( i = 0; i < n; i++ ) l[i] = (int)(Math.abs(r.nextGaussian())*32);
+		for( i = 0; i < n; i++ ) a[i] = new KEY_TYPE[l[i]];
+		for( i = 0; i < n; i++ ) for( j = 0; j < l[i]; j++ ) a[i][j] = genKey();
+
+		ARRAY_FRONT_CODED_LIST m = new ARRAY_FRONT_CODED_LIST( it.unimi.dsi.fastutil.objects.ObjectIterators.wrap( a ), r.nextInt( 4 ) + 1 );
+		it.unimi.dsi.fastutil.objects.ObjectArrayList t = new it.unimi.dsi.fastutil.objects.ObjectArrayList( a );
+
+		//System.out.println(m);
+		//for( i = 0; i < t.size(); i++ ) System.out.println(ARRAY_LIST.wrap((KEY_TYPE[])t.get(i)));
+
+		/* Now we check that m actually holds that data. */
+		  
+		ensure( contentEquals( m, t ), "Error (" + seed + "): m does not equal t at creation" );
+
+		/* Now we check cloning. */
+
+		ensure( contentEquals( m, (java.util.List)m.clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+
+		try {
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+			oos.writeObject(m);
+			oos.close();
+				
+			java.io.InputStream is = new java.io.FileInputStream(ff);
+			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+			m = (ARRAY_FRONT_CODED_LIST)ois.readObject();
+			ois.close();
+			ff.delete();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+
+		ensure( contentEquals( m, t ), "Error (" + seed + "): m does not equal t after save/read" );
+
+		System.out.println("Test OK");
+		return;
+	}
+
+
+	public static void main( String args[] ) {
+		int n  = Integer.parseInt(args[1]);
+		if ( args.length > 2 ) r = new java.util.Random( seed = Long.parseLong( args[ 3 ] ) );
+		  
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( Throwable e ) {
+			e.printStackTrace( System.err );
+			System.err.println( "seed: " + seed );
+		}
+	}
+
+#endif
+
+
 }
 
 

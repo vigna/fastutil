@@ -86,7 +86,7 @@ import java.util.SortedSet;
  * @see HashCommon
  */
 
-public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, Cloneable, Hash, SORTEDMAP {
+public class OPEN_HASH_MAP extends ABSTRACT_SORTED_MAP implements java.io.Serializable, Cloneable, Hash, SORTED_MAP {
 
 #else
 
@@ -110,7 +110,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
  * @see HashCommon
  */
 
-public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, Cloneable, Hash, MAP {
+public class OPEN_HASH_MAP extends ABSTRACT_MAP implements java.io.Serializable, Cloneable, Hash, MAP {
 
 #endif
 	/** The array of keys. */
@@ -174,7 +174,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * @see Hash#PRIMES
 	 */
 	 
-	public OPENHASHMAP( final int n, final float f ) {
+	public OPEN_HASH_MAP( final int n, final float f ) {
 		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
 		if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
@@ -198,7 +198,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * @param n the expected number of elements in the hash map.
 	 */
 	 
-	public OPENHASHMAP( final int n ) {
+	public OPEN_HASH_MAP( final int n ) {
 		this( n, DEFAULT_LOAD_FACTOR );
 	}
 
@@ -208,7 +208,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 */
 	 
-	public OPENHASHMAP() {
+	public OPEN_HASH_MAP() {
 		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR );
 	}
 
@@ -219,7 +219,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * @param f the load factor.
 	 */
 	 
-	public OPENHASHMAP( final Map m, final float f ) {
+	public OPEN_HASH_MAP( final Map m, final float f ) {
 		this( m.size(), f );
 		putAll( m );
 	}
@@ -229,7 +229,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * @param m a {@link Map} to be copied into the new hash map. 
 	 */
 	 
-	public OPENHASHMAP( final Map m ) {
+	public OPEN_HASH_MAP( final Map m ) {
 		this( m, DEFAULT_LOAD_FACTOR );
 	}
 
@@ -239,7 +239,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * @param f the load factor.
 	 */
 	 
-	public OPENHASHMAP( final MAP m, final float f ) {
+	public OPEN_HASH_MAP( final MAP m, final float f ) {
 		this( m.size(), f );
 		putAll( m );
 	}
@@ -249,7 +249,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 * @param m a type-specific map to be copied into the new hash map. 
 	 */
 	 
-	public OPENHASHMAP( final MAP m ) {
+	public OPEN_HASH_MAP( final MAP m ) {
 		this( m, DEFAULT_LOAD_FACTOR );
 	}
 
@@ -357,45 +357,6 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 
 
 
-	public Object put(final Object ok, final Object ov) {
-		final VALUE_TYPE v = VALUE2TYPE(ov);
-		final KEY_TYPE k = KEY2TYPE(ok);
-
-		final int i = findInsertionPoint( k );
-		  
-		if (i < 0) {
-			final VALUE_TYPE oldValue = value[-i-1];
-			value[-i-1] = v;
-			return VALUE2OBJ(oldValue);
-		}
-
-		if ( state[i] == FREE ) free--;
-		state[i] = OCCUPIED;
-		key[i] = k;
-		value[i] = v;
-
-#ifdef linked
-		if ( count == 0 ) {
-			first = last = i;
-			link[ i ] = 0;
-		}
-		else {
-			link[ last ] ^= i ^ -1;
-			link[ i ] = last ^ -1;
-			last = i;
-		}
-#endif
-
-		if ( ++count >= maxFill ) rehash( Math.min(p+16, PRIMES.length-1) ); // Table too filled, let's rehash
-		if ( free == 0 ) rehash( p );
-		if ( asserts ) checkTable();
-		return null;
-	}
-	 
-
-#if ! #valueclass(Object) && ! #valueclass(Reference) || ! #keyclass(Object) && ! #keyclass(Reference)
-
-
 	public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
 		final int i = findInsertionPoint( k );
 		  
@@ -429,39 +390,48 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	}
 
 
-#endif
 
+#if ! #valueclass(Object) && ! #valueclass(Reference) || ! #keyclass(Object) && ! #keyclass(Reference)
 
-
-	public Object remove(final Object ok) {
+	public Object put(final Object ok, final Object ov) {
+		final VALUE_TYPE v = VALUE2TYPE(ov);
 		final KEY_TYPE k = KEY2TYPE(ok);
-		final int i = findKey(k);
-		if (i < 0) return null;
 
-		state[i] = REMOVED;
-		count--;
+		final int i = findInsertionPoint( k );
+		  
+		if (i < 0) {
+			final VALUE_TYPE oldValue = value[-i-1];
+			value[-i-1] = v;
+			return VALUE2OBJ(oldValue);
+		}
 
-#if #keyclass(Object) || #keyclass(Reference)
-		key[i] = HashCommon.removed;
-#endif
-
-#if #valueclass(Object) || #valueclass(Reference)
-		final Object v = value[i];
-		value[i] = HashCommon.removed;
-#endif
+		if ( state[i] == FREE ) free--;
+		state[i] = OCCUPIED;
+		key[i] = k;
+		value[i] = v;
 
 #ifdef linked
-		fixPointers( i );
+		if ( count == 0 ) {
+			first = last = i;
+			link[ i ] = 0;
+		}
+		else {
+			link[ last ] ^= i ^ -1;
+			link[ i ] = last ^ -1;
+			last = i;
+		}
 #endif
 
+		if ( ++count >= maxFill ) rehash( Math.min(p+16, PRIMES.length-1) ); // Table too filled, let's rehash
+		if ( free == 0 ) rehash( p );
 		if ( asserts ) checkTable();
-
-#if #valueclass(Object) || #valueclass(Reference)
-		return v;
-#else
-		return VALUE2OBJ( value[i] );
-#endif
+		return OBJECT_DEFAULT_RETURN_VALUE;
 	}
+	 
+
+#endif
+
+
 
 
 	public boolean containsValue( final VALUE_TYPE v ) {
@@ -563,36 +533,11 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		return key[ last ];
 	}
 
-	final public SortedMap tailMap( Object ofrom ) { throw new UnsupportedOperationException(); }
-	final public SortedMap headMap( Object oto ) { throw new UnsupportedOperationException(); }
-	final public SortedMap subMap( Object ofrom, Object oto ) { throw new UnsupportedOperationException(); }
 	final public Comparator comparator() { return null; }
 
-#if !#keyclass(Object) && !#keyclass(Reference)
-
-	/** Returns the first key of this map in iteration order as an object.
-	 *
-	 * @return the first key in iteration order as an object.
-	 */
-	final public Object firstKey() {
-		return KEY2OBJ( FIRST_KEY() );
-	}
-
-
-	/** Returns the last key of this map in iteration order as an object.
-	 *
-	 * @return the last key in iteration order as an object.
-	 */
-	final public Object lastKey() {
-		return KEY2OBJ( LAST_KEY() );
-	}
-
-	final public SORTEDMAP tailMap( KEY_TYPE ofrom ) { throw new UnsupportedOperationException(); }
-	final public SORTEDMAP headMap( KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
-	final public SORTEDMAP subMap( KEY_TYPE ofrom, KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
-
-#endif
-
+	final public STD_SORTED_MAP tailMap( KEY_TYPE from ) { throw new UnsupportedOperationException(); }
+	final public STD_SORTED_MAP headMap( KEY_TYPE to ) { throw new UnsupportedOperationException(); }
+	final public STD_SORTED_MAP subMap( KEY_TYPE from, KEY_TYPE to ) { throw new UnsupportedOperationException(); }
 
 	/** A list iterator over a linked map.
 	 *
@@ -621,7 +566,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 				index = count;
 			}
 			else {
-				if ( ! OPENHASHMAP.this.containsKey( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
+				if ( ! OPEN_HASH_MAP.this.containsKey( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
 				next = first;
 				int e;
 				do e = nextEntry(); while( ! KEY_EQUAL( key[ e ], from ) );
@@ -728,18 +673,18 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		int c = count;
 		
 		{ 
-			final byte state[] = OPENHASHMAP.this.state;
+			final byte state[] = OPEN_HASH_MAP.this.state;
 			final int n = state.length;
 			
 			if ( c != 0 ) while( pos < n && state[ pos ] != OCCUPIED ) pos++;
 		}
 		
 		public boolean hasNext() {
-			return c != 0 && pos < OPENHASHMAP.this.state.length;
+			return c != 0 && pos < OPEN_HASH_MAP.this.state.length;
 		}
 		
 		public int nextEntry() {
-			final byte state[] = OPENHASHMAP.this.state;
+			final byte state[] = OPEN_HASH_MAP.this.state;
 			final int n = state.length;
 			
 			if ( ! hasNext() ) throw new NoSuchElementException();
@@ -784,26 +729,16 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		return count == 0;
 	}
 
-
-	public Object get(final Object ok) {
-		final int i = findKey(KEY2TYPE(ok));
-
-		return i < 0 ? OBJDEFRETVALUE : VALUE2OBJ(value[i]);
-	}
-
-
-#if !#keyclass(Object) && !#keyclass(Reference)
-
-	public VALUE_TYPE get(final KEY_TYPE k) {
+	public VALUE_TYPE GET_VALUE(final KEY_TYPE k) {
 		final int i = findKey(k);
 
 		return i < 0 ? defRetValue : value[i];
 	}
 
-	public VALUE_TYPE remove(final KEY_TYPE k) {
+	public VALUE_TYPE REMOVE_VALUE(final KEY_TYPE k) {
 		final int i = findKey(k);
 		if (i < 0) return defRetValue;
-
+		
 		state[i] = REMOVED;
 		count--;
 
@@ -821,22 +756,21 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		return value[i];
 #endif
 	}
-	 
-#else
 
-#if !#valueclass(Object) && !#valueclass(Reference)
 
-	public VALUE_TYPE GET_VALUE(final Object k) {
-		final int i = findKey(k);
+#if !#keyclass(Object) && !#keyclass(Reference) || !#valueclass(Object) && !#valueclass(Reference)
 
-		return i < 0 ? defRetValue : value[i];
+	public Object get(final Object ok) {
+		final int i = findKey(KEY2TYPE(ok));
+
+		return i < 0 ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ(value[i]);
 	}
 
-	public VALUE_TYPE REMOVE_VALUE(final Object ok) {
-		final byte state[] = this.state;
 
-		final int i = findKey(KEY2TYPE(ok));
-		if (i < 0) return defRetValue;
+	public Object remove(final Object ok) {
+		final KEY_TYPE k = KEY2TYPE(ok);
+		final int i = findKey(k);
+		if (i < 0) return OBJECT_DEFAULT_RETURN_VALUE;
 
 		state[i] = REMOVED;
 		count--;
@@ -845,14 +779,27 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		key[i] = HashCommon.removed;
 #endif
 
+#if #valueclass(Object) || #valueclass(Reference)
+		final Object v = value[i];
+		value[i] = HashCommon.removed;
+#endif
+
 #ifdef linked
 		fixPointers( i );
 #endif
-		return value[i];
+
+		if ( asserts ) checkTable();
+
+#if #valueclass(Object) || #valueclass(Reference)
+		return v;
+#else
+		return VALUE2OBJ( value[i] );
+#endif
 	}
-	 
+
+
 #endif
-#endif
+
 
 
 	public Set entrySet() {
@@ -873,7 +820,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 					if (!(o instanceof Map.Entry)) return false;
 					final Map.Entry e = (Map.Entry)o;
 					final int i = findKey( KEY2TYPE( e.getKey() ) );
-					if ( i >= 0 ) OPENHASHMAP.this.remove( e.getKey() );
+					if ( i >= 0 ) OPEN_HASH_MAP.this.remove( e.getKey() );
 					return i >= 0;
 				}
 					 
@@ -882,7 +829,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 				}
 					 
 				public void clear() {
-					OPENHASHMAP.this.clear();
+					OPEN_HASH_MAP.this.clear();
 				}
 			};
 	 
@@ -918,13 +865,13 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 
 
 #ifdef linked
-	private final class KeySet extends KEY_ABSTRACT_SET implements SORTEDSET {
+	private final class KeySet extends ABSTRACT_SORTED_SET implements SORTED_SET {
 
 		public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
 			return new KeyIterator( from );
 		}
 #else
-	private final class KeySet extends KEY_ABSTRACT_SET {
+	private final class KeySet extends ABSTRACT_SET {
 #endif
 
 		public KEY_ITERATOR KEY_ITERATOR_METHOD() {
@@ -941,45 +888,31 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 					 
 		public boolean remove( KEY_TYPE k ) {
 			int oldCount = count;
-			OPENHASHMAP.this.remove( k );
+			OPEN_HASH_MAP.this.remove( k );
 			return count != oldCount;
 		}
 					 
-#if #keyclass(Integer)
-		public boolean rem( final KEY_TYPE k ) { return remove( k ); }
-#endif
 		public void clear() {
-			OPENHASHMAP.this.clear();
+			OPEN_HASH_MAP.this.clear();
 		}
 
 
 #ifdef linked
-		final public KEY_TYPE FIRST() {
+		public KEY_TYPE FIRST() {
 			if ( count == 0 ) throw new NoSuchElementException();
 			return key[ first ];
 		}
 
-		final public KEY_TYPE LAST() {
+		public KEY_TYPE LAST() {
 			if ( count == 0 ) throw new NoSuchElementException();
 			return key[ last ];
 		}
 
-#if !#keyclass(Object) && !#keyclass(Reference)
+		public Comparator comparator() { return null; }
 
-		final public Object first() { return KEY2OBJ( FIRST() ); }
-		final public Object last() { return KEY2OBJ( LAST() ); }
-
-		final public SORTEDSET tailSet( KEY_TYPE ofrom ) { throw new UnsupportedOperationException(); }
-		final public SORTEDSET headSet( KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
-		final public SORTEDSET subSet( KEY_TYPE ofrom, KEY_TYPE oto ) { throw new UnsupportedOperationException(); }
-		
-#endif
-
-		final public SortedSet tailSet( Object ofrom ) { throw new UnsupportedOperationException(); }
-		final public SortedSet headSet( Object oto ) { throw new UnsupportedOperationException(); }
-		final public SortedSet subSet( Object ofrom, Object oto ) { throw new UnsupportedOperationException(); }
-		final public Comparator comparator() { return null; }
-
+		final public STD_SORTED_SET tailSet( KEY_TYPE from ) { throw new UnsupportedOperationException(); }
+		final public STD_SORTED_SET headSet( KEY_TYPE to ) { throw new UnsupportedOperationException(); }
+		final public STD_SORTED_SET subSet( KEY_TYPE from, KEY_TYPE to ) { throw new UnsupportedOperationException(); }
 #endif
 	}
 
@@ -1030,7 +963,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 				}
 
 				public void clear() {
-					OPENHASHMAP.this.clear();
+					OPEN_HASH_MAP.this.clear();
 				}
 			};
 
@@ -1206,9 +1139,9 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	 */
 
 	public Object clone() {
-		OPENHASHMAP c;
+		OPEN_HASH_MAP c;
 		try {
-			c = (OPENHASHMAP)super.clone();
+			c = (OPEN_HASH_MAP)super.clone();
 		}
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
@@ -1293,7 +1226,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 
 		n = size();
 		if ( n > 0 ) {
-			i = ((SORTEDSET)keySet()).iterator( LAST_KEY() );
+			i = ((SORTED_SET)keySet()).iterator( LAST_KEY() );
 			while( n-- != 0 ) 
 				if ( ! containsKey( k = i.PREV_KEY() ) ) 
 					throw new AssertionError( "Linked hash table backward enumerates key " + k + ", but the key does not belong to the table" );
@@ -1409,7 +1342,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 
 	private static void speedTest( int n, float f, boolean comp ) {
 		int i, j;
-		OPENHASHMAP m;
+		OPEN_HASH_MAP m;
 #ifdef linked
 		java.util.LinkedHashMap t;
 #else
@@ -1492,7 +1425,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 
 		for( j = 0; j < 20; j++ ) {
 
-			m = new OPENHASHMAP( 16, f );
+			m = new OPEN_HASH_MAP( 16, f );
 
 			/* We put pairs to m. */
 			ms = System.currentTimeMillis();
@@ -1562,7 +1495,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 	}
 
 	protected static void test( int n, float f ) {
-		OPENHASHMAP m = new OPENHASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
+		OPEN_HASH_MAP m = new OPEN_HASH_MAP(Hash.DEFAULT_INITIAL_SIZE, f);
 
 #ifdef linked
 		Map t = new java.util.LinkedHashMap();
@@ -1804,7 +1737,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 			java.io.InputStream is = new java.io.FileInputStream(ff);
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-			m = (OPENHASHMAP)ois.readObject();
+			m = (OPEN_HASH_MAP)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
@@ -1880,7 +1813,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 			Object from;
 			do from = j.next(); while( e-- != 0 );
 
-			i = (java.util.ListIterator)((SORTEDSET)m.keySet()).iterator( KEY2TYPE( from ) ); 
+			i = (java.util.ListIterator)((SORTED_SET)m.keySet()).iterator( KEY2TYPE( from ) ); 
 
 			for( int k = 0; k < 2*n; k++ ) {
 				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
@@ -1932,7 +1865,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		}
 
 #if (#keyclass(Integer) || #keyclass(Long)) && (#valueclass(Integer) || #valueclass(Long))
-		m = new OPENHASHMAP(n, f);
+		m = new OPEN_HASH_MAP(n, f);
 		t.clear();
 		int x;
 
@@ -1974,7 +1907,7 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
 
 		if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
-		if (!((OPENHASHMAP)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
+		if (!((OPEN_HASH_MAP)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
 
 		m.rehash();
 
@@ -2001,8 +1934,8 @@ public class OPENHASHMAP extends ABSTRACT_MAP implements java.io.Serializable, C
 		try {
 			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
 			else if ( "test".equals( args[0] ) ) test(n, f);
-		} catch( AssertionError e ) {
-			System.err.println( e );
+		} catch( Throwable e ) {
+			e.printStackTrace( System.err );
 			System.err.println( "seed: " + seed );
 		}
 			

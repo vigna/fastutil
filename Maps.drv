@@ -93,7 +93,7 @@ public class MAPS {
 #endif
 
 #if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public VALUE_TYPE GET_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
+		public VALUE_TYPE GET_VALUE( final Object k ) { return VALUE_NULL; }
 #endif
 
 		public int size() { return 0; }
@@ -128,14 +128,8 @@ public class MAPS {
 			this.value = value;
 		}
 	
-		public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
-		public Object get( final Object k ) { if ( KEY_EQUAL( key, KEY2TYPE( k ) ) ) return VALUE2OBJ( value ); else return null; }
-
 		public boolean containsKey( final KEY_TYPE k ) { return KEY_EQUAL( key, k ); }
 		public boolean containsValue( final VALUE_TYPE v ) { return VALUE_EQUAL( value, v ); }
-
-		public VALUE_TYPE defaultReturnValue()  { return VALUE_NULL; }
-		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
 
 		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
 
@@ -143,14 +137,24 @@ public class MAPS {
 		public Set keySet() { if ( keys == null ) keys = SETS.singleton( key ); return keys; }
 		public Collection values() { if ( values == null ) values = VALUE_SETS.singleton( value ); return values; }
 
-		private class SingletonEntry implements Map.Entry {
+		private class SingletonEntry implements MAP.Entry {
 			public Object getKey() { return KEY2OBJ( Singleton.this.key ); }
 			public Object getValue() { return VALUE2OBJ( Singleton.this.value ); }
+
+#if !#keyclass(Object) && ! #keyclass(Reference)
+			public KEY_TYPE ENTRY_GET_KEY() { return Singleton.this.key; }
+#endif
+
+#if !#valueclass(Object) && ! #valueclass(Reference)
+			public VALUE_TYPE ENTRY_GET_VALUE() { return Singleton.this.value; }
+			public VALUE_TYPE setValue( final VALUE_TYPE value ) { throw new UnsupportedOperationException(); }
+#endif
+
 			public Object setValue( final Object value ) { throw new UnsupportedOperationException(); }
 			
 			public boolean equals( final Object o ) {
-				if (!(o instanceof MAP.Entry)) return false;
-				MAP.Entry e = (MAP.Entry)o;
+				if (!(o instanceof Map.Entry)) return false;
+				Map.Entry e = (Map.Entry)o;
 			
 				return KEY_EQUAL( Singleton.this.key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( Singleton.this.value, VALUE2TYPE( e.getValue() ) );
 			}
@@ -160,22 +164,7 @@ public class MAPS {
 		}
 
 
-#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public Object put( final Object k, final Object v ) { throw new UnsupportedOperationException(); }
-#endif
-
-#if ! #keyclass( Object ) && ! #keyclass( Reference )
-		public VALUE_TYPE get( final KEY_TYPE k ) { if ( KEY_EQUAL( key, k ) ) return value; else return VALUE_NULL; }
-		public boolean containsKey( final Object ok ) { return containsKey( KEY2TYPE( ok ) ); }
-#endif
-
-#if ! #valueclass( Object ) && ! #valueclass( Reference )
-		public boolean containsValue( final Object ov ) { return VALUE_EQUAL( value, VALUE2TYPE( ov ) ); }
-#endif
-
-#if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public VALUE_TYPE GET_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
-#endif
+		public VALUE_TYPE GET_VALUE( final KEY_TYPE k ) { if ( KEY_EQUAL( key, k ) ) return value; else return defRetValue; }
 
 		public int size() { return 1; }
 	
@@ -183,6 +172,8 @@ public class MAPS {
 	}
 
 	/** Returns a type-specific immutable map containing only the specified pair. The returned map is serializable and cloneable.
+	 *
+	 * <P>Note that albeit the returned map is immutable, its default return value may be changed.
 	 *
 	 * @param key the only key of the returned map.
 	 * @param value the only value of the returned map.
@@ -196,6 +187,8 @@ public class MAPS {
 #if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
 
 	/** Returns a type-specific immutable map containing only the specified pair. The returned map is serializable and cloneable.
+	 *
+	 * <P>Note that albeit the returned map is immutable, its default return value may be changed.
 	 *
 	 * @param key the only key of the returned map.
 	 * @param value the only value of the returned map.
