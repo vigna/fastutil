@@ -268,6 +268,37 @@ echo -e \
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
 \
 \
+"/* Methods that have special names depending on keys (but the special names depend on values) */\n"\
+\
+\
+"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define GET_VALUE get${TYPE_STD[$v]}\n"\
+"#define REMOVE_VALUE remove${TYPE_STD[$v]}\n"\
+"#else\n"\
+"#define GET_VALUE get\n"\
+"#define REMOVE_VALUE remove\n"\
+"#endif\n"\
+\
+\
+\
+"/* Equality */\n"\
+\
+\
+"#if #keyclass(Object)\n"\
+"#define KEY_EQUAL(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ( (x) == null ? (y) == null : (h) == (y).hashCode() && (x).equals(y) )\n"\
+"#else\n"\
+"#define KEY_EQUAL(x,y) ( (x) == (y) )\n"\
+"#define KEY_EQUAL_HASH(x,h,y) ( (x) == (y) )\n"\
+"#endif\n\n"\
+\
+"#if #valueclass(Object)\n"\
+"#define VALUE_EQUAL(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
+"#else\n"\
+"#define VALUE_EQUAL(x,y) ( (x) == (y) )\n"\
+"#endif\n\n"\
+\
+\
 \
 "/* Object/Reference-only definitions (keys) */\n"\
 \
@@ -366,37 +397,6 @@ echo -e \
 \
 "#define OBJECT_DEFAULT_RETURN_VALUE (null)\n"\
 \
-"#endif\n"\
-\
-\
-\
-"/* Equality */\n"\
-\
-\
-"#if #keyclass(Object)\n"\
-"#define KEY_EQUAL(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
-"#define KEY_EQUAL_HASH(x,h,y) ( (x) == null ? (y) == null : (h) == (y).hashCode() && (x).equals(y) )\n"\
-"#else\n"\
-"#define KEY_EQUAL(x,y) ( (x) == (y) )\n"\
-"#define KEY_EQUAL_HASH(x,h,y) ( (x) == (y) )\n"\
-"#endif\n\n"\
-\
-"#if #valueclass(Object)\n"\
-"#define VALUE_EQUAL(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
-"#else\n"\
-"#define VALUE_EQUAL(x,y) ( (x) == (y) )\n"\
-"#endif\n\n"\
-\
-\
-"/* Methods names that have special names depending on keys (but the special names depend on values) */\n"\
-\
-\
-"#if #keyclass(Object) || #keyclass(Reference)\n"\
-"#define GET_VALUE get${TYPE_STD[$v]}\n"\
-"#define REMOVE_VALUE remove${TYPE_STD[$v]}\n"\
-"#else\n"\
-"#define GET_VALUE get\n"\
-"#define REMOVE_VALUE remove\n"\
 "#endif\n"\
 \
 "#include \"$1\"\n"
