@@ -1003,29 +1003,29 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return storedComparator;
 	 }
 
-	 public SortedMap headMap(Object toKey) {
-		  return null; // TODO
+	 public SortedMap headMap( Object to  ) {
+		  return new Submap( KEY_NULL, true, KEY2TYPE( to ), false );
 	 }
 
-	 public SortedMap tailMap(Object fromKey) {
-		  return null; // TODO
+	 public SortedMap tailMap( Object from ) {
+		  return new Submap( KEY2TYPE( from ), false, KEY_NULL, true );
 	 }
 
-	 public SortedMap subMap(Object fromKey, Object toKey) {
-		  return null; // TODO
+	 public SortedMap subMap( Object from, Object to ) {
+		  return new Submap( KEY2TYPE( from ), false, KEY2TYPE( to ), false );
 	 }
 
 #if !#keyclass(Object)
-	 public SORTEDMAP headMap(KEY_TYPE toKey) {
-		  return null; // TODO
+	 public SORTEDMAP headMap( KEY_TYPE to ) {
+		  return new Submap( KEY_NULL, true, to, false );
 	 }
 
-	 public SORTEDMAP tailMap(KEY_TYPE fromKey) {
-		  return null; // TODO
+	 public SORTEDMAP tailMap( KEY_TYPE from ) {
+		  return new Submap( from, false, KEY_NULL, true );
 	 }
 
-	 public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
-		  return null; // TODO
+	 public SORTEDMAP subMap( KEY_TYPE from, KEY_TYPE to ) {
+		  return new Submap( from, false, to, false );
 	 }
 #endif
 
@@ -1034,7 +1034,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  KEY_TYPE from, to;
 		  boolean bottom, top;
 
-		  Submap( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
+		  public Submap( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
 				this.from = from;
 				this.bottom = bottom;
 				this.to = to;
@@ -1205,38 +1205,66 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				return storedComparator;
 		  }
 		  
-		  public SortedMap headMap(Object toKey) {
-				return null; // TODO
+		  public SortedMap headMap( final Object oto ) {
+				final KEY_TYPE to = KEY2TYPE( oto );
+
+				if ( top ) return new Submap( from, bottom, to, false );
+				return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
 		  }
 		  
-		  public SortedMap tailMap(Object fromKey) {
-				return null; // TODO
+		  public SortedMap tailMap( final Object ofrom ) {
+				final KEY_TYPE from = KEY2TYPE( ofrom );
+
+				if ( bottom ) return new Submap( from, false, to, top );
+				return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
 		  }
 		  
-		  public SortedMap subMap(Object fromKey, Object toKey) {
-				return null; // TODO
+		  public SortedMap subMap( final Object ofrom, final Object oto ) {
+				KEY_TYPE to = KEY2TYPE( oto );
+				KEY_TYPE from = KEY2TYPE( ofrom );
+
+				if ( top && bottom ) return new Submap( from, false, to, false );
+				if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
+				if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
+				if ( from == this.from && to == this.to ) return this;
+				return new Submap( from, false, to, false );
 		  }
 
 #if !#keyclass(Object)
-		  public SORTEDMAP headMap(KEY_TYPE toKey) {
-				return null; // TODO
+		  public SORTEDMAP headMap( final KEY_TYPE to ) {
+				if ( top ) return new Submap( from, bottom, to, false );
+				return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
 		  }
 		  
-		  public SORTEDMAP tailMap(KEY_TYPE fromKey) {
-				return null; // TODO
+		  public SORTEDMAP tailMap( final KEY_TYPE from ) {
+				if ( bottom ) return new Submap( from, false, to, top );
+				return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
 		  }
 		  
-		  public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
-				return null; // TODO
+		  public SORTEDMAP subMap( KEY_TYPE from, KEY_TYPE to ) {
+				if ( top && bottom ) return new Submap( from, false, to, false );
+				if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
+				if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
+				if ( from == this.from && to == this.to ) return this;
+				return new Submap( from, false, to, false );
 		  }
 #endif
 
 
 		  public KEY_TYPE FIRST_KEY() {
+				if ( bottom ) return firstEntry.key;
+				Entry e = tree;
+				
+				// We descend the tree on the left until we find a keys greater than from 
+ 				while( e.left() != sentinel && compare( from, e.left.key ) < 0 ) e = e.left;
+				// If we're on the first key, we return it.
+				if ( e.key == from || e.right ) return from;
+
 				return firstEntry.key; // TODO
 		  }
 	 
 		  public KEY_TYPE LAST_KEY() {
+				if ( top ) return lastEntry.key;
 				return lastEntry.key; // TODO
 		  }
 	 
