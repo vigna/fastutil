@@ -25,12 +25,14 @@ jar: jsources
 	ant jar -Dbuild.compiler=jikes
 
 tar: jar
+	-rm fastUtil-$(VERSION)
 	ln -s . fastUtil-$(VERSION)
-	tar zcvf fastUtil-$(VERSION).tar.gz \
+	tar zcvf fastUtil-$(VERSION).tar.gz --owner=root --group=root \
 		fastUtil-$(VERSION)/*.drv \
 		fastUtil-$(VERSION)/build.xml \
 		fastUtil-$(VERSION)/gencsources.sh \
 		fastUtil-$(VERSION)/CHANGES \
+		fastUtil-$(VERSION)/README \
 		fastUtil-$(VERSION)/COPYING.LIB \
 		fastUtil-$(VERSION)/Makefile \
 		fastUtil-$(VERSION)/docs \
