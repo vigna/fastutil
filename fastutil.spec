@@ -94,7 +94,7 @@ fi
 # -----------------------------------------------------------------------------
 
 %changelog
-* Thu Jun 26 2003 Sebastiano Vigna <vigna at acm.org> - 3.0.1-1jpp
+* Wed Jul 04 2003 Sebastiano Vigna <vigna at acm.org> - 3.0.1-1jpp
 - A small but important serialisation bug fix.
 
 * Thu Jun 26 2003 Sebastiano Vigna <vigna at acm.org> - 3.0-1jpp
