@@ -7,7 +7,7 @@ APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will po
 
 .SUFFIXES: .java .j
 
-.PHONY: all clean depend install docs jar tar jsources
+.PHONY: all clean depend install docs jar tar jsources csources
 
 .SECONDARY: $(JSOURCES)
 
@@ -40,6 +40,8 @@ PACKAGE_Float= floats
 PACKAGE_Double = doubles
 PACKAGE_Object = objects
 PACKAGE_Reference = objects
+
+dummy: jsources
 
 LinkedOpenHashSet.drv: OpenHashSet.drv
 	ln -s OpenHashSet.drv LinkedOpenHashSet.drv
