@@ -1,4 +1,4 @@
-VERSION=4.1
+VERSION=4.2
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -452,7 +452,7 @@ SOURCES = \
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	gcc -I. -ftabstop=4 $(if $(TEST),-DTEST,) -DASSERTS=$(if $(ASSERTS),true,false) -E -C -P $< > $@
+	gcc -I. -ftabstop=4 $(if $(TEST),-DTEST,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< > $@
 
 
 clean: 

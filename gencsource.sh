@@ -251,6 +251,7 @@ echo -e \
 "#define POP pop${TYPE_STD[$k]}\n"\
 "#define KEY_ITERATOR_METHOD ${TYPE_LC2[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR_METHOD ${TYPE_LC2[$k]}ListIterator\n\n"\
+"#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\

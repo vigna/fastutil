@@ -43,7 +43,29 @@ public class ARRAYS {
 	private ARRAYS() {}
 
 	/** A static, final, empty array. */
-	public final static KEY_TYPE[] EMPTY_ARRAY = new KEY_TYPE[ 0 ];
+	public final static KEY_TYPE[] EMPTY_ARRAY = {};
+
+
+#if #keyclass(Object)
+	/** Creates a new array using a the given one as prototype. 
+	 *
+	 * <P>This method returns a new array of the given length whose element
+	 * are of the same class as of those of <code>prototype</code>. In case
+	 * of an empty array, it tries to return {@link #EMPTY_ARRAY}, if possible.
+	 *
+	 * @param prototype an array that will be used to type the new one (if <code>null</code>, we will return an array of {@linkplain Object objects}).
+	 * @param length the length of the new array.
+	 * @return a new array of given type and length.
+	 */
+
+	private static Object[] newArray( final Object[] prototype, final int length ) {
+		if ( prototype == null ) {
+			if ( length == 0 ) return EMPTY_ARRAY;
+			else return new Object[ length ];
+		}
+		else return (Object[])java.lang.reflect.Array.newInstance( prototype.getClass().getComponentType(), length );
+	}
+#endif
 
 	/** Ensures that an array can contain the given number of entries.
 	 *
@@ -58,7 +80,12 @@ public class ARRAYS {
 	 */
 	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE[] array, final int length ) {
 		if ( length > array.length ) {
-			KEY_TYPE t[] = new KEY_TYPE[ length ];
+			final KEY_TYPE t[] =
+#if #keyclass(Object)
+				newArray( array, length );
+#else
+				new KEY_TYPE[ length ];
+#endif
 			System.arraycopy( array, 0, t, 0, array.length );
 			return t;
 		}
@@ -76,7 +103,12 @@ public class ARRAYS {
 	 */
 	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE[] array, final int length, final int preserve ) {
 		if ( length > array.length ) {
-			KEY_TYPE t[] = new KEY_TYPE[ length ];
+			final KEY_TYPE t[] =
+#if #keyclass(Object)
+				newArray( array, length );
+#else
+				new KEY_TYPE[ length ];
+#endif
 			System.arraycopy( array, 0, t, 0, preserve );
 			return t;
 		}
@@ -101,7 +133,13 @@ public class ARRAYS {
 
 	public static KEY_TYPE[] grow( final KEY_TYPE[] array, final int length ) {
 		if ( length > array.length ) {
-			KEY_TYPE t[] = new KEY_TYPE[ (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE ) ];
+			final int newLength = (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE );
+			final KEY_TYPE t[] =
+#if #keyclass(Object)
+				newArray( array, newLength );
+#else
+				new KEY_TYPE[ newLength ];
+#endif
 			System.arraycopy( array, 0, t, 0, array.length );
 			return t;
 		}
@@ -127,7 +165,13 @@ public class ARRAYS {
 
 	public static KEY_TYPE[] grow( final KEY_TYPE[] array, final int length, final int preserve ) {
 		if ( length > array.length ) {
-			KEY_TYPE t[] = new KEY_TYPE[ (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE ) ];
+			final int newLength = (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE );
+			final KEY_TYPE t[] =
+#if #keyclass(Object)
+				newArray( array, newLength );
+#else
+				new KEY_TYPE[ newLength ];
+#endif
 			System.arraycopy( array, 0, t, 0, preserve );
 			return t;
 		}
@@ -147,8 +191,12 @@ public class ARRAYS {
 
 	public static KEY_TYPE[] trim( final KEY_TYPE[] array, final int length ) {
 		if ( length >= array.length ) return array;
-		if ( length == 0 ) return EMPTY_ARRAY;
-		KEY_TYPE t[] = new KEY_TYPE[ length ];
+		final KEY_TYPE t[] =
+#if #keyclass(Object)
+			newArray( array, length );
+#else
+			length == 0 ? EMPTY_ARRAY : new KEY_TYPE[ length ];
+#endif
 		System.arraycopy( array, 0, t, 0, length );
 		return t;
 	}
@@ -169,7 +217,6 @@ public class ARRAYS {
 
 	public static KEY_TYPE[] setLength( final KEY_TYPE[] array, final int length ) {
 		if ( length == array.length ) return array;
-		if ( length == 0 ) return EMPTY_ARRAY;
 		if ( length < array.length ) return trim( array, length );
 		return ensureCapacity( array, length );
 	}
@@ -184,8 +231,12 @@ public class ARRAYS {
 
 	public static KEY_TYPE[] copy( final KEY_TYPE[] array, final int offset, final int length ) {
 		ensureOffsetLength( array, offset, length );
-		if ( length == 0 ) return EMPTY_ARRAY;
-		final KEY_TYPE[] a = new KEY_TYPE[ length ];
+		final KEY_TYPE[] a = 
+#if #keyclass(Object)
+			newArray( array, length );
+#else
+			length == 0 ? EMPTY_ARRAY : new KEY_TYPE[ length ];
+#endif
 		System.arraycopy( array, offset, a, 0, length );
 		return a;
 	}
