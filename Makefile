@@ -9,7 +9,7 @@ CSOURCES = $(wildcard $(SRC)/*/*.c $(SRC)/*.c) # The list of C source files
 CFRAGMENTS = $(wildcard $(SRC)/*.h) # The list of C fragments
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 FRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java fragments
-SOURCES = $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java # These are True Java Sources instead
+SOURCES = $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java $(SRC)/Stack.java $(SRC)/AbstractStack.java # These are True Java Sources instead
 
 ifdef ASSERTS
 	ASSERTS_VALUE = true
@@ -30,7 +30,7 @@ explain:
 	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
 
 jar: jsources
-	export ANT_OPTS="-Xmx128M -Xms128M"
+	export ANT_OPTS="-Xmx256M -Xms256M"
 	ant jar
 
 bin: jar docs
@@ -55,7 +55,7 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/Makefile \
-		fastutil-$(VERSION)/$(SRC)/{BidirectionalIterator.java,HashCommon.java,Hash.java} \
+		fastutil-$(VERSION)/$(SRC)/{BidirectionalIterator.java,HashCommon.java,Hash.java,Stack.java,AbstractStack.java} \
 		fastutil-$(VERSION)/$(SRC)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(VERSION)/java/overview.html
 	rm fastutil-$(VERSION)
@@ -82,7 +82,7 @@ docs: jsources
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv java/overview.html $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java
+	etags build.xml Makefile README gencsources.sh *.drv java/overview.html $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java  $(SRC)/Stack.java  $(SRC)/AbstractStack.java
 
 
 .h.j:

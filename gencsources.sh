@@ -15,7 +15,7 @@ DIR="java/it/unimi/dsi/fastutil"
 MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap LinkedOpenHashMap)
 
 # Driver files for lists.
-LIST=(List AbstractList ArrayList)
+LIST=(List AbstractList Stack AbstractStack ArrayList)
 
 # Driver files for sets.
 SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet LinkedOpenHashSet AVLTreeSet RBTreeSet)
@@ -343,11 +343,13 @@ for ((f=0; f<${#SET[*]}; f++)); do
 done
 
 #
-# This loop generates lists.
+# This loop generates lists and stacks.
 #
 
 for ((f=0; f<${#LIST[*]}; f++)); do
 	l=${#TYPE[*]}
+	if [[ ${LIST[$f]} == "Stack" || ${LIST[$f]} == "AbstractStack" ]]; then l=$((l-2)); fi 
+
 	for ((k=0; k<l; k++)); do
 		if [[ ${LIST[$f]:0:8} == "Abstract" ]]; then
 		    FILENAME=$DIR/${TYPE_PACK[$k]}/Abstract${TYPE_CAP[$k]}${LIST[$f]:8}.c
@@ -369,6 +371,8 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n\n"\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define STACK Stack\n\n"\
+"#define ABSTRACT_STACK AbstractStack\n\n"\
 "#define STDARRAYLIST ArrayList\n\n"\
 "#define REMOVE_KEY remove\n"\
 "#define WRITE_KEY writeObject\n"\
@@ -387,6 +391,9 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 "#define PREV_KEY previous\n"\
 "#define INDEXOF_KEY indexOf\n"\
 "#define LASTINDEXOF_KEY lastIndexOf\n"\
+"#define TOP top\n"\
+"#define PEEK peek\n"\
+"#define POP pop\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define TO_KEY_ARRAY toArray\n"\
@@ -398,6 +405,8 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 "#endif\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
+"#define STACK ${TYPE_CAP[$k]}Stack\n\n"\
+"#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\
 "#define STDARRAYLIST ARRAY_LIST\n\n"\
 "#define REMOVE_KEY remove${TYPE_CAP[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
@@ -416,6 +425,9 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define INDEXOF_KEY indexOf${TYPE_CAP[$k]}\n"\
 "#define LASTINDEXOF_KEY lastIndexOf${TYPE_CAP[$k]}\n"\
+"#define TOP top${TYPE_CAP[$k]}\n"\
+"#define PEEK peek${TYPE_CAP[$k]}\n"\
+"#define POP pop${TYPE_CAP[$k]}\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
