@@ -11,7 +11,7 @@ DIR="src/it/unimi/dsi/fastUtil"
 MAP=(Map SortedMap AbstractMap HashMap TreeMap)
 
 # Driver files for sets.
-SET=(AbstractCollection AbstractSet Collection Set SortedSet HashSet)
+SET=(AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet)
 
 # Driver files for interfaces.
 INTERFACE=(Iterator ListIterator Comparator)
@@ -176,8 +176,8 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
 "#define TO_KEY_ARRAY toArray\n"\
-"#define FIRST_KEY firstKey\n"\
-"#define LAST_KEY lastKey\n"\
+"#define FIRST first\n"\
+"#define LAST last\n"\
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (y) != null && (x).hashCode() == (y).hashCode() && (x).equals((y))))\n"\
@@ -192,8 +192,8 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
-"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
-"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
+"#define FIRST first${TYPE_CAP[$k]}\n"\
+"#define LAST last${TYPE_CAP[$k]}\n"\
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
 "#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
 "#elif #keyclass(Boolean)\n"\

@@ -1,0 +1,1668 @@
+/*		 
+ * fastUtil 2.0: Fast & compact specialized utility classes for Java
+ *
+ * Copyright (C) 2002 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package it.unimi.dsi.fastUtil;
+
+import java.util.*;
+import java.io.*;
+
+/** A type-specific tree set with a fast, small-footprint implementation.
+ */
+
+public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
+
+	 /** A reference to the root entry. */
+	 public transient Entry tree;
+
+	 /** Number of entries in the set. */
+	 private int count;
+
+	 /** The first key in this set. */
+	 private transient Entry firstEntry;
+
+	 /** The last key in this set. */
+	 private transient Entry lastEntry;
+
+	 /** Temporary place to keep a key during recursive operations. */
+	 private transient KEY_TYPE key;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, whether the set has been modified. */
+	 private transient boolean modified;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, the entry that during the operation we
+	  * possibly created or removed. */
+	 private transient Entry change;
+
+	 /** The value of this variable remembers, after a <code>delete()</code>,
+	  * the entry that during the operation was deleted. Note that 
+	  * if {@link #change} != {@link deleted}, then this entry is still in the
+	  * set, but it contains the key and value previously stored in {@link #change}. */
+	 private transient Entry deleted;
+
+	 /** This set's comparator, as provided in the constructor. */
+	 private Comparator storedComparator;
+
+	 /** This set's actual comparator; it may differ from {@link #storedComparator} because it is
+		  always a type-specific comparator, so it could be derived from the former by wrapping. */
+	 private transient KEY_COMPARATOR actualComparator;
+
+	 /** A fake {@link Entry} that is used as a result of the {@link Entry#left()} and
+	  * {@link Entry#right()} methods to denote the empty subtree. It has the big advantage
+	  * of having dereferenceable left/right pointers and a level that is smaller 
+	  * than that of any node. */
+	 private static Entry sentinel = new Entry();
+
+
+	 /** Creates a new empty tree set. 
+	  */
+
+	 public TREESET() {
+		  tree = null;
+		  count = 0;
+	 }
+
+	 /** Generates the comparator that will be actually used.
+	  *
+	  * <P>When a specific {@link Comparator} is specified and stored in {@link
+	  * #storedComparator}, we must check whether it is type-specific.  If it is
+	  * so, we can used directly, and we store it in {@link #actualComparator}. Otherwise,
+	  * we generate on-the-fly an anonymous class that wraps the non-specific {@link Comparator}
+	  * and makes it into a type-specific one.
+	  */
+	 private void setActualComparator() {
+#if #keyclass(Object)
+		  actualComparator = storedComparator;
+#else
+		  /* If the provided comparator is already type-specific, we use it. Otherwise,
+			  we use a wrapper anonymous class to fake that it is type-specific. */
+		  if ( storedComparator == null || storedComparator instanceof KEY_COMPARATOR ) actualComparator = (KEY_COMPARATOR)storedComparator;
+		  else actualComparator =	new KEY_COMPARATOR() {
+				public int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+					 return storedComparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
+				}
+				public int compare( Object ok1, Object ok2 ) {
+					 return storedComparator.compare( ok1, ok2 );
+				}
+		  };
+#endif
+	 }
+	 
+
+	 /** Creates a new empty tree set with the given comparator.
+	  *
+	  * @param comparator a {@link #Comparator}.
+	  */
+
+	 public TREESET( final Comparator c ) {
+		  this();
+		  storedComparator = c;
+		  setActualComparator();
+	 }
+
+
+	 /** Creates a new tree set copying a given set.
+	  *
+	  * @param m a {@link Set} to be copied into the new tree set. 
+	  */
+	 
+	 public TREESET( Set m ) {
+		  this();
+		  addAll( m );
+	 }
+
+	 /** Creates a new tree set copying a given sorted set (and its {@link Comparator}).
+	  *
+	  * @param m a {@link SortedSet} to be copied into the new tree set. 
+	  */
+	 
+	 public TREESET( SortedSet m ) {
+		  this( m.comparator() );
+		  addAll( m );
+	 }
+
+
+	 /*
+	  * The following private methods implements some basic building blocks used by
+	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
+	  */
+
+
+	 /** Compares two keys in the right way. 
+	  *
+	  * <P>This method uses the {@link #actualComparator} if it is non-<code>null</code>.
+	  * Otherwise, it resorts to primitive type comparisons or to {@link Comparable#compareTo(Object)}.
+	  *
+	  * @param k1 the first key.
+	  * @param k2 the second key.
+	  * @return a number smaller than, equal to or greater than 0, as usual
+	  * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
+	  */
+	 
+	 private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+		  return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
+    }
+
+
+
+	 /** Returns the entry corresponding to the given key, if it is in the tree; <code>null</code>, otherwise.
+	  *
+	  * @param k the key to search for.
+	  * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
+	  */
+
+   private Entry findKey( KEY_TYPE k ) {
+		 Entry e = tree == null ? sentinel : tree;
+		 int cmp;
+		 
+		 while ( e != sentinel && ( cmp = compare( k, e.key ) ) != 0 ) 
+			  e = cmp < 0 ? e.left() : e.right();
+		 
+		 return e == sentinel ? null : e;
+   }
+
+	 /** The value of this variable remembers during an <code>insert()</code> 
+	  * whether we ever turned left. */
+	 private transient boolean turnedLeft;
+
+	 /** The value of this variable remembers during an <code>insert()</code> 
+	  * whether we ever turned right. */
+	 private transient boolean turnedRight;
+
+
+	 /** Inserts a new element in the set.
+	  *
+	  * <P>After execution of this method, {@link #modified} is true iff a new
+	  * entry has been inserted.
+	  *
+	  * @param k a key.
+	  * @return true if the insertion modified the set.
+	  */
+
+	 
+	 private boolean insert( final KEY_TYPE k ) {
+		  change = null; // This will hold the new entry.
+		  modified = turnedLeft = turnedRight = false;
+		  key = k;
+
+		  if ( tree == null ) { // The case of the empty tree is treated separately.
+				count++;
+				tree = change = new Entry( k );
+				modified = true;
+		  }
+		  else tree = insertRec( tree );
+
+		  if ( modified ) { // We update last/first if we actually changed the set.
+				if ( ! turnedLeft ) lastEntry = change;
+				if ( ! turnedRight ) firstEntry = change;
+		  }
+
+		  // We null everything to avoid residual references.
+		  change = null;
+
+#if #keyclass(Object)
+		  key = null;
+#endif
+
+		  return modified;
+	 }
+
+
+	 /** Inserts recursively a given pair in a nonempty tree.
+	  *
+	  * <P>After execution of this method, {@link #modified} is true iff
+	  * a new entry has been inserted. Moreover, {@link #turnedRight} if true iff we
+	  * turned right during the search; analogously for {@link #turnedLeft}.
+	  *
+	  * @param e a tree (i.e., an {@link Entry}).
+	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
+	  */
+
+   private Entry insertRec( Entry e ) {
+
+		 final int cmp = compare( key, e.key );
+		 
+		 if ( cmp < 0 ) {
+			  turnedLeft = true;
+			  if ( e.left() != sentinel ) e.left = insertRec( e.left );
+			  else {
+					/* <P>This method we create a new {@link Entry} (marked as a leaf) and
+					 * link it at the left of <code>e</code>. The {@link Entry#right} pointer
+					 * of the new entry is <code>e</code>, whereas its {@link Entry#left} pointer
+					 * is the {@link Entry#left} pointer of <code>e</code>. */
+					count++;
+					final Entry l = change = new Entry( key );
+					
+					modified = true;
+					
+					l.right = e;
+					l.left = e.left;
+					
+					e.pred( false );
+					e.left = l;
+			  }
+
+			  if ( ! modified ) return e; // Fast exit.
+		 } 
+		 else if ( cmp > 0 ) {
+			  turnedRight = true;
+			  if ( e.right() != sentinel ) e.right = insertRec( e.right );
+			  else {
+					/* <P>We create a new {@link Entry} (marked as a leaf) and
+					 * link it at the right of <code>e</code>. The {@link Entry#left} pointer
+					 * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
+					 * is the {@link Entry#right} pointer of <code>e</code>. */
+					count++;
+					final Entry r = change = new Entry( key );
+					
+					modified = true;
+					
+					r.left = e;
+					r.right = e.right;
+					
+					e.succ( false );
+					e.right = r;
+			  }
+
+			  if ( ! modified ) return e; // Fast exit.
+		 }
+		 else return e;
+
+		 e = e.skew();
+		 e = e.split();
+
+		 return e;
+   }
+	 
+	 
+	 /** Deletes an entry from the set.
+	  *
+	  * <P>After execution of this method, {@link #modified} is true iff an 
+	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
+	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  *
+	  * @param k a key.
+	  * @return true if the deletion modified the set.
+	  */
+	 
+	 private boolean delete( final KEY_TYPE k ) {
+		  change = deleted = null;
+		  modified = false;
+		  key = k;
+
+		  if ( tree == null ) return false;
+
+		  tree = deleteRec( null, tree );
+
+#if #keyclass(Object)
+		  key = null;
+#endif
+
+		  return modified;
+	 }
+
+	 /** Deletes recursively an entry from a tree.
+	  *
+	  * <P>After execution of this method, {@link #modified} is true iff an 
+	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
+	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  *
+	  * @param p the parent of the second argument (i.e., an {@link Entry}.
+	  * @param e a tree (i.e., an {@link Entry}.
+	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
+	  */
+
+	 private Entry deleteRec( Entry p, Entry e ) {
+		  change = e;
+
+		  if ( compare( key, e.key ) < 0 ) {
+				if ( e.left() != sentinel ) e.left = deleteRec( e, e.left );
+		  }
+		  else  {
+				deleted = e;
+				if ( e.right() != sentinel ) e.right = deleteRec( e, e.right );
+		  }
+				
+		  if ( e == change && deleted != null && compare( key, deleted.key ) == 0 ) {
+
+				deleted.key = e.key;
+
+				modified = true;
+				count--;
+
+				if ( p != null ) {
+					 if ( p.right == e ) {
+						  if ( e.succ() ) p.succ( true );  // This handles the case of e being a leaf to the right of p.
+						  else if ( e.right.pred() ) e.right.left = p; // This handles the case of e being a right subtree and e.right a leaf.
+					 }
+					 else if ( e.right() != sentinel && e.right.pred() ) e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
+				}
+
+				// If we are deleting the first or last entry, we must update our state accordingly.
+				if ( e.right == null ) lastEntry = e.left;
+				if ( e.left == null ) firstEntry = e.right;
+
+				/* If e is a leaf to the left of p, returning e.right would cause a
+				loop. The right thing to do is to return e.left and set the
+				predecessor flag in the parent. */
+
+				if ( p != null && p.left == e && e.succ() ) {
+					 p.pred( true );
+					 return e.left;
+				}
+
+				return e.right;
+		  }
+
+		  if ( e.left().level() < e.level() - 1 || e.right().level() < e.level() - 1 ) {
+				e.decLevel();
+				if ( e.right().level() > e.level() ) e.right().level( e.level() );
+				e = e.skew();
+				if ( e.right() != sentinel ) e.right = e.right.skew();
+				if ( e.right().right() != sentinel ) e.right.right = e.right.right.skew();
+				e = e.split();
+				if ( e.right() != sentinel ) e.right = e.right.split();
+		  }
+
+		  return e;
+	 }
+	 
+
+#if ! #keyclass(Object)
+	 public boolean add( final KEY_TYPE k ) {
+		  return insert( k );
+	 }
+
+   public boolean remove( final KEY_TYPE k ) {
+		 delete( k );
+		 deleted = change = null;
+		 return modified;
+   }
+
+	 public boolean contains( final KEY_TYPE k ) {
+		  return findKey( k ) != null;
+	 }
+#endif
+
+	 public boolean add( final Object ok ) {
+		  return insert( KEY2TYPE(ok) );
+	 }
+	 
+	 public boolean remove( final Object ok ) {
+		  delete( KEY2TYPE( ok ) );
+		  deleted = change = null;
+		  return modified;
+	 }
+	 
+	 public boolean contains( final Object ok ) {
+		  return findKey( KEY2TYPE( ok ) ) != null;
+	 }
+
+
+	 public void clear() {
+		  count = 0;
+		  tree = null;
+		  firstEntry = lastEntry = null;
+	 }
+
+	 
+	 /** This class represent an entry in a tree set.
+	  *
+	  * <P>We use the only "metadata", i.e., {@link Entry#mix}, to store
+	  * information about level, predecessor status and successor status.
+	  *
+	  * <P>Note that since the class is recursive, it can be
+	  * considered equivalently a tree.
+	  */
+
+    private static final class Entry {
+		  /** If the bit in this mask is true, {@link #right} points to a successor. */
+		  private final static int SUCC_MASK = 1 << 31;
+		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
+		  private final static int PRED_MASK = 1 << 30;
+		  /** The bits in this mask hold the node level. */
+		  private final static int LEVEL_MASK = ~( SUCC_MASK | PRED_MASK );
+		  /** The key of this entry. */
+		  protected KEY_TYPE key;
+		  /** The pointers to the left and right subtrees. */
+		  protected Entry left, right;
+		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #LEVEL_MASK}). */
+		  private int mix;
+
+		  /** Creates a new entry with no explicitly set key and <code>null</code> subtrees.
+			*/
+
+		  protected Entry() {}
+
+		  /** Creates a new entry with the given key.
+			*
+			* @param k a key.
+			*/
+		  protected Entry( Object k ) {
+				this.key = KEY2TYPE( k );
+				mix = 1 | SUCC_MASK | PRED_MASK;
+		  }
+
+#if ! #keyclass(Object)  
+		  
+		  /** Creates a new entry with the given key.
+			*
+			* @param k a key.
+			*/
+		  protected Entry( KEY_TYPE k ) {
+				this.key = k;
+				mix = 1 | SUCC_MASK | PRED_MASK;
+		  }
+		  
+#endif
+
+		  /** Returns the left subtree, if it is a real one. 
+			*
+			* @return the left subtree, or {@link #sentinel} if the left
+			* subtree is empty, or it really points to a predecessor.
+			*/
+		  protected Entry left() {
+				if ( ( mix & PRED_MASK ) != 0 || left == null ) return TREESET.sentinel;
+				else return left;
+		  }
+		  
+		  /** Returns the right subtree, if it is a real one. 
+			*
+			* @return the right subtree, or {@link #sentinel} if the right
+			* subtree is empty, or it really points to a successor.
+			*/
+		  protected Entry right() {
+				if ( ( mix & SUCC_MASK ) != 0 || right == null ) return TREESET.sentinel;
+				else return right;
+		  }
+		  
+		  /** Checks whether the left pointer is really a predecessor.
+			* @return true if the left pointer is a predecessor.
+			*/
+		  protected boolean pred() {
+				return ( mix & PRED_MASK ) != 0;
+		  }
+		  
+		  /** Checks whether the right pointer is really a successor.
+			* @return true if the right pointer is a successor.
+			*/
+		  protected boolean succ() {
+				return ( mix & SUCC_MASK ) != 0;
+		  }
+		  
+		  /** Sets whether the left pointer is really a predecessor.
+			* @param pred if true then the left pointer will be considered a predecessor.
+			*/
+		  protected void pred( boolean pred ) {
+				if ( pred ) mix |= PRED_MASK;
+				else mix &= ~PRED_MASK;
+		  }
+		  
+		  /** Sets whether the right pointer is really a successor.
+			* @param succ if true then the right pointer will be considered a successor.
+			*/
+		  protected void succ( boolean succ ) {
+				if ( succ ) mix |= SUCC_MASK;
+				else mix &= ~SUCC_MASK;
+		  }
+		  
+		  /** Returns the current level of the node.
+			* @return the current level of this node.
+			*/
+		  protected int level() {
+				return mix & LEVEL_MASK ;
+		  }
+
+		  /** Sets the level of this node.
+			* @param level the new level of this node.
+			*/
+		  protected void level( int level ) {
+				mix &= ~LEVEL_MASK;
+				mix |= level;
+		  }
+
+		  /** Increments the level of this node. */
+		  protected void incLevel() {
+				mix++;
+		  }
+		  
+		  /** Decrements the level of this node. */
+		  protected	void decLevel() {
+				mix--;
+		  }
+		  
+		  public Object getKey() {
+				return KEY2OBJ(key);
+		  }
+		  
+#if ! #keyclass(Object)
+		  public KEY_TYPE ENTRY_GET_KEY() {
+				return key;
+		  }
+#endif
+		  
+		  public boolean equals(Object o) {
+				if (!(o instanceof Entry)) return false;
+				Entry e = (Entry)o;
+				
+				return KEY_EQUAL(key, e.key);
+		  }
+		  
+		  public int hashCode() {
+				return KEY2INT(key);
+		  }
+		  
+		  
+		  public String toString() {
+				return "" + key;
+		  }
+		  
+
+		  /** Splits this subtree.
+			* @return the new top of the subtree.
+			*/
+		  Entry split() {
+				if ( this != sentinel && right().right().level() == level() ) {
+					 /* Firstly, we save the current right pointer. */
+					 final Entry t = right;
+					 
+					 /* Then, if our right subtree contains a predecessor, we set the
+						 subtree as our successor. */
+					 if ( ! t.pred() ) right = t.left;
+					 
+					 succ( t.pred() );
+					 
+					 t.left = this;
+					 t.pred( false );
+					 t.incLevel();
+					 
+					 return t;
+				}
+				return this;
+		  }
+		  
+		  /** Skews this subtree.
+			* @return the new top of the subtree.
+			*/
+		  Entry skew() {
+				if ( this != sentinel && left().level() == level() ) {
+					 /* Firstly, we save the current left pointer. */
+					 final Entry t = left;
+					 
+					 /* Then, if our left subtree contains a successor, we set the
+						 subtree as our predecessor. */
+					 if ( ! t.succ() ) left = t.right;
+					 
+					 pred( t.succ() );
+					 
+					 t.right = this;
+					 t.succ( false );
+					 
+					 return t;
+				}
+				return this;
+		  }
+		  
+		  public void prettyPrint() {
+				prettyPrint(0);
+		  }
+
+		  public void prettyPrint(int level) {
+				if ( pred() ) {
+					 for (int i = 0; i < level; i++)
+						  System.err.print("  ");
+					 System.err.println("pred: " + left );
+				}
+				else if (left != null)
+					 left.prettyPrint(level +1 );
+				for (int i = 0; i < level; i++)
+					 System.err.print("  ");
+				System.err.println(key + " (" + level() + ")");
+				if ( succ() ) {
+					 for (int i = 0; i < level; i++)
+						  System.err.print("  ");
+					 System.err.println("succ: " + right );
+				}
+				else if (right != null)
+					 right.prettyPrint(level + 1);
+		  }
+    }
+	 
+   public void prettyPrint() {
+      System.err.println("size: " + count);
+      if (tree != null) tree.prettyPrint();
+   }
+
+	 public int size() {
+		  return count;
+	 }
+	 
+	 public boolean isEmpty() {
+		  return count == 0;
+	 }
+	 
+	 public KEY_TYPE FIRST() {
+		  TREESET.Entry e = tree;
+		  if ( e == null ) throw new NoSuchElementException();
+		  while ( e.left != null ) e = e.left;
+		  return e.key;
+	 }
+	 
+	 public KEY_TYPE LAST() {
+		  TREESET.Entry e = tree;
+		  if ( e == null ) throw new NoSuchElementException();
+		  while ( e.right != null ) e = e.right;
+		  return e.key;
+	 }
+	 
+#if !#keyclass(Object)
+	 public Object first() {
+		  return KEY2OBJ( FIRST() );
+	 }
+	 
+	 public Object last() {
+		  return KEY2OBJ( LAST() );
+	 }
+
+#endif
+
+	 /** An iterator on the whole range.
+	  *
+	  * <P>This class can iterate in both directions on a threaded tree.
+	  */
+
+	 private class SetIterator implements KEY_LIST_ITERATOR {
+		  /** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
+		  protected Entry prev;
+		  /** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
+		  protected Entry next;
+		  /** The last entry that was returned (or <code>null</code> if we did not iterate or used {@link #remove()}). */
+		  protected Entry curr;
+		  /** The current index (in the sense of a {@link ListIterator}). */
+		  protected int index = 0;
+		  
+		  protected SetIterator() {
+				next = firstEntry;
+		  }
+
+		  public boolean hasNext() { return next != null; }
+		  public boolean hasPrevious() { return prev != null; }
+
+		  protected void updateNext() {
+				next = next.right;
+				if ( next != null && ! curr.pred() ) while ( next.left() != sentinel ) next = next.left;
+		  }
+
+		  protected Entry nextEntry() {
+				if ( ! hasNext() ) throw new NoSuchElementException();
+				curr = prev = next;
+				index++;
+				updateNext();
+				return curr;
+		  }
+
+		  public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
+		  public KEY_TYPE PREV_KEY() { return previousEntry().key; }
+#if !#keyclass(Object)
+		  public Object next() { return KEY2OBJ( nextEntry().key ); }
+		  public Object previous() { return KEY2OBJ( previousEntry().key ); }
+#endif									
+
+		  protected void updatePrevious() {
+				prev = prev.left;
+				if ( prev != null && ! curr.pred() ) while ( prev.right() != sentinel ) prev = prev.right;
+		  }
+
+		  protected Entry previousEntry() {
+				if ( ! hasPrevious() ) throw new NoSuchElementException();
+				curr = next = prev;
+				index--;
+				updatePrevious();
+				return curr;
+		  }
+
+		  public int nextIndex() {
+				if ( ! hasNext() ) throw new NoSuchElementException();
+				return index;
+		  }
+
+		  public int previousIndex() {
+				if ( ! hasPrevious() ) throw new NoSuchElementException();
+				return index - 1;
+		  }
+
+		  public void remove() {
+				if ( curr == null ) throw new IllegalStateException();
+				/* If the last operation was a next(), we are removing an entry that preceeds
+					the current index, and thus we must decrement it. */
+				if ( curr == prev ) index--;
+				next = prev = curr;
+				updatePrevious();
+				updateNext();
+				TREESET.this.delete( curr.key );
+
+				/* It could happen that the entry we chose as next is exactly the
+				one that gets deleted (as deletion is performed by copying a
+				suitable entry over the one to be deleted and then removing the
+				source of the copy).  In this case, next will point to a removed
+				entry (change); it should instead point to the destination of the
+				copy (deleted), which is certainly the entry immediately after the
+				deleted one. */
+				if ( next == change ) next = deleted;
+				change = deleted = curr = null;
+		  }
+
+		  public void set( Object o ) {
+				throw new UnsupportedOperationException();
+		  }
+
+		  public void add( Object o ) {
+				throw new UnsupportedOperationException();
+		  }
+	 }
+
+
+	 public Iterator iterator() {
+		  return new SetIterator();
+	 }
+
+	 public Comparator comparator() {
+		  return storedComparator;
+	 }
+
+	 public SortedSet headSet( Object to  ) {
+		  return new Subset( KEY_NULL, true, KEY2TYPE( to ), false );
+	 }
+
+	 public SortedSet tailSet( Object from ) {
+		  return new Subset( KEY2TYPE( from ), false, KEY_NULL, true );
+	 }
+
+	 public SortedSet subSet( Object from, Object to ) {
+		  return new Subset( KEY2TYPE( from ), false, KEY2TYPE( to ), false );
+	 }
+
+#if !#keyclass(Object)
+	 public SORTEDSET headSet( KEY_TYPE to ) {
+		  return new Subset( KEY_NULL, true, to, false );
+	 }
+
+	 public SORTEDSET tailSet( KEY_TYPE from ) {
+		  return new Subset( from, false, KEY_NULL, true );
+	 }
+
+	 public SORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) {
+		  return new Subset( from, false, to, false );
+	 }
+#endif
+
+	 /** A subset with given range.
+	  *
+	  * <P>This class represents a subset. One has to specify the left/right
+	  * limits (which can be set to -&infin; or &infin;). Since the subset is a
+	  * view on the set, at a given moment it could happen that the limits of
+	  * the range are not any longer in the main set. Thus, things such as
+	  * {@link #first()} or {@link #size()} must be always computed
+	  * on-the-fly.  
+	  */
+	 private class Subset extends ABSTRACT_SET implements Serializable, SORTEDSET {
+		  /** The start of the subset range, unless {@link #bottom} is true. */
+		  private KEY_TYPE from;
+		  /** The end of the subset range, unless {@link #top} is true. */
+		  private KEY_TYPE to;
+		  /** If true, the subset range starts from -&infin;. */
+		  private boolean bottom;
+		  /** If true, the subset range goes to &infin;. */
+		  private boolean top;
+		  
+		  /** Creates a new subset with given key range.
+			*
+			* @param from the start of the subset range.
+			* @param bottom if true, the first parameter is ignored and the range starts from -&infin;.
+			* @param to the end of the subset range.
+			* @param top if true, the third parameter is ignored and the range goes to &infin;.
+			*/
+		  public Subset( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
+				if ( ! bottom && ! top && TREESET.this.compare( from, to ) > 0 ) {
+					 throw new IllegalArgumentException( "fromKey > toKey" );
+				}
+
+				this.from = from;
+				this.bottom = bottom;
+				this.to = to;
+				this.top = top;
+		  }
+
+		  public void clear() {
+				final SubsetIterator i = new SubsetIterator();
+				while( i.hasNext() ) {
+					 i.next();
+					 i.remove();
+				}
+		  }
+
+		  /** Checks whether a key is in the subset range.
+			* @param k a key.
+			* @return true if is the key is in the subset range.
+			*/
+		  private boolean in( KEY_TYPE k ) {
+				return ( bottom || TREESET.this.compare( k, from ) >= 0 ) &&
+					 ( top || TREESET.this.compare( k, to ) < 0 );
+		  }
+
+		  public boolean contains( final KEY_TYPE k ) {
+				return in( k ) && TREESET.this.contains( k );
+		  }
+
+#if !#keyclass(Object) 
+		  public boolean contains( final Object ok ) {
+				return contains( KEY2TYPE( ok ) );
+		  }
+#endif
+
+
+		  public boolean add( final Object ok ) {
+				if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
+				return insert( KEY2TYPE(ok) );
+		  }
+
+		  
+#if ! #keyclass(Object)
+		  public boolean add( final KEY_TYPE  k ) {
+				if ( ! in( k ) ) throw new IllegalArgumentException(); 
+				return insert( k );
+		  }
+#endif
+
+
+		  public boolean remove( final Object ok ) {
+				if ( ! in( KEY2TYPE( ok ) ) ) return false;
+				delete( KEY2TYPE( ok ) );
+				deleted = change = null;
+				return modified;
+		  }
+
+#if ! #keyclass(Object)
+		  public boolean remove( final KEY_TYPE k ) {
+				if ( ! in( k ) ) return false;
+				delete( k );
+				deleted = change = null;
+				return modified;
+		  }
+#endif
+
+		  public int size() {
+				final SubsetIterator i = new SubsetIterator();
+				int n = 0;
+				
+				while( i.hasNext() ) {
+					 n++;
+					 i.next();
+				}
+				
+				return n;
+		  }
+
+
+		  public boolean isEmpty() {
+				return ! new SubsetIterator().hasNext();
+		  }
+		  
+		  public Comparator comparator() {
+				return storedComparator;
+		  }
+
+		  public Iterator iterator() {
+				return new SubsetIterator();
+		  }
+		  
+		  public SortedSet headSet( final Object oto ) {
+				final KEY_TYPE to = KEY2TYPE( oto );
+
+				if ( top ) return new Subset( from, bottom, to, false );
+				return compare( to, this.to ) < 0 ? new Subset( from, bottom, to, false ) : this;
+		  }
+		  
+		  public SortedSet tailSet( final Object ofrom ) {
+				final KEY_TYPE from = KEY2TYPE( ofrom );
+
+				if ( bottom ) return new Subset( from, false, to, top );
+				return compare( from, this.from ) > 0 ? new Subset( from, false, to, top ) : this;
+		  }
+		  
+		  public SortedSet subSet( final Object ofrom, final Object oto ) {
+				KEY_TYPE to = KEY2TYPE( oto );
+				KEY_TYPE from = KEY2TYPE( ofrom );
+
+				if ( top && bottom ) return new Subset( from, false, to, false );
+				if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
+				if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
+				if ( from == this.from && to == this.to ) return this;
+				return new Subset( from, false, to, false );
+		  }
+
+#if !#keyclass(Object)
+		  public SORTEDSET headSet( final KEY_TYPE to ) {
+				if ( top ) return new Subset( from, bottom, to, false );
+				return compare( to, this.to ) < 0 ? new Subset( from, bottom, to, false ) : this;
+		  }
+		  
+		  public SORTEDSET tailSet( final KEY_TYPE from ) {
+				if ( bottom ) return new Subset( from, false, to, top );
+				return compare( from, this.from ) > 0 ? new Subset( from, false, to, top ) : this;
+		  }
+		  
+		  public SORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) {
+				if ( top && bottom ) return new Subset( from, false, to, false );
+				if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
+				if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
+				if ( from == this.from && to == this.to ) return this;
+				return new Subset( from, false, to, false );
+		  }
+#endif
+
+		  /** Locates a key.
+			*
+			* @param k a key.
+			* @return the last entry on a search for the given key; this will be
+			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
+			*/
+		  private TREESET.Entry locateKey( KEY_TYPE k ) {
+				TREESET.Entry e = tree, last = tree;
+				int cmp = 0;
+				
+				while ( e != sentinel && ( cmp = compare( k, e.key ) ) != 0 ) {
+					 last = e;
+					 e = cmp < 0 ? e.left() : e.right();
+				}
+				
+				return cmp == 0 ? e : last;
+		  }
+
+
+		  /** Locates the first entry.
+			*
+			* @param k a key.
+			* @return the first entry of this subset, or <code>null</code> if the subset is empty.
+			*/
+		  public TREESET.Entry firstEntry() {
+				if ( tree == null ) return null;
+				// If this subset goes to -infinity, we return the main set first entry; otherwise, we locate the start of the set.
+				TREESET.Entry e;
+				if ( bottom ) e = firstEntry;
+				else {
+					 e = locateKey( from );
+					 // If we find either the start or something greater we're OK.
+					 if ( compare( e.key, from ) < 0 ) {
+						  // Otherwise, we look for a successor.
+						  boolean succ = e.succ();
+						  e = e.right;
+						  // Oops, it's already the last element.
+						  if ( e == null ) return null;
+						  // If we did not follow a thread we descend the tree on the left.
+						  if ( ! succ ) while ( e.left() != sentinel ) e = e.left;
+					 }
+				}
+				// Finally, if this subset doesn't go to infinity, we check that the resulting key isn't greater than the end.
+				if ( ! top && compare( e.key, to ) >= 0 ) return null;
+				return e;
+		  }
+	 
+		  /** Locates the last entry.
+			*
+			* @param k a key.
+			* @return the last entry of this subset, or <code>null</code> if the subset is empty.
+			*/
+		  public TREESET.Entry lastEntry() {
+				if ( tree == null ) return null;
+				// If this subset goes to infinity, we return the main set last entry; otherwise, we locate the end of the set.
+				TREESET.Entry e;
+				if ( top ) e = lastEntry;
+				else {
+					 e = locateKey( to );
+					 // If we find something smaller than the end we're OK.
+					 if ( compare( e.key, to ) >= 0 ) {
+						  // Otherwise, we look for a predecessor.
+						  boolean pred = e.pred();
+						  e = e.left;
+						  // Oops, it's already the first element.
+						  if ( e == null ) return null;
+						  // If we did not follow a thread we descend the tree on the right.
+						  if ( ! pred ) while ( e.right() != sentinel ) e = e.right;
+					 }
+				}
+				// Finally, if this subset doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
+				if ( ! bottom && compare( e.key, from ) < 0 ) return null;
+				return e;
+		  }
+
+
+		  public KEY_TYPE FIRST() {
+				TREESET.Entry e = firstEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.key;
+		  }
+		  public KEY_TYPE LAST() {
+				TREESET.Entry e = lastEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.key;
+		  }
+	 
+#if !#keyclass(Object)
+		  public Object first() {
+				TREESET.Entry e = firstEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.getKey();
+		  }
+	 
+		  public Object last() {
+				TREESET.Entry e = lastEntry();
+				if ( e == null ) throw new NoSuchElementException();
+				return e.getKey();
+		  }
+
+#endif
+
+		  /** An iterator for subranges.
+			* 
+			* <P>This class inherits from {@link SetIterator}, but overrides the methods that
+			* update the pointer after a {@link #next()} or {@link #previous()}. If we would
+			* move out of the range of the subset we just overwrite the next or previous
+			* entry with <code>null</code>.
+			*/
+		  private class SubsetIterator extends SetIterator {
+				protected SubsetIterator() {
+					 next = firstEntry();
+				}
+				protected void updatePrevious() {
+					 super.updatePrevious();
+					 if ( ! bottom && prev != null && TREESET.this.compare( prev.key, from ) < 0 ) prev = null;
+				}
+				
+				protected void updateNext() {
+					 super.updateNext();
+					 if ( ! top && next != null && TREESET.this.compare( next.key, to ) >= 0 ) next = null;
+				}
+		  }
+	 }
+	 
+
+    private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+		  int n = count;
+		  SetIterator i = new SetIterator();
+
+		  s.defaultWriteObject();
+		  while( n-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
+    }
+
+    private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
+		  s.defaultReadObject();
+		  tree = null;
+		  /* The storedComparator is now correctly set, but we must restore
+			  on-the-fly the actualComparator. */
+		  setActualComparator();
+
+		  int count = this.count;
+		  this.count = 0;
+
+		  /* This is not very good. There are linear-time ways of rebuilding a
+		  tree.  Maybe in the next release... */
+
+		  while( count-- != 0 ) add( s.READ_KEY() );
+    }
+
+
+
+#ifndef NDEBUG
+
+	 private static Random r = new Random();
+
+	 private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		  return (KEY_TYPE)(r.nextInt());
+#elif ! #keyclass(Object)
+		  return r.NEXT_KEY(); 
+#else
+		  return new Long( r.nextLong() );
+#endif
+	 }
+
+#if 0
+	 private static void speedTest( int n ) {
+		  int i;
+		  SORTEDSET m;
+		  SortedSet t;
+		  Object[] k = new Object[n], nk = new Object[n];
+		  KEY_TYPE kt[] = new KEY_TYPE[n];
+		  KEY_TYPE nkt[] = new KEY_TYPE[n];
+		  long ms;
+
+		  for( int j = 0; j < 10; j++ ) {
+
+				if ( j > 0 ) System.out.println();
+
+				t = new TreeSet();
+				m = new TREESET();
+
+				for( i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+					 k[i] = kt[i] = genKey();
+					 nk[i] = nkt[i] = genKey();
+#else
+					 k[i] = new KEY_CLASS( kt[i] = genKey() );
+					 nk[i] = new KEY_CLASS( nkt[i] = genKey() );
+#endif
+				}
+
+				/* We add pairs to t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.add( k[i], v[i] );
+				System.out.println("Added "+n+" pairs in old TreeSet (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
+
+				/* We add pairs to m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.add( kt[i], vt[i] );
+				System.out.println("Added "+n+" pairs in new TreeSet (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
+
+				/* We check for pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.get( k[i] );
+				System.out.println("Examined "+n+" existing pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+				/* We check for pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.get( kt[i] );
+				System.out.println("Examined "+n+" existing pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+				/* We check for pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.get( nk[i] );
+				System.out.println("Examined "+n+" unexisting pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+				/* We check for pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.get( nkt[i] );
+				System.out.println("Examined "+n+" unexisting pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+				/* We iterate on t. */
+				ms = System.currentTimeMillis();
+				for( Iterator it = t.iterator(); it.hasNext(); it.next() );
+				System.out.println("Iterated on old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
+
+				/* We iterate on m. */
+				ms = System.currentTimeMillis();
+				for( KEY_ITERATOR it = (KEY_ITERATOR)m.iterator(); it.hasNext(); it.NEXT_KEY() );
+				System.out.println("Iterated on new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
+
+				/* We delete pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( nk[i] );
+				System.out.println("Removed "+n+" unexisting pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+				/* We delete pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( nkt[i] );
+				System.out.println("Removed "+n+" unexisting pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+	 
+				/* We delete pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( k[i] );
+				System.out.println("Removed "+n+" existing pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+				/* We delete pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( kt[i] );
+				System.out.println("Removed "+n+" existing pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+
+
+		  }
+
+
+	 }
+
+#endif
+
+	 private static boolean valEquals(Object o1, Object o2) {
+		  return o1 == null ? o2 == null : o1.equals(o2);
+	 }
+
+	 private static void fatal( String msg ) {
+		  System.out.println( msg );
+		  System.exit( 1 );
+	 }
+
+	 private static void ensure( boolean cond, String msg ) {
+		  if ( cond ) return;
+		  fatal( msg );
+	 }
+
+	 private static Object[] k, v, nk;
+	 private static KEY_TYPE kt[];
+	 private static KEY_TYPE nkt[];
+	 private static TREESET topSet;
+
+	 private static void testSets( SORTEDSET m, SortedSet t, int n, int level ) {
+		  long ms;
+		  Random r = new Random();
+		  boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement;
+		  boolean rt = false, rm = false;
+
+		  if ( level > 4 ) return;
+				
+
+		  /* Now we check that both sets agree on first/last keys. */
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.first();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.first();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: first() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error: m and t differ at start on their first key (" + m.first() + ", " + t.first() +").\n" );
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.last();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.last();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: last() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+
+		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error: m and t differ at start on their last key (" + m.last() + ", " + t.last() +").\n");
+
+
+		  /* Now we check that m and t are equal. */
+		  if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
+
+		  ensure( m.equals( t ), "Error: ! m.equals( t ) at start.\n" );
+		  ensure( t.equals( m ), "Error: ! t.equals( m ) at start.\n" );
+
+
+
+		  /* Now we check that m actually holds that data. */
+		  for(Iterator i=t.iterator(); i.hasNext();  ) {
+		      ensure( m.contains( i.next() ), "Error: m and t differ on an entry after insertion (iterating on t).\n" );
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  for(Iterator i=m.iterator(); i.hasNext();  ) {
+		      ensure( t.contains( i.next() ), "Error: m and t differ on an entry after insertion (iterating on m).\n" );
+		  }
+
+		  /* Now we check that inquiries about random data give the same answer in m and t. For
+			  m we use the polymorphic method. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+				
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 m.contains(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 t.contains(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: contains() divergence in NoSuchElementException (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: contains() divergence in IllegalArgumentException (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error: divergence in keys between t and m (polymorphic method).\n" );
+		  }
+
+		  /* Again, we check that inquiries about random data give the same answer in m and t, but
+			  for m we use the standard method. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 m.contains(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 t.contains(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: get() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: get() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error: divergence between t and m (standard method).\n" );
+		  }
+
+		  /* Now we add and remove random data in m and t, checking that the result is the same. */
+
+		  for(int i=0; i<20*n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 rm = m.add(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 rt = t.add(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error: divergence in add() between t and m.\n" );
+
+				T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY()
+#else
+					 new Long(r.nextLong())
+#endif
+					 ;
+
+
+				mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+
+				try {
+					 rm = m.remove(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
+
+				try {
+					 rt = t.remove(KEY2OBJ(T));
+				}
+				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
+
+
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error: divergence in remove() between t and m.\n" );
+		  }
+
+		  ensure( m.equals(t), "Error: ! m.equals( t ) after removal.\n" );
+		  ensure( t.equals(m), "Error: ! t.equals( m ) after removal.\n" );
+
+		  /* Now we check that m actually holds the same data. */
+		  
+		  for(Iterator i=t.iterator(); i.hasNext();  ) {
+		      ensure( m.contains( i.next() ), "Error: m and t differ on an entry after removal (iterating on t).\n");
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.iterator(); i.hasNext();  ) {
+		      ensure( t.contains( i.next() ), "Error: m and t differ on an entry after removal (iterating on m).\n" );
+		  }
+
+		  /* Now we check that both sets agree on first/last keys. */
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.first();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.first();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: first() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error: m and t differ on their first key (" + m.first() + ", " + t.first() +").\n" );
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.last();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.last();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: last() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error: m and t differ on their last key (" + m.last() + ", " + t.last() +").\n");
+
+
+
+		  int h = m.hashCode();
+
+
+		  /* Now we save and read m. */
+
+		  SORTEDSET m2 = null;
+		  
+		  try {
+				java.io.File ff = new java.io.File("regressionTest");
+				java.io.OutputStream os = new java.io.FileOutputStream(ff);
+				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+				oos.writeObject(m);
+				oos.close();
+				
+				java.io.InputStream is = new java.io.FileInputStream(ff);
+				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+				m2 = (SORTEDSET)ois.readObject();
+				ois.close();
+				ff.delete();
+		  }
+		  catch(Exception e) {
+				e.printStackTrace();
+				System.exit(-1);
+		  }
+
+		  ensure( m2.hashCode() == h, "Error: hashCode() changed after save/read.\n" );
+		  
+		  /* Now we check that m2 actually holds that data. */
+		  
+		  ensure( m2.equals(t), "Error: ! m2.equals( t ) after save/read.\n" );
+		  ensure( t.equals(m2), "Error: ! t.equals( m2 ) after save/read.\n" );
+
+		  /* Now we take out of m everything, and check that it is empty. */
+
+		  for(Iterator i=t.iterator(); i.hasNext(); ) m2.remove(i.next());
+
+		  ensure( m2.isEmpty(), "Error: m2 is not empty (as it should be).\n" );
+				 
+		  /* Now we play with iterators. */
+
+		  {
+				ListIterator i, j;
+				Object J;
+				i = (ListIterator)m.iterator(); 
+				j = new LinkedList( t ).listIterator(); 
+
+				for( int k = 0; k < n/2; k++ ) {
+					 if ( i.hasNext() != j.hasNext() ) {
+						  System.out.println("Error: divergence in hasNext().\n");
+						  System.exit(-1);
+					 }
+					 if ( i.hasPrevious() != j.hasPrevious() ) {
+						  System.out.println("Error: divergence in hasNext().\n");
+						  System.exit(-1);
+					 }
+
+					 if ( r.nextFloat() < .8 && i.hasNext() ) {
+						  if ( !i.next().equals( J = j.next() ) ) {
+								System.out.println("Error: divergence in next().\n");
+								System.exit(-1);
+						  }
+
+						  if ( r.nextFloat() < 0.05 ) {
+								i.remove();
+								j.remove();
+								t.remove( J );
+						  }
+					 }
+					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+						  if ( !i.previous().equals( J = j.previous() ) ) {
+								System.out.println("Error: divergence in previous().\n");
+								System.exit(-1);
+						  }
+
+						  if ( r.nextFloat() < 0.05 ) {
+								i.remove();
+								j.remove();
+								t.remove( J );
+						  }
+					 }
+				}
+
+		  }
+
+		  /* Now we check that m actually holds that data. */
+		  
+		  ensure( m.equals(t), "Error: ! m.equals( t ) after iteration.\n" );
+		  ensure( t.equals(m), "Error: ! t.equals( m ) after iteration.\n" );
+
+		  /* Now we select a pair of keys and create a subset. */
+
+		  if ( ! m.isEmpty() ) {
+				ListIterator i;
+				Object start = m.first(), end = m.first();
+				for( i = (ListIterator)m.iterator(); i.hasNext() && r.nextFloat() < .3; start = end = i.next() );
+				for( ; i.hasNext() && r.nextFloat() < .95; end = i.next() );
+
+				//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+				testSets( (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), n, level + 1 );
+
+				ensure( m.equals(t), "Error: ! m.equals( t ) after subSet.\n" );
+				ensure( t.equals(m), "Error: ! t.equals( m ) after subSet.\n" );
+
+				//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
+				testSets( (SORTEDSET)m.headSet( end ), t.headSet( end ), n, level + 1 );
+
+				ensure( m.equals(t), "Error: ! m.equals( t ) after headSet.\n" );
+				ensure( t.equals(m), "Error: ! t.equals( m ) after headSet.\n" );
+
+				//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
+				testSets( (SORTEDSET)m.tailSet( start ), t.tailSet( start ), n, level + 1 );
+
+				ensure( m.equals(t), "Error: ! m.equals( t ) after tailSet.\n" );
+				ensure( t.equals(m), "Error: ! t.equals( m ) after tailSet.\n" );
+		  }
+		  
+
+	 }
+
+
+	 private static void regressionTest( int n ) {
+		  TREESET m = new TREESET();
+		  SortedSet t = new TreeSet();
+		  topSet = m;
+		  k = new Object[n];
+		  nk = new Object[n];
+		  kt = new KEY_TYPE[n];
+		  nkt = new KEY_TYPE[n];
+
+		  for( int i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+				k[i] = kt[i] = genKey();
+				nk[i] = nkt[i] = genKey();
+#else
+				k[i] = new KEY_CLASS( kt[i] = genKey() );
+				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
+#endif
+		  }
+		  
+		  /* We add pairs to t. */
+		  for( int i = 0; i < n;  i++ ) t.add( k[i] );
+		  
+		  /* We add to m the same data */
+		  m.addAll(t);
+
+		  testSets( m, t, n, 0 );
+
+		  System.out.println("Regression test OK.\n");
+		  System.exit(0);
+	 }
+
+
+	 public static void main( String args[] ) {
+		  int n  = Integer.parseInt(args[1]);
+		  
+		  if (args[0].equals("speedTest")) ;//speedTest(n);
+		  else if (args[0].equals("regressionTest")) regressionTest(n);
+	 }
+
+#endif
+
+
+}
+
+// Local Variables:
+// mode: java
+// End:
