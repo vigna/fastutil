@@ -91,7 +91,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 
 	public ARRAY_LIST( Collection c ) {
 		this( c.size() );
-		Iterators.unwrap( Iterators.AS_KEY_ITERATOR( c.iterator() ), a );
+		size = Iterators.unwrap( Iterators.AS_KEY_ITERATOR( c.iterator() ), a );
 	}
 
 	/** Creates a new array list and fills it with a given type-specific collection.
@@ -101,7 +101,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 
 	public ARRAY_LIST( COLLECTION c ) {
 		this( c.size() );
-		Iterators.unwrap( c.KEY_ITERATOR_METHOD(), a );
+		size = Iterators.unwrap( c.KEY_ITERATOR_METHOD(), a );
 	}
 
 	/** Creates a new array list and fills it with a given bulk-copy list.
@@ -111,7 +111,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 
 	public ARRAY_LIST( BULK_COPY_LIST l ) {
 		this( l.size() );
-		l.getElements( 0, a, 0, l.size() );
+		l.getElements( 0, a, 0, size = l.size() );
 	}
 
 	/** Creates a new array list and fills it with the elements returned by an iterator..
@@ -120,8 +120,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 	 */
 	 
 	public ARRAY_LIST( Iterator i ) {
-		this();
-		while( i.hasNext() ) this.add( i.next() );
+		this( Iterators.AS_KEY_ITERATOR( i ) );
 	}
 
 	/** Creates a new array list and fills it with the elements returned by a type-specific iterator..
@@ -286,6 +285,12 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		return size;
 	}		
 
+	public void size( int size ) {
+		if ( size > a.length ) ensureCapacity( size );
+		if ( size > this.size ) for( int i = this.size; i < size; i++ ) a[ i ] = KEY_NULL;
+		this.size = size;
+	}		
+
 	public boolean isEmpty() {
 		return size == 0;
 	}		
@@ -341,6 +346,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 				public void add( KEY_TYPE k ) { 
 					if ( last == -1 ) throw new IllegalStateException();
 					ARRAY_LIST.this.add( pos++, k ); 
+					last = -1;
 				}
 				public void set( KEY_TYPE k ) { 
 					if ( last == -1 ) throw new IllegalStateException();
@@ -351,6 +357,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 					ARRAY_LIST.this.REMOVE_KEY( last ); 
 					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
 					if ( last < pos ) pos--;
+					last = -1;
 				}
 			};
 	}
@@ -437,8 +444,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 		public void getElements( int from, KEY_TYPE[] a, int offset, int length ) {
 			checkIndex( from );
-			if ( from + length > to )  throw new IndexOutOfBoundsException( "Length (" + length + ") is greater than array size" );
-			l.getElements( from, a, offset, length );
+			if ( this.from + from + length > to )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than array size" );
+			l.getElements( this.from + from, a, offset, length );
 		}
 
 		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
@@ -457,6 +464,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 					public void add( KEY_TYPE k ) { 
 						if ( last == -1 ) throw new IllegalStateException();
 						SubList.this.add( pos++, k ); 
+						last = -1;
 					}
 					public void set( KEY_TYPE k ) { 
 						if ( last == -1 ) throw new IllegalStateException();
@@ -467,6 +475,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 						SubList.this.REMOVE_KEY( last );
 						/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
 						if ( last < pos ) pos--;
+						last = -1;
 					}
 				};
 		}
@@ -504,6 +513,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		System.arraycopy( a, 0, c.a, 0, size );
 		c.size = size;
 		return c;
+	}
+
+	private boolean valEquals( Object a, Object b ) {
+		return a == null ? b == null : a.equals( b );
 	}
 
 	public boolean equals( ARRAY_LIST l ) {
@@ -544,8 +557,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		return (KEY_TYPE)(r.nextInt());
 #elif !#keyclass(Object) && !#keyclass(Reference)
 		return r.NEXT_KEY(); 
-#else
+#elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
+#else 
+		return new java.io.Serializable() {};
 #endif
 	}
 
@@ -602,10 +617,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 		System.out.println();
 	}
 
-
-	private static boolean valEquals(Object o1, Object o2) {
-		return o1 == null ? o2 == null : o1.equals(o2);
-	}
 
 	private static void fatal( String msg ) {
 		System.out.println( msg );
@@ -709,14 +720,26 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 		/* Now we add and remove random data in m and t, checking that the result is the same. */
 
-		for(int i=0; i<20*n;  i++ ) {
+		for(int i=0; i<2*n;  i++ ) {
 			KEY_TYPE T = genKey();
+
+			try {
+				m.add( T );
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+
+			try {
+				t.add( KEY2OBJ( T ) );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+
+			T = genKey();
 			int p = r.nextInt() % ( 2 * n + 1 );
 
 			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
 
 			try {
-				m.add(p, KEY2OBJ(T));
+				m.add(p, T );
 			}
 			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
 
@@ -747,10 +770,41 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 			if ( !mThrowsOutOfBounds ) ensure( rt.equals( KEY2OBJ( rm ) ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ")" );
 		}
 
-		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal" );
-		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal" );
+		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after add/remove" );
+		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after add/remove" );
 
-		/* Now we add and remove random data in m and t using addAll on a type-specific colelction, checking that the result is the same. */
+		/* Now we add and remove random data in m and t using addAll on a collection, checking that the result is the same. */
+
+		for(int i=0; i<n;  i++ ) {
+			int p = r.nextInt() % ( 2 * n + 1 );
+			Collection m1 = new ArrayList();
+			int s = r.nextInt( n / 2 + 1 );
+			for( int j = 0; j < s; j++ ) m1.add( KEY2OBJ( genKey() ) );
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+
+			try {
+				m.addAll(p, m1);
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+
+			try {
+				t.addAll(p, m1);
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+
+			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after addAll" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals( m ) after addAll" );
+		}
+
+		if ( m.size() > n ) {
+			m.size( n );
+			while( t.size() != n ) t.remove( t.size() -1 );
+		}
+
+		/* Now we add and remove random data in m and t using addAll on a type-specific collection, checking that the result is the same. */
 
 		for(int i=0; i<n;  i++ ) {
 			int p = r.nextInt() % ( 2 * n + 1 );
@@ -779,6 +833,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after polymorphic addAll" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals( m ) after polymorphic addAll" );
+		}
+
+		if ( m.size() > n ) {
+			m.size( n );
+			while( t.size() != n ) t.remove( t.size() -1 );
 		}
 
 		/* Now we add and remove random data in m and t using addAll on a bulk-copy list, checking that the result is the same. */
@@ -812,6 +871,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after copy-list addAll" );
 		}
 
+		if ( m.size() > n ) {
+			m.size( n );
+			while( t.size() != n ) t.remove( t.size() -1 );
+		}
 
 		/* Now we check that m actually holds the same data. */
 		  
@@ -848,7 +911,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 
 		/* Now we inquiry about the content with indexOf()/lastIndexOf(). */
 
-		for(int i=0; i<20*n;  i++ ) {
+		for(int i=0; i<10*n;  i++ ) {
 			KEY_TYPE T = genKey();
 			ensure( m.indexOf( KEY2OBJ( T ) ) == t.indexOf( KEY2OBJ( T ) ),
 					"Error (" + level + ", " + seed + "): indexOf() divergence for " + T + "  (" + m.indexOf( KEY2OBJ( T ) ) + ", " + t.indexOf( KEY2OBJ( T ) ) + ")" );
@@ -866,6 +929,14 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 			ensure( m.equals( ((ARRAY_LIST)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
 			ensure( ((ARRAY_LIST)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
 		}
+
+		/* Now we play with constructors. */
+		ensure( m.equals( new ARRAY_LIST( (Collection)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( Collection m )" );
+		ensure( m.equals( new ARRAY_LIST( (COLLECTION)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific Collection m )" );
+		ensure( m.equals( new ARRAY_LIST( (BULK_COPY_LIST)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( BulkCopyList m )" );
+		ensure( m.equals( new ARRAY_LIST( m.iterator() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.iterator() )" );
+		ensure( m.equals( new ARRAY_LIST( m.KEY_ITERATOR_METHOD() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.type_specific_iterator() )" );
+
 
 		int h = m.hashCode();
 
@@ -925,7 +996,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 					if ( r.nextFloat() < 0.5 ) {
 						i.remove();
 						j.remove();
-						t.remove( J );
 					}
 				}
 				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
@@ -934,7 +1004,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 					if ( r.nextFloat() < 0.5 ) {
 						i.remove();
 						j.remove();
-						t.remove( J );
 					}
 				}
 
@@ -969,7 +1038,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 						//System.err.println("Removing in next");
 						i.remove();
 						j.remove();
-						t.remove( J );
 					}
 				}
 				else if ( !badPrevious && r.nextFloat() < .2 && i.hasPrevious() ) {
@@ -979,7 +1047,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements BULK_COPY_LIST, RandomA
 						//System.err.println("Removing in prev");
 						i.remove();
 						j.remove();
-						t.remove( J );
 					}
 				}
 			}
