@@ -189,6 +189,61 @@ public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename
 	dos.close();
 }
 
+/** A wrapper that exhibits the content of a data input stream as a type-specific iterator. */
+
+final private static class KEY_STREAM_WRAPPER extends KEY_ABSTRACT_ITERATOR {
+	final private DataInputStream stream;
+	private boolean toAdvance = true;
+	private boolean endOfProcess = false;
+	private KEY_TYPE next;
+
+	public KEY_STREAM_WRAPPER( final DataInputStream stream ) {
+		this.stream = stream;
+	}
+
+	public boolean hasNext() {
+		if ( ! toAdvance ) return ! endOfProcess;
+
+		toAdvance = false;
+
+		try {
+			next = stream.READ_KEY();
+		}
+		catch( EOFException eof ) {
+			endOfProcess = true;
+		}
+		catch( IOException rethrow ) { throw new RuntimeException( rethrow ); }
+
+		return ! endOfProcess;
+	}
+
+	public KEY_TYPE NEXT_KEY() {
+		if (! hasNext()) throw new NoSuchElementException();
+		toAdvance = true;
+		return next;
+	}
+}
+
+
+
+/** Wraps the given data input stream stream into an iterator.
+ *
+ * @param stream a data input stream.
+ */
+public static KEY_ITERATOR AS_KEY_ITERATOR( final DataInputStream stream ) throws IOException {
+	return new KEY_STREAM_WRAPPER( stream );
+}
+
+/** Wraps the given filename into an iterator.
+ *
+ * @param filename a file name.
+ */
+public static KEY_ITERATOR AS_KEY_ITERATOR( final CharSequence filename ) throws IOException {
+	return new KEY_STREAM_WRAPPER( new DataInputStream( new FastBufferedInputStream( new FileInputStream( filename.toString() ) ) ) );
+}
+
+
+
 
 // Local Variables:
 // mode: jde
