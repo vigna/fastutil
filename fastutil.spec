@@ -10,18 +10,17 @@ Version:        %{version}
 Release:        %{release}
 Summary:        fastUtil: Fast & compact type-specific utility classes
 License:        LGPL
-Source0:        http://vigna.dsi.unimi.it/fastUtil/fastUtil-2.52.tar.gz
-URL:            http://vigna.dsi.unimi.it/fastUtil/
+Source0:        http://vigna.dsi.unimi.it/fastutil/%{name}-%{version}.tar.gz
+URL:            http://vigna.dsi.unimi.it/fastutil/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
-Provides:	fastUtil fastutil
 BuildRequires:  ant, make, gcc, jpackage-utils, /bin/bash
 BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
-fastUtil provides type-specific maps and sets with a small memory
+fastutil provides type-specific maps and sets with a small memory
 footprint and much (up to 10 times) faster access and insertion.  The
 classes implement their standard counterpart interface (e.g., Map for
 maps) and can be plugged into existing code. Moreover, they provide
@@ -38,7 +37,7 @@ Javadoc for %{name}.
 # -----------------------------------------------------------------------------
 
 %prep
-%setup -q -n fastUtil-%{version}
+%setup -q -n %{name}-%{version}
 
 find . -name "*.jar" -exec rm -f {} ';'
 rm -rf docs
@@ -64,12 +63,13 @@ rm -rf $RPM_BUILD_ROOT
 
 # jars
 mkdir -p $RPM_BUILD_ROOT%{javadir}
-cp -p fastUtil-%{version}.jar $RPM_BUILD_ROOT%{javadir}/%{name}-%{version}.jar
+cp -p %{name}-%{version}.jar $RPM_BUILD_ROOT%{javadir}/%{name}-%{version}.jar
 (cd $RPM_BUILD_ROOT%{javadir} && for jar in *-%{version}*; do ln -sf ${jar} `echo $jar| sed "s|-%{version}||g"`; done)
 
 # javadoc
 mkdir -p $RPM_BUILD_ROOT%{javadocdir}/%{name}-%{version}
 cp -pr docs/* $RPM_BUILD_ROOT%{javadocdir}/%{name}-%{version}
+(cd $RPM_BUILD_ROOT%{javadocdir} && for doc in *-%{version}*; do ln -sf ${doc} `echo $doc| sed "s|-%{version}||g"`; done)
 
 # -----------------------------------------------------------------------------
 
@@ -86,13 +86,14 @@ rm -rf $RPM_BUILD_ROOT
 %files javadoc
 %defattr(0644,root,root,0755)
 %{javadocdir}/%{name}-%{version}
+%{javadocdir}/%{name}
 
 # -----------------------------------------------------------------------------
 
 %changelog
 * Wed Mar 12 2003 Sebastiano Vigna <vigna at acm.org> - 2.52-1jpp
 - IMPORTANT: The package name has changed. Please remove manually
-  the old package.
+  the old package and modify your sources.
 - Deleted docs from source tar.
 - Merged in patches to Makefile.
 
