@@ -32,6 +32,9 @@ TYPE_PACK=(booleans bytes shorts ints longs chars floats doubles objects objects
 # The capitalised types used to build class and method names (now references appear as Reference).
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
+# The downcased types used to build method names.
+TYPE_LC=(boolean byte short int long char float double object reference)
+
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
 
@@ -361,20 +364,16 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
 "#define ABSTRACT_COLLECTION Abstract${TYPE_CAP[$k]}Collection\n\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
+"#define SUBLIST ${TYPE_CAP[$k]}SubList\n"\
+"#define SUBLIST_METHOD ${TYPE_LC[$k]}SubList\n"\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n\n"\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
-"#define BULK_COPY_LIST ${TYPE_CAP[$k]}BulkCopyList\n\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
 "#define STDARRAYLIST ArrayList\n\n"\
 "#define REMOVE_KEY remove\n"\
 "#define WRITE_KEY writeObject\n"\
 "#define READ_KEY readObject\n"\
 "#define GET_KEY get\n"\
-"#if #keyclass(Object)\n"\
-"#define SUBLIST objectSubList\n"\
-"#else\n"\
-"#define SUBLIST referenceSubList\n"\
-"#endif\n"\
 "#define KEY_ITERATOR ObjectIterator\n\n"\
 "#define KEY_ABSTRACT_ITERATOR AbstractObjectIterator\n\n"\
 "#define KEY_ITERATOR_METHOD objectIterator\n\n"\
@@ -404,7 +403,6 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define GET_KEY get${TYPE_CAP[$k]}\n"\
-"#define SUBLIST ${TYPE[$k]}SubList\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\

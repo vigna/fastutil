@@ -111,14 +111,14 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	}
 
 
-	/** Creates a new tree set copying a given set.
+	/** Creates a new tree set copying a given collection.
 	 *
-	 * @param s a {@link Set} to be copied into the new tree set. 
+	 * @param s a collection to be copied into the new tree set. 
 	 */
 	 
-	public RBTREESET( final Set s ) {
+	public RBTREESET( final Collection c ) {
 		this();
-		addAll( s );
+		addAll( c );
 	}
 
 	/** Creates a new tree set copying a given sorted set (and its {@link Comparator}).
@@ -131,14 +131,14 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		addAll( s );
 	}
 
-	/** Creates a new tree set copying a given type-specific set.
+	/** Creates a new tree set copying a given type-specific collection.
 	 *
-	 * @param s a type-specific set to be copied into the new tree set. 
+	 * @param c a type-specific collection to be copied into the new tree set. 
 	 */
 	 
-	public RBTREESET( final SET s ) {
+	public RBTREESET( final COLLECTION c ) {
 		this();
-		addAll( s );
+		addAll( c );
 	}
 
 	/** Creates a new tree set copying a given type-specific sorted set (and its {@link Comparator}).
@@ -163,7 +163,6 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	}
 
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
 	/** Creates a new tree set using elements provided by an iterator.
 	 *
 	 * @param i an iterator whose elements will fill the set.
@@ -172,9 +171,6 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	public RBTREESET( final Iterator i ) {
 		this( Iterators.AS_KEY_ITERATOR( i ) );
 	}
-#endif
-
-
 
 
 	/** Creates a new tree set copying the elements of an array.
@@ -684,7 +680,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	}
 
 #if #keyclass(Integer)
-	public boolean REMOVE( final int k ) { return remove( k ); }
+	public boolean rem( final int k ) { return remove( k ); }
 #endif
 
 	public boolean contains( final KEY_TYPE k ) {
@@ -1877,6 +1873,26 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 			ensure( ((RBTREESET)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
 			m = (RBTREESET)((RBTREESET)m).clone();
 		}
+
+		/* Now we play with constructors. */
+		ensure( m.equals( new RBTREESET( (Collection)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( Collection m )" );
+		ensure( ( new RBTREESET( (Collection)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( Collection m )does not equal m" );
+		ensure( m.equals( new RBTREESET( (COLLECTION)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific Collection m )" );
+		ensure( ( new RBTREESET( (COLLECTION)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific Collection m ) does not equal m" );
+		ensure( m.equals( new RBTREESET( (SortedSet)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( SortedSet m )" );
+		ensure( ( new RBTREESET( (SortedSet)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( SortedSet m ) does not equal m" );
+		ensure( m.equals( new RBTREESET( (SORTEDSET)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific SortedSet m )" );
+		ensure( ( new RBTREESET( (SORTEDSET)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific SortedSet m ) does not equal m" );
+		ensure( m.equals( new RBTREESET( m.iterator() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.iterator() )" );
+		ensure( ( new RBTREESET( m.iterator() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.iterator() ) does not equal m" );
+		ensure( m.equals( new RBTREESET( m.KEY_ITERATOR_METHOD() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.type_specific_iterator() )" );
+		ensure( ( new RBTREESET( m.KEY_ITERATOR_METHOD() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.type_specific_iterator() ) does not equal m" );
+
+		/* Now we play with conversion to array, wrapping and copying. */
+		ensure( m.equals( new RBTREESET( m.TO_KEY_ARRAY() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( toArray( m ) )" );
+		ensure( ( new RBTREESET( m.TO_KEY_ARRAY() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( toArray( m ) ) does not equal m" );
+
+
 
 		int h = m.hashCode();
 

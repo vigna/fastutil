@@ -398,7 +398,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	public void removeElements( final int from, final int to ) {
 		if ( from > size ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than list size (" + size + ")" );
 		if ( to > size ) throw new IndexOutOfBoundsException( "End index (" + to + ") is greater than list size (" + size + ")" );
-		if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 		System.arraycopy( a, to, a, from, size - to );
 		size -= ( to - from );
 #if #keyclass(Object) || #keyclass(Reference)
@@ -448,143 +448,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			};
 	}
 
-
-	private class SubList extends ABSTRACT_LIST implements RandomAccess, java.io.Serializable {
-		private final LIST l; // The list this sublist restricts.
-		private final int from; // Initial (inclusive) index of this sublist.
-		private int to; //  Final (exclusive) index of this sublist.
-
-		public SubList( final LIST l, final int from, final int to ) {
-			this.l = l;
-			this.from = from;
-			this.to = to;
-		}
-
-		public boolean add( final KEY_TYPE k ) {
-			l.add( to, k );
-			to++;
-			return true;
-		}
-
-		public void add( final int index, final KEY_TYPE k ) {
-			ensureIndex( index );
-			l.add( from + index, k );
-			to++;
-		}
-
-		public boolean addAll( final int index, final Collection c ) {
-			ensureIndex( index );
-			to += c.size();
-			return l.addAll( from + index, c );
-		}
-
-		public boolean addAll( final int index, final COLLECTION c ) {
-			ensureIndex( index );
-			to += c.size();
-			return l.addAll( from + index, c );
-		}
-
-		public boolean addAll( final int index, final LIST l ) {
-			ensureIndex( index );
-			to += l.size();
-			return l.addAll( from + index, l );
-		}
-
-		public KEY_TYPE GET_KEY( int index ) {
-			ensureRestrictedIndex( index );
-			return l.GET_KEY( from + index );
-		}
-
-		public KEY_TYPE REMOVE_KEY( int index ) {
-			ensureRestrictedIndex( index );
-			to--;
-			return l.REMOVE_KEY( from + index );
-		}
-
-		public boolean REMOVE( KEY_TYPE k ) {
-			int index = indexOf( k );
-			if ( index == -1 ) return false;
-			to--;
-			l.REMOVE_KEY( from + index );
-			if ( asserts ) assert size <= a.length;
-			return true;
-		}
-
-		public KEY_TYPE set( int index, KEY_TYPE k ) {
-			ensureRestrictedIndex( index );
-			return l.set( from + index, k );
-		}
-
-		public void clear() {
-			removeElements( 0, size() );
-		}
-
-		public int size() { 
-			return to - from; 
-		}
-
-		
-		public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
-			ensureIndex( from );
-			if ( from + length > size() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + size() + ")" );
-			l.getElements( this.from + from, a, offset, length );
-		}
-
-		public void removeElements( final int from, final int to ) {
-			ensureIndex( from );
-			ensureIndex( to );
-			l.removeElements( this.from + from, this.from + to );
-			this.to -= ( to - from );
-		}
-
-		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
-			ensureIndex( index );
-
-			return new KEY_ABSTRACT_LIST_ITERATOR() {
-					int pos = index, last = -1;
-							
-					public boolean hasNext() { return pos < size(); }
-					public boolean hasPrevious() { return pos > 0; }
-					public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
-					public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
-					public int nextIndex() { return pos; }
-					public int previousIndex() { return pos - 1; }
-					public void add( KEY_TYPE k ) { 
-						if ( last == -1 ) throw new IllegalStateException();
-						SubList.this.add( pos++, k ); 
-						last = -1;
-					}
-					public void set( KEY_TYPE k ) { 
-						if ( last == -1 ) throw new IllegalStateException();
-						SubList.this.set( last, k ); 
-					}
-					public void remove() { 
-						if ( last == -1 ) throw new IllegalStateException();
-						SubList.this.REMOVE_KEY( last );
-						/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-						if ( last < pos ) pos--;
-						last = -1;
-					}
-				};
-		}
-
-		public LIST SUBLIST( final int from, final int to ) {
-			ensureIndex( from );
-			ensureIndex( to );
-			if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
-			
-			return new SubList( this, from, to );
-		}
-
-	}
-
-	public LIST SUBLIST( final int from, final int to ) {
-		ensureIndex( from );
-		ensureIndex( to );
-		if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
-
-		return new SubList( this, from, to );
-	}
 
 	public Object clone() {
 		ARRAY_LIST c = new ARRAY_LIST( size );
@@ -730,7 +593,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 
 	private static void testLists( LIST m, List t, int n, int level ) {
 		long ms;
-		boolean mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
+		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds;
 		Object rt = null;
 		KEY_TYPE rm = KEY_NULL;
 
@@ -743,34 +606,34 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			int p = r.nextInt() % ( n * 2 );
 
 			KEY_TYPE T = genKey();
-			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 			
 			try {
 				m.set( p, T );
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 			try {
 				t.set( p, KEY2OBJ( T ) );
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 			
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): set() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( KEY2OBJ( m.GET_KEY( p ) ) ), "Error (" + level + ", " + seed + "): m and t differ after set() on position " + p + " (" + m.GET_KEY( p ) + ", " + t.get( p ) + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): set() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( t.get( p ).equals( KEY2OBJ( m.GET_KEY( p ) ) ), "Error (" + level + ", " + seed + "): m and t differ after set() on position " + p + " (" + m.GET_KEY( p ) + ", " + t.get( p ) + ")" );
 
 			p = r.nextInt() % ( n * 2 );
-			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 			
 			try {
 				m.GET_KEY( p );
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 			try {
 				t.get( p );
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 			
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( KEY2OBJ( m.GET_KEY( p ) ) ), "Error (" + level + ", " + seed + "): m and t differ aftre get() on position " + p + " (" + m.GET_KEY( p ) + ", " + t.get( p ) + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( t.get( p ).equals( KEY2OBJ( m.GET_KEY( p ) ) ), "Error (" + level + ", " + seed + "): m and t differ aftre get() on position " + p + " (" + m.GET_KEY( p ) + ", " + t.get( p ) + ")" );
 			
 		}
 		
@@ -779,19 +642,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		for( int i = 0; i < n; i++ ) {
 			int p = r.nextInt() % ( n * 2 );
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 			
 			try {
 				m.get( p );
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 			try {
 				t.get( p );
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 			
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( m.get( p ) ), "Error (" + level + ", " + seed + "): m and t differ at start on position " + p + " (" + m.get( p ) + ", " + t.get( p ) + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( t.get( p ).equals( m.get( p ) ), "Error (" + level + ", " + seed + "): m and t differ at start on position " + p + " (" + m.get( p ) + ", " + t.get( p ) + ")" );
 			
 		}
 		
@@ -837,48 +700,48 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			try {
 				m.add( T );
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 
 			try {
 				t.add( KEY2OBJ( T ) );
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 
 			T = genKey();
 			int p = r.nextInt() % ( 2 * n + 1 );
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 
 			try {
 				m.add(p, T );
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 
 			try {
 				t.add(p, KEY2OBJ(T));
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 
 
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): add() divergence in IndexOutOfBoundsException for index " + p + " for " + T + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): add() divergence in IndexOutOfBoundsException for index " + p + " for " + T + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
 
 			p = r.nextInt() % ( 2 * n + 1 );
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 
 			try {
 				rm = m.REMOVE_KEY(p);
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 
 			try {
 				rt = t.remove(p);
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 
 
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): remove() divergence in IndexOutOfBoundsException for index " + p + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			if ( !mThrowsOutOfBounds ) ensure( rt.equals( KEY2OBJ( rm ) ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): remove() divergence in IndexOutOfBoundsException for index " + p + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( rt.equals( KEY2OBJ( rm ) ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ")" );
 		}
 
 		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after add/remove" );
@@ -892,19 +755,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			int s = r.nextInt( n / 2 + 1 );
 			for( int j = 0; j < s; j++ ) m1.add( KEY2OBJ( genKey() ) );
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 
 			try {
 				m.addAll(p, m1);
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 
 			try {
 				t.addAll(p, m1);
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after addAll" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals( m ) after addAll" );
@@ -928,19 +791,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 				t1.add( KEY2OBJ( x ) );
 			}
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 
 			try {
 				m.addAll(p, m1);
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 
 			try {
 				t.addAll(p, t1);
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): polymorphic addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): polymorphic addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after polymorphic addAll" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals( m ) after polymorphic addAll" );
@@ -964,19 +827,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 				t1.add( KEY2OBJ( x ) );
 			}
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 
 			try {
 				m.addAll(p, m1);
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 
 			try {
 				t.addAll(p, t1);
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): list addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): list addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after list addAll" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after list addAll" );
@@ -1004,19 +867,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		for( int i = 0; i < n; i++ ) {
 			int p = r.nextInt() % ( n * 2 );
 
-			mThrowsOutOfBounds = tThrowsOutOfBounds  = false;
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
 			
 			try {
 				m.get( p );
 			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
 			try {
 				t.get( p );
 			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
 			
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): get() divergence in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			if ( ! mThrowsOutOfBounds ) ensure( t.get( p ).equals( m.get( p ) ), "Error (" + level + ", " + seed + "): m and t differ on position " + p + " (" + m.get( p ) + ", " + t.get( p ) +")" );
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): get() divergence in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( t.get( p ).equals( m.get( p ) ), "Error (" + level + ", " + seed + "): m and t differ on position " + p + " (" + m.get( p ) + ", " + t.get( p ) +")" );
 			
 		}
 
@@ -1046,8 +909,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		ensure( ( new ARRAY_LIST( (Collection)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( Collection m )does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( (COLLECTION)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific Collection m )" );
 		ensure( ( new ARRAY_LIST( (COLLECTION)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific Collection m ) does not equal m" );
-		ensure( m.equals( new ARRAY_LIST( (LIST)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( BulkCopyList m )" );
-		ensure( ( new ARRAY_LIST( (LIST)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( BulkCopyList m ) does not equal m" );
+		ensure( m.equals( new ARRAY_LIST( (LIST)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific List m )" );
+		ensure( ( new ARRAY_LIST( (LIST)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific List m ) does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( m.iterator() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.iterator() )" );
 		ensure( ( new ARRAY_LIST( m.iterator() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.iterator() ) does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( m.KEY_ITERATOR_METHOD() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.type_specific_iterator() )" );
@@ -1224,7 +1087,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			int start = r.nextInt( m.size() );
 			int end = start + r.nextInt( m.size() - start );
 			//System.err.println("Checking subList from " + start + " to " + end + " (level=" + (level+1) + ")..." );
-			testLists( m.SUBLIST( start, end ), t.subList( start, end ), n, level + 1 );
+			testLists( m.SUBLIST_METHOD( start, end ), t.subList( start, end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals( t ) after subList" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subList" );

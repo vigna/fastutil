@@ -30,6 +30,8 @@ import java.util.*;
  */
 
 public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST {
+
+	private static final boolean asserts = ASSERTS;
 	
 	/** Ensures that the given index is nonnegative and not greater than the list size.
 	 *
@@ -39,7 +41,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 	protected void ensureIndex( final int index ) {
 		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
 		if ( index > size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + ( size() ) + ")" );
-		}
+	}
 	
 	/** Ensures that the given index is nonnegative and smaller than the list size.
 	 *
@@ -149,9 +151,18 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 		else while( i-- != size ) remove( i );
 	}		
 
+
+	public LIST SUBLIST_METHOD( final int from, final int to ) {
+		ensureIndex( from );
+		ensureIndex( to );
+		if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+		
+		return new SUBLIST( this, from, to );
+	}
+	
 	/** Delegates to the corresponding type-specific method. */
 	public List subList( final int from, final int to ) {
-		return SUBLIST( from, to );
+		return SUBLIST_METHOD( from, to );
 	}
 
 	/** Removes elements of this type-specific list one-by-one. 
@@ -168,7 +179,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 		ensureIndex( to );
 		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( from );
 		int n = to - from;
-		if ( n < 0 ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+		if ( n < 0 ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 		while( n-- != 0 ) {
 			i.NEXT_KEY();
 			i.remove();
@@ -330,6 +341,169 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 	}
 
 }
+
+
+class SUBLIST extends ABSTRACT_LIST implements java.io.Serializable {
+	private final LIST l; // The list this sublist restricts.
+	private final int from; // Initial (inclusive) index of this sublist.
+	private int to; //  Final (exclusive) index of this sublist.
+
+	private static final boolean asserts = ASSERTS;
+	
+	public SUBLIST( final LIST l, final int from, final int to ) {
+		this.l = l;
+		this.from = from;
+		this.to = to;
+	}
+
+	private void assertRange() {
+		if ( asserts ) {
+			assert from <= l.size();
+			assert to <= l.size();
+			assert to >= from;
+		}
+	}
+
+	public boolean add( final KEY_TYPE k ) {
+		l.add( to, k );
+		to++;
+		if ( asserts ) assertRange();
+		return true;
+	}
+
+	public void add( final int index, final KEY_TYPE k ) {
+		ensureIndex( index );
+		l.add( from + index, k );
+		to++;
+		if ( asserts ) assertRange();
+	}
+
+	public boolean addAll( final int index, final Collection c ) {
+		ensureIndex( index );
+		to += c.size();
+		if ( asserts ) {
+			boolean retVal = l.addAll( from + index, c );
+			assertRange();
+			return retVal;
+		}
+		else return l.addAll( from + index, c );
+	}
+
+	public boolean addAll( final int index, final COLLECTION c ) {
+		ensureIndex( index );
+		to += c.size();
+		if ( asserts ) {
+			boolean retVal = l.addAll( from + index, c );
+			assertRange();
+			return retVal;
+		}
+		else return l.addAll( from + index, c );
+	}
+
+	public boolean addAll( final int index, final LIST l ) {
+		ensureIndex( index );
+		to += l.size();
+		if ( asserts ) {
+			boolean retVal = this.l.addAll( from + index, l );
+			assertRange();
+			return retVal;
+		}
+		else return this.l.addAll( from + index, l );
+	}
+
+	public KEY_TYPE GET_KEY( int index ) {
+		ensureRestrictedIndex( index );
+		return l.GET_KEY( from + index );
+	}
+
+	public KEY_TYPE REMOVE_KEY( int index ) {
+		ensureRestrictedIndex( index );
+		to--;
+		return l.REMOVE_KEY( from + index );
+	}
+
+	public boolean REMOVE( KEY_TYPE k ) {
+		int index = indexOf( k );
+		if ( index == -1 ) return false;
+		to--;
+		l.REMOVE_KEY( from + index );
+		if ( asserts ) assertRange();
+		return true;
+	}
+
+	public KEY_TYPE set( int index, KEY_TYPE k ) {
+		ensureRestrictedIndex( index );
+		return l.set( from + index, k );
+	}
+
+	public void clear() {
+		removeElements( 0, size() );
+		if ( asserts ) assertRange();
+	}
+
+	public int size() { 
+		return to - from; 
+	}
+
+		
+	public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
+		ensureIndex( from );
+		if ( from + length > size() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + size() + ")" );
+		l.getElements( this.from + from, a, offset, length );
+	}
+
+	public void removeElements( final int from, final int to ) {
+		ensureIndex( from );
+		ensureIndex( to );
+		l.removeElements( this.from + from, this.from + to );
+		this.to -= ( to - from );
+		if ( asserts ) assertRange();
+	}
+
+	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+		ensureIndex( index );
+
+		return new KEY_ABSTRACT_LIST_ITERATOR() {
+				int pos = index, last = -1;
+							
+				public boolean hasNext() { return pos < size(); }
+				public boolean hasPrevious() { return pos > 0; }
+				public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
+				public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
+				public int nextIndex() { return pos; }
+				public int previousIndex() { return pos - 1; }
+				public void add( KEY_TYPE k ) { 
+					if ( last == -1 ) throw new IllegalStateException();
+					SUBLIST.this.add( pos++, k ); 
+					last = -1;
+					if ( asserts ) assertRange();
+				}
+				public void set( KEY_TYPE k ) { 
+					if ( last == -1 ) throw new IllegalStateException();
+					SUBLIST.this.set( last, k ); 
+				}
+				public void remove() { 
+					if ( last == -1 ) throw new IllegalStateException();
+					SUBLIST.this.REMOVE_KEY( last );
+					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+					if ( last < pos ) pos--;
+					last = -1;
+					if ( asserts ) assertRange();
+				}
+			};
+	}
+
+	public LIST SUBLIST_METHOD( final int from, final int to ) {
+		ensureIndex( from );
+		ensureIndex( to );
+		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+			
+		return new SUBLIST( this, from, to );
+	}
+
+}
+
+
 
 // Local Variables:
 // mode: jde

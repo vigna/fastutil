@@ -62,10 +62,7 @@ source:
 
 jsources: $(JSOURCES)
 
-$(JSOURCES): $(CSOURCES) $(FRAGMENTS)
-
-$(FRAGMENTS): $(CFRAGMENTS)
-
+$(JSOURCES): $(FRAGMENTS)
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
