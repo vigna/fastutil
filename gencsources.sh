@@ -26,7 +26,7 @@ CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 
 for ((f=0; f<3; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
-		  for ((v=1; v<${#TYPE[*]}; v++)); do
+		  for ((v=0; v<${#TYPE[*]}; v++)); do
 				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
 				rm -f $FILENAME
 				echo -e \
@@ -40,8 +40,6 @@ for ((f=0; f<3; f++)); do
 "#define WRITE_VALUE write${TYPE_CAP[$v]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define READ_VALUE read${TYPE_CAP[$v]}\n"\
-"#define GET_VALUE get${TYPE_CAP[$v]}\n"\
-"#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
@@ -58,18 +56,24 @@ for ((f=0; f<3; f++)); do
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
+"#define GET_VALUE get${TYPE_CAP[$v]}\n"\
+"#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
 "#else\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
 "#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
+"#elif #keyclass(Boolean)\n"\
+"#define KEY2INT(x) (x ? 1 : 0)\n"\
 "#else\n"\
-"#define KEY2INT(x) ((int)x)\n"\
+"#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
+"#define GET_VALUE get\n"\
+"#define REMOVE_VALUE remove\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#else\n"\
@@ -92,8 +96,10 @@ for ((f=0; f<3; f++)); do
 "#define ENTRY_GET_VALUE get${TYPE_CAP[$v]}Value\n"\
 "#if #valueclass(Float) || #valueclass(Double) || #valueclass(Long)\n"\
 "#define VALUE2INT(x) HashCommon.${TYPE[$v]}2int(x)\n"\
+"#elif #valueclass(Boolean)\n"\
+"#define VALUE2INT(x) ((x) ? 1 : 0)\n"\
 "#else\n"\
-"#define VALUE2INT(x) ((int)x)\n"\
+"#define VALUE2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP[$v]}Iterator\n\n"\
@@ -152,8 +158,10 @@ for ((f=3; f<8; f++)); do
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
 "#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
+"#elif #keyclass(Boolean)\n"\
+"#define KEY2INT(x) ((x) ? 1 : 0)\n"\
 "#else\n"\
-"#define KEY2INT(x) ((int)x)\n"\
+"#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#if #keyclass(Boolean)\n"\
@@ -166,7 +174,6 @@ for ((f=3; f<8; f++)); do
 	  done
 done
 
-rm -f $DIR/BooleanSet.c
 rm -f $DIR/BooleanAbstractSet.c
 rm -f $DIR/BooleanHashSet.c
 

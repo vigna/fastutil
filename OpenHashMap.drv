@@ -31,7 +31,7 @@ import java.io.*;
 /** A type-specific hash map with a very fast, small-footprint implementation.
  */
 
-public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, MAP {
+public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Hash, MAP {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
@@ -85,7 +85,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
 		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
 
-		  int l = Arrays.binarySearch(primes, n+1);
+		  int l = Arrays.binarySearch(primes, (int)(n/f)+1);
 		  if (l < 0) l = -l-1;
 
 		  this.loadFactor = f;
@@ -104,7 +104,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 	  */
 	 
 	 public HASHMAP(int n) {
-		  this(n, Hash.DEFAULT_LOAD_FACTOR);
+		  this(n, DEFAULT_LOAD_FACTOR);
 	 }
 
 
@@ -114,18 +114,28 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 	  */
 	 
 	 public HASHMAP() {
-		  this(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
+		  this(DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR);
 	 }
 
 
-	 /** Creates a new map copying a given one.
+	 /** Creates a new hash map copying a given one.
+	  *
+	  * @param m a {@link Map} to be copied into the new hash map. 
+	  * @param f the load factor.
+	  */
+	 
+	 public HASHMAP( Map m, float f ) {
+		  this(m.size(), f);
+		  putAll(m);
+	 }
+
+	 /** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given one.
 	  *
 	  * @param m a {@link Map} to be copied into the new hash map. 
 	  */
 	 
 	 public HASHMAP( Map m ) {
-		  this(m.size());
-		  putAll(m);
+		  this(m, DEFAULT_LOAD_FACTOR);
 	 }
 
 	 /*
@@ -247,33 +257,6 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 
 #endif
 
-
-	 /** Puts all pairs in the given map.
-	  * If the map implements the interface of this map,
-	  * it uses the faster iterators.
-	  *
-	  * @param m a map.
-	  */
-	 
-	 public void putAll(Map m) {
-		  if (m instanceof MAP) {
-				MAP.Entry e;
-				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-					 e = (MAP.Entry)i.next();
-					 put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
-				}
-		  }
-		  else {
-				Map.Entry e;
-				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-					 e = (Map.Entry)i.next();
-					 put(e.getKey(), e.getValue());
-				}
-		  } 
-	 }
-
-
-
 	 public Object remove(final Object ok) {
 		  final KEY_TYPE k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
@@ -392,7 +375,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  }
 		  
 		  public int hashCode() {
-				return KEY2OBJ(key).hashCode() ^ VALUE2OBJ(value).hashCode();
+				return KEY2INT(key) ^ VALUE2INT(value);
 		  }
 		  
 		  
@@ -528,10 +511,6 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 
 
 #if ! #keyclass(Object)
-					 public boolean add(KEY_TYPE k) {
-						  throw new UnsupportedOperationException();
-					 }
-					 
 					 public boolean contains(KEY_TYPE k) {
 						  return containsKey(k);
 					 }
@@ -620,18 +599,11 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 					 }
 
 #if ! #valueclass(Object)
-					 public boolean add(VALUE_TYPE k) {
-						  throw new UnsupportedOperationException();
-					 }
-
 					 public boolean contains(VALUE_TYPE v) {
 						  return containsValue(v);
 					 }
-					 
-					 public boolean remove(VALUE_TYPE k) {
-						  throw new UnsupportedOperationException();
-					 }
 #endif
+
 					 public void clear() {
 						  HASHMAP.this.clear();
 					 }
@@ -780,21 +752,32 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 	 
 #endif
 #endif
-	 /*
+
+	 /** Returns a deep copy of the map. 
+	  *  @return a deep copy of the map.
+	  */
+
 	 public Object clone() {
-		  HASHMAP c = (MAP)super.clone();
-		  c.key = (KEY_TYPE[])c.key.clone();
-		  c.value = (VALUE_TYPE[])c.value.clone();
-		  c.state = (byte[])c.state.clone();
+		  HASHMAP c;
+		  try {
+				c = (HASHMAP)super.clone();
+		  }
+		  catch(CloneNotSupportedException cantHappen) {
+				throw new InternalError();
+		  }
+		  c.key = (KEY_TYPE[])key.clone();
+		  c.value = (VALUE_TYPE[])value.clone();
+		  c.state = (byte[])state.clone();
 		  return c;
-		  }*/
+	 }
+
 
 	 /** Returns a hash code for this map.
 	  *
-	  * The hash code of a map is computed by summing the hash codes of
-	  * keys and values of the map. Note that we correctly handle the case
-	  * of <code>null</code> and that of a map being its own key or value
-	  * (in both cases, we just sum 0).
+	  * This method overrides the generic method provided by the superclass. 
+	  * Since <code>equals()</code> is not overriden, it is important
+	  * that the value returned by this method is the same value as
+	  * the one returned by the overriden method.
 	  *
 	  * @return a hash code for this map.
 	  */
@@ -816,31 +799,6 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  return h;
 	 }
 
-	 public String toString() {
-		  StringBuffer s = new StringBuffer();
-		  int i = 0, j = count;
-
-		  s.append("[");
-
-		  while(j-- != 0) {
-				if (i != 0) s.append(", ");
-				while(state[i] != OCCUPIED ) i++;
-#if #keyclass(Object)
-				if (this == key[i]) s.append("(this map)"); else
-#endif
-				s.append(String.valueOf(key[i]));
-				s.append("=>");
-#if #valueclass(Object)
-				if (this == value[i]) s.append("(this map)"); else
-#endif
-				s.append(String.valueOf(value[i]));
-				i++;
-		  }
-
-		  s.append("]");
-		  return s.toString();
-	 }
-	 
 
 
     private void writeObject(java.io.ObjectOutputStream s) throws IOException {
@@ -862,7 +820,6 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
     private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
-		  int count;
 
 		  s.defaultReadObject();
 		  this.n = primes[p];
@@ -872,10 +829,11 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  this.key = new KEY_TYPE[n];
 		  this.value = new VALUE_TYPE[n];
 		  this.state = new byte[n];
+
+		  int count = this.count;
 		  this.count = 0;
 
-		  int j = count;
-		  while(j-- != 0) {
+		  while(count-- != 0) {
 				key = s.READ_KEY();
 				value = s.READ_VALUE();
 				put(key, value);
@@ -1066,7 +1024,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 
 
 	 private static void regressionTest( int n, float f ) {
-		  MAP m = new HASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
+		  HASHMAP m = new HASHMAP(Hash.DEFAULT_INITIAL_SIZE, f);
 		  Map t = new HashMap();
 		  Random r = new Random();
 
@@ -1096,24 +1054,23 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  
 		  m.putAll(t);
 
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after insertion.\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after insertion.\n");
+
 		  /* Now we check that m actually holds that data. */
 		  
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
 				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      if (!valEquals(e.getValue(), m.get(e.getKey()))) {
+		      if (!valEquals(e.getValue(), m.get(e.getKey()))) 
 					 System.out.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on t).\n");
-					 System.exit(-1);
-				}
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  
 		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
 				Entry e = (Entry)i.next();
-		      if (!valEquals(e.getValue(), t.get(e.getKey()))) {
+		      if (!valEquals(e.getValue(), t.get(e.getKey()))) 
 					 System.out.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on m).\n");
-					 System.exit(-1);
-				}
 		  }
 
 		  /* Now we check that m actually holds the same keys. */
@@ -1266,6 +1223,8 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 				}
 		  }
 
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after removal.\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after removal.\n");
 
 
 		  /* Now we check that m actually holds the same data. */
@@ -1346,6 +1305,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  }
 
 
+		  int h = m.hashCode();
 
 
 		  /* Now we save and read m. */
@@ -1361,7 +1321,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (MAP)ois.readObject();
+				m = (HASHMAP)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }
@@ -1369,6 +1329,8 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 				e.printStackTrace();
 				System.exit(-1);
 		  }
+
+		  if (m.hashCode() != h) System.out.println("Error: hashCode() changed after save/read.\n");
 
 		  /* Now we check that m actually holds that data. */
 		  
@@ -1388,6 +1350,60 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 				System.out.println("Error: m is not empty (as it should be).\n");
 				System.exit(-1);
 		  }
+
+#if (#keyclass(Integer) || #keyclass(Long)) && (#valueclass(Integer) || #valueclass(Long))
+		  m = new HASHMAP(n, f);
+		  t.clear();
+		  int x;
+
+		  /* Now we torture-test the hash table. This part is implemented only for integers and longs. */
+
+		  int p = m.n;
+
+		  for(int i=0; i<p; i++) {
+				for (int j=0; j<20; j++) {
+					 m.put(i+(r.nextInt() % 10)*p, 1);
+					 m.remove(i+(r.nextInt() % 10)*p);
+				}
+
+				for (int j=-10; j<10; j++) m.remove(i+j*p);
+		  }
+		  
+		  t.putAll(m);
+
+		  /* Now all table entries are REMOVED. */
+		  System.err.println(m.n);
+
+		  for(int i=0; i<(p*f)/10; i++) {
+				for (int j=0; j<10; j++) {
+					 if (m.put(KEY2OBJ(x = i+(r.nextInt() % 10)*p), VALUE2OBJ(1)) != t.put(KEY2OBJ(x), VALUE2OBJ(1)))
+						  System.out.println("Error: m and t differ on a key during torture-test insertion.");
+				}
+		  }
+
+		  System.err.println(m.n);
+
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after torture-test insertion.\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after torture-test insertion.\n");
+
+		  for(int i=0; i<p/10; i++) {
+				for (int j=0; j<10; j++) {
+					 if (!valEquals(m.remove(KEY2OBJ(x = i+(r.nextInt() % 10)*p)), t.remove(KEY2OBJ(x))))
+						  System.out.println("Error: m and t differ on a key during torture-test removal.");
+				}
+		  }
+
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after torture-test removal.\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after torture-test removal.\n");
+
+		  if (!m.equals(m.clone())) System.out.println("Error: !m.equals(m.clone()) after torture-test removal.\n");
+		  if (!((HASHMAP)m.clone()).equals(m)) System.out.println("Error: !m.clone().equals(m) after torture-test removal.\n");
+
+		  m.rehash();
+
+		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after rehash().\n");
+		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after rehash().\n");
+#endif
 
 		  System.out.println("Regression test OK.\n");
 		  System.exit(0);

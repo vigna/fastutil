@@ -72,7 +72,7 @@
 		changing the default return value does not change anything about the data
 		structure; it is just a way to return a reasonably meaningful result, and
 		it can be changed at any time.</li>
-		  
+
 		<li>For all maps that have object as keys, the {@link
 		java.util.Map#get(Object)} and {@link java.util.Map#remove(Object)}
 		methods do not admit polymorphic versions, as Java does not allow
@@ -80,6 +80,10 @@
 		methods of the form <code>get<var>valuetype</var>()</code> and
 		<code>remove<var>valuetype</var>()</code>.
 
+		<li>The method {@link java.util.Collection#toArray} has a polymorphic
+		version accepting a type-specific array. Moreover, there are explicitly
+		typed methods <code>to<var>keytype</var>Array()</code> (which, again, are
+		necessary because of lack of return-value polymorphism).
 	 </ul>
 
 	 <h3>Additional Methods</h3>
@@ -96,9 +100,9 @@
 	 java.util.Map#values()} to the appropriate type.
 
 	 <p>Similarly, all iterators have a suitable method
-		<code>next<var>type</var>()</code> returning directly a
-	 primitive type: however, you must cast explicitly the object returned by
-	 {@link java.util.Set#iterator()} to the appropriate type (e.g., {@link
+	 <code>next<var>type</var>()</code> returning directly a primitive type:
+	 however, you must cast explicitly the object returned by {@link
+	 java.util.Set#iterator()} to the appropriate type (e.g., {@link
 	 it.unimi.dsi.fastUtil.CharIterator} for a {@link
 	 it.unimi.dsi.fastUtil.CharSet}).
 
@@ -115,6 +119,7 @@
 	 avoided (but tables have to be rehashed whenever they are filled
 	 beyond the load factor).
 
+
 	 <h2>Deletions</h2>
 
 	 <p>Since deletions are handled simply by tagging, they are very fast <i>per
@@ -123,18 +128,21 @@
 	 are continuously created and deleted, unsuccessful searches may take linear
 	 time (as <em>all</em> entries must be probed).
 
-	 <p>A partial solution to this problem (which has no known solution if you
-	 use open addressing with secondary hashing&mdash;cfr. Knuth's section on hashing
-	 in the third volume of <em>The Art of Computer Programming</em>) is to
-	 call the <code>rehash()</code> method, which will try to rebuild the table
-	 remapping all keys.
+	 <p>A partial solution to this problem (which has no known complete solution
+	 if you use open addressing with secondary hashing&mdash;cfr. Knuth's
+	 section on hashing in the third volume of <em>The Art of Computer
+	 Programming</em>) is to call the <code>rehash()</code> method, which will
+	 try to rebuild the table remapping all keys.
 
 	 <p>In other words, if your application requires inextricably interleaved
 	 insertions, deletions and queries open addressing implementations (and in
 	 particular <code>fastUtil</code> classes) are not the right choice.
 
-	 <p>More details about the implementation can be found in the documentation
-	  of the {@link it.unimi.dsi.fastUtil.Hash} interface.
+	 <p>Note, however, that <code>fastUtil</code> implements a special
+	 optimization, usually not found elsewhere, that greatly speeds up probes
+	 for recently deleted entries. More details about the implementation can be
+	 found in the documentation of the {@link it.unimi.dsi.fastUtil.Hash}
+	 interface.
 
 	 <h2>Memory Usage</h2>
 
@@ -161,7 +169,13 @@
 	 <var>n</var>/<var>f</var>. Primes in {@link
 	 it.unimi.dsi.fastUtil.Hash#primes} are roughly multiplicatively spaced by
 	 2<sup>1/16</sup>, so you lose on average about 2% with respect to
-	 <var>n</var>/<var>f</var>.
+	 <var>n</var>/<var>f</var>. When the table is filled up beyond the load
+	 factor, it is rehashed to a roughly doubled size.
+
+	 <p>An important downside of this design is that <em>hash codes are not
+	 cached</em>. Thus, you should not use <code>fastUtil</code> classes with
+	 keys having slow equality methods, as a probe requires testing equality
+	 with all keys met along the probe sequence.
 
 	 <h2>Robustness</h2>
 	 

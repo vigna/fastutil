@@ -32,6 +32,8 @@ package it.unimi.dsi.fastUtil;
 
 public class HashCommon {
 
+	 private HashCommon() {};
+
 	 /* To get an integer from a integer type smaller than long, we just cast.
 	  * In all other cases, we need some support functions. 
 	  */
