@@ -1,6 +1,6 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=2.50
+VERSION=2.51
 
 .SUFFIXES: .java .class
 
@@ -21,7 +21,8 @@ explain:
 	@echo -e "will compile regression and speed tests into the classes.\n\n"
 
 jar: jsources
-	ant jar
+	export ANT_OPTS="-Xmx128M -Xms128M"
+	ant jar -Dbuild.compiler=jikes
 
 tar: jar
 	ln -s . fastUtil-$(VERSION)
