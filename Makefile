@@ -12,13 +12,13 @@ CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 .PHONY: all clean depend install docs jar tar jsources
 .SECONDARY: $(SOURCES)
 
-jsources: $(SOURCES)
-
 tar: jar
 	tar zhcvf fastUtil-1.0.tgz fastUtil-1.0/
 
 jar: jsources
 	ant dist
+
+jsources: $(SOURCES)
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
@@ -30,6 +30,7 @@ clean:
 PACKAGES = it.unimi.dsi.fastUtil
 
 docs: jsources
+	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
 	javadoc -d $(DOCSDIR)  -windowtitle fastUtil -link $(APIURL) $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
@@ -37,4 +38,4 @@ docs: jsources
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
-	gcc -I. -E -C -P $< > $@
+	gcc -I. -DNDEBUG -E -C -P $< > $@
