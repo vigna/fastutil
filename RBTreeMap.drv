@@ -24,7 +24,7 @@ package it.unimi.dsi.fastUtil;
 import java.util.*;
 import java.io.*;
 
-/** A type-specific tree map with a fast, small-footprint implementation.
+/** A type-specific red-black tree map with a fast, small-footprint implementation.
  */
 
 public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
@@ -59,6 +59,9 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  always a type-specific comparator, so it could be derived from the former by wrapping. */
 	 private transient KEY_COMPARATOR actualComparator;
 
+	 {
+		  allocatePaths();
+	 }
 
 	 /** Creates a new empty tree map. 
 	  */
@@ -166,10 +169,15 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		 return e;
    }
 
+	 /** This vector remembers the path and the direction followed during the
+	  *  current insertion. It suffices for about 2<sup>32</sup> entries. */
+	 private transient boolean dirPath[];
+	 private transient Entry nodePath[];
 
-	 /** This vector remembers the path followed during the current insertion. It suffices for
-		  about 2<sup>32</sup> entries. */
-	 private transient boolean dirPath[] = new boolean[ 48 ];
+	 private void allocatePaths() {
+		  dirPath = new boolean[ 64 ];
+		  nodePath = new Entry[ 64 ];
+	 }
 
 	 /** Inserts a new pair in the map.
 	  *
@@ -183,17 +191,20 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 	  */
 
 	 
+	 
 	 private VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
 		  modified = false;
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
 				tree = lastEntry = firstEntry = new Entry( k, v );
-				modified = true;
 		  }
 		  else {
-				Entry p = tree, q = null, y = tree, z = null, e = null, w = null;
-				int cmp, i = 0;
+				Entry p = tree, e;
+				int cmp, i = 1;
+
+				dirPath[ 0 ]  = false;
+				nodePath[ 0 ] = null;
 
 				while( true ) {
 					 if ( ( cmp = compare( k, p.key ) ) == 0 ) {
@@ -202,18 +213,13 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  return oldValue;
 					 }
 					 
-					 if ( (byte)p.info != 0 ) {
-						  i = 0;
-						  z = q;
-						  y = p;
-					 }
+					 nodePath[ i ] = p;
 					 
 					 if ( dirPath[ i++ ] = cmp > 0 ) {
 						  if ( p.succ() ) {
 								count++;
 								e = new Entry( k, v );
 								
-								modified = true; 
 								if ( p.right == null ) lastEntry = e;
 								
 								e.left = p;
@@ -224,7 +230,6 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								break;
 						  }
 
-						  q = p;
 						  p = p.right;
 					 }
 					 else {
@@ -232,7 +237,6 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								count++;
 								e = new Entry( k, v );
 								
-								modified = true;
 								if ( p.left == null ) firstEntry = e;
 								
 								e.right = p;
@@ -243,164 +247,109 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								break;
 						  }
 
-						  q = p;
 						  p = p.left;
 					 }
 				}
 
-				p = y;
-				i = 0;
+				modified = true;
 
-				while( p != e ) {
-					 if ( dirPath[ i ] ) p.incBalance();
-					 else p.decBalance();
+				while( i >= 3 && ! nodePath[ i - 1 ].black() ) {
+					 if ( ! dirPath[ i - 2 ] ) {
+						  Entry y = nodePath[ i - 2 ].right;
 
-					 p = dirPath[ i++ ] ? p.right : p.left;
-				}
-				
-				if ( (byte)y.info == -2 ) {
-					 Entry x = y.left;
-
-					 if ( (byte)x.info == -1 ) {
-						  w = x;
-						  if ( x.succ() ) {
-								x.succ( false );
-								y.pred( x );
-						  }
-						  else y.left = x.right;
-
-						  x.right = y;
-						  x.balance( 0 );
-						  y.balance( 0 );
-					 }
-					 else {
-						  //assert (byte)x.info == 1;
-
-						  w = x.right;
-						  x.right = w.left;
-						  w.left = x;
-						  y.left = w.right;
-						  w.right = y;
-						  if ( (byte)w.info == -1 ) {
-								x.balance( 0 );
-								y.balance( 1 );
-						  }
-						  else if ( (byte)w.info == 0 ) {
-								x.balance( 0 );
-								y.balance( 0 );
+						  if ( ! nodePath[ i - 2 ].succ() && ! y.black() ) {
+								nodePath[ i - 1 ].black( true );
+								y.black( true );
+								nodePath[ i - 2 ].black( false );
+								i -= 2;
 						  }
 						  else {
-								x.balance( -1 );
-								y.balance( 0 );
+								Entry x;
+
+								if ( ! dirPath[ i - 1 ] ) y = nodePath[ i - 1 ];
+								else {
+									 x = nodePath[ i - 1 ];
+									 y = x.right;
+									 x.right = y.left;
+									 y.left = x;
+									 nodePath[ i - 2 ].left = y;
+
+									 if ( y.pred() ) {
+										  y.pred( false );
+										  x.succ( y );
+									 }
+								}
+								
+								x = nodePath[ i - 2 ];
+								x.black( false );
+								y.black( true );
+								
+								x.left = y.right;
+								y.right = x;
+								if ( nodePath[ i - 3 ] == null ) tree = y;
+								else {
+									 if ( dirPath[ i - 3 ] ) nodePath[ i - 3 ].right = y;
+									 else nodePath[ i - 3 ].left = y;
+								}
+
+								if ( y.succ() ) {
+									 y.succ( false );
+									 x.pred( y );
+								}
+								break;
 						  }
-						  w.balance( 0 );
-
-
-						  if ( w.pred() ) {
-								x.succ( w );
-								w.pred( false );
-						  }
-						  if ( w.succ() ) {
-								y.pred( w );
-								w.succ( false );
-						  }
-
-					 }
-				}
-				else if ( (byte)y.info == +2 ) {
-					 Entry x = y.right;
-
-					 if ( (byte)x.info == 1 ) {
-						  w = x;
-						  if ( x.pred() ) {
-								x.pred( false );
-								y.succ( x );
-						  }
-						  else y.right = x.left;
-
-						  x.left = y;
-						  x.balance( 0 );
-						  y.balance( 0 );
 					 }
 					 else {
-						  //assert (byte)x.info == -1;
-
-						  w = x.left;
-						  x.left = w.right;
-						  w.right = x;
-						  y.right = w.left;
-						  w.left = y;
-						  if ( (byte)w.info == 1 ) {
-								x.balance( 0 );
-								y.balance( -1 );
-						  }
-						  else if ( (byte)w.info == 0 ) {
-								x.balance( 0 );
-								y.balance( 0 );
+						  Entry y = nodePath[ i - 2 ].left;
+						  
+						  if ( ! nodePath[ i - 2 ].pred() && ! y.black() ) {
+								nodePath[ i - 1 ].black( true );
+								y.black( true );
+								nodePath[ i - 2 ].black( false );
+								i -= 2;
 						  }
 						  else {
-								x.balance( 1 );
-								y.balance( 0 );
-						  }
-						  w.balance( 0 );
+								Entry x;
 
+								if ( dirPath[ i - 1 ] ) y = nodePath[ i - 1 ];
+								else {
+									 x = nodePath[ i - 1 ];
+									 y = x.left;
+									 x.left = y.right;
+									 y.right = x;
+									 nodePath[ i - 2 ].right = y;
+	 
+									 if ( y.succ() ) {
+										  y.succ( false );
+										  x.pred( y );
+									 }
+	 
+								}
 
-						  if ( w.pred() ) {
-								y.succ( w );
-								w.pred( false );
-						  }
-						  if ( w.succ() ) {
-								x.pred( w );
-								w.succ( false );
-						  }
+								x = nodePath[ i - 2 ];
+								x.black( false );
+								y.black( true );
 
+								x.right = y.left;
+								y.left = x;
+								if ( nodePath[ i - 3 ] == null ) tree = y;
+								else {
+									 if ( dirPath[ i - 3 ] ) nodePath[ i - 3 ].right = y;
+									 else nodePath[ i - 3 ].left = y;
+								}
+
+								if ( y.pred() ){
+									 y.pred( false );
+									 x.succ( y );
+								}
+
+								break;
+						  }
 					 }
-				}
-				else return defRetValue;
-
-				if ( z == null ) tree = w;
-				else {
-					 if ( z.left == y ) z.left = w;
-					 else z.right = w;
 				}
 		  }
-
+		  tree.black( true );
 		  return defRetValue;
-	 }
-
-	 /** Finds the parent of an entry.
-	  *
-	  * @param e a node of the tree.
-	  * @return the parent of the given node, or <code>null</code> for the root.
-	  */
-
-	 private Entry parent( Entry e ) {
-		  if ( e == tree ) return null;
-
-		  Entry x, y, p;
-		  x = y = e;
-
-		  while( true ) {
-				if ( y.succ() ) {
-					 p = y.right;
-					 if ( p == null || p.left != e ) {
-						  while( ! x.pred() ) x = x.left;
-						  p = x.left;
-					 }
-					 return p;
-				}
-				else if ( x.pred() ) {
-					 p = x.left;
-					 if ( p == null || p.right != e ) {
-						  while( ! y.succ() ) y = y.right;
-						  p = y.right;
-					 }
-					 return p;
-				}
-
-				x = x.left;
-				y = y.right;
-		  }
 	 }
 
 	 
@@ -415,25 +364,32 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 	  * was no existing entry with the given key).
 	  */
 	 
+	 	 
 	 private VALUE_TYPE delete( final KEY_TYPE k ) {
 		  modified = false;
-
+		  
 		  if ( tree == null ) return defRetValue;
 
+		  Entry p = tree;
 		  int cmp;
-		  Entry p = tree, q = null;
-		  boolean dir = false;
+		  int i = 1;
+
+		  nodePath[ 0 ] = null;
+		  dirPath[ 0 ] = false;
 
 		  while( true ) {
 				if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
-				else if ( dir = cmp > 0 ) {
-					 q = p;
+
+				dirPath[ i ] = cmp > 0;
+				nodePath[ i ] = p;
+
+				if ( dirPath[ i++ ] ) {
 					 if ( ( p = p.right() ) == null ) return defRetValue;
 				}
-				else if ( cmp < 0 ) {
-					 q = p;
+				else {
 					 if ( ( p = p.left() ) == null ) return defRetValue;
 				}
+
 		  }
 
 		  if ( p.left == null ) {
@@ -448,11 +404,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 		  if ( p.succ() ) {
 				if ( p.pred() ) {
-					 if ( q != null ) {
-						  if ( dir ) q.succ( p.right );
-						  else q.pred( p.left );
+					 if ( nodePath[ i - 1 ] != null ) {
+						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].succ( p.right );
+						  else nodePath[ i - 1 ].pred( p.left );
 					 }
-					 else tree = dir ? p.right : p.left;
+					 else tree = dirPath[ i - 1 ] ? p.right : p.left;
 				}
 				else {
 					 Entry l = p.left;
@@ -460,14 +416,15 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 					 l.right = p.right;
 
-					 if ( q != null ) {
-						  if ( dir ) q.right = p.left;
-						  else q.left = p.left;
+					 if ( nodePath[ i - 1 ] != null ) {
+						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].right = p.left;
+						  else nodePath[ i - 1 ].left = p.left;
 					 }
 					 else tree = p.left;
 				}
 		  }
 		  else {
+				boolean colour;
 				Entry r = p.right;
 
 				if ( r.pred() ) {
@@ -478,25 +435,32 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  while( ! l.succ() ) l = l.right;
 						  l.right = r;
 					 }
-					 if ( q != null ) {
-						  if ( dir ) q.right = r;
-						  else q.left = r;
+					 if ( nodePath[ i - 1 ] != null ) {
+						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].right = r;
+						  else nodePath[ i - 1 ].left = r;
 					 }
 					 else tree = r;
 
-					 r.balance( (byte)p.info );
-					 q = r;
-					 dir = true;
-
+					 colour = r.black();
+					 r.black( p.black() );
+					 p.black( colour );
+					 dirPath[ i ] = true;
+					 nodePath[ i++ ] = r;
 				}
 				else {
 					 Entry s;
+					 int j = i++;
 
 					 while( true ) {
+						  dirPath[ i ] = false;
+						  nodePath[ i++ ] = r;
 						  s = r.left;
 						  if ( s.pred() ) break;
 						  r = s;
 					 }
+
+					 dirPath[ j ] = true;
+					 nodePath[ j ] = s;
 
 					 if ( s.succ() ) r.pred( s );
 					 else r.left = s.right;
@@ -511,200 +475,171 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  s.pred( false );
 					 }
 
-					 s.right = p.right;
-					 s.succ( false );
-								
-					 if ( q != null ) {
-						  if ( dir ) q.right = s;
-						  else q.left = s;
+					 s.right( p.right );
+							
+					 colour = s.black();
+					 s.black( p.black() );
+					 p.black( colour );
+	
+					 if ( nodePath[ j - 1 ] != null ) {
+						  if ( dirPath[ j - 1 ] ) nodePath[ j - 1 ].right = s;
+						  else nodePath[ j - 1 ].left = s;
 					 }
 					 else tree = s;
-
-					 s.balance( (byte)p.info );
-					 q = r;
-					 dir = false;
 				}
 		  }
 
-		  Entry y;
+		  if ( p.black() ) {
+				for( ; i > 1; i-- ) {
+					 if ( dirPath[ i - 1 ] && ! nodePath[ i - 1 ].succ() ||
+							! dirPath[ i - 1 ] && ! nodePath[ i - 1 ].pred() ) {
+						  Entry x = dirPath[ i - 1 ] ? nodePath[ i - 1 ].right : nodePath[ i - 1 ].left;
 
-		  while( q != null ) {
-				y = q;
-				q = parent( y );
+						  if ( ! x.black() ) {
+								x.black( true );
+								break;
+						  }
+					 }
 
-				if ( ! dir ) {
-					 dir = q != null && q.left != y;
-					 y.incBalance();
+					 if ( ! dirPath[ i - 1 ] ) {
+						  Entry w = nodePath[ i - 1 ].right;
 
-					 if ( (byte)y.info == 1 ) break;
-					 else if ( (byte)y.info == 2 ) {
+						  if ( ! w.black() ) {
+								w.black( true );
+								nodePath[ i - 1 ].black( false );
 
-						  Entry x = y.right;
-						  //assert x != null;
-									 
-						  if ( (byte)x.info == -1 ) {
-								Entry w;
-								
-								//assert (byte)x.info == -1;
+								nodePath[ i - 1 ].right = w.left;
+								w.left = nodePath[ i - 1 ];
 
-								w = x.left;
-								x.left = w.right;
-								w.right = x;
-								y.right = w.left;
-								w.left = y;
-
-								if ( (byte)w.info == 1 ) {
-									 x.balance( 0 );
-									 y.balance( -1 );
-								}
-								else if ( (byte)w.info == 0 ) {
-									 x.balance( 0 );
-									 y.balance( 0 );
-								}
-								else {
-									 //assert (byte)w.info == -1;
-
-									 x.balance( 1 );
-									 y.balance( 0 );
-								}
-
-								w.balance( 0 );
-
-								if ( w.pred() ) {
-									 y.succ( w );
-									 w.pred( false );
-								}
-								if ( w.succ() ) {
-									 x.pred( w );
-									 w.succ( false );
-								}
-
-								if ( q != null ) {
-									 if ( dir ) q.right = w;
-									 else q.left = w;
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
 								}
 								else tree = w;
+
+								nodePath[ i ] = nodePath[ i - 1 ];
+								dirPath[ i ] = false;
+								nodePath[ i - 1 ] = w;
+								i++;
+
+								w = nodePath[ i - 1 ].right;
+						  }
+
+						  if ( ( w.pred() || w.left.black() ) &&
+								 ( w.succ() || w.right.black() ) ) {
+								w.black( false );
 						  }
 						  else {
-								if ( q != null ) {
-									 if ( dir ) q.right = x;
-									 else q.left = x;
-								}
-								else tree = x;
-										  
-								if ( (byte)x.info == 0 ) {
-									 y.right = x.left;
-									 x.left = y;
-									 x.balance( -1 );
-									 y.balance( +1 );
-									 break;
-								}
-								else {
-									 //assert (byte)x.info == 1;
+								if ( w.succ() || w.right.black() ) {
+									 Entry y = w.left;
+									 
+									 y.black ( true );
+									 w.black( false );
+									 w.left = y.right;
+									 y.right = w;
+									 w = nodePath[ i - 1 ].right = y;
 
-									 if ( x.pred() ) {
-										  y.succ( true );
-										  x.pred( false );
+									 if ( w.succ() ) {
+										  w.succ( false );
+										  w.right.pred( w );
 									 }
-									 else y.right = x.left;
-
-									 x.left = y;
-									 y.balance( 0 );
-									 x.balance( 0 );
 								}
+
+								w.black( nodePath[ i - 1 ].black() );
+								nodePath[ i - 1 ].black( true );
+								w.right.black( true );
+
+								nodePath[ i - 1 ].right = w.left;
+								w.left = nodePath[ i - 1 ];
+
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
+								}
+								else tree = w;
+
+								if ( w.pred() ) {
+									 w.pred( false );
+									 nodePath[ i - 1 ].succ( w );
+								}
+								break;
+						  }
+					 }
+					 else {
+						  Entry w = nodePath[ i - 1 ].left;
+
+						  if ( ! w.black() ) {
+								w.black ( true );
+								nodePath[ i - 1 ].black( false );
+
+								nodePath[ i - 1 ].left = w.right;
+								w.right = nodePath[ i - 1 ];
+
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
+								}
+								else tree = w;
+
+								nodePath[ i ] = nodePath[ i - 1 ];
+								dirPath[ i ] = true;
+								nodePath[ i - 1 ] = w;
+								i++;
+
+								w = nodePath[ i - 1 ].left;
+						  }
+						  
+						  if ( ( w.pred() || w.left.black() ) &&
+								 ( w.succ() || w.right.black() ) ) {
+								w.black( false );
+						  }
+						  else {
+								if ( w.pred() || w.left.black() ) {
+									 Entry y = w.right;
+
+									 y.black( true );
+									 w.black ( false );
+									 w.right = y.left;
+									 y.left = w;
+									 w = nodePath[ i - 1 ].left = y;
+
+									 if ( w.pred() ) {
+										  w.pred( false );
+										  w.left.succ( w );
+									 }
+								}
+
+								w.black( nodePath[ i - 1 ].black() );
+								nodePath[ i -1 ].black( true );
+								w.left.black( true );
+
+								nodePath[ i - 1 ].left = w.right;
+								w.right = nodePath[ i - 1 ];
+									  
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
+								}
+								else tree = w;
+
+								if ( w.succ() ) {
+									 w.succ( false );
+									 nodePath[ i - 1 ].pred( w );
+								}
+								break;
 						  }
 					 }
 				}
-				else {
-					 dir = q != null && q.left != y;
-					 y.decBalance();
 
-					 if ( (byte)y.info == -1 ) break;
-					 else if ( (byte)y.info == -2 ) {
-
-						  Entry x = y.left;
-						  //assert x != null;
-									 
-						  if ( (byte)x.info == 1 ) {
-								Entry w;
-								
-								//assert (byte)x.info == 1;
-
-								w = x.right;
-								x.right = w.left;
-								w.left = x;
-								y.left = w.right;
-								w.right = y;
-
-								if ( (byte)w.info == -1 ) {
-									 x.balance( 0 );
-									 y.balance( 1 );
-								}
-								else if ( (byte)w.info == 0 ) {
-									 x.balance( 0 );
-									 y.balance( 0 );
-								}
-								else {
-									 //assert (byte)w.info == 1;
-
-									 x.balance( -1 );
-									 y.balance( 0 );
-								}
-
-								w.balance( 0 );
-
-								if ( w.pred() ) {
-									 x.succ( w );
-									 w.pred( false );
-								}
-								if ( w.succ() ) {
-									 y.pred( w );
-									 w.succ( false );
-								}
-
-								if ( q != null ) {
-									 if ( dir ) q.right = w;
-									 else q.left = w;
-								}
-								else tree = w;
-						  }
-						  else {
-								if ( q != null ) {
-									 if ( dir ) q.right = x;
-									 else q.left = x;
-								}
-								else tree = x;
-										  
-								if ( (byte)x.info == 0 ) {
-									 y.left = x.right;
-									 x.right = y;
-									 x.balance( +1 );
-									 y.balance( -1 );
-									 break;
-								}
-								else {
-									 //assert (byte)x.info == -1;
-
-									 if ( x.succ() ) {
-										  y.pred( true );
-										  x.succ( false );
-									 }
-									 else y.left = x.right;
-
-									 x.right = y;
-									 y.balance( 0 );
-									 x.balance( 0 );
-								}
-						  }
-					 }  
-				}
+				if ( tree != null ) tree.black( true );
 		  }
 
 		  modified = true;
 		  count--;
 		  return p.value;
 	 }
-	 
+
+
 
 	 public Object put( final Object ok, final Object ov ) {
 		  final VALUE_TYPE oldValue = insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
@@ -764,12 +699,12 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 	  */
 
     private static final class Entry implements MAP.Entry {
+		  /** The the bit in this mask is true, the node is black. */
+		  private final static int BLACK_MASK = 1;
 		  /** If the bit in this mask is true, {@link #right} points to a successor. */
-		  private final static int SUCC_MASK = 1 << 31;
+		  private final static int SUCC_MASK = 1 << 1;
 		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
-		  private final static int PRED_MASK = 1 << 30;
-		  /** The bits in this mask hold the node level. */
-		  private final static int BALANCE_MASK = 0xFF;
+		  private final static int PRED_MASK = 1 << 2;
 		  /** The key of this entry. */
 		  protected KEY_TYPE key;
 		  /** The value of this entry. */
@@ -778,11 +713,6 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  protected Entry left, right;
 		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
 		  private int info;
-
-		  /** Creates a new entry with no explicitly set key/value and <code>null</code> subtrees.
-			*/
-
-		  protected Entry() {}
 
 		  /** Creates a new entry with the given key and value.
 			*
@@ -890,31 +820,22 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				this.right = right;
 		  }
 		  
-		  /** Returns the current level of the node.
-			* @return the current level of this node.
+		  
+		  /** Returns whether this node is black.
+			* @return true iff this node is black.
 			*/
-		  protected int balance() {
-				return (byte)info;
+		  protected boolean black() {
+				return ( info & BLACK_MASK ) != 0;
 		  }
 
-		  /** Sets the level of this node.
-			* @param level the new level of this node.
+		  /** Sets whether this node is black.
+			* @param black if true, then this node becomes black; otherwise, it becomes red..
 			*/
-		  protected void balance( int level ) {
-				info &= ~BALANCE_MASK;
-				info |= ( level & BALANCE_MASK );
+		  protected void black( boolean black ) {
+				if ( black ) info |= BLACK_MASK;
+				else info &= ~BLACK_MASK;
 		  }
 
-		  /** Increments the level of this node. */
-		  protected void incBalance() {
-				info = info & ~BALANCE_MASK | ( (byte)info + 1 ) & 0xFF;
-		  }
-		  
-		  /** Decrements the level of this node. */
-		  protected	void decBalance() {
-				info = info & ~BALANCE_MASK | ( (byte)info - 1 ) & 0xFF;
-		  }
-		  
 		  public Object getKey() {
 				return KEY2OBJ(key);
 		  }
@@ -965,7 +886,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				return key + "=>" + value;
 		  }
 		  
-
+		  /*
 		  public void prettyPrint() {
 				prettyPrint(0);
 		  }
@@ -988,13 +909,14 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				}
 				else if (right != null)
 					 right.prettyPrint(level + 1);
-		  }
+					 }*/
     }
 	 
+	 /*
 		public void prettyPrint() {
       System.err.println("size: " + count);
       if (tree != null) tree.prettyPrint();
-   }
+		}*/
 
 	 public boolean containsKey( KEY_TYPE k ) {
 		  return findKey( k ) != null;
@@ -1056,22 +978,6 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  return lastEntry.key;
 	 }
 
-	 /*
-	 public Entry firstEntry() {
-		  if ( tree == null ) throw new NoSuchElementException();
-		  Entry e = tree;
-		  while( ! e.pred() ) e = e.left;
-		  return e;
-	 }
-	 
-	 public Entry lastEntry() {
-		  if ( tree == null ) throw new NoSuchElementException();
-		  Entry e = tree;
-		  while( ! e.succ() ) e = e.right;
-		  return e;
-	 }
-	 */
-	 
 #if !#keyclass(Object)
 	 public Object firstKey() {
 		  return KEY2OBJ( FIRST_KEY() );
@@ -1151,7 +1057,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				next = prev = curr;
 				updatePrevious();
 				updateNext();
-				RBTREEMAP.this.delete( curr.key );
+				delete( curr.key );
 				curr = null;
 		  }
 
@@ -1835,6 +1741,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  /* The storedComparator is now correctly set, but we must restore
 			  on-the-fly the actualComparator. */
 		  setActualComparator();
+		  allocatePaths();
 
 		  int count = this.count;
 		  this.count = 0;
@@ -2055,7 +1962,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): firstKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		  if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.firstKey() + ", " + t.firstKey() +").\n" );
+		  if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.firstKey() + ", " + t.firstKey() +")" );
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 		  
@@ -2071,56 +1978,56 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): lastKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
 
-		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
+		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.lastKey() + ", " + t.lastKey() +")");
 
 
 		  /* Now we check that m and t are equal. */
 		  if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
-		  ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start.\n" );
-		  ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start.\n" );
+		  ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start" );
+		  ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start" );
 
 
 
 		  /* Now we check that m actually holds that data. */
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
 				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t).\n" );
+		      ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t)" );
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
 				Entry e = (Entry)i.next();
-		      ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m).\n" );
+		      ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m)" );
 		  }
 
 		  /* Now we check that m actually holds the same keys. */
 		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( m.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t).\n" );
-		      ensure( m.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t).\n" );
+		      ensure( m.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)" );
+		      ensure( m.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)" );
 		  }
 
 		  /* Now we check that m actually holds the same keys, but iterating on m. */
 		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( t.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key after insertion (iterating on m).\n" );
-		      ensure( t.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m).\n" );
+		      ensure( t.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key after insertion (iterating on m)" );
+		      ensure( t.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)" );
 		  }
 
 
 		  /* Now we check that m actually hold the same values. */
 		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( m.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after insertion (iterating on t).\n" );
-		      ensure( m.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after insertion (iterating on t).\n" );
+		      ensure( m.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after insertion (iterating on t)" );
+		      ensure( m.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)" );
 		  }
 
 		  /* Now we check that m actually hold the same values, but iterating on m. */
 		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( t.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after insertion (iterating on m).\n");
-		      ensure( t.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after insertion (iterating on m).\n");
+		      ensure( t.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after insertion (iterating on m)");
+		      ensure( t.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
 		  }
 
 		  /* Now we check that inquiries about random data give the same answer in m and t. For
@@ -2154,7 +2061,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): containsKey() divergence in NoSuchElementException (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): containsKey() divergence in IllegalArgumentException (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
 				if ( !mThrowsNoElement && !mThrowsIllegal ) {
-					 ensure( m.containsKey(KEY2OBJ(T)) == t.containsKey(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method).\n" );
+					 ensure( m.containsKey(KEY2OBJ(T)) == t.containsKey(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method)" );
 					 
 #if #keyclass(Object) && ! #valueclass(Object)
 					 if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
@@ -2166,7 +2073,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
 #endif
 								{
-									 System.out.println("Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method).\n");
+									 System.out.println("Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method)");
 									 System.exit(-1);
 								}
 				}
@@ -2202,7 +2109,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): get() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): get() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T))), "Error (" + level + ", " + seed + "): divergence between t and m (standard method).\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T))), "Error (" + level + ", " + seed + "): divergence between t and m (standard method)" );
 		  }
 
 		  /* Now we put and remove random data in m and t, checking that the result is the same. */
@@ -2246,7 +2153,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): put() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): put() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error (" + level + ", " + seed + "): divergence in put() between t and m (" + rt + ", " + rm + ").\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error (" + level + ", " + seed + "): divergence in put() between t and m (" + rt + ", " + rm + ")" );
 
 				T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -2276,40 +2183,40 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ").\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ")" );
 		  }
 
-		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal.\n" );
-		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal.\n" );
+		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal" );
+		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal" );
 
 		  /* Now we check that m actually holds the same data. */
 		  
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
 				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-		      ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t).\n");
+		      ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  
 		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
 				Entry e = (Entry)i.next();
-		      ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m).\n" );
+		      ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)" );
 		  }
 
 		  /* Now we check that m actually holds the same keys. */
 		  
 		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( m.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+") after removal (iterating on t).\n");
-		      ensure( m.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t).\n");
+		      ensure( m.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
+		      ensure( m.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
 		  }
 
 		  /* Now we check that m actually holds the same keys, but iterating on m. */
 		  
 		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( t.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key after removal (iterating on m).\n");
-		      ensure( t.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m).\n");
+		      ensure( t.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key after removal (iterating on m)");
+		      ensure( t.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
 		  }
 
 
@@ -2317,16 +2224,16 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  
 		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( m.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after removal (iterating on t).\n" );
-		      ensure( m.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after removal (iterating on t).\n");
+		      ensure( m.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after removal (iterating on t)" );
+		      ensure( m.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
 		  }
 
 		  /* Now we check that m actually hold the same values, but iterating on m. */
 		  
 		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
-		      ensure( t.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after removal (iterating on m).\n");
-		      ensure( t.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after removal (iterating on m).\n");
+		      ensure( t.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after removal (iterating on m)");
+		      ensure( t.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
 		  }
 
 		  /* Now we check that both maps agree on first/last keys. */
@@ -2343,7 +2250,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): firstKey() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		  if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error (" + level + ", " + seed + "): m and t differ on their first key (" + m.firstKey() + ", " + t.firstKey() +").\n" );
+		  if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error (" + level + ", " + seed + "): m and t differ on their first key (" + m.firstKey() + ", " + t.firstKey() +")" );
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 		  
@@ -2358,7 +2265,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): lastKey() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
-		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error (" + level + ", " + seed + "): m and t differ on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
+		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error (" + level + ", " + seed + "): m and t differ on their last key (" + m.lastKey() + ", " + t.lastKey() +")");
 
 
 
@@ -2389,18 +2296,18 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				System.exit(-1);
 		  }
 
-		  ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read.\n" );
+		  ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read" );
 		  
 		  /* Now we check that m2 actually holds that data. */
 		  
-		  ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read.\n" );
-		  ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read.\n" );
+		  ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read" );
+		  ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read" );
 
 		  /* Now we take out of m everything, and check that it is empty. */
 		  
 		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m2.remove(i.next());
 		  
-		  ensure( m2.isEmpty(), "Error (" + level + ", " + seed + "): m2 is not empty (as it should be).\n" );
+		  ensure( m2.isEmpty(), "Error (" + level + ", " + seed + "): m2 is not empty (as it should be)" );
 
 		  /* Now we play with iterators. */
 		  
@@ -2411,11 +2318,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				j = new LinkedList( t.entrySet() ).listIterator(); 
 
 				for( int k = 0; k < n/2; k++ ) {
-					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext().\n" );
-					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious().\n" );
+					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext()" );
+					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious()" );
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
-						  ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next().\n" );
+						  ensure( ((Entry)i.next()).getKey().equals( J = ((Map.Entry)j.next()).getKey() ), "Error (" + level + ", " + seed + "): divergence in next()" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -2424,7 +2331,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  }
 					 }
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-						  ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous().\n" );
+						  ensure( ((Entry)i.previous()).getKey().equals( J = ((Map.Entry)j.previous()).getKey() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -2433,16 +2340,16 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  }
 					 }
 
-					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex().\n" );
-					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex().\n" );
+					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex()" );
+					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex()" );
 
 				}
 		  }
 		  
 		  /* Now we check that m actually holds that data. */
 		  
-		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration.\n" );
-		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after iteration.\n" );
+		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration" );
+		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after iteration" );
 
 		  /* Now we select a pair of keys and create a submap. */
 
@@ -2455,20 +2362,20 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				//System.err.println("Checking subMap from " + start + " to " + end + " (level=" + (level+1) + ")..." );
 				testMaps( (SORTEDMAP)m.subMap( start, end ), t.subMap( start, end ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subMap.\n" );
-				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subMap.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subMap" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subMap" );
 
 				//System.err.println("Checking headMap to " + end + " (level=" + (level+1) + ")..." );
 				testMaps( (SORTEDMAP)m.headMap( end ), t.headMap( end ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headMap.\n" );
-				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headMap.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headMap" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headMap" );
 
 				//System.err.println("Checking tailMap from " + start + " (level=" + (level+1) + ")..." );
 				testMaps( (SORTEDMAP)m.tailMap( start ), t.tailMap( start ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailMap.\n" );
-				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailMap.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailMap" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailMap" );
 		  }
 		  
 
@@ -2509,7 +2416,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 		  testMaps( m, t, n, 0 );
 
-		  System.out.println("Regression test OK.\n");
+		  System.out.println("Regression test OK");
 		  System.exit(0);
 	 }
 

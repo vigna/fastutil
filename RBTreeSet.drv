@@ -24,7 +24,7 @@ package it.unimi.dsi.fastUtil;
 import java.util.*;
 import java.io.*;
 
-/** A type-specific tree set with a fast, small-footprint implementation.
+/** A type-specific red-black tree set with a fast, small-footprint implementation.
  */
 
 public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
@@ -654,12 +654,12 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 	  */
 
     private static final class Entry {
+		  /** The the bit in this mask is true, the node is black. */
+		  private final static int BLACK_MASK = 1;
 		  /** If the bit in this mask is true, {@link #right} points to a successor. */
 		  private final static int SUCC_MASK = 1 << 31;
 		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
 		  private final static int PRED_MASK = 1 << 30;
-		  /** The bits in this mask hold the node level. */
-		  private final static int BLACK_MASK = 1;
 		  /** The key of this entry. */
 		  protected KEY_TYPE key;
 		  /** The pointers to the left and right subtrees. */
@@ -769,15 +769,15 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				this.right = right;
 		  }
 		  
-		  /** Returns the current level of the node.
-			* @return the current level of this node.
+		  /** Returns whether this node is black.
+			* @return true iff this node is black.
 			*/
 		  protected boolean black() {
 				return ( info & BLACK_MASK ) != 0;
 		  }
 
-		  /** Sets the level of this node.
-			* @param level the new level of this node.
+		  /** Sets whether this node is black.
+			* @param black if true, then this node becomes black; otherwise, it becomes red..
 			*/
 		  protected void black( boolean black ) {
 				if ( black ) info |= BLACK_MASK;
@@ -810,9 +810,11 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				return "" + key;
 		  }
 		  
+		  /*
 		  public void prettyPrint() {
 				prettyPrint(0);
 		  }
+
 
 		  public void prettyPrint(int level) {
 				if ( pred() ) {
@@ -832,13 +834,15 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				}
 				else if (right != null)
 					 right.prettyPrint(level + 1);
-		  }
+					 }*/
     }
 	 
+	 /*
    public void prettyPrint() {
       System.err.println("size: " + count);
       if (tree != null) tree.prettyPrint();
    }
+	 */
 	
 	 public int size() {
 		  return count;
@@ -1530,7 +1534,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): first() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.first() + ", " + t.first() +").\n" );
+		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.first() + ", " + t.first() +")" );
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 		  
@@ -1546,25 +1550,25 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): last() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
 
-		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.last() + ", " + t.last() +").\n");
+		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.last() + ", " + t.last() +")");
 
 
 		  /* Now we check that m and t are equal. */
 		  if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
-		  ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start.\n" );
-		  ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start.\n" );
+		  ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start" );
+		  ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start" );
 
 
 
 		  /* Now we check that m actually holds that data. */
 		  for(Iterator i=t.iterator(); i.hasNext();  ) {
-		      ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on t).\n" );
+		      ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on t)" );
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
-		      ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m).\n" );
+		      ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m)" );
 		  }
 
 		  /* Now we check that inquiries about random data give the same answer in m and t. For
@@ -1597,7 +1601,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method).\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method)" );
 		  }
 
 		  /* Again, we check that inquiries about random data give the same answer in m and t, but
@@ -1630,7 +1634,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence between t and m (standard method).\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence between t and m (standard method)" );
 		  }
 
 		  /* Now we add and remove random data in m and t, checking that the result is the same. */
@@ -1663,7 +1667,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in add() between t and m.\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in add() between t and m" );
 
 				T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -1693,22 +1697,22 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in remove() between t and m.\n" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in remove() between t and m" );
 		  }
 
-		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal.\n" );
-		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal.\n" );
+		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal" );
+		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal" );
 
 		  /* Now we check that m actually holds the same data. */
 		  
 		  for(Iterator i=t.iterator(); i.hasNext();  ) {
-		      ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on t).\n");
+		      ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on t)");
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
-		      ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m).\n" );
+		      ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		  }
 
 		  /* Now we check that both sets agree on first/last keys. */
@@ -1725,7 +1729,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): first() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + ", " + seed + "): m and t differ on their first key (" + m.first() + ", " + t.first() +").\n" );
+		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + ", " + seed + "): m and t differ on their first key (" + m.first() + ", " + t.first() +")" );
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 		  
@@ -1740,7 +1744,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): last() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
-		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ on their last key (" + m.last() + ", " + t.last() +").\n");
+		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ on their last key (" + m.last() + ", " + t.last() +")");
 
 
 
@@ -1771,18 +1775,18 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				System.exit(-1);
 		  }
 
-		  ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read.\n" );
+		  ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read" );
 		  
 		  /* Now we check that m2 actually holds that data. */
 		  
-		  ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read.\n" );
-		  ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read.\n" );
+		  ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read" );
+		  ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read" );
 
 		  /* Now we take out of m everything, and check that it is empty. */
 
 		  for(Iterator i=t.iterator(); i.hasNext(); ) m2.remove(i.next());
 
-		  ensure( m2.isEmpty(), "Error (" + level + ", " + seed + "): m2 is not empty (as it should be).\n" );
+		  ensure( m2.isEmpty(), "Error (" + level + ", " + seed + "): m2 is not empty (as it should be)" );
 				 
 		  /* Now we play with iterators. */
 
@@ -1793,11 +1797,11 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				j = new LinkedList( t ).listIterator(); 
 
 				for( int k = 0; k < n/2; k++ ) {
-					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext().\n" );
-					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious().\n" );
+					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext()" );
+					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious()" );
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
-						  ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next().\n" );
+						  ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next()" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -1806,7 +1810,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  }
 					 }
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-						  ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous().\n" );
+						  ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -1815,8 +1819,8 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  }
 					 }
 
-					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex().\n" );
-					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex().\n" );
+					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex()" );
+					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex()" );
 
 				}
 
@@ -1824,8 +1828,8 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 		  /* Now we check that m actually holds that data. */
 		  
-		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration.\n" );
-		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after iteration.\n" );
+		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration" );
+		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after iteration" );
 
 		  /* Now we select a pair of keys and create a subset. */
 
@@ -1838,20 +1842,20 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
 				testSets( (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet.\n" );
-				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet" );
 
 				//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
 				testSets( (SORTEDSET)m.headSet( end ), t.headSet( end ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet.\n" );
-				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet" );
 
 				//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
 				testSets( (SORTEDSET)m.tailSet( start ), t.tailSet( start ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet.\n" );
-				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet" );
 		  }
 		  
 
@@ -1885,7 +1889,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 		  testSets( m, t, n, 0 );
 
-		  System.out.println("Regression test OK.\n");
+		  System.out.println("Regression test OK");
 		  System.exit(0);
 	 }
 
