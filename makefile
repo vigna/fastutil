@@ -405,7 +405,6 @@ SOURCES = \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/PriorityQueues.java \
 	$(SOURCEDIR)/IndirectPriorityQueues.java \
-	$(SOURCEDIR)/DoubleIndirectPriorityQueues.java \
 	$(SOURCEDIR)/AbstractPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java \
