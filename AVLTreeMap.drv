@@ -1439,16 +1439,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				// If this submap goes to -infinity, we return the main map first entry; otherwise, we locate the start of the map.
 				TREEMAP.Entry e;
 				if ( bottom ) e = firstEntry;
-				else e = locateKey( from );
-				// If we find either the start or something greater we're OK.
-				if ( compare( e.key, from ) < 0 ) {
-					 // Otherwise, we look for a successor.
-					 boolean succ = e.succ();
-					 e = e.right;
-					 // Oops, it's already the last element.
-					 if ( e == null ) return null;
-					 // If we did not follow a thread we descend the tree on the left.
-					 if ( ! succ ) while ( e.left() != sentinel ) e = e.left;
+				else {
+					 e = locateKey( from );
+					 // If we find either the start or something greater we're OK.
+					 if ( compare( e.key, from ) < 0 ) {
+						  // Otherwise, we look for a successor.
+						  boolean succ = e.succ();
+						  e = e.right;
+						  // Oops, it's already the last element.
+						  if ( e == null ) return null;
+						  // If we did not follow a thread we descend the tree on the left.
+						  if ( ! succ ) while ( e.left() != sentinel ) e = e.left;
+					 }
 				}
 				// Finally, if this submap doesn't go to infinity, we check that the resulting key isn't greater than the end.
 				if ( ! top && compare( e.key, to ) >= 0 ) return null;
@@ -1460,16 +1462,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				// If this submap goes to infinity, we return the main map last entry; otherwise, we locate the end of the map.
 				TREEMAP.Entry e;
 				if ( top ) e = lastEntry;
-				else e = locateKey( to );
-				// If we find something smaller than the end we're OK.
-				if ( compare( e.key, to ) >= 0 ) {
-					 // Otherwise, we look for a predecessor.
-					 boolean pred = e.pred();
-					 e = e.left;
-					 // Oops, it's already the first element.
-					 if ( e == null ) return null;
-					 // If we did not follow a thread we descend the tree on the right.
-					 if ( ! pred ) while ( e.right() != sentinel ) e = e.right;
+				else {
+					 e = locateKey( to );
+					 // If we find something smaller than the end we're OK.
+					 if ( compare( e.key, to ) >= 0 ) {
+						  // Otherwise, we look for a predecessor.
+						  boolean pred = e.pred();
+						  e = e.left;
+						  // Oops, it's already the first element.
+						  if ( e == null ) return null;
+						  // If we did not follow a thread we descend the tree on the right.
+						  if ( ! pred ) while ( e.right() != sentinel ) e = e.right;
+					 }
 				}
 				// Finally, if this submap doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
 				if ( ! bottom && compare( e.key, from ) < 0 ) return null;
@@ -2124,17 +2128,23 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  /* Now we play with iterators. */
 
 		  {
-				Iterator i, j;
-				i = m.keySet().iterator(); 
-				j = t.keySet().iterator(); 
+				ListIterator i, j;
+				Object J;
+				i = (ListIterator)m.keySet().iterator(); 
+				j = new LinkedList( t.keySet() ).listIterator(); 
 
 				for( int k = 0; k < n/2; k++ ) {
 					 if ( i.hasNext() != j.hasNext() ) {
 						  System.out.println("Error: divergence in hasNext().\n");
 						  System.exit(-1);
 					 }
+					 if ( i.hasPrevious() != j.hasPrevious() ) {
+						  System.out.println("Error: divergence in hasNext().\n");
+						  System.exit(-1);
+					 }
+
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
-						  if ( !i.next().equals( j.next() ) ) {
+						  if ( !i.next().equals( J = j.next() ) ) {
 								System.out.println("Error: divergence in next().\n");
 								System.exit(-1);
 						  }
@@ -2142,6 +2152,19 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
 								j.remove();
+								t.remove( J );
+						  }
+					 }
+					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+						  if ( !i.previous().equals( J = j.previous() ) ) {
+								System.out.println("Error: divergence in previous().\n");
+								System.exit(-1);
+						  }
+
+						  if ( r.nextFloat() < 0.05 ) {
+								i.remove();
+								j.remove();
+								t.remove( J );
 						  }
 					 }
 				}
@@ -2159,21 +2182,21 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				ListIterator i;
 				Object start = m.firstKey(), end = m.firstKey();
 				for( i = (ListIterator)m.keySet().iterator(); i.hasNext() && r.nextFloat() < .3; start = i.next() );
-				for( ; i.hasNext() && r.nextFloat() < .99; end = i.next() );
+				for( ; i.hasNext() && ( r.nextFloat() < .99 || KEY_CMP( KEY2TYPE( start ), KEY2TYPE( end ) ) > 0 ); end = i.next() );
 
-				System.err.println("Checking subMap from " + start + " to " + end + " (level=" + (level+1) + ")..." );
+				//System.err.println("Checking subMap from " + start + " to " + end + " (level=" + (level+1) + ")..." );
 				testMaps( (SORTEDMAP)m.subMap( start, end ), t.subMap( start, end ), n, level + 1 );
 
 				ensure( m.equals(t), "Error: ! m.equals( t ) after subMap.\n" );
 				ensure( t.equals(m), "Error: ! t.equals( m ) after subMap.\n" );
 
-				System.err.println("Checking headMap to " + end + " (level=" + (level+1) + ")..." );
+				//System.err.println("Checking headMap to " + end + " (level=" + (level+1) + ")..." );
 				testMaps( (SORTEDMAP)m.headMap( end ), t.headMap( end ), n, level + 1 );
 
 				ensure( m.equals(t), "Error: ! m.equals( t ) after headMap.\n" );
 				ensure( t.equals(m), "Error: ! t.equals( m ) after headMap.\n" );
 
-				System.err.println("Checking tailMap from " + start + " (level=" + (level+1) + ")..." );
+				//System.err.println("Checking tailMap from " + start + " (level=" + (level+1) + ")..." );
 				testMaps( (SORTEDMAP)m.tailMap( start ), t.tailMap( start ), n, level + 1 );
 
 				ensure( m.equals(t), "Error: ! m.equals( t ) after tailMap.\n" );
