@@ -1,4 +1,4 @@
-/*
+/*		 
  * fastUtil 1.12: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
@@ -23,49 +23,41 @@
 package it.unimi.dsi.fastUtil;
 
 import java.util.*;
-import java.util.AbstractCollection; // workaround to force @see/@link
+import java.util.AbstractMap; // workaround to force @see/@link
 
-/** A class inheriting methods from {@link AbstractCollection} but
+/** A class inheriting methods from {@link AbstractMap} but
  * implementing a type-specific interface.
  *
- * @see AbstractCollection
+ * @see AbstractSet
  */
 
-public abstract class ABSTRACT_COLLECTION extends AbstractCollection implements COLLECTION {
+public abstract class ABSTRACT_MAP extends AbstractMap implements MAP {
 
-	 /* This code is a dup of that for sets due to the lack of multiple
-	 inheritance. */
-
-#if !#keyclass(Object)
-	 public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		  return TO_KEY_ARRAY(a);
-	 }
-#endif
-
-
-    public KEY_TYPE[] TO_KEY_ARRAY() {
-		  return TO_KEY_ARRAY(null);
-	 }
+	 /** Puts all pairs in the given map.
+	  * If the map implements the interface of this map,
+	  * it uses the faster iterators.
+	  *
+	  * @param m a map.
+	  */
 	 
-
-    public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
-		  final KEY_TYPE result[];
-		  final KEY_ITERATOR i;
-		  int j;
-
-		  if (a == null || a.length < size()) result = new KEY_TYPE[size()];
-		  else result = a;
-
-		  j = 0;
-		  i = (KEY_ITERATOR)iterator();
-
-		  while(i.hasNext()) a[j++] = i.NEXT_KEY();
-
-		  return result;
-    }
+	 public void putAll(Map m) {
+		  if (m instanceof MAP) {
+				MAP.Entry e;
+				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+					 e = (MAP.Entry)i.next();
+					 put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
+				}
+		  }
+		  else {
+				Map.Entry e;
+				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+					 e = (Map.Entry)i.next();
+					 put(e.getKey(), e.getValue());
+				}
+		  } 
+	 }
 
 }
-
 // Local Variables:
 // mode: java
 // End:

@@ -8,7 +8,7 @@
 DIR="it/unimi/dsi/fastUtil"
 
 # Names of driver files.
-FILE=(Map HashMap AbstractCollection AbstractSet Collection Set HashSet Iterator)
+FILE=(Map AbstractMap HashMap AbstractCollection AbstractSet Collection Set HashSet Iterator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
@@ -24,7 +24,7 @@ CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 # array starts from 1, so we avoid boolean keys.
 #
 
-for ((f=0; f<2; f++)); do
+for ((f=0; f<3; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
 		  for ((v=0; v<${#TYPE[*]}; v++)); do
 				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
@@ -45,6 +45,7 @@ for ((f=0; f<2; f++)); do
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
+"#define ABSTRACT_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AbstractMap\n"\
 "#define KEY_ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION ${TYPE_CAP[$v]}AbstractCollection\n\n"\
 "#define HASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}HashMap\n\n"\
@@ -106,7 +107,7 @@ done
 # so we manually delete boolean sets definitions later.
 #
 
-for ((f=2; f<7; f++)); do
+for ((f=3; f<8; f++)); do
 	 for ((k=0; k<${#TYPE[*]}; k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME
@@ -162,7 +163,7 @@ rm -f $DIR/BooleanHashSet.c
 # boolean iterators for maps with booleans as codomain.
 #
 
-for ((f=7; f<8; f++)); do
+for ((f=8; f<9; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME

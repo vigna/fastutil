@@ -1,5 +1,5 @@
 /*	 
- * fastUtil 1.11: Fast & compact specialized hash-based utility classes for Java
+ * fastUtil 1.12: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -31,7 +31,7 @@ import java.io.*;
 /** A type-specific hash map with a very fast, small-footprint implementation.
  */
 
-public final class HASHMAP implements Serializable, Hash, MAP {
+public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, MAP {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
@@ -57,10 +57,10 @@ public final class HASHMAP implements Serializable, Hash, MAP {
 	 private int count;
 
 	 /** Cached set of entries and keys. */
-	 private transient Set entries, keys;
+	 private transient volatile Set entries, keys;
 
 	 /** Cached collection of values. */
-	 private transient Collection values;
+	 private transient volatile Collection values;
 
 #if ! #valueclass(Object)
     /**
@@ -274,24 +274,6 @@ public final class HASHMAP implements Serializable, Hash, MAP {
 		  Arrays.fill(value, null);
 #endif
 	 }
-
-	 public void putAll(Map m) {
-		  if (m instanceof MAP) {
-				MAP.Entry e;
-				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-					 e = (MAP.Entry)i.next();
-					 put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
-				}
-		  }
-		  else {
-				Map.Entry e;
-				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-					 e = (Map.Entry)i.next();
-					 put(e.getKey(), e.getValue());
-				}
-		  } 
-	 }
-
     private static class Entry implements MAP.Entry {
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
