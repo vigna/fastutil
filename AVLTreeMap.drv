@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 1.3: Fast & compact specialized hash-based utility classes for Java
+ * fastUtil 2.0: Fast & compact specialized utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -30,10 +30,7 @@ import java.io.*;
 public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
-	 public Entry tree;
-
-	 /** Our private random number generator. */
-	 private transient Random random = new Random();
+	 public transient Entry tree;
 
 	 /** Number of entries in the map. */
 	 private int count;
@@ -54,32 +51,39 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 private transient VALUE_TYPE value;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, whether the <em>domain</em> of the map
+	  * has been modified. */
+	 private transient boolean modified;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
 	  * or a <code>delete()</code>, the entry that during the operation we
 	  * possibly created or removed. */
 	 private transient Entry change;
 
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, the entry that during the operation we
-	  * possibly created or removed. */
+	 /** The value of this variable remembers, after a <code>delete()</code>,
+	  * the entry that during the operation was deleted. Note that 
+	  * if {@link #change} != {@link deleted}, then this entry is still in the
+	  * map, but it contains the key and value previously stored in {@link #change}. */
 	 private transient Entry deleted;
-
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, whether we ever turned left. */
-	 private transient boolean turnedLeft;
-
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, whether we ever turned right. */
-	 private transient boolean turnedRight;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
 	  * or a <code>delete()</code>, the value previously associated to the
 	  * given key, if any. */
 	 private transient VALUE_TYPE oldValue;
 
-	 /** This tree map's comparator. */
-	 private Comparator comparator;
+	 /** This map's comparator, as provided in the constructor. */
+	 private Comparator storedComparator;
 
+	 /** This map's actual comparator; it may differ from {@link #storedComparator} because it is
+		  always a type-specific comparator, so it could be derived from the former by wrapping. */
+	 private transient KEY_COMPARATOR actualComparator;
+
+	 /** A fake {@link Entry} that is used as a result of the {@link Entry#left()} and
+	  * {@link Entry#right()} methods to denote the empty subtree. It has the big advantage
+	  * of having dereferenceable left/right pointers and a level that is smaller 
+	  * than that of any node. */
 	 private static Entry sentinel = new Entry();
+
 
 	 /** Creates a new empty tree map. 
 	  */
@@ -88,6 +92,32 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  tree = null;
 		  count = 0;
 	 }
+
+	 /** Generates the comparator that will be actually used.
+	  *
+	  * <P>When a specific {@link Comparator} is specified and stored in {@link
+	  * #storedComparator}, we must check whether it is type-specific.  If it is
+	  * so, we can used directly, and we store it in {@link #actualComparator}. Otherwise,
+	  * we generate on-the-fly an anonymous class that wraps the non-specific {@link Comparator}
+	  * and makes it into a type-specific one.
+	  */
+	 private void setActualComparator() {
+#if #keyclass(Object)
+		  actualComparator = storedComparator;
+#else
+		  /* If the provided comparator is already type-specific, we use it. Otherwise,
+			  we use a wrapper anonymous class to fake that it is type-specific. */
+		  if ( storedComparator == null || storedComparator instanceof KEY_COMPARATOR ) actualComparator = (KEY_COMPARATOR)storedComparator;
+		  else actualComparator =	new KEY_COMPARATOR() {
+				public int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+					 return storedComparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
+				}
+				public int compare( Object ok1, Object ok2 ) {
+					 return storedComparator.compare( ok1, ok2 );
+				}
+		  };
+#endif
+	 }
 	 
 
 	 /** Creates a new empty tree map with the given comparator.
@@ -95,11 +125,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * @param comparator a {@link #Comparator}.
 	  */
 
-	 public TREEMAP( Comparator c ) {
+	 public TREEMAP( final Comparator c ) {
 		  this();
-		  comparator = c;
+		  storedComparator = c;
+		  setActualComparator();
 	 }
-	 
+
 
 	 /** Creates a new tree map copying a given map.
 	  *
@@ -126,6 +157,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
 	  */
 
+
+
 	 /** Compares two keys in the right way. 
 	  *
 	  * @param k1 the first key.
@@ -135,7 +168,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  */
 	 
     private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
-		  return comparator == null ? KEY_CMP( k1, k2 ) : comparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
+		  return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
     }
 
 
@@ -147,64 +180,72 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  */
 
    private Entry findKey( KEY_TYPE k ) {
-      Entry e = tree;
+      Entry e = tree == null ? sentinel : tree;
       int cmp;
 
-      while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
-			 if ( cmp < 0 ) {
-				  if ( e.pred() ) return null; // We should go left, but it's really a predecessor...
-				  e = e.left;
-			 }
-			 else {
-				  if ( e.succ() ) return null; // We should go right, but it's really a successor...
-				  e = e.right;
-			 }
-		}
+      while ( e != sentinel && ( cmp = compare( k, e.key ) ) != 0 ) 
+			 e = cmp < 0 ? e.left() : e.right();
 
-      return e;
+      return e == sentinel ? null : e;
    }
+
+	 /** The value of this variable remembers during an <code>insert()</code> 
+	  * whether we ever turned left. */
+	 private transient boolean turnedLeft;
+
+	 /** The value of this variable remembers during an <code>insert()</code> 
+	  * whether we ever turned right. */
+	 private transient boolean turnedRight;
+
 
 	 /** Inserts a new pair in the map.
 	  *
-	  * <P>After execution of this method, {@link #change} contains the new
-	  * entry, and it is <code>null</code> iff an entry with the same key was
-	  * found; in this case, {@link #oldValue} contains the value previously
-	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
-	  * turned right during the search; analogously for {@link #turnedLeft}.
+	  * <P>After execution of this method, {@link #modified} is true iff a new
+	  * entry has been inserted. Otherwise, {@link #oldValue} contains the value
+	  * previously associated with the key.
 	  *
 	  * @param k a key.
 	  * @param v a value.
 	  * @return the previous value associated to the key (or the default return value, if there 
 	  * was no existing entry with the same key).
 	  */
+
 	 
 	 private VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
-		  oldValue = DEF_RET_VALUE;
-		  change = null;
-		  turnedLeft = turnedRight = false;
+		  oldValue = DEF_RET_VALUE; // This will hold the old value.
+		  change = null; // This will hold the new entry.
+		  modified = turnedLeft = turnedRight = false;
 		  key = k;
 		  value = v;
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
 				tree = change = new Entry( k, v );
+				modified = true;
 		  }
 		  else tree = insertRec( tree );
 
-		  if ( change != null ) { // We update last/first if we actually changed the map domain.
+		  if ( modified ) { // We update last/first if we actually changed the map domain.
 				if ( ! turnedLeft ) lastEntry = change;
 				if ( ! turnedRight ) firstEntry = change;
 		  }
 
+		  // We null everything to avoid residual references.
+		  change = null;
+#if #keyclass(Object)
+		  key = null;
+#endif
+#if #valueclass(Object)
+		  value = null;
+#endif
 		  return oldValue;
 	 }
 
 
 	 /** Inserts recursively a given pair in a nonempty tree.
 	  *
-	  * <P>After execution of this method, {@link #change} contains the new
-	  * entry, and it is <code>null</code> iff an entry with the same key was
-	  * found; in this case, {@link #oldValue} contains the value previously
+	  * <P>After execution of this method, {@link #modified} is true iff
+	  * a new entry has been inserted. Otherwise, {@link #oldValue} contains the value previously
 	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
 	  * turned right during the search; analogously for {@link #turnedLeft}.
 	  *
@@ -218,19 +259,47 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		 
 		 if ( cmp < 0 ) {
 			  turnedLeft = true;
-			  if ( e.left() != sentinel ) {
-					e.left = insertRec( e.left );
-					if ( change == null ) return e;
+			  if ( e.left() != sentinel ) e.left = insertRec( e.left );
+			  else {
+					/* <P>This method we create a new {@link Entry} (marked as a leaf) and
+					 * link it at the left of <code>e</code>. The {@link Entry#right} pointer
+					 * of the new entry is <code>e</code>, whereas its {@link Entry#left} pointer
+					 * is the {@link Entry#left} pointer of <code>e</code>. */
+					count++;
+					final Entry l = change = new Entry( key, value );
+					
+					modified = true;
+					
+					l.right = e;
+					l.left = e.left;
+					
+					e.pred( false );
+					e.left = l;
 			  }
-			  else insertLeft( e );
+
+			  if ( ! modified ) return e; // Fast exit.
 		 } 
 		 else if ( cmp > 0 ) {
 			  turnedRight = true;
-			  if ( e.right() != sentinel ) {
-					e.right = insertRec( e.right );
-					if ( change == null ) return e;
+			  if ( e.right() != sentinel ) e.right = insertRec( e.right );
+			  else {
+					/* <P>We create a new {@link Entry} (marked as a leaf) and
+					 * link it at the right of <code>e</code>. The {@link Entry#left} pointer
+					 * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
+					 * is the {@link Entry#right} pointer of <code>e</code>. */
+					count++;
+					final Entry r = change = new Entry( key, value );
+					
+					modified = true;
+					
+					r.left = e;
+					r.right = e.right;
+					
+					e.succ( false );
+					e.right = r;
 			  }
-			  else insertRight( e );
+
+			  if ( ! modified ) return e; // Fast exit.
 		 }
 		 else {
 			  oldValue = e.value;
@@ -243,55 +312,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		 return e;
    }
-
-
-	 /** Insert the given pair at the left of an {@link Entry}.
-	  *
-	  * <P>This method will create a new {@link Entry} (marked as a leaf) and
-	  * link it at the left of <code>e</code>. The {@link Entry#right} pointer
-	  * of the new entry is <code>e</code>, whereas its {@link Entry#left} pointer
-	  * is the {@link Entry#left} pointer of <code>e</code>.
-	  *
-	  * @param e an {@link Entry}
-	  */
-	 private void insertLeft( Entry e ) {
-		  count++;
-		  final Entry l = change = new Entry( key, value );
-
-		  l.right = e;
-		  l.left = e.left;
-
-		  e.pred( false );
-		  e.left = l;
-	 }
-
-	 /** Insert the given pair at the right of an {@link Entry}.
-	  *
-	  * <P>This method will create a new {@link Entry} (marked as a leaf) and
-	  * link it at the right of <code>e</code>. The {@link Entry#left} pointer
-	  * of the new entry is <code>e</code>, whereas its {@link Entry#right} pointer
-	  * is the {@link Entry#right} pointer of <code>e</code>.
-	  *
-	  * @param e an {@link Entry}
-	  */
-	 private void insertRight( Entry e ) {
-		  count++;
-		  final Entry r = change = new Entry( key, value );
-
-		  r.left = e;
-		  r.right = e.right;
-
-		  e.succ( false );
-		  e.right = r;
-	 }
-
-
+	 
+	 
 	 /** Deletes an entry from the map.
 	  *
-	  * <P>After execution of this method, {@link #change} contains the deleted
-	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
-	  * value previously associated with the key. Moreover, {@link #turnedRight}
-	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
+	  * <P>After execution of this method, {@link #modified} is true iff an 
+	  * entry has been deleted. In this case, {@link #oldValue} contains the value
+	  * previously associated with the key.
 	  *
 	  * @param k a key.
 	  * @return the value previously associated to the key (or the default return value, if there 
@@ -301,82 +328,99 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 private VALUE_TYPE delete( final KEY_TYPE k ) {
 		  oldValue = DEF_RET_VALUE;
 		  change = deleted = null;
+		  modified = false;
 		  key = k;
 
 		  if ( tree == null ) return DEF_RET_VALUE;
 
-		  tree = deleteRec( tree );
+		  tree = deleteRec( null, tree );
+
+#if #keyclass(Object)
+		  key = null;
+#endif
 
 		  return oldValue;
 	 }
 
 	 /** Deletes recursively an entry from a tree.
 	  *
-	  * <P>After execution of this method, {@link #change} contains the deleted
-	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
-	  * value previously associated with the key. Moreover, {@link #turnedRight}
-	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
+	  * <P>After execution of this method, {@link #modified} is true iff an 
+	  * entry has been deleted. In this case, {@link #oldValue} contains the value
+	  * previously associated with the key.
 	  *
+	  * @param p the parent of the second argument (i.e., an {@link Entry}.
 	  * @param e a tree (i.e., an {@link Entry}.
 	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
 	  */
 
-	 private Entry deleteRec( Entry e ) {
+	 private Entry deleteRec( Entry p, Entry e ) {
 		  change = e;
 
 		  if ( compare( key, e.key ) < 0 ) {
 				if ( e.left() != sentinel ) {
-					 e.left = deleteRec( e.left );
-					 if ( e.left == change.right ) {
-						  System.err.println("Got change...");
-						  if ( e.left.succ() ) e.left.right = e;
-						  if ( e.left.pred() ) e.left.left = change.left;
+					 e.left = deleteRec( e, e.left );
+					 if ( e.left == e ) { // This handles the case of e.left being now a predecessor.
+						  e.pred( true );
+						  e.left = e == firstEntry ? null : p;
 					 }
 				}
 		  }
 		  else  {
 				deleted = e;
-				if ( e.right() != sentinel ) {
-					 e.right = deleteRec( e.right );
-					 if ( e.right == change.right ) {
-						  System.err.println("Got change...");
-						  if ( e.right.succ() ) e.right.right = e;
-						  if ( e.right.pred() ) e.right.left = change.left;
-					 }
-				}
+				if ( e.right() != sentinel ) e.right = deleteRec( e, e.right );
 		  }
 				
 		  if ( e == change && deleted != null && key == deleted.key ) {
+
 				oldValue = deleted.value;
 				deleted.key = e.key;
 				deleted.value = e.value;
 
-				if ( deleted == firstEntry ) firstEntry = deleted.right;
-				if ( deleted == lastEntry ) lastEntry = deleted.left;
+				modified = true;
+				//deleted = null;
+				count--;
 
-				deleted = null;
-				
-				System.err.println("Attacching " + e.right + " after deletion...");
+				if ( p != null ) {
+					 if ( p.right == e ) {
+						  if ( e.succ() ) p.succ( true );  // This handles the case of e being a leaf to the right of p.
+						  else if ( e.right.pred() ) e.right.left = p; // This handles the case of e being a right subtree and e.right a leaf.
+					 }
+					 else if ( e.right() != sentinel && e.right.pred() ) e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
+				}
+
+				// If we are deleting the first or last entry, we must update our state accordingly.
+				if ( e.right == null ) lastEntry = e.left;
+				if ( e.left == null ) firstEntry = e.right;
 
 				return e.right;
+		  }
+
+		  if ( e.left().level() < e.level() - 1 || e.right().level() < e.level() - 1 ) {
+				e.decLevel();
+				if ( e.right().level() > e.level() ) e.right().level( e.level() );
+				e = e.skew();
+				if ( e.right() != sentinel ) e.right = e.right.skew();
+				if ( e.right().right() != sentinel ) e.right.right = e.right.right.skew();
+				e = e.split();
+				if ( e.right() != sentinel ) e.right = e.right.split();
 		  }
 
 		  return e;
 	 }
 	 
-	 private Entry deleteLeft( Entry e ) {
-		  return null;
-	 }
 
-	 private Entry deleteRight( Entry e ) {
-		  return null;
+	private boolean searchRef( Entry e, Entry s ) {
+		 if ( e.right == s ) { System.err.println("Got right reference to " + s + " in " + e); return true; }
+		 if ( e.left == s ) { System.err.println("Got left reference to " + s + " in " + e); return true; }
+		 if ( ! e.pred() && searchRef( e.left, s ) ) return true;
+		 if ( ! e.succ() && searchRef( e.right, s ) ) return true;
+		 return false;
 	 }
-	 
 	 
 	 public Object put( final Object ok, final Object ov ) {
 		  if ( ok == null ) throw new IllegalArgumentException();
 		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
-		  return change == null ? VALUE2OBJ( oldValue ) : null;
+		  return ! modified ? VALUE2OBJ( oldValue ) : null;
 	 }
 
 
@@ -395,7 +439,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
    public Object remove(final Object ok) {
 		 if ( ok == null ) throw new IllegalArgumentException();
 		 delete( KEY2TYPE( ok ) );
-		 return change == null ? VALUE2OBJ( oldValue ) : null;
+		 deleted = change = null;
+		 return modified ? VALUE2OBJ( oldValue ) : null;
    }
 
 #if ! #valueclass(Object) 
@@ -554,23 +599,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 		  
 		  public String toString() {
-				return key + "=" + value;
+				return key + "=>" + value;
 		  }
 		  
 
 		  /** Splits this tree.
 			*/
 		  Entry split() {
-				if ( right().right().level() == level() ) {
-					 /* Firstly, we save current right pointer and whether it is a successor. */
+				if ( this != sentinel && right().right().level() == level() ) {
+					 /* Firstly, we save the current right pointer. */
 					 final Entry t = right;
 					 
-					 /* Then, if our right subtree has a left subtree, we take it as our
-						 new right subtree. In this case, we reset our successor flag. If,
-						 however, our right subtree contains a predecessor, we set the
+					 /* Then, if our right subtree contains a predecessor, we set the
 						 subtree as our successor. */
-					 if ( t.pred() ) right = t;
-					 else right = t.left;
+					 if ( ! t.pred() ) right = t.left;
 					 
 					 succ( t.pred() );
 					 
@@ -586,16 +628,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  /** Skews to this tree.
 			*/
 		  Entry skew() {
-				if ( left().level() == level() ) {
-					 /* Firstly, we save current left pointer and whether it is a predecessor. */
+				if ( this != sentinel && left().level() == level() ) {
+					 /* Firstly, we save the current left pointer. */
 					 final Entry t = left;
 					 
-					 /* Then, if our left subtree has a right subtree, we take it as our
-						 new left subtree. In this case, we reset our predecessor flag. If,
-						 however, our left subtree contains a successor, we set the
+					 /* Then, if our left subtree contains a successor, we set the
 						 subtree as our predecessor. */
-					 if ( t.succ() ) left = t;
-					 else left = t.right;
+					 if ( ! t.succ() ) left = t.right;
 					 
 					 pred( t.succ() );
 					 
@@ -637,7 +676,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
       if (tree != null) tree.printDebug();
    }
 
-
 	 public boolean containsKey( KEY_TYPE k ) {
 		  return findKey( k ) != null;
 	 }
@@ -668,7 +706,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 
 	 public VALUE_TYPE remove(final KEY_TYPE k) {
-		  return delete( k );
+		  final VALUE_TYPE v = delete( k );
+		  change = deleted = null;
+		  return v;
 	 }
 	 
 	 public boolean containsKey(final Object ok) {
@@ -687,7 +727,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 	 public VALUE_TYPE REMOVE_VALUE( final Object k ) {
 		  if ( k == null ) throw new IllegalArgumentException();
-		  return delete( k );
+		  final VALUE_TYPE v = delete( k );
+		  change = deleted = null;
+		  return v;
 	 }
 
 #endif
@@ -720,128 +762,82 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 
 #endif
-	 /*
-	 private class TreeIterator implements Iterator {
-		  private List stack = new ArrayList();
-		  
-		  TreeIterator() {
-				Entry e = tree;
-
-				while ( e != null  ) {
-					 stack.add( e );
-					 e = e.left;
-				}
-		  }
-
-		  TreeIterator( KEY_TYPE firstKey ) {
-				Entry e = tree;
-				int cmp;
-
-				while ( e != null && ( cmp = compare( firstKey, e.key ) ) != 0 ) {
-					 stack.add( e );
-					 e = cmp < 0 ? e.left : e.right;
-				}
-		  }
-
-		  public boolean hasNext() {
-				return ! stack.isEmpty();
-		  }
-
-		  public Object next() {
-				if ( ! hasNext() ) throw new NoSuchElementException();
-				
-				final Entry e = (Entry)stack.get( stack.size() - 1 );
-
-				if ( e.right == null ) {
-					 Entry f;
-					 do 
-						  f = (Entry) stack.remove( stack.size() - 1 );
-					 while ( ! stack.isEmpty() && ( (Entry)stack.get( stack.size() - 1 ) ).right == f );
-				} 
-				else {
-					 Entry f;
-					 for( f = e.right; f != null; f = f.left ) stack.add( f );
-				}
-
-				return e;
-		  }
-
-		  public void remove() {
-				throw new UnsupportedOperationException();
-		  }
-	 }
-	 */
 
 
 	 private class TreeIterator implements ListIterator {
-		  Entry curr, prev, next, first, last;
-		  int currIndex;
+		  Entry 
+				prev, // The entry that will be returned by the next call to previous() (or null if no previous entry exists).
+				next, // The entry that will be returned by the next call to next() (or null if no next entry exists).
+				curr; // The last entry that was returned (or null if we did not iterate or used remove()).
+		  int index = 0;
 		  
 		  TreeIterator() {
-				currIndex = -1;
-				first = firstEntry;
+				next = first = firstEntry;
 				last = lastEntry;
 		  }
 
-		  TreeIterator( Entry firstEntry, Entry lastEntry ) {
-				currIndex = -1;
-				first = firstEntry;
-				last = lastEntry;
+		  public boolean hasNext() { return next != null; }
+		  public boolean hasPrevious() { return prev != null; }
+
+		  protected void updateNext() {
+				next = next.right;
+				if ( next != null && ! curr.pred() ) while ( next.left() != sentinel ) next = next.left;
 		  }
 
-		  public boolean hasNext() {
-				if ( count == 0 ) return false;
-				if ( currIndex == -1 ) return true;
-				return curr != lastEntry;
-		  }
-
-		  public boolean hasPrevious() {
-				if ( count == 0 || currIndex == -1 ) return false;
-				return curr != firstEntry;
-		  }
-
-		  public Object next() {
-				if ( currIndex == -1 ) {
-					 currIndex++;
-					 return curr = firstEntry;
-				}
+		  protected Entry nextEntry() {
 				if ( ! hasNext() ) throw new NoSuchElementException();
-
-				final boolean follow = ! curr.succ();
-
-				currIndex++;
-				curr = curr.right;
-
-				if ( curr != null && follow ) while ( curr.left() != sentinel ) curr = curr.left;
-
+				curr = prev = next;
+				index++;
+				updateNext();
 				return curr;
 		  }
 
-		  public Object previous() {
+		  public Object next() { return nextEntry(); }
+
+		  protected void updatePrevious() {
+				prev = prev.left;
+				if ( prev != null && ! curr.pred() ) while ( prev.right() != sentinel ) prev = prev.right;
+		  }
+
+		  protected Entry previousEntry() {
 				if ( ! hasPrevious() ) throw new NoSuchElementException();
-
-				final boolean follow = ! curr.pred();
-
-				currIndex--;
-				curr = curr.left;
-
-				if ( curr != null && follow ) while ( curr.right != null && ! curr.succ() ) curr = curr.right;
-
+				curr = next = prev;
+				index--;
+				updatePrevious();
 				return curr;
 		  }
+
+		  public Object previous() { return previousEntry(); }
 
 		  public int nextIndex() {
 				if ( ! hasNext() ) throw new NoSuchElementException();
-				return currIndex + 1;
+				return index;
 		  }
 
 		  public int previousIndex() {
 				if ( ! hasPrevious() ) throw new NoSuchElementException();
-				return currIndex - 1;
+				return index - 1;
 		  }
 
 		  public void remove() {
-				throw new UnsupportedOperationException();
+				if ( curr == null ) throw new IllegalStateException();
+				/* If the last operation was a next(), we are removing an entry that preceeds
+					the current index, and thus we must decrement it. */
+				if ( curr == prev ) index--;
+				next = prev = curr;
+				updatePrevious();
+				updateNext();
+				TREEMAP.this.delete( curr.key );
+
+				/* It could happen that the entry we chose as next is exactly the
+				one that gets deleted (as deletion is performed by copying a
+				suitable entry over the one to be deleted and then removing the
+				source of the copy).  In this case, next will point to a removed
+				entry (change); it should instead point to the destination of the
+				copy (deleted), which is certainly the entry immediately after the
+				deleted one. */
+				if ( next == change ) next = deleted;
+				change = deleted = curr = null;
 		  }
 
 		  public void set( Object o ) {
@@ -851,6 +847,34 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  public void add( Object o ) {
 				throw new UnsupportedOperationException();
 		  }
+	 }
+
+	 private class SubmapIterator extends TreeIterator {
+		  Entry 
+				first, // The first entry in the map.
+				last; // The last entry in the map.
+		  boolean top, bottom;
+		  
+		  SubmapIterator( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
+				first = tree;
+				while ( first != sentinel && ( bottom || TREEMAP.this.compare( from, first.key ) < 0 ) ) first = first.left();
+				if ( first == sentinel ) first = null;
+
+				last = tree;
+				while ( last != sentinel && ( top || TREEMAP.this.compare( to, last.key ) > 0 ) ) last = last.right();
+				if ( last == sentinel ) last = null;
+		  }
+
+		  protected void updatePrevious() {
+				super.updatePrevious();
+				if ( ! bottom && TREEMAP.this.compare( prev.key, first.key ) < 0 ) prev = null;
+		  }
+
+		  protected void updateNext() {
+				super.updateNext();
+				if ( ! top && TREEMAP.this.compare( next.key, last.key ) > 0 ) next = null;
+		  }
+
 	 }
 
 
@@ -870,8 +894,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 public boolean remove(Object o) {
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
-						  final Map.Entry f = findKey( KEY2TYPE( e.getKey() ) );
-						  if ( f != null ) TREEMAP.this.remove( f.getKey() );
+						  final Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						  if ( f != null ) TREEMAP.this.remove( f.key );
+						  change = deleted = null;
 						  return f != null;
 					 }
 
@@ -888,20 +913,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return entries;
 	 }
 
-
-    public Set keySet() {
-		  if ( keys == null ) keys = new KEY_ABSTRACT_SET() {
-					 public Iterator iterator() {
-						  return new KEY_ITERATOR() {
-									 TreeIterator iterator = new TreeIterator();
-
-									 public boolean hasNext() { return iterator.hasNext(); }
-									 public KEY_TYPE NEXT_KEY() { return ((Entry)iterator.next()).key; }
+	 private class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR {
+		  public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
+		  public KEY_TYPE PREV_KEY() { return previousEntry().key; }
 #if !#keyclass(Object)
-									 public Object next() { return KEY2OBJ( NEXT_KEY() ); }
+		  public Object next() { return KEY2OBJ( nextEntry().key ); }
+		  public Object previous() { return KEY2OBJ( previousEntry().key ); }
 #endif									
-									 public void remove() { iterator.remove(); }
-								};
+	 };
+
+	 public Set keySet() {
+		  if ( keys == null ) keys = new KEY_ABSTRACT_SET() {
+
+					 public Iterator iterator() {
+						  return new KeyIterator();
 					 }
 
 					 public boolean contains( KEY_TYPE k ) {
@@ -909,9 +934,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }					 
 
 					 public boolean remove( KEY_TYPE k ) {
-						  int oldCount = count;
 						  TREEMAP.this.remove( k );
-						  return count != oldCount;
+						  return modified;
 					 }					 
 
 #if ! #keyclass( Object )
@@ -939,20 +963,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return keys;
 	 }
 
+	 private class ValueIterator extends TreeIterator implements VALUE_LIST_ITERATOR {
+		  public VALUE_TYPE NEXT_VALUE() { return nextEntry().value; }
+		  public VALUE_TYPE PREV_VALUE() { return previousEntry().value; }
+#if !#valueclass(Object)
+		  public Object next() { return VALUE2OBJ( nextEntry().value ); }
+		  public Object previous() { return VALUE2OBJ( previousEntry().value ); }
+#endif									
+	 };
+
 
     public Collection values() {
 		  if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
 					 public Iterator iterator() {
-						  return new VALUE_ITERATOR() {
-									 TreeIterator iterator = new TreeIterator();
-
-									 public boolean hasNext() { return iterator.hasNext(); }
-									 public VALUE_TYPE NEXT_VALUE() { return ((Entry)iterator.next()).value; }
-#if !#valueclass(Object)
-									 public Object next() { return VALUE2OBJ( NEXT_VALUE() ); }
-#endif									
-									 public void remove() { throw new UnsupportedOperationException(); }
-								};
+						  return new ValueIterator();
 					 }
 
 					 public boolean contains( VALUE_TYPE k ) {
@@ -981,9 +1005,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 
 	 public Comparator comparator() {
-		  return comparator;
+		  return storedComparator;
 	 }
-	 
+
 	 public SortedMap headMap(Object toKey) {
 		  return null; // TODO
 	 }
@@ -1006,254 +1030,235 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 
 	 public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
-		  return null; // TODO
 	 }
 #endif
 
 
-	 /*
-   public Object clone() {
-      try {
-         Tree tree = (Tree) super.clone();
+	 private class Submap extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
+		  KEY_TYPE from, to;
+		  boolean bottom, top;
 
-         tree.tree = (tree != null) ? (Entry) tree.clone() : null;
-         return tree;a
-      } catch (CloneNotSupportedException e) {
-         // Cannot happen
-         throw new InternalError(e.toString());
-      }
-   }
+		  Submap( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
+				this.from = from;
+				this.bottom = bottom;
+				this.to = to;
+				this.top = top;
+		  }
 
-	 */
+		  public SortedMap headMap(Object toKey) {
+				return null; // TODO
+		  }
+		  
+		  public SortedMap tailMap(Object fromKey) {
+		  return null; // TODO
+		  }
 
-	 /*
-class TreeEnumeration implements Enumeration
-{
-   private Stack stack;
-   private boolean keys;
-   private boolean ascending;
+		  public SortedMap subMap(Object fromKey, Object toKey) {
+				return null; // TODO
+		  }
 
-   TreeEnumeration(Entry t, boolean keys, boolean ascending) {
-      stack = new Stack();
+		  private in( KEY_TYPE k ) {
+				return ( bottom || TREEMAP.this.compare( k, from ) >= 0 ) &&
+					 ( top || TREEMAP.this.compare( k, to < 0 ) );
+		  }
 
-      this.keys = keys;
-      this.ascending = ascending;
-      if (ascending)
-         for ( ; t != null; t = t.left)
-            stack.push(t);
-      else // descending
-         for ( ; t != null; t = t.right)
-            stack.push(t);
-   }
+		  public Set entrySet() {
+				if ( entries == null ) entries = new AbstractSet() {
+						  public Iterator iterator() {
+								return SubmapIterator( from, bottom, to, top );
+						  }
 
-   public boolean hasMoreElements() {
-      return !stack.empty();
-   }
+						  public boolean contains(Object o) {
+								if (!(o instanceof Map.Entry)) return false;
+								final Map.Entry e = (Map.Entry)o;
+								final Entry f = findKey( KEY2TYPE( e.getKey() ) );
+								return f != null && in( KEY2TYPE( f.key ) ) && e.equals( f );
+						  }					 
 
-   public Object nextElement() {
-      if (stack.empty())
-         throw new NoSuchElementException("TreeEnumeration");
+						  public boolean remove(Object o) {
+								if (!(o instanceof Map.Entry)) return false;
+								final Map.Entry e = (Map.Entry)o;
+								final Entry f = findKey( KEY2TYPE( e.getKey() ) );
+								if ( f != null && in( KEY2TYPE( f.key ) ) ) TREEMAP.this.remove( f.key );
+								change = deleted = null;
+								return f != null;
+						  }
 
-      Entry node = (Entry) stack.peek();
-      if (ascending)
-         if (node.right == null) {
-            Entry t = (Entry) stack.pop();
-            while (!stack.empty() &&
-                   ((Entry) stack.peek()).right == t)
-               t = (Entry) stack.pop();
-         } else
-            for (Entry t = node.right; t != null; t = t.left)
-               stack.push(t);
-      else // descending
-         if (node.left == null) {
-            Entry t = (Entry) stack.pop();
-            while (!stack.empty() &&
-                   ((Entry) stack.peek()).left == t)
-               t = (Entry) stack.pop();
-         } else
-            for (Entry t = node.left; t != null; t = t.right)
-               stack.push(t);
+						  public int size() {
+								int c = 0;
+								for( Iterator i = iterator(); i.hasNext(); i.next() ) c++;
+								return c;
+						  }
+					 
 
-      return keys ? node.key : node.value;
-   }
-}
-	 */
+						  public boolean isEmpty() {
+								return ! iterator().hasNext();
+						  }
 
+						  public void clear() {
+								TREEMAP.this.clear();
+						  }
+					 
+					 };
+
+				return entries;
+		  }
+
+		  public Set keySet() {
+				return null; // TODO
+		  }
+		  public Collection values() {
+				return null; // TODO
+		  }
+	 }
+	 
+
+    private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+		  int n = count;
+		  Iterator i = new TreeIterator();
+		  Entry e;
+
+		  s.defaultWriteObject();
+
+		  while(n-- != 0) {
+				e = (Entry)i.next();
+				s.WRITE_KEY( e.key );
+				s.WRITE_VALUE( e.value );
+		  }
+    }
+
+    private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
+		  s.defaultReadObject();
+		  tree = null;
+		  /* The storedComparator is now correctly set, but we must restore
+			  on-the-fly the actualComparator. */
+		  setActualComparator();
+
+		  int count = this.count;
+		  this.count = 0;
+
+		  while(count-- != 0) put(s.READ_KEY(), s.READ_VALUE());
+    }
 
 
 
 #ifndef NDEBUG
 
+	 private static Random r = new Random();
+
+	 private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		  return (KEY_TYPE)(r.nextInt());
+#elif ! #keyclass(Object)
+		  return r.NEXT_KEY(); 
+#else
+		  return new Long( r.nextLong() );
+#endif
+	 }
+
+	 private static VALUE_TYPE genValue() {
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+		  return (VALUE_TYPE)(r.nextInt());
+#elif ! #valueclass(Object)
+		  return r.NEXT_VALUE();
+#else
+		  return new Long( r.nextLong() );
+#endif
+	 }
+
 	 private static void speedTest( int n ) {
 		  int i;
 		  MAP m;
 		  SortedMap t;
-		  Random r = new Random();
-		  Object o;
-		  long v, fm, ct;
+		  Object[] k = new Object[n], v = new Object[n], nk = new Object[n];
+		  KEY_TYPE kt[] = new KEY_TYPE[n];
+		  KEY_TYPE nkt[] = new KEY_TYPE[n];
+		  VALUE_TYPE vt[] = new VALUE_TYPE[n];
+		  long ms;
 
-		  for(int k=0; k<10; k++) {
+		  for( int j = 0; j < 10; j++ ) {
 
-				if (k>0) System.out.println();
+				if ( j > 0 ) System.out.println();
 
 				t = new TreeMap();
 				m = new TREEMAP();
-				/* First of all, we measure the time that is necessary to produce the inputs. */
-		  
-				v = System.currentTimeMillis();
-		  
-				for( i=0; i<n;  i++ ) {
-				
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-						  new KEY_CLASS(r.NEXT_KEY()) 
-#else
-						  new Long(r.nextLong()) 
-#endif
-						  ;
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-					 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-						  new VALUE_CLASS(r.NEXT_VALUE()) 
-#else
-						  new Long(r.nextLong()) 
-#endif
-						  ;
-				}
-		  
-				ct = System.currentTimeMillis() - v;
-		  
-				v = System.currentTimeMillis();
-		  
 
-				/* Then we add pairs to t. */
-
-				for( i=0; i<n;  i++ ) {
-					 t.put( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY()) 
+				for( i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+					 k[i] = kt[i] = genKey();
+					 nk[i] = nkt[i] = genKey();
 #else
-							 new Long(r.nextLong()) 
+					 k[i] = new KEY_CLASS( kt[i] = genKey() );
+					 nk[i] = new KEY_CLASS( nkt[i] = genKey() );
 #endif
-							 ,
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-							 new VALUE_CLASS(r.NEXT_VALUE()) 
+#if #valueclass(Object)
+					 v[i] = vt[i] = genValue();
 #else
-							 new Long(r.nextLong()) 
+					 v[i] = new VALUE_CLASS( vt[i] = genValue() );
 #endif
-							 
-							 );
 				}
 
-				System.out.println("Added "+n+" pairs in old TreeMap (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				/* We add pairs to t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.put( k[i], v[i] );
+				System.out.println("Added "+n+" pairs in old TreeMap (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
 
-				v = System.currentTimeMillis();
+				/* We add pairs to m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.put( kt[i], vt[i] );
+				System.out.println("Added "+n+" pairs in new TreeMap (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
 
-				/* Then we check for pairs in t. */
+				/* We check for pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.get( k[i] );
+				System.out.println("Examined "+n+" existing pairs in old TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				for( i=0; i<n;  i++ ) {
-					 t.get( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY())
-#else
-							 new Long(r.nextLong())
-#endif
-							 );
-				}
+				/* We check for pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.get( kt[i] );
+				System.out.println("Examined "+n+" existing pairs in new TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				System.out.println("Examined "+n+" pairs in old TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				/* We check for pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.get( nk[i] );
+				System.out.println("Examined "+n+" unexisting pairs in old TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				v = System.currentTimeMillis();
+				/* We check for pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.get( nkt[i] );
+				System.out.println("Examined "+n+" unexisting pairs in new TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				/* Again, we measure the time that is necessary to produce the inputs. */
-		  
-				v = System.currentTimeMillis();
-		  
-				for( i=0; i<n;  i++ ) {
-				
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-					 r.nextInt()
-#elif ! #keyclass(Object)
-					 r.NEXT_KEY()
-#else
-					 r.nextLong()
-#endif
-						  ;
-				}
-		  
-				ct = System.currentTimeMillis() - v;
-		  
-				v = System.currentTimeMillis();
+				/* We iterate on t. */
+				ms = System.currentTimeMillis();
+				for( Iterator it = t.keySet().iterator(); it.hasNext(); it.next() );
+				System.out.println("Iterated on old TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
 
-				/* Then we add pairs to m. */
+				/* We iterate on m. */
+				ms = System.currentTimeMillis();
+				for( KEY_ITERATOR it = (KEY_ITERATOR)m.keySet().iterator(); it.hasNext(); it.NEXT_KEY() );
+				System.out.println("Iterated on new TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
 
-				for( i=0; i<n;  i++ ) {
-					 m.put( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-							 new KEY_CLASS(r.NEXT_KEY()) 
-#else
-							 new Long(r.nextLong()) 
-#endif
-							 ,
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-							 new VALUE_CLASS(r.NEXT_VALUE()) 
-#else
-							 new Long(r.nextLong()) 
-#endif
-							 );
-				}
-		  
-				System.out.println("Added "+n+" pairs in new TreeMap (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				/* We delete pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( nk[i] );
+				System.out.println("Removed "+n+" unexisting pairs in old TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				v = System.currentTimeMillis();
-
-				/* Then we check for pairs in m. */
-
-				for( i=0; i<n;  i++ ) {
-					 m.get( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							 (KEY_TYPE)r.nextInt()
-#elif ! #keyclass(Object)
-							 r.NEXT_KEY()
-#else
-							 new Long(r.nextLong())
-#endif
-							 );
-				}
-				
-				System.out.println("Examined "+n+" pairs in new TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
-										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
-			
-				
-				/* Then we enumerate items in t. */
-				v = System.currentTimeMillis();
-
-				for(Iterator it=t.keySet().iterator(); it.hasNext(); ) t.get(it.next());
-				
-				System.out.println("Iterated on old TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
+				/* We delete pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( nkt[i] );
+				System.out.println("Removed "+n+" unexisting pairs in new TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 	 
+				/* We delete pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( k[i] );
+				System.out.println("Removed "+n+" existing pairs in old TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				/* Then we enumerate items in m. */
-				v = System.currentTimeMillis();
+				/* We delete pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( kt[i] );
+				System.out.println("Removed "+n+" existing pairs in new TreeMap in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
 
-				for(KEY_ITERATOR it=(KEY_ITERATOR)m.keySet().iterator(); it.hasNext(); ) m.get(it.NEXT_KEY());
 
-				System.out.println("Iterated on new TreeMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
-	 
 		  }
 
 
@@ -1268,39 +1273,40 @@ class TreeEnumeration implements Enumeration
 	 private static void regressionTest( int n ) {
 		  TREEMAP m = new TREEMAP();
 		  SortedMap t = new TreeMap();
-		  Random r = new Random();
+		  Object[] k = new Object[n], v = new Object[n], nk = new Object[n];
+		  KEY_TYPE kt[] = new KEY_TYPE[n];
+		  KEY_TYPE nkt[] = new KEY_TYPE[n];
+		  VALUE_TYPE vt[] = new VALUE_TYPE[n];
+		  long ms;
 
-		  /* First of all, we fill t with random data. */
-
-		  for(int i=0; i<n;  i++ ) {
-				t.put( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY()) 
+		  for( int i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+				k[i] = kt[i] = genKey();
+				nk[i] = nkt[i] = genKey();
 #else
-						new Long(r.nextLong()) 
+				k[i] = new KEY_CLASS( kt[i] = genKey() );
+				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
 #endif
-						,
-#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
-#elif ! #valueclass(Object)
-						new VALUE_CLASS(r.NEXT_VALUE()) 
+#if #valueclass(Object)
+				v[i] = vt[i] = genValue();
 #else
-						new Long(r.nextLong()) 
+					 v[i] = new VALUE_CLASS( vt[i] = genValue() );
 #endif
-						);
 		  }
 		  
-		  /* Now we add to m the same data */
+		  Random r = new Random();
+				
+		  /* We add pairs to t. */
+		  ms = System.currentTimeMillis();
+		  for( int i = 0; i < n;  i++ ) t.put( k[i], v[i] );
 		  
+		  /* We add to m the same data */
 		  m.putAll(t);
 
 		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after insertion.\n");
 		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after insertion.\n");
 
 		  /* Now we check that m actually holds that data. */
-		  
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
 				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 		      if (!valEquals(e.getValue(), m.get(e.getKey()))) 
@@ -1308,7 +1314,6 @@ class TreeEnumeration implements Enumeration
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
-		  
 		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
 				Entry e = (Entry)i.next();
 		      if (!valEquals(e.getValue(), t.get(e.getKey()))) 
@@ -1316,7 +1321,6 @@ class TreeEnumeration implements Enumeration
 		  }
 
 		  /* Now we check that m actually holds the same keys. */
-		  
 		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
 		      if (!m.containsKey(o)) {
@@ -1330,7 +1334,6 @@ class TreeEnumeration implements Enumeration
 		  }
 
 		  /* Now we check that m actually holds the same keys, but iterating on m. */
-		  
 		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
 				Object o = i.next();
 		      if (!t.containsKey(o)) {
@@ -1345,7 +1348,6 @@ class TreeEnumeration implements Enumeration
 
 
 		  /* Now we check that m actually hold the same values. */
-		  
 		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
 		      if (!m.containsValue(o)) {
@@ -1359,7 +1361,6 @@ class TreeEnumeration implements Enumeration
 		  }
 
 		  /* Now we check that m actually hold the same values, but iterating on m. */
-		  
 		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
 				Object o = i.next();
 		      if (!t.containsValue(o)) {
@@ -1468,7 +1469,6 @@ class TreeEnumeration implements Enumeration
 		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after removal.\n");
 		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after removal.\n");
 
-
 		  /* Now we check that m actually holds the same data. */
 		  
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
@@ -1551,7 +1551,7 @@ class TreeEnumeration implements Enumeration
 
 
 		  /* Now we save and read m. */
-		  /*
+		  
 		  try {
 				java.io.File ff = new java.io.File("regressionTest");
 				java.io.OutputStream os = new java.io.FileOutputStream(ff);
@@ -1573,7 +1573,7 @@ class TreeEnumeration implements Enumeration
 		  }
 
 		  if (m.hashCode() != h) System.out.println("Error: hashCode() changed after save/read.\n");
-		  */
+		  
 		  /* Now we check that m actually holds that data. */
 		  
 		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {

@@ -8,7 +8,7 @@
 DIR="src/it/unimi/dsi/fastUtil"
 
 # Names of driver files.
-FILE=(Map SortedMap AbstractMap HashMap TreeMap AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet Iterator)
+FILE=(Map SortedMap AbstractMap HashMap TreeMap AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet Iterator ListIterator Comparator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
@@ -59,7 +59,10 @@ for ((f=0; f<5; f++)); do
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
+"#define KEY_LIST_ITERATOR ListIterator\n\n"\
+"#define KEY_COMPARATOR Comparator\n\n"\
 "#define NEXT_KEY next\n"\
+"#define PREV_KEY previous\n"\
 "#define GET_VALUE get${TYPE_CAP[$v]}\n"\
 "#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
 "#define FIRST_KEY firstKey\n"\
@@ -78,7 +81,10 @@ for ((f=0; f<5; f++)); do
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
+"#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define GET_VALUE get\n"\
 "#define REMOVE_VALUE remove\n"\
 "#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
@@ -98,7 +104,9 @@ for ((f=0; f<5; f++)); do
 "#define DEF_RET_VALUE null\n"\
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define VALUE_ITERATOR Iterator\n\n"\
+"#define VALUE_LIST_ITERATOR ListIterator\n\n"\
 "#define NEXT_VALUE next\n"\
+"#define PREV_VALUE previous\n"\
 "#else\n"\
 "#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_VALUE())\n"\
 "#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
@@ -112,7 +120,9 @@ for ((f=0; f<5; f++)); do
 "#endif\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP[$v]}Iterator\n\n"\
+"#define VALUE_LIST_ITERATOR ${TYPE_CAP[$v]}ListIterator\n\n"\
 "#define NEXT_VALUE next${TYPE_CAP[$v]}\n"\
+"#define PREV_VALUE previous${TYPE_CAP[$v]}\n"\
 "#if #valueclass(Boolean)\n"\
 "#define VALUE_NULL (false)\n"\
 "#else\n"\
@@ -152,7 +162,10 @@ for ((f=5; f<12; f++)); do
 "#define TREESET ${TYPE_CAP[$k]}TreeSet\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
+"#define KEY_LIST_ITERATOR ListIterator\n\n"\
+"#define KEY_COMPARATOR Comparator\n\n"\
 "#define NEXT_KEY next\n"\
+"#define PREV_KEY previous\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
@@ -165,7 +178,10 @@ for ((f=5; f<12; f++)); do
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
+"#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
@@ -197,11 +213,11 @@ rm -f $DIR/BooleanHashSet.c
 
 
 #
-# This loop generates iterator interfaces. Note that we need
+# This loop generates iterator and comparator interfaces. Note that we need
 # boolean iterators for maps with booleans as codomain.
 #
 
-for ((f=12; f<13; f++)); do
+for ((f=12; f<15; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME
@@ -210,7 +226,10 @@ for ((f=12; f<13; f++)); do
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
+"#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#include \"${FILE[$f]}.drv\"\n" >$FILENAME
 
 	  done
