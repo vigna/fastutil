@@ -34,7 +34,7 @@ public class HashCommon {
 	 /** This reference is used to fill keys and values of removed entries (if
 	 they are objects). <code>null</code> cannot be used as it would confuse the
 	 search algorithm in the presence of an actual <code>null</code> key. */ 
-	 protected static Object removed = new Object();
+	 static Object removed = new Object();
 
 	 private HashCommon() {};
 
@@ -42,17 +42,17 @@ public class HashCommon {
 	  * In all other cases, we need some support functions. 
 	  */
 
-	 final static int float2int(final float f) {
-		  return Float.floatToRawIntBits(f);
+	 final static int float2int( final float f ) {
+		  return Float.floatToRawIntBits( f );
 	 }
 
-	 final static int double2int(final double d) {
-		  final long l = Double.doubleToRawLongBits(d);
-		  return (int)(l ^ (l >>> 32));
+	 final static int double2int( final double d ) {
+		  final long l = Double.doubleToRawLongBits( d );
+		  return (int)( l ^ ( l >>> 32 ) );
 	 }
 
-	 final static int long2int(final long l) {
-		  return (int)(l ^ (l >>> 32));
+	 final static int long2int( final long l ) {
+		  return (int)( l ^ ( l >>> 32 ) );
 	 }
 }
 
