@@ -10,7 +10,7 @@ Version:        %{version}
 Release:        %{release}
 Summary:        fastUtil: Fast & compact type-specific utility classes
 License:        LGPL
-Source0:        http://vigna.dsi.unimi.it/fastutil/%{name}-%{version}.tar.gz
+Source0:        http://vigna.dsi.unimi.it/fastutil/%{name}-%{version}-src.tar.gz
 URL:            http://vigna.dsi.unimi.it/fastutil/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project

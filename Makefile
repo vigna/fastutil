@@ -43,7 +43,7 @@ tar: jar
 source:
 	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
-	tar zcvf fastutil-$(VERSION).tar.gz \
+	tar zcvf fastutil-$(VERSION)-src.tar.gz \
 		fastutil-$(VERSION)/*.drv \
 		fastutil-$(VERSION)/build.xml \
 		fastutil-$(VERSION)/gencsources.sh \
