@@ -607,14 +607,14 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 
 
 	private static void test( int n ) {
-		int c, i, j;
+		int c;
 
 		l = new int[ n ];
 		a = new KEY_TYPE[n][];
 
-		for( i = 0; i < n; i++ ) l[i] = (int)(Math.abs(r.nextGaussian())*32);
-		for( i = 0; i < n; i++ ) a[i] = new KEY_TYPE[l[i]];
-		for( i = 0; i < n; i++ ) for( j = 0; j < l[i]; j++ ) a[i][j] = genKey();
+		for( int i = 0; i < n; i++ ) l[i] = (int)(Math.abs(r.nextGaussian())*32);
+		for( int i = 0; i < n; i++ ) a[i] = new KEY_TYPE[l[i]];
+		for( int i = 0; i < n; i++ ) for( int j = 0; j < l[i]; j++ ) a[i][j] = genKey();
 
 		ARRAY_FRONT_CODED_LIST m = new ARRAY_FRONT_CODED_LIST( it.unimi.dsi.fastutil.objects.ObjectIterators.wrap( a ), r.nextInt( 4 ) + 1 );
 		it.unimi.dsi.fastutil.objects.ObjectArrayList t = new it.unimi.dsi.fastutil.objects.ObjectArrayList( a );
@@ -629,6 +629,62 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 		/* Now we check cloning. */
 
 		ensure( contentEquals( m, (java.util.List)m.clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+
+		/* Now we play with iterators. */
+
+		{
+			ObjectListIterator i;
+			java.util.ListIterator j;
+			Object J;
+			i = m.objectListIterator(); 
+			j = t.listIterator(); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.next(), (KEY_TYPE[])j.next() ), "Error (" + seed + "): divergence in next()" );
+
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.previous(), (KEY_TYPE[])j.previous() ), "Error (" + seed + "): divergence in previous()" );
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()" );
+
+			}
+
+		}
+
+		{
+			Object previous = null;
+			Object I, J;
+			int from = r.nextInt( m.size() +1 );
+			ObjectListIterator i;
+			java.util.ListIterator j;
+			i = m.objectListIterator( from ); 
+			j = t.listIterator( from ); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
+				ensure( i.hasPrevious() == j.hasPrevious() , "Error (" + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.next(), (KEY_TYPE[])j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+					//System.err.println("Done next " + I + " " + J + "  " + badPrevious);
+
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.previous(), (KEY_TYPE[])j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+
+				}
+			}
+
+		}
+		
+
 
 		try {
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
