@@ -1,26 +1,22 @@
-%define name            fastutil
-%define version         2.60
-%define release         1jpp
-%define javadir         %{_datadir}/java
-%define javadocdir      %{_datadir}/javadoc
-%define section         free
+%define section free
 
-Name:           %{name}
-Version:        %{version}
-Release:        %{release}
-Summary:        fastUtil: Fast & compact type-specific utility classes
+Name:           fastutil
+Version:        2.60
+Release:        1jpp
+Epoch:          0
+Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://vigna.dsi.unimi.it/fastutil/%{name}-%{version}-src.tar.gz
-URL:            http://vigna.dsi.unimi.it/fastutil/
+Source0:        http://fastutil.dsi.unimi.it/fastutil-2.60-src.tar.gz
+URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
-BuildRequires:  ant, make, gcc, jpackage-utils, /bin/bash
+BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.5, /bin/bash
 BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
-fastutil provides type-specific maps and sets with a small memory
+fastUtil provides type-specific maps and sets with a small memory
 footprint and much (up to 10 times) faster access and insertion.  The
 classes implement their standard counterpart interface (e.g., Map for
 maps) and can be plugged into existing code. Moreover, they provide
@@ -37,16 +33,13 @@ Javadoc for %{name}.
 # -----------------------------------------------------------------------------
 
 %prep
-%setup -q -n %{name}-%{version}
-
-find . -name "*.jar" -exec rm -f {} ';'
-rm -rf docs
+%setup -q
 
 # -----------------------------------------------------------------------------
 
 %build
 
-. %{_bindir}/java-functions
+. %{_datadir}/java-utils/java-functions
 set_jvm
 
 export PATH=$JAVA_HOME/bin:$PATH
@@ -62,14 +55,13 @@ make jar docs
 rm -rf $RPM_BUILD_ROOT
 
 # jars
-mkdir -p $RPM_BUILD_ROOT%{javadir}
-cp -p %{name}-%{version}.jar $RPM_BUILD_ROOT%{javadir}/%{name}-%{version}.jar
-(cd $RPM_BUILD_ROOT%{javadir} && for jar in *-%{version}*; do ln -sf ${jar} `echo $jar| sed "s|-%{version}||g"`; done)
+mkdir -p $RPM_BUILD_ROOT%{_javadir}
+cp -p %{name}-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/%{name}-%{version}.jar
+(cd $RPM_BUILD_ROOT%{_javadir} && for jar in *-%{version}*; do ln -sf ${jar} `echo $jar| sed "s|-%{version}||g"`; done)
 
 # javadoc
-mkdir -p $RPM_BUILD_ROOT%{javadocdir}/%{name}-%{version}
-cp -pr docs/* $RPM_BUILD_ROOT%{javadocdir}/%{name}-%{version}
-(cd $RPM_BUILD_ROOT%{javadocdir} && for doc in *-%{version}*; do ln -sf ${doc} `echo $doc| sed "s|-%{version}||g"`; done)
+mkdir -p $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
+cp -pr docs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
 
 # -----------------------------------------------------------------------------
 
@@ -81,21 +73,29 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(0644,root,root,0755)
 %doc README CHANGES COPYING.LIB
-%{javadir}/*
+%{_javadir}/*
 
 %files javadoc
 %defattr(0644,root,root,0755)
-%{javadocdir}/%{name}-%{version}
-%{javadocdir}/%{name}
+%{_javadocdir}/%{name}-%{version}
 
 # -----------------------------------------------------------------------------
 
 %changelog
-* Wed Mar 12 2003 Sebastiano Vigna <vigna at acm.org> - 2.52-1jpp
-- IMPORTANT: The package name has changed. Please remove manually
-  the old package and modify your sources.
-- Deleted docs from source tar.
-- Merged in patches to Makefile.
+* Sun Apr 06 2003 Sebastiano Vigna <vigna at acm.org> - 2.60-1jpp
+- Improved iterators.
+
+* Fri Apr  4 2003 Ville Skyttä <ville.skytta at iki.fi> - 0:2.52-2jpp
+- Rebuilt for JPackage 1.5.
+
+* Thu Mar 13 2003 Ville Skyttä <ville.skytta at iki.fi> - 2.52-1jpp
+- Updated to 2.52.
+- Comments from upstream (thanks to Sebastiano Vigna):
+  - IMPORTANT: The package name has changed. Please remove manually
+    the old package (if you have a RPM called "fastUtil" installed)
+    and modify your sources.
+  - Deleted docs from source tar.
+  - Merged in patches to Makefile.
 
 * Sun Mar  9 2003 Ville Skyttä <ville.skytta at iki.fi> - 2.51-2jpp
 - First official JPackage release.
