@@ -15,6 +15,7 @@ explain:
 	@echo "script to generate the fake C sources that will be preprocessed"
 	@echo "to obtain the actual Java files. Then, you can build the jar"
 	@echo -e "file using \"make jar\", or the documentation using \"make docs\".\n"
+	@echo -e "Note that you need ant (http://jakarta.apache.org/ant).\n"
 
 jar: jsources
 	ant dist
