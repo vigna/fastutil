@@ -42,7 +42,7 @@ for ((f=0; f<2; f++)); do
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
-"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
+"#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_ITERATOR_NAME Iterator\n\n"\
 "#else\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_TYPE_VALUE())\n"\
@@ -56,7 +56,7 @@ for ((f=0; f<2; f++)); do
 "#define VALUE2OBJ(x) (x)\n"\
 "#define NULL (null)\n"\
 "#define DEF_RET_VALUE null\n"\
-"#define VALUE_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
+"#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define VALUE_ITERATOR_NAME Iterator\n\n"\
 "#else\n"\
 "#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_TYPE_VALUE())\n"\
@@ -97,7 +97,7 @@ for ((f=2; f<4; f++)); do
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
-"#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
+"#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
 "#define KEY_ITERATOR_NAME ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_TYPE_VALUE())\n"\
