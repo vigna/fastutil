@@ -78,10 +78,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
-* Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.1.0-1jpp
+* Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.1-1jpp
 - Several new static containers.
 
-%changelog
 * Wed Jul 04 2003 Sebastiano Vigna <vigna at acm.org> - 3.0.1-1jpp
 - A small but important serialisation bug fix.
 
