@@ -40,10 +40,9 @@ for ((f=0; f<5; f++)); do
 "#define WRITE_VALUE write${TYPE_CAP[$v]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define READ_VALUE read${TYPE_CAP[$v]}\n"\
-"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
-"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
+"#define SORTEDSET ${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 "#define SORTEDMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#define ABSTRACT_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AbstractMap\n"\
@@ -58,11 +57,13 @@ for ((f=0; f<5; f++)); do
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
-"#define KEY_COMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
+"#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
 "#define GET_VALUE get${TYPE_CAP[$v]}\n"\
 "#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
+"#define FIRST_KEY firstKey\n"\
+"#define LAST_KEY lastKey\n"\
 "#else\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
@@ -75,11 +76,13 @@ for ((f=0; f<5; f++)); do
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
-"#define KEY_COMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define GET_VALUE get\n"\
 "#define REMOVE_VALUE remove\n"\
+"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
+"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#else\n"\
@@ -129,7 +132,7 @@ done
 # so we manually delete boolean sets definitions later.
 #
 
-for ((f=5; f<11; f++)); do
+for ((f=5; f<12; f++)); do
 	 for ((k=0; k<${#TYPE[*]}; k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME
@@ -139,8 +142,6 @@ for ((f=5; f<11; f++)); do
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
-"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
-"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
 "#define SORTEDSET ${TYPE_CAP[$k]}SortedSet\n\n"\
@@ -156,10 +157,12 @@ for ((f=5; f<11; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
 "#define TO_KEY_ARRAY toArray\n"\
+"#define FIRST_KEY firstKey\n"\
+"#define LAST_KEY lastKey\n"\
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
-"#define KEY_COMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
+"#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
@@ -167,6 +170,8 @@ for ((f=5; f<11; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
+"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
+"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
 "#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
 "#elif #keyclass(Boolean)\n"\
@@ -175,7 +180,7 @@ for ((f=5; f<11; f++)); do
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
-"#define KEY_COMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#else\n"\
@@ -196,7 +201,7 @@ rm -f $DIR/BooleanHashSet.c
 # boolean iterators for maps with booleans as codomain.
 #
 
-for ((f=11; f<12; f++)); do
+for ((f=12; f<13; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME
