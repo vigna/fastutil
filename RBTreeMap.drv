@@ -27,7 +27,7 @@ import java.io.*;
 /** A type-specific red-black tree map with a fast, small-footprint implementation.
  */
 
-public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
+public class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
 	 public transient Entry tree;
@@ -201,10 +201,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  }
 		  else {
 				Entry p = tree, e;
-				int cmp, i = 1;
-
-				dirPath[ 0 ]  = false;
-				nodePath[ 0 ] = null;
+				int cmp, i = 0;
 
 				while( true ) {
 					 if ( ( cmp = compare( k, p.key ) ) == 0 ) {
@@ -252,27 +249,28 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 				}
 
 				modified = true;
+				i--;
 
-				while( i >= 3 && ! nodePath[ i - 1 ].black() ) {
-					 if ( ! dirPath[ i - 2 ] ) {
-						  Entry y = nodePath[ i - 2 ].right;
+				while( i > 0 && ! nodePath[ i ].black() ) {
+					 if ( ! dirPath[ i - 1 ] ) {
+						  Entry y = nodePath[ i - 1 ].right;
 
-						  if ( ! nodePath[ i - 2 ].succ() && ! y.black() ) {
-								nodePath[ i - 1 ].black( true );
+						  if ( ! nodePath[ i - 1 ].succ() && ! y.black() ) {
+								nodePath[ i ].black( true );
 								y.black( true );
-								nodePath[ i - 2 ].black( false );
+								nodePath[ i - 1 ].black( false );
 								i -= 2;
 						  }
 						  else {
 								Entry x;
 
-								if ( ! dirPath[ i - 1 ] ) y = nodePath[ i - 1 ];
+								if ( ! dirPath[ i ] ) y = nodePath[ i ];
 								else {
-									 x = nodePath[ i - 1 ];
+									 x = nodePath[ i ];
 									 y = x.right;
 									 x.right = y.left;
 									 y.left = x;
-									 nodePath[ i - 2 ].left = y;
+									 nodePath[ i - 1 ].left = y;
 
 									 if ( y.pred() ) {
 										  y.pred( false );
@@ -280,16 +278,16 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 									 }
 								}
 								
-								x = nodePath[ i - 2 ];
+								x = nodePath[ i - 1 ];
 								x.black( false );
 								y.black( true );
 								
 								x.left = y.right;
 								y.right = x;
-								if ( nodePath[ i - 3 ] == null ) tree = y;
+								if ( i < 2 ) tree = y;
 								else {
-									 if ( dirPath[ i - 3 ] ) nodePath[ i - 3 ].right = y;
-									 else nodePath[ i - 3 ].left = y;
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = y;
+									 else nodePath[ i - 2 ].left = y;
 								}
 
 								if ( y.succ() ) {
@@ -300,24 +298,24 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  }
 					 }
 					 else {
-						  Entry y = nodePath[ i - 2 ].left;
+						  Entry y = nodePath[ i - 1 ].left;
 						  
-						  if ( ! nodePath[ i - 2 ].pred() && ! y.black() ) {
-								nodePath[ i - 1 ].black( true );
+						  if ( ! nodePath[ i - 1 ].pred() && ! y.black() ) {
+								nodePath[ i ].black( true );
 								y.black( true );
-								nodePath[ i - 2 ].black( false );
+								nodePath[ i - 1 ].black( false );
 								i -= 2;
 						  }
 						  else {
 								Entry x;
 
-								if ( dirPath[ i - 1 ] ) y = nodePath[ i - 1 ];
+								if ( dirPath[ i ] ) y = nodePath[ i ];
 								else {
-									 x = nodePath[ i - 1 ];
+									 x = nodePath[ i ];
 									 y = x.left;
 									 x.left = y.right;
 									 y.right = x;
-									 nodePath[ i - 2 ].right = y;
+									 nodePath[ i - 1 ].right = y;
 	 
 									 if ( y.succ() ) {
 										  y.succ( false );
@@ -326,16 +324,16 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 	 
 								}
 
-								x = nodePath[ i - 2 ];
+								x = nodePath[ i - 1 ];
 								x.black( false );
 								y.black( true );
 
 								x.right = y.left;
 								y.left = x;
-								if ( nodePath[ i - 3 ] == null ) tree = y;
+								if ( i < 2 ) tree = y;
 								else {
-									 if ( dirPath[ i - 3 ] ) nodePath[ i - 3 ].right = y;
-									 else nodePath[ i - 3 ].left = y;
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = y;
+									 else nodePath[ i - 2 ].left = y;
 								}
 
 								if ( y.pred() ){
@@ -372,10 +370,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 		  Entry p = tree;
 		  int cmp;
-		  int i = 1;
-
-		  nodePath[ 0 ] = null;
-		  dirPath[ 0 ] = false;
+		  int i = 0;
 
 		  while( true ) {
 				if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
@@ -404,11 +399,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 		  if ( p.succ() ) {
 				if ( p.pred() ) {
-					 if ( nodePath[ i - 1 ] != null ) {
+					 if ( i == 0 ) tree = p.left;
+					 else {
 						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].succ( p.right );
 						  else nodePath[ i - 1 ].pred( p.left );
 					 }
-					 else tree = dirPath[ i - 1 ] ? p.right : p.left;
 				}
 				else {
 					 Entry l = p.left;
@@ -416,11 +411,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 					 l.right = p.right;
 
-					 if ( nodePath[ i - 1 ] != null ) {
+					 if ( i == 0 ) tree = p.left;
+					 else {
 						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].right = p.left;
 						  else nodePath[ i - 1 ].left = p.left;
 					 }
-					 else tree = p.left;
 				}
 		  }
 		  else {
@@ -435,11 +430,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  while( ! l.succ() ) l = l.right;
 						  l.right = r;
 					 }
-					 if ( nodePath[ i - 1 ] != null ) {
+					 if ( i == 0 ) tree = r;
+					 else {
 						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].right = r;
 						  else nodePath[ i - 1 ].left = r;
 					 }
-					 else tree = r;
 
 					 colour = r.black();
 					 r.black( p.black() );
@@ -481,16 +476,16 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 					 s.black( p.black() );
 					 p.black( colour );
 	
-					 if ( nodePath[ j - 1 ] != null ) {
+					 if ( j == 0 ) tree = s;
+					 else {
 						  if ( dirPath[ j - 1 ] ) nodePath[ j - 1 ].right = s;
 						  else nodePath[ j - 1 ].left = s;
 					 }
-					 else tree = s;
 				}
 		  }
 
 		  if ( p.black() ) {
-				for( ; i > 1; i-- ) {
+				for( ; i > 0; i-- ) {
 					 if ( dirPath[ i - 1 ] && ! nodePath[ i - 1 ].succ() ||
 							! dirPath[ i - 1 ] && ! nodePath[ i - 1 ].pred() ) {
 						  Entry x = dirPath[ i - 1 ] ? nodePath[ i - 1 ].right : nodePath[ i - 1 ].left;
@@ -511,11 +506,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								nodePath[ i - 1 ].right = w.left;
 								w.left = nodePath[ i - 1 ];
 
-								if ( nodePath[ i - 2 ] != null ) {
+								if ( i < 2 ) tree = w;
+								else {
 									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
-								else tree = w;
 
 								nodePath[ i ] = nodePath[ i - 1 ];
 								dirPath[ i ] = false;
@@ -552,11 +547,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								nodePath[ i - 1 ].right = w.left;
 								w.left = nodePath[ i - 1 ];
 
-								if ( nodePath[ i - 2 ] != null ) {
+								if ( i < 2 ) tree = w;
+								else {
 									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
-								else tree = w;
 
 								if ( w.pred() ) {
 									 w.pred( false );
@@ -575,11 +570,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								nodePath[ i - 1 ].left = w.right;
 								w.right = nodePath[ i - 1 ];
 
-								if ( nodePath[ i - 2 ] != null ) {
+								if ( i < 2 ) tree = w;
+								else {
 									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
-								else tree = w;
 
 								nodePath[ i ] = nodePath[ i - 1 ];
 								dirPath[ i ] = true;
@@ -610,17 +605,17 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								}
 
 								w.black( nodePath[ i - 1 ].black() );
-								nodePath[ i -1 ].black( true );
+								nodePath[ i - 1 ].black( true );
 								w.left.black( true );
 
 								nodePath[ i - 1 ].left = w.right;
 								w.right = nodePath[ i - 1 ];
 									  
-								if ( nodePath[ i - 2 ] != null ) {
+								if ( i < 2 ) tree = w;
+								else {
 									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
-								else tree = w;
 
 								if ( w.succ() ) {
 									 w.succ( false );
