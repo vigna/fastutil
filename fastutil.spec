@@ -47,7 +47,7 @@ export APIURL=http://java.sun.com/j2se/1.4.1/docs/api/
 #export ANT_ARGS="$ANT_ARGS -Dbuild.compiler=jikes"
 
 ./gencsources.sh
-make jar docs
+make jar docs APIURL=/usr/share/javadoc/java
 
 # -----------------------------------------------------------------------------
 

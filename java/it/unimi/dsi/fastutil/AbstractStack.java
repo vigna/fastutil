@@ -27,7 +27,7 @@ package it.unimi.dsi.fastutil;
  * <P>This class just defines {@link Stack#top()} as {@link Stack#peek(int) peek(0)}, and
  * {@link Stack#peek(int)} as throwing an {@link UnsupportedOperationException}.
  *
- * Subclasses of this class may choose to implement just {@link Stack#push()},
+ * Subclasses of this class may choose to implement just {@link Stack#push(Object)},
  * {@link Stack#pop()} and {@link Stack#isEmpty()}, or (but this is not
  * required) go farther and implement {@link Stack#top()}, or even {@link
  * Stack#peek(int)}.

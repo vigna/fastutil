@@ -1,6 +1,6 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=3.0.1
+VERSION=3.1
 
 .SUFFIXES: .java .j
 
@@ -30,7 +30,6 @@ explain:
 	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
 
 jar: jsources
-	export ANT_OPTS="-Xmx256M -Xms256M"
 	ant jar
 
 bin: jar docs

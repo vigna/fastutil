@@ -66,7 +66,7 @@ public interface Stack {
 	/** Peeks at an element on the stack (optional operation).
 	 *
 	 * @return the <code>i</code>-th element on the stack; 0 represents the top.
-	 * @throws IllegalArgumentException if the designated element does not exist..
+	 * @throws IndexOutOfBoundException if the designated element does not exist..
 	 */
 
 	Object peek( int i );
