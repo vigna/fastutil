@@ -1721,6 +1721,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 private static KEY_TYPE kt[];
 	 private static KEY_TYPE nkt[];
 	 private static VALUE_TYPE vt[];
+	 private static TREEMAP topMap;
 
 	 private static void testMaps( SORTEDMAP m, SortedMap t, int n, int level ) {
 		  long ms;
@@ -1730,10 +1731,52 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  if ( level > 4 ) return;
 				
+
+		  /* Now we check that both maps agree on first/last keys. */
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.firstKey();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.firstKey();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: firstKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error: m and t differ at start on their first key (" + m.firstKey() + ", " + t.firstKey() +").\n" );
+
+		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		  try {
+				m.lastKey();
+		  }
+		  catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		  try {
+				t.lastKey();
+		  }
+		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: lastKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+		  if (  ! mThrowsNoElement && ! t.lastKey().equals( m.lastKey() ) ){
+				System.err.println("m: " + m + " t: " + t);
+				topMap.prettyPrint();
+		  }
+
+
+		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error: m and t differ at start on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
+
+
+		  /* Now we check that m and t are equal. */
 		  if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
 		  ensure( m.equals( t ), "Error: ! m.equals( t ) at start.\n" );
 		  ensure( t.equals( m ), "Error: ! t.equals( m ) at start.\n" );
+
+
 
 		  /* Now we check that m actually holds that data. */
 		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
@@ -1982,7 +2025,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		      ensure( t.values().contains(o), "Error: m and t differ on a value (in values()) after removal (iterating on m).\n");
 		  }
 
-
 		  /* Now we check that both maps agree on first/last keys. */
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
@@ -2014,16 +2056,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  if (  ! mThrowsNoElement && ! t.lastKey().equals( m.lastKey() ) ){
 				System.err.println("m: " + m + " t: " + t);
+				topMap.prettyPrint();
 		  }
 
 
 		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error: m and t differ on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
 
 
+
 		  int h = m.hashCode();
 
 
 		  /* Now we save and read m. */
+
+		  SORTEDMAP m2 = null;
 		  
 		  try {
 				java.io.File ff = new java.io.File("regressionTest");
@@ -2036,7 +2082,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (SORTEDMAP)ois.readObject();
+				m2 = (SORTEDMAP)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }
@@ -2045,22 +2091,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				System.exit(-1);
 		  }
 
-		  if (m.hashCode() != h) System.out.println("Error: hashCode() changed after save/read.\n");
+		  if (m2.hashCode() != h) System.out.println("Error: hashCode() changed after save/read.\n");
 		  
-		  /* Now we check that m actually holds that data. */
+		  /* Now we check that m2 actually holds that data. */
 		  
-		  ensure( m.equals(t), "Error: ! m.equals( t ) after save/read.\n" );
-		  ensure( t.equals(m), "Error: ! t.equals( m ) after save/read.\n" );
+		  ensure( m2.equals(t), "Error: ! m2.equals( t ) after save/read.\n" );
+		  ensure( t.equals(m2), "Error: ! t.equals( m2 ) after save/read.\n" );
 
 		  /* Now we take out of m everything, and check that it is empty. */
 
-		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
+		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m2.remove(i.next()); 
 
-		  ensure( m.isEmpty(), "Error: m is not empty (as it should be).\n" );
-				 
-		  /* Now we put back all data. */
-
-		  m.putAll( t );
+		  ensure( m2.isEmpty(), "Error: m2 is not empty (as it should be).\n" );
 				 
 		  /* Now we play with iterators. */
 
@@ -2128,6 +2170,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 private static void regressionTest( int n ) {
 		  TREEMAP m = new TREEMAP();
 		  SortedMap t = new TreeMap();
+		  topMap = m;
 		  k = new Object[n];
 		  v = new Object[n];
 		  nk = new Object[n];
