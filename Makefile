@@ -10,11 +10,11 @@ CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 .PHONY: all clean depend install docs jar tar jsources
 .SECONDARY: $(SOURCES)
 
-tar: jar
-	tar zhcvf fastUtil-1.1.tgz fastUtil-1.1/
-
 jar: jsources
 	ant dist
+
+tar: jar
+	tar zhcvf fastUtil-1.1.tgz fastUtil-1.1/
 
 jsources: $(SOURCES)
 
@@ -42,4 +42,4 @@ tags:
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
-	gcc -I. -E -C -P $< > $@
+	gcc -I. -DNDEBUG -E -C -P $< > $@

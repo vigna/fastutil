@@ -19,15 +19,21 @@ TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object)
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 
+#
+# This loop generates maps. Note that the index in the key
+# array starts from 1, so we avoid boolean keys.
+#
+
 for ((f=0; f<2; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
 		  for ((v=0; v<${#TYPE[*]}; v++)); do
-				if (( k < $((${#TYPE[*]}-1)) || v < $((${#TYPE[*]}-1)) )); then
-					 FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
-					 rm -f $FILENAME
-					 echo -e \
+				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
+				rm -f $FILENAME
+				echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
+"#define START_COMMENT /\n"\
+"#define END_COMMENT /\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
@@ -91,10 +97,16 @@ for ((f=0; f<2; f++)); do
 "#define DEF_RET_VALUE defRetValue\n"\
 "#endif\n\n"\
 "#include \"${FILE[$f]}.drv\"\n" >$FILENAME
-				fi
 			 done
 	  done
 done
+
+
+#
+# This loop generates sets. Note that the index in the key
+# array starts from 0, because we need boolean Collections, 
+# so we manually delete boolean sets definitions later.
+#
 
 for ((f=2; f<7; f++)); do
 	 for ((k=0; k<${#TYPE[*]}; k++)); do
@@ -102,6 +114,8 @@ for ((f=2; f<7; f++)); do
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
+"#define START_COMMENT /\n"\
+"#define END_COMMENT /\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
@@ -141,12 +155,25 @@ for ((f=2; f<7; f++)); do
 	  done
 done
 
+rm -f $DIR/BooleanSet.c
+rm -f $DIR/BooleanAbstractSet.c
+rm -f $DIR/BooleanHashSet.c
+
+
+
+#
+# This loop generates iterator interfaces. Note that we need
+# boolean iterators for maps with booleans as codomain.
+#
+
 for ((f=7; f<8; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
+"#define START_COMMENT /\n"\
+"#define END_COMMENT /\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
@@ -156,6 +183,3 @@ for ((f=7; f<8; f++)); do
 	  done
 done
 
-# This would be ridiculous
-rm $DIR/BooleanHashSet.c
-rm $DIR/BooleanAbstractSet.c
