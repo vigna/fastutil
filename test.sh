@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FILE=(HashSet TreeSet)
+FILE=(OpenHashSet RBTreeSet AVLTreeSet)
 TYPE=(boolean byte short int long char float double Object)
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object)
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
@@ -9,7 +9,7 @@ lf=".75"
 
 if [ "$1" != "" ]; then lf=$1; fi
 
-for ((t=10; t<1000; t*=10)); do
+for ((t=10; t<10000; t*=10)); do
 	 for ((f=0; f<${#FILE[*]}; f++)); do
 		  for ((k=1; k<${#TYPE[*]}; k++)); do
 				CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}${FILE[$f]}
@@ -20,7 +20,7 @@ for ((t=10; t<1000; t*=10)); do
 
 done
 
-FILE=(HashMap TreeMap)
+FILE=(OpenHashMap RBTreeMap AVLTreeMap)
 
 for ((t=10; t<1000; t*=10)); do
 	 for ((f=0; f<${#FILE[*]}; f++)); do
