@@ -55,7 +55,7 @@ source:
 		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
-jsources: $(FRAGMENTS) 
+jsources: $(FRAGMENTS)  $(SOURCES)
 
 $(FRAGMENTS): $(SOURCES)
 
@@ -63,7 +63,7 @@ clean:
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*ListIterator.java */*/*/*/*/{Boolean,Byte,Short,Int,Long,Char,Float,Double}*Iterator.java */*/*/*/*/*Comparator.java
+	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*ListIterator.java */*/*/*/*/{Boolean,Byte,Short,Int,Long,Char,Float,Double}*Iterator.java */*/*/*/*/*Comparator.java */*/*/*/*/*Iterators*.java
 	@rm -f */*/*/*/*/*.c
 	@rm -fr $(DOCSDIR)/*
 

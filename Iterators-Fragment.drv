@@ -2,7 +2,7 @@ private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_ITERATOR {
 	private final KEY_TYPE array[];
 	private int offset, length;
 
-	public KEY_ARRAY_ITERATOR( KEY_TYPE array[], int offset, int length ) {
+	public KEY_ARRAY_ITERATOR( final KEY_TYPE array[], final int offset, final int length ) {
 		this.array = array;
 		this.offset = offset;
 		this.length = length;
@@ -28,7 +28,7 @@ private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_ITERATOR {
  * @param offset the first element of the array to be returned.
  * @param length the number of elements to return.
  */
-public static KEY_ITERATOR wrap( KEY_TYPE array[], int offset, int length ) {
+public static KEY_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
 	if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
 	return new KEY_ARRAY_ITERATOR( array, offset, length );
 }
@@ -40,9 +40,43 @@ public static KEY_ITERATOR wrap( KEY_TYPE array[], int offset, int length ) {
  *
  * @param array an array to wrap into an iterator.
  */
-public static KEY_ITERATOR wrap( KEY_TYPE array[] ) {
+public static KEY_ITERATOR wrap( final KEY_TYPE array[] ) {
 	return new KEY_ARRAY_ITERATOR( array, 0, array.length );
 }
+
+
+/** Unwraps an iterator over an array starting at a given offset for a given number of elements.
+ *
+ * <P>This method iterates over the given type-specific iterator and stores the elements
+ * returned, up to a maximum of <code>length</code>, in the given array starting at <code>offset</code>.
+ * The number of actually unwrapped elements is returned (it may be less than <code>length</code> if
+ * the iterator emits less than <code>length</code> elements).
+ *
+ * @param array an array to contain the output of the iterator.
+ * @param offset the first element of the array to be returned.
+ * @param length the maximum number of elements to unwrap.
+ * @return the number of elements unwrapped.
+ */
+public static int unwrap( final KEY_ITERATOR i, final KEY_TYPE array[], int offset, final int length ) {
+	if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
+	int j = length;
+	while( j-- != 0 && i.hasNext() ) array[ offset++ ] = i.NEXT_KEY();
+	return length - j - 1;
+}
+
+/** Unwraps an iterator over an array.
+ *
+ * <P>This method iterates over the given type-specific iterator and stores the
+ * elements returned in the given array. The iteration will stop when the
+ * iterator has no more elements or when the end of the array has been reached.
+ *
+ * @param array an array to contain the output of the iterator.
+ * @return the number of elements unwrapped.
+ */
+public static int unwrap( final KEY_ITERATOR i, final KEY_TYPE array[] ) {
+	return unwrap( i, array, 0, array.length );
+}
+
 
 
 // Local Variables:
