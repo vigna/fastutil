@@ -38,6 +38,12 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 /** Number of entries in the map. */
 	 private int count;
 
+	 /** The first key in this map. */
+	 private Entry firstEntry;
+
+	 /** The last key in this map. */
+	 private Entry lastEntry;
+
 	 /** Cached set of entries and keys. */
 	 private transient volatile Set entries, keys;
 
@@ -45,8 +51,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 private transient volatile Collection values;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, whether during the operation we found the given key or not. */
-	 private boolean found;
+	  * or a <code>delete()</code>, whether during the operation we created or removed
+	  * and entry. */
+	 private Entry change;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
 	  * or a <code>delete()</code>, whether we ever turned left. */
@@ -63,6 +70,13 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 
 	 /** This treap map's comparator. */
 	 private Comparator comparator;
+
+	 /** The mask to get the priority from the pri field. */
+	 private final static int PRI_MASK = 0xFFFFFFFE;
+
+	 /** The mask to get the leaf bit from the pri field. */
+	 private final static int LEAF_MASK = 1;
+	 
 
 	 /** Creates a new empty treap map. 
 	  */
@@ -133,18 +147,21 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
       Entry e = treap;
       int cmp;
 
-      while ( e != null && ( cmp = KEY_CMP( k, e.key ) ) != 0 ) 
+      while ( e != null && ( cmp = KEY_CMP( k, e.key ) ) != 0 ) {
+			 if ( ( e.pri & LEAF_MASK ) == 0 ) return null;
 			 e = cmp < 0 ? e.left : e.right;
+		}
 
       return e;
    }
 
 	 /** Inserts a new pair in the map.
 	  *
-	  * <P>After execution of this method, {@link #found} is true iff an entry
-	  * with the same key was found; in this case, {@link #oldValue} contains the
-	  * value previously associated with the key. Moreover, {@link #turnedRight}
-	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
+	  * <P>After execution of this method, {@link #change} contains the new
+	  * entry, and it is <code>null</code> iff an entry with the same key was
+	  * found; in this case, {@link #oldValue} contains the value previously
+	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
+	  * turned right during the search; analogously for {@link #turnedLeft}.
 	  *
 	  * @param k a key.
 	  * @param v a value.
@@ -158,17 +175,29 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #else
 		  oldValue = defRetValue;
 #endif
-		  found = turnedLeft = turnedRight = false;
-		  treap = insertRec( treap, k, v );
+		  change = null;
+		  turnedLeft = turnedRight = false;
+
+		  if ( treap == null ) {
+				count++;
+				treap = change = new Entry( k, v, random.nextInt() | 1 );
+		  }
+		  else treap = insertRec( treap, k, v );
+
+		  if ( change != null ) {
+				if ( ! turnedLeft ) lastEntry = change;
+				if ( ! turnedRight ) firstEntry = change;
+		  }
 		  return oldValue;
 	 }
 
-	 /** Inserts recursively a given pair in a treap.
+	 /** Inserts recursively a given pair in a nonempty treap.
 	  *
-	  * <P>After execution of this method, {@link #found} is true iff an entry
-	  * with the same key was found; in this case, {@link #oldValue} contains the
-	  * value previously associated with the key. Moreover, {@link #turnedRight}
-	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
+	  * <P>After execution of this method, {@link #change} contains the new
+	  * entry, and it is <code>null</code> iff an entry with the same key was
+	  * found; in this case, {@link #oldValue} contains the value previously
+	  * associated with the key. Moreover, {@link #turnedRight} if true iff we
+	  * turned right during the search; analogously for {@link #turnedLeft}.
 	  *
 	  * @param k a key.
 	  * @param v a value.
@@ -177,25 +206,30 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  */
 
    private Entry insertRec( Entry e, final KEY_TYPE k, final VALUE_TYPE v ) {
-		 if ( e == null ) {
-			  count++;
-			  return new Entry( k, v, random.nextInt() );
-		 }
 
 		 final int cmp = compare( k, e.key );
 		 
 		 if ( cmp < 0 ) {
-			  e.left = insertRec( e.left, k, v );
 			  turnedLeft = true;
+			  if ( ( e.pri & LEAF_MASK ) == 0 && e.left != null ) 
+					e.left = insertRec( e.left, k, v );
+			  else {
+					e.pri &= PRI_MASK;
+					e.left = insertLeft( e, k, v );
+			  }
 			  if ( e.pri > e.left.pri ) e = e.rotateRight();
 		 } 
 		 else if ( cmp > 0 ) {
-			  e.right = insertRec( e.right, k, v );
 			  turnedRight = true;
+			  if ( ( e.pri & LEAF_MASK ) == 0 && e.right != null ) 
+					e.right = insertRec( e.right, k, v );
+			  else {
+					e.pri &= PRI_MASK;
+					e.right = insertRight( e, k, v );
+			  }
 			  if ( e.pri > e.right.pri ) e = e.rotateLeft();
 		 }
 		 else {
-			  found = true;
 			  oldValue = e.value;
 			  e.value = v;
 		 }
@@ -203,13 +237,31 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
    }
 
 
+	 private Entry insertLeft( Entry e, final KEY_TYPE k, final VALUE_TYPE v ) {
+		  count++;
+		  assert e.left == null;
+		  final Entry l = new Entry( k, v, random.nextInt() | 1 );
+		  l.left = e.left;
+		  l.right = e;
+		  return l;
+	 }
+
+	 private Entry insertRight( Entry e, final KEY_TYPE k, final VALUE_TYPE v ) {
+		  count++;
+		  assert e.left == null;
+		  final Entry r = new Entry( k, v, random.nextInt() | 1 );
+		  r.left = e;
+		  r.right = e.right;
+		  return r;
+	 }
+
+
 	 /** Deletes an entry from the map.
 	  *
-	  * <P>After execution of this method, {@link #found} is true iff an entry
-	  * was actually deleted; in this case, {@link #oldValue} contains the value
-	  * previously associated with the key. Moreover, {@link #turnedRight} if
-	  * true iff we turned right during the search; analogously for {@link
-	  * #turnedLeft}.
+	  * <P>After execution of this method, {@link #change} contains the deleted
+	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
+	  * value previously associated with the key. Moreover, {@link #turnedRight}
+	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
 	  *
 	  * @param k a key.
 	  * @return the value previously associated to the key (or the default return value, if there 
@@ -222,18 +274,17 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #else
 		  oldValue = defRetValue;
 #endif
-		  found = false;
+		  change = null;
 		  treap = deleteRec( k, treap );
 		  return oldValue;
 	 }
 
 	 /** Deletes recursively an entry from a treap.
 	  *
-	  * <P>After execution of this method, {@link #found} is true iff an entry
-	  * was actually deleted; in this case, {@link #oldValue} contains the value
-	  * previously associated with the key. Moreover, {@link #turnedRight} if
-	  * true iff we turned right during the search; analogously for {@link
-	  * #turnedLeft}.
+	  * <P>After execution of this method, {@link #change} contains the deleted
+	  * entry; if it is not <code>null</code>, {@link #oldValue} contains the
+	  * value previously associated with the key. Moreover, {@link #turnedRight}
+	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
 	  *
 	  * @param k a key.
 	  * @param e a treap (i.e., an {@link Entry}.
@@ -254,7 +305,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				e.right = deleteRec( k, e.right );
 		  }
 		  else {
-				found = true;
+				change = e;
 				oldValue = e.value;
 				e = e.deleteRoot();
 				count--;
@@ -267,7 +318,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 public Object put( final Object ok, final Object ov ) {
 		  if ( ok == null ) throw new IllegalArgumentException();
 		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
-		  return found ? VALUE2OBJ( oldValue ) : null;
+		  return change == null ? VALUE2OBJ( oldValue ) : null;
 	 }
 
 
@@ -286,7 +337,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
    public Object remove(final Object ok) {
 		 if ( ok == null ) throw new IllegalArgumentException();
 		 delete( KEY2TYPE( ok ) );
-		 return found ? VALUE2OBJ( oldValue ) : null;
+		 return change == null ? VALUE2OBJ( oldValue ) : null;
    }
 
 #if ! #valueclass(Object) 
@@ -434,7 +485,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				if ( left.pri < right.pri ) {
 					 t = rotateRight();
 					 t.right = deleteRoot();
-				} 
+				}
 				else {
 					 t = rotateLeft();
 					 t.left = deleteRoot();
@@ -541,7 +592,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 }
 
 #endif
-
+	 /*
 	 private class TreapIterator implements Iterator {
 		  private List stack = new ArrayList();
 		  
@@ -584,6 +635,35 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 					 for( f = e.right; f != null; f = f.left ) stack.add( f );
 				}
 
+				return e;
+		  }
+
+		  public void remove() {
+				throw new UnsupportedOperationException();
+		  }
+	 }
+	 */
+
+
+	 private class TreapIterator implements Iterator {
+		  Entry curr;
+		  
+		  TreapIterator() {
+				curr = firstEntry;
+		  }
+
+		  TreapIterator( Entry firstEntry ) {
+				curr = firstEntry;
+		  }
+
+		  public boolean hasNext() {
+				return curr != null;
+		  }
+
+		  public Object next() {
+				if ( ! hasNext() ) throw new NoSuchElementException();
+				final Entry e = curr;
+				curr = curr.right;
 				return e;
 		  }
 
