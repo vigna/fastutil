@@ -41,6 +41,7 @@ for ((f=0; f<2; f++)); do
 "#if #keyclass(Object)\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
+"#define KEY_NULL (null)\n"\
 "#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_ITERATOR_NAME Iterator\n\n"\
@@ -50,11 +51,16 @@ for ((f=0; f<2; f++)); do
 "#define HASH(x) (x)\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_ITERATOR_NAME ${TYPE_CAP[$k]}Iterator\n\n"\
+"#if #keyclass(Boolean)\n"\
+"#define KEY_NULL (false)\n"\
+"#else\n"\
+"#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#endif\n"\
 "#endif\n\n"\
 "#if #valueclass(Object)\n"\
 "#define VALUE2TYPE(x) (x)\n"\
 "#define VALUE2OBJ(x) (x)\n"\
-"#define NULL (null)\n"\
+"#define VALUE_NULL (null)\n"\
 "#define DEF_RET_VALUE null\n"\
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define VALUE_ITERATOR_NAME Iterator\n\n"\
@@ -64,9 +70,9 @@ for ((f=0; f<2; f++)); do
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
 "#define VALUE_ITERATOR_NAME ${TYPE_CAP[$v]}Iterator\n\n"\
 "#if #valueclass(Boolean)\n"\
-"#define NULL (false)\n"\
+"#define VALUE_NULL (false)\n"\
 "#else\n"\
-"#define NULL ((VALUE_TYPE)0)\n"\
+"#define VALUE_NULL ((VALUE_TYPE)0)\n"\
 "#endif\n"\
 "#define DEF_RET_VALUE defRetValue\n"\
 "#endif\n\n"\
@@ -96,6 +102,7 @@ for ((f=2; f<4; f++)); do
 "#define KEY_ITERATOR_NAME Iterator\n\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
+"#define KEY_NULL (null)\n"\
 "#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
@@ -104,6 +111,11 @@ for ((f=2; f<4; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define HASH(x) (x)\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
+"#if #keyclass(Boolean)\n"\
+"#define KEY_NULL (false)\n"\
+"#else\n"\
+"#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#endif\n"\
 "#endif\n\n"\
 "#include \"${FILE[$f]}.drv\"\n" >$FILENAME
 	  done
