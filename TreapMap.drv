@@ -27,6 +27,14 @@ import java.io.*;
 /** A type-specific treap map with a very fast, small-footprint implementation.
  */
 
+#define PRI(x) ( x.mix & PRI_MASK )
+#define SUCC(x) ( ( x.mix & SUCC_MASK ) != 0 )
+#define PRED(x) ( ( x.mix & PRED_MASK ) != 0 )
+#define SET_SUCC(x) x.mix |= SUCC_MASK
+#define RESET_SUCC(x) x.mix &= ~SUCC_MASK
+#define SET_PRED(x) x.mix |= PRED_MASK
+#define RESET_PRED(x) x.mix &= ~PRED_MASK
+
 public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
@@ -50,6 +58,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 /** Cached collection of values. */
 	 private transient volatile Collection values;
 
+	 private transient KEY_TYPE key;
+	 private transient VALUE_TYPE value;
+
 	 /** The value of this variable remembers, after an <code>insert()</code> 
 	  * or a <code>delete()</code>, the entry that during the operation we
 	  * possibly created or removed. */
@@ -71,12 +82,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 /** This treap map's comparator. */
 	 private Comparator comparator;
 
-	 /** The mask to get the leaf bit from the pri field. */
-	 private final static int LEAF_MASK = 1;
-
-	 /** The mask to get the priority from the pri field. */
-	 private final static int PRI_MASK = ~LEAF_MASK;
-
+	 final static int SUCC_MASK = 1;
+	 final static int PRED_MASK = 2;
+	 final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );
 	 
 
 	 /** Creates a new empty treap map. 
@@ -148,13 +156,13 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
       Entry e = treap;
       int cmp;
 
-      while ( e != null && ( cmp = KEY_CMP( k, e.key ) ) != 0 ) {
+      while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
 			 if ( cmp < 0 ) {
-				  if ( e.pred() ) return null; // We should go right, but it's really a predecessor...
+				  if ( PRED(e) ) return null; // We should go right, but it's really a predecessor...
 				  e = e.left;
 			 }
 			 else {
-				  if ( e.succ() ) return null; // We should go right, but it's really a successor...
+				  if ( SUCC(e) ) return null; // We should go right, but it's really a successor...
 				  e = e.right;
 			 }
 		}
@@ -180,12 +188,14 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  oldValue = DEF_RET_VALUE;
 		  change = null;
 		  turnedLeft = turnedRight = false;
+		  key = k;
+		  value = v;
 
 		  if ( treap == null ) { // The case of the empty treap is treated separately.
 				count++;
 				treap = change = new Entry( k, v, random.nextInt() );
 		  }
-		  else treap = insertRec( treap, k, v );
+		  else treap = insertRec( treap );
 
 		  if ( change != null ) { // We update last/first if we actually changed the map domain.
 				if ( ! turnedLeft ) lastEntry = change;
@@ -205,32 +215,36 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  * turned right during the search; analogously for {@link #turnedLeft}.
 	  *
 	  * @param e a treap (i.e., an {@link Entry}).
-	  * @param k a key.
-	  * @param v a value.
 	  * @return the new treap, that is, the {@link Entry} that is now at the top of the treap.
 	  */
 
-   private Entry insertRec( Entry e, final KEY_TYPE k, final VALUE_TYPE v ) {
+   private Entry insertRec( Entry e ) {
 
-		 final int cmp = compare( k, e.key );
+		 final int cmp = compare( key, e.key );
 		 
 		 if ( cmp < 0 ) {
 			  turnedLeft = true;
-			  if ( ! e.pred() && e.left != null ) {e.left = insertRec( e.left, k, v );System.err.println("turning left..." + e + " " + k);}
-			  else {insertLeft( e, k, v );System.err.println("inserting left..." + e + " " + k);}
+			  if ( ! PRED(e) && e.left != null ) e.left = insertRec( e.left );
+			  else insertLeft( e );
+			  //if ( ! PRED(e) && e.left != null ) {e.left = insertRec( e.left, k, v );System.err.println("turning left..." + e + " " + k);}
+			  //else {insertLeft( e, k, v );System.err.println("inserting left..." + e + " " + k);}
 			  
-			  if ( e.pri() > e.left.pri() ) {System.err.println("Going to rotate right...");e.printDebug();e = e.rotateRight();System.err.println("Rotated.");e.printDebug();}
+			  if ( PRI(e) > PRI(e.left) ) e = e.rotateRight();
+			  //if ( e.pri() > e.left.pri() ) {System.err.println("Going to rotate right...");e.printDebug();e = e.rotateRight();System.err.println("Rotated.");e.printDebug();}
 		 } 
 		 else if ( cmp > 0 ) {
 			  turnedRight = true;
-			  if ( ! e.succ() && e.right != null ) {e.right = insertRec( e.right, k, v );System.err.println("turning right..." + e + " " + k);}
-			  else {insertRight( e, k, v );System.err.println("inserting right..." + e + " " + k);}
+			  if ( ! SUCC(e) && e.right != null ) e.right = insertRec( e.right );
+			  else insertRight( e );
+			  //if ( ! SUCC(e) && e.right != null ) {e.right = insertRec( e.right, k, v );System.err.println("turning right..." + e + " " + k);}
+			  //else {insertRight( e, k, v );System.err.println("inserting right..." + e + " " + k);}
 
-			  if ( e.pri() > e.right.pri() ) {System.err.println("Going to rotate left...");e.printDebug();e = e.rotateLeft();System.err.println("Rotated.");e.printDebug();}
+			  if ( PRI(e) > PRI(e.right) ) e = e.rotateLeft();
+			  //if ( e.pri() > e.right.pri() ) {System.err.println("Going to rotate left...");e.printDebug();e = e.rotateLeft();System.err.println("Rotated.");e.printDebug();}
 		 }
 		 else {
 			  oldValue = e.value;
-			  e.value = v;
+			  e.value = value;
 		 }
 		 return e;
    }
@@ -244,17 +258,15 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  * is the {@link Entry#left} pointer of <code>e</code>.
 	  *
 	  * @param e an {@link Entry}
-	  * @param k a key.
-	  * @param v a value.
 	  */
-	 private void insertLeft( Entry e, final KEY_TYPE k, final VALUE_TYPE v ) {
+	 private void insertLeft( Entry e ) {
 		  count++;
-		  final Entry l = change = new Entry( k, v, random.nextInt() );
+		  final Entry l = change = new Entry( key, value, random.nextInt() );
 
 		  l.right = e;
 		  l.left = e.left;
 
-		  e.pred( false );
+		  RESET_PRED(e);
 		  e.left = l;
 	 }
 
@@ -266,17 +278,15 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  * is the {@link Entry#right} pointer of <code>e</code>.
 	  *
 	  * @param e an {@link Entry}
-	  * @param k a key.
-	  * @param v a value.
 	  */
-	 private void insertRight( Entry e, final KEY_TYPE k, final VALUE_TYPE v ) {
+	 private void insertRight( Entry e ) {
 		  count++;
-		  final Entry r = change = new Entry( k, v, random.nextInt() );
+		  final Entry r = change = new Entry( key, value, random.nextInt() );
 
 		  r.left = e;
 		  r.right = e.right;
 
-		  e.succ( false );
+		  RESET_SUCC(e);
 		  e.right = r;
 	 }
 
@@ -294,13 +304,19 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	  */
 	 
 	 private VALUE_TYPE delete( final KEY_TYPE k ) {
-#if #valueclass(Object)
-		  oldValue = null;
-#else
-		  oldValue = defRetValue;
-#endif
+		  oldValue = DEF_RET_VALUE;
 		  change = null;
+		  turnedLeft = turnedRight = false;
+
+		  if ( treap == null ) return DEF_RET_VALUE;
+
 		  treap = deleteRec( k, treap );
+
+		  if ( change != null ) {
+				if ( ! turnedLeft ) lastEntry = change.right;
+				if ( ! turnedRight ) firstEntry = change.left;
+		  }
+
 		  return oldValue;
 	 }
 
@@ -323,10 +339,12 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  
 		  if ( cmp < 0 ) {
 				turnedLeft = true;
+				if ( PRED(e) ) return null;
 				e.left = deleteRec( k, e.left );
 		  }
 		  else if ( cmp > 0 ) {
 				turnedRight = true;
+				if ( SUCC(e) ) return null;
 				e.right = deleteRec( k, e.right );
 		  }
 		  else {
@@ -400,9 +418,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 
     private static final class Entry implements MAP.Entry {
 
-		  final static int SUCC_MASK = 1;
+		  /*		  final static int SUCC_MASK = 1;
 		  final static int PRED_MASK = 2;
-		  final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );
+		  final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );*/
 
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
@@ -507,21 +525,19 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  Entry rotateLeft() {
 				/* Firstly, we save current right pointer and whether it is a successor. */
 				final Entry t = right;
-				final boolean b = succ(); 
 
-				/* Now we link the left subtree of our right subtree as new right subtree. Correspondingly,
-					we set our successor flag following the predecessor flag of our right subtree. */
-				if ( t.pred() ) {
-					 right = t;
-					 succ( true );
-				}
-				else {
-					 right = t.left;
-					 succ( false );
-				}
+				/* Then, if our right subtree has a left subtree, we take it as our
+				new right subtree. In this case, we reset our successor flag. If,
+				however, our right subtree contains a predecessor, we set the
+				subtree as our successor. */
+				if ( PRED(t) ) right = t;
+				else right = t.left;
+
+				if ( PRED(t) ) SET_SUCC( this );
+				else RESET_SUCC( this );
 				
 				t.left = this;
-				t.pred( false );
+				RESET_PRED( t );
 
 				return t;
 		  }
@@ -533,21 +549,19 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  Entry rotateRight() {
 				/* Firstly, we save current left pointer and whether it is a predecessor. */
 				final Entry t = left;
-				final boolean b = pred(); 
 
-				/* Now we link the right subtree of our left subtree as new left subtree. Correspondingly,
-					we set our predecessor flag following the successor flag of our left subtree. */
-				if ( t.succ() ) {
-					 left = t;
-					 pred( true );
-				}
-				else {
-					 left = t.right;
-					 pred( false );
-				}
+				/* Then, if our left subtree has a right subtree, we take it as our
+				new left subtree. In this case, we reset our predecessor flag. If,
+				however, our left subtree contains a successor, we set the
+				subtree as our predecessor. */
+				if ( SUCC(t) ) left = t;
+				else left = t.right;
+
+				if ( SUCC(t) ) SET_PRED( this );
+				else RESET_PRED( this );
 
 				t.right = this;
-				t.succ( false );
+				RESET_SUCC( t );
 
 				return t;
 		  }
@@ -562,9 +576,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  Entry deleteRoot() {
 				Entry t;
 				
-				if ( left == null ) return right;
-				if ( right == null ) return left;
-				if ( left.pri() < right.pri() ) {
+				if ( PRED(this) ) return right;
+				if ( SUCC(this) ) return left;
+				if ( PRI(left) < PRI(right) ) {
 					 t = rotateRight();
 					 t.right = deleteRoot();
 				}
@@ -580,7 +594,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  }
 
 		  public void printDebug(int level) {
-				if ( pred() ) {
+				if ( PRED(this) ) {
 					 for (int i = 0; i < level; i++)
 						  System.err.print("  ");
 					 System.err.println("pred: " + left );
@@ -590,7 +604,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				for (int i = 0; i < level; i++)
 					 System.err.print("  ");
 				System.err.println(key + "=" + value + " (" + mix + ")");
-				if ( succ() ) {
+				if ( SUCC(this) ) {
 					 for (int i = 0; i < level; i++)
 						  System.err.print("  ");
 					 System.err.println("succ: " + right );
@@ -775,12 +789,12 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 				}
 				if ( ! hasNext() ) throw new NoSuchElementException();
 
-				final boolean follow = ! curr.succ();
+				final boolean follow = ! SUCC(curr);
 
 				currIndex++;
 				curr = curr.right;
 
-				if ( curr != null && follow ) while ( curr.left != null && ! curr.pred() ) curr = curr.left;
+				if ( curr != null && follow ) while ( curr.left != null && ! PRED(curr) ) curr = curr.left;
 
 				return curr;
 		  }
@@ -788,12 +802,12 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 		  public Object previous() {
 				if ( ! hasPrevious() ) throw new NoSuchElementException();
 
-				final boolean follow = ! curr.pred();
+				final boolean follow = ! PRED(curr);
 
 				currIndex--;
 				curr = curr.left;
 
-				if ( curr != null && follow ) while ( curr.right != null && ! curr.succ() ) curr = curr.right;
+				if ( curr != null && follow ) while ( curr.right != null && ! SUCC(curr) ) curr = curr.right;
 
 				return curr;
 		  }

@@ -29,8 +29,8 @@ clean:
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f */*/*/*/*Set.java */*/*/*/*Map.java */*/*/*/*Collection.java */*/*/*/*Iterator.java
-	@rm -f */*/*/*/*.c
+	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*Iterator.java
+	@rm -f */*/*/*/*/*.c
 	@rm -fr $(DOCSDIR)/*
 
 
