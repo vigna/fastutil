@@ -1,20 +1,20 @@
 %define section free
 
 Name:           fastutil
-Version:        3.1
-Release:        1jpp
+Version:        3.2
+Release:        1ubi
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-3.1-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-3.2-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
 BuildArch:      noarch
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-
 BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.5, /bin/bash
+BuildRequires:	java-javadoc
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 fastutil provides type-specific maps, sets and lists with a small memory
@@ -27,18 +27,16 @@ bidirectional iterators) that are not available in the standard classes.
 %package        javadoc
 Summary:        Javadoc for %{name}
 Group:          Development/Documentation
-BuildRequires:  java-javadoc
 
 %description    javadoc
 Javadoc for %{name}.
 
-
 %prep
 %setup -q
 
-
 %build
 make sources
+export CLASSPATH=
 ant \
   -Dj2se.apiurl=%{_javadocdir}/java \
   jar javadoc
@@ -78,6 +76,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.2-1ubi
+- Interim release
+
 * Fri Nov 01 2003 Sebastiano Vigna <vigna at acm.org> - 3.1-1jpp
 - Update to 3.1: Several new static containers.
 

@@ -1,4 +1,4 @@
-VERSION=3.1
+VERSION=3.2
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
