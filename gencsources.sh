@@ -54,7 +54,7 @@ for ((f=0; f<3; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
 "#define KEY_NULL (null)\n"\
-"#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
+"#define HASH(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
@@ -62,7 +62,7 @@ for ((f=0; f<3; f++)); do
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
-"#define HASH(x) (x)\n"\
+"#define HASH(x) ((int)x & 0x7FFFFFFF)\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
@@ -131,7 +131,7 @@ for ((f=3; f<8; f++)); do
 "#define ENTRY_GET_KEY getKey\n"\
 "#define TO_KEY_ARRAY toArray\n"\
 "#define KEY_NULL (null)\n"\
-"#define HASH(x) (x == null ? 0 : x.hashCode())\n"\
+"#define HASH(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -140,7 +140,7 @@ for ((f=3; f<8; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
-"#define HASH(x) (x)\n"\
+"#define HASH(x) ((int)x & 0x7FFFFFFF)\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
