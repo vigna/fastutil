@@ -718,7 +718,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after add/remove" );
 		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after add/remove" );
 
-		/* Now we add and remove random data in m and t using addAll on a collection, checking that the result is the same. */
+		/* Now we add random data in m and t using addAll on a collection, checking that the result is the same. */
 
 		for(int i=0; i<n;  i++ ) {
 			int p = r.nextInt() % ( 2 * n + 1 );
@@ -749,7 +749,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			while( t.size() != n ) t.remove( t.size() -1 );
 		}
 
-		/* Now we add and remove random data in m and t using addAll on a type-specific collection, checking that the result is the same. */
+		/* Now we add random data in m and t using addAll on a type-specific collection, checking that the result is the same. */
 
 		for(int i=0; i<n;  i++ ) {
 			int p = r.nextInt() % ( 2 * n + 1 );
@@ -785,7 +785,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			while( t.size() != n ) t.remove( t.size() -1 );
 		}
 
-		/* Now we add and remove random data in m and t using addAll on a list, checking that the result is the same. */
+		/* Now we add random data in m and t using addAll on a list, checking that the result is the same. */
 
 		for(int i=0; i<n;  i++ ) {
 			int p = r.nextInt() % ( 2 * n + 1 );
@@ -814,6 +814,37 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after list addAll" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after list addAll" );
+		}
+
+		/* Now we add random data in m and t using addElements, checking that the result is the same. */
+
+		for(int i=0; i<n;  i++ ) {
+			int p = r.nextInt() % ( 2 * n + 1 );
+			Collection t1 = new java.util.ArrayList();
+			int s = r.nextInt( n / 2 + 1 );
+			KEY_TYPE a[] = new KEY_TYPE [ s ];
+			for( int j = 0; j < s; j++ ) {
+				KEY_TYPE x = genKey();
+				t1.add( KEY2OBJ( x ) );
+				a[ i ] = x;
+			}
+
+			mThrowsOutOfBounds = tThrowsOutOfBounds  = null;
+
+			try {
+				m.addElements(p, a);
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+
+			try {
+				t.add(p, t1);
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + level + ", " + seed + "): list addElements() divergence in IndexOutOfBoundsException for index " + p + " for " + t1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after list addElements" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after list addElements" );
 		}
 
 		if ( m.size() > n ) {
