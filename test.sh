@@ -10,29 +10,28 @@ if [ "$1" != "" ]; then lf=$1; fi
 
 for ((t=1; t<1000; t*=10)); do
 
-    FILE=(OpenHashSet LinkedOpenHashSet RBTreeSet AVLTreeSet)
+    SET=(OpenHashSet LinkedOpenHashSet RBTreeSet AVLTreeSet)
 
-    for ((f=0; f<${#FILE[*]}; f++)); do
+    for ((f=0; f<${#SET[*]}; f++)); do
 	l=${#TYPE[*]}
-	if [[ ${FILE[$f]} != "OpenHashSet" && ${FILE[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi
+	if [[ ${SET[$f]} != "OpenHashSet" && ${SET[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
 	for ((k=1; k<l; k++)); do
-		CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}${FILE[$f]}
+		CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}${SET[$f]}
 		echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
 		java -server $CLASSNAME regressionTest $t $lf
 	done
     done
 
-    FILE=(OpenHashMap LinkedOpenHashMap RBTreeMap AVLTreeMap)
+    MAP=(OpenHashMap LinkedOpenHashMap RBTreeMap AVLTreeMap)
 
-    for ((f=0; f<${#FILE[*]}; f++)); do
-	for ((k=1; k<${#TYPE[*]}; k++)); do
-	    l=${#TYPE[*]}
-	    if [[ ${FILE[$f]} != "OpenHashMap" && ${FILE[$f]} != "LinkedOpenHashMap" ]]; then l=$((l-1)); fi
-		for ((v=1; v<${#TYPE[*]}; v++)); do
-		    CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}
-		    echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
-		    java -server $CLASSNAME regressionTest $t $lf
-		done
+    for ((f=0; f<${#MAP[*]}; f++)); do
+	l=${#TYPE[*]}
+	if [[ ${MAP[$f]} != "OpenHashMap" && ${MAP[$f]} != "LinkedOpenHashMap" ]]; then l=$((l-1)); fi # Only hash maps may have reference keys.
+	for ((k=1; k<l; k++)); do
+	    for ((v=1; v<${#TYPE[*]}; v++)); do
+		CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}
+		echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
+		java -server $CLASSNAME regressionTest $t $lf
 	    done
 	done
     done
