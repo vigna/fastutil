@@ -30,18 +30,37 @@ import java.util.*;
  */
 
 public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST {
+	
+	/** Ensures that the given index is nonnegative and not greater than the list size.
+	 *
+	 * @param index an index.
+	 * @throw IndexOutOfBoundsException if the given index is negative or greater than the list size.
+	 */
+	protected void ensureIndex( final int index ) {
+		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+		if ( index > size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + ( size() ) + ")" );
+		}
+	
+	/** Ensures that the given index is nonnegative and smaller than the list size.
+	 *
+	 * @param index an index.
+	 * @throw IndexOutOfBoundsException if the given index is negative or not smaller than the list size.
+	 */
+	protected void ensureRestrictedIndex( final int index ) {
+		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+		if ( index >= size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than list size (" + ( size() ) + ")" );
+	}
 
-	public void add( int index, KEY_TYPE k ) {
+	public void add( final int index, final KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 
-	public KEY_TYPE set( int index, KEY_TYPE k ) {
+	public KEY_TYPE set( final int index, final KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean addAll( int index, Collection c ) {
-		if ( index > size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size() + ")" );
-		if ( index < 0 ) throw new IndexOutOfBoundsException( "Index (" + index + ") is  size (" + size() + ")" );
+	public boolean addAll( int index, final Collection c ) {
+		ensureIndex( index );
 		int n = c.size();
 		if ( n == 0 ) return false;
 		Iterator i = c.iterator();
@@ -49,40 +68,56 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 		return true;
 	}
 
-	public boolean addAll( Collection c ) {
+	/** Delegates to a more generic method. */
+	public boolean addAll( final int index, COLLECTION c ) {
+		return addAll( index, (Collection)c );
+	}
+
+	/** Delegates to a more generic method. */
+	public boolean addAll( final int index, LIST l ) {
+		return addAll( index, (COLLECTION)l );
+	}
+
+	/** Delegates to a more generic method. */
+	public boolean addAll( final Collection c ) {
 		return addAll( size(), c );
 	}
 
-	public abstract boolean addAll( int index, COLLECTION c ); // jikes bug?
-
-	public boolean addAll( COLLECTION c ) {
+	/** Delegates to a more generic method. */
+	public boolean addAll( final COLLECTION c ) {
 		return addAll( size(), c );
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
+	/** Delegates to a more generic method. */
+	public boolean addAll( final LIST l ) {
+		return addAll( size(), l );
+	}
+
+	/** Delegates to the corresponding type-specific method. */
 	public ListIterator listIterator() {
 		return KEY_LIST_ITERATOR_METHOD();
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public ListIterator listIterator( int index ) {
+	/** Delegates to the corresponding type-specific method. */
+	public ListIterator listIterator( final int index ) {
 		return KEY_LIST_ITERATOR_METHOD( index );
 	}
 
-	/** A commodity method that delegates to the corresponding list-iterator method. */
+	/** Delegates to the corresponding list-iterator method. */
 	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 		return KEY_LIST_ITERATOR_METHOD();
 	}
 
+	/** Delegates to the corresponding list-iterator method. */
 	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD() {
 		return KEY_LIST_ITERATOR_METHOD( 0 );
 	}
 
-	public boolean contains( KEY_TYPE k ) {
+	public boolean contains( final KEY_TYPE k ) {
 		return indexOf( k ) >= 0;
 	}
 
-	public int indexOf( KEY_TYPE k ) {
+	public int indexOf( final KEY_TYPE k ) {
 #if #keyclass(Object)
 		int h = KEY2INT( k );
 #endif
@@ -95,7 +130,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 		return -1;
 	}
 
-	public int lastIndexOf( KEY_TYPE k ) {
+	public int lastIndexOf( final KEY_TYPE k ) {
 #if #keyclass(Object)
 		int h = KEY2INT( k );
 #endif
@@ -108,18 +143,18 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 		return -1;
 	}
 
-	public void size( int size ) {
+	public void size( final int size ) {
 		int i = size();
 		if ( size > i ) while( i++ < size ) add( KEY_NULL );
 		else while( i-- != size ) remove( i );
 	}		
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public List subList( int from, int to ) {
+	/** Delegates to the corresponding type-specific method. */
+	public List subList( final int from, final int to ) {
 		return SUBLIST( from, to );
 	}
 
-	/** Removes elements of this list one-by-one. 
+	/** Removes elements of this type-specific list one-by-one. 
 	 *
 	 * <P>This is a trivial iterator-based implementation. It is expected that
 	 * implementations will override this method with a more optimised version.
@@ -130,9 +165,10 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 	 */
 	
 	public void removeElements( final int from, final int to ) {
-		if ( to > size() ) throw new IndexOutOfBoundsException( "End index (" + to + ") is greater than list size (" + size() + ")" );
+		ensureIndex( to );
 		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( from );
 		int n = to - from;
+		if ( n < 0 ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 		while( n-- != 0 ) {
 			i.NEXT_KEY();
 			i.remove();
@@ -152,23 +188,25 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 	 
 	public void getElements( final int from, final KEY_TYPE a[], int offset, int length ) {
 		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( from );
+		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Start index (" + offset + ") is negative" );
 		if ( offset + length > a.length ) throw new ArrayIndexOutOfBoundsException( "End index (" + ( offset + length ) + ") is greater than array length (" + a.length + ")" );
+		if ( from + length > size() ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than list size (" + size() + ")" );
 		while( length-- != 0 ) a[ offset++ ] = i.NEXT_KEY();
 	}
 
 
-	private boolean valEquals( Object a, Object b ) {
+	private boolean valEquals( final Object a, final Object b ) {
 		return a == null ? b == null : a.equals( b );
 	}
 
-	public boolean equals( Object o ) {
+	public boolean equals( final Object o ) {
 		if ( o == this ) return true;
 		if ( ! ( o instanceof List ) ) return false;
 		final List l = (List)o;
 		int s = size();
 		if ( s != l.size() ) return false;
 
-		ListIterator i1 = listIterator(), i2 = l.listIterator();
+		final ListIterator i1 = listIterator(), i2 = l.listIterator();
 
 #if #keyclass(Reference)
 		while( s-- !=  0 ) if ( i1.next() != i2.next() ) return false;
@@ -180,22 +218,22 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 
 #if ! #keyclass(Reference) && ! #keyclass(Boolean)
     /** Compares this list to another object. If the
-     * argument is a list, this method performs a lexicographical comparison; otherwise,
+     * argument is a {@link java.util.List}, this method performs a lexicographical comparison; otherwise,
      * it throws a <code>ClassCastException</code>.
      *
      * @param o an object.
-     * @return if the argument is a list, a negative integer,
+     * @return if the argument is a {@link java.util.List}, a negative integer,
      * zero, or a positive integer as this list is lexicographically less than, equal
      * to, or greater than the argument.
      * @throws ClassCastException if the argument is not a list.
      */
 
-	public int compareTo( Object o ) {
+	public int compareTo( final Object o ) {
 		if ( o == this ) return 0;
 		if ( o instanceof LIST ) {
-			LIST l = (LIST)o;
+			final LIST l = (LIST)o;
 			
-			KEY_LIST_ITERATOR i1 = KEY_LIST_ITERATOR_METHOD(), i2 = ((LIST)l).KEY_LIST_ITERATOR_METHOD();
+			final KEY_LIST_ITERATOR i1 = KEY_LIST_ITERATOR_METHOD(), i2 = ((LIST)l).KEY_LIST_ITERATOR_METHOD();
 			int r;
 			KEY_TYPE e1, e2;
 			
@@ -223,51 +261,45 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST 
 	 * @return the hash code for this list.
 	 */
 	public int hashCode() {
-		int h = 1;
 		KEY_ITERATOR i = KEY_ITERATOR_METHOD();
-		int s = size();
-#if #keyclass(Object)
-		int t;
+		int h = 1, s = size();
 		while ( s-- != 0 ) {
-			Object o = i.next(); 
-			h = 31 * h + KEY2INT( o );
+			KEY_TYPE k = i.NEXT_KEY(); 
+			h = 31 * h + KEY2INT( k );
 		}
-#else
-		while ( s-- != 0 ) h = 31 * h + KEY2INT( i.NEXT_KEY() );
-#endif
 		return h;
 	}
 
 
 #if ! #keyclass(Object) && ! #keyclass(Reference)
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public void add( int index, Object ok) {
+	/** Delegates to the corresponding type-specific method. */
+	public void add( final int index, final Object ok) {
 		add( index, KEY2TYPE( ok) );
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public Object set( int index, Object ok) {
+	/** Delegates to the corresponding type-specific method. */
+	public Object set( final int index, final Object ok) {
 		return KEY2OBJ( set( index, KEY2TYPE( ok) ) );
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public Object get( int index ) {
+	/** Delegates to the corresponding type-specific method. */
+	public Object get( final int index ) {
 		return KEY2OBJ( GET_KEY( index ) );
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public int indexOf( Object ok) {
+	/** Delegates to the corresponding type-specific method. */
+	public int indexOf( final Object ok) {
 		return indexOf( KEY2TYPE( ok) );
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public int lastIndexOf( Object ok ) {
+	/** Delegates to the corresponding type-specific method. */
+	public int lastIndexOf( final Object ok ) {
 		return lastIndexOf( KEY2TYPE( ok) );
 	}
 
-	/** A commodity method that delegates to the corresponding type-specific method. */
-	public Object remove( int index ) {
+	/** Delegates to the corresponding type-specific method. */
+	public Object remove( final int index ) {
 		return KEY2OBJ( REMOVE_KEY( index ) );
 	}
 

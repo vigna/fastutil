@@ -30,7 +30,7 @@ explain:
 	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
 
 jar: jsources
-	export ANT_OPTS="-Xmx192M -Xms192M"
+	export ANT_OPTS="-Xmx128M -Xms128M"
 	ant jar
 
 bin: jar docs
@@ -84,7 +84,7 @@ docs: jsources
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java java/overview.html
+	etags build.xml Makefile README gencsources.sh *.drv java/overview.html $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java
 
 
 .h.j:

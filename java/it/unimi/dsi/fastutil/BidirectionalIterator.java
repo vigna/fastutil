@@ -22,12 +22,13 @@
 package it.unimi.dsi.fastutil;
 
 import java.util.Iterator;
+import java.util.ListIterator;
 
 /** A bidirectional {@link Iterator}.
  *
- * <P>This kind of iterator is esssentially a {@link java.util.ListIterator} that
- * does not support {@link java.util.ListIterator#previousIndex()} and {@link
- * java.util.ListIterator#nextIndex()}. It is useful for those maps that can easily
+ * <P>This kind of iterator is esssentially a {@link ListIterator} that
+ * does not support {@link ListIterator#previousIndex()} and {@link
+ * ListIterator#nextIndex()}. It is useful for those maps that can easily
  * provide bidirectional iteration, but provide no index.
  *
  * <P>Note that iterators returned by <code>fastutil</code> classes are more
@@ -43,7 +44,7 @@ public interface BidirectionalIterator extends Iterator {
 	/** Returns the previous element from the collection.
 	 *
 	 * @return the previous element from the collection.
-	 * @see ListIterator#previous()
+	 * @see java.util.ListIterator#previous()
 	 */
 
 	Object previous();
@@ -51,7 +52,7 @@ public interface BidirectionalIterator extends Iterator {
 	/** Returns whether there is a previous element.
 	 *
 	 * @return whether there is a previous element.
-	 * @see ListIterator#hasPrevious()
+	 * @see java.util.ListIterator#hasPrevious()
 	 */
 
 	boolean hasPrevious();

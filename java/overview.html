@@ -7,7 +7,7 @@
   <body>
 
 	 <P>Provides type-specific maps and sets with a small memory footprint and
-	 much (up to 10 times) faster access and insertion. It is <A
+	 much faster access and insertion. It is <A
 	 HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
 	 distributed under the <A
 	 HREF="http://www.gnu.org/copyleft/lesser.html"><ACRONYM TITLE="GNU's not
@@ -18,27 +18,31 @@
       type-specific lists required a tweak in the naming scheme: the
       type-specific version of {@link java.util.Collection#remove(Object)} for
       integers is now named {@link
-      it.unimi.dsi.fastutil.IntCollection#rem(int)}. The only really unpleasant
+      it.unimi.dsi.fastutil.ints.IntCollection#rem(int)}. The only really unpleasant
       effect is that you must use {@link
-      it.unimi.dsi.fastutil.IntCollection#rem(int) rem(int)} on variables of
-      type {@link it.unimi.dsi.fastutil.IntCollection} that are not of type
-      {@link it.unimi.dsi.fastutil.IntSet} (as {@link
-      it.unimi.dsi.fastutil.IntSet} reinstates {@link
-      it.unimi.dsi.fastutil.IntSet#remove(int) remove(int)} in its right
-      place)--for instance, {@link it.unimi.dsi.fastutil#IntList}.  We are
+      it.unimi.dsi.fastutil.ints.IntCollection#rem(int) rem(int)} on variables of
+      type {@link it.unimi.dsi.fastutil.ints.IntCollection} that are not of type
+      {@link it.unimi.dsi.fastutil.ints.IntSet} (as {@link
+      it.unimi.dsi.fastutil.ints.IntSet} reinstates {@link
+      it.unimi.dsi.fastutil.ints.IntSet#remove(int) remove(int)} in its right
+      place)&mdash;for instance, {@link it.unimi.dsi.fastutil.ints.IntList}.  We are
       sorry for this inconvenience, but there was no other way to work around
       the problem.
 
+	<P>The huge number of classes, moreover, required a division in
+	subpackages. Each subpackage contains classes with a given type of keys
+	or elements.
+
 	<P>As of 2.60, there was a major overhaul of iterators. Now iterators
 	must be skippable, so previous implementation of type-specific iterator
-	interfaces (e.g., {@link it.unimi.dsi.fastutil.IntIterator}) will not
+	interfaces (e.g., {@link it.unimi.dsi.fastutil.ints.IntIterator}) will not
 	work. However, new abstract classes allow to build iterator with ease
 	by providing for free the skipping logic, and many useful static
 	methods in Iterators allow to generate type-specific iterators wrapping
 	standard iterators, arrays, etc. Moreover, the name of abstract
 	classes always start with <samp>Abstract</samp> (so what was an
 	<samp>IntAbstractComparator</samp> is now an {@link
-	it.unimi.dsi.fastutil.AbstractIntComparator}). Please read the section
+	it.unimi.dsi.fastutil.ints.AbstractIntComparator}). Please read the section
 	about iterators and comparators.
 
 	<P>As of 2.52, the package name has changed from
@@ -77,10 +81,11 @@
 	 <p>for maps. Presently, the possible values for
 	 <var>collectiontype</var> are <code>OpenHashSet</code>,
 	 <code>LinkedOpenHashSet</code>, <code>AVLTreeSet</code>,
-	 <code>RBTreeSet</code> and <code>ArrayList</code>; correspondingly,
-	 you can use <code>OpenHashMap</code>, <code>LinkedOpenHashMap</code>,
-	 <code>AVLTreeMap</code> and <code>RBTreeMap</code> for
-	 <var>maptype</var>.
+	 <code>RBTreeSet</code> and <code>ArrayList</code>, and the possible
+	 values for <var>maptype</var> are <code>OpenHashMap</code>,
+	 <code>LinkedOpenHashMap</code>, <code>AVLTreeMap</code> and
+	 <code>RBTreeMap</code> (of course, there are also corresponding interfaces,
+	 which can be obtained in the obvious way).
 
          <P>By "type" here I mean a capitalised primitive type, {@link
          java.lang.Object} or <code>Reference</code>. In the latter case, we
@@ -89,22 +94,34 @@
          to {@link java.util.IdentityHashMap}. Of course, reference-based
          maps and sets are significantly faster.</p>
 
-	 <P>Thus, an {@link it.unimi.dsi.fastutil.IntOpenHashSet} stores
+	 <P>Thus, an {@link it.unimi.dsi.fastutil.ints.IntOpenHashSet} stores
 	 integers efficiently, whereas a {@link
-	 it.unimi.dsi.fastutil.Long2IntAVLTreeMap} does the same for maps from
+	 it.unimi.dsi.fastutil.longs.Long2IntAVLTreeMap} does the same for maps from
 	 longs to integers (but the map will be sorted, tree based, and
 	 balanced using the AVL criterion). A {@link
-	 it.unimi.dsi.fastutil.LongLinkedOpenHashSet} stores longs in a hash
+	 it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet} stores longs in a hash
 	 table, but provides a predictable iteration order (the insertion
 	 order) and access to first/last elements of the order. A {@link
-	 it.unimi.dsi.fastutil.Reference2ReferenceOpenHashMap} is similar to an
+	 it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap} is similar to an
 	 {@link java.util.IdentityHashMap}.
 	 
 	 <p>Since there are eight primitive types in Java, and we support
-	 reference-based containers, we get 763 (!) classes (some nonsensical
+	 reference-based containers, we get 803 (!) classes (some nonsensical
 	 classes, such as <code>Boolean2BooleanAVLTreeMap</code>, are not
 	 generated). Many classes are generated just to mimic the hierarchy of
 	 {@link java.util} so to redistribute common code in a similar way.</p>
+
+    	 <p>The huge number of classes required a suitable division in
+    	 subpackages (more than anything else, to avoid crashing browsers with
+    	 a preposterous package summary). Each subpackage is characterised by
+    	 the type of elements or keys: thus, for instance {@link
+    	 it.unimi.dsi.fastutil.ints.IntSet} belongs to {@link
+    	 it.unimi.dsi.fastutil.ints} (the plural is required, as
+    	 <code>int</code> is a keyword and cannot be used in a package
+    	 name), as well as {@link
+    	 it.unimi.dsi.fastutil.ints.Int2ReferenceRBTreeMap}. Note that all classes for non-primitive elements and keys are
+    	 gathered in {@link it.unimi.dsi.fastutil.objects}.
+
 
 	 <p><strong>All classes are not synchronised</strong>. If multiple threads access one
 	 of these classes concurrently, and at least one of the threads modifies it,
@@ -135,8 +152,8 @@
 	 lessen the tedious "type juggling" that is well known to Java
 	 programmers. In doing so, they implement more stringent interfaces that
 	 extend the standard ones (e.g., {@link
-	 it.unimi.dsi.fastutil.Int2IntSortedMap} or {@link
-	 it.unimi.dsi.fastutil.IntListIterator}).</p>
+	 it.unimi.dsi.fastutil.ints.Int2IntSortedMap} or {@link
+	 it.unimi.dsi.fastutil.ints.IntListIterator}).</p>
 	 
 	 <h3>Additional Features and Methods</h3>
 
@@ -154,9 +171,9 @@
 		
 		<LI>Keys and values of a map are of the <code>fastutil</code> type you
 		would expect (e.g., the keys of an {@link
-		it.unimi.dsi.fastutil.Int2LongSortedMap} are an {@link
-		it.unimi.dsi.fastutil.IntSortedSet} and the values are a {@link
-		it.unimi.dsi.fastutil.LongCollection}), but you must explicitly cast the
+		it.unimi.dsi.fastutil.ints.Int2LongSortedMap} are an {@link
+		it.unimi.dsi.fastutil.ints.IntSortedSet} and the values are a {@link
+		it.unimi.dsi.fastutil.longs.LongCollection}), but you must explicitly cast the
 		objects returned by {@link java.util.Map#keySet() keySet()} and {@link
 		java.util.Map#values() values()} to the appropriate type.
 
@@ -167,15 +184,15 @@
 		the right type-specific interface. However, if you use extended
 		interfaces and keys are not objects, then there are new methods accepting
 		primitive keys and returning a type-specific sorted structure directly
-		(see, e.g., {@link it.unimi.dsi.fastutil.Int2IntSortedMap}).
+		(see, e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntSortedMap}).
 
 		<LI>Iterators returned by {@link java.util.Set#iterator()
 		iterator()} can be cast to the obvious type (e.g., {@link
-		it.unimi.dsi.fastutil.CharIterator} for a {@link
-		it.unimi.dsi.fastutil.CharSet}), too. There is also an
+		it.unimi.dsi.fastutil.chars.CharIterator} for a {@link
+		it.unimi.dsi.fastutil.chars.CharSet}), too. There is also an
 		additional method returning directly a type-specific iterator
 		(see, e.g., {@link
-		it.unimi.dsi.fastutil.IntCollection#intIterator()
+		it.unimi.dsi.fastutil.ints.IntCollection#intIterator()
 		intIterator()}). See below for more information on
 		<code>fastutil</code> iterators.
 
@@ -187,7 +204,7 @@
 		result of a call to {@link java.util.Set#iterator() iterator()}
 		to {@link it.unimi.dsi.fastutil.BidirectionalIterator} or, even
 		better, to a type-specific bidirectional iterator such as
-		{@link it.unimi.dsi.fastutil.IntBidirectionalIterator}. Note that
+		{@link it.unimi.dsi.fastutil.ints.IntBidirectionalIterator}. Note that
 		sometimes the return value is explicitly marked to be castable
 		to an even more powerful type-specific {@linkplain
 		java.util.ListIterator list iterator}.
@@ -196,7 +213,7 @@
 		method <code>iterator(from)</code> which creates a type-specific {@link
 		it.unimi.dsi.fastutil.BidirectionalIterator} starting from a given
 		element of the domain (not necessarily in the set). See, for instance,
-		{@link it.unimi.dsi.fastutil.IntSortedSet#iterator(int)}. The method is
+		{@link it.unimi.dsi.fastutil.ints.IntSortedSet#iterator(int)}. The method is
 		implemented by all type-specific sorted sets and subsets.
 
 		<LI>Finally, there are constructors that allow you to build easily a set
@@ -222,7 +239,7 @@
 		return type (<code>false</code> for booleans) at creation, but
 		can be changed using the <code>defaultReturnValue()</code>
 		method (see, e.g., {@link
-		it.unimi.dsi.fastutil.Int2IntMap}). Note that changing the
+		it.unimi.dsi.fastutil.ints.Int2IntMap}). Note that changing the
 		default return value does not change anything about the data
 		structure; it is just a way to return a reasonably meaningful
 		result&mdash;it can be changed at any time. As a commodity,
@@ -232,36 +249,6 @@
 		submap or subset has an independent default return value (which
 		however is initialised to the default return value of the
 		originator).</li>
-
-		<LI>Similarly, all iterators have a suitable method
-		<code>next<var>type</var>()</code> returning directly a primitive type.
-		And, of course, you have a type-specific version of {@link
-		java.util.ListIterator#previous() previous()}.
-
-		<li>A name clash between the list and collection interfaces
-		forces the deletion method of an {@link
-		it.unimi.dsi.fastutil.IntCollection} to be named {@link
-		it.unimi.dsi.fastutil.IntCollection#rem(int)}. At the risk of
-		creating some confusion, as a commodity set
-		<em>implementations</em> actually provide also
-		<code>remove(int)</code>, which means that, for instance, if
-		you declare a variable of type {@link
-		it.unimi.dsi.fastutil.IntOpenHashSet} you can invoke {@link
-		it.unimi.dsi.fastutil.IntOpenHashSet#remove(int)} on it, albeit
-		this would not be true of a variable of type {@link
-		it.unimi.dsi.fastutil.IntCollection} that contains an {@link
-		it.unimi.dsi.fastutil.IntOpenHashSet} or an {@link
-		it.unimi.dsi.fastutil.IntArrayList}.
-	
-		<li>There are type-specific versions of {@link java.util.Comparator} that
-		require specifying both a type-specific comparator and an object-based
-		one; this is necessary as the type-specific version must implement {@link
-		java.util.Comparator}. However, to simplify the creation of type-specific
-		comparators there are abstract type-specific comparator classes that
-		implement an object-based comparator wrapping the (abstract)
-		type-specific one; thus, if you need to create a type-specific comparator
-		you just have to inherit from those classes and define the type-specific
-		method.
 
 		<li>For all maps that have object as keys, the {@link
 		java.util.Map#get(Object) get()} and {@link
@@ -273,10 +260,39 @@
 		occur with <code>firstKey()</code>, <code>lastKey()</code>,
 		<code>indexOf()</code> and so on.</li>
 
+		<LI>Similarly, all iterators have a suitable method
+		<code>next<var>type</var>()</code> returning directly a primitive type.
+		And, of course, you have a type-specific version of {@link
+		java.util.ListIterator#previous() previous()}.
+
 		<li>For the same reason, the method {@link java.util.Collection#toArray}
 		has a polymorphic version accepting a type-specific array, but there are
 		also explicitly typed methods
 		<code>to<var>keytype</var>Array()</code>.</li>
+
+		<li>A name clash between the list and collection interfaces
+		forces the deletion method of an {@link
+		it.unimi.dsi.fastutil.ints.IntCollection} to be named {@link
+		it.unimi.dsi.fastutil.ints.IntCollection#rem(int)}. At the risk
+		of creating some confusion, {@link
+		it.unimi.dsi.fastutil.ints.IntSet#remove(int)} is reintroduced
+		in the {@link it.unimi.dsi.fastutil.ints.IntSet} interface, so
+		the only really unpleasant effect is that you must use {@link
+		it.unimi.dsi.fastutil.ints.IntCollection#rem(int) rem(int)} on
+		variables of type {@link
+		it.unimi.dsi.fastutil.ints.IntCollection} that are not of type
+		{@link it.unimi.dsi.fastutil.ints.IntSet}&mdash;for instance,
+		{@link it.unimi.dsi.fastutil.ints.IntList}.
+
+		<li>There are type-specific versions of {@link java.util.Comparator} that
+		require specifying both a type-specific comparator and an object-based
+		one; this is necessary as the type-specific version must implement {@link
+		java.util.Comparator}. However, to simplify the creation of type-specific
+		comparators there are abstract type-specific comparator classes that
+		implement an object-based comparator wrapping the (abstract)
+		type-specific one; thus, if you need to create a type-specific comparator
+		you just have to inherit from those classes and define the type-specific
+		method.
 
 	 </ul>
 
@@ -285,32 +301,46 @@
     	 <P><code>fastutil</code> provides type-specific iterators and
     	 comparators. The interface of a <code>fastutil</code> iterator is
     	 slightly more powerful than that of a {@link java.util} iterator, as
-    	 it contains a {@link it.unimi.dsi.fastutil.ObjectIterator#skip(int)
+    	 it contains a {@link it.unimi.dsi.fastutil.objects.ObjectIterator#skip(int)
     	 skip()} method that allows to skip over a list of elements (an
     	 {@linkplain
-    	 it.unimi.dsi.fastutil.ObjectBidirectionalIterator#back(int) analogous
+    	 it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator#back(int) analogous
     	 method} is provided for bidirectional iterators). For objects (even
     	 those managed by reference), the extended interface is named {@link
-    	 it.unimi.dsi.fastutil.ObjectIterator}; it is the return type, for
+    	 it.unimi.dsi.fastutil.objects.ObjectIterator}; it is the return type, for
     	 instance, of {@link
-    	 it.unimi.dsi.fastutil.ObjectCollection#objectIterator()}.
+    	 it.unimi.dsi.fastutil.objects.ObjectCollection#objectIterator()}.
       
       	 <code>fastutil</code> provides also classes and methods that makes it
       	 easy to create type-specific iterators. There are abstract versions of
       	 each type-specific iterator and comparator that implement in the
       	 obvious way some of the methods (see, e.g., {@link
-      	 it.unimi.dsi.fastutil.AbstractIntIterator} or {@link
-      	 it.unimi.dsi.fastutil.AbstractIntComparator}).
+      	 it.unimi.dsi.fastutil.ints.AbstractIntIterator} or {@link
+      	 it.unimi.dsi.fastutil.ints.AbstractIntComparator}).
 
       	<P>A plethora of useful static methods is also provided by {@link
       	it.unimi.dsi.fastutil.Iterators}: among other things, you can
       	{@linkplain it.unimi.dsi.fastutil.Iterators#wrap(int[]) wrap arrays}
       	and {@linkplain
       	it.unimi.dsi.fastutil.Iterators#asIntIterator(java.util.Iterator)
-      	standard iterators} in type-specific iterators, generate them giving an
-      	interval of elements to be returned, and {@linkplain
+      	standard iterators} in type-specific iterators, {@linkplain
+      it.unimi.dsi.fastutil.Iterators#fromTo(int,int) generate them} giving an
+      	interval of elements to be returned, {@linkplain
       	it.unimi.dsi.fastutil.Iterators#concat(ObjectIterator[]) concatenate
-      	them}.
+      	them} or  {@linkplain
+      	it.unimi.dsi.fastutil.Iterators#pour(Iterator,ObjectSet) pour
+      	them} in a set.
+
+      <h2>Abstract Classes</h2>
+
+      <p><code>fastutil</code> provides a wide range of abstract classes, to
+      help in implementing its iterfaces. They take care, for instance, of
+      providing wrappers for non-type-specific method calls, so that you have to
+      write just the (usually simpler) type-specific version. As we already
+      remarked, this is true even of
+      iterators and comparators.
+
+
       
 	 <h2>Performance</h2>
 	 
@@ -411,15 +441,13 @@
 	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. Primes in {@link
 	 it.unimi.dsi.fastutil.Hash#PRIMES} are roughly multiplicatively spaced by
 	 2<sup>1/16</sup>, so you lose on average about 2% with respect to
-	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. When the table is filled up beyond the load
-	 factor, it is rehashed to a roughly doubled size.
+	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. 
 
-      	 <p>Of course, if you do not know in advance the final size of your
-      	 table, the size has to grow. The growth behaviour is controlled by the
-      	 <em>growth factor</em>, which can be set at any time. By default, the
-      	 table size is doubled (for more information, see {@link
-	 it.unimi.dsi.fastutil.IntOpenHashSet}), but you can trade speed for
-         memory occupancy by setting a slower growth rate.
+    <P>When the table is filled up beyond the load factor, it is rehashed to a
+    larger size. The growth is controlled by the <em>growth factor</em>, which
+    can be set at any time. By default, the table size is doubled (for more
+    information, see {@link it.unimi.dsi.fastutil.ints.IntOpenHashSet}), but
+    you can trade speed for memory occupancy by setting a slower growth rate.
 
       	 <p>In the case of linked hash tables, there is an additional vector of
       	 <var>p</var> integers that is used to store link information. Each

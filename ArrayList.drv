@@ -25,28 +25,24 @@ import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.Iterators;
 
 import java.util.*;
-import java.util.ArrayList;
 
 /** A type-specific {@link ArrayList}; provides some additional methods that use polymorphism to reduce type juggling. 
  *
- * <P>Instances of this class use an array to represent a list. The array is
- * enlarged as needed when new entries are created (by dividing the current
- * length by the golden ratio), but is <em>never</em> made smaller (even on a
- * {@link #clear()}). A family of {@linkplain #trim() trimming methods} lets
- * you control the size of the array; this is particularly useful if you reuse
- * instances of this class.
+ * <P>This class implements a lightweight, fast, open, optimised,
+ * reuse-oriented version of array-based lists. Instances of this class
+ * represent a list with an array that is enlarged as needed when new entries
+ * are created (by dividing the current length by the golden ratio), but is
+ * <em>never</em> made smaller (even on a {@link #clear()}). A family of
+ * {@linkplain #trim() trimming methods} lets you control the size of the
+ * backing array; this is particularly useful if you reuse instances of this class.
+ * Range checks are equivalent to those of {@link java.util}'s classes, but
+ * they are delayed as much as possible. The backing array is exposed by the
+ * {@link #elements()} method.
  *
- * <P>This class implements a lightweight, fast, open, optimised, reuse-oriented
- * version of array-based lists.  Range checks are equivalent to those of
- * {@link java.util}'s classes, but they are delayed as much as possible. The backing array is 
- * exposed by the {@link #elements()} method.
- *
- * <p>This class implement the bulk-copy list interface, and the same happens
- * for sublists, so that operation like inserting into an array, appending and
- * so on are always performed using high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int)} System.arraycopy()) instead
- * of expensive loops. However, as usual, you must manually cast sublists to
- * the type-specific bulk-copy list interface.
+ * <p>This class implements the bulk methods <code>removeElements()</code>
+ * and <code>getElements()</code> using high-performance system calls (e.g., {@link
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead
+ * of expensive loops.
  *
  * @see ArrayList
  */
@@ -62,7 +58,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	/** The backing array. */
 	protected transient KEY_TYPE a[];
 
-	/** The current actual size of the array (never greater than the backing array length). */
+	/** The current actual size of the list (never greater than the backing-array length). */
 	protected int size;
 
 	public static final long serialVersionUID = -7046029254386353130L;
@@ -86,7 +82,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 */
 
 	public ARRAY_LIST( final int capacity ) {
-		if ( capacity < 0 ) throw new IllegalArgumentException( "Array-list initial capacity must be nonnegative" );
+		if ( capacity < 0 ) throw new IllegalArgumentException( "Initial capacity (" + capacity + ") is negative" );
 
 		a = new KEY_TYPE[ capacity ];
 	}
@@ -118,9 +114,9 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		size = Iterators.unwrap( c.KEY_ITERATOR_METHOD(), a );
 	}
 
-	/** Creates a new array list and fills it with a given bulk-copy list.
+	/** Creates a new array list and fills it with a given type-specific list.
 	 *
-	 * @param l a bulk-copy list that will be used to fill the array list.
+	 * @param l a type-specific list that will be used to fill the array list.
 	 */
 	 
 	public ARRAY_LIST( final LIST l ) {
@@ -234,7 +230,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 	public void add( final int index, final KEY_TYPE k ) {
-		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
+		ensureIndex( index );
 		enlarge( size + 1 );
 		if ( index != size ) System.arraycopy( a, index, a, index + 1, size - index );
 		a[ index ] = k;
@@ -250,8 +246,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 	public boolean addAll( int index, final COLLECTION c ) {
-		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
-		if ( index < 0 ) throw new IndexOutOfBoundsException( "Index (" + index + ") is  size (" + size + ")" );
+		ensureIndex( index );
 		int n = c.size();
 		if ( n == 0 ) return false;
 		enlarge( size + n );
@@ -263,9 +258,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return true;
 	}
 
-	public boolean addAll( int index, final LIST l ) {
-		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
-		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+	public boolean addAll( final int index, final LIST l ) {
+		ensureIndex( index );
 		final int n = l.size();
 		if ( n == 0 ) return false;
 		enlarge( size + n );
@@ -281,11 +275,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 	public KEY_TYPE GET_KEY( final int index ) {
-		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + size + ")" );
+		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		return a[ index ];
 	}
 
-	public int indexOf( KEY_TYPE k ) {
+	public int indexOf( final KEY_TYPE k ) {
 #if #keyclass(Object)
 		int h = KEY2INT( k );
 #endif
@@ -294,7 +288,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 
-	public int lastIndexOf( KEY_TYPE k ) {
+	public int lastIndexOf( final KEY_TYPE k ) {
 #if #keyclass(Object)
 		int h = KEY2INT( k );
 #endif
@@ -303,9 +297,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return -1;
 	}
 
-	public KEY_TYPE REMOVE_KEY( int index ) {
-		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + size + ")" );
-
+	public KEY_TYPE REMOVE_KEY( final int index ) {
+		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		final KEY_TYPE old = a[ index ];
 		size--;
 		if ( index != size ) System.arraycopy( a, index + 1, a, index, size - index );
@@ -316,7 +309,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return old;
 	}
 
-	public boolean REMOVE( KEY_TYPE k ) {
+	public boolean REMOVE( final KEY_TYPE k ) {
 		int index = indexOf( k );
 		if ( index == -1 ) return false;
 		REMOVE_KEY( index );
@@ -324,9 +317,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return true;
 	}
 
-	public KEY_TYPE set( int index, KEY_TYPE k ) {
-		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + size + ")" );
-
+	public KEY_TYPE set( final int index, final KEY_TYPE k ) {
+		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		KEY_TYPE old = a[ index ];
 		a[ index ] = k;
 		return old;
@@ -345,9 +337,12 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return size;
 	}		
 
-	public void size( int size ) {
+	public void size( final int size ) {
 		if ( size > a.length ) ensureCapacity( size );
 		if ( size > this.size ) for( int i = this.size; i < size; i++ ) a[ i ] = KEY_NULL;
+#if #keyclass(Object) || #keyclass(Reference)
+		else for( int i = this.size; i >= size; i-- ) a[ i ] = KEY_NULL;
+#endif
 		this.size = size;
 	}		
 
@@ -363,27 +358,47 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		trim( 0 );
 	}
 
-	/** Trims this array list so that the capacity is equal to maximum between the size and the provided capacity.
+	/** Trims the backing array if it is too large.
+	 * 
+	 * If the current array length is smaller than or equal to
+	 * <var>n</var>, or if the number of elements is larger than 
+	 * <code>n</code>, this method does nothing. Otherwise, it trims the
+	 * array length to <code>n</code>.
 	 *
-	 * @param capacity the trimmed array will have at least this capacity.
+	 * @param n the threshold for the trimming.
 	 */
 
-	public void trim( int capacity ) {
-		KEY_TYPE t[] = new KEY_TYPE[ Math.max( capacity, size )  ];
+	public void trim( int n ) {
+		if ( n >= a.length || n < size ) return;
+		KEY_TYPE t[] = new KEY_TYPE[ Math.max( n, size )  ];
 		System.arraycopy( a, 0, t, 0, size );
 		a = t;
 		if ( asserts ) assert size <= a.length;
 	}
 
-	
+
+   	/** Copies element of this type-specific list into the given array using optimised system calls.
+	 *
+	 * @param from the start index (inclusive).
+	 * @param a the destination array.
+	 * @param offset the offset into the destination array where to store the first element copied.
+	 * @param length the number of elements to be copied.
+	 */
+
 	public void getElements( int from, KEY_TYPE[] a, int offset, int length ) {
-		if ( from + length > size ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than size (" + size + ")" );
+		if ( from + length > size ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than list size (" + size + ")" );
 		System.arraycopy( this.a, from, a, offset, length );
 	}
 
+	/** Removes elements of this type-specific list using optimised system calls.
+	 *
+	 * @param from the start index (inclusive).
+	 * @param to the end index (exclusive).
+	 */
 	public void removeElements( final int from, final int to ) {
-		if ( from > size ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than size (" + size + ")" );
-		if ( to > size ) throw new IndexOutOfBoundsException( "End index (" + to + ") is greater than size (" + size + ")" );
+		if ( from > size ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than list size (" + size + ")" );
+		if ( to > size ) throw new IndexOutOfBoundsException( "End index (" + to + ") is greater than list size (" + size + ")" );
+		if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 		System.arraycopy( a, to, a, from, size - to );
 		size -= ( to - from );
 #if #keyclass(Object) || #keyclass(Reference)
@@ -403,8 +418,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 #endif
 
 	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
-		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
-		if ( index > size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size + ")" );
+		ensureIndex( index );
 
 		return new KEY_ABSTRACT_LIST_ITERATOR() {
 				int pos = index, last = -1;
@@ -435,9 +449,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 
-	private class SubList extends ABSTRACT_LIST implements RandomAccess, Cloneable, java.io.Serializable {
-		private LIST l; // The list this sublist restricts.
-		private int from, to; // Initial (inclusive) and final (exclusive) indices of this sublist.
+	private class SubList extends ABSTRACT_LIST implements RandomAccess, java.io.Serializable {
+		private final LIST l; // The list this sublist restricts.
+		private final int from; // Initial (inclusive) index of this sublist.
+		private int to; //  Final (exclusive) index of this sublist.
 
 		public SubList( final LIST l, final int from, final int to ) {
 			this.l = l;
@@ -445,47 +460,43 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			this.to = to;
 		}
 
-		private void checkIndex( final int index ) {
-			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
-			if ( index > size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to size (" + ( size() ) + ")" );
-		}
-
-		private void checkRestrictedIndex( final int index ) {
-			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
-			if ( index >= size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + ( size() ) + ")" );
-		}
-
-		public boolean add( KEY_TYPE k ) {
+		public boolean add( final KEY_TYPE k ) {
 			l.add( to, k );
 			to++;
 			return true;
 		}
 
-		public void add( int index, KEY_TYPE k ) {
-			checkIndex( index );
+		public void add( final int index, final KEY_TYPE k ) {
+			ensureIndex( index );
 			l.add( from + index, k );
 			to++;
 		}
 
-		public boolean addAll( int index, final COLLECTION c ) {
-			checkIndex( index );
+		public boolean addAll( final int index, final Collection c ) {
+			ensureIndex( index );
 			to += c.size();
 			return l.addAll( from + index, c );
 		}
 
-		public boolean addAll( int index, final LIST l ) {
-			checkIndex( index );
+		public boolean addAll( final int index, final COLLECTION c ) {
+			ensureIndex( index );
+			to += c.size();
+			return l.addAll( from + index, c );
+		}
+
+		public boolean addAll( final int index, final LIST l ) {
+			ensureIndex( index );
 			to += l.size();
 			return l.addAll( from + index, l );
 		}
 
 		public KEY_TYPE GET_KEY( int index ) {
-			checkRestrictedIndex( index );
+			ensureRestrictedIndex( index );
 			return l.GET_KEY( from + index );
 		}
 
 		public KEY_TYPE REMOVE_KEY( int index ) {
-			checkRestrictedIndex( index );
+			ensureRestrictedIndex( index );
 			to--;
 			return l.REMOVE_KEY( from + index );
 		}
@@ -500,7 +511,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		}
 
 		public KEY_TYPE set( int index, KEY_TYPE k ) {
-			checkRestrictedIndex( index );
+			ensureRestrictedIndex( index );
 			return l.set( from + index, k );
 		}
 
@@ -514,21 +525,20 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 
 		
 		public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
-			checkIndex( from );
-			if ( this.from + from + length > to )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than size (" + size() + ")" );
+			ensureIndex( from );
+			if ( from + length > size() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + size() + ")" );
 			l.getElements( this.from + from, a, offset, length );
 		}
 
 		public void removeElements( final int from, final int to ) {
-			checkIndex( from );
-			checkIndex( to );
+			ensureIndex( from );
+			ensureIndex( to );
 			l.removeElements( this.from + from, this.from + to );
 			this.to -= ( to - from );
 		}
 
 		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
-			if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
-			if ( index > size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than size (" + size() + ")" );
+			ensureIndex( index );
 
 			return new KEY_ABSTRACT_LIST_ITERATOR() {
 					int pos = index, last = -1;
@@ -559,29 +569,19 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		}
 
 		public LIST SUBLIST( final int from, final int to ) {
-			if ( from > size() ) throw new IndexOutOfBoundsException( "Starting index (" + from + ") is greater than size (" + size() + ")" );
-			if ( to > size() ) throw new IndexOutOfBoundsException( "Ending index (" + to + ") is greater than size (" + size() + ")" );
-			if ( from > to ) throw new IndexOutOfBoundsException( "Starting Index (" + from + ") is greater than ending index (" + to + ")" );
+			ensureIndex( from );
+			ensureIndex( to );
+			if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 			
 			return new SubList( this, from, to );
 		}
 
-		/** Return a shallow copy of this array list (the entries are not copied).
-		 *
-		 * @return a shallow copy of this array list.
-		 */
-		public Object clone() {
-			ARRAY_LIST c = new ARRAY_LIST( size() );
-			l.getElements( from, c.a, 0, size() );
-			c.size = size();
-			return c;
-		}
 	}
 
 	public LIST SUBLIST( final int from, final int to ) {
-		if ( from > size ) throw new IndexOutOfBoundsException( "Starting index (" + from + ") is greater than size (" + size + ")" );
-		if ( to > size ) throw new IndexOutOfBoundsException( "Ending index (" + to + ") is greater than size (" + size + ")" );
-		if ( from > to ) throw new IndexOutOfBoundsException( "Starting Index (" + from + ") is greater than ending index (" + to + ")" );
+		ensureIndex( from );
+		ensureIndex( to );
+		if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 
 		return new SubList( this, from, to );
 	}
@@ -593,11 +593,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return c;
 	}
 
-	private boolean valEquals( Object a, Object b ) {
+	private boolean valEquals( final Object a, final Object b ) {
 		return a == null ? b == null : a.equals( b );
 	}
 
-	public boolean equals( ARRAY_LIST l ) {
+	public boolean equals( final ARRAY_LIST l ) {
 		if ( l == this ) return true;
 		int s = size();
 		if ( s != l.size() ) return false;
@@ -611,6 +611,23 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 #endif
 		return true;
 	}
+
+
+#if ! #keyclass(Reference) && ! #keyclass(Boolean)
+
+	public int compareTo( final ARRAY_LIST l ) {
+		final int s1 = size(), s2 = l.size();
+		final KEY_TYPE a1[] = a, a2[] = l.a;
+		int r, i1 = 0, i2 = 0;
+		
+		while( i1 < s1 && i2 < s2 ) {
+			if ( ( r = KEY_CMP( a1[ i1 ], a2[ i2 ] ) ) != 0 ) return r;
+			i1++;
+			i2++;
+		}
+		return i2 < s2 ? -1 : ( i1 < s1 ? 1 : 0 );
+	}
+#endif
 
 
 	private void writeObject( java.io.ObjectOutputStream s ) throws java.io.IOException {
@@ -934,7 +951,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			while( t.size() != n ) t.remove( t.size() -1 );
 		}
 
-		/* Now we add and remove random data in m and t using addAll on a bulk-copy list, checking that the result is the same. */
+		/* Now we add and remove random data in m and t using addAll on a list, checking that the result is the same. */
 
 		for(int i=0; i<n;  i++ ) {
 			int p = r.nextInt() % ( 2 * n + 1 );
@@ -959,10 +976,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 			}
 			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = true; }
 
-			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): copy-list addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( mThrowsOutOfBounds == tThrowsOutOfBounds, "Error (" + level + ", " + seed + "): list addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
 
-			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after copy-list addAll" );
-			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after copy-list addAll" );
+			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after list addAll" );
+			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after list addAll" );
 		}
 
 		if ( m.size() > n ) {
