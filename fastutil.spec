@@ -1,5 +1,5 @@
 %define name		fastUtil
-%define version		2.50
+%define version		2.51
 %define release		1jpp
 %define javadir		%{_datadir}/java
 %define javadocdir	%{_datadir}/javadoc

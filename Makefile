@@ -59,7 +59,7 @@ docs: jsources
 
 
 tags:
-	etags Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastUtil/Hash.java src/it/unimi/dsi/fastUtil/BidirectionalIterator.java src/it/unimi/dsi/fastUtil/HashCommon.java src/it/unimi/dsi/fastUtil/package.html
+	etags build.xml Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastUtil/Hash.java src/it/unimi/dsi/fastUtil/BidirectionalIterator.java src/it/unimi/dsi/fastUtil/HashCommon.java src/it/unimi/dsi/fastUtil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
