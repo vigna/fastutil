@@ -1,5 +1,5 @@
 /*		 
- * fastUtil 1.12: Fast & compact specialized hash-based utility classes for Java
+ * fastUtil 1.2: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -23,6 +23,34 @@
 package it.unimi.dsi.fastUtil;
 
 /** Basic data for all hash-based classes.
+ * <p>The classes of <code>fastUtil</code> are built around open-addressing hashing
+ * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
+ * Programming</em>, we use for the table size a prime <var>p</var> such that
+ * <var>p</var>-2 is also prime. In this way hashing is implemented with modulo <var>p</var>,
+ * and secondary hashing with modulo <var>p</var>-2 (plus 1).
+ *
+ * <p>Entries in a table can be in three states: {@link #FREE}, {@link #BUSY} or {@link #REMOVED}.
+ * The naive handling of removed entries requires that you act as if they were occupied. However,
+ * <code>fastUtil</code> implements two useful optimizations, based on the following invariants:
+ * <ol>
+ * <li>There is always an entry that is not {@link #BUSY}.
+ * <li>Let <var>k</var><sub>0</sub>, <var>k</var><sub>1</sub>, &hellip, <var>k</var><sub><var>p</var>-1</sub> be
+ * the permutation of the table indices induced by the key <var>k</var> (i.e., <var>k</var><sub>0</sub> is the hash
+ * of <var>k</var> and the following positions are obtained by adding (modulo <var>p</var>) the secondary hashing.
+ * If there is a {@link #BUSY} entry with key <var>k</var>, its index in the sequence above comes <em>before</em>
+ * any {@link #REMOVED} entries with key <var>k</var>.
+ * </ol>
+ * 
+ * <p>Insertion of key <var>k</var>  scans the entries in the sequence <var>k</var><sub>0</sub>, <var>k</var><sub>1</sub>, &hellip, <var>k</var><sub><var>p</var>-1</sub>
+ * and stops when <var>k</var> is found, when we finished the sequence or when we find a {@link #FREE} entry. 
+ * Note that it is not completely trivial that this is correct. Indeed, when we stop at
+ * a {@link #REMOVED} entry with key <var>k</var> we must rely on the second invariant to be
+ * sure that no {@link #BUSY} entry with the same key can appear later. If we insert and remove frequently the same
+ * entries, this optimization can be very effective.
+ *
+ * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet. 
+ * If we have to actually insert a new element, we use that 
+ * entry, thus avoiding to pollute another {@link #FREE} entry.
  */
 
 public interface Hash {

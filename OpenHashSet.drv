@@ -1,5 +1,5 @@
 /*
- * fastUtil 1.12: Fast & compact specialized hash-based utility classes for Java
+ * fastUtil 1.2: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
  *
@@ -131,24 +131,26 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
 
-		  // Primary hash
-		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  // Primary hash and first usable entry
+		  int h = (int)(( (HASH(k) % n) + n ) % n), f = -1;
 		  // Secondary hash
-		  final int m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  final int s = h, m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + " with hash " + h + " (" + m + ")..." );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
-		  
-		  if ( state[h] != BUSY ) {
-				state[h] = BUSY;
-				count++;
-				key[h] = k;
-				if ( count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
-				return true;
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) {
+				if ( state[h] == REMOVED && f == -1 ) f = h;
+				if ( (h = ( h + m ) % n) == s ) break;
 		  }
+		  
+		  if (state[h] == BUSY && KEY_EQUAL( key[h], k )) return false;
 
-		  return false;
+		  if (f != -1) h = f;
+		  state[h] = BUSY;
+		  count++;
+		  key[h] = k;
+		  if ( count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  return true;
 	 }
 	 
 
@@ -160,24 +162,26 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
-		  // Primary hash
-		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  // Primary hash and first usable entry
+		  int h = (int)(( (HASH(k) % n) + n ) % n), f = -1;
 		  // Secondary hash
-		  final int m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  final int s = h, m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
 
-		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) h = ( h + m ) % n;
-		  
-		  if ( state[h] != BUSY ) {
-				state[h] = BUSY;
-				count++;
-				key[h] = k;
-				if ( count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
-				return true;
+		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) {
+				if ( state[h] == REMOVED && f == -1 ) f = h;
+				if ( (h = ( h + m ) % n) == s ) break;
 		  }
+		  
+		  if (state[h] == BUSY && KEY_EQUAL( key[h], k )) return false;
 
-		  return false;
+		  if (f != -1) h = f;
+		  state[h] = BUSY;
+		  count++;
+		  key[h] = k;
+		  if ( count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  return true;
 	 }
 
 

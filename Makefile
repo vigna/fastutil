@@ -14,7 +14,7 @@ jar: jsources
 	ant dist
 
 tar: jar
-	tar zhcvf fastUtil-1.12.tgz fastUtil-1.12/
+	tar zhcvf fastUtil-1.2.tgz fastUtil-1.2/
 
 jsources: $(SOURCES)
 
@@ -32,7 +32,7 @@ PACKAGES = it.unimi.dsi.fastUtil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -d $(DOCSDIR)  -windowtitle "fastUtil 1.12" -link $(APIURL) $(PACKAGES)
+	javadoc -d $(DOCSDIR) -windowtitle "fastUtil 1.2" -link $(APIURL) $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
@@ -42,4 +42,5 @@ tags:
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
-	gcc -I. -DNDEBUG -E -C -P $< > $@
+	gcc -I. -E -C -P $< > $@
+#	gcc -I. -DNDEBUG -E -C -P $< > $@
