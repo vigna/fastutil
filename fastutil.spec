@@ -1,6 +1,6 @@
 %define name		fastUtil
-%define version		2.11
-%define release		2jpp
+%define version		2.50
+%define release		1jpp
 %define javadir		%{_datadir}/java
 %define javadocdir	%{_datadir}/javadoc
 %define section		free
@@ -74,5 +74,7 @@ rm -rf $RPM_BUILD_ROOT
 %{javadocdir}/%{name}
 
 %changelog
+* Tue Feb 18 2003 Sebastiano Vigna <vigna@acm.org> 2.50
+- New linked hash tables and reference-based containers.
 * Mon Dec 9 2002 Sebastiano Vigna <vigna@acm.org> 2.11
 - JPackage compatible version
