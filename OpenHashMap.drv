@@ -128,6 +128,16 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  putAll(m);
 	 }
 
+#if #keyclass(Float)
+	 private int float2int(final float f) {
+		  return Float.floatToIntBits(f) & 0x7FFFFFFF;
+	 }
+#elif #keyclass(Double)
+	 private int double2int(final double d) {
+		  final long l = Double.doubleToLongBits(d);
+		  return (int)(l ^ (l >>> 32)) & 0x7FFFFFFF;
+	 }
+#endif
 
 
 	 public Object put(Object ok, Object ov) {
@@ -137,15 +147,16 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final VALUE_TYPE v = VALUE2TYPE(ov);
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
 		  // Primary hash and first usable entry
-		  int h = HASH(k) % n, f = -1;
-		  // Secondary hash
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n, f = -1;
+		  // Starting index and secondary hash
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) {
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) {
 				if ( state[h] == REMOVED && f == -1 ) f = h;
 				if ( (h = ( h + m ) % n) == s ) break;
 		  }
@@ -178,15 +189,16 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
 		  // Primary hash and first usable entry
-		  int h = HASH(k) % n, f = -1;
-		  // Secondary hash
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n, f = -1;
+		  // Starting index and secondary hash
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
 
-		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) {
+		  while( state[h] != FREE && ! KEY_EQUAL( key[h], k ) ) {
 				if ( state[h] == REMOVED && f == -1 ) f = h;
 				if ( (h = ( h + m ) % n) == s ) break;
 		  }
@@ -220,20 +232,18 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return null;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2 ) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2 ) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return null;
 		  
-		  if ( state[h] == OCCUPIED && KEY_EQUAL(key[h], k) ) {
+		  if ( state[h] == OCCUPIED ) {
 				state[h] = REMOVED;
 				count--;
-				
 				return VALUE2OBJ(value[h]);
 		  }
 		  else return null;
@@ -613,7 +623,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 	  */
 
 	 private void rehash( int newP ) {
-		  int i, count = 0, h, m;
+		  int i, count = 0, k2i, h, m;
 
 		  KEY_TYPE k;
 		  VALUE_TYPE v;
@@ -629,9 +639,10 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 
 				k = key[i];
 				v = value[i];
+				k2i = KEY2INT(k);
 
-				h = HASH(k) % newN;
-				m = (HASH(k) % newN2) + 1;
+				h = k2i % newN;
+				m = (k2i % newN2) + 1;
 
 				while( newState[h] != FREE ) h = ( h + m ) % newN;
 				
@@ -655,13 +666,12 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return false;
-
-		  int h = HASH(k) % n;
-		  final int m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
 		  
 		  return state[h] == OCCUPIED;
 	 }
@@ -679,16 +689,14 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return null;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return null;
 		  
-		  if ( state[h] == OCCUPIED && KEY_EQUAL(key[h], k) ) return VALUE2OBJ(value[h]);
-		  return null;
+		  return state[h] == OCCUPIED ? VALUE2OBJ(value[h]) : null;
 	 }
 
 
@@ -698,16 +706,14 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return DEF_RET_VALUE;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return DEF_RET_VALUE;
 		  
-		  if ( state[h] == OCCUPIED && KEY_EQUAL(key[h], k) ) return value[h];
-		  return DEF_RET_VALUE;
+		  return state[h] == OCCUPIED ? value[h] : DEF_RET_VALUE;
 	 }
 
 
@@ -723,20 +729,18 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return DEF_RET_VALUE;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return DEF_RET_VALUE;
 		  
-		  if ( state[h] == OCCUPIED && KEY_EQUAL(key[h], k) ) {
+		  if ( state[h] == OCCUPIED ) {
 				state[h] = REMOVED;
 				count--;
-				
 				return value[h];
 		  }
 		  else return DEF_RET_VALUE;
@@ -754,16 +758,14 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return DEF_RET_VALUE;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return DEF_RET_VALUE;
 		  
-		  if ( state[h] == OCCUPIED && KEY_EQUAL(key[h], k) ) return value[h];
-		  return DEF_RET_VALUE;
+		  return state[h] == OCCUPIED ? value[h] : DEF_RET_VALUE;
 	 }
 
 	 /** Removes the entry with the given key from the map.
@@ -776,22 +778,20 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 		  VALUE_TYPE oldValue;
 
 		  final int n = this.n;
-		  KEY_TYPE key[] = this.key;
-		  byte state[] = this.state;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return DEF_RET_VALUE;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return DEF_RET_VALUE;
 		  
-		  if ( state[h] == OCCUPIED && KEY_EQUAL(key[h], k) ) {
+		  if ( state[h] == OCCUPIED ) {
 				state[h] = REMOVED;
 				count--;
-				
 				return value[h];
 		  }
 		  else return DEF_RET_VALUE;
@@ -1182,7 +1182,7 @@ public final class HASHMAP extends ABSTRACT_MAP implements Serializable, Hash, M
 
 		  /* Now we put and remove random data in m and t, checking that the result is the same. */
 
-		  for(int i=0; i<n;  i++ ) {
+		  for(int i=0; i<20*n;  i++ ) {
 				KEY_TYPE T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()

@@ -125,20 +125,32 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 	 }
 
 
+#if #keyclass(Float)
+	 private int float2int(final float f) {
+		  return Float.floatToRawIntBits(f) & 0x7FFFFFFF;
+	 }
+#elif #keyclass(Double)
+	 private int double2int(final double d) {
+		  final long l = Double.doubleToRawLongBits(d);
+		  return (int)(l ^ (l >>> 32)) & 0x7FFFFFFF;
+	 }
+#endif
+
 	 public boolean add(Object ok) {
 
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
 		  // Primary hash and first usable entry
-		  int h = HASH(k) % n, f = -1;
-		  // Secondary hash
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n, f = -1;
+		  // Starting index and secondary hash
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + " with hash " + h + " (" + m + ")..." );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) {
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) {
 				if ( state[h] == REMOVED && f == -1 ) f = h;
 				if ( (h = ( h + m ) % n) == s ) break;
 		  }
@@ -161,15 +173,16 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
 		  // Primary hash and first usable entry
-		  int h = HASH(k) % n, f = -1;
-		  // Secondary hash
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n, f = -1;
+		  // Starting index and secondary hash
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
 
-		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) {
+		  while( state[h] != FREE && ! KEY_EQUAL( key[h], k ) ) {
 				if ( state[h] == REMOVED && f == -1 ) f = h;
 				if ( (h = ( h + m ) % n) == s ) break;
 		  }
@@ -193,24 +206,24 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return false;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
 		  
-		  if ( KEY_EQUAL(key[h], k) && state[h] == OCCUPIED ) {
+		  if ( state[h] == OCCUPIED ) {
 				state[h] = REMOVED;
 				count--;
-				
 				return true;
 		  }
 		  else return false;
 	 }
+
+
 
 	 public void clear() {
 		  this.count = 0;
@@ -319,7 +332,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 	  */
 
 	 private void rehash( int newP ) {
-		  int i, count = 0, h, m;
+		  int i, count = 0, k2i, h, m;
 
 		  //System.err.println("Rehashing to size " +  primes[newP] + "...");
 
@@ -328,15 +341,16 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final int n = this.n, newN = primes[newP], newN2 = newN - 2;
 		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		  final byte state[] = this.state, newState[] = new byte[newN];
-
+		  
 		  for(i=0; i<n; i++) {
 
 				if ( state[i] != OCCUPIED ) continue;
 
 				k = key[i];
+				k2i = KEY2INT(k);
 
-				h = HASH(k) % newN;
-				m = (HASH(k) % newN2) + 1;
+				h = k2i % newN;
+				m = (k2i % newN2) + 1;
 
 				while( newState[h] != FREE ) h = ( h + m ) % newN;
 				
@@ -367,15 +381,14 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return false;
-
-		  int i = n, h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int i = n, h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
 		  
-		  return KEY_EQUAL(key[h], k) && state[h] == OCCUPIED;
+		  return state[h] == OCCUPIED;
 	 }
 
 
@@ -385,19 +398,18 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
-
-		  if (count == 0) return false;
+		  final int k2i = KEY2INT(k); 
 
 		  //System.err.print("Examining " + k + "...");
 
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
 
 		  //System.err.println("done.");
 
-		  return KEY_EQUAL(key[h], k) && state[h] == OCCUPIED;
+		  return state[h] == OCCUPIED;
 	 }
 
 
@@ -407,18 +419,16 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  final int n = this.n;
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  final int k2i = KEY2INT(k); 
 
-		  if (count == 0) return false;
-
-		  int h = HASH(k) % n;
-		  final int s = h, m = (HASH(k) % n2) + 1;
+		  int h = k2i % n;
+		  final int s = h, m = (k2i % n2) + 1;
 		  
-		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) if ( (h = ( h + m ) % n) == s ) break;
+		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
 		  
-		  if ( KEY_EQUAL(key[h], k) && state[h] == OCCUPIED ) {
+		  if ( state[h] == OCCUPIED ) {
 				state[h] = REMOVED;
 				count--;
-				
 				return true;
 		  }
 		  else return false;
@@ -492,7 +502,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 				v = System.currentTimeMillis();
 		  
 
-				/* Then we add pairs to t. */
+				/* Then we add elements to t. */
 
 				for( i=0; i<n;  i++ ) {
 					 t.add( 
@@ -506,13 +516,13 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 							 );
 				}
 
-				System.out.println("Added "+n+" pairs in old HashSet (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
+				System.out.println("Added "+n+" elements in old HashSet (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
 
 				v = System.currentTimeMillis();
 
-				/* Then we check for pairs in t. */
+				/* Then we check for elements in t. */
 
 				for( i=0; i<n;  i++ ) {
 					 t.contains( 
@@ -526,7 +536,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 									);
 				}
 
-				System.out.println("Examined "+n+" pairs in old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+				System.out.println("Examined "+n+" elements in old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
 
@@ -551,7 +561,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 
 				v = System.currentTimeMillis();
 
-				/* Then we add pairs to m. */
+				/* Then we add elements to m. */
 
 				for( i=0; i<n;  i++ ) {
 					 m.add( 
@@ -565,12 +575,12 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 							 );
 				}
 		  
-				System.out.println("Added "+n+" pairs in new HashSet (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+				System.out.println("Added "+n+" elements in new HashSet (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
 				v = System.currentTimeMillis();
 
-				/* Then we check for pairs in m. */
+				/* Then we check for elements in m. */
 
 				for( i=0; i<n;  i++ ) {
 					 m.contains( 
@@ -585,7 +595,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 
 				}
 		  
-				System.out.println("Examined "+n+" pairs in new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
+				System.out.println("Examined "+n+" elements in new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
 
@@ -657,7 +667,7 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 
 		  /* Now we put and remove random data in m and t, checking that the result is the same. */
 
-		  for(int i=0; i<n;  i++ ) {
+		  for(int i=0; i<20*n;  i++ ) {
 				KEY_TYPE T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 					 (KEY_TYPE)r.nextInt()
@@ -784,5 +794,5 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 
 
 // Local Variables:
-// mode: java
+// mode: jde
 // End:

@@ -49,14 +49,12 @@ for ((f=0; f<3; f++)); do
 "#define KEY_ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION ${TYPE_CAP[$v]}AbstractCollection\n\n"\
 "#define HASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}HashMap\n\n"\
-"#define D2L(x) Double.doubleToRawLongBits(x*663608941.737f)\n\n"\
-"#define F2I(x) Float.floatToRawIntBits(x*663608941.737f)\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
 "#define KEY_NULL (null)\n"\
-"#define HASH(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
@@ -65,11 +63,11 @@ for ((f=0; f<3; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#if #keyclass(Float)\n"\
-"#define HASH(x) (F2I(x) & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) float2int(x)\n"\
 "#elif #keyclass(Double)\n"\
-"#define HASH(x) ((int)(D2L(x) & 0x7FFFFFFF))\n"\
+"#define KEY2INT(x) double2int(x)\n"\
 "#else\n"\
-"#define HASH(x) ((int)x & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) ((int)x & 0x7FFFFFFF)\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -131,8 +129,6 @@ for ((f=3; f<8; f++)); do
 "#define ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define ABSTRACT_COLLECTION ${TYPE_CAP[$k]}AbstractCollection\n\n"\
 "#define HASHSET ${TYPE_CAP[$k]}HashSet\n\n"\
-"#define D2L(x) Double.doubleToRawLongBits(x*663608941.737f)\n\n"\
-"#define F2I(x) Float.floatToRawIntBits(x*663608941.737f)\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
@@ -141,7 +137,7 @@ for ((f=3; f<8; f++)); do
 "#define ENTRY_GET_KEY getKey\n"\
 "#define TO_KEY_ARRAY toArray\n"\
 "#define KEY_NULL (null)\n"\
-"#define HASH(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -151,11 +147,11 @@ for ((f=3; f<8; f++)); do
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
 "#if #keyclass(Float)\n"\
-"#define HASH(x) (F2I(x) & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) float2int(x)\n"\
 "#elif #keyclass(Double)\n"\
-"#define HASH(x) ((int)(D2L(x) & 0x7FFFFFFF))\n"\
+"#define KEY2INT(x) double2int(x)\n"\
 "#else\n"\
-"#define HASH(x) ((int)x & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) ((int)x & 0x7FFFFFFF)\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#if #keyclass(Boolean)\n"\
