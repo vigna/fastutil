@@ -172,10 +172,6 @@ public class Collections {
 		public int size() { return 0; }
 		public void clear() {}
 	}
-
-
-#endif
-	
 }
 
 // Local Variables:

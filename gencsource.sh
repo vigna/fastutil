@@ -105,6 +105,7 @@ echo -e \
 "#define ABSTRACT_COLLECTION Abstract${TYPE_CAP[$k]}Collection\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION Abstract${TYPE_CAP[$v]}Collection\n\n"\
 "#define VALUE_COLLECTION ${TYPE_CAP[$v]}Collection\n\n"\
+"#define VALUE_COLLECTIONS ${TYPE_CAP[$v]}Collections\n\n"\
 "#define ABSTRACT_SET Abstract${TYPE_CAP[$k]}Set\n\n"\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
 \
@@ -144,6 +145,7 @@ echo -e \
 "#define STD_KEY_ITERATOR Iterator\n\n"\
 "#define STACK Stack\n\n"\
 "#define ABSTRACT_STACK AbstractStack\n\n"\
+"#define ITERATORS ObjectIterators\n\n"\
 \
 "#define REMOVE_KEY remove\n"\
 "#define GET_KEY get\n"\
@@ -218,6 +220,7 @@ echo -e \
 "#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define STACK ${TYPE_CAP[$k]}Stack\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\
+"#define ITERATORS ${TYPE_CAP[$k]}Iterators\n\n"\
 \
 "#define REMOVE_KEY remove${TYPE_CAP[$k]}\n"\
 "#define GET_KEY get${TYPE_CAP[$k]}\n"\

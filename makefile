@@ -59,8 +59,8 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/makefile \
-		fastutil-$(VERSION)/$(SRC)/{BidirectionalIterator.java,HashCommon.java,Hash.java,Stack.java,AbstractStack.java} \
-		fastutil-$(VERSION)/$(SRC)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
+		$(foreach f, $(SOURCES), fastutil-$(VERSION)/$(f)) \
+		fastutil-$(VERSION)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(VERSION)/java/overview.html
 	rm fastutil-$(VERSION)
 
@@ -253,19 +253,19 @@ $(ITERATORS_STATIC): Iterators.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ITERATORS_STATIC)
 
 
-COLLECTIONS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Collections.c)
+COLLECTIONS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Collections.c)
 $(COLLECTIONS_STATIC): Collections.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COLLECTIONS_STATIC)
 
 
-SETS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Sets.c)
+SETS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Sets.c)
 $(SETS_STATIC): Sets.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SETS_STATIC)
 
 
-SORTEDSETS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)SortedSets.c)
+SORTEDSETS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)SortedSets.c)
 $(SORTEDSETS_STATIC): SortedSets.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SORTEDSETS_STATIC)
@@ -283,7 +283,7 @@ $(ARRAYS_STATIC): Arrays.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ARRAYS_STATIC)
 
 
-MAPS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Maps.c)
+MAPS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)Maps.c))
 $(MAPS_STATIC): Maps.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(MAPS_STATIC)
@@ -292,7 +292,7 @@ CSOURCES += $(MAPS_STATIC)
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
 
-SOURCES = 
+SOURCES = \
 	$(SOURCEDIR)/Hash.java \
 	$(SOURCEDIR)/BidirectionalIterator.java \
 	$(SOURCEDIR)/HashCommon.java $(SOURCEDIR)/Stack.java \
@@ -302,8 +302,7 @@ SOURCES =
 	$(SOURCEDIR)/Sets.java \
 	$(SOURCEDIR)/Sets.java \
 	$(SOURCEDIR)/SortedSets.java \
-	$(SOURCEDIR)/Lists.java \
-	$(SOURCEDIR)/Maps.java # These are True Java Sources instead
+	$(SOURCEDIR)/Lists.java # These are True Java Sources instead
 
 ifdef ASSERTS
 	ASSERTS_VALUE = true

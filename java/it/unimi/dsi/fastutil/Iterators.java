@@ -34,7 +34,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with iterators.
+/** A class providing static methods that do useful things with type-specific iterators.
  *
  * @see Iterator
  */

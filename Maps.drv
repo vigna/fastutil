@@ -33,188 +33,112 @@ import it.unimi.dsi.fastutil.objects.*;
 
 import it.unimi.dsi.fastutil.Iterators;
 import it.unimi.dsi.fastutil.Arrays;
-import it.unimi.dsi.fastutil.Sets;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import java.util.SortedSet;
+import java.util.SortedMap;
 import java.util.NoSuchElementException;
 
-/** A class providing static methods that do useful things with type-specific sorted sets.
+/** A class providing static methods that do useful things with type-specific maps.
  *
  * @see java.util.Collections
  */
 
-public class SORTEDSETS {
+public class MAPS {
 
-	private SORTEDSETS() {}
+	private MAPS() {}
 
-#if ! #keyclass(Reference)
-
-	/** A class representing a sorted singleton. */
-
-	protected static class SINGLETON extends SETS.Singleton implements SORTEDSET, java.io.Serializable, Cloneable {
-	
-		public static final long serialVersionUID = -7046029254386353129L;
-
-		KEY_COMPARATOR comparator;
-
-		private SINGLETON( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
-			super( element );
-			this.comparator = comparator;
-		}
-
-		private SINGLETON( final KEY_TYPE element ) {
-			this( element, null );
-		}
-
-		final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
-			return comparator == null ? KEY_CMP( k1, k2 ) : comparator.compare( k1, k2 );
-		}
-
-		public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) { 
-			KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)KEY_ITERATOR_METHOD(); 
-			if ( compare( element, from ) <= 0 ) i.next();
-			return i;
-		}
-
-		public Comparator comparator() { return comparator; }
-
-		public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) { if ( compare( from, element ) <= 0 && compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
-		public STDSORTEDSET headSet( KEY_TYPE to ) { if ( compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
-		public STDSORTEDSET tailSet( KEY_TYPE from ) { if ( compare( from, element ) <= 0 ) return this; else return Sets.EMPTY_SET; }
-
-		public KEY_TYPE FIRST() { return element; }
-		public KEY_TYPE LAST() { return element; }
-
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-		public Object first() { return KEY2OBJ( element ); }
-		public Object last() { return KEY2OBJ( element ); }
-
-		public Iterator iterator( Object from ) { return iterator( KEY2TYPE( from ) ); }
-
-		public SortedSet subSet( Object from, Object to ) { return subSet( KEY2TYPE( from ), KEY2TYPE( to ) ); }
-		public SortedSet headSet( Object to ) { return headSet( KEY2TYPE( to ) ); }
-		public SortedSet tailSet( Object from ) { return tailSet( KEY2TYPE( from ) ); }
-#endif
-	}
-
-
-	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serialisable and cloneable.
-	 *
-	 * @param element the only element of the returned sorted set.
-	 * @return a type-specific immutable sorted set containing just <code>element</code>.
-	 */
-
-	public static SORTEDSET singleton( final KEY_TYPE element ) {
-		return new SINGLETON( element );
-	}
-
-	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serialisable and cloneable.
-	 *
-	 * @param element the only element of the returned sorted set.
-	 * @param comparator the comparator to use in the returned sorted set.
-	 * @return a type-specific immutable sorted set containing just <code>element</code>.
-	 */
-
-	public static SORTEDSET singleton( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
-		return new SINGLETON( element, comparator );
-	}
-
-#if ! #keyclass(Object) 
-
-	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serialisable and cloneable.
-	 *
-	 * @param element the only element of the returned sorted set.
-	 * @return a type-specific immutable sorted set containing just <code>element</code>.
-	 */
-
-	public static SORTEDSET singleton( Object element ) {
-		return new SINGLETON( KEY2TYPE( element ) );
-	}
-
-	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serialisable and cloneable.
-	 *
-	 * @param element the only element of the returned sorted set.
-	 * @param comparator the comparator to use in the returned sorted set.
-	 * @return a type-specific immutable sorted set containing just <code>element</code>.
-	 */
-
-	public static SORTEDSET singleton( final Object element, final KEY_COMPARATOR comparator ) {
-		return new SINGLETON( KEY2TYPE( element ), comparator );
-	}
-#endif
-
-#endif
-
-
-
-	protected static class SynchronizedSortedSet extends SETS.SynchronizedSet implements SORTEDSET, java.io.Serializable {
+	protected static class SynchronizedMap extends ABSTRACT_MAP implements MAP, java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		SORTEDSET sortedset;
+		MAP map;
+		Object sync;
 
-		SynchronizedSortedSet( SORTEDSET s, Object sync ) {
-			super( s, sync );
-			sortedset = s;
+		SynchronizedMap( MAP m, Object sync ) {
+			if ( m == null ) throw new NullPointerException();
+			this.map = m;
+			this.sync = sync;
 		}
 
-		SynchronizedSortedSet( SORTEDSET s ) {
-			this( s, null );
+		SynchronizedMap( MAP m ) {
+			if ( m == null ) throw new NullPointerException();
+			this.map = m;
+			this.sync = this;
 		}
 
-		public Comparator comparator() { synchronized( sync ) { return sortedset.comparator(); } }
+		public int size() { synchronized( sync ) { return map.size(); } }
+		public boolean isEmpty() { synchronized( sync ) { return map.isEmpty(); } }
+		public boolean containsKey( KEY_TYPE k ) { synchronized( sync ) { return map.containsKey( k ); } }
+		public boolean containsValue( VALUE_TYPE v ) { synchronized( sync ) { return map.containsValue( v ); } }
 
-		public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.subSet( from, to ), sync ); }
-		public STDSORTEDSET headSet( KEY_TYPE to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.headSet( to ), sync ); }
-		public STDSORTEDSET tailSet( KEY_TYPE from ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.tailSet( from ), sync ); }
+		public VALUE_TYPE defaultReturnValue()  { synchronized( sync ) { return map.defaultReturnValue(); } }
+		public void defaultReturnValue( VALUE_TYPE defRetValue )  { synchronized( sync ) { map.defaultReturnValue( defRetValue ); } }
 
-		public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) { return sortedset.iterator( from ); }
+		public VALUE_TYPE put( KEY_TYPE k, VALUE_TYPE v ) { synchronized( sync ) { return map.put( k, v ); } }
 
-		public KEY_TYPE FIRST() {  synchronized( sync ) { return sortedset.FIRST(); } }
-		public KEY_TYPE LAST() {  synchronized( sync ) { return sortedset.LAST(); } }
+		public void putAll( MAP c ) { synchronized( sync ) { map.putAll( c ); } }
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-		public Object first() {  synchronized( sync ) { return sortedset.first(); } }
-		public Object last() {  synchronized( sync ) { return sortedset.last(); } }
+		public Set entrySet() { return ObjectSets.synchronize( (ObjectSet)map.entrySet(), sync ); }
+		public Set keySet() { return SETS.synchronize( (SET)map.keySet(), sync ); }
+		public Collection values() { return VALUE_COLLECTIONS.synchronize( (VALUE_COLLECTION)map.values(), sync ); }
 
-		public Iterator iterator( Object from ) { return sortedset.iterator( KEY2TYPE( from ) ); }
+		public void clear() { synchronized( sync ) { map.clear(); } }
+		public String toString() { synchronized( sync ) { return map.toString(); } }
 
-		public SortedSet subSet( Object from, Object to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.subSet( from, to ), sync ); }
-		public SortedSet headSet( Object to ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.headSet( to ), sync ); }
-		public SortedSet tailSet( Object from ) { return new SynchronizedSortedSet( (SORTEDSET)sortedset.tailSet( from ), sync ); }
+#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
+		public Object put( Object k, Object v ) { synchronized( sync ) { return map.put( k, v ); } }
 #endif
+
+#if ! #keyclass( Object ) && ! #keyclass( Reference )
+		public VALUE_TYPE remove( KEY_TYPE k ) { synchronized( sync ) { return map.remove( k ); } }
+		public VALUE_TYPE get( KEY_TYPE k ) { synchronized( sync ) { return map.get( k ); } }
+		public boolean containsKey( Object ok ) { synchronized( sync ) { return map.containsKey( ok ); } }
+#endif
+
+		public Object remove( Object k ) { synchronized( sync ) { return map.remove( k ); } }
+		public Object get( Object k ) { synchronized( sync ) { return map.get( k ); } }
+
+#if ! #valueclass( Object ) && ! #valueclass( Reference )
+		public boolean containsValue( Object ov ) { synchronized( sync ) { return map.containsValue( ov ); } }
+#endif
+
+#if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
+		public VALUE_TYPE REMOVE_VALUE( Object k ) { synchronized( sync ) { return map.REMOVE_VALUE( k ); } }
+		public VALUE_TYPE GET_VALUE( Object k ) { synchronized( sync ) { return map.GET_VALUE( k ); } }
+#endif
+
 	}
 
-
-	/** Returns a synchronized sorted set backed by the specified sorted set.
+	/** Returns a synchronized map backed by the specified map.
 	 *
-	 * @param s the sorted set to be "wrapped" in a synchronized sorted set.
-	 * @return a synchronized view of the specified sorted set.
-	 * @see java.util.Collections#synchronizedSortedSet(SortedSet)
+	 * @param m the map to be "wrapped" in a synchronized map.
+	 * @return a synchronized view of the specified map.
+	 * @see java.util.Collections#synchronizedMap(Map)
 	 */
-	public static SORTEDSET synchronize( SORTEDSET s ) {	return new SynchronizedSortedSet( s ); }
+	public static MAP synchronize( MAP m ) { return new SynchronizedMap( m ); }
 
-	/** Returns a synchronized sorted set backed by the specified sorted set, using an assigned object to synchronize.
+	/** Returns a synchronized map backed by the specified map, using an assigned object to synchronize.
 	 *
-	 * @param s the sorted set to be "wrapped" in a synchronized sorted set.
+	 * @param m the map to be "wrapped" in a synchronized map.
 	 * @param sync an object that will be used to synchronize the list access.
-	 * @return a synchronized view of the specified sorted set.
-	 * @see java.util.Collections#synchronizedSortedSet(SortedSet)
+	 * @return a synchronized view of the specified map.
+	 * @see java.util.Collections#synchronizedMap(Map)
 	 */
 
-	public static SORTEDSET synchronize( SORTEDSET s, Object sync ) { return new SynchronizedSortedSet( s, sync ); }
+	public static MAP synchronize( MAP m, Object sync ) { return new SynchronizedMap( m, sync ); }
 
 
 
 
 
 
-#ifdef TEST
+#ifdef TESTNO
 
 	private static KEY_TYPE GEN_KEY() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -234,7 +158,7 @@ public class SORTEDSETS {
 		int c;
 		KEY_TYPE k = GEN_KEY();
 		SINGLETON m = new SINGLETON( k );
-		SortedSet t = java.util.Collections.singleton( KEY2OBJ( k ) );
+		Map t = java.util.Collections.singleton( KEY2OBJ( k ) );
 
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsIndex, tThrowsIndex, mThrowsUnsupp, tThrowsUnsupp;
@@ -437,8 +361,8 @@ public class SORTEDSETS {
 			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex && !mThrowsUnsupp ) ensure( rm == rt, "Error (" + seed + "): divergence in removeAll() between t and m " + m );
 		}
 
-		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after set removal " + m );
-		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after set removal " + m );
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after map removal " + m );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after map removal " + m );
 
 		/* Now we check that m actually holds the same data. */
 		  
@@ -459,7 +383,7 @@ public class SORTEDSETS {
 
 		/* Now we save and read m. */
 
-		SORTEDSET m2 = null;
+		MAP m2 = null;
 		  
 		try {
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
@@ -472,7 +396,7 @@ public class SORTEDSETS {
 			java.io.InputStream is = new java.io.FileInputStream(ff);
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-			m2 = (SORTEDSET)ois.readObject();
+			m2 = (MAP)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
@@ -497,16 +421,6 @@ public class SORTEDSETS {
 
 
 
-#endif
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
-
-
-#ifdef TEST
-	
 	private static long seed = System.currentTimeMillis(); 
 	private static java.util.Random r = new java.util.Random( seed );
 
@@ -535,7 +449,7 @@ public class SORTEDSETS {
 		if ( arg.length > 1 ) r = new java.util.Random( seed = Long.parseLong( arg[ 1 ] ) );
 		  
 		try {
-			SORTEDSETS.class.getDeclaredMethod( "test" + arg[ 0 ], new Class[] {} ).invoke( SORTEDSETS.class, new Object[] {} ); 
+			MAPS.class.getDeclaredMethod( "test" + arg[ 0 ], new Class[] {} ).invoke( MAPS.class, new Object[] {} ); 
 		} catch( AssertionError e ) {
 			System.err.println( e );
 			System.err.println( "seed: " + seed );

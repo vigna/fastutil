@@ -19,7 +19,7 @@
  *
  */
 
-package it.unimi.dsi.fastutil;
+package PACKAGE;
 
 import it.unimi.dsi.fastutil.booleans.*;
 import it.unimi.dsi.fastutil.bytes.*;
@@ -31,6 +31,8 @@ import it.unimi.dsi.fastutil.floats.*;
 import it.unimi.dsi.fastutil.doubles.*;
 import it.unimi.dsi.fastutil.objects.*;
 
+import it.unimi.dsi.fastutil.Iterators;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -39,95 +41,499 @@ import java.util.NoSuchElementException;
  * @see Iterator
  */
 
-public class Iterators {
+public class ITERATORS {
 
-	private Iterators() {}
+	private ITERATORS() {}
 	
-	protected static class EmptyIterator extends AbstractObjectListIterator implements 
-		BooleanListIterator, ByteListIterator, ShortListIterator, IntListIterator,
-		LongListIterator, CharListIterator, FloatListIterator, DoubleListIterator,
-		ObjectListIterator {
-
-		public static final long serialVersionUID = -7046029254386353129L;
-
-		private EmptyIterator() {}
-
-		public boolean hasNext() { return false; }
-		public boolean hasPrevious() { return false; }
-
-		public boolean nextBoolean() { throw new NoSuchElementException(); }
-		public boolean previousBoolean() { throw new NoSuchElementException(); }
-		public byte nextByte() { throw new NoSuchElementException(); }
-		public byte previousByte() { throw new NoSuchElementException(); }
-		public short nextShort() { throw new NoSuchElementException(); }
-		public short previousShort() { throw new NoSuchElementException(); }
-		public int nextInt() { throw new NoSuchElementException(); }
-		public int previousInt() { throw new NoSuchElementException(); }
-		public long nextLong() { throw new NoSuchElementException(); }
-		public long previousLong() { throw new NoSuchElementException(); }
-		public char nextChar() { throw new NoSuchElementException(); }
-		public char previousChar() { throw new NoSuchElementException(); }
-		public float nextFloat() { throw new NoSuchElementException(); }
-		public float previousFloat() { throw new NoSuchElementException(); }
-		public double nextDouble() { throw new NoSuchElementException(); }
-		public double previousDouble() { throw new NoSuchElementException(); }
-		public Object next() { throw new NoSuchElementException(); }
-		public Object previous() { throw new NoSuchElementException(); }
-
-		public int nextIndex() { return 0; }
-		public int previousIndex() { return -1; }
-
-		public int skip( int n ) { return 0; };
-
-		public void set( boolean x ) { throw new UnsupportedOperationException(); }
-		public void add( boolean x ) { throw new UnsupportedOperationException(); }
-		public void set( byte x ) { throw new UnsupportedOperationException(); }
-		public void add( byte x ) { throw new UnsupportedOperationException(); }
-		public void set( short x ) { throw new UnsupportedOperationException(); }
-		public void add( short x ) { throw new UnsupportedOperationException(); }
-		public void set( int x ) { throw new UnsupportedOperationException(); }
-		public void add( int x ) { throw new UnsupportedOperationException(); }
-		public void set( long x ) { throw new UnsupportedOperationException(); }
-		public void add( long x ) { throw new UnsupportedOperationException(); }
-		public void set( char x ) { throw new UnsupportedOperationException(); }
-		public void add( char x ) { throw new UnsupportedOperationException(); }
-		public void set( float x ) { throw new UnsupportedOperationException(); }
-		public void add( float x ) { throw new UnsupportedOperationException(); }
-		public void set( double x ) { throw new UnsupportedOperationException(); }
-		public void add( double x ) { throw new UnsupportedOperationException(); }
-
-		public Object clone() { return EMPTY_ITERATOR; }
-
-        private Object readResolve() { return EMPTY_ITERATOR; }
-	
+	/** Returns an empty type-specific list iterator.
+	 *
+	 * @return an empty type-specific list iterator.
+	 * @deprecated As of <code>fastutil</code> 3.1, replaced by {@link Iterators#EMPTY_ITERATOR}.
+	 */
+	public static KEY_LIST_ITERATOR KEY_EMPTY_ITERATOR_METHOD() {
+		return Iterators.EMPTY_ITERATOR;
 	}
 
-	/** An empty iterator (immutable). It is serialisable and cloneable.
+	/** A class to wrap arrays in iterators. */
+
+	private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_LIST_ITERATOR {
+		private final KEY_TYPE array[];
+		private final int offset, length;
+		private int curr;
+
+		public KEY_ARRAY_ITERATOR( final KEY_TYPE array[], final int offset, final int length ) {
+			this.array = array;
+			this.offset = offset;
+			this.length = length;
+		}
+	
+		public boolean hasNext() { return curr < length; }
+		public boolean hasPrevious() { return curr > 0; }
+
+		public KEY_TYPE NEXT_KEY() {
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			return array[ offset + curr++ ];
+		}
+
+		public KEY_TYPE PREV_KEY() {
+			if ( ! hasPrevious() ) throw new NoSuchElementException();
+			return array[ offset + --curr ];
+		}
+
+		public int skip( int n ) {
+			if ( n <= length - curr ) {
+				curr += n;
+				return n;
+			}
+			else {
+				n = length - curr;
+				curr = length;
+				return n;
+			}
+		}
+
+		public int back( int n ) {
+			if ( n <= curr ) {
+				curr -= n;
+				return n;
+			}
+			else {
+				n = curr;
+				curr = 0;
+				return n;
+			}
+		}
+
+		public int nextIndex() {
+			return curr;
+		}
+
+		public int previousIndex() {
+			return curr - 1;
+		}
+	}
+
+
+	/** Wraps the given part of an array into a type-specific list iterator.
 	 *
-	 * <P>The class of this objects represent an abstract empty iterator
-	 * that can iterate as any type-specific (list) iterator. Thus, {@link #EMPTY_ITERATOR}
-	 * may be assigned to a variable of any type-specific (list) iterator.
+	 * <P>The type-specific list iterator returned by this method will iterate
+	 * <code>length</code> times, returning consecutive elements of the given
+	 * array starting from the one with index <code>offset</code>.
+	 *
+	 * @param array an array to wrap into a type-specific list iterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param length the number of elements to return.
+	 */
+	public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
+		if ( length < 0 ) throw new IllegalArgumentException( "The length (" + length + ") is negative" );
+		if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
+		return new KEY_ARRAY_ITERATOR( array, offset, length );
+	}
+
+	/** Wraps the given array into a type-specific list iterator.
+	 *
+	 * <P>The type-specific list iterator returned by this method will return
+	 * all elements of the given array.
+	 *
+	 * @param array an array to wrap into a type-specific list iterator.
+	 */
+	public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[] ) {
+		return new KEY_ARRAY_ITERATOR( array, 0, array.length );
+	}
+
+
+	/** Unwraps an iterator into an array starting at a given offset for a given number of elements.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and stores the elements
+	 * returned, up to a maximum of <code>length</code>, in the given array starting at <code>offset</code>.
+	 * The number of actually unwrapped elements is returned (it may be less than <code>max</code> if
+	 * the iterator emits less than <code>max</code> elements).
+	 *
+	 * @param i a type-specific iterator.
+	 * @param array an array to contain the output of the iterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param max the maximum number of elements to unwrap.
+	 * @return the number of elements unwrapped.
+	 */
+	public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[], int offset, final int max ) {
+		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
+		if ( offset < 0 || offset + max > array.length ) throw new IllegalArgumentException();
+		int j = max;
+		while( j-- != 0 && i.hasNext() ) array[ offset++ ] = i.NEXT_KEY();
+		return max - j - 1;
+	}
+
+	/** Unwraps an iterator into an array.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and stores the
+	 * elements returned in the given array. The iteration will stop when the
+	 * iterator has no more elements or when the end of the array has been reached.
+	 *
+	 * @param i a type-specific iterator.
+	 * @param array an array to contain the output of the iterator.
+	 * @return the number of elements unwrapped.
+	 */
+	public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[] ) {
+		return unwrap( i, array, 0, array.length );
+	}
+
+	/** Unwraps an iterator, returning an array, with a limit on the number of elements.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and returns an array
+	 * containing the elements returned by the iterator. At most <code>max</code> elements
+	 * will be returned.
+	 *
+	 * @param i a type-specific iterator.
+	 * @param max the maximum number of elements to be unwrapped.
+	 * @return an array containing the elements returned by the iterator (at most <ocde>max</code>).
+	 */
+	public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i, int max ) {
+		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
+		KEY_TYPE array[] = new KEY_TYPE[ 16 ];
+		int j = 0;
+
+		while( max-- != 0 && i.hasNext() ) {
+			if ( j == array.length ) {
+				KEY_TYPE oldArray[] = array;
+				array = new KEY_TYPE[ j * 2 ];
+				System.arraycopy( oldArray, 0, array, 0, j );
+			}
+			array[ j++ ] = i.NEXT_KEY();
+		}
+
+		if ( j != array.length ) {
+			KEY_TYPE oldArray[] = array;
+			array = new KEY_TYPE[ j ];
+			System.arraycopy( oldArray, 0, array, 0, j );
+		}
+
+		return array;
+	}
+
+
+	/** Unwraps an iterator, returning an array.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and returns an array
+	 * containing the elements returned by the iterator.
+	 *
+	 * @param i a type-specific iterator.
+	 * @return an array containing the elements returned by the iterator.
 	 */
 
-	public final static EmptyIterator EMPTY_ITERATOR = new EmptyIterator();
-		
-#include "BooleanIterators-Fragment.j"
-#include "ByteIterators-Fragment.j"
-#include "ShortIterators-Fragment.j"
-#include "IntIterators-Fragment.j"
-#include "LongIterators-Fragment.j"
-#include "CharIterators-Fragment.j"
-#include "FloatIterators-Fragment.j"
-#include "DoubleIterators-Fragment.j"
-#include "ObjectIterators-Fragment.j"
+	public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i ) {
+		return unwrap( i, Integer.MAX_VALUE );
+	}
 
 
-#ifdef TEST
+	/** Unwraps an iterator into a type-specific collection,  with a limit on the number of elements.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and stores the elements
+	 * returned, up to a maximum of <code>max</code>, in the given type-specific collection.
+	 * The number of actually unwrapped elements is returned (it may be less than <code>max</code> if
+	 * the iterator emits less than <code>max</code> elements).
+	 *
+	 * @param i a type-specific iterator.
+	 * @param c a type-specific collection array to contain the output of the iterator.
+	 * @param max the maximum number of elements to unwrap.
+	 * @return the number of elements unwrapped. Note that
+	 * this is the number of elements returned by the iterator, which is not necessarily the number
+	 * of elements that have been added to the collection (because of duplicates).
+	 */
+	public static int unwrap( final STD_KEY_ITERATOR i, final COLLECTION c, final int max ) {
+		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
+		int j = max;
+		while( j-- != 0 && i.hasNext() ) c.add( i.NEXT_KEY() );
+		return max - j - 1;
+	}
 
-	public static void main( String arg[] ) {
+	/** Unwraps an iterator into a type-specific collection.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and stores the
+	 * elements returned in the given type-specific collection. The returned count on the number
+	 * unwrapped elements is a long, so that it will work also with very large collections.
+	 *
+	 * @param i a type-specific iterator.
+	 * @param c a type-specific collection to contain the output of the iterator.
+	 * @return the number of elements unwrapped. Note that
+	 * this is the number of elements returned by the iterator, which is not necessarily the number
+	 * of elements that have been added to the collection (because of duplicates).
+	 */
+	public static long unwrap( final STD_KEY_ITERATOR i, final COLLECTION c ) {
+		long n = 0;
+		while( i.hasNext() ) {
+			c.add( i.NEXT_KEY() );
+			n++;
+		}
+		return n;
+	}
+
+
+#if ! #keyclass(Boolean)
+
+	/** Pours an iterator into a type-specific set, with a limit on the number of elements.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and adds
+	 * the returned elements to the given set (up to <code>max</code>).
+	 *
+	 * @param i a type-specific iterator.
+	 * @param s a type-specific set.
+	 * @param max the maximum number of elements to be poured.
+	 * @return the number of elements poured. Note that
+	 * this is the number of elements returned by the iterator, which is not necessarily the number
+	 * of elements that have been added to the set (because of duplicates).
+	 */
+
+	public static int pour( final STD_KEY_ITERATOR i, final SET s, final int max ) {
+		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
+		int j = max;
+		while( j-- != 0 && i.hasNext() ) s.add( i.NEXT_KEY() );
+		return max - j - 1;
+	}
+
+	/** Pours an iterator into a type-specific set.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and adds
+	 * the returned elements to the given set.
+	 *
+	 * @param i a type-specific iterator.
+	 * @param s a type-specific set.
+	 * @return the number of elements poured. Note that
+	 * this is the number of elements returned by the iterator, which is not necessarily the number
+	 * of elements that have been added to the set (because of duplicates).
+	 */
+
+	public static int pour( final STD_KEY_ITERATOR i, final SET s ) {
+		return pour( i, s, Integer.MAX_VALUE );
+	}
+
+	/** Pours an iterator, returning a type-specific set, with a limit on the number of elements.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and returns
+	 * a type-specific set containing the returned elements (up to <code>max</code>). Iteration
+	 * on the returned set is guaranteed to produce the elements in the same order
+	 * in which they appeared <em>first</em> in the iterator.
+	 *
+	 *
+	 * @param i a type-specific iterator.
+	 * @param max the maximum number of elements to be poured.
+	 * @return a type-specific set containing the returned elements, up to <code>max</code>.
+	 */
+
+	public static SET pour( final STD_KEY_ITERATOR i, int max ) {
+		final LINKEDOPENHASHSET s = new LINKEDOPENHASHSET();
+		pour( i, s, max );
+		return s;
+	}
+
+	/** Pours an iterator, returning a type-specific set.
+	 *
+	 * <P>This method iterates over the given type-specific iterator and returns
+	 * a set containing the returned elements. Iteration
+	 * on the returned set is guaranteed to produce the elements in the same order
+	 * in which they appeared <em>first</em> in the iterator.
+	 *
+	 * @param i a type-specific iterator.
+	 * @return a type-specific set containing the returned elements.
+	 */
+
+	public static SET pour( final STD_KEY_ITERATOR i ) {
+		return pour( i, Integer.MAX_VALUE );
 	}
 
 #endif
+
+
+	private static class KEY_ITERATOR_WRAPPER extends KEY_ABSTRACT_ITERATOR {
+		final Iterator i;
+
+		public KEY_ITERATOR_WRAPPER( final Iterator i ) {
+			this.i = i;
+		}
+
+		public boolean hasNext() { return i.hasNext(); };
+		public void remove() { i.remove(); };
+#if ! #keyclass(Object)
+		public Object next() { return i.next(); };
+#endif
+		public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); };
+	}
+
+	/** Wraps a standard iterator into a type-specific iterator.
+	 *
+	 * <P>This method wraps a standard iterator into a type-specific one which will handle the
+	 * type conversions for you. Of course, any attempt to wrap an iterator returning the
+	 * instances of the wrong class will generate a {@link ClassCastException}.
+	 *
+	 * <P>If <code>i</code> is already type-specific, it will returned and no new object
+	 * will be generated.
+	 *
+	 * @param i an iterator.
+	 * @return a type-specific iterator returning the same element as <code>i</code>.
+	 */
+	public static KEY_ITERATOR AS_KEY_ITERATOR( final Iterator i ) {
+		if ( i instanceof KEY_ITERATOR ) return (KEY_ITERATOR)i;
+		return new KEY_ITERATOR_WRAPPER( i );
+	}
+
+
+#if #keyclass(Integer) || #keyclass(Byte) || #keyclass(Character) || #keyclass(Long)
+
+#if #keyclass(Long)
+	private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_BIDI_ITERATOR  {
+#else
+	private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_LIST_ITERATOR {
+#endif
+
+		private final KEY_TYPE from, to;
+		KEY_TYPE curr;
+
+		public KEY_INTERVAL_ITERATOR( final KEY_TYPE from, final KEY_TYPE to ) {
+			this.from = this.curr = from;
+			this.to = to;
+		}
+
+		public boolean hasNext() { return curr < to; };
+		public boolean hasPrevious() { return curr > from; };
+
+		public KEY_TYPE NEXT_KEY() { 
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			return curr++; 
+		};
+		public KEY_TYPE PREV_KEY() { 
+			if ( ! hasPrevious() ) throw new NoSuchElementException();
+			return --curr; 
+		};
+
+#if ! #keyclass(Long)
+		public int nextIndex() { return curr - from; }
+		public int previousIndex() { return curr - from - 1; }
+#endif
+
+		public int skip( int n ) {
+			if ( curr + n <= to ) {
+				curr += n;
+				return n;
+			}
+			else {
+				n = (int)( to - curr );
+				curr = to;
+				return n;
+			}
+		}
+
+		public int back( int n ) {
+			if ( curr - n >= from ) {
+				curr -= n;
+				return n;
+			}
+			else {
+				n = (int)( curr - from );
+				curr = from;
+				return n;
+			}
+		}
+	}
+		
+	/** Creates a type-specific bidirectional iterator over an interval.
+	 *
+	 * <P>The type-specific bidirectional iterator returned by this method will return the
+	 * elements <code>from</code>, <code>from+1</code>,&hellip;, <code>to-1</code>.
+	 *
+	 * @param from the starting element (inclusive).
+	 * @param to the ending element (exclusive).
+	 * @return a type-specific bidirectional iterator enumerating the elements from <code>from</code> to <code>to</code>.
+	 */
+	public static KEY_BIDI_ITERATOR fromTo( final KEY_TYPE from, final KEY_TYPE to ) {
+		return new KEY_INTERVAL_ITERATOR( from, to );
+	}
+
+#endif
+
+	private static class KEY_ITERATOR_CONCATENATOR extends KEY_ABSTRACT_ITERATOR {
+		final KEY_ITERATOR a[];
+		int offset, length, lastOffset = -1;
+
+		public KEY_ITERATOR_CONCATENATOR( final KEY_ITERATOR a[], int offset, int length ) {
+			this.a = a;
+			this.offset = offset;
+			this.length = length;
+			advance();
+		}
+
+		private void advance() {
+			while( length != 0 ) {
+				if ( a[ offset ].hasNext() ) break;
+				length--;
+				offset++;
+			}
+
+			return;
+		}
+
+		public boolean hasNext() {
+			return length > 0;
+		}
+
+		public KEY_TYPE NEXT_KEY() {
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			KEY_TYPE next = a[ lastOffset = offset ].NEXT_KEY();
+			advance();
+			return next;
+		}
+
+		public void remove() {
+			if ( lastOffset == -1 ) throw new IllegalStateException();
+			a[ lastOffset ].remove();
+		}
+
+		public int skip( int n ) {
+			lastOffset = -1;
+
+			int skipped = 0;
+
+			while( skipped < n && length != 0 ) {
+				skipped += a[ offset ].skip( n - skipped );
+				if ( a[ offset ].hasNext() ) break;
+				length--;
+				offset++;
+			}
+			
+			return skipped;
+		}
+
+	}
+
+
+	/** Concatenates all iterators contained in an array.
+	 *
+	 * <P>This method returns an iterator that will enumerate in order the elements returned
+	 * by all iterators contained in the given array.
+	 *
+	 * @param a an array of iterators.
+	 * @return an iterator obtained by concatenation.
+	 */
+
+	public static KEY_ITERATOR concat( final KEY_ITERATOR a[] ) {
+		return concat( a, 0, a.length );
+	}
+
+
+	/** Concatenates a sequence of iterators contained in an array.
+	 *
+	 * <P>This method returns an iterator that will enumerate in order the elements returned
+	 * by <code>a[ offset ]</code>, then those returned 
+	 * by <code>a[ offset + 1 ]</code>, and so on up to 
+	 * <code>a[ offset + length - 1 ]</code>. 
+	 *
+	 * @param a an array of iterators.
+	 * @param offset the index of the first iterator to concatenate.
+	 * @param length the number of iterators to concatenate.
+	 * @return an iterator obtained by concatenation of <code>length</code> elements of <code>a</code> starting at <code>offset</code>.
+	 */
+
+	public static KEY_ITERATOR concat( final KEY_ITERATOR a[], final int offset, final int length ) {
+		return new KEY_ITERATOR_CONCATENATOR( a, offset, length );
+	}
 
 }
 
