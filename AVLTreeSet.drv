@@ -27,7 +27,7 @@ import java.io.*;
 /** A type-specific AVL tree set with a fast, small-footprint implementation.
  */
 
-public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
+public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable, SORTEDSET {
 
 	 /** A reference to the root entry. */
 	 transient Entry tree;
@@ -718,7 +718,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 	  * considered equivalently a tree.
 	  */
 
-    private static final class Entry {
+    private static final class Entry implements Cloneable {
 		  /** If the bit in this mask is true, {@link #right} points to a successor. */
 		  private final static int SUCC_MASK = 1 << 31;
 		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
@@ -731,6 +731,8 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 		  Entry left, right;
 		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
 		  int info;
+
+		  Entry() {}
 
 		  /** Creates a new entry with the given key.
 			*
@@ -891,6 +893,21 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 		  }
 #endif
 		  
+		  public Object clone() {
+				Entry c;
+				try {
+					 c = (Entry)super.clone();
+				}
+				catch(CloneNotSupportedException cantHappen) {
+					 throw new InternalError();
+				}
+
+				c.key = key;
+				c.info = info;
+
+				return c;
+		  }
+
 		  public boolean equals(Object o) {
 				if (!(o instanceof Entry)) return false;
 				Entry e = (Entry)o;
@@ -1355,6 +1372,81 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 				}
 		  }
 	 }
+
+
+
+	 /** Returns a deep copy of this tree set.
+	  *
+	  * <P>This method performs a deep copy of this tree set; the data stored in the
+	  * set, however, is not cloned. Note that this makes a difference only for object keys.
+	  *
+	  * @return a deep copy of this tree set.
+	  */
+
+	 public Object clone() {
+		  AVLTREESET c;
+		  try {
+				c = (AVLTREESET)super.clone();
+		  }
+		  catch(CloneNotSupportedException cantHappen) {
+				throw new InternalError();
+		  }
+
+		  if ( count != 0 ) {
+				// Also this apparently unfathomable code is derived from GNU libavl.
+				Entry e, p, q, rp = new Entry(), rq = new Entry();
+
+				p = rp;
+				rp.left( tree );
+
+				q = rq;
+				rq.pred( null );
+
+				while( true ) {
+					 if ( ! p.pred() ) {
+						  e = (Entry)p.left.clone();
+						  e.pred( q.left );
+						  e.succ( q );
+						  q.left( e );
+
+						  p = p.left;
+						  q = q.left;
+					 }
+					 else {
+						  while( p.succ() ) {
+								p = p.right;
+
+								if ( p == null ) {
+									 q.right = null;
+									 c.tree = rq.left;
+
+									 c.firstEntry = c.tree;
+									 while( c.firstEntry.left != null ) c.firstEntry = c.firstEntry.left;
+									 c.lastEntry = c.tree;
+									 while( c.lastEntry.right != null ) c.lastEntry = c.lastEntry.right;
+
+									 return c;
+								}
+								q = q.right;
+						  }
+								
+						  p = p.right;
+						  q = q.right;
+					 }
+
+					 if ( ! p.succ() ) {
+						  e = (Entry)p.right.clone();
+						  e.succ( q.right );
+						  e.pred( q );
+						  q.right( e );
+					 }
+				}
+		  }
+
+		  return c;
+	 }
+
+	 
 	 
 
     private void writeObject(java.io.ObjectOutputStream s) throws IOException {
@@ -1819,7 +1911,13 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET 
 
 		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ on their last key (" + m.last() + ", " + t.last() +")");
 
+		  /* Now we check cloning. */
 
+		  if ( level == 0 ) {
+				ensure( m.equals( ((AVLTREESET)m).clone() ), "Error (" + level + ", " + seed + "): m does not equal m.clone()" );
+				ensure( ((AVLTREESET)m).clone().equals( m ), "Error (" + level + ", " + seed + "): m.clone() does not equal m" );
+				m = (AVLTREESET)((AVLTREESET)m).clone();
+		  }
 
 		  int h = m.hashCode();
 
