@@ -29,6 +29,9 @@ TYPE=(boolean byte short int long char float double Object Object)
 # The same types, but capitalized (to build method names).
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
+# The same types, but in lower case (to build package names).
+TYPE_LC=(boolean byte short int long char float double object object)
+
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
 
@@ -59,6 +62,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define $linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
+"#define IMPORT import it.unimi.dsi.fastutil.${TYPE_LC[$v]}.*;\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
@@ -238,6 +243,7 @@ for ((f=0; f<${#SET[*]}; f++)); do
 		 echo -e \
 "#define $linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
@@ -347,6 +353,7 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 		rm -f $FILENAME
 		echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
@@ -470,6 +477,7 @@ for ((f=0; f<t; f++)); do
 		rm -f $FILENAME
 		echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\

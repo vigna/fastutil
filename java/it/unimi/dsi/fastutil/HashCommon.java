@@ -34,7 +34,7 @@ public class HashCommon {
 	/** This reference is used to fill keys and values of removed entries (if
 		they are objects). <code>null</code> cannot be used as it would confuse the
 		search algorithm in the presence of an actual <code>null</code> key. */ 
-	static Object removed = new Object();
+	public static Object removed = new Object();
 
 	private HashCommon() {};
 
