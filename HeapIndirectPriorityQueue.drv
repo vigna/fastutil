@@ -1,7 +1,7 @@
 /*		 
  * fastutil: Fast & compact type-specific data structures for Java
  *
- * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,9 @@ import java.util.Comparator;
 /** A type-specific heap-based indirect priority queue. 
  *
  * <P>Instances of this class use an additional <em>inversion array</em>, of the same length of the reference array,
- * to keep track of the heap position containing a given element of the reference array.
+ * to keep track of the heap position containing a given element of the reference array. The priority queue is
+ * represented using a heap. The heap is enlarged as needed, but it is never
+ * shrunk. Use the {@link #trim()} method to reduce its size, if necessary.
  *
  * <P>This implementation does <em>not</em> allow one to enqueue several times the same index.
  */
@@ -94,11 +96,16 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 	 * @param size the number of elements to be included in the queue.
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c ) {
+	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final int size, final KEY_COMPARATOR c ) {
 		this( refArray, 0, c );
 		this.heap = a;
 		this.size = size;
-		INDIRECT_HEAPS.makeHeap( refArray, a, this.inv, size, c );
+		int i = size;
+		while( i-- != 0 ) {
+			if ( inv[ a[ i ] ] != -1 ) throw new IllegalArgumentException( "Index " + a[ i ] + " appears twice in the heap" );
+			inv[ a[ i ] ] = i;
+		}
+		INDIRECT_HEAPS.makeHeap( refArray, a, inv, size, c );
 	}
 
 
@@ -127,10 +134,7 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 	 * @param size the number of elements to be included in the queue.
 	 */
 	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size ) {
-		this( refArray );
-		this.heap = a;
-		this.size = size;
-		INDIRECT_HEAPS.makeHeap( refArray, a, this.inv, size, null );
+		this( refArray, a, size, null );
 	}
 
 
@@ -208,10 +212,10 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 		ensureHeapElement( index );
 
 		final int result = inv[ index ];
-		if ( result < --size ) inv[ heap[ result ] = heap[ size ] ] = result;
 		inv[ index ] = -1;
 
-		if ( size != result ) {
+		if ( result < --size ) {
+			inv[ heap[ result ] = heap[ size ] ] = result;
 			final int newPos = INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, result, c );
 			INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, newPos, c );
 		}

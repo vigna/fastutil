@@ -1,7 +1,7 @@
 /*		 
  * fastutil: Fast & compact type-specific data structures for Java
  *
- * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,8 @@ import java.util.Comparator;
  *
  * <P>Instances of this class are based on a single array. This implementation
  * is extremely inefficient, but it is difficult to beat when the size of the
- * queue is very small.
+ * queue is very small.  The array is enlarged as needed, but it is never
+ * shrunk. Use the {@link #trim()} method to reduce its size, if necessary.
  *
  * <P>Either comparator may be <code>null</code>, indicating that natural comparison should take place. Of course,
  * it makes little sense having them equal.
@@ -64,8 +65,7 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c ) {
-		super( refArray, capacity, c );
-		secondaryComparator = COMPARATORS.oppositeComparator( c );
+		super( refArray, capacity, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
 	}
 
 
@@ -77,8 +77,7 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	 * @param capacity the initial capacity of this queue.
 	 */
 	public ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
-		super( refArray, capacity, null );
-		secondaryComparator = COMPARATORS.OPPOSITE_COMPARATOR;
+		this( refArray, capacity, null );
 	}
 
 
@@ -89,7 +88,7 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c, KEY_COMPARATOR d ) {
-		this( refArray, 0, c, d );
+		this( refArray, refArray.length, c, d );
 	}
 
 	/** Creates a new empty queue with capacity equal to the length of the reference array.
@@ -100,7 +99,7 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
-		this( refArray, 0, c );
+		this( refArray, refArray.length, c );
 	}
 
 	/** Creates a new empty queue with capacity equal to the length of the reference array and natural order as primary comparator.
@@ -110,15 +109,30 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	 * @param refArray the reference array.
 	 */
 	public ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray ) {
-		this( refArray, 0, null );
+		this( refArray, refArray.length, null );
 	}
 
 
-	/** Wraps a given array in a queue using a given comparator.
+	/** Wraps a given array in a queue using the given comparators.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
-	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param size the number of elements to be included in the queue.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c, final KEY_COMPARATOR d ) {
+		this( refArray, 0, c, d );
+		this.array = a;
+		this.size = size;
+	}
+
+
+	/** Wraps a given array in a queue using a given comparator and its opposite.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
@@ -132,11 +146,9 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	}
 
 
-	/** Wraps a given array in a queue using a given comparator.
+	/** Wraps a given array in a queue using a given comparator and its opposite.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The elements of the array will be rearranged so to form a heap (this is
-	 * more efficient than enqueing the elements of <code>a</code> one by one).
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
@@ -146,11 +158,9 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 		this( refArray, a, a.length, c );
 	}
 
-	/** Wraps a given array in a queue using the natural order.
+	/** Wraps a given array in a queue using the natural order and its opposite.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
-	 * more efficient than enqueing the elements of <code>a</code> one by one).
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
@@ -161,11 +171,9 @@ public class ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORIT
 	}
 
 
-	/** Wraps a given array in a queue using the natural order.
+	/** Wraps a given array in a queue using the natural order and its opposite.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The elements of the array will be rearranged so to form a heap (this is
-	 * more efficient than enqueing the elements of <code>a</code> one by one).
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.

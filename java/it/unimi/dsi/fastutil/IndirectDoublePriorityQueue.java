@@ -1,7 +1,7 @@
 /*		 
  * fastutil: Fast & compact type-specific data structures for Java
  *
- * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@ import java.util.Comparator;
  * <P>An indirect double priority queue uses two distinct comparators (called <em>primary</em>
  * and <em>secondary</em>) to keep its elements ordered. It makes it possible to access the
  * first element w.r.t. the secondary comparatory using {@link #secondaryFirst()} (and, optionally,
- * using the last element using  {@link #secondaryFirst()}). The remaining methods
+ * the last element using  {@link #secondaryLast()}). The remaining methods
  * work like those of an {@linkplain it.unimi.dsi.fastutil.IndirectPriorityQueue indirect priority queue} based on the
  * primary comparator.
  */

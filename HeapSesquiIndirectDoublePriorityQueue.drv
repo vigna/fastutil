@@ -1,7 +1,7 @@
 /*		 
  * fastutil: Fast & compact type-specific data structures for Java
  *
- * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -29,9 +29,9 @@ import java.util.Comparator;
 
 /** A type-specific heap-based sesqui-indirect double priority queue.
  *
- * <P>Instances of this class are based on a semi-indirect queue and an indirect
- * heap-based queue. This implementation is very inefficient, but it could
- * perform .
+ * <P>Instances of this class are based on a semi-indirect and an indirect
+ * heap-based queues. The queues are enlarged as needed, but they are never
+ * shrunk. Use the {@link #trim()} method to reduce their size, if necessary.
  *
  * <P>Either comparator may be <code>null</code>, indicating that natural comparison should take place. Of course,
  * it makes little sense having them equal.
@@ -77,8 +77,7 @@ public class HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_SEMI_INDIRE
 	 * @param capacity the initial capacity of this queue.
 	 */
 	public HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
-		super( refArray, capacity, null );
-		secondaryQueue = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray, capacity, COMPARATORS.OPPOSITE_COMPARATOR );
+		this( refArray, capacity, null );
 	}
 
 
@@ -100,7 +99,7 @@ public class HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_SEMI_INDIRE
 	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
-		this( refArray, refArray.length, c, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
+		this( refArray, refArray.length, c );
 	}
 
 	/** Creates a new empty queue with capacity equal to the length of the reference array and natural order as primary comparator.
@@ -114,35 +113,56 @@ public class HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_SEMI_INDIRE
 	}
 
 
-	/** Wraps a given array in a queue using a given comparator.
+	/** Wraps a given array in a queue using the given comparators.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
 	 * @param size the number of elements to be included in the queue.
-	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c ) {
-		super( refArray, 0, c );
-		this.heap = a;
-		this.size = size;
-		SEMI_INDIRECT_HEAPS.makeHeap( refArray, a, size, c );
-		this.secondaryQueue = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray, (int[])a.clone(), size );
+	public HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c, final KEY_COMPARATOR d ) {
+		super( refArray, a, size, c );
+		this.secondaryQueue = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray, (int[])a.clone(), size, d );
 	}
 
 
 	/** Wraps a given array in a queue using a given comparator.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The elements of the array will be rearranged so to form a heap (this is
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite order of <code>c</code>.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
-	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param size the number of elements to be included in the queue.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c ) {
+		this( refArray, a, size, c, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
+	}
+
+
+	/** Wraps a given array in a queue using a given comparator.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The elements of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite order of <code>c</code>.
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final KEY_COMPARATOR c ) {
 		this( refArray, a, a.length, c );
@@ -151,8 +171,11 @@ public class HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_SEMI_INDIRE
 	/** Wraps a given array in a queue using the natural order.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite of the natural order.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
@@ -166,8 +189,11 @@ public class HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_SEMI_INDIRE
 	/** Wraps a given array in a queue using the natural order.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The elements of the array will be rearranged so to form a heap (this is
+	 * The elements of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite of the natural order.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
