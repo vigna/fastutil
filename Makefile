@@ -15,7 +15,7 @@ CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 jsources: $(SOURCES)
 
 tar: jar
-	tar zhcvf fastMaps-1.0.tgz fastMaps-1.0/
+	tar zhcvf fastUtil-1.0.tgz fastUtil-1.0/
 
 jar: jsources
 	ant dist
@@ -27,11 +27,11 @@ clean:
 	@rm -f */*/*/*/*.java
 	@rm -f */*/*/*/*.c
 
-PACKAGES = it.unimi.dsi.fastMaps
+PACKAGES = it.unimi.dsi.fastUtil
 
 docs: jsources
 	-rm -fr $(DOCSDIR)/*
-	javadoc -d $(DOCSDIR)  -windowtitle fastMaps -link $(APIURL) $(PACKAGES)
+	javadoc -d $(DOCSDIR)  -windowtitle fastUtil -link $(APIURL) $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 # Implicit rule for making Java class files from Java 

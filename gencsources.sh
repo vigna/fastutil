@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DIR="it/unimi/dsi/fastMaps"
+DIR="it/unimi/dsi/fastUtil"
 FILE=(Map HashMap Set HashSet)
 TYPE=(boolean byte short int long char float double Object)
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object)

@@ -10,9 +10,9 @@ for ((t=10; t<1000000; t*=10)); do
 #		  for ((k=1; k<${#TYPE[*]}; k++)); do
 #				for ((v=0; v<${#TYPE[*]}; v++)); do
 #					 if (( k < $((${#TYPE[*]}-1)) || v < $((${#TYPE[*]}-1)) )); then
-#						  CLASSNAME=it.unimi.dsi.fastMaps.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}
+#						  CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}
 #						  echo "Testing $CLASSNAME ($t elements)..."
-#						  java -server -cp fastMaps.jar $CLASSNAME regressionTest $t
+#						  java -server -cp fastUtil.jar $CLASSNAME regressionTest $t
 #					 fi
 #				done
 #		  done
@@ -20,9 +20,9 @@ for ((t=10; t<1000000; t*=10)); do
 
 	 for ((f=1; f<2; f++)); do
 		  for ((k=1; k<${#TYPE[*]}; k++)); do
-				CLASSNAME=it.unimi.dsi.fastMaps.${TYPE_CAP[$k]}${FILE[$f]}
+				CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}${FILE[$f]}
 				echo "Testing $CLASSNAME ($t elements)..."
-				java -server -cp fastMaps.jar $CLASSNAME regressionTest $t
+				java -server -cp fastUtil.jar $CLASSNAME regressionTest $t
 		  done
 	 done
 done
