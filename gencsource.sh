@@ -97,6 +97,7 @@ echo -e \
 \
 "#define ABSTRACT_COLLECTION Abstract${TYPE_CAP[$k]}Collection\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION Abstract${TYPE_CAP[$v]}Collection\n\n"\
+"#define VALUE_COLLECTION ${TYPE_CAP[$v]}Collection\n\n"\
 "#define ABSTRACT_SET Abstract${TYPE_CAP[$k]}Set\n\n"\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
 \
@@ -117,6 +118,7 @@ echo -e \
 \
 "#define SYNCHRONIZED_COLLECTION Synchronized${TYPE_CAP[$k]}Collection\n\n"\
 "#define SYNCHRONIZED_SET Synchronized${TYPE_CAP[$k]}Set\n\n"\
+"#define SYNCHRONIZED_MAP Synchronized${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n\n"\
 "#define SYNCHRONIZED_SORTEDSET Synchronized${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define SYNCHRONIZED_LIST Synchronized${TYPE_CAP[$k]}List\n\n"\
 \
@@ -203,7 +205,6 @@ echo -e \
 "#define STDSORTEDMAP SORTEDMAP\n\n"\
 "#define STDARRAYLIST ARRAY_LIST\n\n"\
 "#define KEY_EMPTY_SET ${TYPE_UC[$k]}_EMPTY_SET\n\n"\
-"#define KEY_EMPTY_MAP ${TYPE_UC[$k]}_EMPTY_MAP\n\n"\
 "#define KEY_EMPTY_LIST ${TYPE_UC[$k]}_EMPTY_LIST\n\n"\
 "#define KEY_EMPTY_ARRAY ${TYPE_UC[$k]}_EMPTY_ARRAY\n\n"\
 "#define KEY_EMPTY_ITERATOR ${TYPE_UC[$k]}_EMPTY_ITERATOR\n\n"\

@@ -41,7 +41,41 @@ PACKAGE_Double = doubles
 PACKAGE_Object = objects
 PACKAGE_Reference = objects
 
-dummy: jsources
+explain:
+	@echo -e "\nTo build fastutil, you must first use \"make sources\""
+	@echo -e "to obtain the actual Java files. Then, you can build the jar"
+	@echo -e "file using \"ant jar\", or the documentation using \"ant javadoc\".\n"
+	@echo -e "If you set the make variable TEST (e.g., make jar TEST=1), you"
+	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
+
+source:
+	-rm -f fastutil-$(VERSION)
+	ln -s . fastutil-$(VERSION)
+	tar zcvf fastutil-$(VERSION)-src.tar.gz --owner=root --group=root \
+		fastutil-$(VERSION)/*.drv \
+		fastutil-$(VERSION)/build.xml \
+		fastutil-$(VERSION)/gencsources.sh \
+		fastutil-$(VERSION)/CHANGES \
+		fastutil-$(VERSION)/README \
+		fastutil-$(VERSION)/COPYING.LIB \
+		fastutil-$(VERSION)/makefile \
+		fastutil-$(VERSION)/$(SRC)/{BidirectionalIterator.java,HashCommon.java,Hash.java,Stack.java,AbstractStack.java} \
+		fastutil-$(VERSION)/$(SRC)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
+		fastutil-$(VERSION)/java/overview.html
+	rm fastutil-$(VERSION)
+
+bin:
+	ant jar docs
+	-rm -f fastutil-$(VERSION)
+	ln -s . fastutil-$(VERSION)
+	tar zcvf fastutil-$(VERSION)-bin.tar.gz --owner=root --group=root \
+		fastutil-$(VERSION)/CHANGES \
+		fastutil-$(VERSION)/README \
+		fastutil-$(VERSION)/COPYING.LIB \
+		fastutil-$(VERSION)/docs \
+		fastutil-$(VERSION)/fastutil-$(VERSION).jar
+	rm fastutil-$(VERSION)
+
 
 LinkedOpenHashSet.drv: OpenHashSet.drv
 	ln -s OpenHashSet.drv LinkedOpenHashSet.drv
@@ -291,6 +325,19 @@ $(SOURCEDIR)/Arrays.java: $(ARRAYS_FRAGMENTS:.h=.j)
 CSOURCES += $(SOURCEDIR)/Arrays.c
 
 
+MAPS_FRAGMENTS := $(foreach k, $(TYPE_NOBOOL), $(foreach v, $(TYPE), $(SOURCEDIR)/$(k)2$(v)Maps-Fragment.h))
+$(MAPS_FRAGMENTS): Maps-Fragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(MAPS_FRAGMENTS)
+
+$(SOURCEDIR)/Maps.c: Maps.drv $(MAPS_FRAGMENTS)
+	cp $< $@
+
+$(SOURCEDIR)/Maps.java: $(MAPS_FRAGMENTS:.h=.j)
+
+CSOURCES += $(SOURCEDIR)/Maps.c
+
+
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
 
@@ -325,7 +372,7 @@ clean:
 	@rm -fr $(DOCSDIR)/*
 
 
-jsources: $(JSOURCES) $(JFRAGMENTS)
+sources: $(JSOURCES) $(JFRAGMENTS)
 
 csources: $(CSOURCES) $(CFRAGMENTS)
 
