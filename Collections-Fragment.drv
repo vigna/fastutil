@@ -1,3 +1,77 @@
+protected static class SYNCHRONIZED_COLLECTION implements COLLECTION, java.io.Serializable {
+
+	public static final long serialVersionUID = -7046029254386353129L;
+
+	COLLECTION collection;
+	Object sync;
+
+	SYNCHRONIZED_COLLECTION( COLLECTION c, Object sync ) {
+		if ( c == null ) throw new NullPointerException();
+	    this.collection = c;
+		this.sync = sync;
+	}
+
+	SYNCHRONIZED_COLLECTION( COLLECTION c ) {
+		if ( c == null ) throw new NullPointerException();
+	    this.collection = c;
+		this.sync = this;
+	}
+
+	public int size() { synchronized( sync ) { return collection.size(); } }
+	public boolean isEmpty() { synchronized( sync ) { return collection.isEmpty(); } }
+	public boolean contains( KEY_TYPE o ) { synchronized( sync ) { return collection.contains( o ); } }
+
+	public KEY_TYPE[] TO_KEY_ARRAY() { synchronized( sync ) { return collection.TO_KEY_ARRAY(); } }
+	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE[] a ) { synchronized( sync ) { return collection.TO_KEY_ARRAY( a ); } }
+
+	public Iterator iterator() { return collection.iterator(); }
+	public KEY_ITERATOR KEY_ITERATOR_METHOD() { return collection.KEY_ITERATOR_METHOD(); }
+
+	public boolean add( KEY_TYPE k ) { synchronized( sync ) { return collection.add( k ); } }
+	public boolean REMOVE( KEY_TYPE k ) { synchronized( sync ) { return collection.REMOVE( k ); } }
+
+	public boolean addAll( Collection c ) { synchronized( sync ) { return collection.addAll( c ); } }
+	public boolean containsAll( Collection c ) { synchronized( sync ) { return collection.containsAll( c ); } }
+	public boolean removeAll( Collection c ) { synchronized( sync ) { return collection.removeAll( c ); } }
+	public boolean retainAll( Collection c ) { synchronized( sync ) { return collection.retainAll( c ); } }
+
+	public boolean containsAll( COLLECTION c ) { synchronized( sync ) { return collection.containsAll( c ); } }
+	public boolean addAll( COLLECTION c ) { synchronized( sync ) { return collection.addAll( c ); } }
+	public boolean removeAll( COLLECTION c ) { synchronized( sync ) { return collection.removeAll( c ); } }
+	public boolean retainAll( COLLECTION c ) { synchronized( sync ) { return collection.retainAll( c ); } }
+
+	public void clear() { synchronized( sync ) { collection.clear(); } }
+	public String toString() { synchronized( sync ) { return collection.toString(); } }
+
+#if !#keyclass( Object ) && !#keyclass( Reference )
+	public boolean add( Object k ) { synchronized( sync ) { return collection.add( k ); } }
+	public boolean remove( Object k ) { synchronized( sync ) { return collection.remove( k ); } }
+	public boolean contains( Object k ) { synchronized( sync ) { return collection.contains( k ); } }
+	public Object[] toArray() { synchronized( sync ) { return collection.toArray(); } }
+	public Object[] toArray( Object[] a ) { synchronized( sync ) { return collection.toArray( a ); } }
+	public KEY_TYPE[] toArray( KEY_TYPE[] a ) { synchronized( sync ) { return collection.TO_KEY_ARRAY( a ); } }
+#endif
+}
+
+
+/** Returns a synchronized collection backed by the specified collection.
+ *
+ * @param c the collection to be "wrapped" in a synchronized collection.
+ * @return a synchronized view of the specified collection.
+ * @see java.util.Collections#synchronizedCollection(Collection)
+ */
+public static COLLECTION synchronize( COLLECTION c ) {	return new SYNCHRONIZED_COLLECTION( c ); }
+
+/** Returns a synchronized collection backed by the specified collection, using an assigned object to synchronize.
+ *
+ * @param c the collection to be "wrapped" in a synchronized collection.
+ * @param sync an object that will be used to synchronize the list access.
+ * @return a synchronized view of the specified collection.
+ * @see java.util.Collections#synchronizedCollection(Collection)
+ */
+
+public static COLLECTION synchronize( COLLECTION c, Object sync ) { return new SYNCHRONIZED_COLLECTION( c, sync ); }
+
 
 
 // Local Variables:

@@ -2,6 +2,8 @@
 
 protected static class SINGLETON extends ABSTRACT_LIST implements java.io.Serializable, Cloneable {
 	
+	public static final long serialVersionUID = -7046029254386353129L;
+
 	private KEY_TYPE element;
 	
 	private SINGLETON( KEY_TYPE element ) {
@@ -85,10 +87,92 @@ protected static class SINGLETON extends ABSTRACT_LIST implements java.io.Serial
 #endif
 
 
+protected static class SYNCHRONIZED_LIST extends Collections.SYNCHRONIZED_COLLECTION implements LIST, java.io.Serializable {
+
+	public static final long serialVersionUID = -7046029254386353129L;
+
+	LIST list; // Due to the large number of methods that are not in COLLECTION, this is worth caching.
+
+	SYNCHRONIZED_LIST( LIST l, Object sync ) {
+		super( l, sync );
+		this.list = l;
+	}
+
+	SYNCHRONIZED_LIST( LIST l ) {
+		super( l );
+		this.list = l;
+	}
+
+	public KEY_TYPE GET_KEY( int i ) { synchronized( sync ) { return list.GET_KEY( i ); } }
+	public KEY_TYPE set( int i, KEY_TYPE k ) { synchronized( sync ) { return list.set( i, k ); } }
+	public void add( int i, KEY_TYPE k ) { synchronized( sync ) { list.add( i, k ); } }
+	public KEY_TYPE REMOVE_KEY( int i ) { synchronized( sync ) { return list.REMOVE_KEY( i ); } }
+
+	public int indexOf( KEY_TYPE k ) { synchronized( sync ) { return list.indexOf( k ); } }
+	public int lastIndexOf( KEY_TYPE k ) { synchronized( sync ) { return list.lastIndexOf( k ); } }
+
+	public boolean addAll( int index, Collection c ) { synchronized( sync ) { return list.addAll( index, c ); } }
+	public boolean addAll( int index, COLLECTION c ) { synchronized( sync ) { return list.addAll( index, c ); } }
+	public boolean addAll( List l ) { synchronized( sync ) { return list.addAll( l ); } }
+	public boolean addAll( LIST l ) { synchronized( sync ) { return list.addAll( l ); } }
+	public boolean addAll( int index, List l ) { synchronized( sync ) { return list.addAll( index, l ); } }
+	public boolean addAll( int index, LIST l ) { synchronized( sync ) { return list.addAll( index, l ); } }
+
+	public void getElements( int from, KEY_TYPE a[], int offset, int length ) { synchronized( sync ) { list.getElements( from, a, offset, length ); } }
+	public void removeElements( int from, int to ) { synchronized( sync ) { list.removeElements( from, to ); } }
+	public void size( int size ) { synchronized( sync ) { list.size( size ); } }
+
+	public ListIterator listIterator() { return list.listIterator(); }
+	public ListIterator listIterator( int i ) { return list.listIterator( i ); }
+	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD() { return list.KEY_LIST_ITERATOR_METHOD(); }
+	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( int i ) { return list.KEY_LIST_ITERATOR_METHOD( i ); }
+
+	public List subList( int from, int to ) { synchronized( sync ) { return new SYNCHRONIZED_LIST( (LIST)list.subList( from, to ), sync ); } }
+	public LIST SUBLIST_METHOD( int from, int to ) { synchronized( sync ) { return new SYNCHRONIZED_LIST( list.SUBLIST_METHOD( from, to ), sync ); } }
+
+	public boolean equals( Object o ) { synchronized( sync ) { return collection.equals( o ); } }
+	public int hashCode() { synchronized( sync ) { return collection.hashCode(); } }
+
+#if ! #keyclass(Boolean) && ! #keyclass(Reference)
+	public int compareTo( Object o ) { synchronized( sync ) { return list.compareTo( o ); } }
+#endif
+
+#if !#keyclass( Object ) && !#keyclass( Reference )
+	public Object get( int i ) { synchronized( sync ) { return list.get( i ); } }
+	public void add( int i, Object k ) { synchronized( sync ) { list.add( i, k ); } }
+	public Object set( int index, Object k ) { synchronized( sync ) { return list.set( index, k ); } }
+	public Object remove( int i ) { synchronized( sync ) { return list.remove( i ); } }
+	public int indexOf( Object o ) { synchronized( sync ) { return list.indexOf( o ); } }
+	public int lastIndexOf( Object o ) { synchronized( sync ) { return list.lastIndexOf( o ); } }
+#endif
+}
+
+
+/** Returns a synchronized list backed by the specified list.
+ *
+ * @param l the list to be "wrapped" in a synchronized list.
+ * @return a synchronized view of the specified list.
+ * @see java.util.Collections#synchronizedList(List)
+ */
+public static LIST synchronize( LIST l ) {	return new SYNCHRONIZED_LIST( l ); }
+
+/** Returns a synchronized list backed by the specified list, using an assigned object to synchronize.
+ *
+ * @param l the list to be "wrapped" in a synchronized list.
+ * @param sync an object that will be used to synchronize the list access.
+ * @return a synchronized view of the specified list.
+ * @see java.util.Collections#synchronizedList(List)
+ */
+
+public static LIST synchronize( LIST l, Object sync ) { return new SYNCHRONIZED_LIST( l, sync ); }
+
+
+
+
 #ifdef TEST
 
 	private static KEY_TYPE GEN_KEY() {
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+#if #keyclass(Byte ) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
 #elif !#keyclass(Object) && !#keyclass(Reference)
 		return r.NEXT_KEY(); 

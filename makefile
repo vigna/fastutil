@@ -252,6 +252,19 @@ $(SOURCEDIR)/Sets.java: $(SETS_FRAGMENTS:.h=.j)
 CSOURCES += $(SOURCEDIR)/Sets.c
 
 
+SORTEDSETS_FRAGMENTS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(k)SortedSets-Fragment.h)
+$(SORTEDSETS_FRAGMENTS): SortedSets-Fragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(SORTEDSETS_FRAGMENTS)
+
+$(SOURCEDIR)/SortedSets.c: SortedSets.drv $(SORTEDSETS_FRAGMENTS)
+	cp $< $@
+
+$(SOURCEDIR)/SortedSets.java: $(SORTEDSETS_FRAGMENTS:.h=.j)
+
+CSOURCES += $(SOURCEDIR)/SortedSets.c
+
+
 LISTS_FRAGMENTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(k)Lists-Fragment.h)
 $(LISTS_FRAGMENTS): Lists-Fragment.drv; ./gencsource.sh $< $@ >$@
 
@@ -278,9 +291,10 @@ $(SOURCEDIR)/Arrays.java: $(ARRAYS_FRAGMENTS:.h=.j)
 CSOURCES += $(SOURCEDIR)/Arrays.c
 
 
-
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 JFRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java source fragments
+
+SOURCES = $(SOURCEDIR)/Hash.java $(SOURCEDIR)/BidirectionalIterator.java $(SOURCEDIR)/HashCommon.java $(SOURCEDIR)/Stack.java $(SOURCEDIR)/AbstractStack.java # These are True Java Sources instead
 
 ifdef ASSERTS
 	ASSERTS_VALUE = true
@@ -314,3 +328,6 @@ clean:
 jsources: $(JSOURCES) $(JFRAGMENTS)
 
 csources: $(CSOURCES) $(CFRAGMENTS)
+
+tags:
+	etags build.xml Makefile README gencsource.sh *.drv java/overview.html $(SOURCES)

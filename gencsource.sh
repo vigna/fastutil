@@ -115,6 +115,11 @@ echo -e \
 "#define RBTREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}RBTreeMap\n\n"\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n\n"\
 \
+"#define SYNCHRONIZED_COLLECTION Synchronized${TYPE_CAP[$k]}Collection\n\n"\
+"#define SYNCHRONIZED_SET Synchronized${TYPE_CAP[$k]}Set\n\n"\
+"#define SYNCHRONIZED_SORTEDSET Synchronized${TYPE_CAP[$k]}SortedSet\n\n"\
+"#define SYNCHRONIZED_LIST Synchronized${TYPE_CAP[$k]}List\n\n"\
+\
 "#define SUBLIST ${TYPE_CAP[$k]}SubList\n"\
 "#define SUBLIST_METHOD ${TYPE_LC[$k]}SubList\n"\
 "#define SINGLETON ${TYPE_CAP[$k]}Singleton\n\n"\

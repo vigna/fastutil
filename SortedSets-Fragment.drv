@@ -1,126 +1,159 @@
-/** A class representing a singleton. */
-
-protected static class SINGLETON extends ABSTRACT_SET implements java.io.Serializable, Cloneable {
-	
-	public static final long serialVersionUID = -7046029254386353129L;
-	
-	protected KEY_TYPE element;
-	
-	protected SINGLETON( final KEY_TYPE element ) {
-		this.element = element;
-	}
-	
-	/** This function differs in behaviour from {@link Collections.singleton()}: if <code>k</code>
-	 * is the singleton element, it just returns false, whereas {@link Collections.singleton()} would
-	 * throw an {@link UnsupportedOperationException}. This behaviour is, however, not coherent
-	 * with that of <code>remove()</code>, which does not throw an exception if its argument
-	 * is not the singleton element 
-	 */
-	public boolean add( KEY_TYPE k ) { if ( KEY_EQUAL( k, element ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean remove( KEY_TYPE k ) { if ( ! KEY_EQUAL( k, element ) ) return false; else throw new UnsupportedOperationException(); }
-
-#if #keyclass(Integer)
-	public boolean rem( final int k ) { return remove( k ); }
-#endif
-
-	public boolean contains( final KEY_TYPE k ) { return KEY_EQUAL( k, element ); }
-	
-	public boolean addAll( final List l ) { if ( containsAll( l ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean addAll( final Collection c ) { if ( containsAll( c ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean removeAll( final Collection c ) { if ( ! c.contains( KEY2OBJ( element ) ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean retainAll( final Collection c ) { if ( c.contains( KEY2OBJ( element ) ) ) return false; else throw new UnsupportedOperationException(); }
-
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-	public boolean addAll( final LIST l ) { if ( containsAll( l ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean addAll( final COLLECTION c ) { if ( containsAll( c ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean removeAll( final COLLECTION c ) { if ( ! c.contains( element ) ) return false; else throw new UnsupportedOperationException(); }
-	public boolean retainAll( final COLLECTION c ) { if ( c.contains( element ) ) return false; else throw new UnsupportedOperationException(); }
-#endif
-
-	/* Slightly optimised w.r.t. the one in ABSTRACT_SET. */
-	
-	public KEY_TYPE[] TO_KEY_ARRAY() {
-		KEY_TYPE a[] = new KEY_TYPE[ 1 ];
-		a[ 0 ] = element;
-		return a;
-	}
-	
-	public KEY_ITERATOR KEY_ITERATOR_METHOD() { return Iterators.wrap( TO_KEY_ARRAY() ); }
-	
-	public int size() { return 1; }
-	public void clear() { throw new UnsupportedOperationException(); }
-	
-	public Object clone() { return this; }
-}
-
 #if ! #keyclass(Reference)
 
-	/** Returns a type-specific immutable set containing only the specified element. The returned set is serializable and cloneable.
+/** A class representing a sorted singleton. */
+
+protected static class SINGLETON extends Sets.SINGLETON implements SORTEDSET, java.io.Serializable, Cloneable {
+	
+	public static final long serialVersionUID = -7046029254386353129L;
+
+	KEY_COMPARATOR comparator;
+
+	private SINGLETON( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
+		super( element );
+		this.comparator = comparator;
+	}
+
+	private SINGLETON( final KEY_TYPE element ) {
+		this( element, null );
+	}
+
+	final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
+		return comparator == null ? KEY_CMP( k1, k2 ) : comparator.compare( k1, k2 );
+	}
+
+	public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) { 
+		KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)KEY_ITERATOR_METHOD(); 
+		if ( compare( element, from ) <= 0 ) i.next();
+		return i;
+	}
+
+	public Comparator comparator() { return comparator; }
+
+	public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) { if ( compare( from, element ) <= 0 && compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+	public STDSORTEDSET headSet( KEY_TYPE to ) { if ( compare( element, to ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+	public STDSORTEDSET tailSet( KEY_TYPE from ) { if ( compare( from, element ) <= 0 ) return this; else return Sets.EMPTY_SET; }
+
+	public KEY_TYPE FIRST() { return element; }
+	public KEY_TYPE LAST() { return element; }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+	public Object first() { return KEY2OBJ( element ); }
+	public Object last() { return KEY2OBJ( element ); }
+
+	public Iterator iterator( Object from ) { return iterator( KEY2TYPE( from ) ); }
+
+	public SortedSet subSet( Object from, Object to ) { return subSet( KEY2TYPE( from ), KEY2TYPE( to ) ); }
+	public SortedSet headSet( Object to ) { return headSet( KEY2TYPE( to ) ); }
+	public SortedSet tailSet( Object from ) { return tailSet( KEY2TYPE( from ) ); }
+#endif
+}
+
+
+	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serializable and cloneable.
 	 *
-	 * @param element the only element of the returned set.
-	 * @return a type-specific immutable set containing just <code>element</code>.
+	 * @param element the only element of the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
 	 */
 
-	public static SET singleton( final KEY_TYPE element ) {
+	public static SORTEDSET singleton( final KEY_TYPE element ) {
 		return new SINGLETON( element );
 	}
 
-#endif
+	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned sorted set.
+	 * @param comparator the comparator to use in the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
+	 */
+
+	public static SORTEDSET singleton( final KEY_TYPE element, final KEY_COMPARATOR comparator ) {
+		return new SINGLETON( element, comparator );
+	}
 
 #if ! #keyclass(Object) 
 
-	/** Returns a type-specific immutable set containing only the specified element. The returned set is serializable and cloneable.
+	/** Returns a type-specific immutable sorted set containing only the specified element. The returned sorted set is serializable and cloneable.
 	 *
-	 * @param element the only element of the returned set.
-	 * @return a type-specific immutable set containing just <code>element</code>.
+	 * @param element the only element of the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
 	 */
 
-	public static SET SINGLETON_METHOD( Object element ) {
+	public static SORTEDSET SINGLETON_METHOD( Object element ) {
 		return new SINGLETON( KEY2TYPE( element ) );
 	}
 
+	/** Returns a type-specific immutable sorted set containing only the specified element, and using a specified comparator. The returned sorted set is serializable and cloneable.
+	 *
+	 * @param element the only element of the returned sorted set.
+	 * @param comparator the comparator to use in the returned sorted set.
+	 * @return a type-specific immutable sorted set containing just <code>element</code>.
+	 */
+
+	public static SORTEDSET SINGLETON_METHOD( final Object element, final KEY_COMPARATOR comparator ) {
+		return new SINGLETON( KEY2TYPE( element ), comparator );
+	}
+#endif
+
 #endif
 
 
 
-protected static class SYNCHRONIZED_SET extends Collections.SYNCHRONIZED_COLLECTION implements SET, java.io.Serializable {
+protected static class SYNCHRONIZED_SORTEDSET extends Sets.SYNCHRONIZED_SET implements SORTEDSET, java.io.Serializable {
 
 	public static final long serialVersionUID = -7046029254386353129L;
 
-	SYNCHRONIZED_SET( SET s, Object sync ) {
+	SORTEDSET sortedset;
+
+	SYNCHRONIZED_SORTEDSET( SORTEDSET s, Object sync ) {
 		super( s, sync );
+		sortedset = s;
 	}
 
-	SYNCHRONIZED_SET( SET s ) {
-		super( s );
+	SYNCHRONIZED_SORTEDSET( SORTEDSET s ) {
+		this( s, null );
 	}
 
-#if #keyclass( Integer )
-	public boolean remove( KEY_TYPE k ) { synchronized( sync ) { return ((SET)collection).remove( k ); } }
+	public Comparator comparator() { synchronized( sync ) { return sortedset.comparator(); } }
+
+	public STDSORTEDSET subSet( KEY_TYPE from, KEY_TYPE to ) { return new SYNCHRONIZED_SORTEDSET( (SORTEDSET)sortedset.subSet( from, to ), sync ); }
+	public STDSORTEDSET headSet( KEY_TYPE to ) { return new SYNCHRONIZED_SORTEDSET( (SORTEDSET)sortedset.headSet( to ), sync ); }
+	public STDSORTEDSET tailSet( KEY_TYPE from ) { return new SYNCHRONIZED_SORTEDSET( (SORTEDSET)sortedset.tailSet( from ), sync ); }
+
+	public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) { return sortedset.iterator( from ); }
+
+	public KEY_TYPE FIRST() {  synchronized( sync ) { return sortedset.FIRST(); } }
+	public KEY_TYPE LAST() {  synchronized( sync ) { return sortedset.LAST(); } }
+
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+	public Object first() {  synchronized( sync ) { return sortedset.first(); } }
+	public Object last() {  synchronized( sync ) { return sortedset.last(); } }
+
+	public Iterator iterator( Object from ) { return sortedset.iterator( KEY2TYPE( from ) ); }
+
+	public SortedSet subSet( Object from, Object to ) { return new SYNCHRONIZED_SORTEDSET( (SORTEDSET)sortedset.subSet( from, to ), sync ); }
+	public SortedSet headSet( Object to ) { return new SYNCHRONIZED_SORTEDSET( (SORTEDSET)sortedset.headSet( to ), sync ); }
+	public SortedSet tailSet( Object from ) { return new SYNCHRONIZED_SORTEDSET( (SORTEDSET)sortedset.tailSet( from ), sync ); }
 #endif
-
-	public boolean equals( Object o ) { synchronized( sync ) { return collection.equals( o ); } }
-	public int hashCode() { synchronized( sync ) { return collection.hashCode(); } }
 }
 
 
-/** Returns a synchronized set backed by the specified set.
+/** Returns a synchronized sorted set backed by the specified sorted set.
  *
- * @param s the set to be "wrapped" in a synchronized set.
- * @return a synchronized view of the specified set.
- * @see java.util.Collections#synchronizedSet(Set)
+ * @param s the sorted set to be "wrapped" in a synchronized sorted set.
+ * @return a synchronized view of the specified sorted set.
+ * @see java.util.Collections#synchronizedSortedSet(SortedSet)
  */
-public static SET synchronize( SET s ) {	return new SYNCHRONIZED_SET( s ); }
+public static SORTEDSET synchronize( SORTEDSET s ) {	return new SYNCHRONIZED_SORTEDSET( s ); }
 
-/** Returns a synchronized set backed by the specified set, using an assigned object to synchronize.
+/** Returns a synchronized sorted set backed by the specified sorted set, using an assigned object to synchronize.
  *
- * @param s the set to be "wrapped" in a synchronized set.
+ * @param s the sorted set to be "wrapped" in a synchronized sorted set.
  * @param sync an object that will be used to synchronize the list access.
- * @return a synchronized view of the specified set.
- * @see java.util.Collections#synchronizedSet(Set)
+ * @return a synchronized view of the specified sorted set.
+ * @see java.util.Collections#synchronizedSortedSet(SortedSet)
  */
 
-public static SET synchronize( SET s, Object sync ) { return new SYNCHRONIZED_SET( s, sync ); }
+public static SORTEDSET synchronize( SORTEDSET s, Object sync ) { return new SYNCHRONIZED_SORTEDSET( s, sync ); }
 
 
 
@@ -147,7 +180,7 @@ public static SET synchronize( SET s, Object sync ) { return new SYNCHRONIZED_SE
 		int c;
 		KEY_TYPE k = GEN_KEY();
 		SINGLETON m = new SINGLETON( k );
-		Set t = java.util.Collections.singleton( KEY2OBJ( k ) );
+		SortedSet t = java.util.Collections.singleton( KEY2OBJ( k ) );
 
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsIndex, tThrowsIndex, mThrowsUnsupp, tThrowsUnsupp;
@@ -372,7 +405,7 @@ public static SET synchronize( SET s, Object sync ) { return new SYNCHRONIZED_SE
 
 		/* Now we save and read m. */
 
-		SET m2 = null;
+		SORTEDSET m2 = null;
 		  
 		try {
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
@@ -385,7 +418,7 @@ public static SET synchronize( SET s, Object sync ) { return new SYNCHRONIZED_SE
 			java.io.InputStream is = new java.io.FileInputStream(ff);
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-			m2 = (SET)ois.readObject();
+			m2 = (SORTEDSET)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
