@@ -24,11 +24,15 @@ package PACKAGE;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 
-import java.util.*;
-import java.io.*;
-
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.NoSuchElementException;
 
 #ifdef linked
+import java.util.Comparator;
+import java.util.SortedSet;
 
 /**  A type-specific linked hash set with with a fast, small-footprint implementation.
  *
@@ -67,7 +71,7 @@ import java.io.*;
  * @see HashCommon
  */
 
-public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SORTEDSET {
+public class OPENHASHSET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, Hash, SORTEDSET {
 
 #else
 
@@ -92,7 +96,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
  * @see HashCommon
  */
 
-public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SET {
+public class OPENHASHSET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, Hash, SET {
 
 #endif
 
@@ -962,7 +966,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
-	private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
 		int j = count;
 		s.defaultWriteObject();
@@ -998,7 +1002,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
-	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
 		// Note that we DO NOT USE the stored p. See CHANGES.
@@ -1061,7 +1065,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #ifdef TEST
 
 	private static long seed = System.currentTimeMillis(); 
-	private static Random r = new Random( seed );
+	private static java.util.Random r = new java.util.Random( seed );
 
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -1071,7 +1075,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
 #else
-		return new Serializable() {};
+		return new java.io.Serializable() {};
 #endif
 	}
 
@@ -1088,9 +1092,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		int i, j;
 		OPENHASHSET m;
 #ifdef linked
-		LinkedHashSet t;
+		java.util.LinkedHashSet t;
 #else
-		HashSet t;
+		java.util.HashSet t;
 #endif
 
 		KEY_TYPE k[] = new KEY_TYPE[n];
@@ -1107,9 +1111,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		if ( comp ) { for( j = 0; j < 20; j++ ) {
 
 #ifdef linked
-			t = new LinkedHashSet( 16 );
+			t = new java.util.LinkedHashSet( 16 );
 #else
-			t = new HashSet( 16 );
+			t = new java.util.HashSet( 16 );
 #endif
 
 			/* We add pairs to t. */
@@ -1237,9 +1241,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		int c;
 		OPENHASHSET m = new OPENHASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
 #ifdef linked
-		Set t = new LinkedHashSet();
+		Set t = new java.util.LinkedHashSet();
 #else
-		Set t = new HashSet();
+		Set t = new java.util.HashSet();
 #endif
 
 		/* First of all, we fill t with random data. */
@@ -1394,10 +1398,10 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		/* Now we play with iterators, but only in the linked case. */
 
 		{
-			ListIterator i, j;
+			java.util.ListIterator i, j;
 			Object J;
-			i = (ListIterator)m.iterator(); 
-			j = new LinkedList( t ).listIterator(); 
+			i = (java.util.ListIterator)m.iterator(); 
+			j = new java.util.LinkedList( t ).listIterator(); 
 
 			for( int k = 0; k < 2*n; k++ ) {
 				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
@@ -1430,14 +1434,14 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		}
 
 		if ( t.size() > 0 ) {
-			ListIterator i, j;
+			java.util.ListIterator i, j;
 			Object J;
-			j = new LinkedList( t ).listIterator(); 
+			j = new java.util.LinkedList( t ).listIterator(); 
 			int e = r.nextInt( t.size() );
 			Object from;
 			do from = j.next(); while( e-- != 0 );
 
-			i = (ListIterator)m.iterator( KEY2TYPE( from ) ); 
+			i = (java.util.ListIterator)m.iterator( KEY2TYPE( from ) ); 
 
 			for( int k = 0; k < 2*n; k++ ) {
 				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
@@ -1556,7 +1560,7 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		float f = Hash.DEFAULT_LOAD_FACTOR;
 		int n  = Integer.parseInt(args[1]);
 		if (args.length>2) f = Float.parseFloat(args[2]);
-		if ( args.length > 3 ) r = new Random( seed = Long.parseLong( args[ 3 ] ) );
+		if ( args.length > 3 ) r = new java.util.Random( seed = Long.parseLong( args[ 3 ] ) );
 		  
 		try {
 			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );

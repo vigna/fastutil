@@ -23,8 +23,12 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.HashCommon;
 
-import java.util.*;
-import java.io.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.NoSuchElementException;
 
 /** A type-specific red-black tree set with a fast, small-footprint implementation.
  *
@@ -34,7 +38,7 @@ import java.io.*;
  * to a type-specific {@linkplain java.util.ListIterator list iterator}.
  */
 
-public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, SORTEDSET {
+public class RBTREESET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, SORTEDSET {
 
 	/** A reference to the root entry. */
 	protected transient Entry tree;
@@ -1076,7 +1080,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	 * {@link #first()} or {@link #size()} must be always computed
 	 * on-the-fly.  
 	 */
-	private final class Subset extends ABSTRACT_SET implements Serializable, SORTEDSET {
+	private final class Subset extends ABSTRACT_SET implements java.io.Serializable, SORTEDSET {
 		/** The start of the subset range, unless {@link #bottom} is true. */
 		KEY_TYPE from;
 		/** The end of the subset range, unless {@link #top} is true. */
@@ -1363,7 +1367,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 
 	 
 
-	private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		int n = count;
 		SetIterator i = new SetIterator();
 
@@ -1377,7 +1381,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	 * @param pred the entry containing the key that preceeds the first key in the tree.
 	 * @param succ the entry containing the key that follows the last key in the tree.
 	 */
-	private Entry readTree( final java.io.ObjectInputStream s, final int n, final Entry pred, final Entry succ ) throws IOException, ClassNotFoundException {
+	private Entry readTree( final java.io.ObjectInputStream s, final int n, final Entry pred, final Entry succ ) throws java.io.IOException, ClassNotFoundException {
 		if ( n == 1 ) {
 			final Entry top = new Entry( s.READ_KEY() );
 			top.pred( pred );
@@ -1429,7 +1433,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		return D;
 	}
 
-	private void readObject( java.io.ObjectInputStream s ) throws IOException, ClassNotFoundException {
+	private void readObject( java.io.ObjectInputStream s ) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		/* The storedComparator is now correctly set, but we must restore
 		   on-the-fly the actualComparator. */
@@ -1457,7 +1461,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 #ifdef TEST
 
 	private static long seed = System.currentTimeMillis(); 
-	private static Random r = new Random( seed );
+	private static java.util.Random r = new java.util.Random( seed );
 
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -1480,7 +1484,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 	private static void speedTest( int n, boolean comp ) {
 		int i, j;
 		RBTREESET m;
-		TreeSet t;
+		java.util.TreeSet t;
 		KEY_TYPE k[] = new KEY_TYPE[n];
 		KEY_TYPE nk[] = new KEY_TYPE[n];
 		long ms;
@@ -1495,7 +1499,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		if ( comp ) {
 			for( j = 0; j < 20; j++ ) {
 
-				t = new TreeSet();
+				t = new java.util.TreeSet();
 
 				/* We first add all pairs to t. */
 				for( i = 0; i < n;  i++ ) t.add( KEY2OBJ( k[i] ) );
@@ -1928,10 +1932,10 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		/* Now we play with iterators. */
 
 		{
-			ListIterator i, j;
+			java.util.ListIterator i, j;
 			Object J;
-			i = (ListIterator)m.iterator(); 
-			j = new LinkedList( t ).listIterator(); 
+			i = (java.util.ListIterator)m.iterator(); 
+			j = new java.util.LinkedList( t ).listIterator(); 
 
 			for( int k = 0; k < 2*n; k++ ) {
 				ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext()" );
@@ -1967,10 +1971,10 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 			boolean badPrevious = false;
 			Object previous = null;
 			it.unimi.dsi.fastutil.BidirectionalIterator i;
-			ListIterator j;
+			java.util.ListIterator j;
 			Object I, J;
 			KEY_TYPE from = genKey();
-			j = new LinkedList( t ).listIterator(); 
+			j = new java.util.LinkedList( t ).listIterator(); 
 			while( j.hasNext() ) {
 				Object k = j.next();
 				if ( ((Comparable)k).compareTo( KEY2OBJ( from ) ) > 0 ) {
@@ -2022,9 +2026,9 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 		/* Now we select a pair of keys and create a subset. */
 
 		if ( ! m.isEmpty() ) {
-			ListIterator i;
+			java.util.ListIterator i;
 			Object start = m.first(), end = m.first();
-			for( i = (ListIterator)m.iterator(); i.hasNext() && r.nextFloat() < .3; start = end = i.next() );
+			for( i = (java.util.ListIterator)m.iterator(); i.hasNext() && r.nextFloat() < .3; start = end = i.next() );
 			for( ; i.hasNext() && r.nextFloat() < .95; end = i.next() );
 
 			//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
@@ -2052,7 +2056,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 
 	private static void test( int n ) {
 		RBTREESET m = new RBTREESET();
-		SortedSet t = new TreeSet();
+		SortedSet t = new java.util.TreeSet();
 		topSet = m;
 		k = new Object[n];
 		nk = new Object[n];
@@ -2084,7 +2088,7 @@ public class RBTREESET extends ABSTRACT_SET implements Serializable, Cloneable, 
 
 	public static void main( String args[] ) {
 		int n  = Integer.parseInt(args[1]);
-		if ( args.length > 2 ) r = new Random( seed = Long.parseLong( args[ 2 ] ) );
+		if ( args.length > 2 ) r = new java.util.Random( seed = Long.parseLong( args[ 2 ] ) );
 		  
 		try {
 			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );

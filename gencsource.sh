@@ -79,10 +79,6 @@ echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
 \
-"#define PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$k]}\n"\
-"#define IMPORT_VALUES import it.unimi.dsi.fastutil.${PACKAGE[$v]}.*\n"\
-"#define KEY_TEST test${TYPE_CAP[$k]}\n"\
-\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
 \
@@ -286,6 +282,7 @@ echo -e \
 "#define REMOVE_VALUE remove\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#endif\n"\
+\
 "#if #keyclass(Object)\n"\
 "#define KEY_EQUAL_HASH(x,h,y) ((x) == (y) || ((y) != null && h == (y).hashCode() && (y).equals((x))))\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y) || ((x) != null && (x).equals((y))))\n"\
@@ -293,6 +290,8 @@ echo -e \
 "#define KEY_EQUAL_HASH(x,h,y) ((x) == (y))\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#endif\n\n"\
+\
+\
 "#if #valueclass(Object) || #valueclass(Reference)\n"\
 "#define WRITE_VALUE writeObject\n"\
 "#define READ_VALUE readObject\n"\
@@ -307,12 +306,17 @@ echo -e \
 "#define VALUE_LIST_ITERATOR ObjectListIterator\n\n"\
 "#define NEXT_VALUE next\n"\
 "#define PREV_VALUE previous\n"\
+\
+\
 "#else\n"\
+\
+\
 "#define WRITE_VALUE write${TYPE_CAP[$v]}\n"\
 "#define READ_VALUE read${TYPE_CAP[$v]}\n"\
 "#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_VALUE())\n"\
 "#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
 "#define ENTRY_GET_VALUE get${TYPE_CAP[$v]}Value\n"\
+\
 "#if #valueclass(Float) || #valueclass(Double) || #valueclass(Long)\n"\
 "#define VALUE2INT(x) HashCommon.${TYPE[$v]}2int(x)\n"\
 "#elif #valueclass(Boolean)\n"\
@@ -320,21 +324,35 @@ echo -e \
 "#else\n"\
 "#define VALUE2INT(x) ((int)(x))\n"\
 "#endif\n"\
+\
 "#define VALUE_ITERATOR ${TYPE_CAP[$v]}Iterator\n\n"\
 "#define VALUE_ITERATOR_METHOD ${TYPE[$v]}Iterator\n\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP[$v]}ListIterator\n\n"\
 "#define NEXT_VALUE next${TYPE_CAP[$v]}\n"\
 "#define PREV_VALUE previous${TYPE_CAP[$v]}\n"\
+\
 "#if #valueclass(Boolean)\n"\
 "#define VALUE_NULL (false)\n"\
 "#else\n"\
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\
 "#endif\n"\
+\
 "#define OBJDEFRETVALUE (null)\n"\
 "#endif\n"\
+\
+\
 "#if #valueclass(Object)\n"\
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
 "#endif\n\n"\
+\
+"#define PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$k]}\n"\
+"#define IMPORT_VALUES import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_COLLECTION;\\\\\n"\
+"import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_ABSTRACT_COLLECTION;\\\\\n"\
+"import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_ITERATOR;\\\\\n"\
+"import it.unimi.dsi.fastutil.${PACKAGE[$v]}.VALUE_LIST_ITERATOR;\n"\
+"#define KEY_TEST test${TYPE_CAP[$k]}\n"\
+\
+\
 "#include \"$1\"\n"
