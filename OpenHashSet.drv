@@ -298,45 +298,6 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 
-#ifdef linked
-
-	/** Modifies the {@link #link} vector so that the given entry is removed.
-	 *
-	 * <P>If the given entry is the first or the last one, this method will complete
-	 * in constant time; otherwise, it will have to search for the given entry.
-	 *
-	 * @param the index of an entry. 
-	 */
-	private void fixPointers( int i ) {
-		if ( count == 0 ) {
-			first = last = -1;
-			return;
-		}
-
-		if ( first == i ) {
-			first = link[ i ] ^ -1;
-			link[ first ] ^= i ^ -1;
-			return;
-		}
-
-		if ( last == i ) {
-			last = link[ i ] ^ -1;
-			link[ last ] ^= i ^ -1;
-			return;
-		}
-
-		int j = first, prev = -1, next;
-		while( ( next = link[ j ] ^ prev ) != i ) {
-			prev = j;
-			j = next;
-		}
-		link[ j ] ^= link[ i ] ^ i ^ j;
-		link[ link[ i ] ^ j ] ^= i ^ j;
-	}
-
-#endif
-
-
 
 	public boolean remove( final KEY_TYPE k ) {
 		final int i = findKey( k );
@@ -378,6 +339,41 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 
 #ifdef linked
+
+	/** Modifies the {@link #link} vector so that the given entry is removed.
+	 *
+	 * <P>If the given entry is the first or the last one, this method will complete
+	 * in constant time; otherwise, it will have to search for the given entry.
+	 *
+	 * @param the index of an entry. 
+	 */
+	private void fixPointers( int i ) {
+		if ( count == 0 ) {
+			first = last = -1;
+			return;
+		}
+
+		if ( first == i ) {
+			first = link[ i ] ^ -1;
+			link[ first ] ^= i ^ -1;
+			return;
+		}
+
+		if ( last == i ) {
+			last = link[ i ] ^ -1;
+			link[ last ] ^= i ^ -1;
+			return;
+		}
+
+		int j = first, prev = -1, next;
+		while( ( next = link[ j ] ^ prev ) != i ) {
+			prev = j;
+			j = next;
+		}
+		link[ j ] ^= link[ i ] ^ i ^ j;
+		link[ link[ i ] ^ j ] ^= i ^ j;
+	}
+
 
 	/** Returns the first element of this set in iteration order.
 	 *

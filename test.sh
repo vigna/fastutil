@@ -8,7 +8,7 @@ lf=".75"
 
 if [ "$1" != "" ]; then lf=$1; fi
 
-for ((t=1; t<1000; t*=10)); do
+for ((t=1; t<10000; t*=10)); do
 
     SET=(OpenHashSet LinkedOpenHashSet RBTreeSet AVLTreeSet)
 
