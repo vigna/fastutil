@@ -7,11 +7,11 @@
 
 DIR="src/it/unimi/dsi/fastUtil"
 
-# Driver files for sets.
-MAP=(Map SortedMap AbstractMap HashMap TreeMap)
+# Driver files for maps.
+MAP=(Map SortedMap AbstractMap OpenHashMap AVLTreeMap RBTreeMap)
 
 # Driver files for sets.
-SET=(AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet)
+SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet AVLTreeSet RBTreeSet)
 
 # Driver files for interfaces.
 INTERFACE=(Iterator ListIterator Comparator AbstractComparator)
@@ -54,8 +54,9 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define ABSTRACT_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AbstractMap\n"\
 "#define KEY_ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION ${TYPE_CAP[$v]}AbstractCollection\n\n"\
-"#define HASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}HashMap\n\n"\
-"#define TREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}TreeMap\n\n"\
+"#define OPENHASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}OpenHashMap\n\n"\
+"#define AVLTREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AVLTreeMap\n\n"\
+"#define RBTREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}RBTreeMap\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
@@ -164,8 +165,9 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
 "#define ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define ABSTRACT_COLLECTION ${TYPE_CAP[$k]}AbstractCollection\n\n"\
-"#define HASHSET ${TYPE_CAP[$k]}HashSet\n\n"\
-"#define TREESET ${TYPE_CAP[$k]}TreeSet\n\n"\
+"#define OPENHASHSET ${TYPE_CAP[$k]}OpenHashSet\n\n"\
+"#define AVLTREESET ${TYPE_CAP[$k]}AVLTreeSet\n\n"\
+"#define RBTREESET ${TYPE_CAP[$k]}RBTreeSet\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
@@ -214,9 +216,9 @@ for ((f=0; f<${#SET[*]}; f++)); do
 done
 
 rm -f $DIR/BooleanAbstractSet.c
-rm -f $DIR/BooleanHashSet.c
-rm -f $DIR/BooleanTreeSet.c
-
+rm -f $DIR/BooleanOpenHashSet.c
+rm -f $DIR/BooleanAVLTreeSet.c
+rm -f $DIR/BooleanRBTreeSet.c
 
 
 #

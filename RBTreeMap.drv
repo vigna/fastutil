@@ -27,7 +27,7 @@ import java.io.*;
 /** A type-specific tree map with a fast, small-footprint implementation.
  */
 
-public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
+public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
 	 public transient Entry tree;
@@ -63,7 +63,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 /** Creates a new empty tree map. 
 	  */
 
-	 public TREEMAP() {
+	 public RBTREEMAP() {
 		  tree = null;
 		  count = 0;
 	 }
@@ -100,7 +100,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * @param comparator a {@link #Comparator}.
 	  */
 
-	 public TREEMAP( final Comparator c ) {
+	 public RBTREEMAP( final Comparator c ) {
 		  this();
 		  storedComparator = c;
 		  setActualComparator();
@@ -112,7 +112,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * @param m a {@link Map} to be copied into the new tree map. 
 	  */
 	 
-	 public TREEMAP( Map m ) {
+	 public RBTREEMAP( Map m ) {
 		  this();
 		  putAll( m );
 	 }
@@ -122,7 +122,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * @param m a {@link SortedMap} to be copied into the new tree map. 
 	  */
 	 
-	 public TREEMAP( SortedMap m ) {
+	 public RBTREEMAP( SortedMap m ) {
 		  this( m.comparator() );
 		  putAll( m );
 	 }
@@ -169,7 +169,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 	 /** This vector remembers the path followed during the current insertion. It suffices for
 		  about 2<sup>32</sup> entries. */
-	 private boolean dirPath[] = new boolean[ 48 ];
+	 private transient boolean dirPath[] = new boolean[ 48 ];
 
 	 /** Inserts a new pair in the map.
 	  *
@@ -1153,7 +1153,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				next = prev = curr;
 				updatePrevious();
 				updateNext();
-				TREEMAP.this.delete( curr.key );
+				RBTREEMAP.this.delete( curr.key );
 				curr = null;
 		  }
 
@@ -1186,7 +1186,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
 						  final Entry f = findKey( KEY2TYPE( e.getKey() ) );
-						  if ( f != null ) TREEMAP.this.remove( f.key );
+						  if ( f != null ) RBTREEMAP.this.remove( f.key );
 						  return f != null;
 					 }
 
@@ -1195,7 +1195,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }
 					 
 					 public void clear() {
-						  TREEMAP.this.clear();
+						  RBTREEMAP.this.clear();
 					 }
 					 
 				};
@@ -1230,7 +1230,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }					 
 
 					 public boolean remove( KEY_TYPE k ) {
-						  TREEMAP.this.remove( k );
+						  RBTREEMAP.this.remove( k );
 						  return modified;
 					 }					 
 
@@ -1241,7 +1241,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }					 
 
 					 public boolean remove( Object ok ) {
-						  TREEMAP.this.remove( KEY2TYPE( ok ) );
+						  RBTREEMAP.this.remove( KEY2TYPE( ok ) );
 						  return modified;
 					 }
 
@@ -1252,7 +1252,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }
 					 
 					 public void clear() {
-						  TREEMAP.this.clear();
+						  RBTREEMAP.this.clear();
 					 }
 					 
 				};
@@ -1297,7 +1297,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }
 					 
 					 public void clear() {
-						  TREEMAP.this.clear();
+						  RBTREEMAP.this.clear();
 					 }
 					 
 				};
@@ -1366,7 +1366,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @param top if true, the third parameter is ignored and the range goes to &infin;.
 			*/
 		  public Submap( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
-				if ( ! bottom && ! top && TREEMAP.this.compare( from, to ) > 0 ) {
+				if ( ! bottom && ! top && RBTREEMAP.this.compare( from, to ) > 0 ) {
 					 throw new IllegalArgumentException( "fromKey > toKey" );
 				}
 
@@ -1374,7 +1374,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				this.bottom = bottom;
 				this.to = to;
 				this.top = top;
-				this.defRetValue = TREEMAP.this.defRetValue;
+				this.defRetValue = RBTREEMAP.this.defRetValue;
 		  }
 
 		  public void clear() {
@@ -1390,8 +1390,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @return true if is the key is in the submap range.
 			*/
 		  private boolean in( KEY_TYPE k ) {
-				return ( bottom || TREEMAP.this.compare( k, from ) >= 0 ) &&
-					 ( top || TREEMAP.this.compare( k, to ) < 0 );
+				return ( bottom || RBTREEMAP.this.compare( k, from ) >= 0 ) &&
+					 ( top || RBTREEMAP.this.compare( k, to ) < 0 );
 		  }
 
 		  public Set entrySet() {
@@ -1403,14 +1403,14 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 						  public boolean contains(Object o) {
 								if (!(o instanceof Map.Entry)) return false;
 								final Map.Entry e = (Map.Entry)o;
-								final TREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+								final RBTREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
 								return f != null && in( f.key ) && e.equals( f );
 						  }					 
 
 						  public boolean remove(Object o) {
 								if (!(o instanceof Map.Entry)) return false;
 								final Map.Entry e = (Map.Entry)o;
-								final TREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+								final RBTREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
 								if ( f != null && in( f.key ) ) Submap.this.remove( f.key );
 								return f != null;
 						  }
@@ -1505,7 +1505,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 		  
 		  public boolean containsKey( final KEY_TYPE k ) {
-				return in( k ) && TREEMAP.this.containsKey( k );
+				return in( k ) && RBTREEMAP.this.containsKey( k );
 		  }
 
 #if !#keyclass(Object) 
@@ -1526,7 +1526,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				VALUE_TYPE ev;
 				
 				while( i.hasNext() ) {
-					 ev = ((TREEMAP.Entry)i.next()).value;
+					 ev = ((RBTREEMAP.Entry)i.next()).value;
 					 if ( VALUE_EQUAL( ev, v ) ) return true;
 				}
 				
@@ -1535,19 +1535,19 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 
 		  public Object get( final Object ok ) {
-				final TREEMAP.Entry e;
+				final RBTREEMAP.Entry e;
 				return in( KEY2TYPE( ok ) ) &&  ( e = findKey( KEY2TYPE( ok ) ) ) != null ? e.getValue() : OBJDEFRETVALUE;
 		  }
 		  
 		  
 #if ! #keyclass(Object)
 		  public VALUE_TYPE get(final KEY_TYPE k) {
-				final TREEMAP.Entry e;
+				final RBTREEMAP.Entry e;
 				return in( k ) && ( e = findKey( k ) ) != null ? e.value : this.defRetValue;
 		  }
 #elif ! #valueclass(Object)
 		  public VALUE_TYPE GET_VALUE(final Object k) {
-				final TREEMAP.Entry e;
+				final RBTREEMAP.Entry e;
 				return in( k ) && ( e = findKey( k ) ) != null ? e.value : this.defRetValue;
 		  }
 #endif
@@ -1661,8 +1661,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @return the last entry on a search for the given key; this will be
 			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
 			*/
-		  private TREEMAP.Entry locateKey( KEY_TYPE k ) {
-				TREEMAP.Entry e = tree, last = tree;
+		  private RBTREEMAP.Entry locateKey( KEY_TYPE k ) {
+				RBTREEMAP.Entry e = tree, last = tree;
 				int cmp = 0;
 				
 				while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
@@ -1679,10 +1679,10 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @param k a key.
 			* @return the first entry of this submap, or <code>null</code> if the submap is empty.
 			*/
-		  public TREEMAP.Entry firstEntry() {
+		  public RBTREEMAP.Entry firstEntry() {
 				if ( tree == null ) return null;
 				// If this submap goes to -infinity, we return the main map first entry; otherwise, we locate the start of the map.
-				TREEMAP.Entry e;
+				RBTREEMAP.Entry e;
 				if ( bottom ) e = firstEntry;
 				else {
 					 e = locateKey( from );
@@ -1707,10 +1707,10 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			* @param k a key.
 			* @return the last entry of this submap, or <code>null</code> if the submap is empty.
 			*/
-		  public TREEMAP.Entry lastEntry() {
+		  public RBTREEMAP.Entry lastEntry() {
 				if ( tree == null ) return null;
 				// If this submap goes to infinity, we return the main map last entry; otherwise, we locate the end of the map.
-				TREEMAP.Entry e;
+				RBTREEMAP.Entry e;
 				if ( top ) e = lastEntry;
 				else {
 					 e = locateKey( to );
@@ -1732,25 +1732,25 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 
 		  public KEY_TYPE FIRST_KEY() {
-				TREEMAP.Entry e = firstEntry();
+				RBTREEMAP.Entry e = firstEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 		  public KEY_TYPE LAST_KEY() {
-				TREEMAP.Entry e = lastEntry();
+				RBTREEMAP.Entry e = lastEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 	 
 #if !#keyclass(Object)
 		  public Object firstKey() {
-				TREEMAP.Entry e = firstEntry();
+				RBTREEMAP.Entry e = firstEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.getKey();
 		  }
 	 
 		  public Object lastKey() {
-				TREEMAP.Entry e = lastEntry();
+				RBTREEMAP.Entry e = lastEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.getKey();
 		  }
@@ -1770,12 +1770,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				}
 				protected void updatePrevious() {
 					 super.updatePrevious();
-					 if ( ! bottom && prev != null && TREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
+					 if ( ! bottom && prev != null && RBTREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
 				}
 				
 				protected void updateNext() {
 					 super.updateNext();
-					 if ( ! top && next != null && TREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
+					 if ( ! top && next != null && RBTREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
 				}
 		  }
 
@@ -1883,7 +1883,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return format.format( d, s, p ).toString();
 	 }
 
-	 private static void speedTest( int n ) {
+	 private static void speedTest( int n, boolean comp ) {
 		  int i, j;
 		  MAP m;
 		  SortedMap t;
@@ -1959,7 +1959,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  for( j = 0; j < 20; j++ ) {
 
-				m = new TREEMAP();
+				m = new RBTREEMAP();
 
 				/* We put pairs to m. */
 				ms = System.currentTimeMillis();
@@ -2033,7 +2033,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 private static KEY_TYPE kt[];
 	 private static KEY_TYPE nkt[];
 	 private static VALUE_TYPE vt[];
-	 private static TREEMAP topMap;
+	 private static RBTREEMAP topMap;
 
 	 private static void testMaps( SORTEDMAP m, SortedMap t, int n, int level ) {
 		  long ms;
@@ -2487,7 +2487,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 
 	 private static void regressionTest( int n ) {
-		  TREEMAP m = new TREEMAP();
+		  RBTREEMAP m = new RBTREEMAP();
 		  SortedMap t = new TreeMap();
 		  topMap = m;
 		  k = new Object[n];
@@ -2528,7 +2528,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 public static void main( String args[] ) {
 		  int n  = Integer.parseInt(args[1]);
 		  
-		  if (args[0].equals("speedTest")) speedTest(n);
+		  if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
 		  else if (args[0].equals("regressionTest")) regressionTest(n);
 	 }
 

@@ -27,7 +27,7 @@ import java.io.*;
 /** A type-specific tree set with a fast, small-footprint implementation.
  */
 
-public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
+public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
 
 	 /** A reference to the root entry. */
 	 public transient Entry tree;
@@ -52,7 +52,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 /** Creates a new empty tree set. 
 	  */
 
-	 public TREESET() {
+	 public RBTREESET() {
 		  tree = null;
 		  count = 0;
 	 }
@@ -89,7 +89,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * @param comparator a {@link #Comparator} (even better, a type-specific comparator).
 	  */
 
-	 public TREESET( final Comparator c ) {
+	 public RBTREESET( final Comparator c ) {
 		  this();
 		  storedComparator = c;
 		  setActualComparator();
@@ -101,7 +101,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * @param m a {@link Set} to be copied into the new tree set. 
 	  */
 	 
-	 public TREESET( Set m ) {
+	 public RBTREESET( Set m ) {
 		  this();
 		  addAll( m );
 	 }
@@ -111,7 +111,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * @param m a {@link SortedSet} to be copied into the new tree set. 
 	  */
 	 
-	 public TREESET( SortedSet m ) {
+	 public RBTREESET( SortedSet m ) {
 		  this( m.comparator() );
 		  addAll( m );
 	 }
@@ -158,7 +158,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 /** This vector remembers the path followed during the current insertion. It suffices for
 		  about 2<sup>32</sup> entries. */
-	 private boolean dirPath[] = new boolean[ 48 ];
+	 private transient boolean dirPath[] = new boolean[ 64 ];
+	 private transient Entry nodePath[] = new Entry[ 64 ];
 
 
 	 /** Inserts a new element in the set.
@@ -175,17 +176,17 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				tree = lastEntry = firstEntry = new Entry( k );
 		  }
 		  else {
-				Entry p = tree, q = null, y = tree, z = null, e = null, w = null;
+				Entry p = tree, e = null;
 				int cmp, i = 0;
+
+				dirPath[ 0 ]  = false;
+				nodePath[ 0 ] = null;
+				i = 1;
 
 				while( true ) {
 					 if ( ( cmp = compare( k, p.key ) ) == 0 ) return false;
 					 
-					 if ( (byte)p.info != 0 ) {
-						  i = 0;
-						  z = q;
-						  y = p;
-					 }
+					 nodePath[ i ] = p;
 					 
 					 if ( dirPath[ i++ ] = cmp > 0 ) {
 						  if ( p.succ() ) {
@@ -202,7 +203,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 								break;
 						  }
 
-						  q = p;
 						  p = p.right;
 					 }
 					 else {
@@ -220,170 +220,109 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 								break;
 						  }
 
-						  q = p;
 						  p = p.left;
 					 }
 				}
 
-				p = y;
-				i = 0;
+				while( i >= 3 && ! nodePath[ i - 1 ].black() ) {
+					 if ( dirPath[ i - 2 ] == false ) {
+						  Entry y = nodePath[ i - 2 ].right;
 
-				while( p != e ) {
-					 if ( dirPath[ i ] ) p.incBalance();
-					 else p.decBalance();
-
-					 p = dirPath[ i++ ] ? p.right : p.left;
-				}
-				
-				if ( (byte)y.info == -2 ) {
-					 Entry x = y.left;
-
-					 if ( (byte)x.info == -1 ) {
-						  w = x;
-						  if ( x.succ() ) {
-								x.succ( false );
-								y.pred( x );
-						  }
-						  else y.left = x.right;
-
-						  x.right = y;
-						  x.balance( 0 );
-						  y.balance( 0 );
-					 }
-					 else {
-						  //assert (byte)x.info == 1;
-
-						  w = x.right;
-						  x.right = w.left;
-						  w.left = x;
-						  y.left = w.right;
-						  w.right = y;
-						  if ( (byte)w.info == -1 ) {
-								x.balance( 0 );
-								y.balance( 1 );
-						  }
-						  else if ( (byte)w.info == 0 ) {
-								x.balance( 0 );
-								y.balance( 0 );
+						  if ( ! nodePath[ i - 2 ].succ() && ! y.black() ) {
+								nodePath[ i - 1 ].black( true );
+								y.black( true );
+								nodePath[ i - 2 ].black( false );
+								i -= 2;
 						  }
 						  else {
-								x.balance( -1 );
-								y.balance( 0 );
+								Entry x;
+
+								if ( dirPath[ i - 1 ] == false ) y = nodePath[ i - 1 ];
+								else {
+									 x = nodePath[ i - 1 ];
+									 y = x.right;
+									 x.right = y.left;
+									 y.left = x;
+									 nodePath[ i - 2 ].left = y;
+
+									 if ( y.pred() ) {
+										  y.pred( false );
+										  x.succ( y );
+									 }
+								}
+								
+								x = nodePath[ i - 2 ];
+								x.black( false );
+								y.black( true );
+								
+								x.left = y.right;
+								y.right = x;
+								if ( nodePath[ i - 3 ] == null ) tree = y;
+								else {
+									 if ( dirPath[ i - 3 ] ) nodePath[ i - 3 ].right = y;
+									 else nodePath[ i - 3 ].left = y;
+								}
+
+								if ( y.succ() ) {
+									 y.succ( false );
+									 x.pred( y );
+								}
+								break;
 						  }
-						  w.balance( 0 );
-
-
-						  if ( w.pred() ) {
-								x.succ( w );
-								w.pred( false );
-						  }
-						  if ( w.succ() ) {
-								y.pred( w );
-								w.succ( false );
-						  }
-
-					 }
-				}
-				else if ( (byte)y.info == +2 ) {
-					 Entry x = y.right;
-
-					 if ( (byte)x.info == 1 ) {
-						  w = x;
-						  if ( x.pred() ) {
-								x.pred( false );
-								y.succ( x );
-						  }
-						  else y.right = x.left;
-
-						  x.left = y;
-						  x.balance( 0 );
-						  y.balance( 0 );
 					 }
 					 else {
-						  //assert (byte)x.info == -1;
-
-						  w = x.left;
-						  x.left = w.right;
-						  w.right = x;
-						  y.right = w.left;
-						  w.left = y;
-						  if ( (byte)w.info == 1 ) {
-								x.balance( 0 );
-								y.balance( -1 );
-						  }
-						  else if ( (byte)w.info == 0 ) {
-								x.balance( 0 );
-								y.balance( 0 );
+						  Entry y = nodePath[ i - 2 ].left;
+						  
+						  if ( ! nodePath[ i - 2 ].pred() && ! y.black() ) {
+								nodePath[ i - 1 ].black( true );
+								y.black( true );
+								nodePath[ i - 2 ].black( false );
+								i -= 2;
 						  }
 						  else {
-								x.balance( 1 );
-								y.balance( 0 );
-						  }
-						  w.balance( 0 );
+								Entry x;
 
+								if ( dirPath[ i - 1 ] ) y = nodePath[ i - 1 ];
+								else {
+									 x = nodePath[ i - 1 ];
+									 y = x.left;
+									 x.left = y.right;
+									 y.right = x;
+									 nodePath[ i - 2 ].right = y;
+	 
+									 if ( y.succ() ) {
+										  y.succ( false );
+										  x.pred( y );
+									 }
+	 
+								}
 
-						  if ( w.pred() ) {
-								y.succ( w );
-								w.pred( false );
-						  }
-						  if ( w.succ() ) {
-								x.pred( w );
-								w.succ( false );
-						  }
+								x = nodePath[ i - 2 ];
+								x.black( false );
+								y.black( true );
 
+								x.right = y.left;
+								y.left = x;
+								if ( nodePath[ i - 3 ] == null ) tree = y;
+								else {
+									 if ( dirPath[ i - 3 ] ) nodePath[ i - 3 ].right = y;
+									 else nodePath[ i - 3 ].left = y;
+								}
+
+								if ( y.pred() ){
+									 y.pred( false );
+									 x.succ( y );
+								}
+
+								break;
+						  }
 					 }
-				}
-				else return true;
-
-				if ( z == null ) tree = w;
-				else {
-					 if ( z.left == y ) z.left = w;
-					 else z.right = w;
 				}
 		  }
-
+		  tree.black( true );
 		  return true;
 	 }
-	 
-	 
-	 
 
-	 /** Finds the parent of an entry.
-	  *
-	  * @param e a node of the tree.
-	  * @return the parent of the given node, or <code>null</code> for the root.
-	  */
-
-	 private Entry parent( Entry e ) {
-		  if ( e == tree ) return null;
-
-		  Entry x, y, p;
-		  x = y = e;
-
-		  while( true ) {
-				if ( y.succ() ) {
-					 p = y.right;
-					 if ( p == null || p.left != e ) {
-						  while( ! x.pred() ) x = x.left;
-						  p = x.left;
-					 }
-					 return p;
-				}
-				else if ( x.pred() ) {
-					 p = x.left;
-					 if ( p == null || p.right != e ) {
-						  while( ! y.succ() ) y = y.right;
-						  p = y.right;
-					 }
-					 return p;
-				}
-
-				x = x.left;
-				y = y.right;
-		  }
-	 }
-
-	 
 	 
 	 /** Deletes an entry from the set.
 	  *
@@ -394,18 +333,21 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 private boolean delete( final KEY_TYPE k ) {
 		  if ( tree == null ) return false;
 
+		  int i = 0;
 		  int cmp;
-		  Entry p = tree, q = null;
+		  Entry p = tree;
 		  boolean dir = false;
 
 		  while( true ) {
-				if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
-				else if ( dir = cmp > 0 ) {
-					 q = p;
+				cmp = compare( k, p.key );
+				dirPath[ i ] = dir = cmp > 0;
+				nodePath[ i++ ] = p;
+				if ( cmp  == 0 ) break;
+
+				if ( dir ) {
 					 if ( ( p = p.right() ) == null ) return false;
 				}
-				else if ( cmp < 0 ) {
-					 q = p;
+				else {
 					 if ( ( p = p.left() ) == null ) return false;
 				}
 		  }
@@ -422,9 +364,9 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  if ( p.succ() ) {
 				if ( p.pred() ) {
-					 if ( q != null ) {
-						  if ( dir ) q.succ( p.right );
-						  else q.pred( p.left );
+					 if ( nodePath[ i - 1 ] != null ) {
+						  if ( dir ) nodePath[ i - 1 ].succ( p.right );
+						  else nodePath[ i - 1 ].pred( p.left );
 					 }
 					 else tree = dir ? p.right : p.left;
 				}
@@ -434,14 +376,15 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 					 l.right = p.right;
 
-					 if ( q != null ) {
-						  if ( dir ) q.right = p.left;
-						  else q.left = p.left;
+					 if ( nodePath[ i - 1 ] != null ) {
+						  if ( dir ) nodePath[ i - 1 ].right = p.left;
+						  else nodePath[ i - 1 ].left = p.left;
 					 }
 					 else tree = p.left;
 				}
 		  }
 		  else {
+				boolean colour;
 				Entry r = p.right;
 
 				if ( r.pred() ) {
@@ -452,25 +395,32 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 						  while( ! l.succ() ) l = l.right;
 						  l.right = r;
 					 }
-					 if ( q != null ) {
-						  if ( dir ) q.right = r;
-						  else q.left = r;
+					 if ( nodePath[ i - 1 ] != null ) {
+						  if ( dir ) nodePath[ i - 1 ].right = r;
+						  else nodePath[ i - 1 ].left = r;
 					 }
 					 else tree = r;
 
-					 r.balance( (byte)p.info );
-					 q = r;
-					 dir = true;
-
+					 colour = r.black();
+					 r.black( p.black() );
+					 p.black( colour );
+					 dirPath[ i ] = true;
+					 nodePath[ i++ ] = r;
 				}
 				else {
 					 Entry s;
+					 int j = i++;
 
 					 while( true ) {
+						  dirPath[ i ] = false;
+						  nodePath[ i++ ] = r;
 						  s = r.left;
 						  if ( s.pred() ) break;
 						  r = s;
 					 }
+
+					 dirPath[ j ] = true;
+					 nodePath[ j ] = s;
 
 					 if ( s.succ() ) r.pred( s );
 					 else r.left = s.right;
@@ -487,191 +437,162 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 					 s.right = p.right;
 					 s.succ( false );
-								
-					 if ( q != null ) {
-						  if ( dir ) q.right = s;
-						  else q.left = s;
+							
+					 colour = s.black();
+					 s.black( p.black() );
+					 p.black( colour );
+	
+					 if ( nodePath[ j - 1 ] != null ) {
+						  if ( dir ) nodePath[ j - 1 ].right = s;
+						  else nodePath[ j - 1 ].left = s;
 					 }
 					 else tree = s;
-
-					 s.balance( (byte)p.info );
-					 q = r;
-					 dir = false;
 				}
 		  }
 
-		  Entry y;
+		  if ( p.black() ) {
+				for( ; i > 1; i-- ) {
+					 if ( dirPath[ i - 1 ] && ! nodePath[ i - 1 ].succ() ||
+							! dirPath[ i - 1 ] && ! nodePath[ i -1 ].pred() ) {
+						  Entry x = dirPath[ i - 1 ] ? nodePath[ i - 1 ].right : nodePath[ i - 1 ].left;
 
-		  while( q != null ) {
-				y = q;
-				q = parent( y );
+						  if ( ! x.black() ) {
+								x.black( true );
+								break;
+						  }
+					 }
 
-				if ( ! dir ) {
-					 dir = q != null && q.left != y;
-					 y.incBalance();
+					 if ( dirPath[ i - 1 ] == false ) {
+						  Entry w = nodePath[ i - 1 ].right;
 
-					 if ( (byte)y.info == 1 ) break;
-					 else if ( (byte)y.info == 2 ) {
+						  if ( ! w.black() ) {
+								w.black( true );
+								nodePath[ i - 1 ].black( false );
 
-						  Entry x = y.right;
-						  //assert x != null;
-									 
-						  if ( (byte)x.info == -1 ) {
-								Entry w;
-								
-								//assert (byte)x.info == -1;
+								nodePath[ i - 1 ].right = w.left;
+								w.left = nodePath[ i - 1 ];
 
-								w = x.left;
-								x.left = w.right;
-								w.right = x;
-								y.right = w.left;
-								w.left = y;
-
-								if ( (byte)w.info == 1 ) {
-									 x.balance( 0 );
-									 y.balance( -1 );
-								}
-								else if ( (byte)w.info == 0 ) {
-									 x.balance( 0 );
-									 y.balance( 0 );
-								}
-								else {
-									 //assert (byte)w.info == -1;
-
-									 x.balance( 1 );
-									 y.balance( 0 );
-								}
-
-								w.balance( 0 );
-
-								if ( w.pred() ) {
-									 y.succ( w );
-									 w.pred( false );
-								}
-								if ( w.succ() ) {
-									 x.pred( w );
-									 w.succ( false );
-								}
-
-								if ( q != null ) {
-									 if ( dir ) q.right = w;
-									 else q.left = w;
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
 								}
 								else tree = w;
+
+								nodePath[ i ] = nodePath[ i - 1 ];
+								dirPath[ i ] = false;
+								nodePath[ i - 1 ] = w;
+								i++;
+
+								w = nodePath[ i - 1 ].right;
+						  }
+
+						  if ( ( w.pred() || w.left.black() ) &&
+								 ( w.succ() || w.right.black() ) ) {
+								w.black( false );
 						  }
 						  else {
-								if ( q != null ) {
-									 if ( dir ) q.right = x;
-									 else q.left = x;
-								}
-								else tree = x;
-										  
-								if ( (byte)x.info == 0 ) {
-									 y.right = x.left;
-									 x.left = y;
-									 x.balance( -1 );
-									 y.balance( +1 );
-									 break;
-								}
-								else {
-									 //assert (byte)x.info == 1;
+								if ( w.succ() || w.right.black() ) {
+									 Entry y = w.left;
+									 
+									 y.black ( true );
+									 w.black( false );
+									 w.left = y.right;
+									 y.right = w;
+									 w = nodePath[ i - 1 ].right = y;
 
-									 if ( x.pred() ) {
-										  y.succ( true );
-										  x.pred( false );
+									 if ( w.succ() ) {
+										  w.succ( false );
+										  w.right.pred( w );
 									 }
-									 else y.right = x.left;
-
-									 x.left = y;
-									 y.balance( 0 );
-									 x.balance( 0 );
 								}
+
+								w.black( nodePath[ i - 1 ].black() );
+								nodePath[ i - 1 ].black( true );
+								w.right.black( true );
+
+								nodePath[ i - 1 ].right = w.left;
+								w.left = nodePath[ i - 1 ];
+
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
+								}
+								else tree = w;
+
+								if ( w.pred() ) {
+									 w.pred( false );
+									 nodePath[ i - 1 ].succ( w );
+								}
+								break;
+						  }
+					 }
+					 else {
+						  Entry w = nodePath[ i - 1 ].left;
+
+						  if ( ! w.black() ) {
+								w.black ( true );
+								nodePath[ i - 1 ].black( false );
+
+								nodePath[ i - 1 ].left = w.right;
+								w.right = nodePath[ i - 1 ];
+
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
+								}
+								else tree = w;
+
+								nodePath[ i ] = nodePath[ i - 1 ];
+								dirPath[ i ] = true;
+								nodePath[ i - 1 ] = w;
+								i++;
+
+								w = nodePath[ i - 1 ].left;
+						  }
+						  
+						  if ( ( w.pred() || w.left.black() ) &&
+								 ( w.succ() || w.right.black() ) ) {
+								w.black( false );
+						  }
+						  else {
+								if ( w.pred() || w.left.black() ) {
+									 Entry y = w.right;
+
+									 y.black( true );
+									 w.black ( false );
+									 w.right = y.left;
+									 y.left = w;
+									 w = nodePath[ i - 1 ].left = y;
+
+									 if ( w.pred() ) {
+										  w.pred( false );
+										  w.left.succ( w );
+									 }
+								}
+
+								w.black( nodePath[ i - 1 ].black() );
+								nodePath[ i -1 ].black( true );
+								w.left.black( true );
+
+								nodePath[ i - 1 ].left = w.right;
+								w.right = nodePath[ i - 1 ];
+									  
+								if ( nodePath[ i - 2 ] != null ) {
+									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 else nodePath[ i - 2 ].left = w;
+								}
+								else tree = w;
+
+								if ( w.succ() ) {
+									 w.succ( false );
+									 nodePath[ i - 1 ].pred( w );
+								}
+								break;
 						  }
 					 }
 				}
-				else {
-					 dir = q != null && q.left != y;
-					 y.decBalance();
 
-					 if ( (byte)y.info == -1 ) break;
-					 else if ( (byte)y.info == -2 ) {
-
-						  Entry x = y.left;
-						  //assert x != null;
-									 
-						  if ( (byte)x.info == 1 ) {
-								Entry w;
-								
-								//assert (byte)x.info == 1;
-
-								w = x.right;
-								x.right = w.left;
-								w.left = x;
-								y.left = w.right;
-								w.right = y;
-
-								if ( (byte)w.info == -1 ) {
-									 x.balance( 0 );
-									 y.balance( 1 );
-								}
-								else if ( (byte)w.info == 0 ) {
-									 x.balance( 0 );
-									 y.balance( 0 );
-								}
-								else {
-									 //assert (byte)w.info == 1;
-
-									 x.balance( -1 );
-									 y.balance( 0 );
-								}
-
-								w.balance( 0 );
-
-								if ( w.pred() ) {
-									 x.succ( w );
-									 w.pred( false );
-								}
-								if ( w.succ() ) {
-									 y.pred( w );
-									 w.succ( false );
-								}
-
-								if ( q != null ) {
-									 if ( dir ) q.right = w;
-									 else q.left = w;
-								}
-								else tree = w;
-						  }
-						  else {
-								if ( q != null ) {
-									 if ( dir ) q.right = x;
-									 else q.left = x;
-								}
-								else tree = x;
-										  
-								if ( (byte)x.info == 0 ) {
-									 y.left = x.right;
-									 x.right = y;
-									 x.balance( +1 );
-									 y.balance( -1 );
-									 break;
-								}
-								else {
-									 //assert (byte)x.info == -1;
-
-									 if ( x.succ() ) {
-										  y.pred( true );
-										  x.succ( false );
-									 }
-									 else y.left = x.right;
-
-									 x.right = y;
-									 y.balance( 0 );
-									 x.balance( 0 );
-								}
-						  }
-					 }  
-				}
+				if ( tree != null ) tree.black( true );
 		  }
 
 		  count--;
@@ -729,20 +650,15 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
 		  private final static int PRED_MASK = 1 << 30;
 		  /** The bits in this mask hold the node level. */
-		  private final static int BALANCE_MASK = 0xFF;
+		  private final static int BLACK_MASK = 1;
 		  /** The key of this entry. */
 		  protected KEY_TYPE key;
 		  /** The pointers to the left and right subtrees. */
 		  protected Entry left, right;
-		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
+		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BLACK_MASK}). */
 		  private int info;
 
-		  /** Creates a new entry with no explicitly set key and <code>null</code> subtrees.
-			*/
-
-		  protected Entry() {}
-
-		  /** Creates a new entry with the given key.
+		  /** Creates a new red entry with the given key.
 			*
 			* @param k a key.
 			*/
@@ -753,7 +669,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 #if ! #keyclass(Object)  
 		  
-		  /** Creates a new entry with the given key.
+		  /** Creates a new red entry with the given key.
 			*
 			* @param k a key.
 			*/
@@ -847,28 +763,18 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  /** Returns the current level of the node.
 			* @return the current level of this node.
 			*/
-		  protected int balance() {
-				return (byte)info;
+		  protected boolean black() {
+				return ( info & BLACK_MASK ) != 0;
 		  }
 
 		  /** Sets the level of this node.
 			* @param level the new level of this node.
 			*/
-		  protected void balance( int level ) {
-				info &= ~BALANCE_MASK;
-				info |= ( level & BALANCE_MASK );
+		  protected void black( boolean black ) {
+				if ( black ) info |= BLACK_MASK;
+				else info &= ~BLACK_MASK;
 		  }
 
-		  /** Increments the level of this node. */
-		  protected void incBalance() {
-				info = info & ~BALANCE_MASK | ( (byte)info + 1 ) & 0xFF;
-		  }
-		  
-		  /** Decrements the level of this node. */
-		  protected	void decBalance() {
-				info = info & ~BALANCE_MASK | ( (byte)info - 1 ) & 0xFF;
-		  }
-		  
 		  public Object getKey() {
 				return KEY2OBJ(key);
 		  }
@@ -1030,7 +936,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				next = prev = curr;
 				updatePrevious();
 				updateNext();
-				TREESET.this.delete( curr.key );
+				RBTREESET.this.delete( curr.key );
 				curr = null;
 		  }
 
@@ -1105,7 +1011,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @param top if true, the third parameter is ignored and the range goes to &infin;.
 			*/
 		  public Subset( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
-				if ( ! bottom && ! top && TREESET.this.compare( from, to ) > 0 ) {
+				if ( ! bottom && ! top && RBTREESET.this.compare( from, to ) > 0 ) {
 					 throw new IllegalArgumentException( "fromKey > toKey" );
 				}
 
@@ -1128,12 +1034,12 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @return true if is the key is in the subset range.
 			*/
 		  private boolean in( KEY_TYPE k ) {
-				return ( bottom || TREESET.this.compare( k, from ) >= 0 ) &&
-					 ( top || TREESET.this.compare( k, to ) < 0 );
+				return ( bottom || RBTREESET.this.compare( k, from ) >= 0 ) &&
+					 ( top || RBTREESET.this.compare( k, to ) < 0 );
 		  }
 
 		  public boolean contains( final KEY_TYPE k ) {
-				return in( k ) && TREESET.this.contains( k );
+				return in( k ) && RBTREESET.this.contains( k );
 		  }
 
 #if !#keyclass(Object) 
@@ -1245,8 +1151,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @return the last entry on a search for the given key; this will be
 			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
 			*/
-		  private TREESET.Entry locateKey( KEY_TYPE k ) {
-				TREESET.Entry e = tree, last = tree;
+		  private RBTREESET.Entry locateKey( KEY_TYPE k ) {
+				RBTREESET.Entry e = tree, last = tree;
 				int cmp = 0;
 				
 				while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
@@ -1263,10 +1169,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @param k a key.
 			* @return the first entry of this subset, or <code>null</code> if the subset is empty.
 			*/
-		  public TREESET.Entry firstEntry() {
+		  public RBTREESET.Entry firstEntry() {
 				if ( tree == null ) return null;
 				// If this subset goes to -infinity, we return the main set first entry; otherwise, we locate the start of the set.
-				TREESET.Entry e;
+				RBTREESET.Entry e;
 				if ( bottom ) e = firstEntry;
 				else {
 					 e = locateKey( from );
@@ -1291,10 +1197,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @param k a key.
 			* @return the last entry of this subset, or <code>null</code> if the subset is empty.
 			*/
-		  public TREESET.Entry lastEntry() {
+		  public RBTREESET.Entry lastEntry() {
 				if ( tree == null ) return null;
 				// If this subset goes to infinity, we return the main set last entry; otherwise, we locate the end of the set.
-				TREESET.Entry e;
+				RBTREESET.Entry e;
 				if ( top ) e = lastEntry;
 				else {
 					 e = locateKey( to );
@@ -1316,25 +1222,25 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 
 		  public KEY_TYPE FIRST() {
-				TREESET.Entry e = firstEntry();
+				RBTREESET.Entry e = firstEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 		  public KEY_TYPE LAST() {
-				TREESET.Entry e = lastEntry();
+				RBTREESET.Entry e = lastEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 	 
 #if !#keyclass(Object)
 		  public Object first() {
-				TREESET.Entry e = firstEntry();
+				RBTREESET.Entry e = firstEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.getKey();
 		  }
 	 
 		  public Object last() {
-				TREESET.Entry e = lastEntry();
+				RBTREESET.Entry e = lastEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.getKey();
 		  }
@@ -1354,12 +1260,12 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				}
 				protected void updatePrevious() {
 					 super.updatePrevious();
-					 if ( ! bottom && prev != null && TREESET.this.compare( prev.key, from ) < 0 ) prev = null;
+					 if ( ! bottom && prev != null && RBTREESET.this.compare( prev.key, from ) < 0 ) prev = null;
 				}
 				
 				protected void updateNext() {
 					 super.updateNext();
-					 if ( ! top && next != null && TREESET.this.compare( next.key, to ) >= 0 ) next = null;
+					 if ( ! top && next != null && RBTREESET.this.compare( next.key, to ) >= 0 ) next = null;
 				}
 		  }
 	 }
@@ -1414,7 +1320,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  return format.format( d, s, p ).toString();
 	 }
 
-	 private static void speedTest( int n ) {
+	 private static void speedTest( int n, boolean comp ) {
 		  int i, j;
 		  SORTEDSET m;
 		  SortedSet t;
@@ -1429,6 +1335,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  
 		  double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
 
+		  if ( comp ) {
 		  for( j = 0; j < 20; j++ ) {
 
 				t = new TreeSet();
@@ -1485,9 +1392,11 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  totAdd = totYes = totNo = totIter = totRemYes = totRemNo = 0;
 
+		  }
+
 		  for( j = 0; j < 20; j++ ) {
 
-				m = new TREESET();
+				m = new RBTREESET();
 
 				/* We add pairs to m. */
 				ms = System.currentTimeMillis();
@@ -1559,7 +1468,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 private static Object[] k, v, nk;
 	 private static KEY_TYPE kt[];
 	 private static KEY_TYPE nkt[];
-	 private static TREESET topSet;
+	 private static RBTREESET topSet;
 
 	 private static void testSets( SORTEDSET m, SortedSet t, int n, int level ) {
 		  long ms;
@@ -1920,7 +1829,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 
 	 private static void regressionTest( int n ) {
-		  TREESET m = new TREESET();
+		  RBTREESET m = new RBTREESET();
 		  SortedSet t = new TreeSet();
 		  topSet = m;
 		  k = new Object[n];
@@ -1954,7 +1863,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 public static void main( String args[] ) {
 		  int n  = Integer.parseInt(args[1]);
 		  
-		  if (args[0].equals("speedTest")) speedTest(n);
+		  if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
 		  else if (args[0].equals("regressionTest")) regressionTest(n);
 	 }
 

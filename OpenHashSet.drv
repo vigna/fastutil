@@ -32,7 +32,7 @@ import java.io.*;
  * @see HashCommon
  */
 
-public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SET {
+public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SET {
 	 /** The array of keys. */
 	 private transient KEY_TYPE key[];
 
@@ -62,7 +62,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * @see Hash#primes
 	  */
 	 
-	 public HASHSET( int n, float f ) {
+	 public OPENHASHSET( int n, float f ) {
 		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
 		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
 
@@ -84,7 +84,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * @param n the expected number of elements in the hash set. 
 	  */
 	 
-	 public HASHSET(int n) {
+	 public OPENHASHSET(int n) {
 		  this(n, DEFAULT_LOAD_FACTOR);
 	 }
 
@@ -93,7 +93,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
-	 public HASHSET() {
+	 public OPENHASHSET() {
 		  this(DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR);
 	 }
  
@@ -104,7 +104,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * @param f the load factor.
 	  */
 	 
-	 public HASHSET( Collection c, float f ) {
+	 public OPENHASHSET( Collection c, float f ) {
 		  this(c.size(), f);
 		  addAll(c);
 	 }
@@ -117,7 +117,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * @param c a {@link Collection} to be copied into the new hash set. 
 	  */
 	 
-	 public HASHSET( Collection c ) {
+	 public OPENHASHSET( Collection c ) {
 		  this(c, DEFAULT_LOAD_FACTOR);
 	 }
 
@@ -128,7 +128,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * @param f the load factor.
 	  */
 	 
-	 public HASHSET( KEY_TYPE[] a, float f ) {
+	 public OPENHASHSET( KEY_TYPE[] a, float f ) {
 		  this( a.length, f );
 		  int i = a.length;
 		  while(i-- != 0) add(a[i]);
@@ -140,7 +140,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  * @param a an array to be copied into the new hash set. 
 	  */
 	 
-	 public HASHSET( KEY_TYPE[] a ) {
+	 public OPENHASHSET( KEY_TYPE[] a ) {
 		  this( a, DEFAULT_LOAD_FACTOR );
 	 }
 
@@ -313,8 +313,8 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 					 int pos = 0, last = -1, c = count;
 					 
 					 { 
-						  final byte state[] = HASHSET.this.state;
-						  final int n = HASHSET.this.n;
+						  final byte state[] = OPENHASHSET.this.state;
+						  final int n = OPENHASHSET.this.n;
 
 						  if (c != 0) while( pos < n && state[pos] != OCCUPIED ) pos++;
 					 }
@@ -327,8 +327,8 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 #if !#keyclass(Object)
 					 public KEY_TYPE NEXT_KEY() {
 						  KEY_TYPE retVal;
-						  final byte state[] = HASHSET.this.state;
-						  final int n = HASHSET.this.n;
+						  final byte state[] = OPENHASHSET.this.state;
+						  final int n = OPENHASHSET.this.n;
 						  
 						  if (!hasNext()) throw new NoSuchElementException();
 						  retVal = key[last = pos];
@@ -340,8 +340,8 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 
 					 public Object next() {
 						  Object retVal;
-						  final byte state[] = HASHSET.this.state;
-						  final int n = HASHSET.this.n;
+						  final byte state[] = OPENHASHSET.this.state;
+						  final int n = OPENHASHSET.this.n;
 						  
 						  if (!hasNext()) throw new NoSuchElementException();
 						  retVal = KEY2OBJ(key[last = pos]);
@@ -457,9 +457,9 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 	  */
 
 	 public Object clone() {
-		  HASHSET c;
+		  OPENHASHSET c;
 		  try {
-				c = (HASHSET)super.clone();
+				c = (OPENHASHSET)super.clone();
 		  }
 		  catch(CloneNotSupportedException cantHappen) {
 				throw new InternalError();
@@ -620,7 +620,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 
 		  for( j = 0; j < 20; j++ ) {
 
-				m = new HASHSET( 16, f );
+				m = new OPENHASHSET( 16, f );
 
 				/* We add pairs to m. */
 				ms = System.currentTimeMillis();
@@ -678,7 +678,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 
 
 	 private static void regressionTest( int n, float f ) {
-		  HASHSET m = new HASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
+		  OPENHASHSET m = new OPENHASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
 		  Set t = new HashSet();
 
 		  /* First of all, we fill t with random data. */
@@ -822,7 +822,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  /* Now we make m into an array, make it again a set and check it is OK. */
 		  KEY_TYPE a[] = m.TO_KEY_ARRAY();
 		  
-		  if (!new HASHSET(a).equals(m))
+		  if (!new OPENHASHSET(a).equals(m))
 				System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK.\n");
 
 		  int h = m.hashCode();
@@ -840,7 +840,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
-				m = (HASHSET)ois.readObject();
+				m = (OPENHASHSET)ois.readObject();
 				ois.close();
 				ff.delete();
 		  }
@@ -872,7 +872,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  }
 
 #if #keyclass(Integer) || #keyclass(Long)
-		  m = new HASHSET(n, f);
+		  m = new OPENHASHSET(n, f);
 		  t.clear();
 		  int x;
 
@@ -916,7 +916,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal.\n");
 
 		  if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal.\n");
-		  if (!((HASHSET)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal.\n");
+		  if (!((OPENHASHSET)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal.\n");
 
 		  m.rehash();
 

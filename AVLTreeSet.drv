@@ -27,7 +27,7 @@ import java.io.*;
 /** A type-specific tree set with a fast, small-footprint implementation.
  */
 
-public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
+public final class AVLTREESET extends ABSTRACT_SET implements Serializable, SORTEDSET {
 
 	 /** A reference to the root entry. */
 	 public transient Entry tree;
@@ -52,7 +52,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 /** Creates a new empty tree set. 
 	  */
 
-	 public TREESET() {
+	 public AVLTREESET() {
 		  tree = null;
 		  count = 0;
 	 }
@@ -89,7 +89,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * @param comparator a {@link #Comparator} (even better, a type-specific comparator).
 	  */
 
-	 public TREESET( final Comparator c ) {
+	 public AVLTREESET( final Comparator c ) {
 		  this();
 		  storedComparator = c;
 		  setActualComparator();
@@ -101,7 +101,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * @param m a {@link Set} to be copied into the new tree set. 
 	  */
 	 
-	 public TREESET( Set m ) {
+	 public AVLTREESET( Set m ) {
 		  this();
 		  addAll( m );
 	 }
@@ -111,7 +111,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  * @param m a {@link SortedSet} to be copied into the new tree set. 
 	  */
 	 
-	 public TREESET( SortedSet m ) {
+	 public AVLTREESET( SortedSet m ) {
 		  this( m.comparator() );
 		  addAll( m );
 	 }
@@ -158,7 +158,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 /** This vector remembers the path followed during the current insertion. It suffices for
 		  about 2<sup>32</sup> entries. */
-	 private boolean dirPath[] = new boolean[ 48 ];
+	 private transient boolean dirPath[] = new boolean[ 48 ];
 
 
 	 /** Inserts a new element in the set.
@@ -404,7 +404,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					 q = p;
 					 if ( ( p = p.right() ) == null ) return false;
 				}
-				else if ( cmp < 0 ) {
+				else {
 					 q = p;
 					 if ( ( p = p.left() ) == null ) return false;
 				}
@@ -1030,7 +1030,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				next = prev = curr;
 				updatePrevious();
 				updateNext();
-				TREESET.this.delete( curr.key );
+				AVLTREESET.this.delete( curr.key );
 				curr = null;
 		  }
 
@@ -1105,7 +1105,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @param top if true, the third parameter is ignored and the range goes to &infin;.
 			*/
 		  public Subset( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
-				if ( ! bottom && ! top && TREESET.this.compare( from, to ) > 0 ) {
+				if ( ! bottom && ! top && AVLTREESET.this.compare( from, to ) > 0 ) {
 					 throw new IllegalArgumentException( "fromKey > toKey" );
 				}
 
@@ -1128,12 +1128,12 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @return true if is the key is in the subset range.
 			*/
 		  private boolean in( KEY_TYPE k ) {
-				return ( bottom || TREESET.this.compare( k, from ) >= 0 ) &&
-					 ( top || TREESET.this.compare( k, to ) < 0 );
+				return ( bottom || AVLTREESET.this.compare( k, from ) >= 0 ) &&
+					 ( top || AVLTREESET.this.compare( k, to ) < 0 );
 		  }
 
 		  public boolean contains( final KEY_TYPE k ) {
-				return in( k ) && TREESET.this.contains( k );
+				return in( k ) && AVLTREESET.this.contains( k );
 		  }
 
 #if !#keyclass(Object) 
@@ -1245,8 +1245,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @return the last entry on a search for the given key; this will be
 			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
 			*/
-		  private TREESET.Entry locateKey( KEY_TYPE k ) {
-				TREESET.Entry e = tree, last = tree;
+		  private AVLTREESET.Entry locateKey( KEY_TYPE k ) {
+				AVLTREESET.Entry e = tree, last = tree;
 				int cmp = 0;
 				
 				while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
@@ -1263,10 +1263,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @param k a key.
 			* @return the first entry of this subset, or <code>null</code> if the subset is empty.
 			*/
-		  public TREESET.Entry firstEntry() {
+		  public AVLTREESET.Entry firstEntry() {
 				if ( tree == null ) return null;
 				// If this subset goes to -infinity, we return the main set first entry; otherwise, we locate the start of the set.
-				TREESET.Entry e;
+				AVLTREESET.Entry e;
 				if ( bottom ) e = firstEntry;
 				else {
 					 e = locateKey( from );
@@ -1291,10 +1291,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @param k a key.
 			* @return the last entry of this subset, or <code>null</code> if the subset is empty.
 			*/
-		  public TREESET.Entry lastEntry() {
+		  public AVLTREESET.Entry lastEntry() {
 				if ( tree == null ) return null;
 				// If this subset goes to infinity, we return the main set last entry; otherwise, we locate the end of the set.
-				TREESET.Entry e;
+				AVLTREESET.Entry e;
 				if ( top ) e = lastEntry;
 				else {
 					 e = locateKey( to );
@@ -1316,25 +1316,25 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 
 		  public KEY_TYPE FIRST() {
-				TREESET.Entry e = firstEntry();
+				AVLTREESET.Entry e = firstEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 		  public KEY_TYPE LAST() {
-				TREESET.Entry e = lastEntry();
+				AVLTREESET.Entry e = lastEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.key;
 		  }
 	 
 #if !#keyclass(Object)
 		  public Object first() {
-				TREESET.Entry e = firstEntry();
+				AVLTREESET.Entry e = firstEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.getKey();
 		  }
 	 
 		  public Object last() {
-				TREESET.Entry e = lastEntry();
+				AVLTREESET.Entry e = lastEntry();
 				if ( e == null ) throw new NoSuchElementException();
 				return e.getKey();
 		  }
@@ -1354,12 +1354,12 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				}
 				protected void updatePrevious() {
 					 super.updatePrevious();
-					 if ( ! bottom && prev != null && TREESET.this.compare( prev.key, from ) < 0 ) prev = null;
+					 if ( ! bottom && prev != null && AVLTREESET.this.compare( prev.key, from ) < 0 ) prev = null;
 				}
 				
 				protected void updateNext() {
 					 super.updateNext();
-					 if ( ! top && next != null && TREESET.this.compare( next.key, to ) >= 0 ) next = null;
+					 if ( ! top && next != null && AVLTREESET.this.compare( next.key, to ) >= 0 ) next = null;
 				}
 		  }
 	 }
@@ -1414,7 +1414,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  return format.format( d, s, p ).toString();
 	 }
 
-	 private static void speedTest( int n ) {
+	 private static void speedTest( int n, boolean comp ) {
 		  int i, j;
 		  SORTEDSET m;
 		  SortedSet t;
@@ -1429,6 +1429,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  
 		  double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
 
+		  if ( comp ) {
 		  for( j = 0; j < 20; j++ ) {
 
 				t = new TreeSet();
@@ -1485,9 +1486,11 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  totAdd = totYes = totNo = totIter = totRemYes = totRemNo = 0;
 
+		  }
+
 		  for( j = 0; j < 20; j++ ) {
 
-				m = new TREESET();
+				m = new AVLTREESET();
 
 				/* We add pairs to m. */
 				ms = System.currentTimeMillis();
@@ -1559,7 +1562,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 private static Object[] k, v, nk;
 	 private static KEY_TYPE kt[];
 	 private static KEY_TYPE nkt[];
-	 private static TREESET topSet;
+	 private static AVLTREESET topSet;
 
 	 private static void testSets( SORTEDSET m, SortedSet t, int n, int level ) {
 		  long ms;
@@ -1920,7 +1923,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 
 	 private static void regressionTest( int n ) {
-		  TREESET m = new TREESET();
+		  AVLTREESET m = new AVLTREESET();
 		  SortedSet t = new TreeSet();
 		  topSet = m;
 		  k = new Object[n];
@@ -1954,7 +1957,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 public static void main( String args[] ) {
 		  int n  = Integer.parseInt(args[1]);
 		  
-		  if (args[0].equals("speedTest")) speedTest(n);
+		  if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
 		  else if (args[0].equals("regressionTest")) regressionTest(n);
 	 }
 
