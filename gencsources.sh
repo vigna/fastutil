@@ -17,13 +17,13 @@ SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet AVLTree
 INTERFACE=(Comparator AbstractComparator Iterator ListIterator BidirectionalIterator)
 
 # The primitive types we specialize to.
-TYPE=(boolean byte short int long char float double Object)
+TYPE=(boolean byte short int long char float double Object Object)
 
 # The same types, but capitalized (to build method names).
-TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object)
+TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
-CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
+CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
 
 #
 # This loop generates maps. Note that the index in the key
@@ -32,7 +32,7 @@ CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 
 for ((f=0; f<${#MAP[*]}; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
-		  for ((v=0; v<${#TYPE[*]}; v++)); do
+		  for ((v=0; v<$((${#TYPE[*]}-1)); v++)); do
 				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}.c
 				rm -f $FILENAME
 				echo -e \
