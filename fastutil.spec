@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        4.3.2
-Release:        1jpp
+Version:        4.4.0
+Release:        1ubi
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.3.2-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.4.0-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -19,10 +19,11 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %description
 fastutil extends the Java Collections Framework by providing type-specific
 maps, sets, lists and priority queues with a small memory footprint and
-fast access and insertion. The classes implement their standard counterpart
-interface (e.g., Map for maps) and can be plugged into existing code.
-Moreover, they provide additional features (such as bidirectional
-iterators) that are not available in the standard classes.
+fast access and insertion; it also includes a fast I/O API for binary and
+text files. The classes implement their standard counterpart interface
+(e.g., Map for maps) and can be plugged into existing code. Moreover, they
+provide additional features (such as bidirectional iterators) that are not
+available in the standard classes.
 
 
 %package        javadoc
