@@ -102,7 +102,6 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue
 	 * @param a an array of indices into <code>refArray</code>.
 	 * @param size the number of elements to be included in the queue.
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
-	 * @return a queue wrapping the first <code>size</code> elements of <code>a</code>.
 	 */
 	public ARRAY_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c ) {
 		this( refArray, 0, c );
@@ -120,7 +119,6 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
-	 * @return a queue wrapping the elements of <code>a</code>.
 	 */
 	public ARRAY_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final KEY_COMPARATOR c ) {
 		this( refArray, a, a.length, c );
@@ -135,7 +133,6 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
 	 * @param size the number of elements to be included in the queue.
-	 * @return a queue wrapping the first <code>size</code> elements of <code>a</code>.
 	 */
 	public ARRAY_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size ) {
 		this( refArray, a, size, null );
@@ -150,7 +147,6 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
-	 * @return a queue wrapping the elements of <code>a</code>.
 	 */
 	public ARRAY_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a ) {
 		this( refArray, a, a.length );
@@ -432,8 +428,8 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue
 
 		for( int i = 0; i < n; i++ ) ref[ i ] = genKey();
 		  
-		ARRAY_INDIRECT_PRIORITY_QUEUE m = new ARRAY_INDIRECT_PRIORITY_QUEUE( ref,  COMPARATORS.NATURAL_COMPARATOR );
-		HEAP_INDIRECT_PRIORITY_QUEUE t = new HEAP_INDIRECT_PRIORITY_QUEUE( ref,  COMPARATORS.NATURAL_COMPARATOR );
+		ARRAY_INDIRECT_PRIORITY_QUEUE m = new ARRAY_INDIRECT_PRIORITY_QUEUE( ref );
+		HEAP_INDIRECT_PRIORITY_QUEUE t = new HEAP_INDIRECT_PRIORITY_QUEUE( ref );
 
 		/* We add pairs to t. */
 		for( int i = 0; i < n / 2;  i++ ) {
@@ -563,6 +559,16 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue
 
 			if ( m.size() != 0 ) {
 				ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after change(int) (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
+			}
+
+			int[] temp = (int[])t.heap.clone();
+			java.util.Arrays.sort( temp, 0, t.size() ); // To scramble a bit
+			m = new ARRAY_INDIRECT_PRIORITY_QUEUE( m.refArray, temp, t.size() );
+
+			ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after wrap (" + m + ", " + t + ")" );
+
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after wrap (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
 			}
 
 			if ( m.size() != 0 && ( ( new it.unimi.dsi.fastutil.ints.IntOpenHashSet( m.array, 0, m.size ) ).size() == m.size() ) ) {
