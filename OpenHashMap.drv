@@ -1,0 +1,1213 @@
+package it.unimi.dsi.fastMaps;
+
+import java.util.*;
+import java.io.*;
+
+/**
+ * Provides a very simple kind of hash map with fixed size and with a very
+ * fast, small-footprint implementation.
+ *
+ * Hashing done through modulo a prime.
+ *
+ */
+
+public final class HASHMAP_NAME implements Serializable, MAP_NAME {
+	 /** The array of keys. */
+	 private transient KEY_TYPE key[];
+
+	 /** The array of values. */
+	 private transient VALUE_TYPE value[];
+	 
+	 /** The array of occupancy states. */
+	 private transient byte state[];
+
+	 /** The possible states. */
+	 private static final byte FREE = 0;
+	 private static final byte BUSY = -1;
+	 private static final byte REMOVED = 1;
+	 
+	 /** The i-th element is the greatest prime smaller than or equal to 2^i. */
+	 private static final int primeSizes[] = {  1, 2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 4194301, 8388593, 16777213, 33554393, 67108859, 134217689, 268435399, 536870909, 1073741789, 2147483647 };
+	 /** The i-th element is the greatest prime smaller than the greatest prime smaller than or equal to 2^i. */
+	 private static final int primeSizes2[] = { 1, 1, 2, 5, 11, 29, 59, 113, 241, 503, 1019, 2029, 4091, 8179, 16369, 32719, 65519, 131063, 262133, 524269, 1048571, 2097133, 4194287, 8388587, 16777199, 33554383, 67108837, 134217649, 268435367, 536870879, 1073741783, 2147483629 };
+	 /** Index into the previous list, giving the current table size. */
+	 private int log2n;
+
+	 /** Table size. Must be the log2n-th item of the previous list. */
+	 private transient int n;
+
+	 /** Secondary jump for conflict resolution. Must be the (log2n-1)-th item of the previous list. */
+	 private transient int n2;
+
+	 /** Number of entries in the map. */
+	 private int count;
+
+	 /** Number of used buckets in the map. May be larger than {@link #count} if there are items in state {@link #REMOVED}.  */
+	 private transient int used;
+
+	 /** Cached set of entries and keys. */
+	 private transient Set entries, keys;
+
+	 /** Cached collection of values. */
+	 private transient Collection values;
+
+#if ! #valueclass(Object)
+    /**
+     * The default return value for <code>get()</code>, <code>put()</code> and
+     * <code>remove()</code>.  
+	  */
+
+	 private VALUE_TYPE defRetValue = NULL;
+#endif
+
+
+	 /** Creates a new map.
+	  *
+	  * The actual table size is the least prime greater than n/0.75.
+	  *
+	  * @param n the expected number of elements in the map. 
+	  */
+	 
+	 public HASHMAP_NAME( int n ) {
+		  int l = 3;
+		  while( primeSizes[++l] < (int)(n / 0.75) );
+		  this.n = primeSizes[l];
+		  n2 = primeSizes2[l];
+		  log2n = l;
+		  key = new KEY_TYPE[this.n];
+		  value = new VALUE_TYPE[this.n];
+		  state = new byte[this.n];
+	 }
+	 
+
+
+	 /** Creates a new map.
+	  */
+	 
+	 public HASHMAP_NAME() {
+		  this(32);
+	 }
+
+	 /** Adds a pair to the map.
+	  *
+	  * @param k the key.
+	  * @param v the value.
+	  */
+
+	 public Object put(Object ok, Object ov) {
+		  int h, m, n = this.n;
+		  VALUE_TYPE oldValue, value[] = this.value, v = VALUE2TYPE(ov);
+		  KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  byte  state[] = this.state;
+
+		  // Primary hash
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  // Secondary hash
+		  m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  
+		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
+
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				oldValue = value[h];
+				value[h] = v;
+				//System.err.println("done.");
+				return VALUE2OBJ(oldValue);
+		  }
+		  else {
+				if ( state[h] == FREE ) used++;
+				state[h] = BUSY;
+				count++;
+				key[h] = k;
+				value[h] = v;
+				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+		  }
+
+		  //System.err.println("done.");
+		  return null;
+	 }
+	 
+
+#if ! ( #valueclass(Object) && #keyclass(Object) )
+
+	 /** Adds a pair to the map.
+	  *
+	  * @param k the key.
+	  * @param v the value.
+	  */
+
+	 public VALUE_TYPE put(KEY_TYPE k, VALUE_TYPE v) {
+		  int h, m, n = this.n;
+		  VALUE_TYPE oldValue, value[] = this.value;
+		  KEY_TYPE key[] = this.key;
+		  byte  state[] = this.state;
+
+		  // Primary hash
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  // Secondary hash
+		  m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  
+		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
+
+		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				oldValue = value[h];
+				value[h] = v;
+				//System.err.println("done.");
+				return oldValue;
+		  }
+		  else {
+				if ( state[h] == FREE ) used++;
+				state[h] = BUSY;
+				count++;
+				key[h] = k;
+				value[h] = v;
+				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+		  }
+
+		  //System.err.println("done.");
+		  return DEF_RET_VALUE;
+	 }
+
+
+#endif
+
+
+	 /** Removes the entry with the given key from the map.
+	  *
+	  * @param k the key.
+	  */
+
+	 public Object remove(Object ok) {
+		  int h, m, n = this.n;
+		  VALUE_TYPE oldValue, value[] = this.value;
+		  KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
+
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				state[h] = REMOVED;
+				count--;
+				
+				return VALUE2OBJ(value[h]);
+		  }
+		  else return null;
+	 }
+
+#if ! #valueclass(Object) 
+	 
+    /**
+     * Sets the default return value.
+     *
+     * @param rv the new default return value.
+     */
+
+	 public void setDefRetValue( VALUE_TYPE rv ) {
+		  defRetValue = rv;
+	 }
+
+    /**
+     * Gets the default return value.
+     *
+     * @return the current default return value.
+     */
+	 public VALUE_TYPE getDefRetValue() {
+		  return defRetValue;
+	 }
+
+
+	 public boolean containsValue(Object v) {
+		  return containsValue(VALUE2TYPE(v));
+	 }
+
+#endif
+
+
+
+	 public boolean containsValue(VALUE_TYPE v) {
+		  VALUE_TYPE value[] = this.value;
+		  byte state[] = this.state;
+		  
+		  for(int i = n; i-- != 0; ) if (state[i] == BUSY && VALUE_EQUAL(value[i], v)) return true;
+		  return false;
+	 }
+
+
+	 public void clear() {
+		  this.count = 0;
+		  this.used = 0;
+		  Arrays.fill(state, FREE);
+	 }
+
+
+	 public void putAll(Map m) {
+		  Iterator i = m.entrySet().iterator();
+		  Entry e;
+		  while (i.hasNext()) {
+				e = (Entry)i.next();
+				put(e.getKey(), e.getValue());
+		  }
+	 }
+
+
+
+    private static class Entry implements ENTRY_NAME {
+		  KEY_TYPE key;
+		  VALUE_TYPE value;
+
+		  Entry(Object key, Object value) {
+				this.key = KEY2TYPE(key);
+				this.value = VALUE2TYPE(value);
+		  }
+
+#if ! #keyclass(Object) || ! #valueclass(Object) 
+		  
+		  Entry(KEY_TYPE key, VALUE_TYPE value) {
+				this.key = key;
+				this.value = value;
+		  }
+		  
+#endif
+
+		  public Object getKey() {
+				return KEY2OBJ(key);
+		  }
+		  
+		  public Object getValue() {
+				return VALUE2OBJ(value);
+		  }
+		  
+		  public VALUE_TYPE setValue(VALUE_TYPE value) {
+				VALUE_TYPE oldValue = this.value;
+				this.value = value;
+				return oldValue;
+		  }
+		  
+#if ! #valueclass(Object)
+		  
+		  public Object setValue(Object value) {
+				return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+		  }
+
+#endif
+
+
+		  public boolean equals(Object o) {
+				if (!(o instanceof Entry)) return false;
+				Entry e = (Entry)o;
+				
+				return KEY_EQUAL(key, e.key) && VALUE_EQUAL(value, e.value);
+		  }
+		  
+		  public int hashCode() {
+				return KEY2OBJ(key).hashCode() ^ VALUE2OBJ(value).hashCode();
+		  }
+		  
+		  
+		  public String toString() {
+				return key+"="+value;
+		  }
+    }
+	 
+
+    public Set entrySet() {
+		  if (entries == null) entries = new AbstractSet() {
+					 
+					 private class EntryIterator implements Iterator {
+						  int pos = 0, last = -1;
+						  
+						  EntryIterator() { 
+								byte state[] = HASHMAP_NAME.this.state;
+								while( pos < n && state[pos] != BUSY ) pos++;
+						  }
+						  
+						  public boolean hasNext() {
+								return pos < n;
+						  }
+						  
+						  public Object next() {
+								Entry retVal;
+								byte state[] = HASHMAP_NAME.this.state;
+		  
+								if (!hasNext()) throw new NoSuchElementException();
+								retVal = new Entry(key[pos], value[pos]);
+								do pos++; while( pos < n && state[pos] != BUSY );
+								
+								return retVal;
+						  }
+						  
+						  public void remove() {
+								
+								if (last == -1)
+									 throw new IllegalStateException();
+								
+								state[pos] = REMOVED;
+						  }
+					 }
+
+					 public Iterator iterator() {
+						  return new EntryIterator();
+					 }
+					 
+					 public boolean contains(Object o) {
+						  if (!(o instanceof Map.Entry))
+								return false;
+						  Map.Entry e = (Map.Entry)o;
+						  Object v = get(e.getKey());
+						  return VALUE_EQUAL(v, e.getValue());
+					 }
+					 
+					 public boolean remove(Object o) {
+						  if (!(o instanceof Map.Entry))
+								return false;
+						  Map.Entry e = (Map.Entry)o;
+						  Object v = get(e.getKey());
+						  if ( VALUE_EQUAL(v, e.getValue()) ) return remove(e.getKey());
+						  return false;
+					 }
+					 
+					 public int size() {
+						  return count;
+					 }
+					 
+					 public void clear() {
+						  HASHMAP_NAME.this.clear();
+					 }
+				};
+	 
+		  return entries;
+	 }
+
+
+    public Set keySet() {
+		  if (keys == null) keys = new AbstractSet() {
+
+					 private class KeyIterator implements Iterator {
+						  int pos = 0, last = -1;
+		  
+						  KeyIterator() { 
+								byte state[] = HASHMAP_NAME.this.state;
+								while( pos < n && state[pos] != BUSY ) pos++;
+						  }
+		  
+						  public boolean hasNext() {
+								return pos < n;
+						  }
+		  
+						  public Object next() {
+								Object retVal;
+								byte state[] = HASHMAP_NAME.this.state;
+
+								if (!hasNext()) throw new NoSuchElementException();
+								retVal = KEY2OBJ(key[pos]);
+								do pos++; while( pos < n && state[pos] != BUSY );
+
+								return retVal;
+						  }
+		  
+						  public void remove() {
+								if (last == -1) throw new IllegalStateException();
+								state[pos] = REMOVED;
+						  }
+					 }
+
+
+					 public Iterator iterator() {
+						  return new KeyIterator();
+					 }
+					 public int size() {
+						  return count;
+					 }
+					 public boolean contains(Object o) {
+						  return containsKey(o);
+					 }
+					 public boolean remove(Object o) {
+						  int oldCount = count;
+						  HASHMAP_NAME.this.remove(o);
+						  return count != oldCount;
+					 }
+					 public void clear() {
+								HASHMAP_NAME.this.clear();
+						  }
+				};
+		  return keys;
+    }
+
+
+    public Collection values() {
+		  if (values == null) values = new AbstractCollection() {
+
+					 private class ValueIterator implements Iterator {
+						  int pos = 0, last = -1;
+		  
+						  ValueIterator() { 
+								byte state[] = HASHMAP_NAME.this.state;
+								while( pos < n && state[pos] != BUSY ) pos++;
+						  }
+		  
+						  public boolean hasNext() {
+								return pos < n;
+						  }
+		  
+						  public Object next() {
+								Object retVal;
+								byte state[] = HASHMAP_NAME.this.state;
+		  
+								if (!hasNext()) throw new NoSuchElementException();
+								retVal = VALUE2OBJ(value[pos]);
+								do pos++; while( pos < n && state[pos] != BUSY );
+
+								return retVal;
+						  }
+		  
+						  public void remove() {
+								throw new UnsupportedOperationException();
+						  }
+					 }
+
+					 public Iterator iterator() {
+						  return new ValueIterator();
+					 }
+					 public int size() {
+						  return count;
+					 }
+					 public boolean contains(Object o) {
+						  return containsValue(o);
+					 }
+					 public void clear() {
+						  HASHMAP_NAME.this.clear();
+					 }
+				};
+
+		  return values;
+    }
+
+
+
+
+
+	 /** Resizes the map to the next prime.
+	  */
+
+	 private void enlarge( int newLog2n ) {
+		  int i, count = 0, used = 0, n = this.n, h, m, newN = primeSizes[newLog2n], newN2 = primeSizes2[newLog2n];
+		  KEY_TYPE k, key[] = this.key, newKey[] = new KEY_TYPE[newN];
+		  VALUE_TYPE v, value[] = this.value, newValue[] = new VALUE_TYPE[newN];
+		  byte state[] = this.state, newState[] = new byte[newN];
+
+		  //System.err.println("Enlarging " + this.count + " to " + newN + "...");
+
+		  for(i=0; i<n; i++) {
+
+				if ( state[i] != BUSY ) continue;
+
+				k = key[i];
+				v = value[i];
+
+				h = (int)(( (HASH(k) % newN) + newN ) % newN);
+				m = (int)(( (HASH(k) % newN2 ) + newN2 ) % newN2) + 1;
+
+				while( newState[h] != FREE ) h = ( h + m ) % newN;
+				
+				newState[h] = BUSY;
+				newKey[h] = k;
+				newValue[h] = v;
+				count++;
+				used++;
+
+		  }
+
+		  //System.err.println("Enlarged! " + count);
+
+		  this.n = newN;
+		  this.n2 = newN2;
+		  log2n = newLog2n;
+		  this.key = newKey;
+		  this.value = newValue;
+		  this.state = newState;
+		  this.count = count;
+		  this.used = used;
+	 }
+	 
+	 public boolean containsKey(KEY_TYPE k) {
+		  int h, m, n = this.n;
+		  KEY_TYPE key[] = this.key;
+		  VALUE_TYPE value[] = this.value;
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  return state[h] == BUSY;
+	 }
+	 
+	 public int size() {
+		  return count;
+	 }
+
+	 public boolean isEmpty() {
+		  return count == 0;
+	 }
+
+
+	 public Object get(Object ok) {
+		  int h, m, n = this.n;
+		  KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  VALUE_TYPE value[] = this.value;
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] != BUSY ) return null;
+		  return VALUE2OBJ(value[h]);
+	 }
+
+
+#if !#keyclass(Object)
+
+	 public VALUE_TYPE get(KEY_TYPE k) {
+		  int h, m, n = this.n;
+		  KEY_TYPE key[] = this.key;
+		  VALUE_TYPE value[] = this.value;
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] != BUSY ) return DEF_RET_VALUE;
+		  return value[h];
+	 }
+
+
+	 /** Removes the entry with the given key from the map.
+	  *
+	  * @param k the key.
+	  */
+
+	 public VALUE_TYPE remove(KEY_TYPE k) {
+		  int h, m, n = this.n;
+		  VALUE_TYPE oldValue, value[] = this.value;
+		  KEY_TYPE key[] = this.key;
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
+
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				state[h] = REMOVED;
+				count--;
+				
+				return value[h];
+		  }
+		  else return DEF_RET_VALUE;
+	 }
+	 
+
+	 public boolean containsKey(Object ok) {
+		  return containsKey(KEY2TYPE(ok));
+	 }
+
+#else
+#if !#valueclass(Object)
+
+	 public VALUE_TYPE GET_VALUE_TYPE_CAP(Object k) {
+		  int h, m, n = this.n;
+		  KEY_TYPE key[] = this.key;
+		  VALUE_TYPE value[] = this.value;
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] != BUSY ) return DEF_RET_VALUE;
+		  return value[h];
+	 }
+
+	 public VALUE_TYPE REMOVE_VALUE_TYPE_CAP(Object k) {
+		  int h, m, n = this.n;
+		  VALUE_TYPE oldValue, value[] = this.value;
+		  KEY_TYPE key[] = this.key;
+		  byte state[] = this.state;
+
+		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
+
+		  while(  ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				state[h] = REMOVED;
+				count--;
+				
+				return value[h];
+		  }
+		  else return DEF_RET_VALUE;
+	 }
+	 
+#endif
+#endif
+
+    private void writeObject(java.io.ObjectOutputStream s) throws IOException
+    {
+		  KEY_TYPE key[] = this.key;
+		  VALUE_TYPE value[] = this.value;
+		  byte state[] = this.state;
+
+		  // Write out the threshold, loadfactor, and any hidden stuff
+		  s.defaultWriteObject();
+		  // Write out keys and values (alternating)
+		  for (int i = n; i-- != 0; ) {
+				if (state[i] == BUSY) {
+					 s.WRITE_KEY_TYPE_CAP(key[i]);
+					 s.WRITE_VALUE_TYPE_CAP(value[i]);
+				}
+		  }
+    }
+    private void readObject(java.io.ObjectInputStream s)
+		  throws IOException, ClassNotFoundException
+    {
+		  KEY_TYPE key;
+		  VALUE_TYPE value;
+		  int count;
+		  // Read in the threshold, loadfactor, and any hidden stuff
+		  s.defaultReadObject();
+		  this.n = primeSizes[log2n];
+		  this.n2 = primeSizes2[log2n];
+		  count = this.count;
+
+		  this.key = new KEY_TYPE[n];
+		  this.value = new VALUE_TYPE[n];
+		  this.state = new byte[n];
+		  this.count = 0;
+		  this.used = 0;
+
+		  // Read the keys and values, and put the mappings in the HashMap
+		  for (int i = count; i-- != 0; ) {
+				key = s.READ_KEY_TYPE_CAP();
+				value = s.READ_VALUE_TYPE_CAP();
+				put(key, value);
+		  }
+    }
+
+#ifndef NDEBUG
+
+	 private static void speedTest( int n ) {
+		  int i;
+		  MAP_NAME m;
+		  Map t;
+		  Random r = new Random();
+		  Object o;
+		  long v, fm, ct;
+
+		  for(int k=0; k<10; k++) {
+
+				t = new HashMap(n);
+				m = new HASHMAP_NAME(n);
+		  /* First of all, we measure the time that is necessary to produce the inputs. */
+		  
+		  v = System.currentTimeMillis();
+		  
+		  for( i=0; i<n;  i++ ) {
+				
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+				new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+					 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						  new Long(r.nextLong()) 
+#endif
+								;
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+				new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+					 new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+#else
+						  new Long(r.nextLong()) 
+#endif
+								;
+		  }
+		  
+		  ct = System.currentTimeMillis() - v;
+		  
+		  System.gc();
+		  fm = Runtime.getRuntime().freeMemory();
+		  v = System.currentTimeMillis();
+		  
+
+		  /* Then we add pairs to t. */
+
+		  for( i=0; i<n;  i++ ) {
+				t.put( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							 ,
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+						new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							 
+							 );
+		  }
+
+		  System.out.println("Added "+n+" pairs in HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" + 
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+		  System.gc();
+		  System.gc();
+		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+
+		  v = System.currentTimeMillis();
+
+		  /* Then we check for elements in t. */
+
+		  for( i=0; i<n;  i++ ) {
+				t.get( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
+#else
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+								 );
+		  }
+
+		  System.out.println("Examined "+n+" elements in HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+
+		  t = null;
+		  System.gc();
+		  System.gc();
+		  fm = Runtime.getRuntime().freeMemory();
+
+		  v = System.currentTimeMillis();
+
+		  /* Then we add elements to m. */
+
+		  for( i=0; i<n;  i++ ) {
+				m.put( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							 ,
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+						new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							);
+		  }
+		  
+		  System.out.println("Added "+n+" pairs in specialized HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+		  System.gc();
+		  System.gc();
+		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+
+		  v = System.currentTimeMillis();
+
+		  /* Then we check for elements in m. */
+
+		  for( i=0; i<n;  i++ ) {
+				m.get( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							  (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+							  r.NEXT_KEY_TYPE_CAP()
+#else
+							  r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+									);
+		  }
+		  
+		  System.out.println("Examined "+n+" pairs in specialized HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" +
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+	 
+		  }
+	 }
+
+
+	 private static boolean valEquals(Object o1, Object o2) {
+		  return o1 == null ? o2 == null : o1.equals(o2);
+	 }
+
+
+	 private static void regressionTest( int n ) {
+		  MAP_NAME m = new HASHMAP_NAME();
+		  Map t = new HashMap();
+		  Random r = new Random();
+
+		  /* First of all, we fill t with random data. */
+
+		  for(int i=0; i<n;  i++ ) {
+				t.put( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							 ,
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+#elif ! #valueclass(Object)
+						new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+										);
+		  }
+		  
+		  /* Now we add to m the same data */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) {
+				Object o = i.next();
+				m.put(o, t.get(o)); 
+		  }
+
+		  /* Now we check that m actually holds that data. */
+		  
+		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		      if (!valEquals(e.getValue(), m.get(e.getKey()))) {
+					 System.err.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+				Entry e = (Entry)i.next();
+		      if (!valEquals(e.getValue(), t.get(e.getKey()))) {
+					 System.err.println("Error: m and t differ on an entry ("+e+") after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys. */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsKey(o)) {
+					 System.err.println("Error: m and t differ on a key ("+o+") after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.keySet().contains(o)) {
+					 System.err.println("Error: m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys, but iterating on m. */
+		  
+		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsKey(o)) {
+					 System.err.println("Error: m and t differ on a key after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.keySet().contains(o)) {
+					 System.err.println("Error: m and t differ on a key (in keySet()) after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we check that m actually hold the same values. */
+		  
+		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsValue(o)) {
+					 System.err.println("Error: m and t differ on a value after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.values().contains(o)) {
+					 System.err.println("Error: m and t differ on a value (in values()) after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually hold the same values, but iterating on m. */
+		  
+		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsValue(o)) {
+					 System.err.println("Error: m and t differ on a value after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.values().contains(o)) {
+					 System.err.println("Error: m and t differ on a value (in values()) after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that inquiries about random data give the same answer in m and t. For
+			m we use the polymorphic method. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+
+				if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
+					 System.err.println("Error: divergence in keys between t and m (polymorphic method).\n");
+					 System.exit(-1);
+				}
+
+#if #keyclass(Object) && ! #valueclass(Object)
+				if ((m.GET_VALUE_TYPE_CAP(T) != NULL) != ((t.get(KEY2OBJ(T)) == null ? NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != NULL) || 
+					 t.get(KEY2OBJ(T)) != null && 
+					 ! VALUE2OBJ(m.GET_VALUE_TYPE_CAP(T)).equals(t.get(KEY2OBJ(T)))) 
+#else
+					 if ((m.get(T) != NULL) != ((t.get(KEY2OBJ(T)) == null ? NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != NULL) || 
+						  t.get(KEY2OBJ(T)) != null && 
+						  ! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
+#endif
+						  {
+								System.err.println("Error: divergence between t and m (polymorphic method).\n");
+								System.exit(-1);
+						  }
+		  }
+
+		  /* Again, we check that inquiries about random data give the same answer in m and t, but
+			for m we use the standard method. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+				if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
+					 System.err.println("Error: divergence between t and m (standard method).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+				VALUE_TYPE U =
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+					 (VALUE_TYPE)r.nextInt()
+#elif ! #valueclass(Object)
+					 r.NEXT_VALUE_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+				if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
+					 System.err.println("Error: divergence in put() between t and m.\n");
+					 System.exit(-1);
+				}
+				T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+				if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
+					 System.err.println("Error: divergence in remove() between t and m.\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+
+		  /* Now we check that m actually holds the same data. */
+		  
+		  for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+				java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		      if (!valEquals(e.getValue(), m.get(e.getKey()))) {
+					 System.err.println("Error: m and t differ on an entry ("+e+") after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+				Entry e = (Entry)i.next();
+		      if (!valEquals(e.getValue(), t.get(e.getKey()))) {
+					 System.err.println("Error: m and t differ on an entry ("+e+") after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys. */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsKey(o)) {
+					 System.err.println("Error: m and t differ on a key ("+o+") after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.keySet().contains(o)) {
+					 System.err.println("Error: m and t differ on a key ("+o+", in keySet()) after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds the same keys, but iterating on m. */
+		  
+		  for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsKey(o)) {
+					 System.err.println("Error: m and t differ on a key after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.keySet().contains(o)) {
+					 System.err.println("Error: m and t differ on a key (in keySet()) after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we check that m actually hold the same values. */
+		  
+		  for(Iterator i=t.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!m.containsValue(o)) {
+					 System.err.println("Error: m and t differ on a value after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		      if (!m.values().contains(o)) {
+					 System.err.println("Error: m and t differ on a value (in values()) after removal (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually hold the same values, but iterating on m. */
+		  
+		  for(Iterator i=m.values().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!t.containsValue(o)) {
+					 System.err.println("Error: m and t differ on a value after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		      if (!t.values().contains(o)) {
+					 System.err.println("Error: m and t differ on a value (in values()) after removal (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+
+
+		  /* Now we save and read m. */
+
+		  try {
+				java.io.File f = new java.io.File("regressionTest");
+				java.io.OutputStream os = new java.io.FileOutputStream(f);
+				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+				oos.writeObject(m);
+				oos.close();
+				
+				java.io.InputStream is = new java.io.FileInputStream(f);
+				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+				m = (MAP_NAME)ois.readObject();
+				ois.close();
+				f.delete();
+		  }
+		  catch(Exception e) {
+				e.printStackTrace();
+				System.exit(-1);
+		  }
+
+		  /* Now we check that m actually holds that data. */
+		  
+		  for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+				Object o = i.next();
+		      if (!valEquals(m.get(o),t.get(o))) {
+					 System.err.println("Error: m and t differ on an entry after save/read.\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we take out of m everything, and check that it is empty. */
+
+		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
+
+		  if (!m.isEmpty())  {
+				System.err.println("Error: m is not empty (as it should be).\n");
+				System.exit(-1);
+		  }
+
+		  System.err.println("Regression test OK.\n");
+		  System.exit(0);
+	 }
+
+
+	 public static void main( String args[] ) {
+		  int n  = Integer.parseInt(args[1]);
+		  
+		  if (args[0].equals("speedTest")) speedTest(n);
+		  else if (args[0].equals("regressionTest")) regressionTest(n);
+	 }
+
+#endif
+
+}

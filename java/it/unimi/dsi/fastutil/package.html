@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>fastMaps</title>
+  </head>
+
+  <body>
+	 Provides type-specialized hash maps with a small footprint optimized for
+	 fast access and insertion, but (relatively) slow enumeration and
+	 deletion. It is distributed under the GNU General Public Licence.
+
+	 <h2>Package Specification</h2>
+
+	 <p>The name of a hash map class is
+		<div style="padding: 1em">
+		  <var>keytype</var> 2 <var>valuetype</var> <var>maptype</var>.
+		</div>
+		Thus, a <code>Long2IntTreeMap</code> maps ordered long
+		integers to integers. By "type" here we mean a capitalized primitive type,
+		or <code>Object</code>.</p>
+	 
+	 <p>Since there are eight primitive types in Java, we get 71 (!) map classes
+	 (some nonsensical class, such as <code>Boolean2BooleanHashMap</code>, are
+	 not generated).</p>
+	 
+
+	 <h3>Interfaces Implemented</h3>
+
+	 <p>All maps in <code>fastMaps</code> implement the <code>Map</code>. Thus,
+	 they can be just plugged in existing code, using the standard access (of
+	 course, any attempt to use the wrong type for keys or values will produce a
+	 <code>ClassCastException</code>). However, they also provide (whenever
+	 possible) many polymorphic versions of the most used methods that allow to
+	 avoid the tedious "type juggling" that is well known to Java programmers,
+	 and greatly enhance performance by avoiding creating temporary objects. In
+	 doing so, they implement a more stringent interface that extend the standard
+	 one.</p>
+
+	 <p>This new interface adds some methods, which are rather obvious, and I
+	 suggest you to have a look at some of them. There are just a few
+	 <i>caveat</i>, mainly due to some arbitrary restriction of Java:
+		<ul>
+		  
+		  <li>The versions of the <code>get()</code>, <code>put()</code> and
+		  <code>remove()</code> methods that return a primitive type cannot, of
+		  course, rely on returning <code>null</code> to denote the absence of a
+		  certain pair. Rather, they return a <em>default return value</em>,
+		  which is set to 0 cast to the return type(or <code>false</code> for
+		  booleans) at creation , but can be changed using the
+		  <code>setDefRetValue()</code> method. Note that changing the default
+		  return value does not change anything about the data structure; it is
+		  just a way to return a reasonably meaningful result, and it can be
+			 changed at any time. (However, you cannot change the default return
+			 value of a submap.)</li>
+		  
+		  <li>For all maps that have object as keys, the <code>get()</code> and
+			 <code>remove()</code> methods do not admit polymorphic versions, as Java
+			 does not allow return-value polymorphism. Rather, the extended
+			 interfaces introduce new methods of the form
+			 <code>get<var>valuetype</var>()</code> and
+			 <code>remove<var>valuetype</var>()</code>. Similar problems occur
+		  with <code>first()</code>, <code>last()</code> and so on.</li>
+
+		</ul>
+
+		<h2>Performance</h2>
+
+		<p>The main reason behind <code>fastMaps</code> is performance, both in
+		time and in space. The relevant methods are something like 2 to 10 times
+		faster than those of the standard classes. The memory footprint for a
+		table of size <var>n</var> is exactly the memory required for the related
+		types times <var>n</var> bytes, plus a overhead of <var>n</var> bytes to
+		store the state of each entry. The absence of wrappers around primitive
+		types can reduce space occupancy by several times (this applies even more
+		to serialized data, e.g., when you save such a data structure in a
+		file). These data can greatly vary with your virtual machine,
+		JVM versions, CPU etc.</P>
+
+	   <p>To minimize the memory footprint, the classes to not keep any
+		additional information about elements. In particular, this means that
+		deletions are made simply by tagging suitably an entry, and that
+		enumerations are always linear in the size of the table (rather than in
+		the number of entries).</p>
+
+	   <p>Note that since deletions are handled simply by tagging, they tend to
+		slow down access.
+
+		<h2>Robustness</h2>
+
+		<p>The code in <code>fastMaps</code> has passed intensive regression
+		tests. You can trust it must in the same way you trust the standard
+		classes.</p>
+
+  </body>
+</html>
