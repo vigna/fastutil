@@ -374,9 +374,15 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#if #keyclass(Boolean)\n"\
 "#define KEY2OBJ(x) (Boolean.valueOf(x))\n"\
 "#define KEY_NULL (false)\n"\
+"#define KEY_CMP(x,y) ( !(x) && (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#define KEY_LESS(x,y) ( !(x) && (y) )\n"\
+"#define KEY_LESSEQ(x,y) ( !(x) || (y) )\n"\
 "#else\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#define KEY_LESS(x,y) ( (x) < (y) )\n"\
+"#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
 "#endif\n"\
 \
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
@@ -386,10 +392,6 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#else\n"\
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
-\
-"#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
-"#define KEY_LESS(x,y) ( (x) < (y) )\n"\
-"#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
 \
 "#endif\n"\
 \

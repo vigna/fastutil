@@ -49,7 +49,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	 */
 	protected void ensureIndex( final int index ) {
 		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
-		if ( index > size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + ( size() ) + ")" );
+		if ( index > size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than list size (" + ( size() ) + ")" );
 	}
 	
 	/** Ensures that the given index is nonnegative and smaller than the list size.
@@ -59,11 +59,16 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	 */
 	protected void ensureRestrictedIndex( final int index ) {
 		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
-		if ( index >= size() )  throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than list size (" + ( size() ) + ")" );
+		if ( index >= size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + ( size() ) + ")" );
 	}
 
 	public void add( final int index, final KEY_TYPE k ) {
 		throw new UnsupportedOperationException();
+	}
+
+	public boolean add( final KEY_TYPE k ) {
+		add( size(), k );
+		return true;
 	}
 
 	public boolean rem( KEY_TYPE k ) {
@@ -134,6 +139,37 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD() {
 		return KEY_LIST_ITERATOR_METHOD( 0 );
 	}
+
+	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+		return new KEY_ABSTRACT_LIST_ITERATOR() {
+				int pos = index, last = -1;
+							
+				public boolean hasNext() { return pos < ABSTRACT_LIST.this.size(); }
+				public boolean hasPrevious() { return pos > 0; }
+				public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY( last = pos++ ); }
+				public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY( last = --pos ); }
+				public int nextIndex() { return pos; }
+				public int previousIndex() { return pos - 1; }
+				public void add( KEY_TYPE k ) { 
+					if ( last == -1 ) throw new IllegalStateException();
+					ABSTRACT_LIST.this.add( pos++, k ); 
+					last = -1;
+				}
+				public void set( KEY_TYPE k ) { 
+					if ( last == -1 ) throw new IllegalStateException();
+					ABSTRACT_LIST.this.set( last, k ); 
+				}
+				public void remove() { 
+					if ( last == -1 ) throw new IllegalStateException();
+					ABSTRACT_LIST.this.REMOVE_KEY( last );
+					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+					if ( last < pos ) pos--;
+					last = -1;
+				}
+			};
+	}
+
+
 
 	public boolean contains( final KEY_TYPE k ) {
 		return indexOf( k ) >= 0;
@@ -268,7 +304,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 		return true;
 	}
 
-#if ! #keyclass(Reference) && ! #keyclass(Boolean)
+#if ! #keyclass(Reference)
     /** Compares this list to another object. If the
      * argument is a {@link java.util.List}, this method performs a lexicographical comparison; otherwise,
      * it throws a <code>ClassCastException</code>.
@@ -422,175 +458,179 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 		return s.toString();
 	}
 
-}
 
-
-class SUBLIST extends ABSTRACT_LIST implements java.io.Serializable {
-	private final LIST l; // The list this sublist restricts.
-	private final int from; // Initial (inclusive) index of this sublist.
-	private int to; //  Final (exclusive) index of this sublist.
+	public static class SUBLIST extends ABSTRACT_LIST implements java.io.Serializable {
+		protected final LIST l; // The list this sublist restricts.
+		protected final int from; // Initial (inclusive) index of this sublist.
+		protected int to; //  Final (exclusive) index of this sublist.
 	
-	private static final boolean ASSERTS = ASSERTS_VALUE;
+		private static final boolean ASSERTS = ASSERTS_VALUE;
 	
-	public SUBLIST( final LIST l, final int from, final int to ) {
-		this.l = l;
-		this.from = from;
-		this.to = to;
-	}
-
-	private void assertRange() {
-		if ( ASSERTS ) {
-			assert from <= l.size();
-			assert to <= l.size();
-			assert to >= from;
+		public SUBLIST( final LIST l, final int from, final int to ) {
+			this.l = l;
+			this.from = from;
+			this.to = to;
 		}
-	}
 
-	public boolean add( final KEY_TYPE k ) {
-		l.add( to, k );
-		to++;
-		if ( ASSERTS ) assertRange();
-		return true;
-	}
-
-	public void add( final int index, final KEY_TYPE k ) {
-		ensureIndex( index );
-		l.add( from + index, k );
-		to++;
-		if ( ASSERTS ) assertRange();
-	}
-
-	public boolean addAll( final int index, final Collection c ) {
-		ensureIndex( index );
-		to += c.size();
-		if ( ASSERTS ) {
-			boolean retVal = l.addAll( from + index, c );
-			assertRange();
-			return retVal;
+		private void assertRange() {
+			if ( ASSERTS ) {
+				assert from <= l.size();
+				assert to <= l.size();
+				assert to >= from;
+			}
 		}
-		else return l.addAll( from + index, c );
-	}
 
-	public boolean addAll( final int index, final COLLECTION c ) {
-		ensureIndex( index );
-		to += c.size();
-		if ( ASSERTS ) {
-			boolean retVal = l.addAll( from + index, c );
-			assertRange();
-			return retVal;
+		public boolean add( final KEY_TYPE k ) {
+			l.add( to, k );
+			to++;
+			if ( ASSERTS ) assertRange();
+			return true;
 		}
-		else return l.addAll( from + index, c );
-	}
 
-	public boolean addAll( final int index, final LIST l ) {
-		ensureIndex( index );
-		to += l.size();
-		if ( ASSERTS ) {
-			boolean retVal = this.l.addAll( from + index, l );
-			assertRange();
-			return retVal;
+		public void add( final int index, final KEY_TYPE k ) {
+			ensureIndex( index );
+			l.add( from + index, k );
+			to++;
+			if ( ASSERTS ) assertRange();
 		}
-		else return this.l.addAll( from + index, l );
-	}
 
-	public KEY_TYPE GET_KEY( int index ) {
-		ensureRestrictedIndex( index );
-		return l.GET_KEY( from + index );
-	}
+		public boolean addAll( final int index, final Collection c ) {
+			ensureIndex( index );
+			to += c.size();
+			if ( ASSERTS ) {
+				boolean retVal = l.addAll( from + index, c );
+				assertRange();
+				return retVal;
+			}
+			else return l.addAll( from + index, c );
+		}
 
-	public KEY_TYPE REMOVE_KEY( int index ) {
-		ensureRestrictedIndex( index );
-		to--;
-		return l.REMOVE_KEY( from + index );
-	}
+		public boolean addAll( final int index, final COLLECTION c ) {
+			ensureIndex( index );
+			to += c.size();
+			if ( ASSERTS ) {
+				boolean retVal = l.addAll( from + index, c );
+				assertRange();
+				return retVal;
+			}
+			else return l.addAll( from + index, c );
+		}
 
-	public boolean rem( KEY_TYPE k ) {
-		int index = indexOf( k );
-		if ( index == -1 ) return false;
-		to--;
-		l.REMOVE_KEY( from + index );
-		if ( ASSERTS ) assertRange();
-		return true;
-	}
+		public boolean addAll( final int index, final LIST l ) {
+			ensureIndex( index );
+			to += l.size();
+			if ( ASSERTS ) {
+				boolean retVal = this.l.addAll( from + index, l );
+				assertRange();
+				return retVal;
+			}
+			else return this.l.addAll( from + index, l );
+		}
 
-	public KEY_TYPE set( int index, KEY_TYPE k ) {
-		ensureRestrictedIndex( index );
-		return l.set( from + index, k );
-	}
+		public KEY_TYPE GET_KEY( int index ) {
+			ensureRestrictedIndex( index );
+			return l.GET_KEY( from + index );
+		}
 
-	public void clear() {
-		removeElements( 0, size() );
-		if ( ASSERTS ) assertRange();
-	}
+		public KEY_TYPE REMOVE_KEY( int index ) {
+			ensureRestrictedIndex( index );
+			to--;
+			return l.REMOVE_KEY( from + index );
+		}
 
-	public int size() { 
-		return to - from; 
-	}
+		public boolean rem( KEY_TYPE k ) {
+			int index = indexOf( k );
+			if ( index == -1 ) return false;
+			to--;
+			l.REMOVE_KEY( from + index );
+			if ( ASSERTS ) assertRange();
+			return true;
+		}
+
+		public KEY_TYPE set( int index, KEY_TYPE k ) {
+			ensureRestrictedIndex( index );
+			return l.set( from + index, k );
+		}
+
+		public void clear() {
+			removeElements( 0, size() );
+			if ( ASSERTS ) assertRange();
+		}
+
+		public int size() { 
+			return to - from; 
+		}
 
 		
-	public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
-		ensureIndex( from );
-		if ( from + length > size() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + size() + ")" );
-		l.getElements( this.from + from, a, offset, length );
-	}
+		public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
+			ensureIndex( from );
+			if ( from + length > size() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + size() + ")" );
+			l.getElements( this.from + from, a, offset, length );
+		}
 
-	public void removeElements( final int from, final int to ) {
-		ensureIndex( from );
-		ensureIndex( to );
-		l.removeElements( this.from + from, this.from + to );
-		this.to -= ( to - from );
-		if ( ASSERTS ) assertRange();
-	}
+		public void removeElements( final int from, final int to ) {
+			ensureIndex( from );
+			ensureIndex( to );
+			l.removeElements( this.from + from, this.from + to );
+			this.to -= ( to - from );
+			if ( ASSERTS ) assertRange();
+		}
 
-	public void addElements( int index, final KEY_TYPE a[], int offset, int length ) {
-		ensureIndex( index );
-		l.addElements( this.from + index, a, offset, length );
-		this.to += length;
-		if ( ASSERTS ) assertRange();
-	}
+		public void addElements( int index, final KEY_TYPE a[], int offset, int length ) {
+			ensureIndex( index );
+			l.addElements( this.from + index, a, offset, length );
+			this.to += length;
+			if ( ASSERTS ) assertRange();
+		}
 
-	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
-		ensureIndex( index );
+		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+			ensureIndex( index );
 
-		return new KEY_ABSTRACT_LIST_ITERATOR() {
-				int pos = index, last = -1;
+			return new KEY_ABSTRACT_LIST_ITERATOR() {
+					int pos = index, last = -1;
 							
-				public boolean hasNext() { return pos < size(); }
-				public boolean hasPrevious() { return pos > 0; }
-				public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
-				public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
-				public int nextIndex() { return pos; }
-				public int previousIndex() { return pos - 1; }
-				public void add( KEY_TYPE k ) { 
-					if ( last == -1 ) throw new IllegalStateException();
-					SUBLIST.this.add( pos++, k ); 
-					last = -1;
-					if ( ASSERTS ) assertRange();
-				}
-				public void set( KEY_TYPE k ) { 
-					if ( last == -1 ) throw new IllegalStateException();
-					SUBLIST.this.set( last, k ); 
-				}
-				public void remove() { 
-					if ( last == -1 ) throw new IllegalStateException();
-					SUBLIST.this.REMOVE_KEY( last );
-					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-					if ( last < pos ) pos--;
-					last = -1;
-					if ( ASSERTS ) assertRange();
-				}
-			};
-	}
+					public boolean hasNext() { return pos < size(); }
+					public boolean hasPrevious() { return pos > 0; }
+					public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
+					public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
+					public int nextIndex() { return pos; }
+					public int previousIndex() { return pos - 1; }
+					public void add( KEY_TYPE k ) { 
+						if ( last == -1 ) throw new IllegalStateException();
+						SUBLIST.this.add( pos++, k ); 
+						last = -1;
+						if ( ASSERTS ) assertRange();
+					}
+					public void set( KEY_TYPE k ) { 
+						if ( last == -1 ) throw new IllegalStateException();
+						SUBLIST.this.set( last, k ); 
+					}
+					public void remove() { 
+						if ( last == -1 ) throw new IllegalStateException();
+						SUBLIST.this.REMOVE_KEY( last );
+						/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+						if ( last < pos ) pos--;
+						last = -1;
+						if ( ASSERTS ) assertRange();
+					}
+				};
+		}
 
-	public LIST SUBLIST_METHOD( final int from, final int to ) {
-		ensureIndex( from );
-		ensureIndex( to );
-		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+		public LIST SUBLIST_METHOD( final int from, final int to ) {
+			ensureIndex( from );
+			ensureIndex( to );
+			if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 			
-		return new SUBLIST( this, from, to );
+			return new SUBLIST( this, from, to );
+		}
+
 	}
 
 }
+
+
+
+
 
 
 
