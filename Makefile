@@ -1,15 +1,15 @@
 DOCSDIR=docs
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
-VERSION=2.61
+VERSION=3.0
 
-.SUFFIXES: .java .class
+.SUFFIXES: .java .j
 
 SRC = java/it/unimi/dsi/fastutil
-CSOURCES = $(wildcard $(SRC)/*Set.c $(SRC)/*Collection.c $(SRC)/*Map.c $(SRC)/*List.c $(SRC)/*Iterator.c $(SRC)/*Comparator.c $(SRC)/*Iterators.c) # The list of C source files
-CFRAGMENTS = $(wildcard java/it/unimi/dsi/fastutil/*Fragment*.c) # The list of fragments
-SOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
-FRAGMENTS = $(CFRAGMENTS:.c=.java) # The list of generated Java fragments
-CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
+CSOURCES = $(wildcard $(SRC)/*/*.c $(SRC)/*.c) # The list of C source files
+CFRAGMENTS = $(wildcard $(SRC)/*.h) # The list of C fragments
+JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
+FRAGMENTS = $(CFRAGMENTS:.h=.j) # The list of generated Java fragments
+SOURCES = $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java # These are True Java Sources instead
 
 ifdef ASSERTS
 	ASSERTS_VALUE = true
@@ -18,7 +18,7 @@ else
 endif
 
 .PHONY: all clean depend install docs jar tar jsources
-.SECONDARY: $(SOURCES)
+.SECONDARY: $(JSOURCES)
 
 explain:
 	@echo -e "\nTo build fastutil, you must first use the gencsources.sh shell"
@@ -30,7 +30,7 @@ explain:
 	@echo -e "will compile behavioural and speed tests into the classes.\n\n"
 
 jar: jsources
-	export ANT_OPTS="-Xmx128M -Xms128M"
+	export ANT_OPTS="-Xmx192M -Xms192M"
 	ant jar
 
 bin: jar docs
@@ -55,21 +55,24 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/Makefile \
-		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+		fastutil-$(VERSION)/$(SRC)/{BidirectionalIterator.java,HashCommon.java,Hash.java} \
+		fastutil-$(VERSION)/java/overview.html
 	rm fastutil-$(VERSION)
 
-jsources: $(SOURCES)
 
-$(SOURCES): $(FRAGMENTS)
+jsources: $(JSOURCES)
+
+$(JSOURCES): $(CSOURCES) $(FRAGMENTS)
 
 $(FRAGMENTS): $(CFRAGMENTS)
+
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f */*/*/*/*/*Set.java */*/*/*/*/*List.java */*/*/*/*/*Map.java */*/*/*/*/*Collection.java */*/*/*/*/*{Boolean,Byte,Short,Int,Long,Char,Float,Double,Object,Reference}*Iterator.java */*/*/*/*/*Comparator.java */*/*/*/*/*Iterators*.java
-	@rm -f */*/*/*/*/*.c
+	@rm -f */*/*/*/*/*/*.java
+	@rm -f */*/*/*/*/*.{c,h}
 	@rm -fr $(DOCSDIR)/*
 
 
@@ -78,16 +81,24 @@ PACKAGES = it.unimi.dsi.fastutil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	-rm $(FRAGMENTS)
-	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath java $(PACKAGES)
+	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -overview java/overview.html -link $(APIURL) -sourcepath java $(PACKAGES)
+#	for type in Byte Char Int Long Float Double; do javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR)/$$(echo $$type | tr "[A-Z]" "[a-z]") -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) $(SRC)/{Abstract,}$$type*.java; done
+#	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR)/object -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) $(SRC)/{Abstract,}{Object,Reference}*.java
+#	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -link file:///$$(pwd)/$(DOCSDIR)/int -link file:///$$(pwd)/$(DOCSDIR)/char $(SOURCES)
 	chmod -R a+rX $(DOCSDIR)
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv java/it/unimi/dsi/fastutil/Hash.java java/it/unimi/dsi/fastutil/BidirectionalIterator.java java/it/unimi/dsi/fastutil/HashCommon.java java/it/unimi/dsi/fastutil/package.html
+	etags build.xml Makefile README gencsources.sh *.drv $(SRC)/Hash.java $(SRC)/BidirectionalIterator.java $(SRC)/HashCommon.java java/overview.html
 
-# Implicit rule for making Java class files from Java 
-# source files. 
+
+.h.j:
+ifdef TEST
+	gcc -I. -ftabstop=4 -DTEST -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
+else
+	gcc -I. -ftabstop=4 -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@
+endif
+
 .c.java:
 ifdef TEST
 	gcc -I. -ftabstop=4 -DTEST -DASSERTS=$(ASSERTS_VALUE) -E -C -P $< > $@

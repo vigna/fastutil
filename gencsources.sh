@@ -21,19 +21,20 @@ LIST=(List AbstractList ArrayList)
 SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet LinkedOpenHashSet AVLTreeSet RBTreeSet)
 
 # Driver files for interfaces.
-INTERFACE=(Comparator AbstractComparator Iterator IteratorsFragment AbstractIterator ListIterator AbstractListIterator BidirectionalIterator AbstractBidirectionalIterator)
+INTERFACE=(Comparator AbstractComparator Iterator Iterators-Fragment AbstractIterator ListIterator AbstractListIterator BidirectionalIterator AbstractBidirectionalIterator)
 
-# The primitive types we specialize to.
+# The types we specialise to (these are actual Java types, so references appear here as Object).
 TYPE=(boolean byte short int long char float double Object Object)
 
-# The same types, but capitalized (to build method names).
-TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
+# The same types, but in lower case and plural (to build package names; singular forms are reserved keywords).
+TYPE_PACK=(booleans bytes shorts ints longs chars floats doubles objects objects)
 
-# The same types, but in lower case (to build package names).
-TYPE_LC=(boolean byte short int long char float double object object)
+# The capitalised types used to build class and method names (now references appear as Reference).
+TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
+
 
 #
 # This loop generates maps. Note that the index in the key
@@ -52,9 +53,9 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 	for ((k=1; k<l; k++)); do
 		for ((v=0; v<${#TYPE[*]}; v++)); do
 			if [[ ${MAP[$f]:0:8} == "Abstract" ]]; then
-			    FILENAME=$DIR/Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]:8}.c
+			    FILENAME=$DIR/${TYPE_PACK[$k]}/Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]:8}.c
 			else
-			    FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}.c
+			    FILENAME=$DIR/${TYPE_PACK[$k]}/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}.c
 			fi
 			rm -f $FILENAME
 			if [[ ${MAP[$f]} == "LinkedOpenHashMap" ]]; then linked=linked; else linked=unlinked; fi
@@ -62,8 +63,8 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define $linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
 "#assert valueclass(${CLASS[$v]})\n"\
-"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
-"#define IMPORT import it.unimi.dsi.fastutil.${TYPE_LC[$v]}.*;\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_PACK[$k]}\n"\
+"#define IMPORT_VALUES import it.unimi.dsi.fastutil.${TYPE_PACK[$v]}.*\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
@@ -234,16 +235,16 @@ for ((f=0; f<${#SET[*]}; f++)); do
 		&& ${SET[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
 	for ((k=0; k<l; k++)); do
 		if [[ ${SET[$f]:0:8} == "Abstract" ]]; then
-		    FILENAME=$DIR/Abstract${TYPE_CAP[$k]}${SET[$f]:8}.c
+		    FILENAME=$DIR/${TYPE_PACK[$k]}/Abstract${TYPE_CAP[$k]}${SET[$f]:8}.c
 		else
-		    FILENAME=$DIR/${TYPE_CAP[$k]}${SET[$f]}.c
+		    FILENAME=$DIR/${TYPE_PACK[$k]}/${TYPE_CAP[$k]}${SET[$f]}.c
 		fi
 		 rm -f $FILENAME
 		 if [[ ${SET[$f]} == "LinkedOpenHashSet" ]]; then linked=linked; else linked=unlinked; fi
 		 echo -e \
 "#define $linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
-"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_PACK[$k]}\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
@@ -346,14 +347,14 @@ for ((f=0; f<${#LIST[*]}; f++)); do
 	l=${#TYPE[*]}
 	for ((k=0; k<l; k++)); do
 		if [[ ${LIST[$f]:0:8} == "Abstract" ]]; then
-		    FILENAME=$DIR/Abstract${TYPE_CAP[$k]}${LIST[$f]:8}.c
+		    FILENAME=$DIR/${TYPE_PACK[$k]}/Abstract${TYPE_CAP[$k]}${LIST[$f]:8}.c
 		else
-		    FILENAME=$DIR/${TYPE_CAP[$k]}${LIST[$f]}.c
+		    FILENAME=$DIR/${TYPE_PACK[$k]}/${TYPE_CAP[$k]}${LIST[$f]}.c
 		fi
 		rm -f $FILENAME
 		echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
-"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_PACK[$k]}\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
@@ -461,7 +462,7 @@ for ((f=0; f<t; f++)); do
 	l=${#TYPE[*]}
 	if [[ ${INTERFACE[$f]} == "Comparator" 
 	    || ${INTERFACE[$f]} == "AbstractComparator" ]]; then l=$((l-2)); fi # Comparators use only primitive types.
-	if [[ ${INTERFACE[$f]} == "IteratorsFragment"
+	if [[ ${INTERFACE[$f]} == "Iterators-Fragment"
 	    || ${INTERFACE[$f]} == "Iterator"
 	    || ${INTERFACE[$f]} == "AbstractIterator"
 	    || ${INTERFACE[$f]} == "ListIterator"
@@ -470,14 +471,16 @@ for ((f=0; f<t; f++)); do
 	    || ${INTERFACE[$f]} == "AbstractBidirectionalIterator" ]]; then l=$((l-1)); fi # There are no specific iterators for references.
 	 for ((k=0; k<l; k++)); do
 		if [[ ${INTERFACE[$f]:0:8} == "Abstract" ]]; then
-		    FILENAME=$DIR/Abstract${TYPE_CAP[$k]}${INTERFACE[$f]:8}.c
+		    FILENAME=$DIR/${TYPE_PACK[$k]}/Abstract${TYPE_CAP[$k]}${INTERFACE[$f]:8}.c
+		elif [[ ${INTERFACE[$f]##*-} == "Fragment" ]]; then
+		    FILENAME=$DIR/${TYPE_CAP[$k]}${INTERFACE[$f]}.h
 		else
-		    FILENAME=$DIR/${TYPE_CAP[$k]}${INTERFACE[$f]}.c
+		    FILENAME=$DIR/${TYPE_PACK[$k]}/${TYPE_CAP[$k]}${INTERFACE[$f]}.c
 		fi
 		rm -f $FILENAME
 		echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
-"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC[$k]}\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_PACK[$k]}\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
@@ -530,12 +533,8 @@ done
 
 cp Iterators.drv $DIR/Iterators.c
 
-rm -f $DIR/AbstractBooleanSet.c
-rm -f $DIR/BooleanSortedSet.c
-rm -f $DIR/BooleanSet.c
-rm -f $DIR/BooleanComparator.c
-rm -f $DIR/AbstractBooleanComparator.c
-rm -f $DIR/BooleanOpenHashSet.c
-rm -f $DIR/BooleanLinkedOpenHashSet.c
-rm -f $DIR/BooleanAVLTreeSet.c
-rm -f $DIR/BooleanRBTreeSet.c
+rm -f $DIR/booleans/BooleanSortedSet.c
+rm -f $DIR/booleans/BooleanComparator.c
+rm -f $DIR/booleans/AbstractBooleanComparator.c
+rm -f $DIR/booleans/BooleanAVLTreeSet.c
+rm -f $DIR/booleans/BooleanRBTreeSet.c

@@ -42,16 +42,16 @@ public class HashCommon {
 	 * In all other cases, we need some support functions. 
 	 */
 
-	final static int float2int( final float f ) {
+	final public static int float2int( final float f ) {
 		return Float.floatToRawIntBits( f );
 	}
 
-	final static int double2int( final double d ) {
+	final public static int double2int( final double d ) {
 		final long l = Double.doubleToRawLongBits( d );
 		return (int)( l ^ ( l >>> 32 ) );
 	}
 
-	final static int long2int( final long l ) {
+	final public static int long2int( final long l ) {
 		return (int)( l ^ ( l >>> 32 ) );
 	}
 }
