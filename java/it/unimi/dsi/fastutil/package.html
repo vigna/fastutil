@@ -12,7 +12,7 @@
 	 HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
 	 distributed under the <A
 	 HREF="http://www.gnu.org/copyleft/gpl.html"><ACRONYM TITLE="GNU's not
-	 Unix">GNU</ACRONYM> General Public Licence</A>.
+	 Unix">GNU</ACRONYM> General Public License</A>.
 
 	 <h2>Package Specification</h2>
 
@@ -35,7 +35,7 @@
 	 
 	 <p>Since there are eight primitive types in Java, we get 193 (!) classes
 	 (some nonsensical class, such as <code>Boolean2BooleanHashMap</code>, are
-	 not generated). Many classes are generated just to mimick the hierarchy of
+	 not generated). Many classes are generated just to mimic the hierarchy of
 	 <samp>java.util</samp> so to redistribute common code in a similar way.</p>
 	 
 	 <p><b>All classes are not synchronized</b>. If multiple threads access one
@@ -98,30 +98,40 @@
 	 
 	 <p>The main reason behind <code>fastUtil</code> is performance, both in
 	 time and in space. The relevant methods are something like 2 to 10 times
-	 faster than those of the standard classes. The memory footprint for a table
-	 of size <var>n</var> is exactly the memory required for the related types
-	 times <var>n</var> bytes, plus a overhead of <var>n</var> bytes to store
-	 the state of each entry. The absence of wrappers around primitive types can
-	 reduce space occupancy by several times (this applies even more to
-	 serialized data, e.g., when you save such a data structure in a file).
-	 These data can greatly vary with your virtual machine, JVM versions, CPU
-	 etc.
+	 faster than those of the standard classes. 
 
 	 <p><code>fastUtil</code> reduces enormously the creation and collection of
 	 objects. First of all, if you use the polymorphic methods and iterators no
 	 wrapper objects have to be created. Moreover, since <code>fastUtil</code>
 	 uses closed hashing, creation and garbage collection of table entries are
-	 avoided (but tables have to be rehashed whenever they are is filled
+	 avoided (but tables have to be rehashed whenever they are filled
 	 by more than 3/4).
-
-	 <p>To minimize the memory footprint, I keep no additional
-	 information about elements. In particular, this means that deletions are
-	 made simply by tagging suitably an entry, and that enumerations are always
-	 linear in the size of the table (rather than in the number of entries).</p>
 
 	 <p>Note that since deletions are handled simply by tagging, they are very
 	 fast <i>per se</i>, but they tend to slow down subsequent accesses (with
 	 respect to a set with the same number of element, but no deleted entries).
+
+	 <h2>Memory usage</h2>
+
+	 <p>To avoid memory waste, I keep no additional information about elements
+	 (such as a list of keys). In particular, this means that enumerations are
+	 always linear in the size of the table (rather than in the number of
+	 keys).</p>
+
+	 <p>The memory footprint for a table with <var>n</var> keys is exactly the
+	 memory required for the related types times <var>n</var> bytes, plus a
+	 overhead of <var>n</var> bytes to store the state of each entry. The
+	 absence of wrappers around primitive types can reduce space occupancy by
+	 several times (this applies even more to serialized data, e.g., when you
+	 save such a data structure in a file).  These data can greatly vary with
+	 your virtual machine, JVM versions, CPU etc.
+
+	 <p>More precisely, when you ask for a map that will hold <var>n</var>
+	 elements with load factor 0&lt;<var>f</var>&le;1, <var>p</var> entries are
+	 allocated, where <var>p</var> is first prime in {@link Hash.primes} larger
+	 than <var>n</var>/<var>f</var>. Primes in {@link Hash.primes} are roughly
+	 spaced multiplicatively by 2<sup>1/16</sup>, so you lose on average about
+	 2% with respect to <var>n</var>/<var>f</var>.
 
 	 <h2>Robustness</h2>
 	 

@@ -33,6 +33,9 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	 /** The array of occupancy states. */
 	 private transient byte state[];
 
+	 /** The acceptable load factor. */
+	 private final float loadFactor;
+	 
 	 /** Index into the prime list, giving the current table size. */
 	 private int p;
 
@@ -52,14 +55,21 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 	 /** Creates a new hash set.
 	  *
-	  * The actual table size is the least available prime greater than n/0.75.
+	  * The actual table size is the least available prime greater than n/f.
 	  *
 	  * @param n the expected number of elements in the hash set. 
+	  * @param f the load factor.
+	  * @see Hash#primes
 	  */
 	 
-	 public HASHSET_NAME( int n ) {
+	 public HASHSET_NAME( int n, float f ) {
 		  int l = 0;
-		  while( primes[++l] < (int)(n / 0.75) );
+		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
+		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
+
+		  while( primes[++l] < (int)(n / f) );
+
+		  this.loadFactor = f;
 		  this.n = primes[l];
 		  n2 = prevPrimes[l];
 		  p = l;
@@ -67,15 +77,25 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  state = new byte[this.n];
 	 }
 	 
-
-	 /** Creates a new hash set.
+	 
+	 /** Creates a new hash set with {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
 	  *
+	  * @param n the expected number of elements in the hash set. 
+	  */
+	 
+	 public HASHSET_NAME(int n) {
+		  this(n, Hash.DEFAULT_LOAD_FACTOR);
+	 }
+
+
+	 /** Creates a new hash set with {@link Hash.DEFAULT_INITIAL_SIZE} elements
+	  * and {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
 	 public HASHSET_NAME() {
-		  this(32);
+		  this(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 	 }
-	 
+ 
 
 	 /** Creates a new hash set copying a given collection.
 	  *
@@ -83,7 +103,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	  */
 	 
 	 public HASHSET_NAME( Collection c ) {
-		  this( c.size() );
+		  this(c.size());
 		  addAll(c);
 	 }
 
@@ -121,7 +141,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				count++;
 				key[h] = k;
 				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
+				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 				return true;
 		  }
 
@@ -152,7 +172,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				count++;
 				key[h] = k;
 				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
+				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 				return true;
 		  }
 
@@ -307,7 +327,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 
 	 /** Resizes the set.
-	  * @param newP the new approximate logarithm of the size.
+	  * @param newP the new size as an index in {@link Hash#primes}.
 	  */
 
 	 private void rehash( int newP ) {

@@ -37,6 +37,9 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 /** The array of occupancy states. */
 	 private transient byte state[];
 
+	 /** The acceptable load factor. */
+	 private final float loadFactor;
+	 
 	 /** Index into the prime list, giving the current table size. */
 	 private int p;
 
@@ -70,14 +73,21 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 	 /** Creates a new hash map.
 	  *
-	  * The actual table size is the least available prime greater than n/0.75.
+	  * The actual table size is the least available prime greater than n/f.
 	  *
-	  * @param n the expected number of elements in the hash map. 
+	  * @param n the expected number of elements in the hash map.
+	  * @param f the load factor.
+	  * @see Hash#primes
 	  */
 	 
-	 public HASHMAP_NAME( int n ) {
+	 public HASHMAP_NAME( int n, float f ) {
 		  int l = 0;
-		  while( primes[++l] < (int)(n / 0.75) );
+		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
+		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
+
+		  while( primes[++l] < (int)(n / f) );
+
+		  this.loadFactor = f;
 		  this.n = primes[l];
 		  n2 = prevPrimes[l];
 		  p = l;
@@ -86,13 +96,24 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  state = new byte[this.n];
 	 }
 	 
+	 
+	 /** Creates a new hash map with {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
+	  *
+	  * @param n the expected number of elements in the hash map.
+	  */
+	 
+	 public HASHMAP_NAME(int i) {
+		  this(n, Hash.DEFAULT_LOAD_FACTOR);
+	 }
 
 
-	 /** Creates a new hash map.
+
+	 /** Creates a new hash map with {@link Hash.DEFAULT_INITIAL_SIZE} entries
+	  * and {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
 	 public HASHMAP_NAME() {
-		  this(32);
+		  this(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 	 }
 
 
@@ -102,7 +123,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	  */
 	 
 	 public HASHMAP_NAME( Map m ) {
-		  this( m.size() );
+		  this(m.size());
 		  putAll(m);
 	 }
 
@@ -138,7 +159,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				key[h] = k;
 				value[h] = v;
 				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
+				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  }
 
 		  //System.err.println("done.");
@@ -178,7 +199,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				key[h] = k;
 				value[h] = v;
 				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used > n * 0.75 ) rehash( Math.min(p+8, primes.length-1) ); // Table too filled, let's rehash
+				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  }
 
 		  //System.err.println("done.");
@@ -582,7 +603,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 
 	 /** Resizes the map.
-	  * @param newP the new approximate logarithm of the size.
+	  * @param newP the new size as an index in {@link Hash#primes}.
 	  */
 
 	 private void rehash( int newP ) {
