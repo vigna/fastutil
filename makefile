@@ -430,7 +430,7 @@ CSOURCES += $(COMPARATORS_STATIC)
 # Fragmented stuff
 #
 
-BINIO_FRAGMENTS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/io/$(k)BinIOFragment.h)
+BINIO_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/io/$(k)BinIOFragment.h)
 $(BINIO_FRAGMENTS): BinIOFragment.drv; ./gencsource.sh $< $@ >$@
 
 CFRAGMENTS += $(BINIO_FRAGMENTS)

@@ -1,23 +1,25 @@
-package it.unimi.dsi.fastutil.io;
-
 /*		 
- * Copyright (C) 2004 Sebastiano Vigna 
+ * fastutil: Fast & compact type-specific collections for Java
  *
- *  This program is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by the Free
- *  Software Foundation; either version 2 of the License, or (at your option)
- *  any later version.
+ * Copyright (C) 2005 Sebastiano Vigna 
  *
- *  This program is distributed in the hope that it will be useful, but
- *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- *  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- *  for more details.
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
+
+package it.unimi.dsi.fastutil.io;
 
 import java.io.*;
 import it.unimi.dsi.fastutil.bytes.*;
@@ -30,17 +32,23 @@ import it.unimi.dsi.fastutil.doubles.*;
 
 /** Provides static methods to perform easily binary I/O.
  *
- * <P>This class fills a gap in the Java API: a natural operation on sequences
- * of primitive elements is to load or store them in binary form using the
- * {@link DataInput} conventions.  This method is much more flexible than
- * storing arrays as objects, as it allows, for partial load, partial
- * store, and makes it easy to read the resulting files from other languages.
+ * <P>This class fills some gaps in the Java API. First of all, you have two
+ * buffered, easy-to-use methods to {@link #storeObject(Object,CharSequence)} to a
+ * file an object or {@link #loadObject(CharSequence)} an object from a file.
+ *
+ * <p>Second, a natural operation on sequences of primitive elements is to load or
+ * store them in binary form using the {@link DataInput} conventions.  This
+ * method is much more flexible than storing arrays as objects, as it allows
+ * for partial load, partial store, and makes it easy to read the
+ * resulting files from other languages.
  * 
  * <P>For each primitive type, this class provides methods that read elements
  * from a {@link DataInput} or from a filename (which will be opened using a
  * buffer of {@link #BUFFER_SIZE} bytes) into an array. Analogously, there are
  * methods that store the content of an array (fragment) or the elements
  * returned by an iterator to a {@link DataOutput} or to a given filename.
+ *
+ * @since 4.4
  */
 
 public class BinIO {
@@ -49,6 +57,34 @@ public class BinIO {
 
 	/** The size of the buffer used for all I/O on files. */
 	final public static int BUFFER_SIZE = 64 * 1024;
+
+	/** Stores an object in a given file.
+	 *
+	 * @param o an object.
+	 * @param filename a filename.
+	 * @see #loadObject(CharSequence)
+	 */
+
+	public static void storeObject( final Object o, final CharSequence filename ) throws FileNotFoundException, IOException {
+		final ObjectOutputStream oos = new ObjectOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+		oos.writeObject( o );
+		oos.close();
+	}
+
+	/** Loads an object from a given file.
+	 *
+	 * @param filename a filename.
+	 * @see #storeObject(Object, CharSequence)
+	 */
+	public static Object loadObject( final CharSequence filename ) throws IOException, ClassNotFoundException {
+		final ObjectInputStream ois = new ObjectInputStream( new FastBufferedInputStream( new FileInputStream( filename.toString() ), BUFFER_SIZE ) );
+		final Object result = ois.readObject();
+		ois.close();
+		return result;
+	}
+
+
+
 
 #include "java/it/unimi/dsi/fastutil/io/ByteBinIOFragment.h"
 #include "java/it/unimi/dsi/fastutil/io/ShortBinIOFragment.h"
