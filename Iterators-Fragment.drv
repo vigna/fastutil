@@ -1,3 +1,5 @@
+#if ! #keyclass(Object) && ! #keyclass(Reference)
+
 private static class KEY_ARRAY_ITERATOR extends KEY_ABSTRACT_ITERATOR {
 	private final KEY_TYPE array[];
 	private int offset, length;
@@ -45,13 +47,14 @@ public static KEY_ITERATOR wrap( final KEY_TYPE array[] ) {
 }
 
 
-/** Unwraps an iterator over an array starting at a given offset for a given number of elements.
+/** Unwraps an iterator into an array starting at a given offset for a given number of elements.
  *
  * <P>This method iterates over the given type-specific iterator and stores the elements
  * returned, up to a maximum of <code>length</code>, in the given array starting at <code>offset</code>.
  * The number of actually unwrapped elements is returned (it may be less than <code>length</code> if
  * the iterator emits less than <code>length</code> elements).
  *
+ * @param i a type-specific iterator.
  * @param array an array to contain the output of the iterator.
  * @param offset the first element of the array to be returned.
  * @param length the maximum number of elements to unwrap.
@@ -64,12 +67,13 @@ public static int unwrap( final KEY_ITERATOR i, final KEY_TYPE array[], int offs
 	return length - j - 1;
 }
 
-/** Unwraps an iterator over an array.
+/** Unwraps an iterator into an array.
  *
  * <P>This method iterates over the given type-specific iterator and stores the
  * elements returned in the given array. The iteration will stop when the
  * iterator has no more elements or when the end of the array has been reached.
  *
+ * @param i a type-specific iterator.
  * @param array an array to contain the output of the iterator.
  * @return the number of elements unwrapped.
  */
@@ -77,7 +81,177 @@ public static int unwrap( final KEY_ITERATOR i, final KEY_TYPE array[] ) {
 	return unwrap( i, array, 0, array.length );
 }
 
+/** Unwraps an iterator.
+ *
+ * <P>This method iterates over the given type-specific iterator and returns an array
+ * containing the elements returned by the iterator. At most <code>max</code> elements
+ * will be returned.
+ *
+ * @param i a type-specific iterator.
+ * @param max the maximum number of elements to be unwrapped.
+ * @return an array containing the elements returned by the iterator (at most <ocde>max</code>).
+ */
+public static KEY_TYPE[] unwrap( final KEY_ITERATOR i, int max ) {
+	KEY_TYPE array[] = new KEY_TYPE[ 16 ];
+	int j = 0;
 
+	while( max-- != 0 && i.hasNext() ) {
+		if ( j == array.length ) {
+			KEY_TYPE oldArray[] = array;
+			array = new KEY_TYPE[ j * 2 ];
+			System.arraycopy( oldArray, 0, array, 0, j );
+		}
+		array[ j++ ] = i.NEXT_KEY();
+	}
+
+	if ( j != array.length ) {
+		KEY_TYPE oldArray[] = array;
+		array = new KEY_TYPE[ j ];
+		System.arraycopy( oldArray, 0, array, 0, j );
+	}
+
+	return array;
+}
+
+
+private static class KEY_ITERATOR_WRAPPER implements KEY_ITERATOR {
+	final Iterator i;
+
+	public KEY_ITERATOR_WRAPPER( final Iterator i ) {
+		this.i = i;
+	}
+
+	public Object next() { return next(); };
+	public boolean hasNext() { return hasNext(); };
+	public void remove() { remove(); };
+	public KEY_TYPE NEXT_KEY() { return KEY2TYPE( next() ); };
+}
+
+/** Wraps a genearal iterator into a type-specific iterator.
+ *
+ * <P>This method wraps a standard iterator into a type-specific one which will handle the
+ * type conversions for you. Of course, any attempt to wrap an iterator returning the
+ * wrong class will generate a {@link ClassCastException}.
+ *
+ * <P>If <code>i</code> is already type-specific, it will returned and no new object
+ * will be generated.
+ *
+ * @param i an iterator.
+ * @return a type-specific iterator returning the same element as <code>i</code>.
+ */
+public static KEY_ITERATOR AS_KEY_ITERATOR( final Iterator i ) {
+	if ( i instanceof KEY_ITERATOR ) return (KEY_ITERATOR)i;
+	return new KEY_ITERATOR_WRAPPER( i );
+}
+
+#if ! #keyclass(Boolean)
+
+private static class KEY_INTERVAL_ITERATOR extends KEY_ABSTRACT_ITERATOR {
+	private KEY_TYPE curr;
+	private KEY_TYPE max;
+
+	public KEY_INTERVAL_ITERATOR( final KEY_TYPE from, final KEY_TYPE to ) {
+		this.curr = from;
+		this.max = to;
+	}
+
+	public boolean hasNext() { return curr < max; };
+	public KEY_TYPE NEXT_KEY() { return curr++; };
+}
+
+/** Creates a type-specific iterator over an interval.
+ *
+ * <P>The type-specific iterator returned by this method will return the
+ * elements <code>from</code>, <code>from+1</code>,&hellip;, <code>to-1</code>.
+ *
+ * @param from the starting element (inclusive).
+ * @param to the ending element (exclusive).
+ * @return a type-specific iterator enumerating the elements from <code>from</code> to <code>to</code>.
+ */
+public static KEY_ITERATOR fromTo( final KEY_TYPE from, final KEY_TYPE to ) {
+	return new KEY_INTERVAL_ITERATOR( from, to );
+}
+
+#endif
+
+#endif
+
+#if ! #keyclass(Reference)
+
+#if #keyclass(Object)
+private static class KEY_ITERATOR_CONCATENATOR implements Iterator {
+#else
+private static class KEY_ITERATOR_CONCATENATOR extends KEY_ABSTRACT_ITERATOR {
+#endif
+	final KEY_ITERATOR a[];
+	int offset, length, lastOffset = -1;
+
+	public KEY_ITERATOR_CONCATENATOR( final KEY_ITERATOR a[], int offset, int length ) {
+		this.a = a;
+		this.offset = offset;
+		this.length = length;
+		advance();
+	}
+
+	private void advance() {
+		while( length != 0 ) {
+			if ( a[ offset ].hasNext() ) break;
+			length--;
+			offset++;
+		}
+	}
+
+	public boolean hasNext() {
+		return length > 0;
+	}
+
+	public KEY_TYPE NEXT_KEY() {
+		if ( ! hasNext() ) throw new NoSuchElementException();
+		KEY_TYPE next = a[ lastOffset = offset ].NEXT_KEY();
+		advance();
+		return next;
+	}
+
+	public void remove() {
+		if ( lastOffset == -1 ) throw new IllegalStateException();
+		a[ lastOffset ].remove();
+	}
+
+}
+
+
+/** Concatenates all iterators contained in an array.
+ *
+ * <P>This method returns an iterator that will enumerate in order the elements returned
+ * by all iterators contained in the given array.
+ *
+ * @param a an array of iterators.
+ * @return an iterator obtained by concatenation.
+ */
+
+public static KEY_ITERATOR concat( final KEY_ITERATOR a[] ) {
+	return concat( a, 0, a.length );
+}
+
+
+/** Concatenates a sequence of iterators contained in an array.
+ *
+ * <P>This method returns an iterator that will enumerate in order the elements returned
+ * by <code>a[ offset ]</code>, then those returned 
+ * by <code>a[ offset + 1 ]</code>, and so on up to 
+ * <code>a[ offset + length - 1 ]</code>. 
+ *
+ * @param a an array of iterators.
+ * @param offset the index of the first iterator to concatenate.
+ * @param length the number of iterators to concatenate.
+ * @return an iterator obtained by concatenation of <code>length</code> elements of <code>a</code> starting at <code>offset</code>.
+ */
+
+public static KEY_ITERATOR concat( final KEY_ITERATOR a[], final int offset, final int length ) {
+	return new KEY_ITERATOR_CONCATENATOR( a, offset, length );
+}
+
+#endif
 
 // Local Variables:
 // mode: jde

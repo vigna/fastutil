@@ -250,6 +250,7 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\
+"#define AS_KEY_ITERATOR as${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
@@ -294,19 +295,32 @@ done
 
 t=${#INTERFACE[*]}
 for ((f=0; f<t; f++)); do
-	 for ((k=0; k<$((${#TYPE[*]}-2)); k++)); do
+	l=${#TYPE[*]}
+	if [[ ${INTERFACE[$f]} != "IteratorsFragment"  ]]; then l=$((l-2)); fi # Only fragments use reference keys.
+	 for ((k=0; k<l; k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${INTERFACE[$f]}.c
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
-"#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
-"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
+"#define KEY_ITERATOR_CONCATENATOR ${TYPE_CAP[$k]}IteratorConcatenator\n\n"\
+"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define KEY2TYPE(x) (x)\n"\
+"#define KEY2OBJ(x) (x)\n"\
+"#define NEXT_KEY next\n"\
+"#define PREV_KEY previous\n"\
+"#define KEY_ITERATOR Iterator\n\n"\
+"#else\n"\
+"#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
+"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_ARRAY_ITERATOR ${TYPE_CAP[$k]}ArrayIterator\n\n"\
+"#define KEY_ITERATOR_WRAPPER ${TYPE_CAP[$k]}IteratorWrapper\n\n"\
+"#define AS_KEY_ITERATOR as${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_INTERVAL_ITERATOR ${TYPE_CAP[$k]}IntervalIterator\n\n"\
 "#define KEY_ABSTRACT_ITERATOR ${TYPE_CAP[$k]}AbstractIterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
@@ -315,6 +329,7 @@ for ((f=0; f<t; f++)); do
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
+"#endif\n\n"\
 "#include \"${INTERFACE[$f]}.drv\"\n" >$FILENAME
 
 	  done

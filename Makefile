@@ -4,10 +4,13 @@ VERSION=2.52
 
 .SUFFIXES: .java .class
 
-CSOURCES = $(wildcard java/it/unimi/dsi/fastutil/*.c)	# The list of C source files
-FRAGMENTS = $(wildcard java/it/unimi/dsi/fastutil/*Fragment*.java)	# The list of Java fragments
-SOURCES = $(CSOURCES:.c=.java)	# The list of Java generated source files
+SRC = java/it/unimi/dsi/fastutil
+CSOURCES = $(wildcard $(SRC)/*Set.c $(SRC)/*Collection.c $(SRC)/*Map.c $(SRC)/*Iterator.c $(SRC)/*Comparator.c $(SRC)/*Iterators.c) # The list of C source files
+CFRAGMENTS = $(wildcard java/it/unimi/dsi/fastutil/*Fragment*.c) # The list of fragments
+SOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
+FRAGMENTS = $(CFRAGMENTS:.c=.java) # The list of generated Java fragments
 CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
+
 
 .PHONY: all clean depend install docs jar tar jsources
 .SECONDARY: $(SOURCES)
@@ -55,9 +58,11 @@ source:
 		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
-jsources: $(FRAGMENTS)  $(SOURCES)
+jsources: $(SOURCES)
 
-$(FRAGMENTS): $(SOURCES)
+$(SOURCES): $(FRAGMENTS)
+
+$(FRAGMENTS): $(CFRAGMENTS)
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
@@ -73,6 +78,7 @@ PACKAGES = it.unimi.dsi.fastutil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
+	-rm $(FRAGMENTS)
 	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath java $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
