@@ -54,7 +54,7 @@ for ((t=1; t<10000; t*=10)); do
 	for ((k=1; k<l; k++)); do
 		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_PACK[$k]}.${TYPE_CAP[$k]}${LIST[$f]}
 		echo "Testing $CLASSNAME ($t elements)..."
-		java -ea -server $CLASSNAME test $t $lf
+		java -ea -server $CLASSNAME test $t
 	done
     done
 
