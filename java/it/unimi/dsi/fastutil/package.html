@@ -6,8 +6,8 @@
 
   <body>
 
-	 <P>Provides type-specific maps and sets with a small memory
-	 footprint and much (2 to 10 times) faster access and insertion. It is <A
+	 <P>Provides type-specific maps and sets with a small memory footprint and
+	 much (up to 10 times) faster access and insertion. It is <A
 	 HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
 	 distributed under the <A
 	 HREF="http://www.gnu.org/copyleft/lesser.html"><ACRONYM TITLE="GNU's not
@@ -164,21 +164,25 @@
 	
 	 <h2>Performance</h2>
 	 
-	 <p>The main reason behind <code>fastUtil</code> is performance, both in
-	 time and in space. The relevant methods of the hash maps and sets are
+	 <p>The main reason behind <code>fastUtil</code> is performance, in
+	 particular in space; speed is a by-product (maybe <code>compactUtil</code>
+	 would be a better name). The relevant methods of the hash maps and sets are
 	 something like 2 to 10 times faster than those of the standard classes.
 	 Tree maps and sets are not that faster, as the standard counterparts are
-	 optimised rather well, but the lack of wrappers definitely gives a
-	 performance boost. Note that performance on object keys can even be worse
-	 (albeit usually by a few percent) than that of {@link java.util}, because
+	 optimised rather well, but the lack of wrappers usually gives a performance
+	 boost. Note that performance on object keys is usually <em>worse</em> (from
+	 a few percent to doubled time) than that of {@link java.util}, because
 	 <code>fastUtil</code> classes do not cache hash codes.
 
 	 <p><code>fastUtil</code> reduces enormously the creation and collection of
 	 objects. First of all, if you use the polymorphic methods and iterators no
 	 wrapper objects have to be created. Moreover, since <code>fastUtil</code>
 	 uses open-addressing hashing techniques, creation and garbage collection of
-	 hash-table entries are avoided (but tables have to be rehashed whenever they are
-	 filled beyond the load factor).
+	 hash-table entries are avoided (but tables have to be rehashed whenever
+	 they are filled beyond the load factor). The major reduction of the number
+	 of objects around has a definite (but very difficult to measure) impact on
+	 the whole application (as garbage collection runs proportionally to the
+	 number of alive objects).
 
     <p>Whenever possible, <code>fastUtil</code> tries to gain some speed by
     checking for faster interfaces: for instance, the various set-theoretic
@@ -207,9 +211,9 @@
 	 particular <code>fastUtil</code> classes) are not the right choice.
 
 	 <p>Note, however, that <code>fastUtil</code> implements a special
-	 optimisation, usually not found elsewhere, that greatly speeds up probes
-	 for recently deleted entries. More details can be found in the
-	 documentation of the {@link it.unimi.dsi.fastUtil.Hash} interface.
+	 optimisation, usually not found elsewhere, that speeds up probes for
+	 recently deleted entries. More details can be found in the documentation of
+	 the {@link it.unimi.dsi.fastUtil.Hash} interface.
 
 	 <h2>Memory Usage</h2>
 
@@ -218,14 +222,14 @@
 	 <p>To avoid memory waste, the hash tables in <code>fastUtil</code> keep no
 	 additional information about elements (such as a list of keys). In
 	 particular, this means that enumerations are always linear in the size of
-	 the table (rather than in the number of keys). In general, this would imply
+	 the table (rather than in the number of keys). Usually, this would imply
 	 slower iterators. Nonetheless, the iterator code includes a single, tight
 	 loop; moreover, it is possible to avoid the creation of wrappers. These two
 	 facts make in practise <code>fastUtil</code> iterators <em>faster</em> than
 	 {@link java.util}'s.
 
 	 <p>The memory footprint for a table with <var>n</var> keys is exactly the
-	 memory required for the related types times <var>n</var> bytes, plus a
+	 memory required for the related types times <var>n</var>, plus a
 	 overhead of <var>n</var> bytes to store the state of each entry. The
 	 absence of wrappers around primitive types can reduce space occupancy by
 	 several times (this applies even more to serialised data, e.g., when you
@@ -243,10 +247,12 @@
 	 factor, it is rehashed to a roughly doubled size.
 
 	 <p>Since hash codes are not cached, equality on objects is checked first by
-	 checking equality of their {@link java.lang.Object#hashCode()}, and then using {@link
-	 java.lang.Object#equals(Object)}. This turns out to increase slightly the
-	 performance, as many classes (including {@link java.lang.String} and {@link
-	 java.lang.StringBuffer}) cache their hash codes.
+	 checking equality of their {@link java.lang.Object#hashCode()}, and then
+	 using {@link java.lang.Object#equals(Object)}. This turns out to increase
+	 slightly the performance, as many classes (including {@link
+	 java.lang.String} and {@link java.lang.StringBuffer}) cache their hash
+	 codes; in any case, the speed cannot reach that of {@link java.util}'s hash
+	 classes, which cache hash codes.
 
 
 	 <h3>Balanced Trees</h3>
@@ -261,18 +267,18 @@
 	 that Andersson's code requires just <i>o</i>(log log <var>n</var>) bits per
 	 entry to store level information, so we can safely use a couple of other
 	 bits to store thread information in each entry, and still fit into an
-	 integer. 
-
-	 <P>As a result, we get bidirectional iterators in constant space and
-	 amortised constant time without having to store references to parent nodes
-	 (red-black trees are very nice in theory, but I know no language that
-	 allows one to store <em>exactly one</em> bit in a data structure, without
-	 alignment losses).
-
+	 integer. As a result, we get bidirectional iterators in constant space and
+	 amortised constant time without having to store references to parent nodes.
+		
 	 <P>It should be noted, however, that the checks for threads during searches
 	 make the tree code definitely slower when keys are objects. In that case,
 	 if you have spare memory you could choose to use the standard {@link
 	 java.util.TreeMap} implementation.
+
+    <P>Andersson's code is very elegant, but in practise is about twice as slow
+    as the (dreaded) case-by-case code used in the standard tree maps. Future
+    versions of <code>fastUtil</code> will probably use some more optimised
+    tree balancing code, resulting in faster methods.
 
 	 <h2>Robustness</h2>
 	 
