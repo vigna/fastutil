@@ -14,7 +14,7 @@ MAP=(Map SortedMap AbstractMap OpenHashMap AVLTreeMap RBTreeMap)
 SET=(AbstractCollection AbstractSet Collection Set SortedSet OpenHashSet AVLTreeSet RBTreeSet)
 
 # Driver files for interfaces.
-INTERFACE=(Iterator ListIterator Comparator AbstractComparator)
+INTERFACE=(Comparator AbstractComparator Iterator ListIterator BidirectionalIterator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
@@ -67,6 +67,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR Comparator\n\n"\
 "#define NEXT_KEY next\n"\
 "#define PREV_KEY previous\n"\
@@ -89,6 +90,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
@@ -171,6 +173,7 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#if #keyclass(Object)\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR Comparator\n\n"\
 "#define NEXT_KEY next\n"\
 "#define PREV_KEY previous\n"\
@@ -187,6 +190,7 @@ for ((f=0; f<${#SET[*]}; f++)); do
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
@@ -216,6 +220,8 @@ for ((f=0; f<${#SET[*]}; f++)); do
 done
 
 rm -f $DIR/BooleanAbstractSet.c
+rm -f $DIR/BooleanSortedSet.c
+rm -f $DIR/BooleanSet.c
 rm -f $DIR/BooleanOpenHashSet.c
 rm -f $DIR/BooleanAVLTreeSet.c
 rm -f $DIR/BooleanRBTreeSet.c
@@ -226,7 +232,8 @@ rm -f $DIR/BooleanRBTreeSet.c
 # boolean iterators for maps with booleans as codomain.
 #
 
-for ((f=0; f<${#INTERFACE[*]}; f++)); do
+t=${#INTERFACE[*]}
+for ((f=0; f<t; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${INTERFACE[$f]}.c
 					 rm -f $FILENAME
@@ -238,6 +245,7 @@ for ((f=0; f<${#INTERFACE[*]}; f++)); do
 "#define PREV_KEY previous${TYPE_CAP[$k]}\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
+"#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
 "#define KEY_ABSTRACT_COMPARATOR ${TYPE_CAP[$k]}AbstractComparator\n\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\

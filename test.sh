@@ -9,7 +9,7 @@ lf=".75"
 
 if [ "$1" != "" ]; then lf=$1; fi
 
-for ((t=10; t<10000; t*=10)); do
+for ((t=10; t<100000; t*=10)); do
 	 for ((f=0; f<${#FILE[*]}; f++)); do
 		  for ((k=1; k<${#TYPE[*]}; k++)); do
 				CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}${FILE[$f]}

@@ -164,6 +164,26 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		  return e;
 	 }
 
+	 /** Locates a key.
+	  *
+	  * @param k a key.
+	  * @return the last entry on a search for the given key; this will be
+	  * the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
+	  */
+
+	 Entry locateKey( KEY_TYPE k ) {
+		  Entry e = tree, last = tree;
+		  int cmp = 0;
+		  
+		  while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
+				last = e;
+				e = cmp < 0 ? e.left() : e.right();
+		  }
+		  
+		  return cmp == 0 ? e : last;
+	 }
+
+
 	 /** This vector remembers the path followed during the current insertion. It suffices for
 		  about 2<sup>32</sup> entries. */
 	 private transient boolean dirPath[];
@@ -991,18 +1011,28 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 	  * <P>This class can iterate in both directions on a threaded tree.
 	  */
 
-	 private class SetIterator implements KEY_LIST_ITERATOR {
+	 private class SetIterator implements BidirectionalIterator, KEY_LIST_ITERATOR {
 		  /** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
 		  Entry prev;
 		  /** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
 		  Entry next;
 		  /** The last entry that was returned (or <code>null</code> if we did not iterate or used {@link #remove()}). */
 		  Entry curr;
-		  /** The current index (in the sense of a {@link ListIterator}). */
+		  /** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link TreeIterator} has been created using the nonempty constructor.*/
 		  int index = 0;
 		  
 		  SetIterator() {
 				next = firstEntry;
+		  }
+
+		  SetIterator( KEY_TYPE k ) {
+				if ( ( next = locateKey( k ) ) != null ) {
+					 if ( compare( next.key, k ) <= 0 ) {
+						  prev = next;
+						  next = next.next();
+					 }
+					 else prev = next.prev();
+				}
 		  }
 
 		  public boolean hasNext() { return next != null; }
@@ -1071,6 +1101,10 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 
 	 public Iterator iterator() {
 		  return new SetIterator();
+	 }
+
+	 public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+		  return new SetIterator( from );
 	 }
 
 	 public Comparator comparator() {
@@ -1218,6 +1252,10 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 		  public Iterator iterator() {
 				return new SubsetIterator();
 		  }
+
+		  public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+				return new SubsetIterator( from );
+		  }
 		  
 		  public SortedSet headSet( final Object oto ) {
 				final KEY_TYPE to = KEY2TYPE( oto );
@@ -1263,25 +1301,6 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 				return new Subset( from, false, to, false );
 		  }
 #endif
-
-		  /** Locates a key.
-			*
-			* @param k a key.
-			* @return the last entry on a search for the given key; this will be
-			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
-			*/
-		  private AVLTREESET.Entry locateKey( KEY_TYPE k ) {
-				AVLTREESET.Entry e = tree, last = tree;
-				int cmp = 0;
-				
-				while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
-					 last = e;
-					 e = cmp < 0 ? e.left() : e.right();
-				}
-				
-				return cmp == 0 ? e : last;
-		  }
-
 
 		  /** Locates the first entry.
 			*
@@ -1361,6 +1380,25 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 				SubsetIterator() {
 					 next = firstEntry();
 				}
+
+				SubsetIterator( KEY_TYPE k ) {
+					 this();
+
+					 if ( next != null ) {
+						  if ( ! bottom && compare( k, next.key ) < 0 ) prev = null;
+						  else if ( ! top && compare( k, ( prev = lastEntry() ).key ) >= 0 ) next = null;
+						  else {
+								next = locateKey( k );
+								
+								if ( compare( next.key, k ) <= 0 ) {
+									 prev = next;
+									 next = next.next();
+								}
+								else prev = next.prev();
+						  }
+					 }
+				}
+
 				void updatePrevious() {
 					 prev = prev.prev();
 					 if ( ! bottom && prev != null && AVLTREESET.this.compare( prev.key, from ) < 0 ) prev = null;
@@ -1967,14 +2005,14 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 				i = (ListIterator)m.iterator(); 
 				j = new LinkedList( t ).listIterator(); 
 
-				for( int k = 0; k < n/2; k++ ) {
+				for( int k = 0; k < 2*n; k++ ) {
 					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext()" );
 					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious()" );
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
 						  ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next()" );
 
-						  if ( r.nextFloat() < 0.05 ) {
+						  if ( r.nextFloat() < 0.5 ) {
 								i.remove();
 								j.remove();
 								t.remove( J );
@@ -1983,7 +2021,7 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
 						  ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
 
-						  if ( r.nextFloat() < 0.05 ) {
+						  if ( r.nextFloat() < 0.5 ) {
 								i.remove();
 								j.remove();
 								t.remove( J );
@@ -1993,6 +2031,57 @@ public class AVLTREESET extends ABSTRACT_SET implements Serializable, Cloneable,
 					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex()" );
 					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex()" );
 
+				}
+
+		  }
+
+		  {
+				boolean badPrevious = false;
+				Object previous = null;
+				BidirectionalIterator i;
+				ListIterator j;
+				Object I, J;
+				KEY_TYPE from = genKey();
+				j = new LinkedList( t ).listIterator(); 
+				while( j.hasNext() ) {
+					 Object k = j.next();
+					 if ( ((Comparable)k).compareTo( KEY2OBJ( from ) ) > 0 ) {
+						  badPrevious = true;
+						  j.previous();
+						  break;
+					 }
+					 previous = k;
+				}
+
+				i = (BidirectionalIterator)m.iterator( from ); 
+
+				for( int k = 0; k < 2*n; k++ ) {
+					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
+					 ensure( i.hasPrevious() == j.hasPrevious() || badPrevious && ( i.hasPrevious() == ( previous != null ) ), "Error (" + level + ", " + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" + badPrevious );
+
+					 if ( r.nextFloat() < .8 && i.hasNext() ) {
+						  ensure( ( I = i.next() ).equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next() (" + I + ", " + J + ", iterator with starting point " + from + ")" );
+						  //System.err.println("Done next " + I + " " + J + "  " + badPrevious);
+
+						  badPrevious = false;
+
+						  if ( r.nextFloat() < 0.5 ) {
+								//System.err.println("Removing in next");
+								i.remove();
+								j.remove();
+								t.remove( J );
+						  }
+					 }
+					 else if ( !badPrevious && r.nextFloat() < .2 && i.hasPrevious() ) {
+						  ensure( ( I = i.previous() ).equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous() (" + I + ", " + J + ", iterator with starting point " + from + ")" );
+
+						  if ( r.nextFloat() < 0.5 ) {
+								//System.err.println("Removing in prev");
+								i.remove();
+								j.remove();
+								t.remove( J );
+						  }
+					 }
 				}
 
 		  }

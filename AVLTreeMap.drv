@@ -174,6 +174,24 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 		 return e;
    }
 
+	 /** Locates a key.
+	  *
+	  * @param k a key.
+	  * @return the last entry on a search for the given key; this will be
+	  * the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
+	  */
+
+	 Entry locateKey( KEY_TYPE k ) {
+		  Entry e = tree, last = tree;
+		  int cmp = 0;
+		  
+		  while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
+				last = e;
+				e = cmp < 0 ? e.left() : e.right();
+		  }
+		  
+		  return cmp == 0 ? e : last;
+	 }
 
 	 /** This vector remembers the directions followed during the current insertion. It suffices for
 	  *  about 2<sup>32</sup> entries. */
@@ -1103,18 +1121,28 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 	  * <P>This class can iterate in both directions on a threaded tree.
 	  */
 
-	 private class TreeIterator implements ListIterator {
+	 private class TreeIterator implements BidirectionalIterator, ListIterator {
 		  /** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
 		  Entry prev;
 		  /** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
 		  Entry next;
 		  /** The last entry that was returned (or <code>null</code> if we did not iterate or used {@link #remove()}). */
 		  Entry curr;
-		  /** The current index (in the sense of a {@link ListIterator}). */
+		  /** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link TreeIterator} has been created using the nonempty constructor.*/
 		  int index = 0;
 		  
 		  TreeIterator() {
 				next = firstEntry;
+		  }
+
+		  TreeIterator( KEY_TYPE k ) {
+				if ( ( next = locateKey( k ) ) != null ) {
+					 if ( compare( next.key, k ) <= 0 ) {
+						  prev = next;
+						  next = next.next();
+					 }
+					 else prev = next.prev();
+				}
 		  }
 
 		  public boolean hasNext() { return next != null; }
@@ -1221,6 +1249,8 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 	  * their type-specific counterparts) so that they return keys instead of entries.
 	  */
 	 private final class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR {
+		  public KeyIterator() { super(); }
+		  public KeyIterator( KEY_TYPE k ) { super( k ); }
 		  public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
 		  public KEY_TYPE PREV_KEY() { return previousEntry().key; }
 #if !#keyclass(Object)
@@ -1234,6 +1264,10 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 
 					 public Iterator iterator() {
 						  return new KeyIterator();
+					 }
+
+					 public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+						  return new KeyIterator( from );
 					 }
 
 					 public boolean contains( KEY_TYPE k ) {
@@ -1453,6 +1487,10 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 								return new SubmapKeyIterator();
 						  }
 
+						  public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+								return new SubmapKeyIterator( from );
+						  }
+
 						  public boolean contains( KEY_TYPE k ) {
 								return containsKey( k );
 						  }					 
@@ -1666,25 +1704,6 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 		  }
 #endif
 
-		  /** Locates a key.
-			*
-			* @param k a key.
-			* @return the last entry on a search for the given key; this will be
-			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
-			*/
-		  private AVLTREEMAP.Entry locateKey( KEY_TYPE k ) {
-				AVLTREEMAP.Entry e = tree, last = tree;
-				int cmp = 0;
-				
-				while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
-					 last = e;
-					 e = cmp < 0 ? e.left() : e.right();
-				}
-				
-				return cmp == 0 ? e : last;
-		  }
-
-
 		  /** Locates the first entry.
 			*
 			* @param k a key.
@@ -1762,6 +1781,25 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 				SubmapIterator() {
 					 next = firstEntry();
 				}
+
+				SubmapIterator( KEY_TYPE k ) {
+					 this();
+					 
+					 if ( next != null ) {
+						  if ( ! bottom && compare( k, next.key ) < 0 ) prev = null;
+						  else if ( ! top && compare( k, ( prev = lastEntry() ).key ) >= 0 ) next = null;
+						  else {
+								next = locateKey( k );
+								
+								if ( compare( next.key, k ) <= 0 ) {
+									 prev = next;
+									 next = next.next();
+								}
+								else prev = next.prev();
+						  }
+					 }			
+				}
+
 				void updatePrevious() {
 					 prev = prev.prev();
 					 if ( ! bottom && prev != null && AVLTREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
@@ -1782,6 +1820,8 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 			* entries.
 			*/
 		  private final class SubmapKeyIterator extends SubmapIterator implements KEY_LIST_ITERATOR {
+				public SubmapKeyIterator() { super(); }
+				public SubmapKeyIterator( KEY_TYPE from ) { super( from ); }
 				public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
 				public KEY_TYPE PREV_KEY() { return previousEntry().key; }
 #if !#keyclass(Object)
@@ -2517,14 +2557,14 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 				i = (ListIterator)m.entrySet().iterator(); 
 				j = new LinkedList( t.entrySet() ).listIterator(); 
 
-				for( int k = 0; k < n/2; k++ ) {
+				for( int k = 0; k < 2*n; k++ ) {
 					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext()" );
 					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious()" );
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
 						  ensure( ((Entry)i.next()).getKey().equals( J = ((Map.Entry)j.next()).getKey() ), "Error (" + level + ", " + seed + "): divergence in next()" );
 
-						  if ( r.nextFloat() < 0.05 ) {
+						  if ( r.nextFloat() < 0.5 ) {
 								i.remove();
 								j.remove();
 								t.remove( J );
@@ -2533,7 +2573,7 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
 						  ensure( ((Entry)i.previous()).getKey().equals( J = ((Map.Entry)j.previous()).getKey() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
 
-						  if ( r.nextFloat() < 0.05 ) {
+						  if ( r.nextFloat() < 0.5 ) {
 								i.remove();
 								j.remove();
 								t.remove( J );
@@ -2547,6 +2587,58 @@ public class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, Cloneable,
 
 		  }
 		  
+
+		  {
+				boolean badPrevious = false;
+				Object previous = null;
+				BidirectionalIterator i;
+				ListIterator j;
+				Object I, J;
+				KEY_TYPE from = genKey();
+				j = new LinkedList( t.keySet() ).listIterator(); 
+				while( j.hasNext() ) {
+					 Object k = j.next();
+					 if ( ((Comparable)k).compareTo( KEY2OBJ( from ) ) > 0 ) {
+						  badPrevious = true;
+						  j.previous();
+						  break;
+					 }
+					 previous = k;
+				}
+
+				i = (BidirectionalIterator)((SORTEDSET)m.keySet()).iterator( from ); 
+
+				for( int k = 0; k < 2*n; k++ ) {
+					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
+					 ensure( i.hasPrevious() == j.hasPrevious() || badPrevious && ( i.hasPrevious() == ( previous != null ) ), "Error (" + level + ", " + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" + badPrevious );
+
+					 if ( r.nextFloat() < .8 && i.hasNext() ) {
+						  ensure( ( I = i.next() ).equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next() (" + I + ", " + J + ", iterator with starting point " + from + ")" );
+						  //System.err.println("Done next " + I + " " + J + "  " + badPrevious);
+
+						  badPrevious = false;
+
+						  if ( r.nextFloat() < 0.5 ) {
+								//System.err.println("Removing in next");
+								i.remove();
+								j.remove();
+								t.remove( J );
+						  }
+					 }
+					 else if ( !badPrevious && r.nextFloat() < .2 && i.hasPrevious() ) {
+						  ensure( ( I = i.previous() ).equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous() (" + I + ", " + J + ", iterator with starting point " + from + ")" );
+
+						  if ( r.nextFloat() < 0.5 ) {
+								//System.err.println("Removing in prev");
+								i.remove();
+								j.remove();
+								t.remove( J );
+						  }
+					 }
+				}
+
+		  }
+
 		  /* Now we check that m actually holds that data. */
 		  
 		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration" );
