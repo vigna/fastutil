@@ -96,7 +96,7 @@
 		<LI>Sorted structures in <code>fastUtil</code> return type-specific
 		{@link java.util.ListIterator}s. This means that you can move back and
 		forth among entries, keys or values. Again, you must manually cast the
-		result of a call to <code>iterator()</code> to {@link
+		result of a call to {@link java.util.Set#iterator()} to {@link
 		java.util.ListIterator} or, even better, to a type-specific list iterator
 		such as {@link it.unimi.dsi.fastUtil.IntListIterator}.
 
@@ -104,7 +104,7 @@
 		from an array. This means, for instance, that you can create quickly a
 		set of strings with a statement like
 		  <blockquote>
-			 <code>new ObjectHashSet(new String[] { "foo", "bar" })</code>
+			 <code>new ObjectHashSet( new String[] { "foo", "bar" } )</code>
 		  </blockquote>
 
 	 </UL>
@@ -120,13 +120,14 @@
 		cannot, of course, rely on returning <code>null</code> to denote the
 		absence of a certain pair. Rather, they return a <em>default return
 		value</em>, which is set to 0 cast to the return type(or
-		<code>false</code> for booleans and <code>null</code> for objects) at
+		<code>false</code> for booleans) at
 		creation, but can be changed using the <code>setDefRetValue()</code>
 		method. Note that changing the default return value does not change
 		anything about the data structure; it is just a way to return a
 		reasonably meaningful result&mdash;it can be changed at any time. As a
 		commodity, even maps and sets returning objects can use
-		<code>setDefRetValue()</code>. A submap or subset has an independent
+		<code>setDefRetValue()</code> (of course, in this case the default return
+		  value is initialised to <code>null</code>). A submap or subset has an independent
 		default return value (which however is initialised to the default return
 		value of the originator).</li>
 
@@ -158,7 +159,9 @@
 	 something like 2 to 10 times faster than those of the standard classes.
 	 Tree maps and sets are not that faster, as the standard counterparts are
 	 optimised rather well, but the lack of wrappers definitely gives a
-	 performance boost.
+	 performance boost. Note that performance on object keys can even be worse
+	 (albeit usually by a few percent) than that of {@link java.util}, because
+	 <code>fastUtil</code> classes do not cache hash codes.
 
 	 <p><code>fastUtil</code> reduces enormously the creation and collection of
 	 objects. First of all, if you use the polymorphic methods and iterators no
@@ -229,12 +232,14 @@
 	 <var>n</var>&nbsp;/&nbsp;<var>f</var>. When the table is filled up beyond the load
 	 factor, it is rehashed to a roughly doubled size.
 
-	 <p>An important downside of this design is that <em>hash codes are not
-	 cached</em>. Thus, you should not use <code>fastUtil</code> classes with
-	 keys having slow equality methods, as a probe requires testing equality
-	 with all keys met along the probe sequence.
+	 <p>Since hash codes are not cached, equality on objects is checked first by
+	 checking equality of their {@link java.lang.Object#hashCode()}, and then using {@link
+	 java.lang.Object#equals(Object)}. This turns out to increase slightly the
+	 performance, as many classes (including {@link java.lang.String} and {@link
+	 java.lang.StringBuffer}) cache their hash codes.
 
-    <h3>Balanced Trees</h3>
+
+	 <h3>Balanced Trees</h3>
 
 	 <p>The balanced trees implementation is also very parsimonious.
 	 <code>fastUtil</code> uses the excellent code described by Arne Andersson
@@ -246,12 +251,18 @@
 	 that Andersson's code requires just <i>o</i>(log log <var>n</var>) bits per
 	 entry to store level information, so we can safely use a couple of other
 	 bits to store thread information in each entry, and still fit into an
-	 integer. As a result, we get bidirectional iterators in constant space and
+	 integer. 
+
+	 <P>As a result, we get bidirectional iterators in constant space and
 	 amortised constant time without having to store references to parent nodes
 	 (red-black trees are very nice in theory, but I know no language that
 	 allows one to store <em>exactly one</em> bit in a data structure, without
 	 alignment losses).
 
+	 <P>It should be noted, however, that the checks for threads during searches
+	 make the tree code definitely slower when keys are objects. In that case,
+	 if you have spare memory you could choose to use the standard {@link
+	 java.util.TreeMap} implementation.
 
 	 <h2>Robustness</h2>
 	 
