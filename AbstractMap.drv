@@ -75,39 +75,7 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		return defRetValue;
 	}
 
-#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
-                                                                                                                                             
-	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key.
-	 *
-	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
-	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
-	 */
-	public Object get( Object ok ) {
-		KEY_TYPE k = KEY2TYPE( ok );
-		return containsKey( k ) ? null : VALUE2OBJ( GET_VALUE( k ) );
-	}
-                                                                                                                                             
-	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key. 
-	 *
-	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
-	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
-	 */
-	public Object put( Object ok, Object ov ) {
-		KEY_TYPE k = KEY2TYPE( ok );
-		return containsKey( k ) ? null : VALUE2OBJ( put( k, VALUE2TYPE( ov ) ) );
-	}
-                                                                                                                                             
-	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key. 
-	 *
-	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
-	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
-	 */
-	public Object remove( Object ok ) {
-		KEY_TYPE k = KEY2TYPE( ok );
-		return containsKey( k ) ? null : VALUE2OBJ( REMOVE_VALUE( k ) );
-	}
-#endif
-                                                                                                                                             
+
 	public VALUE_TYPE put( KEY_TYPE key, VALUE_TYPE value ) {
 		throw new UnsupportedOperationException();
 	}
@@ -120,6 +88,42 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 		throw new UnsupportedOperationException();
 	}
 
+
+#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+                                                                                                                                             
+	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key.
+	 *
+	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
+	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
+	 */
+	public Object get( Object ok ) {
+		KEY_TYPE k = KEY2TYPE( ok );
+		return containsKey( k ) ? VALUE2OBJ( GET_VALUE( k ) ) : null;
+	}
+                                                                                                                                             
+	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key. 
+	 *
+	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
+	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
+	 */
+	public Object put( Object ok, Object ov ) {
+		KEY_TYPE k = KEY2TYPE( ok );
+		VALUE_TYPE v = put( k, VALUE2TYPE( ov ) );
+		return containsKey( k ) ? VALUE2OBJ( v ) : null;
+	}
+                                                                                                                                             
+	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key. 
+	 *
+	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
+	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
+	 */
+	public Object remove( Object ok ) {
+		KEY_TYPE k = KEY2TYPE( ok );
+		VALUE_TYPE v = REMOVE_VALUE( k );
+		return containsKey( k ) ? VALUE2OBJ( v ) : null;
+	}
+#endif
+                                                                                                                                             
 #if ! #valueclass(Object) && ! #valueclass(Reference)
 	public boolean containsValue( Object ov ) {
 		return containsValue( VALUE2TYPE( ov ) );
