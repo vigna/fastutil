@@ -2,11 +2,11 @@
 
 Name:           fastutil
 Version:        4.3
-Release:        0jpp
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.2.1-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.3-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
