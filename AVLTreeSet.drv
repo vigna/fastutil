@@ -66,12 +66,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  always a type-specific comparator, so it could be derived from the former by wrapping. */
 	 private transient KEY_COMPARATOR actualComparator;
 
-	 /** A fake {@link Entry} that is used as a result of the {@link Entry#left()} and
-	  * {@link Entry#right()} methods to denote the empty subtree. It has the big advantage
-	  * of having dereferenceable left/right pointers and a level that is smaller 
-	  * than that of any node. */
-	 private static Entry sentinel = new Entry();
-
 
 	 /** Creates a new empty tree set. 
 	  */
@@ -171,13 +165,13 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	  */
 
    private Entry findKey( KEY_TYPE k ) {
-		 Entry e = tree == null ? sentinel : tree;
+		 Entry e = tree;
 		 int cmp;
-		 
-		 while ( e != sentinel && ( cmp = compare( k, e.key ) ) != 0 ) 
+
+		 while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) 
 			  e = cmp < 0 ? e.left() : e.right();
 		 
-		 return e == sentinel ? null : e;
+		 return e;
    }
 
 	 /** The value of this variable remembers during an <code>insert()</code> 
@@ -200,24 +194,15 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 
 	 private boolean insert( final KEY_TYPE k ) {
-		  change = null; // This will hold the new entry.
 		  modified = turnedLeft = turnedRight = false;
 		  key = k;
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
-				tree = change = new Entry( k );
+				tree = lastEntry = firstEntry = new Entry( k );
 				modified = true;
 		  }
 		  else tree = insertRec( tree );
-
-		  if ( modified ) { // We update last/first if we actually changed the set.
-				if ( ! turnedLeft ) lastEntry = change;
-				if ( ! turnedRight ) firstEntry = change;
-		  }
-
-		  // We null everything to avoid residual references.
-		  change = null;
 
 #if #keyclass(Object)
 		  key = null;
@@ -243,7 +228,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		 
 		 if ( cmp < 0 ) {
 			  turnedLeft = true;
-			  if ( e.left() != sentinel ) e.left = insertRec( e.left );
+			  if ( e.left() != null ) e.left = insertRec( e.left );
 			  else {
 					/* <P>This method we create a new {@link Entry} (marked as a leaf) and
 					 * link it at the left of <code>e</code>. The {@link Entry#right} pointer
@@ -253,6 +238,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					final Entry l = change = new Entry( key );
 					
 					modified = true;
+					if ( ! turnedRight ) firstEntry = l;
 					
 					l.right = e;
 					l.left = e.left;
@@ -265,7 +251,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		 } 
 		 else if ( cmp > 0 ) {
 			  turnedRight = true;
-			  if ( e.right() != sentinel ) e.right = insertRec( e.right );
+			  if ( e.right() != null ) e.right = insertRec( e.right );
 			  else {
 					/* <P>We create a new {@link Entry} (marked as a leaf) and
 					 * link it at the right of <code>e</code>. The {@link Entry#left} pointer
@@ -275,6 +261,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					final Entry r = change = new Entry( key );
 					
 					modified = true;
+					if ( ! turnedLeft ) lastEntry = r;
 					
 					r.left = e;
 					r.right = e.right;
@@ -335,11 +322,11 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  change = e;
 
 		  if ( compare( key, e.key ) < 0 ) {
-				if ( e.left() != sentinel ) e.left = deleteRec( e, e.left );
+				if ( e.left() != null ) e.left = deleteRec( e, e.left );
 		  }
 		  else  {
 				deleted = e;
-				if ( e.right() != sentinel ) e.right = deleteRec( e, e.right );
+				if ( e.right() != null ) e.right = deleteRec( e, e.right );
 		  }
 				
 		  if ( e == change && deleted != null && compare( key, deleted.key ) == 0 ) {
@@ -354,7 +341,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 						  if ( e.succ() ) p.succ( true );  // This handles the case of e being a leaf to the right of p.
 						  else if ( e.right.pred() ) e.right.left = p; // This handles the case of e being a right subtree and e.right a leaf.
 					 }
-					 else if ( e.right() != sentinel && e.right.pred() ) e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
+					 else if ( e.right() != null && e.right.pred() ) e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
 				}
 
 				// If we are deleting the first or last entry, we must update our state accordingly.
@@ -373,14 +360,21 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				return e.right;
 		  }
 
-		  if ( modified && ( e.left().level() < e.level() - 1 || e.right().level() < e.level() - 1 ) ) {
+		  if ( ! modified ) return e;
+
+		  Entry l, r;
+		  final int level = e.level();
+
+		  if ( ( r = e.right() ) == null && level > 1 || r != null && r.level() < level - 1 || ( l = e.left() ) == null && level > 1 || l != null && l.level() < level - 1 ) {
 				e.decLevel();
-				if ( e.right().level() > e.level() ) e.right().level( e.level() );
+				if ( r != null && r.level() > e.level() ) r.level( e.level() );
 				e = e.skew();
-				if ( e.right() != sentinel ) e.right = e.right.skew();
-				if ( e.right().right() != sentinel ) e.right.right = e.right.right.skew();
+				if ( ( r = e.right() ) != null ) {
+					 r = e.right = r.skew();
+					 if ( r.right() != null ) r.right = r.right.skew();
+				}
 				e = e.split();
-				if ( e.right() != sentinel ) e.right = e.right.split();
+				if ( ( r = e.right() ) != null ) e.right = r.split();
 		  }
 
 		  return e;
@@ -475,24 +469,22 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  
 #endif
 
-		  /** Returns the left subtree, if it is a real one. 
+		  /** Returns the left subtree. 
 			*
-			* @return the left subtree, or {@link #sentinel} if the left
-			* subtree is empty, or it really points to a predecessor.
+			* @return the left subtree (<code>null</code> if the left
+			* subtree is empty).
 			*/
 		  protected Entry left() {
-				if ( ( mix & PRED_MASK ) != 0 || left == null ) return TREESET.sentinel;
-				else return left;
+				return ( mix & PRED_MASK ) != 0 ? null : left;
 		  }
 		  
-		  /** Returns the right subtree, if it is a real one. 
+		  /** Returns the right subtree. 
 			*
-			* @return the right subtree, or {@link #sentinel} if the right
-			* subtree is empty, or it really points to a successor.
+			* @return the right subtree (<code>null</code> if the right
+			* subtree is empty).
 			*/
 		  protected Entry right() {
-				if ( ( mix & SUCC_MASK ) != 0 || right == null ) return TREESET.sentinel;
-				else return right;
+				return ( mix & SUCC_MASK ) != 0 ? null : right;
 		  }
 		  
 		  /** Checks whether the left pointer is really a predecessor.
@@ -581,21 +573,19 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @return the new top of the subtree.
 			*/
 		  Entry split() {
-				if ( this != sentinel && right().right().level() == level() ) {
-					 /* Firstly, we save the current right pointer. */
-					 final Entry t = right;
-					 
-					 /* Then, if our right subtree contains a predecessor, we set the
+				final Entry r;
+				if ( ( r = right() ) != null && r.right() != null && r.right.level() == level() ) {
+					 /* If our right subtree contains a predecessor, we set the
 						 subtree as our successor. */
-					 if ( ! t.pred() ) right = t.left;
+					 if ( ! r.pred() ) right = r.left;
 					 
-					 succ( t.pred() );
+					 succ( r.pred() );
 					 
-					 t.left = this;
-					 t.pred( false );
-					 t.incLevel();
+					 r.left = this;
+					 r.pred( false );
+					 r.incLevel();
 					 
-					 return t;
+					 return r;
 				}
 				return this;
 		  }
@@ -604,20 +594,18 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 			* @return the new top of the subtree.
 			*/
 		  Entry skew() {
-				if ( this != sentinel && left().level() == level() ) {
-					 /* Firstly, we save the current left pointer. */
-					 final Entry t = left;
-					 
-					 /* Then, if our left subtree contains a successor, we set the
+				final Entry l;
+				if ( ( l = left() ) != null && l.level() == level() ) {
+					 /* If our left subtree contains a successor, we set the
 						 subtree as our predecessor. */
-					 if ( ! t.succ() ) left = t.right;
+					 if ( ! l.succ() ) left = l.right;
 					 
-					 pred( t.succ() );
+					 pred( l.succ() );
 					 
-					 t.right = this;
-					 t.succ( false );
+					 l.right = this;
+					 l.succ( false );
 					 
-					 return t;
+					 return l;
 				}
 				return this;
 		  }
@@ -665,17 +653,11 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 }
 	 
 	 public KEY_TYPE FIRST() {
-		  TREESET.Entry e = tree;
-		  if ( e == null ) throw new NoSuchElementException();
-		  while ( e.left != null ) e = e.left;
-		  return e.key;
+		  return firstEntry.key;
 	 }
 	 
 	 public KEY_TYPE LAST() {
-		  TREESET.Entry e = tree;
-		  if ( e == null ) throw new NoSuchElementException();
-		  while ( e.right != null ) e = e.right;
-		  return e.key;
+		  return lastEntry.key;
 	 }
 	 
 #if ! #keyclass(Object)
@@ -686,7 +668,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 public Object last() {
 		  return KEY2OBJ( LAST() );
 	 }
-
 #endif
 
 	 /** An iterator on the whole range.
@@ -713,7 +694,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  protected void updateNext() {
 				next = next.right;
-				if ( next != null && ! curr.pred() ) while ( next.left() != sentinel ) next = next.left;
+				if ( next != null && ! curr.pred() ) while ( next.left() != null ) next = next.left;
 		  }
 
 		  protected Entry nextEntry() {
@@ -733,7 +714,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  protected void updatePrevious() {
 				prev = prev.left;
-				if ( prev != null && ! curr.pred() ) while ( prev.right() != sentinel ) prev = prev.right;
+				if ( prev != null && ! curr.pred() ) while ( prev.right() != null ) prev = prev.right;
 		  }
 
 		  protected Entry previousEntry() {
@@ -994,7 +975,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				TREESET.Entry e = tree, last = tree;
 				int cmp = 0;
 				
-				while ( e != sentinel && ( cmp = compare( k, e.key ) ) != 0 ) {
+				while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
 					 last = e;
 					 e = cmp < 0 ? e.left() : e.right();
 				}
@@ -1023,7 +1004,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 						  // Oops, it's already the last element.
 						  if ( e == null ) return null;
 						  // If we did not follow a thread we descend the tree on the left.
-						  if ( ! succ ) while ( e.left() != sentinel ) e = e.left;
+						  if ( ! succ ) while ( e.left() != null ) e = e.left;
 					 }
 				}
 				// Finally, if this subset doesn't go to infinity, we check that the resulting key isn't greater than the end.
@@ -1051,7 +1032,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 						  // Oops, it's already the first element.
 						  if ( e == null ) return null;
 						  // If we did not follow a thread we descend the tree on the right.
-						  if ( ! pred ) while ( e.right() != sentinel ) e = e.right;
+						  if ( ! pred ) while ( e.right() != null ) e = e.right;
 					 }
 				}
 				// Finally, if this subset doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
@@ -1179,8 +1160,6 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  
 		  double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
 
-		  System.out.println("******** java.util.TreeSet ********");
-
 		  for( int j = 0; j < 20; j++ ) {
 
 				t = new TreeSet();
@@ -1230,10 +1209,10 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				System.out.println();
 		  }
 
-		  System.out.println("Add: " + format( totAdd/20 ) + " Yes: " + format( totYes/20 ) + " No: " + format( totNo/20 ) + " Iter: " + format( totIter/20 ) + " RemYes: " + format( totRemYes/20 ) + " RemNo: " + format( totRemNo/20 ) );
+		  System.out.println();
+		  System.out.println( "java.util Add: " + format( totAdd/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + "K/s" );
 
 		  System.out.println();
-		  System.out.println("******** fastUtil ********");
 
 		  totAdd = totYes = totNo = totIter = totRemYes = totRemNo = 0;
 
@@ -1286,7 +1265,11 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				System.out.println();
 		  }
 
-		  System.out.println("Add: " + format( totAdd/20 ) + " Yes: " + format( totYes/20 ) + " No: " + format( totNo/20 ) + " Iter: " + format( totIter/20 ) + " RemYes: " + format( totRemYes/20 ) + " RemNo: " + format( totRemNo/20 ) );
+
+		  System.out.println();
+		  System.out.println( "fastUtil  Add: " + format( totAdd/20 ) + " K/s Yes: " + format( totYes/20 ) + " K/s No: " + format( totNo/20 ) + " K/s Iter: " + format( totIter/20 ) + " K/s RemYes: " + format( totRemYes/20 ) + " K/s RemNo: " + format( totRemNo/20 ) + " K/s" );
+
+		  System.out.println();
 	 }
 
 
