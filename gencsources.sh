@@ -26,7 +26,7 @@ CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 
 for ((f=0; f<3; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
-		  for ((v=0; v<${#TYPE[*]}; v++)); do
+		  for ((v=1; v<${#TYPE[*]}; v++)); do
 				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
 				rm -f $FILENAME
 				echo -e \
@@ -54,7 +54,7 @@ for ((f=0; f<3; f++)); do
 "#define KEY2OBJ(x) (x)\n"\
 "#define ENTRY_GET_KEY getKey\n"\
 "#define KEY_NULL (null)\n"\
-"#define KEY2INT(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
@@ -62,12 +62,10 @@ for ((f=0; f<3; f++)); do
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
-"#if #keyclass(Float)\n"\
-"#define KEY2INT(x) float2int(x)\n"\
-"#elif #keyclass(Double)\n"\
-"#define KEY2INT(x) double2int(x)\n"\
+"#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
+"#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
 "#else\n"\
-"#define KEY2INT(x) ((int)x & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) ((int)x)\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -83,6 +81,7 @@ for ((f=0; f<3; f++)); do
 "#define VALUE2OBJ(x) (x)\n"\
 "#define ENTRY_GET_VALUE getValue\n"\
 "#define VALUE_NULL (null)\n"\
+"#define VALUE2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define DEF_RET_VALUE null\n"\
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define VALUE_ITERATOR Iterator\n\n"\
@@ -91,6 +90,11 @@ for ((f=0; f<3; f++)); do
 "#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_VALUE())\n"\
 "#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
 "#define ENTRY_GET_VALUE get${TYPE_CAP[$v]}Value\n"\
+"#if #valueclass(Float) || #valueclass(Double) || #valueclass(Long)\n"\
+"#define VALUE2INT(x) HashCommon.${TYPE[$v]}2int(x)\n"\
+"#else\n"\
+"#define VALUE2INT(x) ((int)x)\n"\
+"#endif\n"\
 "#define VALUE_EQUAL(x,y) ((x) == (y))\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP[$v]}Iterator\n\n"\
 "#define NEXT_VALUE next${TYPE_CAP[$v]}\n"\
@@ -137,7 +141,7 @@ for ((f=3; f<8; f++)); do
 "#define ENTRY_GET_KEY getKey\n"\
 "#define TO_KEY_ARRAY toArray\n"\
 "#define KEY_NULL (null)\n"\
-"#define KEY2INT(x) (x == null ? 0 : x.hashCode() & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
@@ -146,12 +150,10 @@ for ((f=3; f<8; f++)); do
 "#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define ENTRY_GET_KEY get${TYPE_CAP[$k]}Key\n"\
 "#define TO_KEY_ARRAY to${TYPE_CAP[$k]}Array\n"\
-"#if #keyclass(Float)\n"\
-"#define KEY2INT(x) float2int(x)\n"\
-"#elif #keyclass(Double)\n"\
-"#define KEY2INT(x) double2int(x)\n"\
+"#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
+"#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
 "#else\n"\
-"#define KEY2INT(x) ((int)x & 0x7FFFFFFF)\n"\
+"#define KEY2INT(x) ((int)x)\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
 "#if #keyclass(Boolean)\n"\

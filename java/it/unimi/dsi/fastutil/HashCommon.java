@@ -22,17 +22,31 @@
 
 package it.unimi.dsi.fastUtil;
 
-import java.util.*;
-import java.util.AbstractMap; // workaround to force @see/@link
-
-/** A class inheriting methods from {@link AbstractMap} but
- * implementing a type-specific interface.
+/** Common code for all hash-based classes.
  *
- * @see AbstractSet
+ * All hashing in <code>fastUtil</code> is performed starting from a 32-bit integer
+ * associated to a key or value. For all integer types smaller than <code>long</code>, we
+ * just cast. In all other cases, we do some conversion using static code in this
+ * class.
  */
 
-public abstract class ABSTRACT_MAP extends AbstractMap implements MAP {
+public class HashCommon {
+
+	 /* To get an integer from a integer type smaller than long, we just cast.
+	  * In all other cases, we need some support functions. 
+	  */
+
+	 final static int float2int(final float f) {
+		  return Float.floatToRawIntBits(f);
+	 }
+
+	 final static int double2int(final double d) {
+		  final long l = Double.doubleToRawLongBits(d);
+		  return (int)(l ^ (l >>> 32));
+	 }
+
+	 final static int long2int(final long l) {
+		  return (int)(l ^ (l >>> 32));
+	 }
 }
-// Local Variables:
-// mode: java
-// End:
+

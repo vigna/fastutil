@@ -57,21 +57,21 @@ package it.unimi.dsi.fastUtil;
 public interface Hash {
 
 	 /** The initial default size of a hash table. */
-	 final int DEFAULT_INITIAL_SIZE = 16;
+	 final public int DEFAULT_INITIAL_SIZE = 16;
 	 /** The default load factor of a hash table. */
-	 final float DEFAULT_LOAD_FACTOR = .75f;
+	 final public float DEFAULT_LOAD_FACTOR = .75f;
 	 /** The state of a free hash table entry. */
-	 final byte FREE = 0;
+	 final public byte FREE = 0;
 	 /** The state of a occupied hash table entry. */
-	 final byte OCCUPIED = -1;
+	 final public byte OCCUPIED = -1;
 	 /** The state of a hash table entry freed by a deletion. */
-	 final byte REMOVED = 1;
+	 final public byte REMOVED = 1;
 	 
 	 /** A list of primes to be used as table sizes. The <var>i</var>-th element is 
 	  *  the largest prime <var>p</var> smaller than 2<sup>(<var>i</var>+28)/16</sup> 
 	  * and such that <var>p</var>-2 is also prime (or 1, for the first few entries). */
 
-	 final int primes[] = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7,
+	 final public int primes[] = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7,
 	 7, 7, 7, 7, 7, 7, 7, 7, 13, 13, 13, 13, 13, 13, 13, 13, 19, 19, 19, 19, 19,
 	 19, 19, 19, 19, 19, 19, 19, 31, 31, 31, 31, 31, 31, 31, 43, 43, 43, 43, 43,
 	 43, 43, 43, 61, 61, 61, 61, 61, 73, 73, 73, 73, 73, 73, 73, 103, 103, 109,

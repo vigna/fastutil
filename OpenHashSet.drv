@@ -124,76 +124,104 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  while(i-- != 0) add(a[i]);
 	 }
 
+	 /*
+	  * The following private methods implements some basic building blocks used by
+	  * all accessors. They are (and should be maintained) identical to those used in HashMap.drv.
+	  */
 
-#if #keyclass(Float)
-	 private int float2int(final float f) {
-		  return Float.floatToRawIntBits(f) & 0x7FFFFFFF;
+	 /** Searches for a key, keeping track of a possible insertion point.
+	  *
+	  * The instance variables used by the search are to be passed as parameters to
+	  * increase access speed.
+	  *
+	  * @param k the key.
+	  * @param key the key array.
+	  * @param state the state array.
+	  * @return the index of the correct insertion point, if the key is not found; otherwise,
+	  * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
+	  */
+
+	 private int findInsertionPoint(final KEY_TYPE k, final KEY_TYPE key[], final byte state[]) {
+
+		  // First of all, we make the key into a positive integer.
+		  final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
+		  // The primary hash, a.k.a. starting point.
+		  int h1 = k2i % n;
+		  final int s = h1;
+		  // The secondary hash.
+		  final int h2 = (k2i % n2) + 1;
+
+		  while( state[h1] == OCCUPIED && ! KEY_EQUAL( key[h1], k ) ) h1 = ( h1 + h2 ) % n; // There's always a non-OCCUPIED entry.
+
+		  if (state[h1] == FREE) return h1;
+		  if (state[h1] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL(key[h1], k).
+
+		  /* Tables without deletions will never use code beyond this point. */
+
+		  final int f = h1; // Remember first available bucket for later.
+		  
+		  /** See the comments in the documentation of the interface Hash. */
+		  while( state[h1] != FREE && ! KEY_EQUAL( key[h1], k ) ) if ( (h1 = ( h1 + h2 ) % n) == s ) return f;
+		  
+		  return state[h1] == OCCUPIED ? -h1-1 : f; // In the first case, necessarily, KEY_EQUAL(key[h1], k).
 	 }
-#elif #keyclass(Double)
-	 private int double2int(final double d) {
-		  final long l = Double.doubleToRawLongBits(d);
-		  return (int)(l ^ (l >>> 32)) & 0x7FFFFFFF;
+
+
+	 /** Searches for a key.
+	  *
+	  * The instance variables used by the search are to be passed as parameters to
+	  * increase access speed.
+	  *
+	  * @param k the key.
+	  * @param key the key array.
+	  * @param state the state array.
+	  * @return the index of the entry containing the key, or -1 if the key wasn't found.
+	  */
+
+	 private int findKey(final KEY_TYPE k, final KEY_TYPE key[], final byte state[]) {
+
+		  // First of all, we make the key into a positive integer.
+		  final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
+		  // The primary hash, a.k.a. starting point.
+		  int h1 = k2i % n;
+		  final int s = h1;
+		  // The secondary hash.
+		  final int h2 = (k2i % n2) + 1;
+		  
+		  /** See the comments in the documentation of the interface Hash. */
+		  while( state[h1] != FREE && ! KEY_EQUAL(key[h1], k) ) if ( (h1 = ( h1 + h2 ) % n) == s ) return -1;
+		  return state[h1] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL(key[h1], k).
 	 }
-#endif
 
-	 public boolean add(Object ok) {
 
-		  final int n = this.n;
+
+
+	 public boolean add(final Object ok) {
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
-		  final int k2i = KEY2INT(k); 
 
-		  // Primary hash and first usable entry
-		  int h = k2i % n, f = -1;
-		  // Starting index and secondary hash
-		  final int s = h, m = (k2i % n2) + 1;
-		  
-		  //System.err.print("Putting in " + k + " with hash " + h + " (" + m + ")..." );
+		  final int i = findInsertionPoint(k, key, state);
+		  if (i < 0) return false;
 
-		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) {
-				if ( state[h] == REMOVED && f == -1 ) f = h;
-				if ( (h = ( h + m ) % n) == s ) break;
-		  }
-		  
-		  if (state[h] == OCCUPIED && KEY_EQUAL( key[h], k )) return false;
-
-		  if (f != -1) h = f;
-		  state[h] = OCCUPIED;
-		  count++;
-		  key[h] = k;
-		  if ( count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  state[i] = OCCUPIED;
+		  key[i] = k;
+		  if ( ++count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return true;
 	 }
 	 
 
 #if ! ( #keyclass(Object) )
 
-
-	 public boolean add(KEY_TYPE k) {
-		  final int n = this.n;
+	 public boolean add(final KEY_TYPE k) {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
-		  final int k2i = KEY2INT(k); 
 
-		  // Primary hash and first usable entry
-		  int h = k2i % n, f = -1;
-		  // Starting index and secondary hash
-		  final int s = h, m = (k2i % n2) + 1;
-		  
-		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
+		  final int i = findInsertionPoint(k, key, state);
+		  if (i < 0) return false;
 
-		  while( state[h] != FREE && ! KEY_EQUAL( key[h], k ) ) {
-				if ( state[h] == REMOVED && f == -1 ) f = h;
-				if ( (h = ( h + m ) % n) == s ) break;
-		  }
-		  
-		  if (state[h] == OCCUPIED && KEY_EQUAL( key[h], k )) return false;
-
-		  if (f != -1) h = f;
-		  state[h] = OCCUPIED;
-		  count++;
-		  key[h] = k;
-		  if ( count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+		  state[i] = OCCUPIED;
+		  key[i] = k;
+		  if ( ++count >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  return true;
 	 }
 
@@ -201,26 +229,15 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 #endif
 
 
-	 public boolean remove(Object ok) {
-
-		  final int n = this.n;
-		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+	 public boolean remove(final Object ok) {
 		  final byte state[] = this.state;
-		  final int k2i = KEY2INT(k); 
 
-		  int h = k2i % n;
-		  final int s = h, m = (k2i % n2) + 1;
+		  final int i = findKey(KEY2TYPE(ok), key, state);
+		  if (i < 0) return false;
 		  
-		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
-
-		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
-		  
-		  if ( state[h] == OCCUPIED ) {
-				state[h] = REMOVED;
-				count--;
-				return true;
-		  }
-		  else return false;
+		  state[i] = REMOVED;
+		  count--;
+		  return true;
 	 }
 
 
@@ -237,16 +254,18 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 	 /* We override the method in the type-specific {@link AbstractCollection}
 		 with a faster version without iterators. */
 
-    public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
+    public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE a[] ) {
 		  final KEY_TYPE key[] = this.key, result[];
-		  final int n = this.n, count = this.count;
 		  final byte state[] = this.state;
 		  int i, j, pos = 0;
 
 		  if (a == null || a.length < count) result = new KEY_TYPE[count];
 		  else result = a;
 
-		  for(i=j=0; i<count; i++) {
+		  i = count; 
+		  j = 0;
+
+		  while(i-- != 0) {
 				while( state[pos] != OCCUPIED ) pos++;
 				result[j++] = key[pos++];
 		  }
@@ -331,33 +350,32 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 	  * @param newP the new size as an index in {@link Hash#primes}.
 	  */
 
-	 private void rehash( int newP ) {
-		  int i, count = 0, k2i, h, m;
+	 private void rehash( final int newP ) {
+		  int i = 0, j = count, k2i, h1, h2;
 
 		  //System.err.println("Rehashing to size " +  primes[newP] + "...");
 
 		  KEY_TYPE k;
 
-		  final int n = this.n, newN = primes[newP], newN2 = newN - 2;
+		  final int newN = primes[newP], newN2 = newN - 2;
 		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		  final byte state[] = this.state, newState[] = new byte[newN];
-		  
-		  for(i=0; i<n; i++) {
 
-				if ( state[i] != OCCUPIED ) continue;
+		  while(j-- != 0) {
+
+				while(state[i] != OCCUPIED ) i++;
 
 				k = key[i];
-				k2i = KEY2INT(k);
+				k2i = KEY2INT(k) & 0x7FFFFFFF;
 
-				h = k2i % newN;
-				m = (k2i % newN2) + 1;
+				h1 = k2i % newN;
+				h2 = (k2i % newN2) + 1;
 
-				while( newState[h] != FREE ) h = ( h + m ) % newN;
+				while( newState[h1] != FREE ) h1 = ( h1 + h2 ) % newN;
 				
-				newState[h] = OCCUPIED;
-				newKey[h] = k;
-				count++;
-
+				newState[h1] = OCCUPIED;
+				newKey[h1] = k;
+				i++;
 		  }
 
 		  this.n = newN;
@@ -365,7 +383,6 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  p = newP;
 		  this.key = newKey;
 		  this.state = newState;
-		  this.count = count;
 	 }
 	 
 	 public int size() {
@@ -377,74 +394,94 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 	 }
 
 
-	 public boolean contains(Object ok) {
-		  final int n = this.n;
-		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
-		  final byte state[] = this.state;
-		  final int k2i = KEY2INT(k); 
-
-		  int i = n, h = k2i % n;
-		  final int s = h, m = (k2i % n2) + 1;
-		  
-		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
-		  
-		  return state[h] == OCCUPIED;
+	 public boolean contains(final Object ok) {
+		  return findKey(KEY2TYPE(ok), key, state) >= 0;
 	 }
 
 
 #if !#keyclass(Object)
 
-	 public boolean contains(KEY_TYPE k) {
-		  final int n = this.n;
-		  final KEY_TYPE key[] = this.key;
-		  final byte state[] = this.state;
-		  final int k2i = KEY2INT(k); 
-
-		  //System.err.print("Examining " + k + "...");
-
-		  int h = k2i % n;
-		  final int s = h, m = (k2i % n2) + 1;
-		  
-		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
-
-		  //System.err.println("done.");
-
-		  return state[h] == OCCUPIED;
+	 public boolean contains(final KEY_TYPE k) {
+		  return findKey(k, key, state) >= 0;
 	 }
 
 
-
-	 public boolean remove(KEY_TYPE k) {
-
-		  final int n = this.n;
-		  final KEY_TYPE key[] = this.key;
-		  final byte state[] = this.state;
-		  final int k2i = KEY2INT(k); 
-
-		  int h = k2i % n;
-		  final int s = h, m = (k2i % n2) + 1;
-		  
-		  while( state[h] != FREE && ! KEY_EQUAL(key[h], k) ) if ( (h = ( h + m ) % n) == s ) return false;
-		  
-		  if ( state[h] == OCCUPIED ) {
-				state[h] = REMOVED;
-				count--;
-				return true;
-		  }
-		  else return false;
+	 public boolean remove(final KEY_TYPE k) {
+		  final int i = findKey(k, key, state);
+		  if (i < 0) return false;
+		  state[i] = REMOVED;
+		  count--;
+		  return true;
 	 }
 	 
 
 #endif
 
+	 /*
+	 public Object clone() {
+		  SET c = (SET)super.clone();
+		  c.key = (KEY_TYPE[])c.key.clone();
+		  c.state = (byte[])c.state.clone();
+		  return c;
+		  }*/
+
+
+	 /** Returns a hash code for this set.
+	  *
+	  * The hash code of a set is computed by summing the hash codes of
+	  * keys of the set. Note that we correctly handle the case
+	  * of <code>null</code> and that of a set being its own key
+	  * (in both cases, we just sum 0).
+	  *
+	  * @return a hash code for this set.
+	  */
+
+
+	 public int hashCode() {
+		  int h = 0, i = 0, j = count;
+		  while(j-- != 0) {
+				while(state[i] != OCCUPIED ) i++;
+#if #keyclass(Object)
+				if (this != key[i])
+#endif
+				h += KEY2INT(key[i]);
+				i++;
+		  }
+		  return h;
+	 }
+
+
+	 public String toString() {
+		  StringBuffer s = new StringBuffer();
+		  int i = 0, j = count;
+
+		  s.append("{");
+
+		  while(j-- != 0) {
+				if (i != 0) s.append(", ");
+				while(state[i] != OCCUPIED ) i++;
+#if #keyclass(Object)
+				if (this == key[i]) s.append("(this set)"); else
+#endif
+				s.append(String.valueOf(key[i]));
+				i++;
+		  }
+
+		  s.append("}");
+		  return s.toString();
+	 }
+	 
     private void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
+		  int i = 0, j = count;
 
 		  s.defaultWriteObject();
-
-		  for (int i = n; i-- != 0; ) {
-				if (state[i] == OCCUPIED) s.WRITE_KEY(key[i]);
+		  
+		  while(j-- != 0) {
+				while(state[i] != OCCUPIED ) i++;
+				s.WRITE_KEY(key[i]);
+				i++;
 		  }
     }
 
@@ -460,9 +497,8 @@ public final class HASHSET extends ABSTRACT_SET implements Serializable, Hash, S
 		  this.state = new byte[n];
 		  this.count = 0;
 
-		  for (int i = count; i-- != 0; ) {
-				add(s.READ_KEY());
-		  }
+		  int j = count;
+		  while(j-- != 0) add(s.READ_KEY());
     }
 
 #ifndef NDEBUG

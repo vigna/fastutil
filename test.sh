@@ -9,7 +9,7 @@ lf=".75"
 
 if [ "$1" != "" ]; then lf=$1; fi
 
-for ((t=10; t<1000000; t*=10)); do
+for ((t=10; t<10000; t*=10)); do
 	 for ((f=0; f<1; f++)); do
 		  for ((k=1; k<${#TYPE[*]}; k++)); do
 				for ((v=0; v<${#TYPE[*]}; v++)); do
