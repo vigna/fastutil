@@ -1,5 +1,5 @@
 /*		 
- * fastdata: Fast & compact type-specific data structures for Java
+ * fastutil: Fast & compact type-specific data structures for Java
  *
  * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
@@ -33,9 +33,10 @@ import java.util.Comparator;
  * <P>Additionally, the queue may provide a method to peek at 
  * element that would be dequeued {@linkplain #last() last}.
  *
- * <P>Relative comparisons should not change during queue operations. Nonetheless,
- * some implementations may give the caller a way to notify the queue that 
- * the {@linkplain #changed() first element has changed}.
+ * <P>The relative order of the elements enqueued should not change during
+ * queue operations. Nonetheless, some implementations may give the caller a
+ * way to notify the queue that the {@linkplain #changed() first element has
+ * changed its relative position in the order}.
  */
 
 public interface PriorityQueue {

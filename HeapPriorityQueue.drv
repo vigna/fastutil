@@ -1,5 +1,5 @@
 /*		 
- * fastdata: Fast & compact type-specific data structures for Java
+ * fastutil: Fast & compact type-specific data structures for Java
  *
  * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
  *
@@ -25,54 +25,129 @@ package PACKAGE;
 import it.unimi.dsi.fastutil.AbstractPriorityQueue;
 #endif
 
+import it.unimi.dsi.fastutil.HashCommon;
+
 import java.util.NoSuchElementException;
 import java.util.Comparator;
 
-/** A type-specific {@link it.unimi.dsi.fastutil.PriorityQueue}; provides some additional methods that use polymorphism to reduce type juggling. 
+/** A type-specific heap-based priority queue.
+ *
+ * <P>Instances of this class represent a priority queue using a heap. The heap is enlarged as needed, but
+ * it is never shrunk. Use the {@link #trim()} method to reduce its size, if necessary.
  */
 
 public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 
-	/** The backing array. */
+	/** The heap array. */
 	protected KEY_TYPE heap[] = ARRAYS.EMPTY_ARRAY;
 
-	/** The number of elements in this heap. */
+	/** The number of elements in this queue. */
 	protected int size;
 	
-	/** The type-specific comparator used in this heap. */
+	/** The type-specific comparator used in this queue. */
 	protected KEY_COMPARATOR c;
 
-	/** Creates a new empty heap without elements with a given capacity and comparator.
+	/** Creates a new empty queue with a given capacity and comparator.
 	 *
-	 * @param capacity the initial capacity of this heap.
-	 * @param c the comparator used in this heap, or <code>null</code> for the natural order.
+	 * @param capacity the initial capacity of this queue.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public HEAP_PRIORITY_QUEUE( int capacity, KEY_COMPARATOR c ) {
 		if ( capacity > 0 ) this.heap = new KEY_TYPE[ capacity ];
 		this.c = c;
 	}
 
-	/** Creates a new empty heap without elements and a given capacity.
+	/** Creates a new empty queue with a given capacity and using the natural order.
 	 *
-	 * @param capacity the initial capacity of this heap.
+	 * @param capacity the initial capacity of this queue.
 	 */
 	public HEAP_PRIORITY_QUEUE( int capacity ) {
 		this( capacity, null );
 	}
 
-	/** Creates a new empty heap without elements and a given comparator.
+	/** Creates a new empty queue with a given comparator.
 	 *
-	 * @param c the comparator used in this heap, or <code>null</code> for the natural order.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public HEAP_PRIORITY_QUEUE( KEY_COMPARATOR c ) {
 		this( 0, c );
 	}
 
-	/** Creates a new empty heap without elements. 
+	/** Creates a new empty queue using the natural order. 
 	 */
 	public HEAP_PRIORITY_QUEUE() {
 		this( 0, null );
 	}
+
+	/** Wraps a given array in a queue using a given comparator.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param a an array.
+	 * @param size the number of elements to be included in the queue.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @return a queue wrapping the first <code>size</code> elements of <code>a</code>.
+	 */
+	public HEAP_PRIORITY_QUEUE wrap( final KEY_TYPE[] a, int size, final KEY_COMPARATOR c ) {
+		HEAP_PRIORITY_QUEUE q = new HEAP_PRIORITY_QUEUE( c );
+		q.heap = a;
+		q.size = size;
+		HEAPS.makeHeap( a, size, c );
+		return q;
+	}
+
+
+	/** Wraps a given array in a queue using a given comparator.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The elements of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param a an array.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @return a queue wrapping the elements of <code>a</code>.
+	 */
+	public HEAP_PRIORITY_QUEUE wrap( final KEY_TYPE[] a, final KEY_COMPARATOR c ) {
+		return wrap( a, a.length, c );
+	}
+
+	/** Wraps a given array in a queue using the natural order.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param a an array.
+	 * @param size the number of elements to be included in the queue.
+	 * @return a queue wrapping the first <code>size</code> elements of <code>a</code>.
+	 */
+	public HEAP_PRIORITY_QUEUE wrap( final KEY_TYPE[] a, int size ) {
+		HEAP_PRIORITY_QUEUE q = new HEAP_PRIORITY_QUEUE( c );
+		q.heap = a;
+		q.size = size;
+		HEAPS.makeHeap( a, size, null );
+		return q;
+	}
+
+
+	/** Wraps a given array in a queue using the natural order.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The elements of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param a an array.
+	 * @return a queue wrapping the elements of <code>a</code>.
+	 */
+	public HEAP_PRIORITY_QUEUE wrap( final KEY_TYPE[] a ) {
+		return wrap( a, a.length, c );
+	}
+
+
+
+
 
 	private void ensureNonEmpty() {
 		if ( size == 0 ) throw new NoSuchElementException();
@@ -93,7 +168,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 #if #keyclass(Object)
 		heap[ size ] = null;
 #endif
-		HEAPS.downHeap( heap, size, 0, c );
+		if ( size != 0 ) HEAPS.downHeap( heap, size, 0, c );
 		return result;
 	}
 
@@ -103,6 +178,8 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	}
 
 	public void changed() {
+		ensureNonEmpty();
+
 		HEAPS.downHeap( heap, size, 0, c );
 	}
 
@@ -115,7 +192,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 		size = 0; 
 	}
 
-	/** Trims the backing array so that it has exactly {@link #size()} elements.
+	/** Trims the underlying heap array so that it has exactly {@link #size()} elements.
 	 */
 
 	public void trim() {
@@ -123,6 +200,184 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	}
 
 	public Comparator comparator() { return c; }
+
+
+#ifdef TEST
+
+	private static long seed = System.currentTimeMillis(); 
+	private static java.util.Random r = new java.util.Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif !#keyclass(Object) && !#keyclass(Reference)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else 
+		return new java.io.Serializable() {};
+#endif
+	}
+
+	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	private static java.text.FieldPosition p = new java.text.FieldPosition( 0 );
+
+	private static String format( double d ) {
+		StringBuffer s = new StringBuffer();
+		return format.format( d, s, p ).toString();
+	}
+
+	private static void speedTest( int n, boolean comp ) {
+		System.out.println( "There are presently no speed tests for lists." );
+	}
+
+
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
+
+	private static boolean heapEqual( KEY_TYPE[] a, KEY_TYPE[] b, int sizea, int sizeb ) {
+		if ( sizea != sizeb ) return false;
+		KEY_TYPE[] aa = (KEY_TYPE[])a.clone();
+		KEY_TYPE[] bb = (KEY_TYPE[])b.clone();
+		java.util.Arrays.sort( aa, 0, sizea );
+		java.util.Arrays.sort( bb, 0, sizeb );
+		while( sizea-- != 0 ) if ( ! KEY_EQUAL( aa[sizea], bb[sizea] ) ) return false;
+		return true;
+	}
+
+	private static KEY_TYPE k[];
+
+	protected static void test( int n ) {
+		long ms;
+		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
+		KEY_TYPE rm = KEY_NULL, rt = KEY_NULL;
+		k = new KEY_TYPE[ n ];
+
+		for( int i = 0; i < n; i++ ) k[i] = genKey();
+
+		HEAP_PRIORITY_QUEUE m = new HEAP_PRIORITY_QUEUE( COMPARATORS.NATURAL_COMPARATOR );
+		ARRAY_PRIORITY_QUEUE t = new ARRAY_PRIORITY_QUEUE( COMPARATORS.NATURAL_COMPARATOR );
+
+		/* We add pairs to t. */
+		for( int i = 0; i < n / 2;  i++ ) {
+			t.enqueue( k[ i ] );
+			m.enqueue( k[ i ] );
+		}
+
+		ensure( heapEqual( m.heap, t.array, m.size(), t.size() ), "Error (" + seed + "): m and t differ after creation (" + m + ", " + t + ")" );
+
+		if ( m.size() != 0 ) {
+			ensure( KEY_EQUAL(m.FIRST(), t.FIRST()), "Error (" + seed + "): m and t differ in first element after creation (" + m.FIRST() + ", " + t.FIRST() + ")");
+		}
+
+		/* Now we add and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<2*n;  i++ ) {
+			KEY_TYPE T = genKey();
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+			try {
+				m.enqueue( T );
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
+
+			try {
+				t.enqueue( T );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
+
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): enqueue() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): enqueue() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+
+			ensure( heapEqual( m.heap, t.array, m.size(), t.size() ), "Error (" + seed + "): m and t differ after enqueue (" + m + ", " + t + ")" );
+			
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL(m.FIRST(), t.FIRST()), "Error (" + seed + "): m and t differ in first element after enqueue (" + m.FIRST() + ", " + t.FIRST() + ")");
+			}
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+			try {
+				rm = m.DEQUEUE();
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { mThrowsNoElement = e; }
+
+			try {
+				rt = t.DEQUEUE();
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { tThrowsNoElement = e; }
+
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): dequeue() divergence in IndexOutOfBoundsException (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): dequeue() divergence in IllegalArgumentException  (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): dequeue() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( rt == rm , "Error (" + seed + "): divergence in dequeue() between t and m (" + rt + ", " + rm + ")" );
+
+
+			ensure( heapEqual( m.heap, t.array, m.size(), t.size() ), "Error (" + seed + "): m and t differ after dequeue (" + m + ", " + t + ")");
+			
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL(m.FIRST(), t.FIRST()), "Error (" + seed + "): m and t differ in first element after dequeue (" + m.FIRST() + ", " + t.FIRST() + ")");
+			}
+
+			if ( m.size() != 0 && ( ( new OPENHASHSET( m.heap, 0, m.size ) ).size() == m.size() ) ) {
+
+				int j = t.size(), M = --j;
+				while( j-- != 0 ) if ( KEY_LESS( t.array[ j ], t.array[ M ] ) ) M = j;
+
+				m.heap[ 0 ] = t.array[ M ] = genKey();
+
+				m.changed();
+				t.changed();
+				
+				ensure( heapEqual( m.heap, t.array, m.size(), t.size() ), "Error (" + seed + "): m and t differ after change (" + m + ", " + t + ")");
+				
+				if ( m.size() != 0 ) {
+					ensure( KEY_EQUAL(m.FIRST(), t.FIRST()), "Error (" + seed + "): m and t differ in first element after change (" + m.FIRST() + ", " + t.FIRST() + ")");
+				}
+			}
+		}
+
+
+		/* Now we check that m actually holds the same data. */
+		  
+		m.clear();
+		ensure( m.isEmpty(), "Error (" + seed + "): m is not empty after clear()" );
+
+		System.out.println("Test OK");
+	}
+
+
+
+	public static void main( String args[] ) {
+		int n  = Integer.parseInt(args[1]);
+		if ( args.length > 2 ) r = new java.util.Random( seed = Long.parseLong( args[ 2 ] ) );
+		  
+
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
+	}
+
+#endif
+
 }
 
 // Local Variables:

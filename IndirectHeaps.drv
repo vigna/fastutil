@@ -37,25 +37,27 @@ public class INDIRECT_HEAPS {
 
 	private INDIRECT_HEAPS() {}
 
-	/** Moves the given element down into the indirect heap until it reaches its final position.
+	/** Moves the given element down into the indirect heap until it reaches the lowest possible position.
 	 *
 	 * @param refArray the reference array.
 	 * @param heap the indirect heap (starting at 0).
 	 * @param inv the inversion array.
 	 * @param size the number of elements in the heap.
-	 * @param i the position to be heapified.
+	 * @param i the index in the heap of the element to be moved down.
 	 * @param c a type-specific comparator, or <code>null</code> for the natural order.
-	 * @return the new position of the element of index <code>i</code>.
+	 * @return the new position in the heap of the element of heap index <code>i</code>.
 	 */
 
 	static public int downHeap( final KEY_TYPE[] refArray, final int[] heap, final int[] inv, final int size, int i, final KEY_COMPARATOR c ) {
+		if ( i >= size ) throw new IllegalArgumentException( "Heap position (" + i + ") is larger than or equal to heap size (" + size + ")" );
+
 		final int e = heap[ i ];
 		int child;
 
 		if ( c == null )
 			while ( ( child = 2 * i + 1 ) < size ) {
-				if ( child + 1 < size && KEY_CMP( refArray[ heap[ child + 1 ] ], refArray[ heap[ child ] ] ) < 0 ) child++;
-				if ( KEY_CMP( refArray[ e ], refArray[ heap[ child ] ] ) <= 0 ) break;
+				if ( child + 1 < size && KEY_LESS( refArray[ heap[ child + 1 ] ], refArray[ heap[ child ] ] ) ) child++;
+				if ( KEY_LESSEQ( refArray[ e ], refArray[ heap[ child ] ] ) ) break;
 				heap[ i ] = heap[ child ];
 				inv[ heap[ i ] ] = i;
 				i = child;
@@ -82,18 +84,20 @@ public class INDIRECT_HEAPS {
 	 * @param heap the indirect heap (starting at 0).
 	 * @param inv the inversion array.
 	 * @param size the number of elements in the heap.
-	 * @param i the position to be made swimming.
+	 * @param i the index in the heap of the element to be moved up.
 	 * @param c a type-specific comparator, or <code>null</code> for the natural order.
-	 * @return the new position of the element of index <code>i</code>.
+	 * @return the new position in the heap of the element of heap index <code>i</code>.
 	 */
 
 	static public int upHeap( final KEY_TYPE[] refArray, final int[] heap, final int[] inv, final int size, int i, final KEY_COMPARATOR c ) {
+		if ( i >= size ) throw new IllegalArgumentException( "Heap position (" + i + ") is larger than or equal to heap size (" + size + ")" );
+
 		final int e = heap[ i ];
 		int parent;
 
 		if ( c == null )
 			while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
-				if ( KEY_CMP( refArray[ heap[ parent ] ], refArray[ e ] ) <= 0 ) break;
+				if ( KEY_LESSEQ( refArray[ heap[ parent ] ], refArray[ e ] ) ) break;
 				heap[ i ] = heap[ parent ];
 				inv[ heap[ i ] ] = i;
 				i = parent;

@@ -263,6 +263,11 @@ $(HEAP_PRIORITY_QUEUES): HeapPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(HEAP_PRIORITY_QUEUES)
 
+ARRAY_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayPriorityQueue.c)
+$(ARRAY_PRIORITY_QUEUES): ArrayPriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ARRAY_PRIORITY_QUEUES)
+
 HEAP_SEMI_INDIRECT_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapSemiIndirectPriorityQueue.c)
 $(HEAP_SEMI_INDIRECT_PRIORITY_QUEUES): HeapSemiIndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
@@ -273,10 +278,20 @@ $(HEAP_INDIRECT_PRIORITY_QUEUES): HeapIndirectPriorityQueue.drv; ./gencsource.sh
 
 CSOURCES += $(HEAP_INDIRECT_PRIORITY_QUEUES)
 
+ARRAY_INDIRECT_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayIndirectPriorityQueue.c)
+$(ARRAY_INDIRECT_PRIORITY_QUEUES): ArrayIndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ARRAY_INDIRECT_PRIORITY_QUEUES)
+
 HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapSesquiIndirectDoublePriorityQueue.c)
 $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): HeapSesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
+
+ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArraySesquiIndirectDoublePriorityQueue.c)
+$(ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): ArraySesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 #
 # Static containers
@@ -363,8 +378,8 @@ SOURCES = \
 	$(SOURCEDIR)/BidirectionalIterator.java \
 	$(SOURCEDIR)/Stack.java \
 	$(SOURCEDIR)/PriorityQueue.java \
-	$(SOURCEDIR)/SemiIndirectPriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
+	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \
 	$(SOURCEDIR)/Iterators.java \
 	$(SOURCEDIR)/Collections.java \
 	$(SOURCEDIR)/Sets.java \
@@ -372,6 +387,8 @@ SOURCES = \
 	$(SOURCEDIR)/Lists.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/AbstractPriorityQueue.java \
+	$(SOURCEDIR)/AbstractIndirectPriorityQueue.java \
+	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java \
 	$(SOURCEDIR)/AbstractStack.java # These are True Java Sources instead
 
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,

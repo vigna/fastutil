@@ -1,0 +1,554 @@
+/*		 
+ * fastutil: Fast & compact type-specific data structures for Java
+ *
+ * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.AbstractIndirectPriorityQueue;
+
+import java.util.NoSuchElementException;
+import java.util.Comparator;
+
+/** A type-specific array-based semi-indirect priority queue. 
+ *
+ * <P>Instances of this class use as reference list a <em>reference array</em>,
+ * which must be provided to each constructor, and represent a priority queue
+ * using a backing array of integer indices&mdash;all operations are performed
+ * directly on the array. The array is enlarged as needed, but it is never
+ * shrunk. Use the {@link #trim()} method to reduce its size, if necessary.
+ *
+ * <P>This implementation is extremely inefficient, but it is difficult to beat
+ * when the size of the queue is very small. Moreover, it allows to enqueue several
+ * time the same index.
+ */
+
+public class ARRAY_INDIRECT_PRIORITY_QUEUE extends AbstractIndirectPriorityQueue  {
+
+	/** The reference array. */
+	protected KEY_TYPE refArray[];
+
+	/** The backing array. */
+	protected int array[] = IntArrays.EMPTY_ARRAY;
+
+	/** The number of elements in this queue. */
+	protected int size;
+ 	
+	/** The type-specific comparator used in this queue. */
+	protected KEY_COMPARATOR c;
+
+	/** Creates a new empty queue without elements with a given capacity and comparator.
+	 *
+	 * @param refArray the reference array.
+	 * @param capacity the initial capacity of this queue.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public ARRAY_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c ) {
+		if ( capacity > 0 ) this.array = new int[ capacity ];
+		this.refArray = refArray;
+		this.c = c;
+	}
+
+	/** Creates a new empty queue with given capacity and using the natural order.
+	 *
+	 * @param refArray the reference array.
+	 * @param capacity the initial capacity of this queue.
+	 */
+	public ARRAY_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
+		this( refArray, capacity, null );
+	}
+
+	/** Creates a new empty queue with capacity equal to the length of the reference array and a given comparator.
+	 *
+	 * @param refArray the reference array.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public ARRAY_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
+		this( refArray, refArray.length, c );
+	}
+
+	/** Creates a new empty queue with capacity equal to the length of the reference array and using the natural order. 
+	 * @param refArray the reference array.
+	 */
+	public ARRAY_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray ) {
+		this( refArray, refArray.length, null );
+	}
+
+	/** Returns the index (in {@link #array}) of the smallest element. */
+
+	private int findFirst() {
+		int i = size;
+		int firstIndex = --i;
+		KEY_TYPE first = refArray[ array[ firstIndex ] ];
+
+		if ( c == null ) while( i-- != 0 ) { if ( KEY_LESS( refArray[ array[ i ] ], first ) ) first = refArray[ array[ firstIndex = i ] ]; }
+		else while( i-- != 0 ) { if ( c.compare( refArray[ array[ i ] ], first ) < 0 ) first = refArray[ array[ firstIndex = i ] ]; }
+
+		return firstIndex;
+	}
+
+	/** Returns the index (in {@link #array}) of the largest element. */
+
+	private int findLast() {
+		int i = size;
+		int firstIndex = --i;
+		KEY_TYPE first = refArray[ array[ firstIndex ] ];
+
+		if ( c == null ) { while( i-- != 0 ) if ( KEY_LESS( first, refArray[ array[ i ] ] ) ) first = refArray[ array[ firstIndex = i ] ]; }
+		else { while( i-- != 0 ) if ( c.compare( first, refArray[ array[ i ] ] ) < 0 ) first = refArray[ array[ firstIndex = i ] ]; }
+
+		return firstIndex;
+	}
+
+	protected final void ensureNonEmpty() {
+		if ( size == 0 ) throw new NoSuchElementException();
+	}
+
+	/** Ensures that the given index is a valid reference.
+	 *
+	 * @param index an index in the reference array.
+	 * @throws IndexOutOfBoundsException if the given index is negative or larger than the reference array length.
+	 */
+	protected void ensureElement( final int index ) {
+		if ( index < 0 )  throw new IndexOutOfBoundsException( "Index (" + index + ") is negative" );
+		if ( index >= refArray.length ) throw new IndexOutOfBoundsException( "Index (" + index + ") is larger than or equal to reference array size (" + refArray.length + ")" );
+	}
+	
+	/** {@inheritDoc}
+	 *
+	 * <P>Note that for efficiency reasons this method will <em>not</em> throw an exception
+	 * when <code>x</code> is already in the queue. However, the queue state will become
+	 * inconsistent and the following behaviour will not be predictable.
+	 */
+	public void enqueue( int x ) {
+		ensureElement( x );
+		if ( size == array.length ) array = IntArrays.grow( array, size + 1 );
+		array[ size++ ] = x;
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <P>Note that each call to this method requires a complete scan of the backing array. Please
+	 * consider caching its result.
+	 */
+
+	public int dequeue() {
+		ensureNonEmpty();
+		final int first = findFirst();
+		final int result = array[ first ];
+		if ( --size != 0 ) System.arraycopy( array, first + 1, array, first, size - first );
+		return result;
+	}
+
+	public int first() {
+		ensureNonEmpty();
+		return array[ findFirst() ];
+	}
+
+	public int last() {
+		ensureNonEmpty();
+		return array[ findLast() ];
+	}
+
+	public void changed() {
+		ensureNonEmpty();
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <P>Note that for efficiency reasons this method will <em>not</em> throw an exception
+	 * when <code>index</code> is not in the queue.
+	 */
+
+	public void changed( int index ) {
+		ensureElement( index );
+	}
+
+	public void remove( int index ) {
+		ensureElement( index );
+		final int[] a = array;
+		int i = size;
+		while( i-- != 0 ) if ( a[ i ] == index ) break;
+		if ( i < 0 ) throw new IllegalArgumentException( "Index " + index + " does not belong to the queue" );
+		if ( --size != 0 ) System.arraycopy( a, i + 1, a, i, size - i );
+	}
+
+	public int size() { return size; }
+
+	public void clear() { size = 0; }
+
+	/** Trims the backing array so that it has exactly {@link #size()} elements.
+	 */
+
+	public void trim() {
+		array = IntArrays.trim( array, size );
+	}
+
+	public Comparator comparator() { return c; }
+
+	public String toString() {
+		StringBuffer s = new StringBuffer();
+		s.append( "[" );
+		for ( int i = 0; i < size; i++ ) {
+			if ( i != 0 ) s.append( ", " );
+			s.append( refArray[ array [ i ] ] );
+		}
+		s.append( "]" );
+		return s.toString();
+	}
+
+
+#ifdef TEST
+	private static long seed = System.currentTimeMillis(); 
+	private static java.util.Random r = new java.util.Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif !#keyclass(Object) && !#keyclass(Reference)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else 
+		return new java.io.Serializable() {};
+#endif
+	}
+
+	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	private static java.text.FieldPosition p = new java.text.FieldPosition( 0 );
+
+	private static String format( double d ) {
+		StringBuffer s = new StringBuffer();
+		return format.format( d, s, p ).toString();
+	}
+
+	private static void speedTest( int n, boolean comp ) {
+		int i, j, s;
+		ARRAY_INDIRECT_PRIORITY_QUEUE[] m = new ARRAY_INDIRECT_PRIORITY_QUEUE[ 100000 ];
+		HEAP_INDIRECT_PRIORITY_QUEUE[] t = new HEAP_INDIRECT_PRIORITY_QUEUE[ m.length ];
+		KEY_TYPE k[] = new KEY_TYPE[n];
+		KEY_TYPE nk[] = new KEY_TYPE[m.length];
+		long ms;
+
+		for( i = 0; i < n; i++ ) k[i] = genKey();
+		for( i = 0; i < m.length; i++ ) nk[i] = genKey();
+		  
+		double totEnq = 0, totDeq = 0, totChange = 0, d;
+
+		for( i = 0; i < m.length; i++ ) {
+			t[ i ] = new HEAP_INDIRECT_PRIORITY_QUEUE( k );
+			m[ i ] = new ARRAY_INDIRECT_PRIORITY_QUEUE( k );
+		}
+
+		if ( comp ) {
+			for( j = 0; j < 20; j++ ) {
+
+				for( i = 0; i < m.length; i++ ) t[ i ].clear();
+
+				ms = System.currentTimeMillis();
+				s = m.length;
+				while( s-- != 0 ) { i = n; while( i-- != 0 ) t[ s ].enqueue( i ); }
+				d = System.currentTimeMillis() - ms;
+				if ( j > 2 ) totEnq += d; 				
+				System.out.print("Enqueue: " + format( m.length * n/d ) +" K/s " );
+
+				ms = System.currentTimeMillis();
+				s = m.length;
+				while( s-- != 0 ) { i = n; while( i-- != 0 ) { k[ t[ s ].first() ] = nk[ i ]; t[ s ].changed(); } }
+				d = System.currentTimeMillis() - ms;
+				if ( j > 2 ) totChange += d; 				
+				System.out.print("Change: " + format( m.length * n/d ) +" K/s " );
+
+				ms = System.currentTimeMillis();
+				s = m.length;
+				while( s-- != 0 ) { i = n; while( i-- != 0 ) t[ s ].dequeue(); }
+				d = System.currentTimeMillis() - ms;
+				if ( j > 2 ) totDeq += d; 				
+				System.out.print("Dequeue: " + format( m.length * n/d ) +" K/s " );
+
+				System.out.println();
+			}
+
+			System.out.println();
+			System.out.println( "Heap:  Enqueue: " + format( m.length * (j-3)*n/totEnq ) + " K/s Dequeue: " + format( m.length * (j-3)*n/totDeq )  + " K/s Change: " + format( m.length * (j-3)*n/totChange ) + " K/s" );
+
+			System.out.println();
+
+			totEnq = totChange = totDeq = 0;
+
+		}
+
+		for( j = 0; j < 20; j++ ) {
+
+			for( i = 0; i < m.length; i++ ) m[ i ].clear();
+
+			ms = System.currentTimeMillis();
+			s = m.length;
+			while( s-- != 0 ) { i = n; while( i-- != 0 ) m[ s ].enqueue( i ); }
+			d = System.currentTimeMillis() - ms;
+			if ( j > 2 ) totEnq += d; 				
+			System.out.print("Enqueue: " + format( m.length * n/d ) +" K/s " );
+
+			ms = System.currentTimeMillis();
+			s = m.length;
+			while( s-- != 0 ) { i = n; while( i-- != 0 ) { k[ m[ s ].first() ] = nk[ i ]; m[ s ].changed(); } }
+			d = System.currentTimeMillis() - ms;
+			if ( j > 2 ) totChange += d; 				
+			System.out.print("Change: " + format( m.length * n/d ) +" K/s " );
+
+			ms = System.currentTimeMillis();
+			s = m.length;
+			while( s-- != 0 ) { i = n; while( i-- != 0 ) m[ s ].dequeue(); }
+			d = System.currentTimeMillis() - ms;
+			if ( j > 2 ) totDeq += d; 				
+			System.out.print("Dequeue: " + format( m.length * n/d ) +" K/s " );
+			
+			System.out.println();
+		}
+
+
+		System.out.println();
+		System.out.println( "Array:  Enqueue: " + format( m.length * (j-3)*n/totEnq ) + " K/s Dequeue: " + format( m.length * (j-3)*n/totDeq )  + " K/s Change: " + format( m.length * (j-3)*n/totChange ) + " K/s" );
+
+		System.out.println();
+	}
+
+
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
+
+	private static boolean heapEqual( int[] a, int[] b, int sizea, int sizeb ) {
+		if ( sizea != sizeb ) return false;
+		KEY_TYPE[] aa = new KEY_TYPE[ sizea ];
+		KEY_TYPE[] bb = new KEY_TYPE[ sizea ];
+		for( int i = 0; i < sizea; i++ ) {
+			aa[ i ] = ref[ a[ i ] ];
+			bb[ i ] = ref[ b[ i ] ];
+		}
+		java.util.Arrays.sort( aa );
+		java.util.Arrays.sort( bb );
+		while( sizea-- != 0 ) if ( !KEY_EQUAL(aa[sizea], bb[sizea]) ) return false;
+		return true;
+	}
+
+	private static KEY_TYPE[] ref;
+
+	protected static void test( int n ) {
+		long ms;
+		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
+		int rm = 0, rt = 0;
+
+		ref = new KEY_TYPE[ n ];
+
+		for( int i = 0; i < n; i++ ) ref[ i ] = genKey();
+		  
+		ARRAY_INDIRECT_PRIORITY_QUEUE m = new ARRAY_INDIRECT_PRIORITY_QUEUE( ref,  COMPARATORS.NATURAL_COMPARATOR );
+		HEAP_INDIRECT_PRIORITY_QUEUE t = new HEAP_INDIRECT_PRIORITY_QUEUE( ref,  COMPARATORS.NATURAL_COMPARATOR );
+
+		/* We add pairs to t. */
+		for( int i = 0; i < n / 2;  i++ ) {
+			t.enqueue( i );
+			m.enqueue( i );
+		}
+
+		ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after creation (" + m + ", " + t + ")" );
+
+		/* Now we add and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<2*n;  i++ ) {
+			int T = r.nextInt( 2 * n );
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+			try {
+				t.enqueue( T );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
+
+			if ( tThrowsIllegal == null ) { // To skip duplicates
+				try {
+					m.enqueue( T );
+				}
+				catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
+			}
+
+			mThrowsIllegal = tThrowsIllegal = null; // To skip duplicates
+
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): enqueue() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): enqueue() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+
+			ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after enqueue (" + m + ", " + t + ")" );
+			
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after enqueue (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
+			}
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+			try {
+				rm = m.dequeue();
+				while( ! m.isEmpty() && KEY_EQUAL( ref[ m.first() ], ref[ rm ] ) ) m.dequeue();
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { mThrowsNoElement = e; }
+
+			try {
+				rt = t.dequeue();
+				while( ! t.isEmpty() && KEY_EQUAL( ref[ t.first() ], ref[ rt ] ) ) t.dequeue();
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { tThrowsNoElement = e; }
+
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): dequeue() divergence in IndexOutOfBoundsException (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): dequeue() divergence in IllegalArgumentException  (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): dequeue() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+			if ( mThrowsOutOfBounds == null ) ensure( KEY_EQUAL( ref[ rt ], ref[ rm ]), "Error (" + seed + "): divergence in dequeue() between m and t (" + rm + "->" + ref[ rm ] + ", " + rt + "->" + ref[ rt ] + ")" );
+
+
+			ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after dequeue (" + m + ", " + t + ")");
+			
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after dequeue (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
+			}
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+
+			int pos = r.nextInt( n * 2 );
+
+			try {
+				m.remove( pos );
+			}
+			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { mThrowsNoElement = e; }
+
+			try {
+				t.remove( pos );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { tThrowsNoElement = e; }
+
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): remove(int) divergence in IndexOutOfBoundsException (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): remove(int) divergence in IllegalArgumentException  (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): remove(int) divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+			ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after remove(int) (" + m + ", " + t + ")" );
+
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after remove(int) (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
+			}
+
+
+			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+
+			pos = r.nextInt( n );
+
+			try {
+				t.changed( pos );
+			}
+			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
+			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
+			catch ( NoSuchElementException e ) { tThrowsNoElement = e; }
+
+			if ( tThrowsIllegal == null ) {
+				try {
+					m.changed( pos );
+				}
+				catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
+				catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
+				catch ( NoSuchElementException e ) { mThrowsNoElement = e; }
+			}
+			
+			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): change(int) divergence in IndexOutOfBoundsException (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
+			//ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): change(int) divergence in IllegalArgumentException  (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): change(int) divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+			ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after change(int) (" + m + ", " + t + ")" );
+
+			if ( m.size() != 0 ) {
+				ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after change(int) (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
+			}
+
+			if ( m.size() != 0 && ( ( new it.unimi.dsi.fastutil.ints.IntOpenHashSet( m.array, 0, m.size ) ).size() == m.size() ) ) {
+
+				int first = m.first();
+				ref[ first ] = genKey();
+
+				//System.err.println("Pre-change m: " +m );
+				//System.err.println("Pre-change t: " +t );
+				m.changed();
+				t.changed( first );
+				
+				//System.err.println("Post-change m: " +m );
+				//System.err.println("Post-change t: " +t );
+
+				ensure( heapEqual( m.array, t.heap, m.size(), t.size() ), "Error (" + seed + "): m and t differ after change (" + m + ", " + t + ")");
+				
+				if ( m.size() != 0 ) {
+					ensure( KEY_EQUAL( ref[ m.first() ], ref[ t.first() ] ), "Error (" + seed + "): m and t differ in first element after change (" + m.first() + "->" + ref[ m.first() ] + ", " + t.first() + "->" + ref[ t.first() ] + ")");
+				}
+			}
+		}
+
+
+		/* Now we check that m actually holds the same data. */
+		  
+		m.clear();
+		ensure( m.isEmpty(), "Error (" + seed + "): m is not empty after clear()" );
+
+		System.out.println("Test OK");
+	}
+
+
+
+	public static void main( String args[] ) {
+		int n  = Integer.parseInt(args[1]);
+		if ( args.length > 2 ) r = new java.util.Random( seed = Long.parseLong( args[ 2 ] ) );
+		  
+
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( AssertionError e ) {
+			System.err.println( e );
+			System.err.println( "seed: " + seed );
+		}
+	}
+
+#endif
+}
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

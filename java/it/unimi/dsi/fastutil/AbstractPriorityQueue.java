@@ -1,7 +1,5 @@
-package it.unimi.dsi.fastutil;
-
 /*		 
- * fastdata: Fast & compact type-specific data structures for Java
+ * fastutil: Fast & compact type-specific data structures for Java
  *
  * Copyright (C) 2003 Paolo Boldi and Sebastiano Vigna 
  *
@@ -21,9 +19,15 @@ package it.unimi.dsi.fastutil;
  *
  */
 
+package it.unimi.dsi.fastutil;
+
 import it.unimi.dsi.fastutil.PriorityQueue;
 
-/**  An abstract class providing basic methods for implementing priority queues. */
+/**  An abstract class providing basic methods for implementing the {@link PriorityQueue} interface. 
+ *
+ * <P>This class defines {@link #changed()} and {@link #last()} as throwing an
+ * {@link UnsupportedOperationException}.
+ */
 
 public abstract class AbstractPriorityQueue implements PriorityQueue {
 

@@ -58,6 +58,17 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
+    QUEUE=(HeapPriorityQueue HeapSemiIndirectPriorityQueue ArrayIndirectPriorityQueue HeapIndirectPriorityQueue HeapSesquiIndirectDoublePriorityQueue ArraySesquiIndirectDoublePriorityQueue)
+
+    for ((f=0; f<${#QUEUE[*]}; f++)); do
+	l=${#TYPE[*]}
+	for ((k=1; k<l-1; k++)); do
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${QUEUE[$f]}
+		echo "Testing $CLASSNAME ($t elements)..."
+		java -ea -server $CLASSNAME test $t
+	done
+    done
+
     SINGLETON=(Sets SortedSets Lists)
 
     for ((f=0; f<${#SINGLETONS[*]}; f++)); do

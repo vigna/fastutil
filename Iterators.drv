@@ -115,8 +115,7 @@ public class ITERATORS {
 	 * @param length the number of elements to return.
 	 */
 	public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
-		if ( length < 0 ) throw new IllegalArgumentException( "The length (" + length + ") is negative" );
-		if ( offset < 0 || offset + length > array.length ) throw new IllegalArgumentException();
+		ARRAYS.ensureOffsetLength( array, offset, length );
 		return new KEY_ARRAY_ITERATOR( array, offset, length );
 	}
 
@@ -183,21 +182,11 @@ public class ITERATORS {
 		int j = 0;
 
 		while( max-- != 0 && i.hasNext() ) {
-			if ( j == array.length ) {
-				KEY_TYPE oldArray[] = array;
-				array = new KEY_TYPE[ j * 2 ];
-				System.arraycopy( oldArray, 0, array, 0, j );
-			}
+			if ( j == array.length ) array = ARRAYS.grow( array, j + 1 );
 			array[ j++ ] = i.NEXT_KEY();
 		}
 
-		if ( j != array.length ) {
-			KEY_TYPE oldArray[] = array;
-			array = new KEY_TYPE[ j ];
-			System.arraycopy( oldArray, 0, array, 0, j );
-		}
-
-		return array;
+		return ARRAYS.trim( array, j );
 	}
 
 

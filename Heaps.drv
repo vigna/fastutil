@@ -24,29 +24,36 @@ package PACKAGE;
 import java.util.Comparator;
 
 /** A class providing static methods that do useful things with heaps.
+ *
+ * <P>The static methods of this class allow to treat arrays as 0-based heaps. They
+ * are used in the implementation of heap-based queues, but they may be also used
+ * directly.
+ *
  */
 
 public class HEAPS {
 
 	private HEAPS() {}
 
-	/** Moves the given element down into the heap until it reaches its final position.
+	/** Moves the given element down into the heap until it reaches the lowest possible position.
 	 *
 	 * @param heap the heap (starting at 0).
 	 * @param size the number of elements in the heap.
-	 * @param i the position to be heapified.
+	 * @param i the index of the element that must be moved down.
 	 * @param c a type-specific comparator, or <code>null</code> for the natural order.
 	 * @return the new position of the element of index <code>i</code>.
 	 */
 
 	static public int downHeap( final KEY_TYPE[] heap, final int size, int i, final KEY_COMPARATOR c ) {
+		if ( i >= size ) throw new IllegalArgumentException( "Heap position (" + i + ") is larger than or equal to heap size (" + size + ")" );
+
 		final KEY_TYPE e = heap[ i ];
 		int child;
 
 		if ( c == null )
 			while ( ( child = 2 * i + 1 ) < size ) {
-				if ( child + 1 < size && KEY_CMP( heap[ child + 1 ], heap[ child ] ) < 0 ) child++;
-				if ( KEY_CMP( e, heap[ child ] ) <= 0 ) break;
+				if ( child + 1 < size && KEY_LESS( heap[ child + 1 ], heap[ child ] ) ) child++;
+				if ( KEY_LESSEQ( e, heap[ child ] ) ) break;
 				heap[ i ] = heap[ child ];
 				i = child;
 			}
@@ -59,27 +66,28 @@ public class HEAPS {
 			}
 
 		heap[ i ] = e;
+
 		return i;
 	}
 
 	/** Moves the given element up in the heap until it reaches the highest possible position.
 	 *
-	 * Note that in principle after this call the heap property may be violated.
-	 * 
 	 * @param heap the heap (starting at 0).
 	 * @param size the number of elements in the heap.
-	 * @param i the position to be made swimming.
+	 * @param i the index of the element that must be moved up.
 	 * @param c a type-specific comparator, or <code>null</code> for the natural order.
 	 * @return the new position of the element of index <code>i</code>.
 	 */
 
 	static public int upHeap( final KEY_TYPE[] heap, final int size, int i, final KEY_COMPARATOR c ) {
+		if ( i >= size ) throw new IllegalArgumentException( "Heap position (" + i + ") is larger than or equal to heap size (" + size + ")" );
+
 		final KEY_TYPE e = heap[ i ];
 		int parent;
 
 		if ( c == null )
 			while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
-				if ( KEY_CMP( heap[ parent ], e ) <= 0 ) break;
+				if ( KEY_LESSEQ( heap[ parent ], e ) ) break;
 				heap[ i ] = heap[ parent ]; 
 				i = parent;
 			}

@@ -152,6 +152,10 @@ echo -e \
 "#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ObjectHeapSemiIndirectPriorityQueue\n\n"\
 "#define HEAP_INDIRECT_PRIORITY_QUEUE ObjectHeapIndirectPriorityQueue\n\n"\
 "#define HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ObjectHeapSesquiIndirectDoublePriorityQueue\n\n"\
+"#define ARRAY_PRIORITY_QUEUE ObjectArrayPriorityQueue\n\n"\
+"#define ARRAY_SEMI_INDIRECT_PRIORITY_QUEUE ObjectArraySemiIndirectPriorityQueue\n\n"\
+"#define ARRAY_INDIRECT_PRIORITY_QUEUE ObjectArrayIndirectPriorityQueue\n\n"\
+"#define ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ObjectArraySesquiIndirectDoublePriorityQueue\n\n"\
 "#define ABSTRACT_STACK AbstractStack\n\n"\
 "#define ITERATORS ObjectIterators\n\n"\
 "#define COMPARATORS ObjectComparators\n\n"\
@@ -217,6 +221,8 @@ echo -e \
 "#define REMOVE_VALUE remove${TYPE_CAP[$v]}\n"\
 "#endif\n"\
 "#define KEY_CMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
+"#define KEY_LESS(x,y) ((((Comparable)(x)).compareTo(y))<0)\n"\
+"#define KEY_LESSEQ(x,y) ((((Comparable)(x)).compareTo(y))<=0)\n"\
 \
 \
 "#else\n"\
@@ -242,6 +248,10 @@ echo -e \
 "#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapSemiIndirectPriorityQueue\n\n"\
 "#define HEAP_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapIndirectPriorityQueue\n\n"\
 "#define HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP[$k]}HeapSesquiIndirectDoublePriorityQueue\n\n"\
+"#define ARRAY_PRIORITY_QUEUE ${TYPE_CAP[$k]}ArrayPriorityQueue\n\n"\
+"#define ARRAY_SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}ArraySemiIndirectPriorityQueue\n\n"\
+"#define ARRAY_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP[$k]}ArrayIndirectPriorityQueue\n\n"\
+"#define ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP[$k]}ArraySesquiIndirectDoublePriorityQueue\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\
 "#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_CAP[$k]}PriorityQueue\n\n"\
 "#define ITERATORS ${TYPE_CAP[$k]}Iterators\n\n"\
@@ -309,6 +319,8 @@ echo -e \
 "#define GET_VALUE get\n"\
 "#define REMOVE_VALUE remove\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#define KEY_LESS(x,y) ( (x) < (y) )\n"\
+"#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
 "#endif\n"\
 \
 "#if #keyclass(Object)\n"\
