@@ -2,7 +2,7 @@
 
 Name:           fastutil
 Version:        4.1
-Release:        0
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
@@ -77,7 +77,7 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
-* Sun Jan 25 2004 Sebastiano Vigna <vigna at acm.org> - 4.1-1jpp
+* Mon Feb 09 2004 Sebastiano Vigna <vigna at acm.org> - 4.1-1jpp
 - New custom hash classes.
 
 * Sun Jan 18 2004 Sebastiano Vigna <vigna at acm.org> - 4.0-1jpp
