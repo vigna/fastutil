@@ -711,6 +711,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				return this;
 		  }
 		  
+		  /*
 		  public void prettyPrint() {
 				prettyPrint(0);
 		  }
@@ -734,12 +735,15 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				else if (right != null)
 					 right.prettyPrint(level + 1);
 		  }
+		  */
     }
 	 
-   public void prettyPrint() {
+	 /*
+		public void prettyPrint() {
       System.err.println("size: " + count);
       if (tree != null) tree.prettyPrint();
    }
+	 */
 
 	 public boolean containsKey( KEY_TYPE k ) {
 		  return findKey( k ) != null;
@@ -1624,6 +1628,15 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #endif
 	 }
 
+
+	 private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	 private static java.text.FieldPosition p = new java.text.FieldPosition( 0 );
+
+	 private static String format( double d ) {
+		  StringBuffer s = new StringBuffer();
+		  return format.format( d, s, p ).toString();
+	 }
+
 	 private static void speedTest( int n ) {
 		  int i;
 		  MAP m;
@@ -1634,6 +1647,21 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  VALUE_TYPE vt[] = new VALUE_TYPE[n];
 		  long ms;
 
+		  for( i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+				k[i] = kt[i] = genKey();
+				nk[i] = nkt[i] = genKey();
+#else
+				k[i] = new KEY_CLASS( kt[i] = genKey() );
+				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
+#endif
+#if #valueclass(Object)
+				v[i] = vt[i] = genValue();
+#else
+				v[i] = new VALUE_CLASS( vt[i] = genValue() );
+#endif
+		  }
+
 		  for( int j = 0; j < 10; j++ ) {
 
 				if ( j > 0 ) System.out.println();
@@ -1641,20 +1669,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				t = new TreeMap();
 				m = new TREEMAP();
 
-				for( i = 0; i < n; i++ ) {
-#if #keyclass(Object)
-					 k[i] = kt[i] = genKey();
-					 nk[i] = nkt[i] = genKey();
-#else
-					 k[i] = new KEY_CLASS( kt[i] = genKey() );
-					 nk[i] = new KEY_CLASS( nkt[i] = genKey() );
-#endif
-#if #valueclass(Object)
-					 v[i] = vt[i] = genValue();
-#else
-					 v[i] = new VALUE_CLASS( vt[i] = genValue() );
-#endif
-				}
 
 				/* We add pairs to t. */
 				ms = System.currentTimeMillis();

@@ -110,7 +110,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 /** Creates a new empty tree set with the given comparator.
 	  *
-	  * @param comparator a {@link #Comparator}.
+	  * @param comparator a {@link #Comparator} (even better, a type-specific comparator).
 	  */
 
 	 public TREESET( final Comparator c ) {
@@ -143,7 +143,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 	 /*
 	  * The following private methods implements some basic building blocks used by
-	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
+	  * all accessors.  They are (and should be maintained) identical to those used in TreeMap.drv.
 	  */
 
 
@@ -373,7 +373,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				return e.right;
 		  }
 
-		  if ( e.left().level() < e.level() - 1 || e.right().level() < e.level() - 1 ) {
+		  if ( modified && ( e.left().level() < e.level() - 1 || e.right().level() < e.level() - 1 ) ) {
 				e.decLevel();
 				if ( e.right().level() > e.level() ) e.right().level( e.level() );
 				e = e.skew();
@@ -622,6 +622,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				return this;
 		  }
 		  
+		  /*
 		  public void prettyPrint() {
 				prettyPrint(0);
 		  }
@@ -645,13 +646,16 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				else if (right != null)
 					 right.prettyPrint(level + 1);
 		  }
+		  */
     }
 	 
+	 /*
    public void prettyPrint() {
       System.err.println("size: " + count);
       if (tree != null) tree.prettyPrint();
    }
-
+	 */
+	
 	 public int size() {
 		  return count;
 	 }
@@ -674,7 +678,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  return e.key;
 	 }
 	 
-#if !#keyclass(Object)
+#if ! #keyclass(Object)
 	 public Object first() {
 		  return KEY2OBJ( FIRST() );
 	 }
@@ -1146,7 +1150,14 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 #endif
 	 }
 
-#if 0
+	 private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	 private static java.text.FieldPosition p = new java.text.FieldPosition( 0 );
+
+	 private static String format( double d ) {
+		  StringBuffer s = new StringBuffer();
+		  return format.format( d, s, p ).toString();
+	 }
+
 	 private static void speedTest( int n ) {
 		  int i;
 		  SORTEDSET m;
@@ -1156,90 +1167,128 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  KEY_TYPE nkt[] = new KEY_TYPE[n];
 		  long ms;
 
-		  for( int j = 0; j < 10; j++ ) {
+		  for( i = 0; i < n; i++ ) {
+#if #keyclass(Object)
+				k[i] = kt[i] = genKey();
+				nk[i] = nkt[i] = genKey();
+#else
+				k[i] = new KEY_CLASS( kt[i] = genKey() );
+				nk[i] = new KEY_CLASS( nkt[i] = genKey() );
+#endif
+		  }
+		  
+		  double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
 
-				if ( j > 0 ) System.out.println();
+		  System.out.println("******** java.util.TreeSet ********");
+
+		  for( int j = 0; j < 20; j++ ) {
 
 				t = new TreeSet();
-				m = new TREESET();
-
-				for( i = 0; i < n; i++ ) {
-#if #keyclass(Object)
-					 k[i] = kt[i] = genKey();
-					 nk[i] = nkt[i] = genKey();
-#else
-					 k[i] = new KEY_CLASS( kt[i] = genKey() );
-					 nk[i] = new KEY_CLASS( nkt[i] = genKey() );
-#endif
-				}
 
 				/* We add pairs to t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.add( k[i], v[i] );
-				System.out.println("Added "+n+" pairs in old TreeSet (actual size: " + t.size() + ") in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
-
-				/* We add pairs to m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.add( kt[i], vt[i] );
-				System.out.println("Added "+n+" pairs in new TreeSet (actual size: " + m.size() + ") in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
+				for( i = 0; i < n;  i++ ) t.add( k[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totAdd += d; 				
+				System.out.print("Add: " + format( d ) +" K/s " );
 
 				/* We check for pairs in t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.get( k[i] );
-				System.out.println("Examined "+n+" existing pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
-
-				/* We check for pairs in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.get( kt[i] );
-				System.out.println("Examined "+n+" existing pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+				for( i = 0; i < n;  i++ ) t.contains( k[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totYes += d; 				
+				System.out.print("Yes: " + format( d ) +" K/s " );
 
 				/* We check for pairs not in t. */
 				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.get( nk[i] );
-				System.out.println("Examined "+n+" unexisting pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
-
-				/* We check for pairs not in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.get( nkt[i] );
-				System.out.println("Examined "+n+" unexisting pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+				for( i = 0; i < n;  i++ ) t.contains( nk[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totNo += d; 				
+				System.out.print("No: " + format( d ) +" K/s " );
 
 				/* We iterate on t. */
 				ms = System.currentTimeMillis();
 				for( Iterator it = t.iterator(); it.hasNext(); it.next() );
-				System.out.println("Iterated on old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totIter += d; 				
+				System.out.print("Iter: " + format( d ) +" K/s " );
+				
+				/* We delete pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( nk[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemNo += d; 				
+				System.out.print("RemNo: " + format( d ) +" K/s " );
+				
+				/* We delete pairs in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( k[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemYes += d; 				
+				System.out.print("RemYes: " + format( d ) +" K/s " );
+				
+				System.out.println();
+		  }
+
+		  System.out.println("Add: " + format( totAdd/20 ) + " Yes: " + format( totYes/20 ) + " No: " + format( totNo/20 ) + " Iter: " + format( totIter/20 ) + " RemYes: " + format( totRemYes/20 ) + " RemNo: " + format( totRemNo/20 ) );
+
+		  System.out.println();
+		  System.out.println("******** fastUtil ********");
+
+		  totAdd = totYes = totNo = totIter = totRemYes = totRemNo = 0;
+
+		  for( int j = 0; j < 20; j++ ) {
+
+				m = new TREESET();
+
+				/* We add pairs to m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.add( kt[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totAdd += d; 				
+				System.out.print("Add: " + format( d ) +" K/s " );
+
+				/* We check for pairs in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.contains( kt[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totYes += d; 				
+				System.out.print("Yes: " + format( d ) +" K/s " );
+
+				/* We check for pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.contains( nkt[i] );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totNo += d; 				
+				System.out.print("No: " + format( d ) +" K/s " );
 
 				/* We iterate on m. */
 				ms = System.currentTimeMillis();
 				for( KEY_ITERATOR it = (KEY_ITERATOR)m.iterator(); it.hasNext(); it.NEXT_KEY() );
-				System.out.println("Iterated on new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s");
-
-				/* We delete pairs not in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( nk[i] );
-				System.out.println("Removed "+n+" unexisting pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totIter += d; 	 
+				System.out.print("Iter: " + format( d ) +" K/s " );
 
 				/* We delete pairs not in m. */
 				ms = System.currentTimeMillis();
 				for( i = 0; i < n;  i++ ) m.remove( nkt[i] );
-				System.out.println("Removed "+n+" unexisting pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
-	 
-				/* We delete pairs in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( k[i] );
-				System.out.println("Removed "+n+" existing pairs in old TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemNo += d; 	
+				System.out.print("RemNo: " + format( d ) +" K/s " );
 
 				/* We delete pairs in m. */
 				ms = System.currentTimeMillis();
 				for( i = 0; i < n;  i++ ) m.remove( kt[i] );
-				System.out.println("Removed "+n+" existing pairs in new TreeSet in "+((System.currentTimeMillis() - ms)) / 1000.0+" s" );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totRemYes += d; 				
+				System.out.print("RemYes: " + format( d ) +" K/s " );	 
 
-
+				System.out.println();
 		  }
 
-
+		  System.out.println("Add: " + format( totAdd/20 ) + " Yes: " + format( totYes/20 ) + " No: " + format( totNo/20 ) + " Iter: " + format( totIter/20 ) + " RemYes: " + format( totRemYes/20 ) + " RemNo: " + format( totRemNo/20 ) );
 	 }
 
-#endif
 
 	 private static boolean valEquals(Object o1, Object o2) {
 		  return o1 == null ? o2 == null : o1.equals(o2);
@@ -1381,8 +1430,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 
-				ensure( mThrowsNoElement == tThrowsNoElement, "Error: get() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-				ensure( mThrowsIllegal == tThrowsIllegal, "Error: get() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error: contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error: contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
 				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error: divergence between t and m (standard method).\n" );
 		  }
 
@@ -1654,7 +1703,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 	 public static void main( String args[] ) {
 		  int n  = Integer.parseInt(args[1]);
 		  
-		  if (args[0].equals("speedTest")) ;//speedTest(n);
+		  if (args[0].equals("speedTest")) speedTest(n);
 		  else if (args[0].equals("regressionTest")) regressionTest(n);
 	 }
 

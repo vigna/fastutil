@@ -14,7 +14,7 @@ MAP=(Map SortedMap AbstractMap HashMap TreeMap)
 SET=(AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet)
 
 # Driver files for interfaces.
-INTERFACE=(Iterator ListIterator Comparator)
+INTERFACE=(Iterator ListIterator Comparator AbstractComparator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
@@ -237,6 +237,10 @@ for ((f=0; f<${#INTERFACE[*]}; f++)); do
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
+"#define KEY_ABSTRACT_COMPARATOR ${TYPE_CAP[$k]}AbstractComparator\n\n"\
+"#define KEY_VALUE ${TYPE[$k]}Value\n"\
+"#define KEY_CLASS ${CLASS[$k]}\n"\
+"#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
 "#include \"${INTERFACE[$f]}.drv\"\n" >$FILENAME
 
 	  done
