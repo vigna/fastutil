@@ -1,0 +1,674 @@
+package it.unimi.dsi.fastMaps;
+
+import java.util.*;
+import java.io.*;
+
+/**
+ * Provides a very simple kind of hash map with fixed size and with a very
+ * fast, small-footprint implementation.
+ *
+ * Hashing done through modulo a prime.
+ *
+ */
+
+public final class HASHSET_NAME extends AbstractSet implements Serializable, SET_NAME {
+	 /** The array of keys. */
+	 private transient KEY_TYPE key[];
+
+	 /** The array of occupancy states. */
+	 private transient byte state[];
+
+	 /** The possible states. */
+	 private static final byte FREE = 0;
+	 private static final byte BUSY = -1;
+	 private static final byte REMOVED = 1;
+	 
+	 /** The i-th element is the greatest prime smaller than or equal to 2^i. */
+	 private static final int primeSizes[] = {  1, 2, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 4194301, 8388593, 16777213, 33554393, 67108859, 134217689, 268435399, 536870909, 1073741789, 2147483647 };
+	 /** The i-th element is the greatest prime smaller than the greatest prime smaller than or equal to 2^i. */
+	 private static final int primeSizes2[] = { 1, 1, 2, 5, 11, 29, 59, 113, 241, 503, 1019, 2029, 4091, 8179, 16369, 32719, 65519, 131063, 262133, 524269, 1048571, 2097133, 4194287, 8388587, 16777199, 33554383, 67108837, 134217649, 268435367, 536870879, 1073741783, 2147483629 };
+	 /** Index into the previous list, giving the current table size. */
+	 private int log2n;
+
+	 /** Table size. Must be the log2n-th item of the previous list. */
+	 private transient int n;
+
+	 /** Secondary jump for conflict resolution. Must be the (log2n-1)-th item of the previous list. */
+	 private transient int n2;
+
+	 /** Number of entries in the map. */
+	 private int count;
+
+	 /** Number of used buckets in the map. May be larger than {@link #count} if there are items in state {@link #REMOVED}.  */
+	 private transient int used;
+
+
+
+	 /** Creates a new set.
+	  *
+	  * The actual table size is the least prime greater than n/0.75.
+	  *
+	  * @param n the expected number of elements in the set. 
+	  */
+	 
+	 public HASHSET_NAME( int n ) {
+		  int l = 3;
+		  while( primeSizes[++l] < (int)(n / 0.75) );
+		  this.n = primeSizes[l];
+		  n2 = primeSizes2[l];
+		  log2n = l;
+		  key = new KEY_TYPE[this.n];
+		  state = new byte[this.n];
+	 }
+	 
+
+
+	 /** Creates a new set.
+	  */
+	 
+	 public HASHSET_NAME() {
+		  this(32);
+	 }
+
+	 /** Adds a key to the set.
+	  *
+	  * @param ok the key.
+	  */
+
+	 public boolean add(Object ok) {
+
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  final byte state[] = this.state;
+
+		  // Primary hash
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  // Secondary hash
+		  final int m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  
+		  //System.err.print("Putting in " + k + " with hash " + h + " (" + m + ")..." );
+
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] != BUSY ) {
+				if ( state[h] == FREE ) used++;
+				state[h] = BUSY;
+				count++;
+				key[h] = k;
+				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+				return true;
+		  }
+
+		  return false;
+	 }
+	 
+
+#if ! ( #keyclass(Object) )
+
+	 /** Adds a key to the map.
+	  *
+	  * @param k the key.
+	  */
+
+	 public boolean add(KEY_TYPE k) {
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
+
+		  // Primary hash
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  // Secondary hash
+		  final int m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  
+		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
+
+		  while( ! KEY_EQUAL( key[h], k ) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] != BUSY ) {
+				if ( state[h] == FREE ) used++;
+				state[h] = BUSY;
+				count++;
+				key[h] = k;
+				if ( count < used/2 ) enlarge( log2n ); // Too many removed entries, let's collect
+				if ( used > n * 0.75 ) enlarge( log2n+1 ); // Table too filled, let's enlarge
+				return true;
+		  }
+
+		  return false;
+	 }
+
+
+#endif
+
+
+	 /** Removes the given key from the map.
+	  *
+	  * @param ok the key.
+	  */
+
+	 public boolean remove(Object ok) {
+
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  final byte state[] = this.state;
+
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
+
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				state[h] = REMOVED;
+				count--;
+				
+				return true;
+		  }
+		  else return false;
+	 }
+
+	 public void clear() {
+		  this.count = 0;
+		  this.used = 0;
+		  Arrays.fill(state, FREE);
+	 }
+
+
+	 public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+		  return TO_KEY_TYPE_CAP_ARRAY(a);
+	 }
+
+    public KEY_TYPE[] TO_KEY_TYPE_CAP_ARRAY() {
+		  return TO_KEY_TYPE_CAP_ARRAY(null);
+	 }
+
+	 
+    public KEY_TYPE[] TO_KEY_TYPE_CAP_ARRAY( KEY_TYPE a[] ) {
+		  final KEY_TYPE key[] = this.key, result[];
+		  final int n = this.n, count = this.count;
+		  final byte state[] = this.state;
+		  int i, j, pos = 0;
+
+		  if (a == null || a.length < count) result = new KEY_TYPE[size()];
+		  else result = a;
+
+		  for(i=j=0; i<count; i++) {
+				while( state[pos] != BUSY ) pos++;
+				result[j++] = key[pos++];
+		  }
+
+		  return result;
+    }
+
+
+	 public Iterator iterator() {
+		  return new Iterator() {
+					 int pos = 0, last = -1;
+					 
+					 { 
+						  final byte state[] = HASHSET_NAME.this.state;
+						  final int n = HASHSET_NAME.this.n;
+						  
+						  while( pos < n && state[pos] != BUSY ) pos++;
+					 }
+					 
+					 public boolean hasNext() {
+						  return pos < n;
+					 }
+					 
+					 public Object next() {
+						  Object retVal;
+						  final byte state[] = HASHSET_NAME.this.state;
+						  final int n = HASHSET_NAME.this.n;
+						  
+						  if (!hasNext()) throw new NoSuchElementException();
+						  retVal = KEY2OBJ(key[pos]);
+						  do pos++; while( pos < n && state[pos] != BUSY );
+						  
+						  return retVal;
+					 }
+					 
+					 public void remove() {
+						  if (last == -1) throw new IllegalStateException();
+						  state[pos] = REMOVED;
+					 }
+				};
+	 }
+	 
+
+
+	 /** Resizes the map to the next prime.
+	  */
+
+	 private void enlarge( int newLog2n ) {
+		  int i, count = 0, used = 0, h, m;
+
+		  KEY_TYPE k;
+
+		  final int n = this.n, newN = primeSizes[newLog2n], newN2 = primeSizes2[newLog2n];
+		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
+		  final byte state[] = this.state, newState[] = new byte[newN];
+
+		  for(i=0; i<n; i++) {
+
+				if ( state[i] != BUSY ) continue;
+
+				k = key[i];
+
+				h = (int)(( (HASH(k) % newN) + newN ) % newN);
+				m = (int)(( (HASH(k) % newN2 ) + newN2 ) % newN2) + 1;
+
+				while( newState[h] != FREE ) h = ( h + m ) % newN;
+				
+				newState[h] = BUSY;
+				newKey[h] = k;
+				count++;
+				used++;
+
+		  }
+
+		  this.n = newN;
+		  this.n2 = newN2;
+		  log2n = newLog2n;
+		  this.key = newKey;
+		  this.state = newState;
+		  this.count = count;
+		  this.used = used;
+	 }
+	 
+	 public int size() {
+		  return count;
+	 }
+
+	 public boolean isEmpty() {
+		  return count == 0;
+	 }
+
+
+	 public boolean contains(Object ok) {
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  final byte state[] = this.state;
+
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  return state[h] == BUSY;
+	 }
+
+
+#if !#keyclass(Object)
+
+	 public boolean contains(KEY_TYPE k) {
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
+
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  return state[h] == BUSY;
+	 }
+
+
+	 /** Removes the entry with the given key from the map.
+	  *
+	  * @param k the key.
+	  */
+
+	 public boolean remove(KEY_TYPE k) {
+
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
+
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  
+		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
+		  
+		  if ( state[h] == BUSY ) {
+				state[h] = REMOVED;
+				count--;
+				
+				return true;
+		  }
+		  else return false;
+	 }
+	 
+
+#endif
+
+    private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
+
+		  s.defaultWriteObject();
+
+		  for (int i = n; i-- != 0; ) {
+				if (state[i] == BUSY) s.WRITE_KEY_TYPE_CAP(key[i]);
+		  }
+    }
+
+    private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
+		  int count;
+
+		  s.defaultReadObject();
+		  this.n = primeSizes[log2n];
+		  this.n2 = primeSizes2[log2n];
+		  count = this.count;
+
+		  this.key = new KEY_TYPE[n];
+		  this.state = new byte[n];
+		  this.count = 0;
+		  this.used = 0;
+
+		  for (int i = count; i-- != 0; ) {
+				add(s.READ_KEY_TYPE_CAP());
+		  }
+    }
+
+#ifndef NDEBUG
+
+	 private static void speedTest( int n ) {
+		  int i;
+		  SET_NAME m;
+		  Set t;
+		  Random r = new Random();
+		  Object o;
+		  long v, fm, ct;
+
+		  for(int k=0; k<10; k++) {
+
+				t = new HashSet(n);
+				m = new HASHSET_NAME(n);
+		  /* First of all, we measure the time that is necessary to produce the inputs. */
+		  
+		  v = System.currentTimeMillis();
+		  
+		  for( i=0; i<n;  i++ ) {
+				
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+				new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+					 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						  new Long(r.nextLong()) 
+#endif
+								;
+		  }
+		  
+		  ct = System.currentTimeMillis() - v;
+		  
+		  System.gc();
+		  fm = Runtime.getRuntime().freeMemory();
+		  v = System.currentTimeMillis();
+		  
+
+		  /* Then we add pairs to t. */
+
+		  for( i=0; i<n;  i++ ) {
+				t.add( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							 );
+		  }
+
+		  System.out.println("Added "+n+" pairs in HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" + 
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+		  System.gc();
+		  System.gc();
+		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+
+		  v = System.currentTimeMillis();
+
+		  /* Then we check for elements in t. */
+
+		  for( i=0; i<n;  i++ ) {
+				t.contains( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
+#else
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+								 );
+		  }
+
+		  System.out.println("Examined "+n+" elements in HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+
+		  t = null;
+		  System.gc();
+		  System.gc();
+		  fm = Runtime.getRuntime().freeMemory();
+
+		  v = System.currentTimeMillis();
+
+		  /* Then we add elements to m. */
+
+		  for( i=0; i<n;  i++ ) {
+				m.add( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							);
+		  }
+		  
+		  System.out.println("Added "+n+" pairs in specialized HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+		  System.gc();
+		  System.gc();
+		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+
+		  v = System.currentTimeMillis();
+
+		  /* Then we check for elements in m. */
+
+		  for( i=0; i<n;  i++ ) {
+				m.contains( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							  (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+							  r.NEXT_KEY_TYPE_CAP()
+#else
+							  r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+									);
+		  }
+		  
+		  System.out.println("Examined "+n+" pairs in specialized HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" +
+									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+	 
+		  }
+	 }
+
+
+
+
+	 private static void regressionTest( int n ) {
+		  SET_NAME m = new HASHSET_NAME();
+		  Set t = new HashSet();
+		  Random r = new Random();
+
+		  /* First of all, we fill t with random data. */
+
+		  for(int i=0; i<n;  i++ ) {
+				t.add( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+										);
+		  }
+		  
+		  /* Now we add to m the same data */
+		  
+		  for(Iterator i=t.iterator(); i.hasNext(); ) {
+				m.add(i.next()); 
+		  }
+
+		  /* Now we check that m actually holds that data. */
+		  
+		  for(Iterator i=t.iterator(); i.hasNext();  ) {
+				Object e = i.next();
+		      if (!m.contains(e)) {
+					 System.err.println("Error: m and t differ on a key ("+e+") after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.iterator(); i.hasNext();  ) {
+				Object e = i.next();
+		      if (!t.contains(e)) {
+					 System.err.println("Error: m and t differ on a key ("+e+") after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		  for(int i=0; i<n;  i++ ) {
+				KEY_TYPE T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+				if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
+					 System.err.println("Error: divergence in add() between t and m.\n");
+					 System.exit(-1);
+				}
+				T =
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+					 (KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+					 r.NEXT_KEY_TYPE_CAP()
+#else
+					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+						  ;
+				if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
+					 System.err.println("Error: divergence in remove() between t and m.\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+
+
+		  /* Now we check that m actually holds that data. */
+		  
+		  for(Iterator i=t.iterator(); i.hasNext();  ) {
+				Object e = i.next();
+		      if (!m.contains(e)) {
+					 System.err.println("Error: m and t differ on a key ("+e+") after insertion (iterating on t).\n");
+					 System.exit(-1);
+				}
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.iterator(); i.hasNext();  ) {
+				Object e = i.next();
+		      if (!t.contains(e)) {
+					 System.err.println("Error: m and t differ on a key ("+e+") after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we make m into an array and we check it is OK. */
+		  KEY_TYPE a[] = m.TO_KEY_TYPE_CAP_ARRAY();
+
+		  
+		  for(int i=0; i<a.length; i++) {
+		      if (!m.contains(a[i])) {
+					 System.err.println("Error: toArray() output is not OK ("+a[i]+").\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we save and read m. */
+
+		  try {
+				java.io.File f = new java.io.File("regressionTest");
+				java.io.OutputStream os = new java.io.FileOutputStream(f);
+				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+				oos.writeObject(m);
+				oos.close();
+				
+				java.io.InputStream is = new java.io.FileInputStream(f);
+				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+				m = (SET_NAME)ois.readObject();
+				ois.close();
+				f.delete();
+		  }
+		  catch(Exception e) {
+				e.printStackTrace();
+				System.exit(-1);
+		  }
+
+		  /* Now we check that m actually holds that data, but iterating on m. */
+		  
+		  for(Iterator i=m.iterator(); i.hasNext();  ) {
+				Object e = i.next();
+		      if (!t.contains(e)) {
+					 System.err.println("Error: m and t differ on a key ("+e+") after insertion (iterating on m).\n");
+					 System.exit(-1);
+				}
+		  }
+
+
+		  /* Now we take out of m everything, and check that it is empty. */
+
+		  for(Iterator i=t.iterator(); i.hasNext(); ) m.remove(i.next()); 
+
+		  if (!m.isEmpty())  {
+				System.err.println("Error: m is not empty (as it should be).\n");
+				System.exit(-1);
+		  }
+
+		  System.err.println("Regression test OK.\n");
+		  System.exit(0);
+	 }
+
+
+	 public static void main( String args[] ) {
+		  int n  = Integer.parseInt(args[1]);
+		  
+		  if (args[0].equals("speedTest")) speedTest(n);
+		  else if (args[0].equals("regressionTest")) regressionTest(n);
+	 }
+
+#endif
+
+}

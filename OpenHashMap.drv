@@ -1,4 +1,4 @@
-package it.unimi.dsi.fastMaps;
+package it.unimi.dsi.fastUtil;
 
 import java.util.*;
 import java.io.*;
@@ -95,15 +95,17 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	  */
 
 	 public Object put(Object ok, Object ov) {
-		  int h, m, n = this.n;
-		  VALUE_TYPE oldValue, value[] = this.value, v = VALUE2TYPE(ov);
-		  KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
-		  byte  state[] = this.state;
+		  VALUE_TYPE oldValue;
+
+		  final int n = this.n;
+		  final VALUE_TYPE v = VALUE2TYPE(ov);
+		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  final byte state[] = this.state;
 
 		  // Primary hash
-		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  // Secondary hash
-		  m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  final int m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
 
@@ -139,15 +141,16 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	  */
 
 	 public VALUE_TYPE put(KEY_TYPE k, VALUE_TYPE v) {
-		  int h, m, n = this.n;
-		  VALUE_TYPE oldValue, value[] = this.value;
-		  KEY_TYPE key[] = this.key;
-		  byte  state[] = this.state;
+		  VALUE_TYPE oldValue;
+
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
 
 		  // Primary hash
-		  h = (int)(( (HASH(k) % n) + n ) % n);
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  // Secondary hash
-		  m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
+		  final int m = (int)(( (HASH(k) % n2) + n2 ) % n2) + 1;
 		  
 		  //System.err.print("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")..." );
 
@@ -183,13 +186,14 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	  */
 
 	 public Object remove(Object ok) {
-		  int h, m, n = this.n;
-		  VALUE_TYPE oldValue, value[] = this.value;
-		  KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
-		  byte state[] = this.state;
+		  VALUE_TYPE oldValue;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  final byte state[] = this.state;
+
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
@@ -235,8 +239,8 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 
 	 public boolean containsValue(VALUE_TYPE v) {
-		  VALUE_TYPE value[] = this.value;
-		  byte state[] = this.state;
+		  final VALUE_TYPE value[] = this.value;
+		  final byte state[] = this.state;
 		  
 		  for(int i = n; i-- != 0; ) if (state[i] == BUSY && VALUE_EQUAL(value[i], v)) return true;
 		  return false;
@@ -251,14 +255,13 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 
 	 public void putAll(Map m) {
-		  Iterator i = m.entrySet().iterator();
 		  Entry e;
-		  while (i.hasNext()) {
+
+		  for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
 				e = (Entry)i.next();
 				put(e.getKey(), e.getValue());
 		  }
 	 }
-
 
 
     private static class Entry implements ENTRY_NAME {
@@ -323,53 +326,50 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
     public Set entrySet() {
 		  if (entries == null) entries = new AbstractSet() {
 					 
-					 private class EntryIterator implements Iterator {
-						  int pos = 0, last = -1;
-						  
-						  EntryIterator() { 
-								byte state[] = HASHMAP_NAME.this.state;
-								while( pos < n && state[pos] != BUSY ) pos++;
-						  }
-						  
-						  public boolean hasNext() {
-								return pos < n;
-						  }
-						  
-						  public Object next() {
-								Entry retVal;
-								byte state[] = HASHMAP_NAME.this.state;
-		  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = new Entry(key[pos], value[pos]);
-								do pos++; while( pos < n && state[pos] != BUSY );
-								
-								return retVal;
-						  }
-						  
-						  public void remove() {
-								
-								if (last == -1)
-									 throw new IllegalStateException();
-								
-								state[pos] = REMOVED;
-						  }
-					 }
-
 					 public Iterator iterator() {
-						  return new EntryIterator();
+						  return new Iterator() {
+									 int pos = 0, last = -1;
+						  
+									 { 
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+
+										  while( pos < n && state[pos] != BUSY ) pos++;
+									 }
+						  
+									 public boolean hasNext() {
+										  return pos < n;
+									 }
+						  
+									 public Object next() {
+										  Entry retVal;
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+		  
+										  if (!hasNext()) throw new NoSuchElementException();
+										  retVal = new Entry(key[pos], value[pos]);
+										  do pos++; while( pos < n && state[pos] != BUSY );
+								
+										  return retVal;
+									 }
+						  
+									 public void remove() {
+										  if (last == -1) throw new IllegalStateException();
+										  state[pos] = REMOVED;
+									 }
+								};
+
 					 }
 					 
 					 public boolean contains(Object o) {
-						  if (!(o instanceof Map.Entry))
-								return false;
+						  if (!(o instanceof Map.Entry)) return false;
 						  Map.Entry e = (Map.Entry)o;
 						  Object v = get(e.getKey());
 						  return VALUE_EQUAL(v, e.getValue());
 					 }
 					 
 					 public boolean remove(Object o) {
-						  if (!(o instanceof Map.Entry))
-								return false;
+						  if (!(o instanceof Map.Entry)) return false;
 						  Map.Entry e = (Map.Entry)o;
 						  Object v = get(e.getKey());
 						  if ( VALUE_EQUAL(v, e.getValue()) ) return remove(e.getKey());
@@ -392,53 +392,57 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
     public Set keySet() {
 		  if (keys == null) keys = new AbstractSet() {
 
-					 private class KeyIterator implements Iterator {
-						  int pos = 0, last = -1;
-		  
-						  KeyIterator() { 
-								byte state[] = HASHMAP_NAME.this.state;
-								while( pos < n && state[pos] != BUSY ) pos++;
-						  }
-		  
-						  public boolean hasNext() {
-								return pos < n;
-						  }
-		  
-						  public Object next() {
-								Object retVal;
-								byte state[] = HASHMAP_NAME.this.state;
-
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = KEY2OBJ(key[pos]);
-								do pos++; while( pos < n && state[pos] != BUSY );
-
-								return retVal;
-						  }
-		  
-						  public void remove() {
-								if (last == -1) throw new IllegalStateException();
-								state[pos] = REMOVED;
-						  }
-					 }
-
-
 					 public Iterator iterator() {
-						  return new KeyIterator();
+						  return new Iterator() {
+									 int pos = 0, last = -1;
+		  
+									 { 
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+										  
+										  while( pos < n && state[pos] != BUSY ) pos++;
+									 }
+									 
+									 public boolean hasNext() {
+										  return pos < n;
+									 }
+									 
+									 public Object next() {
+										  Object retVal;
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+										  
+										  if (!hasNext()) throw new NoSuchElementException();
+										  retVal = KEY2OBJ(key[pos]);
+										  do pos++; while( pos < n && state[pos] != BUSY );
+										  
+										  return retVal;
+									 }
+									 
+									 public void remove() {
+										  if (last == -1) throw new IllegalStateException();
+										  state[pos] = REMOVED;
+									 }
+								};
 					 }
+
 					 public int size() {
 						  return count;
 					 }
+
 					 public boolean contains(Object o) {
 						  return containsKey(o);
 					 }
+
 					 public boolean remove(Object o) {
 						  int oldCount = count;
 						  HASHMAP_NAME.this.remove(o);
 						  return count != oldCount;
 					 }
+
 					 public void clear() {
-								HASHMAP_NAME.this.clear();
-						  }
+						  HASHMAP_NAME.this.clear();
+					 }
 				};
 		  return keys;
     }
@@ -447,43 +451,47 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
     public Collection values() {
 		  if (values == null) values = new AbstractCollection() {
 
-					 private class ValueIterator implements Iterator {
-						  int pos = 0, last = -1;
-		  
-						  ValueIterator() { 
-								byte state[] = HASHMAP_NAME.this.state;
-								while( pos < n && state[pos] != BUSY ) pos++;
-						  }
-		  
-						  public boolean hasNext() {
-								return pos < n;
-						  }
-		  
-						  public Object next() {
-								Object retVal;
-								byte state[] = HASHMAP_NAME.this.state;
-		  
-								if (!hasNext()) throw new NoSuchElementException();
-								retVal = VALUE2OBJ(value[pos]);
-								do pos++; while( pos < n && state[pos] != BUSY );
-
-								return retVal;
-						  }
-		  
-						  public void remove() {
-								throw new UnsupportedOperationException();
-						  }
-					 }
-
 					 public Iterator iterator() {
-						  return new ValueIterator();
+						  return new Iterator() {
+									 int pos = 0, last = -1;
+									 
+									 { 
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+										  
+										  while( pos < n && state[pos] != BUSY ) pos++;
+									 }
+		  
+									 public boolean hasNext() {
+										  return pos < n;
+									 }
+		  
+									 public Object next() {
+										  Object retVal;
+										  final byte state[] = HASHMAP_NAME.this.state;
+										  final int n = HASHMAP_NAME.this.n;
+		  
+										  if (!hasNext()) throw new NoSuchElementException();
+										  retVal = VALUE2OBJ(value[pos]);
+										  do pos++; while( pos < n && state[pos] != BUSY );
+
+										  return retVal;
+									 }
+		  
+									 public void remove() {
+										  throw new UnsupportedOperationException();
+									 }
+								};
 					 }
+
 					 public int size() {
 						  return count;
 					 }
+
 					 public boolean contains(Object o) {
 						  return containsValue(o);
 					 }
+
 					 public void clear() {
 						  HASHMAP_NAME.this.clear();
 					 }
@@ -500,12 +508,15 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	  */
 
 	 private void enlarge( int newLog2n ) {
-		  int i, count = 0, used = 0, n = this.n, h, m, newN = primeSizes[newLog2n], newN2 = primeSizes2[newLog2n];
-		  KEY_TYPE k, key[] = this.key, newKey[] = new KEY_TYPE[newN];
-		  VALUE_TYPE v, value[] = this.value, newValue[] = new VALUE_TYPE[newN];
-		  byte state[] = this.state, newState[] = new byte[newN];
+		  int i, count = 0, used = 0, h, m;
 
-		  //System.err.println("Enlarging " + this.count + " to " + newN + "...");
+		  KEY_TYPE k;
+		  VALUE_TYPE v;
+
+		  final int n = this.n, newN = primeSizes[newLog2n], newN2 = primeSizes2[newLog2n];
+		  final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
+		  final VALUE_TYPE value[] = this.value, newValue[] = new VALUE_TYPE[newN];
+		  final byte state[] = this.state, newState[] = new byte[newN];
 
 		  for(i=0; i<n; i++) {
 
@@ -527,8 +538,6 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 		  }
 
-		  //System.err.println("Enlarged! " + count);
-
 		  this.n = newN;
 		  this.n2 = newN2;
 		  log2n = newLog2n;
@@ -540,13 +549,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 }
 	 
 	 public boolean containsKey(KEY_TYPE k) {
-		  int h, m, n = this.n;
-		  KEY_TYPE key[] = this.key;
-		  VALUE_TYPE value[] = this.value;
-		  byte state[] = this.state;
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
 		  
@@ -563,13 +571,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 
 
 	 public Object get(Object ok) {
-		  int h, m, n = this.n;
-		  KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
-		  VALUE_TYPE value[] = this.value;
-		  byte state[] = this.state;
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
+		  final byte state[] = this.state;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
 		  
@@ -581,13 +588,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 #if !#keyclass(Object)
 
 	 public VALUE_TYPE get(KEY_TYPE k) {
-		  int h, m, n = this.n;
-		  KEY_TYPE key[] = this.key;
-		  VALUE_TYPE value[] = this.value;
-		  byte state[] = this.state;
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
 		  
@@ -602,13 +608,14 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	  */
 
 	 public VALUE_TYPE remove(KEY_TYPE k) {
-		  int h, m, n = this.n;
-		  VALUE_TYPE oldValue, value[] = this.value;
-		  KEY_TYPE key[] = this.key;
-		  byte state[] = this.state;
+		  VALUE_TYPE oldValue;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
+
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
@@ -632,13 +639,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 #if !#valueclass(Object)
 
 	 public VALUE_TYPE GET_VALUE_TYPE_CAP(Object k) {
-		  int h, m, n = this.n;
-		  KEY_TYPE key[] = this.key;
-		  VALUE_TYPE value[] = this.value;
-		  byte state[] = this.state;
+		  final int n = this.n;
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
 		  
@@ -647,13 +653,14 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 	 }
 
 	 public VALUE_TYPE REMOVE_VALUE_TYPE_CAP(Object k) {
-		  int h, m, n = this.n;
-		  VALUE_TYPE oldValue, value[] = this.value;
+		  VALUE_TYPE oldValue;
+
+		  final int n = this.n;
 		  KEY_TYPE key[] = this.key;
 		  byte state[] = this.state;
 
-		  h = (int)(( (HASH(k) % n) + n ) % n);
-		  m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
+		  int h = (int)(( (HASH(k) % n) + n ) % n);
+		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  //System.err.println("Putting in " + k + ", " + v + " with hash " + h + " (" + m + ")" );
 
@@ -671,15 +678,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 #endif
 #endif
 
-    private void writeObject(java.io.ObjectOutputStream s) throws IOException
-    {
-		  KEY_TYPE key[] = this.key;
-		  VALUE_TYPE value[] = this.value;
-		  byte state[] = this.state;
+    private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+		  final KEY_TYPE key[] = this.key;
+		  final VALUE_TYPE value[] = this.value;
+		  final byte state[] = this.state;
 
-		  // Write out the threshold, loadfactor, and any hidden stuff
 		  s.defaultWriteObject();
-		  // Write out keys and values (alternating)
 		  for (int i = n; i-- != 0; ) {
 				if (state[i] == BUSY) {
 					 s.WRITE_KEY_TYPE_CAP(key[i]);
@@ -687,13 +691,12 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 				}
 		  }
     }
-    private void readObject(java.io.ObjectInputStream s)
-		  throws IOException, ClassNotFoundException
-    {
+
+    private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
 		  int count;
-		  // Read in the threshold, loadfactor, and any hidden stuff
+
 		  s.defaultReadObject();
 		  this.n = primeSizes[log2n];
 		  this.n2 = primeSizes2[log2n];
@@ -705,7 +708,6 @@ public final class HASHMAP_NAME implements Serializable, MAP_NAME {
 		  this.count = 0;
 		  this.used = 0;
 
-		  // Read the keys and values, and put the mappings in the HashMap
 		  for (int i = count; i-- != 0; ) {
 				key = s.READ_KEY_TYPE_CAP();
 				value = s.READ_VALUE_TYPE_CAP();
