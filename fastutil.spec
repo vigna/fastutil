@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        2.60
+Version:        3.0
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-2.60-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-3.0-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -16,12 +16,12 @@ BuildArch:      noarch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
-fastUtil provides type-specific maps and sets with a small memory
-footprint and much (up to 10 times) faster access and insertion.  The
-classes implement their standard counterpart interface (e.g., Map for
-maps) and can be plugged into existing code. Moreover, they provide
-additional features (such as bidirectional iterators) that are not
-available in the standard classes.
+
+fastutil provides type-specific maps, sets and lists with a small memory
+footprint and much faster access and insertion. The classes implement their
+standard counterpart interface (e.g., Map for maps) and can be plugged into
+existing code. Moreover, they provide additional features (such as
+bidirectional iterators) that are not available in the standard classes.
 
 %package javadoc
 Summary:        Javadoc for %{name}
@@ -94,6 +94,9 @@ fi
 # -----------------------------------------------------------------------------
 
 %changelog
+* Thu Jun 26 2003 Sebastiano Vigna <vigna at acm.org> - 3.0-1jpp
+- First release of version 3.0.
+
 * Sun Apr 06 2003 Sebastiano Vigna <vigna at acm.org> - 2.60-1jpp
 - Improved iterators.
 

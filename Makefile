@@ -56,6 +56,7 @@ source:
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/Makefile \
 		fastutil-$(VERSION)/$(SRC)/{BidirectionalIterator.java,HashCommon.java,Hash.java} \
+		fastutil-$(VERSION)/$(SRC)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(VERSION)/java/overview.html
 	rm fastutil-$(VERSION)
 
