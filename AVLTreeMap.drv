@@ -1889,7 +1889,7 @@ public final class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORT
 				v[i] = genValue();
 		  }
 
-		  double totPut = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d, dd;
+		  double totPut = 0, totYes = 0, totNo = 0, totIterFor = 0, totIterBack = 0, totRemYes = 0, d, dd;
 
 		  for( j = 0; j < 20; j++ ) {
 
@@ -1926,13 +1926,6 @@ public final class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORT
 				/* And then we put it back. */
 				for( i = 0; i < n/2;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] )  );
 
-				/* We delete pairs not in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemNo += d; 				
-				System.out.print("RemNo: " + format( d ) +" K/s " );
-
 				/* We check for pairs in t. */
 				ms = System.currentTimeMillis();
 				for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
@@ -1951,19 +1944,19 @@ public final class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORT
 				ms = System.currentTimeMillis();
 				for( Iterator it = t.entrySet().iterator(); it.hasNext(); it.next() );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totIter += d; 				
-				System.out.print("Iter: " + format( d ) +" K/s " );
+				if ( j > 2 ) totIterFor += d; 				
+				System.out.print("IterFor: " + format( d ) +" K/s " );
 				
 				System.out.println();
 		  }
 
 		  System.out.println();
-		  System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + "K/s" );
+		  System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) )+ " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s"  );
 
 		  System.out.println();
 
 		  t = null;
-		  totPut = totYes = totNo = totIter = totRemYes = totRemNo = 0;
+		  totPut = totYes = totNo = totIterFor = totIterBack = totRemYes;
 
 		  for( j = 0; j < 20; j++ ) {
 
@@ -2000,13 +1993,6 @@ public final class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORT
 				/* And then we put it back. */
 				for( i = 0; i < n/2;  i++ ) m.put( k[i], v[i]  );
 
-				/* We delete pairs not in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( nk[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemNo += d; 				
-				System.out.print("RemNo: " + format( d ) +" K/s " );
-
 				/* We check for pairs in m. */
 				ms = System.currentTimeMillis();
 				for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
@@ -2021,19 +2007,28 @@ public final class AVLTREEMAP extends ABSTRACT_MAP implements Serializable, SORT
 				if ( j > 2 ) totNo += d; 				
 				System.out.print("No: " + format( d ) +" K/s " );
 
-				/* We iterate on m. */
-				ms = System.currentTimeMillis();
-				for( Iterator it = m.entrySet().iterator(); it.hasNext(); it.next() );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totIter += d; 	 
-				System.out.print("Iter: " + format( d ) +" K/s " );
 
+				/* We iterate on m. */
+				ListIterator it = (ListIterator)m.entrySet().iterator();
+				ms = System.currentTimeMillis();
+				for( it = (ListIterator)m.entrySet().iterator(); it.hasNext(); it.next() );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totIterFor += d; 				
+				System.out.print("IterFor: " + format( d ) +" K/s " );
+				
+				/* We iterate back on m. */
+				ms = System.currentTimeMillis();
+				for( ; it.hasPrevious(); it.previous() );
+				d = 1.0 * n / (System.currentTimeMillis() - ms );
+				if ( j > 2 ) totIterBack += d; 				
+				System.out.print("IterBack: " + format( d ) +" K/s " );
+				
 				System.out.println();
 		  }
 
 
 		  System.out.println();
-		  System.out.println( "fastUtil  Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
+		  System.out.println( "fastUtil  Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) ) + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
 
 		  System.out.println();
 
