@@ -20,6 +20,8 @@
 
 package it.unimi.dsi.fastUtil;
 
+import it.unimi.dsi.fastUtil.Hash; // workaround to force @see/@link
+
 import java.util.*;
 import java.io.*;
 
@@ -67,7 +69,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
 		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
 
-		  while( primes[++l] < (int)(n / f) );
+		  while( primes[++l] <= (int)(n / f) );
 
 		  this.loadFactor = f;
 		  this.n = primes[l];
@@ -78,7 +80,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	 }
 	 
 	 
-	 /** Creates a new hash set with {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
+	 /** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  *
 	  * @param n the expected number of elements in the hash set. 
 	  */
@@ -88,8 +90,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	 }
 
 
-	 /** Creates a new hash set with {@link Hash.DEFAULT_INITIAL_SIZE} elements
-	  * and {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
+	 /** Creates a new hash set with {@link Hash#DEFAULT_INITIAL_SIZE} elements
+	  * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
 	 public HASHSET_NAME() {
@@ -140,8 +142,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
-				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+				if ( count >= n * loadFactor - 1 ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 				return true;
 		  }
 
@@ -171,8 +172,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				state[h] = BUSY;
 				count++;
 				key[h] = k;
-				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+				if ( count >= n * loadFactor - 1 ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 				return true;
 		  }
 
@@ -333,6 +333,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 	 private void rehash( int newP ) {
 		  int i, count = 0, used = 0, h, m;
 
+		  System.err.println("Rehashing to size " +  primes[newP] + "...");
+
 		  KEY_TYPE k;
 
 		  final int n = this.n, newN = primes[newP], newN2 = prevPrimes[newP];
@@ -396,11 +398,15 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
+		  System.err.print("Examining " + k + "...");
+
 		  int h = (int)(( (HASH(k) % n) + n ) % n);
 		  final int m = (int)(( (HASH(k) % n2 ) + n2 ) % n2) + 1;
 		  
 		  while( ! KEY_EQUAL(key[h], k) && state[h] != FREE ) h = ( h + m ) % n;
-		  
+
+		  System.err.println("done.");
+
 		  return state[h] == BUSY;
 	 }
 
@@ -460,7 +466,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 #ifndef NDEBUG
 
-	 private static void speedTest( int n ) {
+	 private static void speedTest( int n, float f ) {
 		  int i;
 		  SET_NAME m;
 		  Set t;
@@ -470,115 +476,113 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 		  for(int k=0; k<10; k++) {
 
+				if (k>0) System.out.println();
+
 				t = new HashSet(n);
-				m = new HASHSET_NAME(n);
-		  /* First of all, we measure the time that is necessary to produce the inputs. */
+				m = new HASHSET_NAME(n, f);
+				/* First of all, we measure the time that is necessary to produce the inputs. */
 		  
-		  v = System.currentTimeMillis();
+				v = System.currentTimeMillis();
 		  
-		  for( i=0; i<n;  i++ ) {
+				for( i=0; i<n;  i++ ) {
 				
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-				new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-					 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+						  new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
 #else
 						  new Long(r.nextLong()) 
 #endif
-								;
-		  }
+						  ;
+				}
 		  
-		  ct = System.currentTimeMillis() - v;
+				ct = System.currentTimeMillis() - v;
 		  
-		  System.gc();
-		  fm = Runtime.getRuntime().freeMemory();
-		  v = System.currentTimeMillis();
+				System.gc();
+				v = System.currentTimeMillis();
 		  
 
-		  /* Then we add pairs to t. */
+				/* Then we add pairs to t. */
 
-		  for( i=0; i<n;  i++ ) {
-				t.add( 
+				for( i=0; i<n;  i++ ) {
+					 t.add( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
 							 );
-		  }
+				}
 
-		  System.out.println("Added "+n+" pairs in HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" + 
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
-		  System.gc();
-		  System.gc();
-		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+				System.out.println("Added "+n+" pairs in old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				System.gc();
+				System.gc();
 
-		  v = System.currentTimeMillis();
+				v = System.currentTimeMillis();
 
-		  /* Then we check for elements in t. */
+				/* Then we check for pairs in t. */
 
-		  for( i=0; i<n;  i++ ) {
-				t.contains( 
+				for( i=0; i<n;  i++ ) {
+					 t.contains( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+									new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
+									new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
-#endif
-								 );
-		  }
-
-		  System.out.println("Examined "+n+" elements in HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
-
-		  t = null;
-		  System.gc();
-		  System.gc();
-		  fm = Runtime.getRuntime().freeMemory();
-
-		  v = System.currentTimeMillis();
-
-		  /* Then we add elements to m. */
-
-		  for( i=0; i<n;  i++ ) {
-				m.add( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
-#elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
-#else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
-#endif
-							);
-		  }
-		  
-		  System.out.println("Added "+n+" pairs in specialized HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
-		  System.gc();
-		  System.gc();
-		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
-
-		  v = System.currentTimeMillis();
-
-		  /* Then we check for elements in m. */
-
-		  for( i=0; i<n;  i++ ) {
-				m.contains( 
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							  (KEY_TYPE)r.nextInt()
-#elif ! #keyclass(Object)
-							  r.NEXT_KEY_TYPE_CAP()
-#else
-							  r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+									r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
 									);
-		  }
+				}
+
+				System.out.println("Examined "+n+" pairs in old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+
+				t = null;
+				System.gc();
+				System.gc();
+
+				v = System.currentTimeMillis();
+
+				/* Then we add pairs to m. */
+
+				for( i=0; i<n;  i++ ) {
+					 m.add( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+#elif ! #keyclass(Object)
+							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+#else
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+#endif
+							 );
+				}
 		  
-		  System.out.println("Examined "+n+" pairs in specialized HashSet in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" +
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+				System.out.println("Added "+n+" pairs in new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				System.gc();
+				System.gc();
+
+				v = System.currentTimeMillis();
+
+				/* Then we check for pairs in m. */
+
+				for( i=0; i<n;  i++ ) {
+					 m.contains( 
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+									(KEY_TYPE)r.nextInt()
+#elif ! #keyclass(Object)
+									r.NEXT_KEY_TYPE_CAP()
+#else
+									r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+#endif
+									);
+				}
+		  
+				System.out.println("Examined "+n+" pairs in new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 	 
 		  }
 	 }
@@ -586,8 +590,8 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 
 
-	 private static void regressionTest( int n ) {
-		  SET_NAME m = new HASHSET_NAME();
+	 private static void regressionTest( int n, float f ) {
+		  SET_NAME m = new HASHSET_NAME(Hash.DEFAULT_INITIAL_SIZE, f);
 		  Set t = new HashSet();
 		  Random r = new Random();
 
@@ -602,7 +606,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #else
 						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
-										);
+						);
 		  }
 		  
 		  /* Now we add to m the same data */
@@ -641,7 +645,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 				if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
 					 System.err.println("Error: divergence in add() between t and m.\n");
 					 System.exit(-1);
@@ -654,7 +658,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 				if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
 					 System.err.println("Error: divergence in remove() between t and m.\n");
 					 System.exit(-1);
@@ -698,19 +702,19 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 		  /* Now we save and read m. */
 
 		  try {
-				java.io.File f = new java.io.File("regressionTest");
-				java.io.OutputStream os = new java.io.FileOutputStream(f);
+				java.io.File ff = new java.io.File("regressionTest");
+				java.io.OutputStream os = new java.io.FileOutputStream(ff);
 				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
 				oos.writeObject(m);
 				oos.close();
 				
-				java.io.InputStream is = new java.io.FileInputStream(f);
+				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
 				m = (SET_NAME)ois.readObject();
 				ois.close();
-				f.delete();
+				ff.delete();
 		  }
 		  catch(Exception e) {
 				e.printStackTrace();
@@ -745,10 +749,12 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 
 	 public static void main( String args[] ) {
+		  float f = Hash.DEFAULT_LOAD_FACTOR;
 		  int n  = Integer.parseInt(args[1]);
+		  if (args.length>2) f = Float.parseFloat(args[2]);
 		  
-		  if (args[0].equals("speedTest")) speedTest(n);
-		  else if (args[0].equals("regressionTest")) regressionTest(n);
+		  if (args[0].equals("speedTest")) speedTest(n, f);
+		  else if (args[0].equals("regressionTest")) regressionTest(n, f);
 	 }
 
 #endif

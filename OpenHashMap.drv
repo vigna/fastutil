@@ -21,6 +21,8 @@
 
 package it.unimi.dsi.fastUtil;
 
+import it.unimi.dsi.fastUtil.Hash; // workaround to force @see/@link
+
 import java.util.*;
 import java.io.*;
 
@@ -85,7 +87,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  if ( f <= 0 || f > 1 ) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
 		  if ( n < 0 ) throw new IllegalArgumentException("Hash table size must be nonnegative");
 
-		  while( primes[++l] < (int)(n / f) );
+		  while( primes[++l] <= (int)(n / f) );
 
 		  this.loadFactor = f;
 		  this.n = primes[l];
@@ -97,19 +99,19 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 }
 	 
 	 
-	 /** Creates a new hash map with {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
+	 /** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  *
 	  * @param n the expected number of elements in the hash map.
 	  */
 	 
-	 public HASHMAP_NAME(int i) {
+	 public HASHMAP_NAME(int n) {
 		  this(n, Hash.DEFAULT_LOAD_FACTOR);
 	 }
 
 
 
-	 /** Creates a new hash map with {@link Hash.DEFAULT_INITIAL_SIZE} entries
-	  * and {@link Hash.DEFAULT_LOAD_FACTOR} as load factor.
+	 /** Creates a new hash map with {@link Hash#DEFAULT_INITIAL_SIZE} entries
+	  * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	  */
 	 
 	 public HASHMAP_NAME() {
@@ -158,8 +160,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				count++;
 				key[h] = k;
 				value[h] = v;
-				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+				if ( count >= n * loadFactor - 1 ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  }
 
 		  //System.err.println("done.");
@@ -198,8 +199,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 				count++;
 				key[h] = k;
 				value[h] = v;
-				if ( count < used/2 ) rehash( p ); // Too many removed entries, let's collect
-				if ( used >= n * loadFactor ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
+				if ( count >= n * loadFactor - 1 ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		  }
 
 		  //System.err.println("done.");
@@ -285,7 +285,13 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 					 put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
 				}
 		  }
-		  else ((Map)this).putAll(m);
+		  else {
+				Map.Entry e;
+				for(Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+					 e = (Map.Entry)i.next();
+					 put(e.getKey(), e.getValue());
+				}
+		  } 
 	 }
 #endif
 
@@ -823,7 +829,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 #ifndef NDEBUG
 
-	 private static void speedTest( int n ) {
+	 private static void speedTest( int n, float f ) {
 		  int i;
 		  MAP_NAME m;
 		  Map t;
@@ -833,140 +839,138 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 		  for(int k=0; k<10; k++) {
 
+				if (k>0) System.out.println();
+
 				t = new HashMap(n);
-				m = new HASHMAP_NAME(n);
-		  /* First of all, we measure the time that is necessary to produce the inputs. */
+				m = new HASHMAP_NAME(n, f);
+				/* First of all, we measure the time that is necessary to produce the inputs. */
 		  
-		  v = System.currentTimeMillis();
+				v = System.currentTimeMillis();
 		  
-		  for( i=0; i<n;  i++ ) {
+				for( i=0; i<n;  i++ ) {
 				
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-				new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+					 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-					 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+						  new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
 #else
 						  new Long(r.nextLong()) 
 #endif
-								;
+						  ;
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-				new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+					 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-					 new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+						  new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
 #else
 						  new Long(r.nextLong()) 
 #endif
-								;
-		  }
+						  ;
+				}
 		  
-		  ct = System.currentTimeMillis() - v;
+				ct = System.currentTimeMillis() - v;
 		  
-		  System.gc();
-		  fm = Runtime.getRuntime().freeMemory();
-		  v = System.currentTimeMillis();
+				System.gc();
+				v = System.currentTimeMillis();
 		  
 
-		  /* Then we add pairs to t. */
+				/* Then we add pairs to t. */
 
-		  for( i=0; i<n;  i++ ) {
-				t.put( 
+				for( i=0; i<n;  i++ ) {
+					 t.put( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
 							 ,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-						new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+							 new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
 							 
 							 );
-		  }
+				}
 
-		  System.out.println("Added "+n+" pairs in HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" + 
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
-		  System.gc();
-		  System.gc();
-		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+				System.out.println("Added "+n+" pairs in old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s" + 
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				System.gc();
+				System.gc();
 
-		  v = System.currentTimeMillis();
+				v = System.currentTimeMillis();
 
-		  /* Then we check for elements in t. */
+				/* Then we check for pairs in t. */
 
-		  for( i=0; i<n;  i++ ) {
-				t.get( 
+				for( i=0; i<n;  i++ ) {
+					 t.get( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
+							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP())
 #else
 							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-								 );
-		  }
+							 );
+				}
 
-		  System.out.println("Examined "+n+" elements in HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+				System.out.println("Examined "+n+" pairs in old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 
-		  t = null;
-		  System.gc();
-		  System.gc();
-		  fm = Runtime.getRuntime().freeMemory();
+				t = null;
+				System.gc();
+				System.gc();
 
-		  v = System.currentTimeMillis();
+				v = System.currentTimeMillis();
 
-		  /* Then we add elements to m. */
+				/* Then we add pairs to m. */
 
-		  for( i=0; i<n;  i++ ) {
-				m.put( 
+				for( i=0; i<n;  i++ ) {
+					 m.put( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-						new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
+							 new KEY_CLASS((KEY_TYPE)(r.nextInt())) 
 #elif ! #keyclass(Object)
-						new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
+							 new KEY_CLASS(r.NEXT_KEY_TYPE_CAP()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
 							 ,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
-						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
+							 new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
-						new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
+							 new VALUE_CLASS(r.NEXT_VALUE_TYPE_CAP()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
-							);
-		  }
+							 );
+				}
 		  
-		  System.out.println("Added "+n+" pairs in specialized HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s"+
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
-		  System.gc();
-		  System.gc();
-		  System.out.println("Memory used: "+ (fm - Runtime.getRuntime().freeMemory()) );
+				System.out.println("Added "+n+" pairs in new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s"+
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
+				System.gc();
+				System.gc();
 
-		  v = System.currentTimeMillis();
+				v = System.currentTimeMillis();
 
-		  /* Then we check for elements in m. */
+				/* Then we check for pairs in m. */
 
-		  for( i=0; i<n;  i++ ) {
-				m.get( 
+				for( i=0; i<n;  i++ ) {
+					 m.get( 
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
-							  (KEY_TYPE)r.nextInt()
+							 (KEY_TYPE)r.nextInt()
 #elif ! #keyclass(Object)
-							  r.NEXT_KEY_TYPE_CAP()
+							 r.NEXT_KEY_TYPE_CAP()
 #else
-							  r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-									);
-		  }
+							 );
+				}
 		  
-		  System.out.println("Examined "+n+" pairs in specialized HashMap in "+((System.currentTimeMillis() - v) % 100000) / 1000.0+"s" +
-									" (actual time: "+((System.currentTimeMillis() - v - ct) % 100000) / 1000.0+"s)" );
+				System.out.println("Examined "+n+" pairs in new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s" +
+										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 	 
 		  }
 	 }
@@ -977,8 +981,8 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 	 }
 
 
-	 private static void regressionTest( int n ) {
-		  MAP_NAME m = new HASHMAP_NAME();
+	 private static void regressionTest( int n, float f ) {
+		  MAP_NAME m = new HASHMAP_NAME(Hash.DEFAULT_INITIAL_SIZE, f);
 		  Map t = new HashMap();
 		  Random r = new Random();
 
@@ -993,7 +997,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
-							 ,
+						,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 						new VALUE_CLASS((VALUE_TYPE)(r.nextInt())) 
 #elif ! #valueclass(Object)
@@ -1001,7 +1005,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
 #endif
-										);
+						);
 		  }
 		  
 		  /* Now we add to m the same data */
@@ -1086,7 +1090,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  }
 
 		  /* Now we check that inquiries about random data give the same answer in m and t. For
-			m we use the polymorphic method. */
+			  m we use the polymorphic method. */
 
 		  for(int i=0; i<n;  i++ ) {
 				KEY_TYPE T =
@@ -1097,7 +1101,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 
 				if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
 					 System.err.println("Error: divergence in keys between t and m (polymorphic method).\n");
@@ -1120,7 +1124,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  }
 
 		  /* Again, we check that inquiries about random data give the same answer in m and t, but
-			for m we use the standard method. */
+			  for m we use the standard method. */
 
 		  for(int i=0; i<n;  i++ ) {
 				KEY_TYPE T =
@@ -1131,7 +1135,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 				if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
 					 System.err.println("Error: divergence between t and m (standard method).\n");
 					 System.exit(-1);
@@ -1149,7 +1153,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 				VALUE_TYPE U =
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 					 (VALUE_TYPE)r.nextInt()
@@ -1158,7 +1162,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 				if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
 					 System.err.println("Error: divergence in put() between t and m.\n");
 					 System.exit(-1);
@@ -1171,7 +1175,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 #else
 					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
 #endif
-						  ;
+					 ;
 				if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
 					 System.err.println("Error: divergence in remove() between t and m.\n");
 					 System.exit(-1);
@@ -1263,19 +1267,19 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  /* Now we save and read m. */
 
 		  try {
-				java.io.File f = new java.io.File("regressionTest");
-				java.io.OutputStream os = new java.io.FileOutputStream(f);
+				java.io.File ff = new java.io.File("regressionTest");
+				java.io.OutputStream os = new java.io.FileOutputStream(ff);
 				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 				
 				oos.writeObject(m);
 				oos.close();
 				
-				java.io.InputStream is = new java.io.FileInputStream(f);
+				java.io.InputStream is = new java.io.FileInputStream(ff);
 				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 				
 				m = (MAP_NAME)ois.readObject();
 				ois.close();
-				f.delete();
+				ff.delete();
 		  }
 		  catch(Exception e) {
 				e.printStackTrace();
@@ -1307,10 +1311,12 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 
 	 public static void main( String args[] ) {
+		  float f = Hash.DEFAULT_LOAD_FACTOR;
 		  int n  = Integer.parseInt(args[1]);
+		  if (args.length>2) f = Float.parseFloat(args[2]);
 		  
-		  if (args[0].equals("speedTest")) speedTest(n);
-		  else if (args[0].equals("regressionTest")) regressionTest(n);
+		  if (args[0].equals("speedTest")) speedTest(n, f);
+		  else if (args[0].equals("regressionTest")) regressionTest(n, f);
 	 }
 
 #endif
