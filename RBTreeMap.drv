@@ -27,14 +27,6 @@ import java.io.*;
 /** A type-specific tree map with a very fast, small-footprint implementation.
  */
 
-#define PRI(x) ( x.mix & PRI_MASK )
-#define SUCC(x) ( ( x.mix & SUCC_MASK ) != 0 )
-#define PRED(x) ( ( x.mix & PRED_MASK ) != 0 )
-#define SET_SUCC(x) x.mix |= SUCC_MASK
-#define RESET_SUCC(x) x.mix &= ~SUCC_MASK
-#define SET_PRED(x) x.mix |= PRED_MASK
-#define RESET_PRED(x) x.mix &= ~PRED_MASK
-
 public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
 
 	 /** A reference to the root entry. */
@@ -67,6 +59,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 private transient Entry change;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
+	  * or a <code>delete()</code>, the entry that during the operation we
+	  * possibly created or removed. */
+	 private transient Entry deleted;
+
+	 /** The value of this variable remembers, after an <code>insert()</code> 
 	  * or a <code>delete()</code>, whether we ever turned left. */
 	 private transient boolean turnedLeft;
 
@@ -82,10 +79,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 /** This tree map's comparator. */
 	 private Comparator comparator;
 
-	 final static int SUCC_MASK = 1;
-	 final static int PRED_MASK = 2;
-	 final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );
-	 
+	 private static Entry sentinel = new Entry();
 
 	 /** Creates a new empty tree map. 
 	  */
@@ -158,11 +152,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
       while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
 			 if ( cmp < 0 ) {
-				  if ( PRED(e) ) return null; // We should go right, but it's really a predecessor...
+				  if ( e.pred() ) return null; // We should go left, but it's really a predecessor...
 				  e = e.left;
 			 }
 			 else {
-				  if ( SUCC(e) ) return null; // We should go right, but it's really a successor...
+				  if ( e.succ() ) return null; // We should go right, but it's really a successor...
 				  e = e.right;
 			 }
 		}
@@ -193,7 +187,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  if ( tree == null ) { // The case of the empty tree is treated separately.
 				count++;
-				tree = change = new Entry( k, v, random.nextInt() );
+				tree = change = new Entry( k, v );
 		  }
 		  else tree = insertRec( tree );
 
@@ -224,28 +218,29 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		 
 		 if ( cmp < 0 ) {
 			  turnedLeft = true;
-			  if ( ! PRED(e) && e.left != null ) e.left = insertRec( e.left );
+			  if ( e.left() != sentinel ) {
+					e.left = insertRec( e.left );
+					if ( change == null ) return e;
+			  }
 			  else insertLeft( e );
-			  //if ( ! PRED(e) && e.left != null ) {e.left = insertRec( e.left, k, v );System.err.println("turning left..." + e + " " + k);}
-			  //else {insertLeft( e, k, v );System.err.println("inserting left..." + e + " " + k);}
-			  
-			  if ( PRI(e) > PRI(e.left) ) e = e.rotateRight();
-			  //if ( e.pri() > e.left.pri() ) {System.err.println("Going to rotate right...");e.printDebug();e = e.rotateRight();System.err.println("Rotated.");e.printDebug();}
 		 } 
 		 else if ( cmp > 0 ) {
 			  turnedRight = true;
-			  if ( ! SUCC(e) && e.right != null ) e.right = insertRec( e.right );
+			  if ( e.right() != sentinel ) {
+					e.right = insertRec( e.right );
+					if ( change == null ) return e;
+			  }
 			  else insertRight( e );
-			  //if ( ! SUCC(e) && e.right != null ) {e.right = insertRec( e.right, k, v );System.err.println("turning right..." + e + " " + k);}
-			  //else {insertRight( e, k, v );System.err.println("inserting right..." + e + " " + k);}
-
-			  if ( PRI(e) > PRI(e.right) ) e = e.rotateLeft();
-			  //if ( e.pri() > e.right.pri() ) {System.err.println("Going to rotate left...");e.printDebug();e = e.rotateLeft();System.err.println("Rotated.");e.printDebug();}
 		 }
 		 else {
 			  oldValue = e.value;
 			  e.value = value;
+			  return e;
 		 }
+
+		 e = e.skew();
+		 e = e.split();
+
 		 return e;
    }
 
@@ -261,12 +256,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  */
 	 private void insertLeft( Entry e ) {
 		  count++;
-		  final Entry l = change = new Entry( key, value, random.nextInt() );
+		  final Entry l = change = new Entry( key, value );
 
 		  l.right = e;
 		  l.left = e.left;
 
-		  RESET_PRED(e);
+		  e.pred( false );
 		  e.left = l;
 	 }
 
@@ -281,12 +276,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  */
 	 private void insertRight( Entry e ) {
 		  count++;
-		  final Entry r = change = new Entry( key, value, random.nextInt() );
+		  final Entry r = change = new Entry( key, value );
 
 		  r.left = e;
 		  r.right = e.right;
 
-		  RESET_SUCC(e);
+		  e.succ( false );
 		  e.right = r;
 	 }
 
@@ -305,17 +300,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 	 private VALUE_TYPE delete( final KEY_TYPE k ) {
 		  oldValue = DEF_RET_VALUE;
-		  change = null;
-		  turnedLeft = turnedRight = false;
+		  change = deleted = null;
+		  key = k;
 
 		  if ( tree == null ) return DEF_RET_VALUE;
 
-		  tree = deleteRec( k, tree );
-
-		  if ( change != null ) {
-				if ( ! turnedLeft ) lastEntry = change.right;
-				if ( ! turnedRight ) firstEntry = change.left;
-		  }
+		  tree = deleteRec( tree );
 
 		  return oldValue;
 	 }
@@ -327,35 +317,60 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * value previously associated with the key. Moreover, {@link #turnedRight}
 	  * if true iff we turned right during the search; analogously for {@link #turnedLeft}.
 	  *
-	  * @param k a key.
 	  * @param e a tree (i.e., an {@link Entry}.
 	  * @return the new tree, that is, the {@link Entry} that is now at the top of the tree.
 	  */
 
-	 private Entry deleteRec( KEY_TYPE k, Entry e ) {
-		  if ( e == null ) return null;
-		  
-		  final int cmp = compare( k, e.key );
-		  
-		  if ( cmp < 0 ) {
-				turnedLeft = true;
-				if ( PRED(e) ) return null;
-				e.left = deleteRec( k, e.left );
+	 private Entry deleteRec( Entry e ) {
+		  change = e;
+
+		  if ( compare( key, e.key ) < 0 ) {
+				if ( e.left() != sentinel ) {
+					 e.left = deleteRec( e.left );
+					 if ( e.left == change.right ) {
+						  System.err.println("Got change...");
+						  if ( e.left.succ() ) e.left.right = e;
+						  if ( e.left.pred() ) e.left.left = change.left;
+					 }
+				}
 		  }
-		  else if ( cmp > 0 ) {
-				turnedRight = true;
-				if ( SUCC(e) ) return null;
-				e.right = deleteRec( k, e.right );
+		  else  {
+				deleted = e;
+				if ( e.right() != sentinel ) {
+					 e.right = deleteRec( e.right );
+					 if ( e.right == change.right ) {
+						  System.err.println("Got change...");
+						  if ( e.right.succ() ) e.right.right = e;
+						  if ( e.right.pred() ) e.right.left = change.left;
+					 }
+				}
 		  }
-		  else {
-				change = e;
-				oldValue = e.value;
-				e = e.deleteRoot();
-				count--;
+				
+		  if ( e == change && deleted != null && key == deleted.key ) {
+				oldValue = deleted.value;
+				deleted.key = e.key;
+				deleted.value = e.value;
+
+				if ( deleted == firstEntry ) firstEntry = deleted.right;
+				if ( deleted == lastEntry ) lastEntry = deleted.left;
+
+				deleted = null;
+				
+				System.err.println("Attacching " + e.right + " after deletion...");
+
+				return e.right;
 		  }
+
 		  return e;
 	 }
 	 
+	 private Entry deleteLeft( Entry e ) {
+		  return null;
+	 }
+
+	 private Entry deleteRight( Entry e ) {
+		  return null;
+	 }
 	 
 	 
 	 public Object put( final Object ok, final Object ov ) {
@@ -418,9 +433,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
     private static final class Entry implements MAP.Entry {
 
-		  /*		  final static int SUCC_MASK = 1;
-		  final static int PRED_MASK = 2;
-		  final static int PRI_MASK = ~( SUCC_MASK | PRED_MASK );*/
+		  final static int SUCC_MASK = 1 << 31;
+		  final static int PRED_MASK = 1 << 30;
+		  final static int LEVEL_MASK = ~( SUCC_MASK | PRED_MASK );
 
 		  KEY_TYPE key;
 		  VALUE_TYPE value;
@@ -428,21 +443,34 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  Entry left, right;
 		  int mix;
 
-		  Entry(Object k, Object v, int p) {
+		  Entry() {}
+
+		  Entry( Object k, Object v ) {
 				this.key = KEY2TYPE( k );
 				this.value = VALUE2TYPE( v );
-				mix = p | SUCC_MASK | PRED_MASK;
+				mix = 1 | SUCC_MASK | PRED_MASK;
 		  }
 
 #if ! #keyclass(Object) || ! #valueclass(Object) 
 		  
-		  Entry(KEY_TYPE k, VALUE_TYPE v, int p) {
+		  Entry( KEY_TYPE k, VALUE_TYPE v ) {
 				this.key = k;
 				this.value = v;
-				mix = p | SUCC_MASK | PRED_MASK;
+				mix = 1 | SUCC_MASK | PRED_MASK;
 		  }
 		  
 #endif
+
+		  public Entry left() {
+				if ( ( mix & PRED_MASK ) != 0 || left == null ) return TREEMAP.sentinel;
+				else return left;
+		  }
+		  
+		  public Entry right() {
+				if ( ( mix & SUCC_MASK ) != 0 || right == null ) return TREEMAP.sentinel;
+				else return right;
+		  }
+		  
 
 		  public boolean pred() {
 				return ( mix & PRED_MASK ) != 0;
@@ -462,8 +490,21 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				else mix &= ~SUCC_MASK;
 		  }
 		  
-		  public int pri() {
-				return mix & PRI_MASK ;
+		  public int level() {
+				return mix & LEVEL_MASK ;
+		  }
+
+		  public void level( int level ) {
+				mix &= ~LEVEL_MASK;
+				mix |= level;
+		  }
+
+		  public void incLevel() {
+				mix++;
+		  }
+		  
+		  public void decLevel() {
+				mix--;
 		  }
 		  
 		  public Object getKey() {
@@ -517,84 +558,61 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 		  
 
-		  /** Applies a left rotation to this tree. 
-			*
-			* @return the new top of this tree.
+		  /** Splits this tree.
 			*/
-		  
-		  Entry rotateLeft() {
-				/* Firstly, we save current right pointer and whether it is a successor. */
-				final Entry t = right;
-
-				/* Then, if our right subtree has a left subtree, we take it as our
-				new right subtree. In this case, we reset our successor flag. If,
-				however, our right subtree contains a predecessor, we set the
-				subtree as our successor. */
-				if ( PRED(t) ) right = t;
-				else right = t.left;
-
-				if ( PRED(t) ) SET_SUCC( this );
-				else RESET_SUCC( this );
-				
-				t.left = this;
-				RESET_PRED( t );
-
-				return t;
-		  }
-		  
-		  /** Applies a right rotation to this tree.
-			*
-			* @return the new top of this tree.
-			*/
-		  Entry rotateRight() {
-				/* Firstly, we save current left pointer and whether it is a predecessor. */
-				final Entry t = left;
-
-				/* Then, if our left subtree has a right subtree, we take it as our
-				new left subtree. In this case, we reset our predecessor flag. If,
-				however, our left subtree contains a successor, we set the
-				subtree as our predecessor. */
-				if ( SUCC(t) ) left = t;
-				else left = t.right;
-
-				if ( SUCC(t) ) SET_PRED( this );
-				else RESET_PRED( this );
-
-				t.right = this;
-				RESET_SUCC( t );
-
-				return t;
-		  }
-		  
-		  /** Deletes the root of this tree.
-			*
-			* <P>To do so, it must move the root down until it is a leaf.
-			*
-			* @return the new top of this tree.
-			*/
-
-		  Entry deleteRoot() {
-				Entry t;
-				
-				if ( PRED(this) ) return right;
-				if ( SUCC(this) ) return left;
-				if ( PRI(left) < PRI(right) ) {
-					 t = rotateRight();
-					 t.right = deleteRoot();
+		  Entry split() {
+				if ( right().right().level() == level() ) {
+					 /* Firstly, we save current right pointer and whether it is a successor. */
+					 final Entry t = right;
+					 
+					 /* Then, if our right subtree has a left subtree, we take it as our
+						 new right subtree. In this case, we reset our successor flag. If,
+						 however, our right subtree contains a predecessor, we set the
+						 subtree as our successor. */
+					 if ( t.pred() ) right = t;
+					 else right = t.left;
+					 
+					 succ( t.pred() );
+					 
+					 t.left = this;
+					 t.pred( false );
+					 t.incLevel();
+					 
+					 return t;
 				}
-				else {
-					 t = rotateLeft();
-					 t.left = deleteRoot();
-				}
-				return t;
+				return this;
 		  }
-
+		  
+		  /** Skews to this tree.
+			*/
+		  Entry skew() {
+				if ( left().level() == level() ) {
+					 /* Firstly, we save current left pointer and whether it is a predecessor. */
+					 final Entry t = left;
+					 
+					 /* Then, if our left subtree has a right subtree, we take it as our
+						 new left subtree. In this case, we reset our predecessor flag. If,
+						 however, our left subtree contains a successor, we set the
+						 subtree as our predecessor. */
+					 if ( t.succ() ) left = t;
+					 else left = t.right;
+					 
+					 pred( t.succ() );
+					 
+					 t.right = this;
+					 t.succ( false );
+					 
+					 return t;
+				}
+				return this;
+		  }
+		  
 		  public void printDebug() {
 				printDebug(0);
 		  }
 
 		  public void printDebug(int level) {
-				if ( PRED(this) ) {
+				if ( pred() ) {
 					 for (int i = 0; i < level; i++)
 						  System.err.print("  ");
 					 System.err.println("pred: " + left );
@@ -603,8 +621,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 left.printDebug(level +1 );
 				for (int i = 0; i < level; i++)
 					 System.err.print("  ");
-				System.err.println(key + "=" + value + " (" + mix + ")");
-				if ( SUCC(this) ) {
+				System.err.println(key + "=" + value + " (" + level() + ")");
+				if ( succ() ) {
 					 for (int i = 0; i < level; i++)
 						  System.err.print("  ");
 					 System.err.println("succ: " + right );
@@ -789,12 +807,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				}
 				if ( ! hasNext() ) throw new NoSuchElementException();
 
-				final boolean follow = ! SUCC(curr);
+				final boolean follow = ! curr.succ();
 
 				currIndex++;
 				curr = curr.right;
 
-				if ( curr != null && follow ) while ( curr.left != null && ! PRED(curr) ) curr = curr.left;
+				if ( curr != null && follow ) while ( curr.left() != sentinel ) curr = curr.left;
 
 				return curr;
 		  }
@@ -802,12 +820,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  public Object previous() {
 				if ( ! hasPrevious() ) throw new NoSuchElementException();
 
-				final boolean follow = ! PRED(curr);
+				final boolean follow = ! curr.pred();
 
 				currIndex--;
 				curr = curr.left;
 
-				if ( curr != null && follow ) while ( curr.right != null && ! SUCC(curr) ) curr = curr.right;
+				if ( curr != null && follow ) while ( curr.right != null && ! curr.succ() ) curr = curr.right;
 
 				return curr;
 		  }

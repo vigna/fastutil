@@ -49,7 +49,7 @@ for ((f=0; f<5; f++)); do
 "#define KEY_ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION ${TYPE_CAP[$v]}AbstractCollection\n\n"\
 "#define HASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}HashMap\n\n"\
-"#define TREAPMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}TreapMap\n\n"\
+"#define TREEMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}TreeMap\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
@@ -149,7 +149,7 @@ for ((f=5; f<12; f++)); do
 "#define ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define ABSTRACT_COLLECTION ${TYPE_CAP[$k]}AbstractCollection\n\n"\
 "#define HASHSET ${TYPE_CAP[$k]}HashSet\n\n"\
-"#define TREAPSET ${TYPE_CAP[$k]}TreapSet\n\n"\
+"#define TREESET ${TYPE_CAP[$k]}TreeSet\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
