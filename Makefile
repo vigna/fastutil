@@ -22,7 +22,7 @@ explain:
 
 jar: jsources
 	export ANT_OPTS="-Xmx128M -Xms128M"
-	ant jar -Dbuild.compiler=jikes
+	ant jar
 
 tar: jar
 	-rm fastUtil-$(VERSION)
@@ -37,6 +37,20 @@ tar: jar
 		fastUtil-$(VERSION)/Makefile \
 		fastUtil-$(VERSION)/docs \
 		fastUtil-$(VERSION)/fastUtil-$(VERSION).jar \
+		fastUtil-$(VERSION)/src/it/unimi/dsi/fastUtil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+	rm fastUtil-$(VERSION)
+
+source:
+	-rm fastUtil-$(VERSION)
+	ln -s . fastUtil-$(VERSION)
+	tar zcvf fastUtil-$(VERSION).tar.gz \
+		fastUtil-$(VERSION)/*.drv \
+		fastUtil-$(VERSION)/build.xml \
+		fastUtil-$(VERSION)/gencsources.sh \
+		fastUtil-$(VERSION)/CHANGES \
+		fastUtil-$(VERSION)/README \
+		fastUtil-$(VERSION)/COPYING.LIB \
+		fastUtil-$(VERSION)/Makefile \
 		fastUtil-$(VERSION)/src/it/unimi/dsi/fastUtil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastUtil-$(VERSION)
 
