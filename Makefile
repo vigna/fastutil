@@ -17,6 +17,8 @@ explain:
 	@echo "to obtain the actual Java files. Then, you can build the jar"
 	@echo -e "file using \"make jar\", or the documentation using \"make docs\".\n"
 	@echo -e "Note that you need ant (http://jakarta.apache.org/ant).\n"
+	@echo -e "If you set the make variable TEST (e.g., make jar TEST=1), you"
+	@echo -e "will compile regression and speed tests into the classes.\n\n"
 
 jar: jsources
 	ant dist
@@ -50,5 +52,8 @@ tags:
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
-#	gcc -I. -DNDEBUG -E -C -P $< > $@
+ifdef TEST
+	gcc -I. -DTEST -E -C -P $< > $@
+else
 	gcc -I. -E -C -P $< > $@
+endif

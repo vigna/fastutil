@@ -1136,12 +1136,10 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  public Object previous() { return previousEntry(); }
 
 		  public int nextIndex() {
-				if ( ! hasNext() ) throw new NoSuchElementException();
 				return index;
 		  }
 
 		  public int previousIndex() {
-				if ( ! hasPrevious() ) throw new NoSuchElementException();
 				return index - 1;
 		  }
 
@@ -1849,7 +1847,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 
 
 
-#ifndef NDEBUG
+#ifdef TEST
 
 	 private static long seed = System.currentTimeMillis(); 
 	 private static Random r = new Random( seed );
@@ -2409,24 +2407,15 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  {
 				ListIterator i, j;
 				Object J;
-				i = (ListIterator)m.keySet().iterator(); 
-				j = new LinkedList( t.keySet() ).listIterator(); 
+				i = (ListIterator)m.entrySet().iterator(); 
+				j = new LinkedList( t.entrySet() ).listIterator(); 
 
 				for( int k = 0; k < n/2; k++ ) {
-					 if ( i.hasNext() != j.hasNext() ) {
-						  System.out.println("Error (" + level + ", " + seed + "): divergence in hasNext().\n");
-						  System.exit(-1);
-					 }
-					 if ( i.hasPrevious() != j.hasPrevious() ) {
-						  System.out.println("Error (" + level + ", " + seed + "): divergence in hasNext().\n");
-						  System.exit(-1);
-					 }
+					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext().\n" );
+					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious().\n" );
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
-						  if ( !i.next().equals( J = j.next() ) ) {
-								System.out.println("Error (" + level + ", " + seed + "): divergence in next().\n");
-								System.exit(-1);
-						  }
+						  ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next().\n" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -2435,10 +2424,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 						  }
 					 }
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-						  if ( !i.previous().equals( J = j.previous() ) ) {
-								System.out.println("Error (" + level + ", " + seed + "): divergence in previous().\n");
-								System.exit(-1);
-						  }
+						  ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous().\n" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -2446,8 +2432,11 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 								t.remove( J );
 						  }
 					 }
-				}
 
+					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex().\n" );
+					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex().\n" );
+
+				}
 		  }
 		  
 		  /* Now we check that m actually holds that data. */
@@ -2529,7 +2518,7 @@ public final class RBTREEMAP extends ABSTRACT_MAP implements Serializable, SORTE
 		  int n  = Integer.parseInt(args[1]);
 		  
 		  if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
-		  else if (args[0].equals("regressionTest")) regressionTest(n);
+		  else if ( "regressionTest".equals( args[0] ) ) regressionTest(n);
 	 }
 
 #endif

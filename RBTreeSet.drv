@@ -48,6 +48,9 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  always a type-specific comparator, so it could be derived from the former by wrapping. */
 	 private transient KEY_COMPARATOR actualComparator;
 
+	 {
+		  allocatePaths();
+	 }
 
 	 /** Creates a new empty tree set. 
 	  */
@@ -156,10 +159,15 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		 return e;
    }
 
-	 /** This vector remembers the path followed during the current insertion. It suffices for
-		  about 2<sup>32</sup> entries. */
-	 private transient boolean dirPath[] = new boolean[ 64 ];
-	 private transient Entry nodePath[] = new Entry[ 64 ];
+	 /** This vector remembers the path and the direction followed during the
+	  *  current insertion. It suffices for about 2<sup>32</sup> entries. */
+	 private transient boolean dirPath[];
+	 private transient Entry nodePath[];
+
+	 private void allocatePaths() {
+		  dirPath = new boolean[ 64 ];
+		  nodePath = new Entry[ 64 ];
+	 }
 
 
 	 /** Inserts a new element in the set.
@@ -176,12 +184,11 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				tree = lastEntry = firstEntry = new Entry( k );
 		  }
 		  else {
-				Entry p = tree, e = null;
-				int cmp, i = 0;
+				Entry p = tree, e;
+				int cmp, i = 1;
 
 				dirPath[ 0 ]  = false;
 				nodePath[ 0 ] = null;
-				i = 1;
 
 				while( true ) {
 					 if ( ( cmp = compare( k, p.key ) ) == 0 ) return false;
@@ -225,7 +232,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				}
 
 				while( i >= 3 && ! nodePath[ i - 1 ].black() ) {
-					 if ( dirPath[ i - 2 ] == false ) {
+					 if ( ! dirPath[ i - 2 ] ) {
 						  Entry y = nodePath[ i - 2 ].right;
 
 						  if ( ! nodePath[ i - 2 ].succ() && ! y.black() ) {
@@ -237,7 +244,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  else {
 								Entry x;
 
-								if ( dirPath[ i - 1 ] == false ) y = nodePath[ i - 1 ];
+								if ( ! dirPath[ i - 1 ] ) y = nodePath[ i - 1 ];
 								else {
 									 x = nodePath[ i - 1 ];
 									 y = x.right;
@@ -333,23 +340,26 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 	 private boolean delete( final KEY_TYPE k ) {
 		  if ( tree == null ) return false;
 
-		  int i = 0;
-		  int cmp;
 		  Entry p = tree;
-		  boolean dir = false;
+		  int cmp;
+		  int i = 1;
+
+		  nodePath[ 0 ] = null;
+		  dirPath[ 0 ] = false;
 
 		  while( true ) {
-				cmp = compare( k, p.key );
-				dirPath[ i ] = dir = cmp > 0;
-				nodePath[ i++ ] = p;
-				if ( cmp  == 0 ) break;
+				if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
 
-				if ( dir ) {
+				dirPath[ i ] = cmp > 0;
+				nodePath[ i ] = p;
+
+				if ( dirPath[ i++ ] ) {
 					 if ( ( p = p.right() ) == null ) return false;
 				}
 				else {
 					 if ( ( p = p.left() ) == null ) return false;
 				}
+
 		  }
 
 		  if ( p.left == null ) {
@@ -365,10 +375,10 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  if ( p.succ() ) {
 				if ( p.pred() ) {
 					 if ( nodePath[ i - 1 ] != null ) {
-						  if ( dir ) nodePath[ i - 1 ].succ( p.right );
+						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].succ( p.right );
 						  else nodePath[ i - 1 ].pred( p.left );
 					 }
-					 else tree = dir ? p.right : p.left;
+					 else tree = dirPath[ i - 1 ] ? p.right : p.left;
 				}
 				else {
 					 Entry l = p.left;
@@ -377,7 +387,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 					 l.right = p.right;
 
 					 if ( nodePath[ i - 1 ] != null ) {
-						  if ( dir ) nodePath[ i - 1 ].right = p.left;
+						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].right = p.left;
 						  else nodePath[ i - 1 ].left = p.left;
 					 }
 					 else tree = p.left;
@@ -396,7 +406,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  l.right = r;
 					 }
 					 if ( nodePath[ i - 1 ] != null ) {
-						  if ( dir ) nodePath[ i - 1 ].right = r;
+						  if ( dirPath[ i - 1 ] ) nodePath[ i - 1 ].right = r;
 						  else nodePath[ i - 1 ].left = r;
 					 }
 					 else tree = r;
@@ -435,15 +445,14 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  s.pred( false );
 					 }
 
-					 s.right = p.right;
-					 s.succ( false );
+					 s.right( p.right );
 							
 					 colour = s.black();
 					 s.black( p.black() );
 					 p.black( colour );
 	
 					 if ( nodePath[ j - 1 ] != null ) {
-						  if ( dir ) nodePath[ j - 1 ].right = s;
+						  if ( dirPath[ j - 1 ] ) nodePath[ j - 1 ].right = s;
 						  else nodePath[ j - 1 ].left = s;
 					 }
 					 else tree = s;
@@ -453,7 +462,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  if ( p.black() ) {
 				for( ; i > 1; i-- ) {
 					 if ( dirPath[ i - 1 ] && ! nodePath[ i - 1 ].succ() ||
-							! dirPath[ i - 1 ] && ! nodePath[ i -1 ].pred() ) {
+							! dirPath[ i - 1 ] && ! nodePath[ i - 1 ].pred() ) {
 						  Entry x = dirPath[ i - 1 ] ? nodePath[ i - 1 ].right : nodePath[ i - 1 ].left;
 
 						  if ( ! x.black() ) {
@@ -462,7 +471,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  }
 					 }
 
-					 if ( dirPath[ i - 1 ] == false ) {
+					 if ( ! dirPath[ i - 1 ] ) {
 						  Entry w = nodePath[ i - 1 ].right;
 
 						  if ( ! w.black() ) {
@@ -473,7 +482,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 								w.left = nodePath[ i - 1 ];
 
 								if ( nodePath[ i - 2 ] != null ) {
-									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
 								else tree = w;
@@ -514,7 +523,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 								w.left = nodePath[ i - 1 ];
 
 								if ( nodePath[ i - 2 ] != null ) {
-									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
 								else tree = w;
@@ -537,7 +546,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 								w.right = nodePath[ i - 1 ];
 
 								if ( nodePath[ i - 2 ] != null ) {
-									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
 								else tree = w;
@@ -578,7 +587,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 								w.right = nodePath[ i - 1 ];
 									  
 								if ( nodePath[ i - 2 ] != null ) {
-									 if ( dir ) nodePath[ i - 2 ].right = w;
+									 if ( dirPath[ i - 2 ] ) nodePath[ i - 2 ].right = w;
 									 else nodePath[ i - 2 ].left = w;
 								}
 								else tree = w;
@@ -801,7 +810,6 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				return "" + key;
 		  }
 		  
-		  /*
 		  public void prettyPrint() {
 				prettyPrint(0);
 		  }
@@ -816,7 +824,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 					 left.prettyPrint(level +1 );
 				for (int i = 0; i < level; i++)
 					 System.err.print("  ");
-				System.err.println(key + " (" + level() + ")");
+				System.err.println(key + " (" + (black() ? "black" : "red") + ")");
 				if ( succ() ) {
 					 for (int i = 0; i < level; i++)
 						  System.err.print("  ");
@@ -825,15 +833,12 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				else if (right != null)
 					 right.prettyPrint(level + 1);
 		  }
-		  */
     }
 	 
-	 /*
    public void prettyPrint() {
       System.err.println("size: " + count);
       if (tree != null) tree.prettyPrint();
    }
-	 */
 	
 	 public int size() {
 		  return count;
@@ -919,12 +924,10 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  }
 
 		  public int nextIndex() {
-				if ( ! hasNext() ) throw new NoSuchElementException();
 				return index;
 		  }
 
 		  public int previousIndex() {
-				if ( ! hasPrevious() ) throw new NoSuchElementException();
 				return index - 1;
 		  }
 
@@ -1275,9 +1278,8 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  int n = count;
 		  SetIterator i = new SetIterator();
 
-		  s.defaultWriteObject();
-		  while( n-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
-    }
+		  s.defaultWriteObject(); while( n-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
+		  }
 
     private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
 		  s.defaultReadObject();
@@ -1285,6 +1287,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  /* The storedComparator is now correctly set, but we must restore
 			  on-the-fly the actualComparator. */
 		  setActualComparator();
+		  allocatePaths();
 
 		  int count = this.count;
 		  this.count = 0;
@@ -1297,7 +1300,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 
 
-#ifndef NDEBUG
+#ifdef TEST
 
 	 private static long seed = System.currentTimeMillis(); 
 	 private static Random r = new Random( seed );
@@ -1333,19 +1336,50 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				nk[i] = genKey();
 		  }
 		  
-		  double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
+		  double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d, dd;
 
 		  if ( comp ) {
 		  for( j = 0; j < 20; j++ ) {
 
 				t = new TreeSet();
 
-				/* We add pairs to t. */
-				ms = System.currentTimeMillis();
+				/* We first add all pairs to t. */
 				for( i = 0; i < n;  i++ ) t.add( KEY2OBJ( k[i] ) );
+
+				/* Then we remove the first half and put it back. */
+				for( i = 0; i < n/2;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n/2;  i++ ) t.add( KEY2OBJ( k[i] ) );
+				d = System.currentTimeMillis() - ms;
+
+				/* Then we remove the other half and put it back again. */
+				ms = System.currentTimeMillis();
+				for( i = n/2; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+				dd = System.currentTimeMillis() - ms ;
+
+				ms = System.currentTimeMillis();
+				for( i = n/2; i < n;  i++ ) t.add( KEY2OBJ( k[i] ) );
+				d += System.currentTimeMillis() - ms;
+				if ( j > 2 ) totAdd += n/d; 				
+				System.out.print("Add: " + format( n/d ) +" K/s " );
+
+				/* Then we remove again the first half. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n/2;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+				dd += System.currentTimeMillis() - ms ;
+				if ( j > 2 ) totRemYes += n/dd; 				
+				System.out.print("RemYes: " + format( n/dd ) +" K/s " );
+
+				/* And then we put it back. */
+				for( i = 0; i < n/2;  i++ ) t.add( KEY2OBJ( k[i] ) );
+
+				/* We delete pairs not in t. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totAdd += d; 				
-				System.out.print("Add: " + format( d ) +" K/s " );
+				if ( j > 2 ) totRemNo += d; 				
+				System.out.print("RemNo: " + format( d ) +" K/s " );
 
 				/* We check for pairs in t. */
 				ms = System.currentTimeMillis();
@@ -1368,20 +1402,6 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				if ( j > 2 ) totIter += d; 				
 				System.out.print("Iter: " + format( d ) +" K/s " );
 				
-				/* We delete pairs not in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemNo += d; 				
-				System.out.print("RemNo: " + format( d ) +" K/s " );
-				
-				/* We delete pairs in t. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemYes += d; 				
-				System.out.print("RemYes: " + format( d ) +" K/s " );
-				
 				System.out.println();
 		  }
 
@@ -1398,12 +1418,44 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 
 				m = new RBTREESET();
 
-				/* We add pairs to m. */
-				ms = System.currentTimeMillis();
+
+				/* We first add all pairs to m. */
 				for( i = 0; i < n;  i++ ) m.add( k[i] );
+
+				/* Then we remove the first half and put it back. */
+				for( i = 0; i < n/2;  i++ ) m.remove( k[i] );
+
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n/2;  i++ ) m.add( k[i] );
+				d = System.currentTimeMillis() - ms;
+
+				/* Then we remove the other half and put it back again. */
+				ms = System.currentTimeMillis();
+				for( i = n/2; i < n;  i++ ) m.remove( k[i] );
+				dd = System.currentTimeMillis() - ms ;
+
+				ms = System.currentTimeMillis();
+				for( i = n/2; i < n;  i++ ) m.add( k[i] );
+				d += System.currentTimeMillis() - ms;
+				if ( j > 2 ) totAdd += n/d; 				
+				System.out.print("Add: " + format( n/d ) +" K/s " );
+
+				/* Then we remove again the first half. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n/2;  i++ ) m.remove( k[i] );
+				dd += System.currentTimeMillis() - ms ;
+				if ( j > 2 ) totRemYes += n/dd; 				
+				System.out.print("RemYes: " + format( n/dd ) +" K/s " );
+
+				/* And then we put it back. */
+				for( i = 0; i < n/2;  i++ ) m.add( k[i] );
+
+				/* We delete pairs not in m. */
+				ms = System.currentTimeMillis();
+				for( i = 0; i < n;  i++ ) m.remove( nk[i] );
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totAdd += d; 				
-				System.out.print("Add: " + format( d ) +" K/s " );
+				if ( j > 2 ) totRemNo += d; 				
+				System.out.print("RemNo: " + format( d ) +" K/s " );
 
 				/* We check for pairs in m. */
 				ms = System.currentTimeMillis();
@@ -1425,20 +1477,6 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				d = 1.0 * n / (System.currentTimeMillis() - ms );
 				if ( j > 2 ) totIter += d; 	 
 				System.out.print("Iter: " + format( d ) +" K/s " );
-
-				/* We delete pairs not in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( nk[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemNo += d; 	
-				System.out.print("RemNo: " + format( d ) +" K/s " );
-
-				/* We delete pairs in m. */
-				ms = System.currentTimeMillis();
-				for( i = 0; i < n;  i++ ) m.remove( k[i] );
-				d = 1.0 * n / (System.currentTimeMillis() - ms );
-				if ( j > 2 ) totRemYes += d; 				
-				System.out.print("RemYes: " + format( d ) +" K/s " );	 
 
 				System.out.println();
 		  }
@@ -1755,20 +1793,11 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 				j = new LinkedList( t ).listIterator(); 
 
 				for( int k = 0; k < n/2; k++ ) {
-					 if ( i.hasNext() != j.hasNext() ) {
-						  System.out.println("Error (" + level + ", " + seed + "): divergence in hasNext().\n");
-						  System.exit(-1);
-					 }
-					 if ( i.hasPrevious() != j.hasPrevious() ) {
-						  System.out.println("Error (" + level + ", " + seed + "): divergence in hasNext().\n");
-						  System.exit(-1);
-					 }
+					 ensure( i.hasNext() == j.hasNext(), "Error (" + level + ", " + seed + "): divergence in hasNext().\n" );
+					 ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious().\n" );
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
-						  if ( !i.next().equals( J = j.next() ) ) {
-								System.out.println("Error (" + level + ", " + seed + "): divergence in next().\n");
-								System.exit(-1);
-						  }
+						  ensure( i.next().equals( J = j.next() ), "Error (" + level + ", " + seed + "): divergence in next().\n" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -1777,10 +1806,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 						  }
 					 }
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-						  if ( !i.previous().equals( J = j.previous() ) ) {
-								System.out.println("Error (" + level + ", " + seed + "): divergence in previous().\n");
-								System.exit(-1);
-						  }
+						  ensure( i.previous().equals( J = j.previous() ), "Error (" + level + ", " + seed + "): divergence in previous().\n" );
 
 						  if ( r.nextFloat() < 0.05 ) {
 								i.remove();
@@ -1788,6 +1814,10 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 								t.remove( J );
 						  }
 					 }
+
+					 ensure( i.nextIndex() == j.nextIndex(), "Error (" + level + ", " + seed + "): divergence in nextIndex().\n" );
+					 ensure( i.previousIndex() == j.previousIndex(), "Error (" + level + ", " + seed + "): divergence in previousIndex().\n" );
+
 				}
 
 		  }
@@ -1864,7 +1894,7 @@ public final class RBTREESET extends ABSTRACT_SET implements Serializable, SORTE
 		  int n  = Integer.parseInt(args[1]);
 		  
 		  if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
-		  else if (args[0].equals("regressionTest")) regressionTest(n);
+		  else if ( "regressionTest".equals( args[0] ) ) regressionTest(n);
 	 }
 
 #endif
