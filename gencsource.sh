@@ -142,6 +142,9 @@ echo -e \
 "#define ARRAYS ObjectArrays\n\n"\
 "#define STD_KEY_ITERATOR Iterator\n\n"\
 "#define STACK Stack\n\n"\
+"#define DOUBLEINDIRECTPRIORITYQUEUE ObjectDoubleIndirectPriorityQueue\n\n"\
+"#define INDIRECTPRIORITYQUEUE IndirectPriorityQueue\n\n"\
+"#define PRIORITYQUEUE PriorityQueue\n\n"\
 "#define ABSTRACT_STACK AbstractStack\n\n"\
 "#define ITERATORS ObjectIterators\n\n"\
 \
@@ -219,6 +222,9 @@ echo -e \
 "#define KEY_EMPTY_ITERATOR ${TYPE_UC[$k]}_EMPTY_ITERATOR\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define STACK ${TYPE_CAP[$k]}Stack\n\n"\
+"#define DOUBLEINDIRECTPRIORITYQUEUE ${TYPE_CAP[$k]}DoubleIndirectPriorityQueue\n\n"\
+"#define INDIRECTPRIORITYQUEUE ${TYPE_CAP[$k]}IndirectPriorityQueue\n\n"\
+"#define PRIORITYQUEUE ${TYPE_CAP[$k]}PriorityQueue\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\
 "#define ITERATORS ${TYPE_CAP[$k]}Iterators\n\n"\
 \

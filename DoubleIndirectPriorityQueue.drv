@@ -1,0 +1,223 @@
+/*		 
+ * fastutil: Fast & compact type-specific collections for Java
+ *
+ * Copyright (C) 2002, 2003 Paolo Boldi and Sebastiano Vigna
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+
+/** A type-specific double indirect priority queue (a data structure maintaning two indipendent priority queues on 
+ * the same set of elements).
+ *
+ * <P>A DIPQ (double indirect priority queue) is created on the basis of an array, called the 
+ * <def>reference array</def>, and of two type-specific comparators, called the <def>primary</def> and <def>secondary</def>
+ * comparator.
+ *
+ * <P>After creation, a DIPQ contains a set of indices of the reference array (initially empty). New indices may
+ * be added using the {@link #add(int)} method. At any time, the {@link #top()} method returns the index 
+ * that minimizes the primary comparison, the {@link #secTop()} method returns the index that minimizes the secondary comparison,
+ * the {@link #remove()} method removes the index that minimizes the primary comparison.
+ *
+ * <P>The {@link #change()} method must be called whenever the reference array
+ * content is modified in the position returned by {@link #top()}: no other
+ * change in the reference array is allowed.
+ */
+
+public class DOUBLEINDIRECTPRIORITYQUEUE implements INDIRECTPRIORITYQUEUE {
+
+	/** The reference array */
+	private KEY_TYPE refArray[];
+	/** Its length */
+	private int N;
+	/** The number of elements in the heaps */
+	private int n;
+	/** The two comparators */
+	private KEY_COMPARATOR primaryComp, secondaryComp;
+	/** Two indirect heaps are used, called <code>primary</code> and <code>secondary</code>. Each of them contains
+		a permutation of <code>n</code> among the indices 0, 1, ..., <code>N</code>-1 in such a way that the corresponding
+		objects be sorted with respect to the two comparators.
+		We also need an array <code>inSec[]</code> so that <code>inSec[k]</code> is the index of <code>secondary</code> 
+		containing <code>k</code>.
+	*/
+	private int primary[], secondary[], inSec[];
+
+	/** Builds a double indirect priority queue.
+	 *  @param refArray The reference array.
+	 *  @param primaryComp The primary comparator.
+	 *  @param secondaryComp The secondary comparator.
+	 */
+	public DOUBLEINDIRECTPRIORITYQUEUE( KEY_TYPE refArray[], KEY_COMPARATOR primaryComp, KEY_COMPARATOR secondaryComp ) {
+		this.refArray = refArray;
+		this.N = refArray.length;
+		assert this.N != 0;
+		this.n = 0;
+		this.primaryComp = primaryComp;
+		this.secondaryComp = secondaryComp;
+		this.primary = new int[N];
+		this.secondary = new int[N];
+		this.inSec = new int[N];
+	}
+
+	/** Adds an index to the queue. Notice that the index should not be already present in the queue.
+	 *  @param i The index to be added
+	 */
+	public void add( int i ) {
+		primary[n] = i;
+		secondary[n] = i; inSec[i] = n;
+		n++;
+		swimPrimary( n-1 );
+		swimSecondary( n-1 );
+	}
+
+	/** Heapify the primary heap.
+	 *  @param i The index of the heap to be heapified.
+	 */
+	private void heapifyPrimary( int i ) {
+		int dep = primary[i];
+		int child;
+
+		while ( ( child = 2*i+1 ) < n ) {
+			if ( child+1 < n && primaryComp.compare( refArray[primary[child+1]], refArray[primary[child]] ) < 0 ) child++;
+			if ( primaryComp.compare( refArray[dep], refArray[primary[child]] ) <= 0 ) break;
+			primary[i] = primary[child];
+			i = child;
+		}
+		primary[i] = dep;
+	}
+
+	/** Heapify the secondary heap.
+	 *  @param i The index of the heap to be heapified.
+	 */
+	private void heapifySecondary( int i ) {
+		int dep = secondary[i];
+		int child;
+
+		while ( ( child = 2*i+1 ) < n ) {
+			if ( child+1 < n && secondaryComp.compare( refArray[secondary[child+1]], refArray[secondary[child]] ) < 0 ) child++;
+			if ( secondaryComp.compare( refArray[dep], refArray[secondary[child]] ) <= 0 ) break;
+			secondary[i] = secondary[child]; inSec[secondary[i]] = i;
+			i = child;
+		}
+		secondary[i] = dep; inSec[secondary[i]] = i;
+	}
+
+	/** Swim and heapify the primary heap.
+	 *  @param i The index to be moved.
+	 */
+	private void swimPrimary( int i ) {
+		int dep = primary[i];
+		int parent;
+
+		while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
+			if ( primaryComp.compare( refArray[primary[parent]], refArray[dep] ) <= 0 ) break;
+			primary[i] = primary[parent];
+			i = parent;
+		}
+		primary[i] = dep;
+		heapifyPrimary( i );
+	}
+
+	/** Swim and heapify the secondary heap.
+	 *  @param i The index to be moved.
+	 */
+	private void swimSecondary( int i ) {
+		int dep = secondary[i];
+		int parent;
+
+		while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
+			if ( secondaryComp.compare( refArray[secondary[parent]], refArray[dep] ) <= 0 ) break;
+			secondary[i] = secondary[parent]; inSec[secondary[i]] = i;
+			i = parent;
+		}
+		secondary[i] = dep; inSec[secondary[i]] = i;
+		heapifySecondary( i );
+	}
+
+	/** Returns the minimum element with respect to the primary comparator.
+		@return the minimum element.
+	*/
+	public int top() {
+		if ( n == 0 ) throw new NoSuchElementException();
+		return primary[0];
+	}
+
+	/** Returns the minimum element with respect to the secondary comparator.
+		@return the minimum element.
+	*/
+	public int secTop() {
+		if ( n == 0 ) throw new NoSuchElementException();
+		return secondary[0];
+	}
+
+	/** Removes the minimum element with respect to the primary comparator.
+	 *  @return the removed element.
+	 */
+	public void remove() {
+		if ( n == 0 ) throw new NoSuchElementException();
+		int result = primary[0];
+		int ins = inSec[result];
+		// Copy a leaf 
+		primary[0] = primary[n-1];
+		if ( ins == n-1 ) {
+			n--;
+			heapifyPrimary( 0 );	
+			return;
+		}
+		secondary[ins] = secondary[n-1]; 
+		inSec[secondary[ins]] = ins;
+		// Heapify
+		n--;
+		heapifyPrimary( 0 );
+		swimSecondary( ins );
+	}
+
+	/** Signals that the minimum element with respect to the comparator has changed.
+	 */
+	public void change() {
+		int ins = inSec[primary[0]];
+		heapifyPrimary( 0 );
+		swimSecondary( ins );
+	}
+
+	/** Returns the number of elements in the queue.
+	 *  @return the size of the queue
+	 */
+	public int size() {
+		return n;
+	}
+
+	public String toString() {
+		String s = "Primary queue: ";
+		for ( int i = 0; i < n; i++ )
+			s += refArray[primary[i]]+" ";
+		s += "\nSecondary queue: ";
+		for ( int i = 0; i < n; i++ )
+			s += refArray[secondary[i]]+" ";
+		s += "\n";
+		return s;
+	}
+}
+
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

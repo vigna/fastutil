@@ -248,6 +248,11 @@ $(FRONT_CODED_LISTS): ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(FRONT_CODED_LISTS)
 
+DOUBLE_INDIRECT_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)DoubleIndirectPriorityQueue.c)
+$(DOUBLE_INDIRECT_PRIORITY_QUEUES): DoubleIndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(DOUBLE_INDIRECT_PRIORITY_QUEUES)
+
 #
 # Static containers
 #
@@ -307,6 +312,7 @@ SOURCES = \
 	$(SOURCEDIR)/HashCommon.java \
 	$(SOURCEDIR)/BidirectionalIterator.java \
 	$(SOURCEDIR)/Stack.java \
+	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/Iterators.java \
 	$(SOURCEDIR)/Collections.java \
 	$(SOURCEDIR)/Sets.java \
