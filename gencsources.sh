@@ -9,7 +9,7 @@
 ln -sf OpenHashSet.drv LinkedOpenHashSet.drv
 ln -sf OpenHashMap.drv LinkedOpenHashMap.drv
 
-DIR="src/it/unimi/dsi/fastutil"
+DIR="java/it/unimi/dsi/fastutil"
 
 # Driver files for maps.
 MAP=(Map SortedMap AbstractMap AVLTreeMap RBTreeMap OpenHashMap LinkedOpenHashMap)

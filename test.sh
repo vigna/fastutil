@@ -16,7 +16,7 @@ for ((t=1; t<10000; t*=10)); do
 	l=${#TYPE[*]}
 	if [[ ${SET[$f]} != "OpenHashSet" && ${SET[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
 	for ((k=1; k<l; k++)); do
-		CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}${SET[$f]}
+		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_CAP[$k]}${SET[$f]}
 		echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
 		java -server $CLASSNAME regressionTest $t $lf
 	done
@@ -29,7 +29,7 @@ for ((t=1; t<10000; t*=10)); do
 	if [[ ${MAP[$f]} != "OpenHashMap" && ${MAP[$f]} != "LinkedOpenHashMap" ]]; then l=$((l-1)); fi # Only hash maps may have reference keys.
 	for ((k=1; k<l; k++)); do
 	    for ((v=1; v<${#TYPE[*]}; v++)); do
-		CLASSNAME=it.unimi.dsi.fastUtil.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}
+		CLASSNAME=it.unimi.dsi.fastutil.${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}
 		echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
 		java -server $CLASSNAME regressionTest $t $lf
 	    done

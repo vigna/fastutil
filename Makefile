@@ -4,7 +4,7 @@ VERSION=2.52
 
 .SUFFIXES: .java .class
 
-CSOURCES = $(wildcard src/it/unimi/dsi/fastutil/*.c)	# The list of C source files
+CSOURCES = $(wildcard java/it/unimi/dsi/fastutil/*.c)	# The list of C source files
 SOURCES = $(CSOURCES:.c=.java)	# The list of Java generated source files
 CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 
@@ -25,7 +25,7 @@ jar: jsources
 	ant jar
 
 tar: jar
-	-rm fastutil-$(VERSION)
+	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
 	tar zcvf fastutil-$(VERSION).tar.gz --owner=root --group=root \
 		fastutil-$(VERSION)/*.drv \
@@ -37,11 +37,11 @@ tar: jar
 		fastutil-$(VERSION)/Makefile \
 		fastutil-$(VERSION)/docs \
 		fastutil-$(VERSION)/fastutil-$(VERSION).jar \
-		fastutil-$(VERSION)/src/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
 source:
-	-rm fastutil-$(VERSION)
+	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
 	tar zcvf fastutil-$(VERSION).tar.gz \
 		fastutil-$(VERSION)/*.drv \
@@ -51,7 +51,7 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/Makefile \
-		fastutil-$(VERSION)/src/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+		fastutil-$(VERSION)/java/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
 	rm fastutil-$(VERSION)
 
 jsources: $(SOURCES)
@@ -70,12 +70,12 @@ PACKAGES = it.unimi.dsi.fastutil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
+	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath java $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastutil/Hash.java src/it/unimi/dsi/fastutil/BidirectionalIterator.java src/it/unimi/dsi/fastutil/HashCommon.java src/it/unimi/dsi/fastutil/package.html
+	etags build.xml Makefile README gencsources.sh *.drv java/it/unimi/dsi/fastutil/Hash.java java/it/unimi/dsi/fastutil/BidirectionalIterator.java java/it/unimi/dsi/fastutil/HashCommon.java java/it/unimi/dsi/fastutil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
