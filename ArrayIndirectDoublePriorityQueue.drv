@@ -39,8 +39,8 @@ import java.util.Comparator;
 
 public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_PRIORITY_QUEUE implements IndirectDoublePriorityQueue {
 
-	/** The secondary indirect queue. */
-	protected ARRAY_INDIRECT_PRIORITY_QUEUE secondaryQueue;
+	/** The secondary comparator. */
+	protected KEY_COMPARATOR secondaryComparator;
 
 	/** Creates a new empty queue with a given capacity.
 	 *
@@ -51,7 +51,7 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 */
 	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c, KEY_COMPARATOR d ) {
 		super( refArray, capacity, c );
-		secondaryQueue = new ARRAY_INDIRECT_PRIORITY_QUEUE( refArray, capacity, d );
+		secondaryComparator = d;
 	}
 
 
@@ -65,7 +65,7 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 */
 	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c ) {
 		super( refArray, capacity, c );
-		secondaryQueue = new ARRAY_INDIRECT_PRIORITY_QUEUE( refArray, capacity, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
+		secondaryComparator = COMPARATORS.oppositeComparator( c );
 	}
 
 
@@ -78,7 +78,7 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 */
 	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
 		super( refArray, capacity, null );
-		secondaryQueue = new ARRAY_INDIRECT_PRIORITY_QUEUE( refArray, capacity, COMPARATORS.OPPOSITE_COMPARATOR );
+		secondaryComparator = COMPARATORS.OPPOSITE_COMPARATOR;
 	}
 
 
@@ -89,7 +89,7 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c, KEY_COMPARATOR d ) {
-		this( refArray, refArray.length, c, d );
+		this( refArray, 0, c, d );
 	}
 
 	/** Creates a new empty queue with capacity equal to the length of the reference array.
@@ -100,7 +100,7 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
 	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
-		this( refArray, refArray.length, c, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
+		this( refArray, 0, c );
 	}
 
 	/** Creates a new empty queue with capacity equal to the length of the reference array and natural order as primary comparator.
@@ -110,44 +110,106 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 * @param refArray the reference array.
 	 */
 	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray ) {
-		this( refArray, refArray.length, null );
+		this( refArray, 0, null );
 	}
 
-	public void enqueue( int x ) {
-		secondaryQueue.enqueue( x );
-		super.enqueue( x );
+
+	/** Wraps a given array in a queue using a given comparator.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param size the number of elements to be included in the queue.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @return a queue wrapping the first <code>size</code> elements of <code>a</code>.
+	 */
+	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c ) {
+		this( refArray, 0, c );
+		this.array = a;
+		this.size = size;
 	}
 
-	public int dequeue() {
-		final int result = super.dequeue();
-		secondaryQueue.remove( result );
-		return result;
+
+	/** Wraps a given array in a queue using a given comparator.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The elements of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @return a queue wrapping the elements of <code>a</code>.
+	 */
+	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final KEY_COMPARATOR c ) {
+		this( refArray, a, a.length, c );
 	}
+
+	/** Wraps a given array in a queue using the natural order.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param size the number of elements to be included in the queue.
+	 * @return a queue wrapping the first <code>size</code> elements of <code>a</code>.
+	 */
+	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size ) {
+		this( refArray, a, size, null );
+	}
+
+
+	/** Wraps a given array in a queue using the natural order.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The elements of the array will be rearranged so to form a heap (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @return a queue wrapping the elements of <code>a</code>.
+	 */
+	public ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a ) {
+		this( refArray, a, a.length );
+	}
+
+	/** Returns the index (in {@link #array}) of the smallest element w.r.t. the {@linkplain #secondaryComparator secondary comparator}. */
+
+	private int findSecondaryFirst() {
+		int i = size;
+		int firstIndex = --i;
+		KEY_TYPE first = refArray[ array[ firstIndex ] ];
+
+		if ( secondaryComparator == null ) while( i-- != 0 ) { if ( KEY_LESS( refArray[ array[ i ] ], first ) ) first = refArray[ array[ firstIndex = i ] ]; }
+		else while( i-- != 0 ) { if ( secondaryComparator.compare( refArray[ array[ i ] ], first ) < 0 ) first = refArray[ array[ firstIndex = i ] ]; }
+
+		return firstIndex;
+	}
+
+	private int findSecondaryLast() {
+		int i = size;
+		int lastIndex = --i;
+		KEY_TYPE last = refArray[ array[ lastIndex ] ];
+
+		if ( secondaryComparator == null ) while( i-- != 0 ) { if ( KEY_LESS( last, refArray[ array[ i ] ] ) ) last = refArray[ array[ lastIndex = i ] ]; }
+		else while( i-- != 0 ) { if ( secondaryComparator.compare( last, refArray[ array[ i ] ] ) < 0 ) last = refArray[ array[ lastIndex = i ] ]; }
+
+		return lastIndex;
+	}
+
 
 	public int secondaryFirst() {
-		return secondaryQueue.first();
+		return array[ findSecondaryFirst() ];
 	}
+
 
 	public int secondaryLast() {
-		return secondaryQueue.last();
-	}
-
-	public void changed() {
-		secondaryQueue.changed( array[ 0 ] );
-		super.changed();
-	}
-
-	public void clear() { 
-		super.clear();
-		secondaryQueue.clear();
-	}
-
-	/** Trims the underlying queues so that they have exactly {@link #size()} elements.
-	 */
-
-	public void trim() {
-		super.trim();
-		secondaryQueue.trim();
+		return array[ findSecondaryLast() ];
 	}
 
 	/** Returns the secondary comparator of this queue.
@@ -155,7 +217,7 @@ public class ARRAY_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE extends ARRAY_INDIRECT_
 	 * @return the secondary comparator of this queue.
 	 * @see #secondaryFirst()
 	 */
-	public Comparator secondaryComparator() { return secondaryQueue.comparator(); }
+	public Comparator secondaryComparator() { return secondaryComparator; }
 
 #ifdef TEST
 
