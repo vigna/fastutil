@@ -374,32 +374,32 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  if ( compare( key, e.key ) < 0 ) {
 				if ( e.left() != sentinel ) {
 					 e.left = deleteRec( e, e.left );
-					 if ( e.left == e ) { // This handles the case of e.left being now a predecessor.
+					 /*					 if ( e.left == e ) { // This handles the case of e.left being now a predecessor.
 						  e.pred( true );
 						  e.left = e == firstEntry ? null : ( change == deleted ? p : deleted );
 						  System.err.println( "Fast fix at " + e + "; deleted=" + deleted + "; change=" + change + "; key=" + key );
-					 }
+						  }*/
 				}
 
-				if ( e.pred() && e.left != null && KEY_CMP( e.left.key, e.key ) > 0 ) {
+								if ( e.pred() && e.left != null && KEY_CMP( e.left.key, e.key ) > 0 ) {
 					 System.err.println( "Wrong predecessor at " + e + " (left turn)" + "; deleted=" + deleted + "; change=" + change + "; key=" + key  );
 					 tree.prettyPrint();
-				}
+					 }
 		  }
 		  else  {
 				deleted = e;
 				if ( e.right() != sentinel ) e.right = deleteRec( e, e.right );
 
-				if ( e.pred() && e.left != null && KEY_CMP( e.left.key, e.key ) > 0 ) {
+								if ( e.pred() && e.left != null && KEY_CMP( e.left.key, e.key ) > 0 ) {
 					 System.err.println( "Wrong predecessor at " + e + " (right turn)" );
 					 tree.prettyPrint();
-				}
+					 }
 		  }
 				
 		  if ( e == change && deleted != null && key == deleted.key ) {
 
 				oldValue = deleted.value;
-				System.err.println("Deleted entry is " + deleted + "; pred=" + deleted.pred() + "; succ="+ deleted.succ() + "; left=" + deleted.left + "; right=" + deleted.right );
+				//System.err.println("Deleted entry is " + deleted + "; pred=" + deleted.pred() + "; succ="+ deleted.succ() + "; left=" + deleted.left + "; right=" + deleted.right );
 
 				deleted.key = e.key;
 				deleted.value = e.value;
@@ -410,24 +410,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				if ( p != null ) {
 					 if ( p.right == e ) {
 						  if ( e.succ() ) p.succ( true );  // This handles the case of e being a leaf to the right of p.
-						  else if ( e.right.pred() ) {
-								e.right.left = p; // This handles the case of e being a right subtree and e.right a leaf.
-								System.err.println( "Fixed a right subtree" ) ;
-						  }
+						  else if ( e.right.pred() ) e.right.left = p; // This handles the case of e being a right subtree and e.right a leaf.
 					 }
-					 else if ( e.right() != sentinel && e.right.pred() ) {
-						  e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
-						  System.err.println( "Fixed a left subtree" ) ;
-					 }
+					 else if ( e.right() != sentinel && e.right.pred() ) e.right.left = e.left; // This handles the case of e being a left subtree of p with a right leaf.
 				}
 
 				// If we are deleting the first or last entry, we must update our state accordingly.
 				if ( e.right == null ) lastEntry = e.left;
 				if ( e.left == null ) firstEntry = e.right;
 
-				/* If e is a leaf to the left of p, returning e.right would cause a loop. */
+				/* If e is a leaf to the left of p, returning e.right would cause a
+				loop. The right thing to do is to return e.left and set the
+				predecessor flag in the parent. */
 
-				if ( p.left == e && e.succ() ) {
+				if ( p != null && p.left == e && e.succ() ) {
 					 p.pred( true );
 					 return e.left;
 				}
@@ -1465,20 +1461,15 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				TREEMAP.Entry e;
 				if ( top ) e = lastEntry;
 				else e = locateKey( to );
-				System.err.println("Located key " + e);
 				// If we find something smaller than the end we're OK.
 				if ( compare( e.key, to ) >= 0 ) {
 					 // Otherwise, we look for a predecessor.
-					 System.err.print("Search predecessor...");
 					 boolean pred = e.pred();
 					 e = e.left;
-					 System.err.print("moved left to " + e + " (pred=" + pred + ")...");
 					 // Oops, it's already the first element.
 					 if ( e == null ) return null;
 					 // If we did not follow a thread we descend the tree on the right.
-					 if ( ! pred ) System.err.print("following right path...");
 					 if ( ! pred ) while ( e.right() != sentinel ) e = e.right;
-					 System.err.println("got " + e);
 				}
 				// Finally, if this submap doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
 				if ( ! bottom && compare( e.key, from ) < 0 ) return null;
