@@ -1,4 +1,4 @@
- /*	 
+/*	 
  * fastUtil 1.1: Fast & compact specialized hash-based utility classes for Java
  *
  * Copyright (C) 2002 Sebastiano Vigna 
@@ -371,19 +371,19 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 					 
 					 public Iterator iterator() {
 						  return new Iterator() {
-									 int pos = 0, last = -1;
+									 int pos = 0, last = -1, c = count;
 						  
 									 { 
 										  final byte state[] = HASHMAP_NAME.this.state;
 										  final int n = HASHMAP_NAME.this.n;
 
-										  if (count == 0) pos = n;
+										  if (c == 0) pos = n;
 
 										  while( pos < n && state[pos] != BUSY ) pos++;
 									 }
 						  
 									 public boolean hasNext() {
-										  return pos < n;
+										  return c != 0 && pos < n;
 									 }
 						  
 									 public Object next() {
@@ -393,7 +393,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = new Entry(key[last = pos], value[pos]);
-										  do pos++; while( pos < n && state[pos] != BUSY );
+										  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 								
 										  return retVal;
 									 }
@@ -440,19 +440,19 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 					 public Iterator iterator() {
 						  return new KEY_ITERATOR_NAME() {
-									 int pos = 0, last = -1;
+									 int pos = 0, last = -1, c = count;
 		  
 									 { 
 										  final byte state[] = HASHMAP_NAME.this.state;
 										  final int n = HASHMAP_NAME.this.n;
 										  
-										  if (count == 0) pos = n;
+										  if (c == 0) pos = n;
 
 										  while( pos < n && state[pos] != BUSY ) pos++;
 									 }
 									 
 									 public boolean hasNext() {
-										  return pos < n;
+										  return c != 0 && pos < n;
 									 }
 									 
 #if !#keyclass(Object)
@@ -463,7 +463,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 										  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = key[last = pos];
-										  do pos++; while( pos < n && state[pos] != BUSY );
+										  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 										  
 										  return retVal;
 									 }
@@ -477,7 +477,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 										  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = KEY2OBJ(key[last = pos]);
-										  do pos++; while( pos < n && state[pos] != BUSY );
+										  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 										  
 										  return retVal;
 									 }
@@ -534,19 +534,19 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 
 					 public Iterator iterator() {
 						  return new VALUE_ITERATOR_NAME() {
-									 int pos = 0, last = -1;
+									 int pos = 0, last = -1, c = count;
 									 
 									 { 
 										  final byte state[] = HASHMAP_NAME.this.state;
 										  final int n = HASHMAP_NAME.this.n;
 										  
-										  if (count == 0) pos = n;
+										  if (c == 0) pos = n;
 		  
 										  while( pos < n && state[pos] != BUSY ) pos++;
 									 }
 		  
 									 public boolean hasNext() {
-										  return pos < n;
+										  return c != 0 && pos < n;
 									 }
 		  
 #if !#valueclass(Object)
@@ -557,7 +557,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = value[pos];
-										  do pos++; while( pos < n && state[pos] != BUSY );
+										  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 
 										  return retVal;
 									 }
@@ -570,7 +570,7 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 		  
 										  if (!hasNext()) throw new NoSuchElementException();
 										  retVal = VALUE2OBJ(value[pos]);
-										  do pos++; while( pos < n && state[pos] != BUSY );
+										  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 
 										  return retVal;
 									 }
@@ -999,21 +999,19 @@ public final class HASHMAP_NAME implements Serializable, Hash, MAP_NAME {
 										 " (actual time: "+((System.currentTimeMillis() - v - ct)) / 1000.0+"s)" );
 	 
 				
-#if !#valueclass(Object) && !#valueclass(Boolean)
+#if !#valueclass(Object) && !#valueclass(Boolean) && !#keyclass(Object) && !#keyclass(Boolean)
 				v = System.currentTimeMillis();
 				
 				/* Then we enumerate items in t. */
 				int s = 0;
-				for(Iterator it=t.entrySet().iterator(); it.hasNext(); ) 
-					 s += VALUE2TYPE(((Map.Entry)(it.next())).getValue());
+				for(Iterator it=t.keySet().iterator(); it.hasNext(); ) t.get(it.next());
 				
 				System.out.println("Iterated on old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
 	 
 				v = System.currentTimeMillis();
 
 				/* Then we enumerate items in m. */
-				for(Iterator it=m.entrySet().iterator(); it.hasNext(); ) 
-					 s += ((MAP_NAME.Entry)(it.next())).ENTRY_GET_VALUE();
+				for(KEY_ITERATOR_NAME it=(KEY_ITERATOR_NAME)m.keySet().iterator(); it.hasNext(); ) m.get(it.NEXT_KEY_TYPE_CAP());
 				
 				System.out.println("Iterated on new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
 #endif

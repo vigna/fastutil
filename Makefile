@@ -25,14 +25,14 @@ clean:
 	@rm -f */*/*/*/*Set.java */*/*/*/*Map.java */*/*/*/*Collection.java */*/*/*/*Iterator.java
 	@rm -f */*/*/*/*.c
 	@rm -fr $(DOCSDIR)/*
-	
+
 
 PACKAGES = it.unimi.dsi.fastUtil
 
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -d $(DOCSDIR)  -windowtitle fastUtil -link $(APIURL) $(PACKAGES)
+	javadoc -d $(DOCSDIR)  -windowtitle "fastUtil 1.1" -link $(APIURL) $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 # Implicit rule for making Java class files from Java 

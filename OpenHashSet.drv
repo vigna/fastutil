@@ -276,19 +276,19 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 
 	 public Iterator iterator() {
 		  return new KEY_ITERATOR_NAME() {
-					 int pos = 0, last = -1;
+					 int pos = 0, last = -1, c = count;
 					 
 					 { 
 						  final byte state[] = HASHSET_NAME.this.state;
 						  final int n = HASHSET_NAME.this.n;
 
-						  if (count == 0) pos = n;
+						  if (c == 0) pos = n;
 						  
 						  while( pos < n && state[pos] != BUSY ) pos++;
 					 }
 					 
 					 public boolean hasNext() {
-						  return pos < n;
+						  return c != 0 && pos < n;
 					 }
 					 
 					 
@@ -300,7 +300,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 						  
 						  if (!hasNext()) throw new NoSuchElementException();
 						  retVal = key[last = pos];
-						  do pos++; while( pos < n && state[pos] != BUSY );
+						  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 						  
 						  return retVal;
 					 }
@@ -313,7 +313,7 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 						  
 						  if (!hasNext()) throw new NoSuchElementException();
 						  retVal = KEY2OBJ(key[last = pos]);
-						  do pos++; while( pos < n && state[pos] != BUSY );
+						  if (--c != 0) do pos++; while( pos < n && state[pos] != BUSY );
 						  
 						  return retVal;
 					 }
@@ -610,14 +610,14 @@ public final class HASHSET_NAME extends ABSTRACT_SET_NAME implements Serializabl
 				int s = 0;
 				for(Iterator it=t.iterator(); it.hasNext(); ) s += KEY2TYPE(it.next());
 				
-				System.out.println("Iterated on old HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
+				System.out.println("Iterated on old HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
 	 
 				v = System.currentTimeMillis();
 
 				/* Then we enumerate items in m. */
 				for(KEY_ITERATOR_NAME it=(KEY_ITERATOR_NAME)m.iterator(); it.hasNext(); ) s += it.NEXT_KEY_TYPE_CAP();
 				
-				System.out.println("Iterated on new HashMap in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
+				System.out.println("Iterated on new HashSet in "+((System.currentTimeMillis() - v)) / 1000.0+"s");
 #endif
 	 
 		  }
