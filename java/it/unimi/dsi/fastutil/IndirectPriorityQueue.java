@@ -27,7 +27,9 @@ import java.util.Comparator;
  *
  * <P>An indirect priority queue provides a way to {@linkplain #enqueue(int)
  * enqueue} by index elements taken from a given <em>reference list</em>,
- * and to {@linkplain #dequeue() dequeue} them in some specified order.  It
+ * and to {@linkplain #dequeue() dequeue} them in some specified order.
+ * Elements that are <em>greater</em> in the specified order are
+ * dequeued first. It
  * is also possible to get the {@linkplain #first() index of the first element}, that
  * is, the index that would be dequeued next.
  *

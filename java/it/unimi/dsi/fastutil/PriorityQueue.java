@@ -27,8 +27,9 @@ import java.util.Comparator;
  *
  * <P>A priority queue provides a way to {@linkplain #enqueue(Object) enqueue}
  * elements, and to {@linkplain #dequeue() dequeue} them in some specified
- * order.  It is also possible to get the {@linkplain #first() first element},
- * that is, the element that would be dequeued next.
+ * order. Elements that are <em>greater</em> in the specified order are
+ * dequeued first.  It is also possible to get the {@linkplain #first() first
+ * element}, that is, the element that would be dequeued next.
  *
  * <P>Additionally, the queue may provide a method to peek at 
  * element that would be dequeued {@linkplain #last() last}.
