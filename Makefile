@@ -4,7 +4,7 @@ VERSION=2.52
 
 .SUFFIXES: .java .class
 
-CSOURCES = $(wildcard src/it/unimi/dsi/fastUtil/*.c)	# The list of C source files
+CSOURCES = $(wildcard src/it/unimi/dsi/fastutil/*.c)	# The list of C source files
 SOURCES = $(CSOURCES:.c=.java)	# The list of Java generated source files
 CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 
@@ -12,7 +12,7 @@ CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 .SECONDARY: $(SOURCES)
 
 explain:
-	@echo -e "\nTo build fastUtil, you must first use the gencsources.sh shell"
+	@echo -e "\nTo build fastutil, you must first use the gencsources.sh shell"
 	@echo "script to generate the fake C sources that will be preprocessed"
 	@echo "to obtain the actual Java files. Then, you can build the jar"
 	@echo -e "file using \"make jar\", or the documentation using \"make docs\".\n"
@@ -25,34 +25,34 @@ jar: jsources
 	ant jar
 
 tar: jar
-	-rm fastUtil-$(VERSION)
-	ln -s . fastUtil-$(VERSION)
-	tar zcvf fastUtil-$(VERSION).tar.gz --owner=root --group=root \
-		fastUtil-$(VERSION)/*.drv \
-		fastUtil-$(VERSION)/build.xml \
-		fastUtil-$(VERSION)/gencsources.sh \
-		fastUtil-$(VERSION)/CHANGES \
-		fastUtil-$(VERSION)/README \
-		fastUtil-$(VERSION)/COPYING.LIB \
-		fastUtil-$(VERSION)/Makefile \
-		fastUtil-$(VERSION)/docs \
-		fastUtil-$(VERSION)/fastUtil-$(VERSION).jar \
-		fastUtil-$(VERSION)/src/it/unimi/dsi/fastUtil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
-	rm fastUtil-$(VERSION)
+	-rm fastutil-$(VERSION)
+	ln -s . fastutil-$(VERSION)
+	tar zcvf fastutil-$(VERSION).tar.gz --owner=root --group=root \
+		fastutil-$(VERSION)/*.drv \
+		fastutil-$(VERSION)/build.xml \
+		fastutil-$(VERSION)/gencsources.sh \
+		fastutil-$(VERSION)/CHANGES \
+		fastutil-$(VERSION)/README \
+		fastutil-$(VERSION)/COPYING.LIB \
+		fastutil-$(VERSION)/Makefile \
+		fastutil-$(VERSION)/docs \
+		fastutil-$(VERSION)/fastutil-$(VERSION).jar \
+		fastutil-$(VERSION)/src/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+	rm fastutil-$(VERSION)
 
 source:
-	-rm fastUtil-$(VERSION)
-	ln -s . fastUtil-$(VERSION)
-	tar zcvf fastUtil-$(VERSION).tar.gz \
-		fastUtil-$(VERSION)/*.drv \
-		fastUtil-$(VERSION)/build.xml \
-		fastUtil-$(VERSION)/gencsources.sh \
-		fastUtil-$(VERSION)/CHANGES \
-		fastUtil-$(VERSION)/README \
-		fastUtil-$(VERSION)/COPYING.LIB \
-		fastUtil-$(VERSION)/Makefile \
-		fastUtil-$(VERSION)/src/it/unimi/dsi/fastUtil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
-	rm fastUtil-$(VERSION)
+	-rm fastutil-$(VERSION)
+	ln -s . fastutil-$(VERSION)
+	tar zcvf fastutil-$(VERSION).tar.gz \
+		fastutil-$(VERSION)/*.drv \
+		fastutil-$(VERSION)/build.xml \
+		fastutil-$(VERSION)/gencsources.sh \
+		fastutil-$(VERSION)/CHANGES \
+		fastutil-$(VERSION)/README \
+		fastutil-$(VERSION)/COPYING.LIB \
+		fastutil-$(VERSION)/Makefile \
+		fastutil-$(VERSION)/src/it/unimi/dsi/fastutil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+	rm fastutil-$(VERSION)
 
 jsources: $(SOURCES)
 
@@ -65,17 +65,17 @@ clean:
 	@rm -fr $(DOCSDIR)/*
 
 
-PACKAGES = it.unimi.dsi.fastUtil
+PACKAGES = it.unimi.dsi.fastutil
 
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastUtil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
+	javadoc -J-Xmx256M -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
 tags:
-	etags build.xml Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastUtil/Hash.java src/it/unimi/dsi/fastUtil/BidirectionalIterator.java src/it/unimi/dsi/fastUtil/HashCommon.java src/it/unimi/dsi/fastUtil/package.html
+	etags build.xml Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastutil/Hash.java src/it/unimi/dsi/fastutil/BidirectionalIterator.java src/it/unimi/dsi/fastutil/HashCommon.java src/it/unimi/dsi/fastutil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 

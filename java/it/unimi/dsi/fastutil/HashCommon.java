@@ -19,7 +19,7 @@
  *
  */
 
-package it.unimi.dsi.fastUtil;
+package it.unimi.dsi.fastutil;
 
 /** Common code for all hash-based classes.
  *

@@ -19,7 +19,7 @@
  *
  */
 
-package it.unimi.dsi.fastUtil;
+package it.unimi.dsi.fastutil;
 
 /** Basic data for all hash-based classes.
  * <p>The classes in <code>fastUtil</code> are built around open-addressing hashing
