@@ -274,6 +274,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
+"#define PARSE_KEY parse${TYPE_STD[$k]}\n"\
 "#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
 "#define STORE_KEYS store${TYPE_STD[$k]}s\n"\
 \

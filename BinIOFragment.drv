@@ -1,0 +1,196 @@
+/*		 
+ * Copyright (C) 2004 Sebastiano Vigna 
+ *
+ *  This program is free software; you can redistribute it and/or modify it
+ *  under the terms of the GNU General Public License as published by the Free
+ *  Software Foundation; either version 2 of the License, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ *  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ *  for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ */
+
+
+/** Loads elements from a given data input, storing them in a given array fragment.
+ *
+ * @param dataInput a data input.
+ * @param array an array which will be filled with data from <code>dataInput</code>.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from <code>dataInput</code> (it might be less than <code>length</code> if <code>dataInput</code> ends).
+ */
+public static int LOAD_KEYS( final DataInput dataInput, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+	int i = 0;
+	try {
+		for( i = 0; i < length; i++ ) array[ i + offset ] = dataInput.READ_KEY();
+	}
+	catch( EOFException itsOk ) {}
+	return i;
+}
+
+/** Loads elements from a given data input, storing them in a given array.
+ *
+ * @param dataInput a data input.
+ * @param array an array which will be filled with data from <code>dataInput</code>.
+ * @return the number of elements actually read from <code>dataInput</code> (it might be less than the array length if <code>dataInput</code> ends).
+ */
+public static int LOAD_KEYS( final DataInput dataInput, final KEY_TYPE[] array ) throws IOException {
+	int i = 0;
+	try {
+		final int length = array.length;
+		for( i = 0; i < length; i++ ) array[ i ] = dataInput.READ_KEY();
+	}
+	catch( EOFException itsOk ) {}
+	return i;
+}
+
+/** Loads elements from a given filename, storing them in a given array fragment.
+ *
+ * @param filename a file name.
+ * @param array an array which will be filled with data from the specified file.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from the given file (it might be less than <code>length</code> if the file is too short).
+ */
+public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+
+	final FileInputStream fis = new FileInputStream( filename.toString() );
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis, BUFFER_SIZE ) );
+
+	int i = 0;
+	try {
+		for( i = 0; i < length; i++ ) array[ i + offset ] = dis.READ_KEY();
+	}
+	catch( EOFException itsOk ) {}
+
+	dis.close();
+
+	return i;
+}
+
+/** Loads elements from a given filename, storing them in a given array.
+ *
+ * @param filename a file name.
+ * @param array an array which will be filled with data from the specified file.
+ * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
+ */
+public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array ) throws IOException {
+	final FileInputStream fis = new FileInputStream( filename.toString() );
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis, BUFFER_SIZE ) );
+
+	int i = 0;
+	try {
+		final int length = array.length;
+		for( i = 0; i < length; i++ ) array[ i ] = dis.READ_KEY();
+	}
+	catch( EOFException itsOk ) {}
+
+	dis.close();
+
+	return i;
+}
+
+/** Loads elements from a given filename, storing them in a new array.
+ *
+ * <P>Note that the length of the returned array will be computed 
+ * dividing the specified file size by the number of bytes used to
+ * represent each element.
+ *
+ * @param filename a file name.
+ * @return an array filled with the content of the specified file.
+ */
+public static KEY_TYPE[] LOAD_KEYS( final CharSequence filename ) throws IOException {
+	final FileInputStream fis = new FileInputStream( filename.toString() );
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis, BUFFER_SIZE ) );
+
+	final int length = (int)(fis.getChannel().size() / KEY_SIZE);
+	final KEY_TYPE[] array = new KEY_TYPE[ length ];
+
+	for( int i = 0; i < length; i++ ) array[ i ] = dis.READ_KEY();
+
+	dis.close();
+	return array;
+}
+
+/** Stores an array fragment to a given data output.
+ *
+ * @param array an array whose elements will be written to <code>dataOutput</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param dataOutput a data output.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final DataOutput dataOutput ) throws IOException {
+	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+	for( int i = 0; i < length; i++ ) dataOutput.WRITE_KEY( array[ offset + i ] );
+}
+
+/** Stores an array to a given data output.
+ *
+ * @param array an array whose elements will be written to <code>dataOutput</code>.
+ * @param dataOutput a data output.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final DataOutput dataOutput ) throws IOException {
+	final int length = array.length;
+	for( int i = 0; i < length; i++ ) dataOutput.WRITE_KEY( array[ i ] );
+}
+
+/** Stores an array fragment to a given filename.
+ *
+ * @param array an array whose elements will be written to <code>filename</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param filename a file name.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final CharSequence filename ) throws IOException {
+	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ offset + i ] );
+	dos.close();
+}
+
+/** Stores an array to a given filename.
+ *
+ * @param array an array whose elements will be written to <code>filename</code>.
+ * @param filename a file name.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final CharSequence filename ) throws IOException {
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	final int length = array.length;
+	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ i ] );
+	dos.close();
+}
+
+/** Stores the element returned by an iterator to a given data output.
+ *
+ * @param i an iterator whose output will be written to <code>dataOutput</code>.
+ * @param dataOutput a file name.
+ */
+public static void STORE_KEYS( final KEY_ITERATOR i, final DataOutput dataOutput ) throws IOException {
+	while( i.hasNext() ) dataOutput.WRITE_KEY( i.NEXT_KEY() );
+}
+
+/** Stores the element returned by an iterator to a given filename.
+ *
+ * @param i an iterator whose output will be written to <code>filename</code>.
+ * @param filename a file name.
+ */
+public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename ) throws IOException {
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	while( i.hasNext() ) dos.WRITE_KEY( i.NEXT_KEY() );
+	dos.close();
+}
+
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:

@@ -426,6 +426,32 @@ $(COMPARATORS_STATIC): Comparators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COMPARATORS_STATIC)
 
+#
+# Fragmented stuff
+#
+
+BINIO_FRAGMENTS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/io/$(k)BinIOFragment.h)
+$(BINIO_FRAGMENTS): BinIOFragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(BINIO_FRAGMENTS)
+
+$(SOURCEDIR)/io/BinIO.c: BinIO.drv $(BINIO_FRAGMENTS)
+	./gencsource.sh BinIO.drv $@ >$@
+
+CSOURCES += $(SOURCEDIR)/io/BinIO.c
+
+
+TEXTIO_FRAGMENTS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/io/$(k)TextIOFragment.h)
+$(TEXTIO_FRAGMENTS): TextIOFragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(TEXTIO_FRAGMENTS)
+
+$(SOURCEDIR)/io/TextIO.c: TextIO.drv $(TEXTIO_FRAGMENTS)
+	./gencsource.sh TextIO.drv $@ >$@
+
+CSOURCES += $(SOURCEDIR)/io/TextIO.c
+
+
 
 
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
@@ -451,20 +477,23 @@ SOURCES = \
 	$(SOURCEDIR)/AbstractPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java \
-	$(SOURCEDIR)/AbstractStack.java # These are True Java Sources instead
+	$(SOURCEDIR)/AbstractStack.java \
+	$(SOURCEDIR)/io/FastBufferedInputStream.java \
+	$(SOURCEDIR)/io/FastBufferedOutputStream.java \
+	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
 
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	gcc -I. -ftabstop=4 $(if $(TEST),-DTEST,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< > $@
+	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< > $@
 
 
 clean: 
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f $(SOURCEDIR)/*/*.java
+	@rm -f $(SOURCEDIR)/{booleans,bytes,shorts,chars,ints,longs,floats,doubles,objects}/*.java
 	@rm -f $(SOURCEDIR)/*.{c,h,j} $(SOURCEDIR)/*/*.{c,h,j}
 	@rm -fr $(DOCSDIR)/*
 

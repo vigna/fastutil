@@ -1,0 +1,145 @@
+/*		 
+ * Copyright (C) 2004 Sebastiano Vigna 
+ *
+ *  This program is free software; you can redistribute it and/or modify it
+ *  under the terms of the GNU General Public License as published by the Free
+ *  Software Foundation; either version 2 of the License, or (at your option)
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ *  or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ *  for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ */
+
+
+/** Loads elements from a given fast buffered reader, storing them in a given array fragment.
+ *
+ * @param reader a fast buffered reader.
+ * @param array an array which will be filled with data from <code>reader</code>.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from <code>reader</code> (it might be less than <code>length</code> if <code>reader</code> ends).
+ */
+public static int LOAD_KEYS( final BufferedReader reader, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+	int i = 0;
+	String s;
+	try {
+		for( i = 0; i < length; i++ ) 
+			if ( ( s = reader.readLine() ) != null ) array[ i + offset ] = KEY_CLASS.PARSE_KEY( s );
+			else break;
+	}
+	catch( EOFException itsOk ) {}
+	return i;
+}
+
+/** Loads elements from a given fast buffered reader, storing them in a given array.
+ *
+ * @param reader a fast buffered reader.
+ * @param array an array which will be filled with data from <code>reader</code>.
+ * @return the number of elements actually read from <code>reader</code> (it might be less than the array length if <code>reader</code> ends).
+ */
+public static int LOAD_KEYS( final BufferedReader reader, final KEY_TYPE[] array ) throws IOException {
+	return LOAD_KEYS( reader, array, 0, array.length );
+}
+
+/** Loads elements from a given filename, storing them in a given array fragment.
+ *
+ * @param filename a file name.
+ * @param array an array which will be filled with data from the specified file.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from the given file (it might be less than <code>length</code> if the file is too short).
+ */
+public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+	final BufferedReader reader = new BufferedReader( new FileReader( filename.toString() ), BUFFER_SIZE );
+	final int result = LOAD_KEYS( reader, array, offset, length );
+	reader.close();
+
+	return result;
+}
+
+/** Loads elements from a given filename, storing them in a given array.
+ *
+ * @param filename a file name.
+ * @param array an array which will be filled with data from the specified file.
+ * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
+ */
+public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array ) throws IOException {
+	return LOAD_KEYS( filename, array, 0, array.length );
+}
+
+/** Stores an array fragment to a given print stream.
+ *
+ * @param array an array whose elements will be written to <code>stream</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param stream a print stream.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final PrintStream stream ) throws IOException {
+	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+	for( int i = 0; i < length; i++ ) stream.println( array[ offset + i ] );
+}
+
+/** Stores an array to a given print stream.
+ *
+ * @param array an array whose elements will be written to <code>stream</code>.
+ * @param stream a print stream.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final PrintStream stream ) throws IOException {
+	STORE_KEYS( array, 0, array.length, stream );
+}
+
+/** Stores an array fragment to a given filename.
+ *
+ * @param array an array whose elements will be written to <code>filename</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param filename a file name.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final CharSequence filename ) throws IOException {
+	final PrintStream stream = new PrintStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	STORE_KEYS( array, offset, length, stream );
+	stream.close();
+}
+
+/** Stores an array to a given filename.
+ *
+ * @param array an array whose elements will be written to <code>filename</code>.
+ * @param filename a file name.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final CharSequence filename ) throws IOException {
+	STORE_KEYS( array, 0, array.length, filename );
+}
+
+/** Stores the element returned by an iterator to a given print stream.
+ *
+ * @param i an iterator whose output will be written to <code>stream</code>.
+ * @param stream a file name.
+ */
+public static void STORE_KEYS( final KEY_ITERATOR i, final PrintStream stream ) throws IOException {
+	while( i.hasNext() ) stream.println( i.NEXT_KEY() );
+}
+
+/** Stores the element returned by an iterator to a given filename.
+ *
+ * @param i an iterator whose output will be written to <code>filename</code>.
+ * @param filename a file name.
+ */
+public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename ) throws IOException {
+	final PrintStream stream = new PrintStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ), BUFFER_SIZE ) );
+	STORE_KEYS( i, stream );
+	stream.close();
+}
+
+
+// Local Variables:
+// mode: jde
+// tab-width: 4
+// End:
