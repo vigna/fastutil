@@ -1028,7 +1028,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			if (!(o instanceof Map.Entry)) return false;
 			Map.Entry e = (Map.Entry)o;
 				
-			return KEY_EQUAL( key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE2TYPE( e.getValue() ) );
+			return KEY_EQUALS( key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE2TYPE( e.getValue() ) );
 		}
 		  
 		public int hashCode() {
@@ -2534,6 +2534,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 		{
 			java.util.ListIterator i, j;
+			Map.Entry E, F;
 			Object J;
 			i = (java.util.ListIterator)m.entrySet().iterator(); 
 			j = new java.util.LinkedList( t.entrySet() ).listIterator(); 
@@ -2543,21 +2544,31 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + level + ", " + seed + "): divergence in hasPrevious()" );
 
 				if ( r.nextFloat() < .8 && i.hasNext() ) {
-					ensure( ((Entry)i.next()).getKey().equals( J = ((Map.Entry)j.next()).getKey() ), "Error (" + level + ", " + seed + "): divergence in next()" );
+					ensure( (E=(Entry)i.next()).getKey().equals( J = (F=(Map.Entry)j.next()).getKey() ), "Error (" + level + ", " + seed + "): divergence in next()" );
 
-					if ( r.nextFloat() < 0.5 ) {
+					if ( r.nextFloat() < 0.3 ) {
 						i.remove();
 						j.remove();
 						t.remove( J );
 					}
+					else if ( r.nextFloat() < 0.3 ) {
+						Object U = VALUE2OBJ(genValue());
+						E.setValue( U );
+                        t.put( F.getKey(), U );
+					}
 				}
 				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-					ensure( ((Entry)i.previous()).getKey().equals( J = ((Map.Entry)j.previous()).getKey() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
+					ensure( (E=(Entry)i.previous()).getKey().equals( J = (F=(Map.Entry)j.previous()).getKey() ), "Error (" + level + ", " + seed + "): divergence in previous()" );
 
-					if ( r.nextFloat() < 0.5 ) {
+					if ( r.nextFloat() < 0.3 ) {
 						i.remove();
 						j.remove();
 						t.remove( J );
+					}
+					else if ( r.nextFloat() < 0.3 ) {
+						Object U = VALUE2OBJ(genValue());
+						E.setValue( U );
+                        t.put( F.getKey(), U );
 					}
 				}
 

@@ -28,9 +28,17 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
-    MAP=(OpenHashMap LinkedOpenHashMap RBTreeMap AVLTreeMap)
+    CUSTOM_SET=(ObjectOpenCustomHashSet ObjectLinkedOpenCustomHashSet)
 
-    for ((f=0; f<${#MAP[*]}; f++)); do
+    for ((f=0; f<${#CUSTOM_SET[*]}; f++)); do
+	CLASSNAME=it.unimi.dsi.fastutil.objects.${CUSTOM_SET[$f]}
+	echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
+	java -ea -server $CLASSNAME test $t $lf
+    done
+
+     MAP=(OpenHashMap LinkedOpenHashMap RBTreeMap AVLTreeMap)
+
+     for ((f=0; f<${#MAP[*]}; f++)); do
 	l=${#TYPE[*]}
 	if [[ ${MAP[$f]} != "OpenHashMap" && ${MAP[$f]} != "LinkedOpenHashMap" ]]; then l=$((l-1)); fi # Only hash maps may have reference keys.
 	for ((k=1; k<l; k++)); do
@@ -44,6 +52,16 @@ for ((t=1; t<10000; t*=10)); do
 			java -ea -server $CLASSNAME test $t
 		fi
 	    done
+	done
+    done
+
+    CUSTOM_MAP=(OpenCustomHashMap LinkedOpenCustomHashMap)
+
+    for ((f=0; f<${#CUSTOM_MAP[*]}; f++)); do
+	for ((v=1; v<${#TYPE[*]}; v++)); do
+	    CLASSNAME=it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$v]}${CUSTOM_MAP[$f]}
+	    echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
+	    java -ea -server $CLASSNAME test $t $lf
 	done
     done
 

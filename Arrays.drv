@@ -22,6 +22,8 @@
 package PACKAGE;
 
 import it.unimi.dsi.fastutil.Arrays;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
 
 /** A class providing static methods and objects that do useful things with type-specific arrays.
  *
@@ -54,7 +56,7 @@ public class ARRAYS {
 	 * an array with <code>length</code> entries whose first <code>array.length</code>
 	 * entries are the same as those of <code>array</code>.
 	 */
-	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE array[], final int length ) {
+	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE[] array, final int length ) {
 		if ( length > array.length ) {
 			KEY_TYPE t[] = new KEY_TYPE[ length ];
 			System.arraycopy( array, 0, t, 0, array.length );
@@ -72,7 +74,7 @@ public class ARRAYS {
 	 * an array with <code>length</code> entries whose first <code>preserve</code>
 	 * entries are the same as those of <code>array</code>.
 	 */
-	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE array[], final int length, final int preserve ) {
+	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE[] array, final int length, final int preserve ) {
 		if ( length > array.length ) {
 			KEY_TYPE t[] = new KEY_TYPE[ length ];
 			System.arraycopy( array, 0, t, 0, preserve );
@@ -97,7 +99,7 @@ public class ARRAYS {
 	 * <code>array.length</code> entries are the same as those of <code>array</code>.
 	 * */
 
-	public static KEY_TYPE[] grow( final KEY_TYPE array[], final int length ) {
+	public static KEY_TYPE[] grow( final KEY_TYPE[] array, final int length ) {
 		if ( length > array.length ) {
 			KEY_TYPE t[] = new KEY_TYPE[ (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE ) ];
 			System.arraycopy( array, 0, t, 0, array.length );
@@ -123,7 +125,7 @@ public class ARRAYS {
 	 * <code>preserve</code> entries are the same as those of <code>array</code>.
 	 * */
 
-	public static KEY_TYPE[] grow( final KEY_TYPE array[], final int length, final int preserve ) {
+	public static KEY_TYPE[] grow( final KEY_TYPE[] array, final int length, final int preserve ) {
 		if ( length > array.length ) {
 			KEY_TYPE t[] = new KEY_TYPE[ (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE ) ];
 			System.arraycopy( array, 0, t, 0, preserve );
@@ -143,7 +145,7 @@ public class ARRAYS {
 	 * 
 	 */
 
-	public static KEY_TYPE[] trim( final KEY_TYPE array[], final int length ) {
+	public static KEY_TYPE[] trim( final KEY_TYPE[] array, final int length ) {
 		if ( length >= array.length ) return array;
 		if ( length == 0 ) return EMPTY_ARRAY;
 		KEY_TYPE t[] = new KEY_TYPE[ length ];
@@ -165,7 +167,7 @@ public class ARRAYS {
 	 * 
 	 */
 
-	public static KEY_TYPE[] setLength( final KEY_TYPE array[], final int length ) {
+	public static KEY_TYPE[] setLength( final KEY_TYPE[] array, final int length ) {
 		if ( length == array.length ) return array;
 		if ( length == 0 ) return EMPTY_ARRAY;
 		if ( length < array.length ) return trim( array, length );
@@ -180,7 +182,7 @@ public class ARRAYS {
 	 * @return a new array containing <code>length</code> elements of <code>array</code> starting at <code>offset</code>.
 	 */
 
-	public static KEY_TYPE[] copy( final KEY_TYPE array[], final int offset, final int length ) {
+	public static KEY_TYPE[] copy( final KEY_TYPE[] array, final int offset, final int length ) {
 		ensureOffsetLength( array, offset, length );
 		if ( length == 0 ) return EMPTY_ARRAY;
 		final KEY_TYPE[] a = new KEY_TYPE[ length ];
@@ -194,8 +196,8 @@ public class ARRAYS {
 	 * @return a copy of <code>array</code>.
 	 */
 
-	public static KEY_TYPE[] copy( final KEY_TYPE array[] ) {
-		return copy( array, 0, array.length );
+	public static KEY_TYPE[] copy( final KEY_TYPE[] array ) {
+		return (KEY_TYPE[])array.clone();
 	}
 
 	/** Fills the given array with the given value.
@@ -207,7 +209,7 @@ public class ARRAYS {
 	 * @param value the new value for all elements of the array.
 	 */
 
-	public static void fill( final KEY_TYPE array[], final KEY_TYPE value ) {
+	public static void fill( final KEY_TYPE[] array, final KEY_TYPE value ) {
 		int i = array.length;
 		while( i-- != 0 ) array[ i ] = value;
 	}
@@ -224,10 +226,29 @@ public class ARRAYS {
 	 * @param value the new value for all elements of the specified portion of the array.
 	 */
 
-	public static void fill( final KEY_TYPE array[], final int from, int to, final KEY_TYPE value ) {
+	public static void fill( final KEY_TYPE[] array, final int from, int to, final KEY_TYPE value ) {
 		ensureFromTo( array, from, to );
 		if ( from == 0 ) while( to-- != 0 ) array[ to ] = value;
 		else for( int i = from; i < to; i++ ) array[ i ] = value;
+	}
+
+
+
+	/** Returns true if the two arrays are elementwise equal.
+	 *
+	 * <P>This method uses a backward loop. It is significantly faster than the corresponding
+	 * method in {@link java.util.Arrays}.
+	 *
+	 * @param a1 an array.
+	 * @param a2 another array.
+	 * @return true if the two arrays are of the same length, and their elements are equal.
+	 */
+
+	public static boolean equals( final KEY_TYPE[] a1, final KEY_TYPE a2[] ) {
+		int i = a1.length;
+		if ( i != a2.length ) return false;
+		while( i-- != 0 ) if (! KEY_EQUALS( a1[ i ], a2[ i ] ) ) return false;
+		return true;
 	}
 
 
@@ -258,6 +279,38 @@ public class ARRAYS {
 	public static void ensureOffsetLength( final KEY_TYPE[] a, final int offset, final int length ) {
 		Arrays.ensureOffsetLength( a.length, offset, length );
 	}
+
+
+	/** A type-specific content-based hash strategy for arrays. */
+
+	private static final class ArrayHashStrategy implements Hash.Strategy, java.io.Serializable {
+
+		public int hashCode( final Object o ) {
+			if ( o == null ) return 0;
+			if ( o == HashCommon.REMOVED ) return HashCommon.REMOVED.hashCode();
+			KEY_TYPE[] a = (KEY_TYPE[])o;
+			int i = a.length, hashCode = -1;
+			while( i-- != 0 ) hashCode = 31 * hashCode + KEY2INT( a[ i ] );
+			return hashCode;
+		}
+		
+		public boolean equals( final Object a, final Object b ) {
+			if ( a == null ) return b == null;
+			if ( a == HashCommon.REMOVED || b == HashCommon.REMOVED ) return a == b;
+			return ARRAYS.equals( (KEY_TYPE[])a, (KEY_TYPE[])b );
+		}
+	}
+
+	/** A type-specific content-based hash strategy for arrays.
+	 *
+	 * <P>This hash strategy may be used in custom hash collections whenever keys are
+	 * arrays, and they must be considered equal by content. This strategy
+	 * will handle <code>null</code> correctly, and it is serializable.
+	 */
+
+	public final static Hash.Strategy HASH_STRATEGY = new ArrayHashStrategy();
+
+
 
 }
 

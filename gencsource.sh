@@ -75,7 +75,8 @@ for((v=0; v<${#TYPE_CAP[*]}; v++)); do
     if [[ ${TYPE_CAP[$v]} == $VALUE_TYPE_CAP ]]; then break; fi;
 done
 
-if [[ $root != ${root#Linked} ]]; then linked=linked; else linked=unlinked; fi
+if [[ $root == *Linked* ]]; then Linked=Linked; fi
+if [[ $root == *Custom* ]]; then Custom=Custom; fi
 
 echo -e \
 \
@@ -83,7 +84,8 @@ echo -e \
 "/* Generic definitions */\n"\
 \
 \
-"#define $linked\n"\
+"${Linked:+#define Linked}\n"\
+"${Custom:+#define Custom}\n"\
 "#define PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$k]}\n"\
 "#define VALUE_PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$v]}\n"\
 \
@@ -200,13 +202,8 @@ echo -e \
 "/* Implementations */\n"\
 \
 \
-"#ifdef linked\n"\
-"#define OPEN_HASH_SET ${TYPE_CAP[$k]}LinkedOpenHashSet\n\n"\
-"#define OPEN_HASH_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}LinkedOpenHashMap\n\n"\
-"#else\n"\
-"#define OPEN_HASH_SET ${TYPE_CAP[$k]}OpenHashSet\n\n"\
-"#define OPEN_HASH_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}OpenHashMap\n\n"\
-"#endif\n"\
+"#define OPEN_HASH_SET ${TYPE_CAP[$k]}${Linked}Open${Custom}HashSet\n\n"\
+"#define OPEN_HASH_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${Linked}Open${Custom}HashMap\n\n"\
 "#define LINKED_OPEN_HASH_SET ${TYPE_CAP[$k]}LinkedOpenHashSet\n\n"\
 "#define AVL_TREE_SET ${TYPE_CAP[$k]}AVLTreeSet\n\n"\
 "#define RB_TREE_SET ${TYPE_CAP[$k]}RBTreeSet\n\n"\
@@ -287,11 +284,16 @@ echo -e \
 \
 \
 "#if #keyclass(Object)\n"\
-"#define KEY_EQUAL(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
-"#define KEY_EQUAL_HASH(x,h,y) ( (x) == null ? (y) == null : (h) == (y).hashCode() && (x).equals(y) )\n"\
+"#ifdef Custom\n"\
+"#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
+"#define KEY_EQUALS_HASH(x,h,y) ( (h) == strategy.hashCode(y) && strategy.equals((x), (y)) )\n"\
 "#else\n"\
-"#define KEY_EQUAL(x,y) ( (x) == (y) )\n"\
-"#define KEY_EQUAL_HASH(x,h,y) ( (x) == (y) )\n"\
+"#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
+"#define KEY_EQUALS_HASH(x,h,y) ( (x) == null ? (y) == null : (h) == (y).hashCode() && (x).equals(y) )\n"\
+"#endif\n"\
+"#else\n"\
+"#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
+"#define KEY_EQUALS_HASH(x,h,y) ( (x) == (y) )\n"\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\
@@ -315,7 +317,11 @@ echo -e \
 "#define KEY_NULL (null)\n"\
 \
 "#if #keyclass(Object)\n"\
+"#ifdef Custom\n"\
+"#define KEY2INT(x) ( strategy.hashCode(x) )\n"\
+"#else\n"\
 "#define KEY2INT(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
+"#endif\n"\
 "#else\n"\
 "#define KEY2INT(x) (System.identityHashCode(x))\n"\
 "#endif\n"\

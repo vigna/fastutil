@@ -1,4 +1,4 @@
-VERSION=4.0
+VERSION=4.1
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -79,10 +79,22 @@ bin:
 
 
 LinkedOpenHashSet.drv: OpenHashSet.drv
-	ln -s OpenHashSet.drv LinkedOpenHashSet.drv
+	ln -s OpenHashSet.drv $@
 
 LinkedOpenHashMap.drv: OpenHashMap.drv
-	ln -s OpenHashMap.drv LinkedOpenHashMap.drv
+	ln -s OpenHashMap.drv $@
+
+OpenCustomHashSet.drv: OpenHashSet.drv
+	ln -s OpenHashSet.drv $@
+
+OpenCustomHashMap.drv: OpenHashMap.drv
+	ln -s OpenHashMap.drv $@
+
+LinkedOpenCustomHashSet.drv: OpenHashSet.drv
+	ln -s OpenHashSet.drv $@
+
+LinkedOpenCustomHashMap.drv: OpenHashMap.drv
+	ln -s OpenHashMap.drv $@
 
 CSOURCES := 
 
@@ -228,6 +240,16 @@ $(LINKED_OPEN_HASH_SETS): LinkedOpenHashSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LINKED_OPEN_HASH_SETS)
 
+OPEN_CUSTOM_HASH_SETS := $(SOURCEDIR)/objects/ObjectOpenCustomHashSet.c
+$(OPEN_CUSTOM_HASH_SETS): OpenCustomHashSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(OPEN_CUSTOM_HASH_SETS)
+
+LINKED_OPEN_CUSTOM_HASH_SETS := $(SOURCEDIR)/objects/ObjectLinkedOpenCustomHashSet.c
+$(LINKED_OPEN_CUSTOM_HASH_SETS): LinkedOpenCustomHashSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(LINKED_OPEN_CUSTOM_HASH_SETS)
+
 AVL_TREE_SETS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)AVLTreeSet.c)
 $(AVL_TREE_SETS): AVLTreeSet.drv; ./gencsource.sh $< $@ >$@
 
@@ -247,6 +269,16 @@ LINKED_OPEN_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOUR
 $(LINKED_OPEN_HASH_MAPS): LinkedOpenHashMap.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LINKED_OPEN_HASH_MAPS)
+
+OPEN_CUSTOM_HASH_MAPS := $(foreach v,$(TYPE), $(SOURCEDIR)/objects/Object2$(v)OpenCustomHashMap.c)
+$(OPEN_CUSTOM_HASH_MAPS): OpenCustomHashMap.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(OPEN_CUSTOM_HASH_MAPS)
+
+LINKED_OPEN_CUSTOM_HASH_MAPS := $(foreach v,$(TYPE), $(SOURCEDIR)/objects/Object2$(v)LinkedOpenCustomHashMap.c)
+$(LINKED_OPEN_CUSTOM_HASH_MAPS): LinkedOpenCustomHashMap.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(LINKED_OPEN_CUSTOM_HASH_MAPS)
 
 AVL_TREE_MAPS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)AVLTreeMap.c))
 $(AVL_TREE_MAPS): AVLTreeMap.drv; ./gencsource.sh $< $@ >$@

@@ -32,7 +32,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.NoSuchElementException;
 
-#ifdef linked
+#ifdef Linked
 import java.util.Comparator;
 import java.util.SortedSet;
 
@@ -77,6 +77,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SORTED_SET implements java.io.Serial
 
 #else
 
+#ifdef Custom
+
 /**  A type-specific hash set with with a fast, small-footprint implementation.
  *
  * <P>Instances of this class use a hash table to represent a set. The table is
@@ -99,6 +101,34 @@ public class OPEN_HASH_SET extends ABSTRACT_SORTED_SET implements java.io.Serial
  */
 
 public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, Hash, SET {
+
+#else
+
+/**  A hash set with with a fast, small-footprint implementation whose {@linkplain it.unimi.dsi.fastutil.Hash.Strategy hashing strategy}
+ * is specified at creation time.
+ *
+ * <P>Instances of this class use a hash table to represent a set. The table is
+ * enlarged as needed when new entries are created, but it is <em>never</em> made
+ * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * methods} lets you control the size of the table; this is particularly useful
+ * if you reuse instances of this class.
+ *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
+ * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, Hash, SET {
+
+#endif
 
 #endif
 
@@ -126,7 +156,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	/** The growth factor of the table. The next table size will be <code>{@link Hash#PRIMES}[{@link #p}+growthFactor</code>. */
 	protected transient int growthFactor = Hash.DEFAULT_GROWTH_FACTOR;
 
-#ifdef linked
+#ifdef Linked
 	/** The index of the first entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
 	protected transient int first = -1;
 	/** The index of the last entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
@@ -138,10 +168,28 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	protected transient int link[];
 #endif
 
+#ifdef Custom
+	/** The hash strategy of this custom set. */
+	protected Strategy strategy;
+#endif
+
     public static final long serialVersionUID = -7046029254386353129L;
 
 	private static final boolean asserts = ASSERTS;
 
+#ifdef Custom
+	/** Creates a new hash set.
+	 *
+	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+	 *
+	 * @param n the expected number of elements in the hash set. 
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 * @see Hash#PRIMES
+	 */
+	public OPEN_HASH_SET( final int n, final float f, final Strategy strategy ) {
+		this.strategy = strategy;
+#else
 	/** Creates a new hash set.
 	 *
 	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
@@ -150,8 +198,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 * @see Hash#PRIMES
 	 */
-	 
 	public OPEN_HASH_SET( final int n, final float f ) {
+#endif
 		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
 		if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
@@ -163,12 +211,24 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		this.maxFill = (int)( free * f );
 		key = new KEY_TYPE[ free ];
 		state = new byte[ free ];
-#ifdef linked
+#ifdef Linked
 		link = new int[ free ];
 #endif
 	}
 	 
 	 
+#ifdef Custom
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 *
+	 * @param n the expected number of elements in the hash set. 
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final int n, final Strategy strategy ) {
+		this( n, DEFAULT_LOAD_FACTOR, strategy );
+	}
+
+#else
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 *
 	 * @param n the expected number of elements in the hash set. 
@@ -178,16 +238,42 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		this( n, DEFAULT_LOAD_FACTOR );
 	}
 
+#endif
 
+
+#ifdef Custom
+	/** Creates a new hash set with {@link Hash#DEFAULT_INITIAL_SIZE} elements
+	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final Strategy strategy ) {
+	this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
 	/** Creates a new hash set with {@link Hash#DEFAULT_INITIAL_SIZE} elements
 	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 */
 	 
 	public OPEN_HASH_SET() {
 		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR );
-	}
- 
+	} 
+#endif
 
+
+#ifdef Custom
+	/** Creates a new hash set copying a given collection.
+	 *
+	 * @param c a {@link Collection} to be copied into the new hash set. 
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final Collection c, final float f, final Strategy strategy ) {
+	this( c.size(), f, strategy );
+		addAll( c );
+	}
+#else
 	/** Creates a new hash set copying a given collection.
 	 *
 	 * @param c a {@link Collection} to be copied into the new hash set. 
@@ -198,9 +284,23 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		this( c.size(), f );
 		addAll( c );
 	}
+#endif
 
 
 
+#ifdef Custom
+	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying a given collection.
+	 *
+	 * @param c a {@link Collection} to be copied into the new hash set. 
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final Collection c, final Strategy strategy ) {
+		this( c, DEFAULT_LOAD_FACTOR, strategy );
+	}
+
+#else
 	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
 	 * copying a given collection.
 	 *
@@ -210,8 +310,22 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final Collection c ) {
 		this( c, DEFAULT_LOAD_FACTOR );
 	}
+#endif
 
 
+#ifdef Custom
+	/** Creates a new hash set copying a given type-specific collection.
+	 *
+	 * @param c a type-specific collection to be copied into the new hash set. 
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final COLLECTION c, final float f, Strategy strategy ) {
+	this( c.size(), f, strategy );
+		addAll( c );
+	}
+#else
 	/** Creates a new hash set copying a given type-specific collection.
 	 *
 	 * @param c a type-specific collection to be copied into the new hash set. 
@@ -222,9 +336,21 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		this( c.size(), f );
 		addAll( c );
 	}
+#endif
 
 
-
+#ifdef Custom
+	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying a given type-specific collection.
+	 *
+	 * @param c a type-specific collection to be copied into the new hash set. 
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final COLLECTION c, final Strategy strategy ) {
+		this( c, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
 	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
 	 * copying a given type-specific collection.
 	 *
@@ -234,8 +360,22 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final COLLECTION c ) {
 		this( c, DEFAULT_LOAD_FACTOR );
 	}
+#endif
 
 
+#ifdef Custom
+	/** Creates a new hash set using elements provided by a type-specific iterator.
+	 *
+	 * @param i a type-specific iterator whose elements will fill the set.
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final KEY_ITERATOR i, final float f, final Strategy strategy ) {
+		this( DEFAULT_INITIAL_SIZE, f, strategy );
+		while( i.hasNext() ) add( i.NEXT_KEY() );
+	}
+#else
 	/** Creates a new hash set using elements provided by a type-specific iterator.
 	 *
 	 * @param i a type-specific iterator whose elements will fill the set.
@@ -246,8 +386,19 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		this( DEFAULT_INITIAL_SIZE, f );
 		while( i.hasNext() ) add( i.NEXT_KEY() );
 	}
+#endif
 
-
+#ifdef Custom
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by a type-specific iterator.
+	 *
+	 * @param i a type-specific iterator whose elements will fill the set.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final KEY_ITERATOR i, final Strategy strategy ) {
+		this( i, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by a type-specific iterator.
 	 *
 	 * @param i a type-specific iterator whose elements will fill the set.
@@ -256,8 +407,24 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final KEY_ITERATOR i ) {
 		this( i, DEFAULT_LOAD_FACTOR );
 	}
+#endif
+
+
 
 #if ! #keyclass(Object) && ! #keyclass(Reference)
+
+#ifdef Custom
+	/** Creates a new hash set using elements provided by an iterator.
+	 *
+	 * @param i an iterator whose elements will fill the set.
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final Iterator i, final float f, final Strategy strategy ) {
+		this( ITERATORS.AS_KEY_ITERATOR( i ), f, strategy );
+	}
+#else
 	/** Creates a new hash set using elements provided by an iterator.
 	 *
 	 * @param i an iterator whose elements will fill the set.
@@ -267,7 +434,19 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final Iterator i, final float f ) {
 		this( ITERATORS.AS_KEY_ITERATOR( i ), f );
 	}
+#endif
 
+#ifdef Custom
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by an iterator.
+	 *
+	 * @param i an iterator whose elements will fill the set.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final Iterator i, final Strategy strategy ) {
+		this( ITERATORS.AS_KEY_ITERATOR( i, strategy ) );
+	}
+#else
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by an iterator.
 	 *
 	 * @param i an iterator whose elements will fill the set.
@@ -278,8 +457,26 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	}
 #endif
 
+#endif
 
 
+
+#ifdef Custom
+	/** Creates a new hash set and fills it with the elements of a given array.
+	 *
+	 * @param a an array whose elements will be used to fill the set.
+	 * @param offset the first element to use.
+	 * @param length the number of elements to use.
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length, final float f, final Strategy strategy ) {
+	this( length < 0 ? 0 : length, f, strategy );
+		ARRAYS.ensureOffsetLength( a, offset, length );
+		for( int i = 0; i < length; i++ ) add( a[ offset + i ] );
+	}
+#else
 	/** Creates a new hash set and fills it with the elements of a given array.
 	 *
 	 * @param a an array whose elements will be used to fill the set.
@@ -293,8 +490,21 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		ARRAYS.ensureOffsetLength( a, offset, length );
 		for( int i = 0; i < length; i++ ) add( a[ offset + i ] );
 	}
+#endif
 
-
+#ifdef Custom
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor and fills it with the elements of a given array.
+	 *
+	 * @param a an array whose elements will be used to fill the set.
+	 * @param offset the first element to use.
+	 * @param length the number of elements to use.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length, final Strategy strategy ) {
+		this( a, offset, length, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor and fills it with the elements of a given array.
 	 *
 	 * @param a an array whose elements will be used to fill the set.
@@ -305,7 +515,20 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length ) {
 		this( a, offset, length, DEFAULT_LOAD_FACTOR );
 	}
+#endif
 
+#ifdef Custom
+	/** Creates a new set copying the elements of an array.
+	 *
+	 * @param a an array to be copied into the new hash set. 
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final KEY_TYPE[] a, final float f, final Strategy strategy ) {
+		this( a, 0, a.length, f, strategy );
+	}
+#else
 	/** Creates a new set copying the elements of an array.
 	 *
 	 * @param a an array to be copied into the new hash set. 
@@ -315,8 +538,20 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final KEY_TYPE[] a, final float f ) {
 		this( a, 0, a.length, f );
 	}
+#endif
 
-
+#ifdef Custom
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying the elements of an array.
+	 *
+	 * @param a an array to be copied into the new hash set. 
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_SET( final KEY_TYPE[] a, final Strategy strategy ) {
+		this( a, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
 	 * copying the elements of an array.
 	 *
@@ -326,7 +561,19 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	public OPEN_HASH_SET( final KEY_TYPE[] a ) {
 		this( a, DEFAULT_LOAD_FACTOR );
 	}
+#endif
 
+
+#ifdef Custom
+	/** Gets the hashing strategy.
+	 *
+	 * @return the hashing strategy of this custom hash set.
+	 */
+
+	public Strategy strategy() {
+		return strategy;
+	}
+#endif
 
 	/** Sets the growth factor. Subsequent enlargements will increase the table
 	 * size roughly by a multiplicative factor of 2<sup>p/16</sup>.
@@ -338,6 +585,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		if ( growthFactor <= 0 ) throw new IllegalArgumentException( "Illegal growth factor " + growthFactor );
 		this.growthFactor = growthFactor;
 	}
+
 
 	/** Gets the growth factor.
 	 *
@@ -376,27 +624,27 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		// The primary hash, a.k.a. starting point.
 		int h1 = k2i % n;
 
-		if ( state[ h1 ] == OCCUPIED && ! KEY_EQUAL_HASH( k, h, key[ h1 ] ) ) {
+		if ( state[ h1 ] == OCCUPIED && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ) {
 			// The secondary hash.
 			final int h2 = ( k2i % ( n - 2 ) ) + 1;
-			do h1 = ( h1 + h2 ) % n; while( state[ h1 ] == OCCUPIED && ! KEY_EQUAL_HASH( k, h, key[ h1 ] ) ); // There's always a FREE entry.
+			do h1 = ( h1 + h2 ) % n; while( state[ h1 ] == OCCUPIED && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ); // There's always a FREE entry.
 		}
 
 		if (state[ h1 ] == FREE) return h1;
-		if (state[ h1 ] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUAL_HASH( k, h, key[ h1 ] ).
+		if (state[ h1 ] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUALS_HASH( k, h, key[ h1 ] ).
 
 		/* Tables without deletions will never use code beyond this point. */
 
 		final int i = h1; // Remember first available bucket for later.
 		  
 		/** See the comments in the documentation of the interface Hash. */
-		if ( state[ h1 ] != FREE && ! KEY_EQUAL_HASH( k, h, key[ h1 ] ) ) {
+		if ( state[ h1 ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ) {
 			// The secondary hash.
 			final int h2 = ( k2i % ( n - 2 ) ) + 1;
-			do h1 = ( h1 + h2 ) % n;  while( state[ h1 ] != FREE && ! KEY_EQUAL_HASH( k, h, key[ h1 ] ) );
+			do h1 = ( h1 + h2 ) % n;  while( state[ h1 ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) );
 		}
 		  
-		return state[ h1 ] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUAL_HASH( k, h, key[ h1 ] ).
+		return state[ h1 ] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUALS_HASH( k, h, key[ h1 ] ).
 	}
 
 
@@ -421,13 +669,13 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		int h1 = k2i % n;
 		  
 		/** See the comments in the documentation of the interface Hash. */
-		if ( state[ h1 ] != FREE && ! KEY_EQUAL_HASH( k, h, key[ h1 ] ) ) {
+		if ( state[ h1 ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ) {
 			// The secondary hash.
 			final int h2 = ( k2i % ( n - 2 ) ) + 1;
-			do h1 = ( h1 + h2 ) % n; while( state[ h1 ] != FREE && ! KEY_EQUAL_HASH( k, h, key[ h1 ] ) ); // There's always a FREE entry.
+			do h1 = ( h1 + h2 ) % n; while( state[ h1 ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ); // There's always a FREE entry.
 		}
 
-		return state[ h1 ] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUAL_HASH( k, h, key[ h1 ] ).
+		return state[ h1 ] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUALS_HASH( k, h, key[ h1 ] ).
 	}
  
 
@@ -440,7 +688,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		state[ i ] = OCCUPIED;
 		key[ i ] = k;
 
-#ifdef linked
+#ifdef Linked
 		if ( count == 0 ) {
 			first = last = i;
 			link[ i ] = 0;
@@ -475,7 +723,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		key[ i ] = HashCommon.REMOVED;
 #endif
 
-#ifdef linked
+#ifdef Linked
 		fixPointers( i );
 #endif
 
@@ -506,14 +754,14 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		ObjectArrays.fill( key, null );
 #endif
 
-#ifdef linked
+#ifdef Linked
 		first = last = -1;
 #endif
 	}
 
 
 
-#ifdef linked
+#ifdef Linked
 
 	/** Modifies the {@link #link} vector so that the given entry is removed.
 	 *
@@ -599,7 +847,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		}
 
 		SetIterator( KEY_TYPE from ) {
-			if ( KEY_EQUAL( key[ last ], from ) ) {
+			if ( KEY_EQUALS( key[ last ], from ) ) {
 				prev = last;
 				index = count;
 			}
@@ -607,7 +855,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 				if ( ! contains( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
 				next = first;
 				KEY_TYPE k;
-				do k = NEXT_KEY(); while( ! KEY_EQUAL( k, from ) );
+				do k = NEXT_KEY(); while( ! KEY_EQUALS( k, from ) );
 				curr = -1;
 			}
 		}
@@ -846,7 +1094,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 */
 
 	private void rehash( final int newP ) {
-#ifdef linked
+#ifdef Linked
 		int i = first, j = count, prev = -1, newPrev = -1, t, k2i, h1, h2;
 #else
 		int i = 0, j = count, k2i, h1, h2;
@@ -859,7 +1107,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		final int newN = PRIMES[ newP ];
 		final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[ newN ];
 		final byte state[] = this.state, newState[] = new byte[ newN ];
-#ifdef linked
+#ifdef Linked
 		final int link[] = this.link, newLink[] = new int[ newN ];
 		first = -1;
 #endif
@@ -883,7 +1131,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			newState[ h1 ] = OCCUPIED;
 			newKey[ h1 ] = k;
 
-#ifdef linked
+#ifdef Linked
 			t = i;
 			i = link[ i ] ^ prev;
 			prev = t;
@@ -907,7 +1155,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		maxFill = (int)( newN * f );
 		this.key = newKey;
 		this.state = newState;
-#ifdef linked
+#ifdef Linked
 		this.link = newLink;
 		this.last = newPrev;
 		if ( newPrev != -1 ) newLink[ newPrev ] ^= -1; 
@@ -942,8 +1190,11 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		}
 		c.key = (KEY_TYPE[])key.clone();
 		c.state = (byte[])state.clone();
-#ifdef linked
+#ifdef Linked
 		c.link = (int[])link.clone();
+#endif
+#ifdef Custom
+		c.strategy = strategy;
 #endif
 		return c;
 	}
@@ -986,7 +1237,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			if ( state[ n ] == OCCUPIED && ! contains( key[ n ] ) ) 
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
 
-#ifdef linked
+#ifdef Linked
 		KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)iterator();
 		KEY_TYPE k;
 		n = size();
@@ -1023,7 +1274,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		
 		final KEY_TYPE key[] = this.key = new KEY_TYPE[ n ];
 		final byte state[] = this.state = new byte[ n ];
-#ifdef linked
+#ifdef Linked
 		final int link[] = this.link = new int[ n ];
 		int prev = -1;
 		first = last = -1;
@@ -1048,7 +1299,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			state[ h1 ] = OCCUPIED;
 			key[ h1 ] = k;
 
-#ifdef linked
+#ifdef Linked
 			if ( first != -1 ) {
 				link[ prev ] ^= h1;
 				link[ h1 ] = prev;
@@ -1061,7 +1312,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 #endif
 		}
 
-#ifdef linked
+#ifdef Linked
 		last = prev;
 		if ( prev != -1 ) link[ prev ] ^= -1; 
 #endif
@@ -1081,12 +1332,83 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 #elif !#keyclass(Object) && !#keyclass(Reference)
 		return r.NEXT_KEY(); 
 #elif #keyclass(Object)
+#ifdef Custom
+		int i = r.nextInt( 3 );
+		byte a[] = new byte[ i ];
+		while( i-- != 0 ) a[ i ] = (byte)r.nextInt();
+		return a;
+#else
 		return Integer.toBinaryString( r.nextInt() );
+#endif
 #else
 		return new java.io.Serializable() {};
 #endif
 	}
 
+
+	private static final class ArrayComparator implements java.util.Comparator {
+		public int compare( Object a, Object b ) {
+			byte[] aa = (byte[])a;
+			byte[] bb = (byte[])b;
+			int length = Math.min( aa.length, bb.length );
+			for( int i = 0; i < length; i++ ) {
+				if ( aa[ i ] < bb[ i ] ) return -1;
+				if ( aa[ i ] > bb[ i ] ) return 1;
+			}
+			return aa.length == bb.length ? 0 : ( aa.length < bb.length ? -1 : 1 );
+		}
+	}
+
+	private static final class MockSet extends java.util.TreeSet {
+		private java.util.List list = new java.util.ArrayList();
+
+		public MockSet( java.util.Comparator c ) { super( c ); }
+
+		public boolean add( Object k ) {
+			if ( ! contains( k ) ) list.add( k );
+			return super.add( k );
+		}
+
+		public boolean addAll( Collection c ) {
+			Iterator i = c.iterator();
+			boolean result = false;
+			while( i.hasNext() ) result |= add( i.next() );
+			return result;
+		}
+
+		public boolean removeAll( Collection c ) {
+			Iterator i = c.iterator();
+			boolean result = false;
+			while( i.hasNext() ) result |= remove( i.next() );
+			return result;
+		}
+
+		public boolean remove( Object k ) {
+			if ( contains( k ) ) {
+				int i = list.size();
+				while( i-- != 0 ) if ( comparator().compare( list.get( i ), k ) == 0 ) {
+					list.remove( i );
+					break;
+				}
+			}
+			return super.remove( k );
+		}
+
+		private void justRemove( Object k ) { super.remove( k ); }
+
+		public Iterator iterator() {
+			return new Iterator() {
+					final Iterator iterator = list.iterator();
+					Object curr;
+					public Object next() { return curr = iterator.next(); }
+					public boolean hasNext() { return iterator.hasNext(); }
+					public void remove() { 
+						justRemove( curr );
+						iterator.remove(); 
+					}
+				};
+		}
+	}
 
 	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
 	private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
@@ -1097,9 +1419,10 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	}
 
 	private static void speedTest( int n, float f, boolean comp ) {
+#ifndef Custom
 		int i, j;
 		OPEN_HASH_SET m;
-#ifdef linked
+#ifdef Linked
 		java.util.LinkedHashSet t;
 #else
 		java.util.HashSet t;
@@ -1118,7 +1441,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		if ( comp ) { for( j = 0; j < 20; j++ ) {
 
-#ifdef linked
+#ifdef Linked
 			t = new java.util.LinkedHashSet( 16 );
 #else
 			t = new java.util.HashSet( 16 );
@@ -1231,6 +1554,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		System.out.println( "fastutil  Add: " + format( totAdd/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
 
 		System.out.println();
+#endif
 	}
 
 
@@ -1247,11 +1571,23 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 	private static void test( int n, float f ) {
 		int c;
-		OPEN_HASH_SET m = new OPEN_HASH_SET(Hash.DEFAULT_INITIAL_SIZE, f);
-#ifdef linked
-		Set t = new java.util.LinkedHashSet();
+#ifdef Custom
+		OPEN_HASH_SET m = new OPEN_HASH_SET(Hash.DEFAULT_INITIAL_SIZE, f, it.unimi.dsi.fastutil.bytes.ByteArrays.HASH_STRATEGY);
 #else
+		OPEN_HASH_SET m = new OPEN_HASH_SET(Hash.DEFAULT_INITIAL_SIZE, f);
+#endif
+#ifdef Linked
+#ifdef Custom
+		Set t = new MockSet(new ArrayComparator());
+#else
+		Set t = new java.util.LinkedHashSet();
+#endif
+#else
+#ifdef Custom
+		Set t = new java.util.TreeSet(new ArrayComparator());
+#else 
 		Set t = new java.util.HashSet();
+#endif
 #endif
 
 		/* First of all, we fill t with random data. */
@@ -1349,9 +1685,13 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		/* Now we make m into an array, make it again a set and check it is OK. */
 		KEY_TYPE a[] = m.TO_KEY_ARRAY();
 		  
+#ifdef Custom
+		if (!new OPEN_HASH_SET(a, m.strategy()).equals(m))
+			System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
+#else
 		if (!new OPEN_HASH_SET(a).equals(m))
 			System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
-
+#endif
 
 		/* Now we check cloning. */
 
@@ -1399,15 +1739,33 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		m.addAll( t );
 #endif
 
+		/* Now we put and remove random data in m and t, checking that the result is the same. */
 
-#ifdef linked
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in add() between t and m after save/read");
+				System.exit( 1 );
+			}
+			T = genKey();
+			if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in remove() between t and m after save/read");
+				System.exit( 1 );
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after post-save/read removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after post-save/read removal");
+
+
+#ifdef Linked
 
 				 
 		/* Now we play with iterators, but only in the linked case. */
 
 		{
 			java.util.ListIterator i, j;
-			Object J;
+			Object I, J;
 			i = (java.util.ListIterator)m.iterator(); 
 			j = new java.util.LinkedList( t ).listIterator(); 
 
@@ -1416,8 +1774,11 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
 
 				if ( r.nextFloat() < .8 && i.hasNext() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( i.next(), J = j.next() ), "Error (" + seed + "): divergence in next()" );
+#else
 					ensure( i.next().equals( J = j.next() ), "Error (" + seed + "): divergence in next()" );
-
+#endif
 					if ( r.nextFloat() < 0.5 ) {
 						i.remove();
 						j.remove();
@@ -1425,8 +1786,11 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 					}
 				}
 				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( i.previous(), J = j.previous() ), "Error (" + seed + "): divergence in previous()" );
+#else
 					ensure( i.previous().equals( J = j.previous() ), "Error (" + seed + "): divergence in previous()" );
-
+#endif
 					if ( r.nextFloat() < 0.5 ) {
 						i.remove();
 						j.remove();
@@ -1456,7 +1820,11 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" );
 
 				if ( r.nextFloat() < .8 && i.hasNext() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( i.next(), J = j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+#else
 					ensure( i.next().equals( J = j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+#endif
 
 					if ( r.nextFloat() < 0.5 ) {
 						i.remove();
@@ -1465,7 +1833,11 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 					}
 				}
 				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( i.previous(), J = j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+#else
 					ensure( i.previous().equals( J = j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+#endif
 
 					if ( r.nextFloat() < 0.5 ) {
 						i.remove();

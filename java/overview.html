@@ -93,7 +93,7 @@
     absence of wrappers around primitive types can increas speed and reduce
     space occupancy by several times. The implementation of generics in Java
     will not change this fact, since there will be no genericity for primitive
-    types: thanks to automatic boxing/deboxing of primitive types, juggling will
+    types: thanks to automatic boxing/deboxing of primitive types, type juggling will
     be eliminated, but the data structures themselves will remain much larger and
     slower than needed.
 
@@ -140,17 +140,23 @@
       classes are significantly faster.</p>
     
     <P>Thus, an {@link it.unimi.dsi.fastutil.ints.IntOpenHashSet} stores
-    integers efficiently and implements {@link it.unimi.dsi.fastutil.ints.IntSet}, whereas a {@link
+    integers efficiently and implements {@link
+    it.unimi.dsi.fastutil.ints.IntSet}, whereas a {@link
     it.unimi.dsi.fastutil.longs.Long2IntAVLTreeMap} does the same for maps from
     longs to integers (but the map will be sorted, tree based, and balanced
     using the AVL criterion), implementing {@link
-    it.unimi.dsi.fastutil.longs.Long2IntMap}. A {@link
-    it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet} stores longs in a hash
-    table, but provides a predictable iteration order (the insertion order) and
-    access to first/last elements of the order. A {@link
-    it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap} is similar to
-    an {@link java.util.IdentityHashMap}. You can manage a priority queue of
-    characters in a heap using a {@link
+    it.unimi.dsi.fastutil.longs.Long2IntMap}. If you need additional
+    flexibility in choosing your {@linkplain
+    it.unimi.dsi.fastutil.Hash.Strategy hash strategy}, you can put, say, arrays
+    of integers in a {@link it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet},
+    maybe using the ready-made {@linkplain
+    it.unimi.dsi.fastutil.ints.IntArrays#HASH_STRATEGY hash strategy for
+    arrays}.  A {@link it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet}
+    stores longs in a hash table, but provides a predictable iteration order
+    (the insertion order) and access to first/last elements of the order. A
+    {@link it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap} is
+    similar to an {@link java.util.IdentityHashMap}. You can manage a priority
+    queue of characters in a heap using a {@link
     it.unimi.dsi.fastutil.chars.CharHeapPriorityQueue}, which implements {@link
     it.unimi.dsi.fastutil.chars.CharPriorityQueue}.  {@link
     it.unimi.dsi.fastutil.bytes.ByteArrayFrontCodedList Front-coded lists} are
@@ -158,7 +164,7 @@
     number of arrays: if you don't know them you probably don't need them.
 
     <p>Since there are eight primitive types in Java, and we support
-    reference-based containers, we get 1280 (!) classes (some nonsensical
+    reference-based containers, we get 1303 (!) classes (some nonsensical
     classes, such as <code>Boolean2BooleanAVLTreeMap</code>, are not
     generated). Many classes are generated just to mimic the hierarchy of
     {@link java.util} so to redistribute common code in a similar way. There
@@ -189,14 +195,14 @@
     <table border=1 title="Interfaces and Abstract Implementations">
 	<tr><th>Interfaces<th>Abstract Implementations<th>Implementations
 	<tr><td>Collection<td>AbstractCollection
-	<tr><td>Set<td>AbstractSet<td>OpenHashSet
+	<tr><td>Set<td>AbstractSet<td>OpenHashSet, OpenCustomHashSet
 	<tr><td>SortedSet<td>AbstractSortedSet<td>RBTreeSet, AVLTreeSet, LinkedOpenHashSet
-	<tr><td>Map<td>AbstractMap<td>OpenHashMap
+	<tr><td>Map<td>AbstractMap<td>OpenHashMap, OpenCustomHashMap
 	<tr><td>SortedMap<td>AbstractSortedMap<td>RBTreeMap, AVLTreeMap, LinkedOpenHashMap
 	<tr><td>List<td>AbstractList<td>ArrayList, ArrayFrontCodedList
 	<tr><td>PriorityQueue&dagger;<td>AbstractPriorityQueue&dagger;<td>HeapPriorityQueue, ArrayPriorityQueue
 	<tr><td>IndirectPriorityQueue&Dagger;<td>AbstractIndirectPriorityQueue&Dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
-	<tr><td>IndirectDoublePriorityQueue&Dagger;<td>AbstractIndirectDoublePriorityQueue&Dagger;<td>HeapSesquIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
+	<tr><td>IndirectDoublePriorityQueue&Dagger;<td>AbstractIndirectDoublePriorityQueue&Dagger;<td>HeapSesquiIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
 	<tr><td>Stack&dagger;<td>AbstractStack&dagger;<td>ArrayList
 	<tr><td>Iterator<td>AbstractIterator
 	<tr><td>Comparator<td>AbstractComparator
@@ -285,7 +291,8 @@
       the situation in {@link java.util} is definitely different, and
       inconsistent: for instance, in singletons <code>add()</code> always
       throws an exception, whereas <code>remove()</code> does it only if the
-      singleton would be modified.
+      singleton would be modified. This behaviour agrees with the interface documentation, 
+      but it is confusing nonetheless.
 
     
     <h3>Additional Features and Methods</h3>
@@ -453,8 +460,9 @@
       type-specific static classes such as {@link
       it.unimi.dsi.fastutil.chars.CharSets}, {@link
       it.unimi.dsi.fastutil.floats.Float2ByteSortedMaps}, {@link
-      it.unimi.dsi.fastutil.longs.LongArrays} and {@link
-      it.unimi.dsi.fastutil.floats.FloatHeaps}.  Presently, you can easily
+      it.unimi.dsi.fastutil.longs.LongArrays}, {@link
+      it.unimi.dsi.fastutil.floats.FloatHeaps} and  {@link
+      it.unimi.dsi.fastutil.doubles.DoublePriorityQueues}.  Presently, you can easily
       obtain {@linkplain it.unimi.dsi.fastutil.Sets#EMPTY_SET empty collections},
       {@linkplain it.unimi.dsi.fastutil.longs.Long2IntMaps#EMPTY_MAP empty
       type-specific collections}, {@linkplain
@@ -518,6 +526,48 @@
       pour them} into a set.
 
 
+    <h3>Queues</h3>
+
+    <P><code>fastutil</code> offers three types of queues: <em>direct
+    queues</em>, <em>indirect queues</em> and <em>double indirect
+    queues</em>. A direct queue offers type-specific method to {@linkplain
+    it.unimi.dsi.fastutil.longs.LongPriorityQueue#enqueue(long) enqueue} and
+    {@linkplain it.unimi.dsi.fastutil.longs.LongPriorityQueue#dequeueLong()
+    dequeue} elements. An indirect queue needs a <em>reference array</em>,
+    specified at construction time: {@linkplain
+    it.unimi.dsi.fastutil.IndirectPriorityQueue#enqueue(int) enqueue} and
+    {@linkplain it.unimi.dsi.fastutil.IndirectPriorityQueue#dequeue()
+    dequeue} operations refer to indices in the reference array. The advantage
+    is that it may be possible to {@linkplain
+    it.unimi.dsi.fastutil.IndirectPriorityQueue#changed(int) notify the change}
+      of any element of the reference array, or even to {@linkplain
+    it.unimi.dsi.fastutil.IndirectPriorityQueue#remove(int) remove an arbitrary
+      element}. Finally, {@linkplain it.unimi.dsi.fastutil.IndirectDoublePriorityQueue double indirect queues} maintain at the same time <em>two</em> orders
+      (very commonly, opposite orders).
+
+    <P>Queues have two type of implementations: a trivial array-based
+    implementation, and a heap-based implementation. In particular, heap-based
+    indirect queues may be {@linkplain
+    it.unimi.dsi.fastutil.objects.ObjectHeapIndirectPriorityQueue fully
+    indirect} or just {@linkplain
+    it.unimi.dsi.fastutil.objects.ObjectHeapSemiIndirectPriorityQueue
+    semi-indirect}: in the latter case, there is no need for an explicit
+    indirection array (which saves one integer per queue entry), but not all
+    operations will be avalable. Correspondingly, double priority queues have a
+    <em>{@linkplain it.unimi.dsi.fastutil.ints.IntHeapSesquiIndirectDoublePriorityQueue sesqui}</em>
+    (i.e., one-and-a-half) indirect implementation.
+
+
+    <h3>Custom Hashing</h3>
+
+    <P>Sometimes, the behaviour of the built-in equality and hashing methods is
+    not what you want. In particular, this happens if you store in a hash-based
+    collection arrays, and you would like to compare them by equality. For this kind of applications,
+      <code>fastutil</code> provides {@linkplain it.unimi.dsi.fastutil.Hash.Strategy custom hash strategies},
+      which define new equality and hashing methods to be used inside the collection. There are even
+      {@linkplain it.unimi.dsi.fastutil.ints.IntArrays#HASH_STRATEGY ready-made strategies} for arrays. Note, however,
+      that <code>fastutil</code> containers do not cache hash codes, so custom hash strategies must be efficient.
+
 
     <h3>Abstract Classes</h3>
 
@@ -531,13 +581,14 @@
     <h3>Performance</h3>
     
     <p>The main reason behind <code>fastutil</code> is performance, both in
-      time and in space. The relevant methods of type-specific hash maps and sets
-      are something like 2 to 10 times faster than those of the standard
-      classes. Note that performance of hash-based classes on object keys is
-      usually <em>worse</em> (from a few percent to doubled time) than that of
-      {@link java.util}, because <code>fastutil</code> classes do not cache hash
-      codes. Of course, you can try to get more speed from hash tables using a
-      small load factor (say, 1/2).
+    time and in space. The relevant methods of type-specific hash maps and sets
+    are something like 2 to 10 times faster than those of the standard
+    classes. Note that performance of hash-based classes on object keys is
+    usually <em>worse</em> (from a few percent to doubled time) than that of
+    {@link java.util}, because <code>fastutil</code> classes do not cache hash
+    codes (albeit it will not be that bad if keys cache internally hash codes,
+    as in the case of {@link java.lang.String}). Of course, you can try to get
+    more speed from hash tables using a small load factor (say, 1/2).
 
     <p>For tree-based classes you have two choices: AVL and red-black
       trees. The essential difference is that AVL trees are more balanced (their
