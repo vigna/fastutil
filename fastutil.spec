@@ -17,11 +17,12 @@ BuildRequires:	java-javadoc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
-fastutil provides type-specific maps, sets, lists and priority queues with a
-small memory footprint and fast access and insertion. The classes implement
-their standard counterpart interface (e.g., Map for maps) and can be plugged
-into existing code. Moreover, they provide additional features (such as
-bidirectional iterators) that are not available in the standard classes.
+fastutil extends the Java Collections Framework by providing type-specific
+maps, sets, lists and priority queues with a small memory footprint and
+fast access and insertion. The classes implement their standard counterpart
+interface (e.g., Map for maps) and can be plugged into existing code.
+Moreover, they provide additional features (such as bidirectional
+iterators) that are not available in the standard classes.
 
 
 %package        javadoc
