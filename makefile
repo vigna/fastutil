@@ -1,4 +1,4 @@
-VERSION=4.3
+VERSION=4.3.1
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -334,6 +334,11 @@ HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF)
 $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): HeapSesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
+
+HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapIndirectDoublePriorityQueue.c)
+$(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES): HeapIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayIndirectDoublePriorityQueue.c)
 $(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES): ArrayIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@

@@ -1,8 +1,8 @@
 %define section free
 
 Name:           fastutil
-Version:        4.3
-Release:        1jpp
+Version:        4.3.1
+Release:        0jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL

@@ -215,6 +215,7 @@ echo -e \
 "#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapSemiIndirectPriorityQueue\n\n"\
 "#define HEAP_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapIndirectPriorityQueue\n\n"\
 "#define HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapSesquiIndirectDoublePriorityQueue\n\n"\
+"#define HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapIndirectDoublePriorityQueue\n\n"\
 "#define ARRAY_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayPriorityQueue\n\n"\
 "#define ARRAY_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayIndirectPriorityQueue\n\n"\
 "#define ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayIndirectDoublePriorityQueue\n\n"\

@@ -76,7 +76,7 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
-    QUEUE=(HeapPriorityQueue HeapSemiIndirectPriorityQueue ArrayIndirectPriorityQueue HeapIndirectPriorityQueue HeapSesquiIndirectDoublePriorityQueue ArrayIndirectDoublePriorityQueue)
+    QUEUE=(HeapPriorityQueue HeapSemiIndirectPriorityQueue ArrayIndirectPriorityQueue HeapIndirectPriorityQueue HeapSesquiIndirectDoublePriorityQueue HeapIndirectDoublePriorityQueue ArrayIndirectDoublePriorityQueue)
 
     for ((f=0; f<${#QUEUE[*]}; f++)); do
 	l=${#TYPE[*]}

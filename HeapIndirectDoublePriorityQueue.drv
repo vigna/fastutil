@@ -22,118 +22,182 @@
 package PACKAGE;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
-import it.unimi.dsi.fastutil.IndirectPriorityQueue;
+import it.unimi.dsi.fastutil.IndirectDoublePriorityQueue;
 
 import java.util.NoSuchElementException;
 import java.util.Comparator;
 
-/** A type-specific heap-based indirect priority queue. 
+/** A type-specific heap-based indirect double priority queue.
  *
- * <P>Instances of this class use an additional <em>inversion array</em>, of the same length of the reference array,
- * to keep track of the heap position containing a given element of the reference array. The priority queue is
- * represented using a heap. The heap is enlarged as needed, but it is never
- * shrunk. Use the {@link #trim()} method to reduce its size, if necessary.
+ * <P>Instances of this class are based on two indirect
+ * heap-based queues. The queues are enlarged as needed, but they are never
+ * shrunk. Use the {@link #trim()} method to reduce their size, if necessary.
  *
- * <P>This implementation does <em>not</em> allow one to enqueue several times the same index.
+ * <P>Either comparator may be <code>null</code>, indicating that natural comparison should take place. Of course,
+ * it makes little sense having them equal.
  */
 
-public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QUEUE {
+public class HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE extends HEAP_INDIRECT_PRIORITY_QUEUE implements IndirectDoublePriorityQueue {
 
-	/** The inversion array. */
-	protected int inv[];
+	/** The secondary indirect queue. */
+	protected HEAP_INDIRECT_PRIORITY_QUEUE secondaryQueue;
 
-	/** Creates a new empty queue with a given capacity and comparator.
+	/** Creates a new empty queue with a given capacity.
 	 *
 	 * @param refArray the reference array.
 	 * @param capacity the initial capacity of this queue.
-	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c, KEY_COMPARATOR d ) {
 		super( refArray, capacity, c );
-		if ( capacity > 0 ) this.heap = new int[ capacity ];
-
-		this.refArray = refArray;
-		this.c = c;
-
-		this.inv = new int[ refArray.length ];
-		IntArrays.fill( inv, -1 );
+		secondaryQueue = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray, capacity, d );
 	}
 
-	/** Creates a new empty queue with a given capacity and using the natural order.
+
+	/** Creates a new empty queue with a given capacity.
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite order of <code>c</code>.
+	 *
+	 * @param refArray the reference array.
+	 * @param capacity the initial capacity of this queue.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity, KEY_COMPARATOR c ) {
+		super( refArray, capacity, c );
+		secondaryQueue = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray, capacity, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
+	}
+
+
+	/** Creates a new empty queue with a given capacity and natural order as primary comparator.
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite of the natural order.
 	 *
 	 * @param refArray the reference array.
 	 * @param capacity the initial capacity of this queue.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, int capacity ) {
 		this( refArray, capacity, null );
 	}
 
-	/** Creates a new empty queue with capacity equal to the length of the reference array and a given comparator.
+
+	/** Creates a new empty queue with capacity equal to the length of the reference array.
 	 *
 	 * @param refArray the reference array.
-	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c, KEY_COMPARATOR d ) {
+		this( refArray, refArray.length, c, d );
+	}
+
+	/** Creates a new empty queue with capacity equal to the length of the reference array.
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite order of <code>c</code>.
+	 *
+	 * @param refArray the reference array.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray, KEY_COMPARATOR c ) {
 		this( refArray, refArray.length, c );
 	}
 
-	/** Creates a new empty queue with capacity equal to the length of the reference array and using the natural order. 
+	/** Creates a new empty queue with capacity equal to the length of the reference array and natural order as primary comparator.
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite of the natural order.
+	 *
 	 * @param refArray the reference array.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( KEY_TYPE[] refArray ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( KEY_TYPE[] refArray ) {
 		this( refArray, refArray.length, null );
 	}
 
 
-	/** Wraps a given array in a queue using a given comparator.
+	/** Wraps a given array in a queue using the given comparators.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
 	 * @param size the number of elements to be included in the queue.
-	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final int size, final KEY_COMPARATOR c ) {
-		this( refArray, 0, c );
-		this.heap = a;
-		this.size = size;
-		int i = size;
-		while( i-- != 0 ) {
-			if ( inv[ a[ i ] ] != -1 ) throw new IllegalArgumentException( "Index " + a[ i ] + " appears twice in the heap" );
-			inv[ a[ i ] ] = i;
-		}
-		INDIRECT_HEAPS.makeHeap( refArray, a, inv, size, c );
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c, final KEY_COMPARATOR d ) {
+		super( refArray, a, size, c );
+		this.secondaryQueue = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray, (int[])a.clone(), size, d );
+	}
+
+	/** Wraps a given array in a queue using the given comparators.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The first elements of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param d the secondary comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final KEY_COMPARATOR c, final KEY_COMPARATOR d ) {
+		this( refArray, a, a.length, c, d );
 	}
 
 
 	/** Wraps a given array in a queue using a given comparator.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The elements of the array will be rearranged so to form a heap (this is
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite order of <code>c</code>.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
-	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
+	 * @param size the number of elements to be included in the queue.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final KEY_COMPARATOR c ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size, final KEY_COMPARATOR c ) {
+		this( refArray, a, size, c, c == null ? COMPARATORS.OPPOSITE_COMPARATOR : COMPARATORS.oppositeComparator( c ) );
+	}
+
+
+	/** Wraps a given array in a queue using a given comparator.
+	 *
+	 * <P>The queue returned by this method will be backed by the given array.
+	 * The elements of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
+	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite order of <code>c</code>.
+	 *
+	 * @param refArray the reference array.
+	 * @param a an array of indices into <code>refArray</code>.
+	 * @param c the primary comparator used in this queue, or <code>null</code> for the natural order.
+	 */
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, final KEY_COMPARATOR c ) {
 		this( refArray, a, a.length, c );
 	}
 
 	/** Wraps a given array in a queue using the natural order.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The first <code>size</code> element of the array will be rearranged so to form a heap (this is
+	 * The first <code>size</code> element of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite of the natural order.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
 	 * @param size the number of elements to be included in the queue.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a, int size ) {
 		this( refArray, a, size, null );
 	}
 
@@ -141,104 +205,83 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 	/** Wraps a given array in a queue using the natural order.
 	 *
 	 * <P>The queue returned by this method will be backed by the given array.
-	 * The elements of the array will be rearranged so to form a heap (this is
+	 * The elements of the array will be rearranged so to form a heap, and
+	 * moreover the array will be cloned and wrapped in a secondary queue (this is
 	 * more efficient than enqueing the elements of <code>a</code> one by one).
+	 *
+	 * <P>This constructor uses as secondary comparator the opposite of the natural order.
 	 *
 	 * @param refArray the reference array.
 	 * @param a an array of indices into <code>refArray</code>.
 	 */
-	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a ) {
+	public HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( final KEY_TYPE[] refArray, final int[] a ) {
 		this( refArray, a, a.length );
 	}
 
 
-	/** Ensures that the given index is a valid reference and belongs to the queue.
-	 *
-	 * @param index an index of the reference array.
-	 * @throws IndexOutOfBoundsException if the given index is negative or larger than the reference array length.
-	 * @throws IllegalArgumentException if the given index does not belong to the queue.
-	 */
-	protected void ensureHeapElement( final int index ) {
-		ensureElement( index );
-		if ( inv[ index ] < 0 ) throw new IllegalArgumentException( "Index " + index + " does not belong to the queue" );
-	}
-	
-	/** Ensures that the given index is a valid reference and does not belong to the queue.
-	 *
-	 * @param index an index in the reference array.
-	 * @throws IndexOutOfBoundsException if the given index is negative or larger than the reference array length.
-	 * @throws IllegalArgumentException if the given index belongs to the queue.
-	 */
-	protected void ensureNotHeapElement( final int index ) {
-		ensureElement( index );
-		if ( inv[ index ] >= 0 ) throw new IllegalArgumentException( "Index " + index + " belongs to the queue" );
-	}
-	
-
-	public void enqueue( final int x ) {
-		ensureNotHeapElement( x );
-
-		if ( size == heap.length ) heap = IntArrays.grow( heap, size + 1 );
-
-		inv[ heap[ size ] = x ] = size++;
-
-		INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, size - 1, c );
+	public void enqueue( int x ) {
+		secondaryQueue.enqueue( x );
+		super.enqueue( x );
 	}
 
 	public int dequeue() {
-		ensureNonEmpty();
-		
-		final int result = heap[ 0 ];
-		if ( --size != 0 ) inv[ heap[ 0 ] = heap[ size ] ] = 0;
-		inv[ result ] = -1;
-
-		if ( size != 0 ) INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, 0, c );
+		final int result = super.dequeue();
+		secondaryQueue.remove( result );
 		return result;
 	}
 
+	public int secondaryFirst() {
+		return secondaryQueue.first();
+	}
+
+	public int secondaryLast() { throw new UnsupportedOperationException(); }
+
 	public void changed() {
-		ensureNonEmpty();
-		INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, 0, c );
+		secondaryQueue.changed( heap[ 0 ] );
+		super.changed();
 	}
 
 	public void changed( final int index ) {
-		ensureHeapElement( index );
-		final int newPos = INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, inv[ index ], c );
-		INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, newPos, c );
+		secondaryQueue.changed( index );
+		super.changed( index );
 	}
 
-	/** Rebuilds this heap in a bottom-up fashion.
-	 */
 
 	public void allChanged() {
-		INDIRECT_HEAPS.makeHeap( refArray, heap, inv, size, c );
+		secondaryQueue.allChanged();
+		super.allChanged();
 	}
 
+	public void clear() { 
+		super.clear();
+		secondaryQueue.clear();
+	}
 
 	public void remove( final int index ) {
-		ensureHeapElement( index );
-
-		final int result = inv[ index ];
-		inv[ index ] = -1;
-
-		if ( result < --size ) {
-			inv[ heap[ result ] = heap[ size ] ] = result;
-			final int newPos = INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, result, c );
-			INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, newPos, c );
-		}
+		secondaryQueue.remove( index );
+		super.remove( index );
 	}
 
 
-	public void clear() {
-		size = 0;
-		IntArrays.fill( inv, -1 );
+	/** Trims the underlying queues so they have exactly {@link #size()} elements.
+	 */
+
+	public void trim() {
+		super.trim();
+		secondaryQueue.trim();
 	}
+
+	/** Returns the secondary comparator of this queue.
+	 *
+	 * @return the secondary comparator of this queue.
+	 * @see #secondaryFirst()
+	 */
+	public Comparator secondaryComparator() { return secondaryQueue.comparator(); }
 
 
 #ifdef TEST
 
 	/** The original class, now just used for testing. */
-
 
 	private static class TestQueue {
 
@@ -374,7 +417,6 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 		 */
 		public void remove() {
 			if ( n == 0 ) throw new NoSuchElementException();
-			if ( inSec[primary[0]] == -1 ) throw new IllegalArgumentException();
 			int result = primary[0];
 			int ins = inSec[result];
 			inSec[ result ] = -1;
@@ -398,41 +440,36 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 		}
 
 		public void remove( int index ) {
-			if ( index >= refArray.length ) throw new IndexOutOfBoundsException();
-			if ( inSec[index] == -1 ) throw new IllegalArgumentException();
-			int ins = inSec[index];
-			inSec[ index ] = -1;
+			if ( n == 0 ) throw new NoSuchElementException();
+			int result = primary[index];
+			int ins = inSec[result];
+			inSec[ result ] = -1;
 			// Copy a leaf 
-			primary[ins] = primary[n-1];
+			primary[index] = primary[n-1];
 			if ( ins == n-1 ) {
 				n--;
-				swimPrimary( ins );	
+				swimPrimary( index );	
 				return;
 			}
 			secondary[ins] = secondary[n-1]; 
 			inSec[secondary[ins]] = ins;
 			// Heapify
 			n--;
-			swimPrimary( ins );
+			swimPrimary( index );
 			swimSecondary( ins );
 		}
 
 		/** Signals that the minimum element with respect to the comparator has changed.
 		 */
 		public void change() {
-			if ( n == 0 ) throw new NoSuchElementException();
-			if ( inSec[primary[0]] == -1 ) throw new IllegalArgumentException();
 			int ins = inSec[primary[0]];
 			heapifyPrimary( 0 );
 			swimSecondary( ins );
 		}
 
 		public void change(int index) {
-			if ( index >= refArray.length ) throw new IndexOutOfBoundsException();
-			if ( inSec[index] == -1 ) throw new IllegalArgumentException();
-			if ( n == 0 ) throw new NoSuchElementException();
-			int ins = inSec[ index ];
-			swimPrimary( ins );
+			int ins = inSec[primary[index]];
+			swimPrimary( index );
 			swimSecondary( ins );
 		}
 
@@ -452,6 +489,7 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 			return s+ "]";
 		}
 	}
+
 
 	private static long seed = System.currentTimeMillis(); 
 	private static java.util.Random r = new java.util.Random( seed );
@@ -503,6 +541,8 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 		return true;
 	}
 
+
+
 	protected static void test( int n ) {
 		long ms;
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
@@ -511,17 +551,18 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 
 		for( int i = 0; i < n; i++ ) refArray[ i ] = genKey();
 		  
-		HEAP_INDIRECT_PRIORITY_QUEUE m = new HEAP_INDIRECT_PRIORITY_QUEUE( refArray,  COMPARATORS.NATURAL_COMPARATOR );
-		TestQueue t = new TestQueue( refArray, COMPARATORS.NATURAL_COMPARATOR, COMPARATORS.NATURAL_COMPARATOR );
+		HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE m = new HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE( refArray );
+		TestQueue t = new TestQueue( refArray, COMPARATORS.NATURAL_COMPARATOR, COMPARATORS.OPPOSITE_COMPARATOR );
 
 		/* We add pairs to t. */
 		for( int i = 0; i < n / 2;  i++ ) {
 			t.add( i );
 			m.enqueue( i );
 		}
-
-		ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ after creation (" + m + ", " + t + ")" );
-		ensure( invEqual( m.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after creation (" + cern.colt.Arrays.toString( m.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
+		
+		ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in primary heap after creation (" + m + ", " + t + ")" );
+		ensure( heapEqual( m.secondaryQueue.heap, t.secondary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in secondary heap after creation (" + m + ", " + t + ")" );
+		ensure( invEqual( m.secondaryQueue.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after creation (" + cern.colt.Arrays.toString( m.secondaryQueue.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
 
 		/* Now we add and remove random data in m and t, checking that the result is the same. */
 
@@ -554,12 +595,15 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): enqueue() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
 			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): enqueue() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
 
-			ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ after enqueue (" + m + ", " + t + ")" );
-			ensure( invEqual( m.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after enqueue (" + cern.colt.Arrays.toString( m.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
+			ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in primary heap after enqueue (" + m + ", " + t + ")" );
+			ensure( heapEqual( m.secondaryQueue.heap, t.secondary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in secondary heap after enqueue (" + m + ", " + t + ")" );
+			ensure( invEqual( m.secondaryQueue.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after enqueue (" + cern.colt.Arrays.toString( m.secondaryQueue.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
 			
 			if ( m.size() != 0 ) {
 				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after enqueue (" + m.first() + ", " + t.top() + ")");
+				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after enqueue (" + m.secondaryFirst() + ", " + t.secTop() + ")");
 			}
+
 
 			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
 
@@ -583,84 +627,37 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE extends HEAP_SEMI_INDIRECT_PRIORITY_QU
 			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): dequeue() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 			if ( mThrowsOutOfBounds == null ) ensure( rt == rm , "Error (" + seed + "): divergence in dequeue() between t and m (" + rt + ", " + rm + ")" );
 
-			ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ after dequeue (" + m + ", " + t + ")" );
-			ensure( invEqual( m.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after dequeue (" + cern.colt.Arrays.toString( m.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
-			
+			ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in primary heap after dequeue (" + m + ", " + t + ")" );
+			ensure( heapEqual( m.secondaryQueue.heap, t.secondary, m.size(), t.size() ), "Error (" + seed + "): m and t differ in secondary heap after dequeue (" + m + ", " + t + ")" );
+			ensure( invEqual( m.secondaryQueue.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after dequeue (" + cern.colt.Arrays.toString( m.secondaryQueue.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
+
 			if ( m.size() != 0 ) {
 				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after dequeue (" + m.first() + ", " + t.top() + ")");
-			}
-
-
-			int pos = r.nextInt( n * 2 );
-
-			try {
-				m.remove( pos );
-			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
-			catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
-			catch ( NoSuchElementException e ) { mThrowsNoElement = e; }
-
-			try {
-				t.remove( pos );
-			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
-			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
-			catch ( NoSuchElementException e ) { tThrowsNoElement = e; }
-
-			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): remove(int) divergence in IndexOutOfBoundsException (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): remove(int) divergence in IllegalArgumentException  (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): remove(int) divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-			if ( mThrowsOutOfBounds == null ) ensure( rt == rm , "Error (" + seed + "): divergence in remove(int) between t and m (" + rt + ", " + rm + ")" );
-
-			ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ after remove(int) (" + m + ", " + t + ")" );
-			ensure( invEqual( m.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after remove(int) (" + cern.colt.Arrays.toString( m.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
-
-			if ( m.size() != 0 ) {
-				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after remove(int) (" + m.first() + ", " + t.top() + ")");
-			}
-
-
-			pos = r.nextInt( n * 2 );
-
-			try {
-				m.changed( pos );
-			}
-			catch ( IndexOutOfBoundsException e ) { mThrowsOutOfBounds = e; }
-			catch ( IllegalArgumentException e ) { mThrowsIllegal = e; }
-			catch ( NoSuchElementException e ) { mThrowsNoElement = e; }
-
-			try {
-				t.change( pos );
-			}
-			catch ( IndexOutOfBoundsException e ) { tThrowsOutOfBounds = e; }
-			catch ( IllegalArgumentException e ) { tThrowsIllegal = e; }
-			catch ( NoSuchElementException e ) { tThrowsNoElement = e; }
-
-			ensure( ( mThrowsOutOfBounds == null ) == ( tThrowsOutOfBounds == null ), "Error (" + seed + "): change(int) divergence in IndexOutOfBoundsException (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" );
-			ensure( ( mThrowsIllegal == null ) == ( tThrowsIllegal == null ), "Error (" + seed + "): change(int) divergence in IllegalArgumentException  (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-			ensure( ( mThrowsNoElement == null ) == ( tThrowsNoElement == null ), "Error (" + seed + "): change(int) divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-			if ( mThrowsOutOfBounds == null ) ensure( rt == rm , "Error (" + seed + "): divergence in change(int) between t and m (" + rt + ", " + rm + ")" );
-
-			ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ after change(int) (" + m + ", " + t + ")" );
-			ensure( invEqual( m.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after change(int) (" + cern.colt.Arrays.toString( m.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
-
-			if ( m.size() != 0 ) {
-				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after change(int) (" + m.first() + ", " + t.top() + ")");
+				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after dequeue (" + m.secondaryFirst() + ", " + t.secTop() + ")");
 			}
 
 			if ( m.size() != 0 ) {
-
 				refArray[ m.first() ] = genKey();
-
+				
 				m.changed();
 				t.change();
 				
-				ensure( heapEqual( m.heap, t.primary, m.size(), t.size() ), "Error (" + seed + "): m and t differ after change (" + m + ", " + t + ")" );
-				ensure( invEqual( m.inv, t.inSec ), "Error (" + seed + "): m and t differ in inversion arrays after change (" + cern.colt.Arrays.toString( m.inv ) + ", " + cern.colt.Arrays.toString( t.inSec ) + ")" );
+				ensure( m.size() == t.size(), "Error (" + seed + "): m and t differ in size after change (" + m.size() + ", " + t.size() + ")");
 				
-				if ( m.size() != 0 ) {
-					ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after change (" + m.first() + ", " + t.top() + ")");
-				}
+				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after change (" + m.first() + ", " + t.top() + ")");
+				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after change (" + m.secondaryFirst() + ", " + t.secTop() + ")");
+			}
+
+			if ( m.size() != 0 ) {
+				refArray[ m.secondaryfirst() ] = genKey();
+				
+				m.changed( m.secondaryfirst() );
+				t.change( m.secondaryfirst() );
+				
+				ensure( m.size() == t.size(), "Error (" + seed + "): m and t differ in size after change of secondary first (" + m.size() + ", " + t.size() + ")");
+				
+				ensure( m.first() == t.top(), "Error (" + seed + "): m and t differ in first element after change of secondary first (" + m.first() + ", " + t.top() + ")");
+				ensure( m.secondaryFirst() == t.secTop(), "Error (" + seed + "): m and t differ in secondary first element after change of secondary first (" + m.secondaryFirst() + ", " + t.secTop() + ")");
 			}
 		}
 
