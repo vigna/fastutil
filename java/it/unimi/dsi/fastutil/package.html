@@ -6,7 +6,7 @@
 
   <body>
 
-	 <P>Provides type-specialized hash maps and sets with a small memory
+	 <P>Provides type-specific maps and sets with a small memory
 	 footprint and much (2 to 10 times) faster access and insertion. It is <A
 	 HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
 	 distributed under the <A
@@ -15,9 +15,10 @@
 
 	 <h2>Package Specification</h2>
 
-	 <p>The classes of this package specialize the most useful {@link
-	 java.util.HashSet} and {@link java.util.HashMap} classes to versions that
-	 accept a specific kind of key or value.
+	 <p>The classes of this package specialise the most useful {@link
+	 java.util.HashSet}, {@link java.util.HashMap}, {@link java.util.TreeSet}
+	 and {@link java.util.TreeMap} classes to versions that accept a specific
+	 kind of key or value.
 
 	 The general format is</p>
 		<div style="padding: 1em">
@@ -29,18 +30,18 @@
 		</div>
 	 <p>for maps.Thus, an {@link it.unimi.dsi.fastUtil.IntHashSet} stores
 	 integers efficiently, whereas a {@link
-	 it.unimi.dsi.fastUtil.Long2IntHashMap} does the same for maps from long
-	 integers to integers. By "type" here I mean a capitalized primitive type,
-	 or {@link java.lang.Object}.</p>
+	 it.unimi.dsi.fastUtil.Long2IntTreeMap} does the same for maps from long
+	 integers to integers (but the map will be sorted). By "type" here I mean a
+	 capitalised primitive type, or {@link java.lang.Object}.</p>
 	 
-	 <p>Since there are eight primitive types in Java, we get 269 (!) classes
+	 <p>Since there are eight primitive types in Java, we get 434 (!) classes
 	 (some nonsensical class, such as <code>Boolean2BooleanHashMap</code>, are
 	 not generated). Many classes are generated just to mimic the hierarchy of
 	 {@link java.util} so to redistribute common code in a similar way.</p>
 	 
-	 <p><b>All classes are not synchronized</b>. If multiple threads access one
+	 <p><b>All classes are not synchronised</b>. If multiple threads access one
 	 of these classes concurrently, and at least one of the threads modifies it,
-	 it must be synchronized externally. Iterators will behave unpredictably in
+	 it must be synchronised externally. Iterators will behave unpredictably in
 	 the presence of concurrent modifications.
 
 	 <h3>Interfaces Implemented</h3>
@@ -48,12 +49,14 @@
 	 <p>All maps and sets in <code>fastUtil</code> implement their standard
 	 counterpart interface (e.g., {@link java.util.Map} for maps). Thus, they
 	 can be just plugged in existing code, using the standard access (of course,
-	 any attempt to use the wrong type for keys or values will produce a
-	 {@link java.lang.ClassCastException}). However, they also provide (whenever
+	 any attempt to use the wrong type for keys or values will produce a {@link
+	 java.lang.ClassCastException}). However, they also provide (whenever
 	 possible) many polymorphic versions of the most used methods that allow to
 	 avoid the tedious "type juggling" that is well known to Java
 	 programmers. In doing so, they implement more stringent interfaces that
-	 extend the standard ones.</p>
+	 extend the standard ones (e.g., {@link
+	 it.unimi.dsi.fastUtil.Int2IntSortedMap} or {@link
+	 it.unimi.dsi.fastUtil.IntListIterator}.</p>
 	 
 	 <p>These new interfaces add some methods, which are rather obvious, and I
 	 suggest you to have a look at some of them. There are just a few
@@ -68,35 +71,45 @@
 		absence of a certain pair. Rather, they return a <em>default return
 		value</em>, which is set to 0 cast to the return type(or
 		<code>false</code> for booleans) at creation, but can be changed using
-		the <code>setDefRetValue()</code> method. Note that
-		changing the default return value does not change anything about the data
-		structure; it is just a way to return a reasonably meaningful result, and
-		it can be changed at any time.</li>
+		the <code>setDefRetValue()</code> method. Note that changing the default
+		return value does not change anything about the data structure; it is
+		just a way to return a reasonably meaningful result, and it can be
+		changed at any time. As a commodity, even maps returning objects can use
+		<code>setDefRetValue()</code> to change their default return value.</li>
 
 		<li>For all maps that have object as keys, the {@link
 		java.util.Map#get(Object)} and {@link java.util.Map#remove(Object)}
 		methods do not admit polymorphic versions, as Java does not allow
 		return-value polymorphism. Rather, the extended interfaces introduce new
 		methods of the form <code>get<var>valuetype</var>()</code> and
-		<code>remove<var>valuetype</var>()</code>.
+		<code>remove<var>valuetype</var>()</code>. Similar problems occur with
+		<code>firstKey()</code>, <code>lastKey()</code> and so on.
 
 		<li>For the same reason, the method {@link java.util.Collection#toArray}
 		has a polymorphic version accepting a type-specific array, but there are
 		also explicitly typed methods <code>to<var>keytype</var>Array()</code>.
+
 	 </ul>
 
 	 <h3>Additional Methods</h3>
  
 	 <p>Again, due to some limitation of Java (you cannot override covariantly
 	 the return value of an interface, i.e., with a method returning a more
-	 type-specific value) there are some features of <code>fastUtil</code> that are
-	 available only by means of type casting. In particular, keys and values
+	 type-specific value) there are some features of <code>fastUtil</code> that
+	 are available only by means of type casting. In particular, keys and values
 	 of a map are of the <code>fastUtil</code> type you expect (e.g., the keys
-	 of an {@link it.unimi.dsi.fastUtil.Int2LongMap} are an {@link
-	 it.unimi.dsi.fastUtil.IntSet} and the values are a {@link
+	 of an {@link it.unimi.dsi.fastUtil.Int2LongSortedMap} are an {@link
+	 it.unimi.dsi.fastUtil.IntSortedSet} and the values are a {@link
 	 it.unimi.dsi.fastUtil.LongCollection}), but you must explicitly cast the
 	 objects returned by {@link java.util.Map#keySet()} and {@link
-	 java.util.Map#values()} to the appropriate type.
+	 java.util.Map#values()} to the appropriate type. 
+
+	 <P>Analogously, the standard version of the submap constructors of the
+	 classes specialising tree maps returns a {@link java.util.SortedMap}, which
+	 of course can be safely cast to the right type-specific interface. However,
+	 if you use extended interfaces and keys are not objects, then there are new
+	 methods accepting primitive keys and returning a type-specific sorted submap
+	 directly.
 
 	 <p>Similarly, all iterators have a suitable method
 	 <code>next<var>type</var>()</code> returning directly a primitive type:
@@ -104,6 +117,13 @@
 	 java.util.Set#iterator()} to the appropriate type (e.g., {@link
 	 it.unimi.dsi.fastUtil.CharIterator} for a {@link
 	 it.unimi.dsi.fastUtil.CharSet}).
+
+	 <p>Sorted maps in <code>fastUtil</code> return type-specific {@link
+	 java.util.ListIterator}s. This means that you can move back and forth among
+	 entries, keys or values. Again, you must manually cast the result of a call
+	 to <code>iterator()</code> to the right type-specific {@link
+	 java.util.ListIterator}. And, of course, you have a type-specific
+	 version of {@link java.util.ListIterator#previous()}.
 
 	 <p>Finally, there are constructors that allows you to build easily a set
 	 from an array. This means, for instance, that you can create quickly a set
@@ -116,15 +136,18 @@
 	 <h2>Performance</h2>
 	 
 	 <p>The main reason behind <code>fastUtil</code> is performance, both in
-	 time and in space. The relevant methods are something like 2 to 10 times
-	 faster than those of the standard classes. 
+	 time and in space. The relevant methods of the hash maps and sets are
+	 something like 2 to 10 times faster than those of the standard classes.
+	 Tree maps and sets are not that faster, as the standard counterparts are
+	 optimised rather well, but the lack of wrappers definitely gives a
+	 performance boost.
 
 	 <p><code>fastUtil</code> reduces enormously the creation and collection of
 	 objects. First of all, if you use the polymorphic methods and iterators no
 	 wrapper objects have to be created. Moreover, since <code>fastUtil</code>
-	 uses open addressing, creation and garbage collection of table entries are
-	 avoided (but tables have to be rehashed whenever they are filled
-	 beyond the load factor).
+	 uses open-addressing hashing techniques, creation and garbage collection of
+	 table entries are avoided (but tables have to be rehashed whenever they are
+	 filled beyond the load factor).
 
     <p>Whenever possible, <code>fastUtil</code> tries to gain some speed by
     checking for faster interfaces: for instance, the various set-theoretic
@@ -133,7 +156,7 @@
     accordingly.
 	 
 
-	 <h2>Deletions</h2>
+	 <h3>Deletions in Hash Tables</h3>
 
 	 <p>Since deletions are handled simply by tagging, they are very fast <i>per
 	 se</i>, but they tend to slow down subsequent accesses (with respect to a
@@ -152,11 +175,13 @@
 	 particular <code>fastUtil</code> classes) are not the right choice.
 
 	 <p>Note, however, that <code>fastUtil</code> implements a special
-	 optimization, usually not found elsewhere, that greatly speeds up probes
+	 optimisation, usually not found elsewhere, that greatly speeds up probes
 	 for recently deleted entries. More details can be found in the
 	 documentation of the {@link it.unimi.dsi.fastUtil.Hash} interface.
 
 	 <h2>Memory Usage</h2>
+
+	 <h3>Hash Tables</h3>
 
 	 <p>To avoid memory waste, the classes in <code>fastUtil</code> keep no
 	 additional information about elements (such as a list of keys). In
@@ -164,14 +189,14 @@
 	 the table (rather than in the number of keys). In general, this would imply
 	 slower iterators. Nonetheless, the iterator code includes a single, tight
 	 loop; moreover, it is possible to avoid the creation of wrappers. These two
-	 facts make in practice <code>fastUtil</code> iterators <em>faster</em> than
+	 facts make in practise <code>fastUtil</code> iterators <em>faster</em> than
 	 {@link java.util}'s.
 
 	 <p>The memory footprint for a table with <var>n</var> keys is exactly the
 	 memory required for the related types times <var>n</var> bytes, plus a
 	 overhead of <var>n</var> bytes to store the state of each entry. The
 	 absence of wrappers around primitive types can reduce space occupancy by
-	 several times (this applies even more to serialized data, e.g., when you
+	 several times (this applies even more to serialised data, e.g., when you
 	 save such a data structure in a file).  These data can greatly vary with
 	 your virtual machine, JVM versions, CPU etc.
 
@@ -189,6 +214,21 @@
 	 cached</em>. Thus, you should not use <code>fastUtil</code> classes with
 	 keys having slow equality methods, as a probe requires testing equality
 	 with all keys met along the probe sequence.
+
+    <h3>Balanced Trees</h3>
+
+	 <p>The balanced trees implementation is also very parsimonious.
+	 <code>fastUtil</code> uses the excellent code described by Arne Andersson
+	 in his paper <i>Balanced Search Trees Made Simple</i>, Proc.&nbsp; of the
+	 Workshop on Algorithms and Data Structures, pages 60&minus;71,
+	 Springer-Verlag, 1993, and combines it with <em>threads</em>. As a result,
+	 the overhead per entry is two pointers and one integer, which compares well
+	 to three pointers plus one boolean of the standard tree maps. The trick is
+	 that Andersson's code requires just <i>o</i>(log log <var>n</var> per entry
+	 to store level information, so we can use a couple of bits to store thread
+	 information in each entry. As a result, we get bidirectional iterators in
+	 constant space and amortised constant time.
+
 
 	 <h2>Robustness</h2>
 	 

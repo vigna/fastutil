@@ -106,6 +106,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define VALUE2OBJ(x) (x)\n"\
 "#define ENTRY_GET_VALUE getValue\n"\
 "#define VALUE_NULL (null)\n"\
+"#define OBJDEFRETVALUE (defRetValue)\n"\
 "#define VALUE2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define VALUE_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
 "#define VALUE_ITERATOR Iterator\n\n"\
@@ -133,6 +134,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#else\n"\
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\
 "#endif\n"\
+"#define OBJDEFRETVALUE (null)\n"\
 "#endif\n\n"\
 "#include \"${MAP[$f]}.drv\"\n" >$FILENAME
 			 done

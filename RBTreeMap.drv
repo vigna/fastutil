@@ -24,7 +24,7 @@ package it.unimi.dsi.fastUtil;
 import java.util.*;
 import java.io.*;
 
-/** A type-specific tree map with a very fast, small-footprint implementation.
+/** A type-specific tree map with a fast, small-footprint implementation.
  */
 
 public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
@@ -69,9 +69,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * map, but it contains the key and value previously stored in {@link #change}. */
 	 private transient Entry deleted;
 
-	 /** The value of this variable remembers, after an <code>insert()</code> 
-	  * or a <code>delete()</code>, the value previously associated to the
-	  * given key, if any. */
+	 /** This variable is used by <code>insert()</code> 
+	  * and <code>delete()</code> to remember temporarily the value previously 
+	  * associated to the current {@link #key}, if any. */
 	 private transient VALUE_TYPE oldValue;
 
 	 /** This map's comparator, as provided in the constructor. */
@@ -207,11 +207,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 /** Inserts a new pair in the map.
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff a new
-	  * entry has been inserted. Otherwise, {@link #oldValue} contains the value
-	  * previously associated with the key.
-	  *
-	  * <P>Note that if values are not primitive it is a good idea to clear the
-	  * content of {@link #oldValue} after calling this method.
+	  * entry has been inserted.
 	  *
 	  * @param k a key.
 	  * @param v a value.
@@ -241,13 +237,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  // We null everything to avoid residual references.
 		  change = null;
+
 #if #keyclass(Object)
 		  key = null;
 #endif
+
 #if #valueclass(Object)
 		  value = null;
-#endif
+		  final VALUE_TYPE retValue = oldValue;
+		  oldValue = VALUE_NULL;
+		  return retValue;
+#else
 		  return oldValue;
+#endif
+
 	 }
 
 
@@ -326,13 +329,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 /** Deletes an entry from the map.
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff an 
-	  * entry has been deleted. In this case, {@link #oldValue} contains the value
-	  * previously associated with the key, {@link #deleted} is the entry that contained
+	  * entry has been deleted. In this case, {@link #deleted} is the entry that contained
 	  * the deleted key and {@link #change} is the entry actually removed from the tree.
 	  *
 	  * <P>Note that if values are not primitive it is a good idea to clear the
-	  * content of {@link #oldValue} after calling this method. In any case, the content
-	  * of {@link #change} and {@link #deleted} should always be clear.
+	  * content {@link #change} and {@link #deleted} after calling this method.
 	  *
 	  * @param k a key.
 	  * @return the value previously associated to the key (or the default return value, if there 
@@ -353,7 +354,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  key = null;
 #endif
 
+#if #valueclass(Object)
+		  final VALUE_TYPE retValue = oldValue;
+		  oldValue = VALUE_NULL;
+		  return retValue;
+#else
 		  return oldValue;
+#endif
 	 }
 
 	 /** Deletes recursively an entry from a tree.
@@ -372,31 +379,14 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  change = e;
 
 		  if ( compare( key, e.key ) < 0 ) {
-				if ( e.left() != sentinel ) {
-					 e.left = deleteRec( e, e.left );
-					 /*					 if ( e.left == e ) { // This handles the case of e.left being now a predecessor.
-						  e.pred( true );
-						  e.left = e == firstEntry ? null : ( change == deleted ? p : deleted );
-						  System.err.println( "Fast fix at " + e + "; deleted=" + deleted + "; change=" + change + "; key=" + key );
-						  }*/
-				}
-
-								if ( e.pred() && e.left != null && KEY_CMP( e.left.key, e.key ) > 0 ) {
-					 System.err.println( "Wrong predecessor at " + e + " (left turn)" + "; deleted=" + deleted + "; change=" + change + "; key=" + key  );
-					 tree.prettyPrint();
-					 }
+				if ( e.left() != sentinel ) e.left = deleteRec( e, e.left );
 		  }
 		  else  {
 				deleted = e;
 				if ( e.right() != sentinel ) e.right = deleteRec( e, e.right );
-
-								if ( e.pred() && e.left != null && KEY_CMP( e.left.key, e.key ) > 0 ) {
-					 System.err.println( "Wrong predecessor at " + e + " (right turn)" );
-					 tree.prettyPrint();
-					 }
 		  }
 				
-		  if ( e == change && deleted != null && key == deleted.key ) {
+		  if ( e == change && deleted != null && compare( key, deleted.key ) == 0 ) {
 
 				oldValue = deleted.value;
 				//System.err.println("Deleted entry is " + deleted + "; pred=" + deleted.pred() + "; succ="+ deleted.succ() + "; left=" + deleted.left + "; right=" + deleted.right );
@@ -444,20 +434,10 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return e;
 	 }
 	 
-	 /*
-		private boolean searchRef( Entry e, Entry s ) {
-		if ( e.right == s ) { System.err.println("Got right reference to " + s + " in " + e); return true; }
-		if ( e.left == s ) { System.err.println("Got left reference to " + s + " in " + e); return true; }
-		if ( ! e.pred() && searchRef( e.left, s ) ) return true;
-		if ( ! e.succ() && searchRef( e.right, s ) ) return true;
-		return false;
-		}
-	 */
-	 
 
 	 public Object put( final Object ok, final Object ov ) {
-		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
-		  return ! modified ? VALUE2OBJ( oldValue ) : null;
+		  final VALUE_TYPE oldValue = insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
+		  return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
 	 }
 
 
@@ -468,9 +448,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #endif
 
    public Object remove(final Object ok) {
-		 delete( KEY2TYPE( ok ) );
+		 final VALUE_TYPE oldValue = delete( KEY2TYPE( ok ) );
 		 deleted = change = null;
-		 return modified ? VALUE2OBJ( oldValue ) : null;
+		 return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
    }
 
 #if ! #valueclass(Object) 
@@ -776,7 +756,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 	 public Object get( final Object ok ) {
 		  final Entry e = findKey( KEY2TYPE( ok ) );
-		  return e == null ? (VALUE_CLASS)null : e.getValue();
+		  return e == null ? OBJDEFRETVALUE : e.getValue();
 	 }
 	 
 
@@ -788,9 +768,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 
 	 public VALUE_TYPE remove(final KEY_TYPE k) {
-		  final VALUE_TYPE v = delete( k );
+		  final VALUE_TYPE oldValue = delete( k );
 		  change = deleted = null;
-		  return v;
+		  return oldValue;
 	 }
 	 
 	 public boolean containsKey(final Object ok) {
@@ -807,9 +787,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 
 	 public VALUE_TYPE REMOVE_VALUE( final Object k ) {
-		  final VALUE_TYPE v = delete( k );
-		  change = deleted = null;
-		  return v;
+		  final VALUE_TYPE oldValue = delete( k );
+		  deleted = change = null;
+		  return oldValue;
 	 }
 
 #endif
@@ -1137,11 +1117,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 throw new IllegalArgumentException( "fromKey > toKey" );
 				}
 
-
 				this.from = from;
 				this.bottom = bottom;
 				this.to = to;
 				this.top = top;
+				defRetValue = TREEMAP.this.defRetValue;
 		  }
 
 		  public void clear() {
@@ -1303,49 +1283,60 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 
 		  public Object get( final Object ok ) {
-				return in( KEY2TYPE( ok ) ) ? TREEMAP.this.get( ok ) : null;
+				final TREEMAP.Entry e;
+				return in( KEY2TYPE( ok ) ) &&  ( e = findKey( KEY2TYPE( ok ) ) ) != null ? e.getValue() : OBJDEFRETVALUE;
 		  }
 		  
 		  
 #if ! #keyclass(Object)
 		  public VALUE_TYPE get(final KEY_TYPE k) {
-				return in( k ) ? TREEMAP.this.get( k ) : defRetValue;
+				final TREEMAP.Entry e;
+				return in( k ) && ( e = findKey( k ) ) != null ? e.value : defRetValue;
 		  }
 #elif ! #valueclass(Object)
 		  public VALUE_TYPE GET_VALUE(final Object k) {
-				return in( k ) ? TREEMAP.this.GET_VALUE( k ) : defRetValue;
+				final TREEMAP.Entry e;
+				return in( k ) && ( e = findKey( k ) ) != null ? e.value : defRetValue;
 		  }
 #endif
 		  
 		  
 		  public Object put( final Object ok, final Object ov ) {
 				if ( ! in( KEY2TYPE( ok ) ) ) throw new IllegalArgumentException(); 
-				return TREEMAP.this.put( ok, ov );
+				final VALUE_TYPE oldValue = insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
+				return modified ? OBJDEFRETVALUE : VALUE2OBJ( oldValue );
 		  }
 
 		  
 #if ! ( #valueclass(Object) && #keyclass(Object) )
 		  public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
 				if ( ! in( k ) ) throw new IllegalArgumentException(); 
-				return TREEMAP.this.put( k, v );
+				final VALUE_TYPE oldValue = insert( k, v );
+				return modified ? defRetValue : oldValue;
 		  }
 #endif
 
 
 		  public Object remove( final Object ok ) {
 				if ( ! in( KEY2TYPE( ok ) ) ) return null;
-				return TREEMAP.this.remove( ok );
+				final VALUE_TYPE oldValue = delete( KEY2TYPE( ok ) );
+				deleted = change = null;
+				return modified ? VALUE2OBJ( oldValue ) : OBJDEFRETVALUE;
 		  }
 
 #if ! #keyclass(Object)
 		  public VALUE_TYPE remove( final KEY_TYPE k ) {
 				if ( ! in( k ) ) return defRetValue;
-				return TREEMAP.this.remove( k );
+				final VALUE_TYPE oldValue = delete( k );
+				deleted = change = null;
+				return modified ? oldValue : defRetValue;
 		  }
 #elif ! #valueclass(Object)
 		  public VALUE_TYPE REMOVE_VALUE( final Object k ) {
 				if ( ! in( k ) ) return defRetValue; 
-				return TREEMAP.this.REMOVE_VALUE( k );
+				final VALUE_TYPE oldValue = delete( k );
+				deleted = change = null;
+				return modified ? oldValue : defRetValue;
 		  }
 #endif
 
@@ -1419,7 +1410,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 			*
 			* @param k a key.
 			* @return the last entry on a search for the given key; this will be
-			* either the given key, or the smallest greater key, or the greatest smaller key.
+			* the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
 			*/
 		  private TREEMAP.Entry locateKey( KEY_TYPE k ) {
 				TREEMAP.Entry e = tree, last = tree;
@@ -1434,6 +1425,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 
 
+		  /** Locates the first entry of  key.
+			*
+			* @param k a key.
+			* @return the last entry on a search for the given key; this will be
+			* either the given key, or the smallest greater key, or the greatest smaller key.
+			*/
 		  public TREEMAP.Entry firstEntry() {
 				if ( tree == null ) return null;
 				// If this submap goes to -infinity, we return the main map first entry; otherwise, we locate the start of the map.
@@ -1518,7 +1515,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  private class SubmapIterator extends TreeIterator {
 				protected SubmapIterator() {
 					 next = firstEntry();
-					 if ( next != null && TREEMAP.this.compare( next.key, to ) >= 0 ) next = null; 
 				}
 				protected void updatePrevious() {
 					 super.updatePrevious();
@@ -1781,11 +1777,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: lastKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-
-		  if (  ! mThrowsNoElement && ! t.lastKey().equals( m.lastKey() ) ){
-				System.err.println("m: " + m + " t: " + t);
-				topMap.prettyPrint();
-		  }
 
 
 		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error: m and t differ at start on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
@@ -2075,12 +2066,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 		  ensure( mThrowsNoElement == tThrowsNoElement, "Error: lastKey() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
-		  if (  ! mThrowsNoElement && ! t.lastKey().equals( m.lastKey() ) ){
-				System.err.println("m: " + m + " t: " + t);
-				topMap.prettyPrint();
-		  }
-
-
 		  if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error: m and t differ on their last key (" + m.lastKey() + ", " + t.lastKey() +").\n");
 
 
@@ -2121,7 +2106,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 		  /* Now we take out of m everything, and check that it is empty. */
 
-		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m2.remove(i.next()); 
+		  for(Iterator i=t.keySet().iterator(); i.hasNext(); ) m2.remove(i.next());
 
 		  ensure( m2.isEmpty(), "Error: m2 is not empty (as it should be).\n" );
 				 
