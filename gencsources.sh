@@ -5,7 +5,7 @@
 # through a C preprocessor to get the actual Java sources.
 #
 
-DIR="it/unimi/dsi/fastUtil"
+DIR="src/it/unimi/dsi/fastUtil"
 
 # Names of driver files.
 FILE=(Map AbstractMap HashMap AbstractCollection AbstractSet Collection Set HashSet Iterator)

@@ -3,7 +3,7 @@ APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will po
 
 .SUFFIXES: .java .class
 
-CSOURCES = $(wildcard */*/*/*/*.c)	# The list of C source files
+CSOURCES = $(wildcard src/it/unimi/dsi/fastUtil/*.c)	# The list of C source files
 SOURCES = $(CSOURCES:.c=.java)	# The list of Java generated source files
 CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 
@@ -32,12 +32,12 @@ PACKAGES = it.unimi.dsi.fastUtil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -d $(DOCSDIR) -windowtitle "fastUtil 1.2" -link $(APIURL) $(PACKAGES)
+	javadoc -d $(DOCSDIR) -windowtitle "fastUtil 1.2" -link $(APIURL) -sourcepath src $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 
 tags:
-	etags Makefile README gencsources.sh *.drv it/unimi/dsi/fastUtil/Hash.java it/unimi/dsi/fastUtil/package.html
+	etags Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastUtil/Hash.java src/it/unimi/dsi/fastUtil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
