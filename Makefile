@@ -42,5 +42,4 @@ tags:
 # Implicit rule for making Java class files from Java 
 # source files. 
 .c.java:
-	gcc -I. -E -C -P $< > $@
-#	gcc -I. -DNDEBUG -E -C -P $< > $@
+	gcc -I. -DNDEBUG -E -C -P $< > $@
