@@ -12,6 +12,9 @@ Summary:        fastUtil: Fast & compact specialized utility classes for Java
 License:        LGPL
 Source0:	%{name}-%{version}.tar.gz
 URL:            http://vigna.dsi.unimi.it/%{name}/
+BuildRequires:  ant
+BuildRequires:  make
+BuildRequires:  gcc
 Group:          Development/Java
 BuildRoot:      %{_tmppath}/%{name}-%{version}-buildroot
 BuildArch:      noarch
@@ -41,6 +44,8 @@ rm -rf $RPM_BUILD_ROOT
 %setup -n %{name}-%{version}
 
 %build
+./gencsources.sh
+make jar
 
 %install
 #jars

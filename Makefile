@@ -21,10 +21,21 @@ explain:
 	@echo -e "will compile regression and speed tests into the classes.\n\n"
 
 jar: jsources
-	ant dist
+	ant jar
 
 tar: jar
-	tar zhcvf fastUtil-$(VERSION).tar.gz fastUtil-*.*/
+	ln -s . fastUtil-$(VERSION)
+	tar zcvf fastUtil-$(VERSION).tar.gz \
+		fastUtil-$(VERSION)/*.drv \
+		fastUtil-$(VERSION)/build.xml \
+		fastUtil-$(VERSION)/gencsources.sh \
+		fastUtil-$(VERSION)/CHANGES \
+		fastUtil-$(VERSION)/COPYING.LIB \
+		fastUtil-$(VERSION)/Makefile \
+		fastUtil-$(VERSION)/docs \
+		fastUtil-$(VERSION)/fastUtil-$(VERSION).jar \
+		fastUtil-$(VERSION)/src/it/unimi/dsi/fastUtil/{BidirectionalIterator.java,HashCommon.java,Hash.java,package.html}
+	rm fastUtil-$(VERSION)
 
 jsources: $(SOURCES)
 
@@ -47,7 +58,7 @@ docs: jsources
 
 
 tags:
-	etags Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastUtil/Hash.java src/it/unimi/dsi/fastUtil/HashCommon.java src/it/unimi/dsi/fastUtil/package.html
+	etags Makefile README gencsources.sh *.drv src/it/unimi/dsi/fastUtil/Hash.java src/it/unimi/dsi/fastUtil/BidirectionalIterator.java src/it/unimi/dsi/fastUtil/HashCommon.java src/it/unimi/dsi/fastUtil/package.html
 
 # Implicit rule for making Java class files from Java 
 # source files. 
