@@ -1107,7 +1107,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 #ifndef NDEBUG
 
-	 private static Random r = new Random();
+	 private static long seed = System.currentTimeMillis(); 
+	 private static Random r = new Random( seed );
 
 	 private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -1296,8 +1297,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  }
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
-		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): first() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + "): m and t differ at start on their first key (" + m.first() + ", " + t.first() +").\n" );
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): first() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.first() + ", " + t.first() +").\n" );
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 		  
@@ -1310,28 +1311,28 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  }
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
-		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): last() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): last() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
 
-		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + "): m and t differ at start on their last key (" + m.last() + ", " + t.last() +").\n");
+		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.last() + ", " + t.last() +").\n");
 
 
 		  /* Now we check that m and t are equal. */
 		  if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
-		  ensure( m.equals( t ), "Error (" + level + "): ! m.equals( t ) at start.\n" );
-		  ensure( t.equals( m ), "Error (" + level + "): ! t.equals( m ) at start.\n" );
+		  ensure( m.equals( t ), "Error (" + level + ", " + seed + "): ! m.equals( t ) at start.\n" );
+		  ensure( t.equals( m ), "Error (" + level + ", " + seed + "): ! t.equals( m ) at start.\n" );
 
 
 
 		  /* Now we check that m actually holds that data. */
 		  for(Iterator i=t.iterator(); i.hasNext();  ) {
-		      ensure( m.contains( i.next() ), "Error (" + level + "): m and t differ on an entry after insertion (iterating on t).\n" );
+		      ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on t).\n" );
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
-		      ensure( t.contains( i.next() ), "Error (" + level + "): m and t differ on an entry after insertion (iterating on m).\n" );
+		      ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m).\n" );
 		  }
 
 		  /* Now we check that inquiries about random data give the same answer in m and t. For
@@ -1362,9 +1363,9 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 
-				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): contains() divergence in NoSuchElementException (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + "): contains() divergence in IllegalArgumentException (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + "): divergence in keys between t and m (polymorphic method).\n" );
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method).\n" );
 		  }
 
 		  /* Again, we check that inquiries about random data give the same answer in m and t, but
@@ -1395,9 +1396,9 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 
-				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + level + "): divergence between t and m (standard method).\n" );
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( m.contains(KEY2OBJ(T)) ==  t.contains(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence between t and m (standard method).\n" );
 		  }
 
 		  /* Now we add and remove random data in m and t, checking that the result is the same. */
@@ -1428,9 +1429,9 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 
 
-				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + "): divergence in add() between t and m.\n" );
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in add() between t and m.\n" );
 
 				T =
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -1458,24 +1459,24 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 
 
-				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
-				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + "): divergence in remove() between t and m.\n" );
+				ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+				ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + level + ", " + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ")" );
+				if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( rm == rt, "Error (" + level + ", " + seed + "): divergence in remove() between t and m.\n" );
 		  }
 
-		  ensure( m.equals(t), "Error (" + level + "): ! m.equals( t ) after removal.\n" );
-		  ensure( t.equals(m), "Error (" + level + "): ! t.equals( m ) after removal.\n" );
+		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal.\n" );
+		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal.\n" );
 
 		  /* Now we check that m actually holds the same data. */
 		  
 		  for(Iterator i=t.iterator(); i.hasNext();  ) {
-		      ensure( m.contains( i.next() ), "Error (" + level + "): m and t differ on an entry after removal (iterating on t).\n");
+		      ensure( m.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on t).\n");
 		  }
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
-		      ensure( t.contains( i.next() ), "Error (" + level + "): m and t differ on an entry after removal (iterating on m).\n" );
+		      ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m).\n" );
 		  }
 
 		  /* Now we check that both sets agree on first/last keys. */
@@ -1491,8 +1492,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  }
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
-		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): first() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + "): m and t differ on their first key (" + m.first() + ", " + t.first() +").\n" );
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): first() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  if ( ! mThrowsNoElement ) ensure( t.first().equals( m.first() ), "Error (" + level + ", " + seed + "): m and t differ on their first key (" + m.first() + ", " + t.first() +").\n" );
 
 		  mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
 		  
@@ -1505,9 +1506,9 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 		  }
 		  catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
 		  
-		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + "): last() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		  ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): last() divergence in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
 
-		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + "): m and t differ on their last key (" + m.last() + ", " + t.last() +").\n");
+		  if ( ! mThrowsNoElement ) ensure( t.last().equals( m.last() ), "Error (" + level + ", " + seed + "): m and t differ on their last key (" + m.last() + ", " + t.last() +").\n");
 
 
 
@@ -1538,18 +1539,18 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				System.exit(-1);
 		  }
 
-		  ensure( m2.hashCode() == h, "Error (" + level + "): hashCode() changed after save/read.\n" );
+		  ensure( m2.hashCode() == h, "Error (" + level + ", " + seed + "): hashCode() changed after save/read.\n" );
 		  
 		  /* Now we check that m2 actually holds that data. */
 		  
-		  ensure( m2.equals(t), "Error (" + level + "): ! m2.equals( t ) after save/read.\n" );
-		  ensure( t.equals(m2), "Error (" + level + "): ! t.equals( m2 ) after save/read.\n" );
+		  ensure( m2.equals(t), "Error (" + level + ", " + seed + "): ! m2.equals( t ) after save/read.\n" );
+		  ensure( t.equals(m2), "Error (" + level + ", " + seed + "): ! t.equals( m2 ) after save/read.\n" );
 
 		  /* Now we take out of m everything, and check that it is empty. */
 
 		  for(Iterator i=t.iterator(); i.hasNext(); ) m2.remove(i.next());
 
-		  ensure( m2.isEmpty(), "Error (" + level + "): m2 is not empty (as it should be).\n" );
+		  ensure( m2.isEmpty(), "Error (" + level + ", " + seed + "): m2 is not empty (as it should be).\n" );
 				 
 		  /* Now we play with iterators. */
 
@@ -1561,17 +1562,17 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 				for( int k = 0; k < n/2; k++ ) {
 					 if ( i.hasNext() != j.hasNext() ) {
-						  System.out.println("Error (" + level + "): divergence in hasNext().\n");
+						  System.out.println("Error (" + level + ", " + seed + "): divergence in hasNext().\n");
 						  System.exit(-1);
 					 }
 					 if ( i.hasPrevious() != j.hasPrevious() ) {
-						  System.out.println("Error (" + level + "): divergence in hasNext().\n");
+						  System.out.println("Error (" + level + ", " + seed + "): divergence in hasNext().\n");
 						  System.exit(-1);
 					 }
 
 					 if ( r.nextFloat() < .8 && i.hasNext() ) {
 						  if ( !i.next().equals( J = j.next() ) ) {
-								System.out.println("Error (" + level + "): divergence in next().\n");
+								System.out.println("Error (" + level + ", " + seed + "): divergence in next().\n");
 								System.exit(-1);
 						  }
 
@@ -1583,7 +1584,7 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 					 }
 					 else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
 						  if ( !i.previous().equals( J = j.previous() ) ) {
-								System.out.println("Error (" + level + "): divergence in previous().\n");
+								System.out.println("Error (" + level + ", " + seed + "): divergence in previous().\n");
 								System.exit(-1);
 						  }
 
@@ -1599,8 +1600,8 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 
 		  /* Now we check that m actually holds that data. */
 		  
-		  ensure( m.equals(t), "Error (" + level + "): ! m.equals( t ) after iteration.\n" );
-		  ensure( t.equals(m), "Error (" + level + "): ! t.equals( m ) after iteration.\n" );
+		  ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after iteration.\n" );
+		  ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after iteration.\n" );
 
 		  /* Now we select a pair of keys and create a subset. */
 
@@ -1613,20 +1614,20 @@ public final class TREESET extends ABSTRACT_SET implements Serializable, SORTEDS
 				//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
 				testSets( (SORTEDSET)m.subSet( start, end ), t.subSet( start, end ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + "): ! m.equals( t ) after subSet.\n" );
-				ensure( t.equals(m), "Error (" + level + "): ! t.equals( m ) after subSet.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet.\n" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet.\n" );
 
 				//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
 				testSets( (SORTEDSET)m.headSet( end ), t.headSet( end ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + "): ! m.equals( t ) after headSet.\n" );
-				ensure( t.equals(m), "Error (" + level + "): ! t.equals( m ) after headSet.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet.\n" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet.\n" );
 
 				//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
 				testSets( (SORTEDSET)m.tailSet( start ), t.tailSet( start ), n, level + 1 );
 
-				ensure( m.equals(t), "Error (" + level + "): ! m.equals( t ) after tailSet.\n" );
-				ensure( t.equals(m), "Error (" + level + "): ! t.equals( m ) after tailSet.\n" );
+				ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet.\n" );
+				ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet.\n" );
 		  }
 		  
 

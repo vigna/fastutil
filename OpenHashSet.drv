@@ -525,7 +525,8 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 
 #ifndef NDEBUG
 
-	 private static Random r = new Random();
+	 private static long seed = System.currentTimeMillis(); 
+	 private static Random r = new Random( seed );
 
 	 private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
@@ -699,15 +700,15 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  
 		  m.addAll(t); 
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after insertion.\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after insertion.\n");
+		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion.\n");
+		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion.\n");
 
 		  /* Now we check that m actually holds that data. */
 		  
 		  for(Iterator i=t.iterator(); i.hasNext();  ) {
 				Object e = i.next();
 		      if (!m.contains(e)) {
-					 System.out.println("Error: m and t differ on a key ("+e+") after insertion (iterating on t).\n");
+					 System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on t).\n");
 					 System.exit(-1);
 				}
 		  }
@@ -717,7 +718,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
 				Object e = i.next();
 		      if (!t.contains(e)) {
-					 System.out.println("Error: m and t differ on a key ("+e+") after insertion (iterating on m).\n");
+					 System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on m).\n");
 					 System.exit(-1);
 				}
 		  }
@@ -738,7 +739,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 					 ;
 
 				if (m.contains(T) != t.contains(KEY2OBJ(T))) {
-					 System.out.println("Error: divergence in keys between t and m (polymorphic method).\n");
+					 System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method).\n");
 					 System.exit(-1);
 				}
 		  }
@@ -757,7 +758,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 #endif
 					 ;
 				if (m.contains(KEY2OBJ(T)) != t.contains(KEY2OBJ(T))) {
-					 System.out.println("Error: divergence between t and m (standard method).\n");
+					 System.out.println("Error (" + seed + "): divergence between t and m (standard method).\n");
 					 System.exit(-1);
 				}
 		  }
@@ -776,7 +777,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 #endif
 					 ;
 				if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
-					 System.out.println("Error: divergence in add() between t and m.\n");
+					 System.out.println("Error (" + seed + "): divergence in add() between t and m.\n");
 					 System.exit(-1);
 				}
 				T =
@@ -789,21 +790,21 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 #endif
 					 ;
 		  if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
-					 System.out.println("Error: divergence in remove() between t and m.\n");
+					 System.out.println("Error (" + seed + "): divergence in remove() between t and m.\n");
 					 System.exit(-1);
 				}
 		  }
 
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after removal.\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after removal.\n");
+		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal.\n");
+		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal.\n");
 
 		  /* Now we check that m actually holds that data. */
 		  
 		  for(Iterator i=t.iterator(); i.hasNext();  ) {
 				Object e = i.next();
 		      if (!m.contains(e)) {
-					 System.out.println("Error: m and t differ on a key ("+e+") after removal (iterating on t).\n");
+					 System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on t).\n");
 					 System.exit(-1);
 				}
 		  }
@@ -813,7 +814,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
 				Object e = i.next();
 		      if (!t.contains(e)) {
-					 System.out.println("Error: m and t differ on a key ("+e+") after removal (iterating on m).\n");
+					 System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on m).\n");
 					 System.exit(-1);
 				}
 		  }
@@ -823,7 +824,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  KEY_TYPE a[] = m.TO_KEY_ARRAY();
 		  
 		  if (!new HASHSET(a).equals(m))
-				System.out.println("Error: toArray() output (or array-based constructor) is not OK.\n");
+				System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK.\n");
 
 		  int h = m.hashCode();
 
@@ -849,14 +850,14 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 				System.exit(-1);
 		  }
 
-		  if (m.hashCode() != h) System.out.println("Error: hashCode() changed after save/read.\n");
+		  if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read.\n");
 
 		  /* Now we check that m actually holds that data, but iterating on m. */
 		  
 		  for(Iterator i=m.iterator(); i.hasNext();  ) {
 				Object e = i.next();
 		      if (!t.contains(e)) {
-					 System.out.println("Error: m and t differ on a key ("+e+") after save/read.\n");
+					 System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after save/read.\n");
 					 System.exit(-1);
 				}
 		  }
@@ -867,7 +868,7 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 		  for(Iterator i=m.iterator(); i.hasNext(); ) { i.next(); i.remove();} 
 
 		  if (!m.isEmpty())  {
-				System.out.println("Error: m is not empty (as it should be).\n");
+				System.out.println("Error (" + seed + "): m is not empty (as it should be).\n");
 				System.exit(-1);
 		  }
 
@@ -898,30 +899,30 @@ public class HASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Ha
 				for (int j=0; j<10; j++) {
 					 k++;
 					 if (m.add(x = i+(r.nextInt() % 10)*p) != t.add(KEY2OBJ(x)))
-						  System.out.println("Error: m and t differ on a key during torture-test insertion.");
+						  System.out.println("Error (" + seed + "): m and t differ on a key during torture-test insertion.");
 				}
 		  }
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after torture-test insertion.\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after torture-test insertion.\n");
+		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion.\n");
+		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion.\n");
 
 		  for(int i=0; i<(p*f)/10; i++) {
 				for (int j=0; j<10; j++) {
 					 if (m.remove(x = i+(r.nextInt() % 10)*p) != t.remove(KEY2OBJ(x)))
-						  System.out.println("Error: m and t differ on a key during torture-test removal.");
+						  System.out.println("Error (" + seed + "): m and t differ on a key during torture-test removal.");
 				}
 		  }
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after torture-test removal.\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after torture-test removal.\n");
+		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal.\n");
+		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal.\n");
 
-		  if (!m.equals(m.clone())) System.out.println("Error: !m.equals(m.clone()) after torture-test removal.\n");
-		  if (!((HASHSET)m.clone()).equals(m)) System.out.println("Error: !m.clone().equals(m) after torture-test removal.\n");
+		  if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal.\n");
+		  if (!((HASHSET)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal.\n");
 
 		  m.rehash();
 
-		  if (!m.equals(t)) System.out.println("Error: !m.equals(t) after rehash().\n");
-		  if (!t.equals(m)) System.out.println("Error: !t.equals(m) after rehash().\n");
+		  if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after rehash().\n");
+		  if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after rehash().\n");
 #endif
 
 		  System.out.println("Regression test OK.\n");
