@@ -343,7 +343,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 	 * @param a the array that will store the result (we assume that it can hold the result).
 	 * @param offset an offset into <code>a</code> where elements will be store.
 	 * @param length a maximum number of elements to store in <code>a</code>.
-	 * @param the position after the extraction.
+	 * @return the length of the extracted array.
 	 */
 	private int extract( final int index, final KEY_TYPE a[], final int offset, final int length ) {
 		final int delta = index % ratio; // The delta inside the block.
@@ -353,7 +353,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 		if ( delta == 0 ) {
 			pos = p[ index / ratio ] + count( arrayLength );
 			System.arraycopy( array, pos, a, offset, Math.min( length, arrayLength ) );
-			return pos + arrayLength;
+			return arrayLength;
 		}
 		
 		int common = 0;
@@ -373,9 +373,9 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 			}
 		}
 
-		if ( currLen < length ) System.arraycopy( array, pos + count( arrayLength ) + count( common ), a, currLen + offset, length - currLen );
+		if ( currLen < length ) System.arraycopy( array, pos + count( arrayLength ) + count( common ), a, currLen + offset, Math.min( arrayLength, length - currLen ) );
 
-		return pos + count( arrayLength ) + count( common ) + arrayLength;
+		return arrayLength + common;
 	}
 
 	public Object get( final int index ) {
@@ -407,8 +407,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 		ensureRestrictedIndex( index );
 		ARRAYS.ensureOffsetLength( a, offset, length );
 
-		final int arrayLength = length( index );
-		extract( index, a, offset, Math.min( arrayLength, length ) );
+		final int arrayLength = extract( index, a, offset, length );
 		if ( length >= arrayLength ) return arrayLength;
 		else return length - arrayLength;
 	}
@@ -421,7 +420,7 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
 	public int get( final int index, final KEY_TYPE[] a ) {
-		return get( index, a, 0, Integer.MAX_VALUE );
+		return get( index, a, 0, a.length );
 	}
 
 	public int size() {
@@ -434,13 +433,14 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 		return new AbstractObjectListIterator() {
 				KEY_TYPE a[] = ARRAYS.EMPTY_ARRAY;
 				int i = 0, pos = 0;
-				boolean lastWasNext;
+				boolean inSync;
 
 				{
 					if ( start != 0 ) {
 						pos = p[ start / ratio ];
 						int j = start % ratio;
 						i = start - j;
+						inSync = true;
 						while( j-- != 0 ) next();
 					}
 				}
@@ -465,34 +465,36 @@ public class FRONT_CODED_LIST extends AbstractObjectList implements Serializable
 					int length, common;
 
 					if ( ! hasNext() ) throw new NoSuchElementException();
-					if ( lastWasNext ) {
+
+					if ( i % ratio == 0 ) {
+						pos = p[ i / ratio ];
 						length = readInt( array, pos );
-						
-						if ( i % ratio == 0 ) {
-							a = ARRAYS.ensureCapacity( a, length, 0 );
-							System.arraycopy( array, pos + count( length ), a, 0, length );
-							pos += length + count( length );
-						}
-						else {
+						a = ARRAYS.ensureCapacity( a, length, 0 );
+						System.arraycopy( array, pos + count( length ), a, 0, length );
+						pos += length + count( length );
+						inSync = true;
+					}
+					else {
+						if ( inSync ) {
+							length = readInt( array, pos );
 							common = readInt( array, pos + count( length ) );
 							a = ARRAYS.ensureCapacity( a, length + common, common );
 							System.arraycopy( array, pos + count( length ) + count ( common ), a, common, length );
 							pos += count( length ) + count( common ) + length;
 							length += common;
 						}
-					}
-					else {
-						a = ARRAYS.ensureCapacity( a, length = length( i ), 0 );
-						pos = extract( i, a, 0, a.length );
+						else {
+							a = ARRAYS.ensureCapacity( a, length = length( i ), 0 );
+							pos = extract( i, a, 0, length );
+						}
 					}
 					i++;
-					lastWasNext = true;
 					return ARRAYS.copy( a, 0, length );
 				}
 
 				public Object previous() {
 					if ( ! hasPrevious() ) throw new NoSuchElementException();
-					lastWasNext = false;
+					inSync = false;
 					return (KEY_TYPE[])get( --i );
 				}
 			};
