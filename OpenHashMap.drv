@@ -136,13 +136,13 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 	  * increase access speed.
 	  *
 	  * @param k the key.
-	  * @param key the key array.
-	  * @param state the state array.
 	  * @return the index of the correct insertion point, if the key is not found; otherwise,
 	  * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
 	  */
 
-	 private int findInsertionPoint(final KEY_TYPE k, final KEY_TYPE key[], final byte state[]) {
+	 private int findInsertionPoint( final KEY_TYPE k ) {
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
 
 		  // First of all, we make the key into a positive integer.
 		  final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
@@ -174,12 +174,12 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 	  * increase access speed.
 	  *
 	  * @param k the key.
-	  * @param key the key array.
-	  * @param state the state array.
 	  * @return the index of the entry containing the key, or -1 if the key wasn't found.
 	  */
 
-	 private int findKey(final KEY_TYPE k, final KEY_TYPE key[], final byte state[]) {
+	 private int findKey( final KEY_TYPE k ) {
+		  final KEY_TYPE key[] = this.key;
+		  final byte state[] = this.state;
 
 		  // First of all, we make the key into a positive integer.
 		  final int k2i = KEY2INT(k) & 0x7FFFFFFF; 
@@ -202,7 +202,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 		  final KEY_TYPE key[] = this.key, k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
 
-		  final int i = findInsertionPoint( k, key, state );
+		  final int i = findInsertionPoint( k );
 		  
 		  if (i < 0) {
 				oldValue = value[-i-1];
@@ -226,7 +226,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 		  final KEY_TYPE key[] = this.key;
 		  final byte state[] = this.state;
 
-		  final int i = findInsertionPoint( k, key, state );
+		  final int i = findInsertionPoint( k );
 		  
 		  if (i < 0) {
 				oldValue = value[-i-1];
@@ -248,7 +248,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 		  final KEY_TYPE k = KEY2TYPE(ok);
 		  final byte state[] = this.state;
 
-		  final int i = findKey(k, key, state);
+		  final int i = findKey(k);
 		  if (i < 0) return null;
 
 		  state[i] = REMOVED;
@@ -426,14 +426,14 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 					 public boolean contains(Object o) {
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
-						  final int i = findKey( KEY2TYPE( e.getKey() ), key, state );
+						  final int i = findKey( KEY2TYPE( e.getKey() ) );
 						  return i >= 0 && VALUE_EQUAL( value[ i ], VALUE2TYPE( e.getValue() ) );
 					 }
 					 
 					 public boolean remove(Object o) {
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
-						  final int i = findKey( KEY2TYPE( e.getKey() ), key, state );
+						  final int i = findKey( KEY2TYPE( e.getKey() ) );
 						  if ( i >= 0 ) HASHMAP.this.remove( e.getKey() );
 						  return i >= 0;
 					 }
@@ -679,7 +679,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 	 }
 	 
 	 public boolean containsKey(KEY_TYPE k) {
-		  return findKey(k, key, state) >= 0;
+		  return findKey(k) >= 0;
 	 }
 	 
 	 public int size() {
@@ -692,7 +692,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 
 
 	 public Object get(final Object ok) {
-		  final int i = findKey(KEY2TYPE(ok), key, state);
+		  final int i = findKey(KEY2TYPE(ok));
 
 		  return i < 0 ? null : VALUE2OBJ(value[i]);
 	 }
@@ -701,7 +701,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 #if !#keyclass(Object)
 
 	 public VALUE_TYPE get(final KEY_TYPE k) {
-		  final int i = findKey(k, key, state);
+		  final int i = findKey(k);
 
 		  return i < 0 ? defRetValue : value[i];
 	 }
@@ -709,7 +709,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 	 public VALUE_TYPE remove(final KEY_TYPE k) {
 		  final byte state[] = this.state;
 
-		  final int i = findKey(k, key, state);
+		  final int i = findKey(k);
 		  if (i < 0) return defRetValue;
 
 		  state[i] = REMOVED;
@@ -730,14 +730,14 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 	 
 
 	 public boolean containsKey(final Object ok) {
-		  return findKey(KEY2TYPE(ok), key, state) >= 0;
+		  return findKey(KEY2TYPE(ok)) >= 0;
 	 }
 
 #else
 #if !#valueclass(Object)
 
 	 public VALUE_TYPE GET_VALUE(final Object k) {
-		  final int i = findKey(k, key, state);
+		  final int i = findKey(k);
 
 		  return i < 0 ? defRetValue : value[i];
 	 }
@@ -745,7 +745,7 @@ public class HASHMAP extends ABSTRACT_MAP implements Serializable, Cloneable, Ha
 	 public VALUE_TYPE REMOVE_VALUE(final Object ok) {
 		  final byte state[] = this.state;
 
-		  final int i = findKey(KEY2TYPE(ok), key, state);
+		  final int i = findKey(KEY2TYPE(ok));
 		  if (i < 0) return defRetValue;
 
 		  state[i] = REMOVED;
