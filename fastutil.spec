@@ -8,22 +8,24 @@
 Name:           %{name}
 Version:        %{version}
 Release:        %{release}
-Summary:        fastUtil: Fast & compact specialized utility classes for Java
+Summary:        fastUtil: Fast & compact type-specific utility classes
 License:        LGPL
-Source0:	%{name}-%{version}.tar.gz
+Source0:	http://vigna.dsi.unimi.it/fastUtil/%{name}-%{version}.tar.gz
 URL:            http://vigna.dsi.unimi.it/%{name}/
-BuildRequires:  ant
-BuildRequires:  make
-BuildRequires:  gcc
-Group:          Development/Java
-BuildRoot:      %{_tmppath}/%{name}-%{version}-buildroot
+Group:          Development/Libraries/Java
+Vendor:         JPackage Project
+Distribution:   JPackage
+BuildRequires:  ant, make, gcc
 BuildArch:      noarch
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Provides:	%{name}
-Vendor:		JPackage project
 
-%description
-fastUtil provides type-specialized maps and sets with a small memory
-footprint and much (2 to 10 times) faster access and insertion.
+%description 
+fastUtil provides type-specific maps and sets with a small memory footprint and
+much (up to 10 times) faster access and insertion.  The classes implement their
+standard counterpart interface (e.g., Map for maps) and can be plugged into
+existing code. Moreover, they provide additional features (such as
+bidirectional iterators) that are not available in the standard classes.
 
 %package manual
 Summary:        Manual for %{name}
@@ -61,20 +63,22 @@ cp -pr docs/* $RPM_BUILD_ROOT%{javadocdir}/%{name}-%{version}
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(-,root,root)
+%defattr(0644,root,root,0755)
 %{javadir}/*
 
 %files manual
-%defattr(-,root,root)
+%defattr(0644,root,root,0755)
 %doc README CHANGES COPYING.LIB
 
 %files javadoc
-%defattr(-,root,root)
+%defattr(0644,root,root,0755)
 %{javadocdir}/%{name}-%{version}
 %{javadocdir}/%{name}
 
 %changelog
-* Tue Feb 18 2003 Sebastiano Vigna <vigna@acm.org> 2.50
+* Wed Feb 26 2003 Sebastiano Vigna <vigna at acm.org> 2.51
+- New flexible trim(int) method..
+* Tue Feb 18 2003 Sebastiano Vigna <vigna at acm.org> 2.50
 - New linked hash tables and reference-based containers.
-* Mon Dec 9 2002 Sebastiano Vigna <vigna@acm.org> 2.11
+* Mon Dec 9 2002 Sebastiano Vigna <vigna at acm.org> 2.11
 - JPackage compatible version
