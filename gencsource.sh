@@ -16,6 +16,9 @@ PACKAGE=(booleans bytes shorts ints longs chars floats doubles objects objects)
 # The capitalised types used to build class and method names (now references appear as Reference).
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
+# The upper case types used to build class and method names.
+TYPE_UC=(BOOLEAN BYTE SHORT INT LONG CHAR FLOAT DOUBLE OBJECT REFERENCE)
+
 # The downcased types used to build method names.
 TYPE_LC=(boolean byte short int long char float double object reference)
 
@@ -148,6 +151,7 @@ echo -e \
 \
 "#define KEY_ITERATOR_METHOD objectIterator\n\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD emptyObjectIterator\n\n"\
+"#define KEY_LIST_ITERATOR_METHOD objectListIterator\n\n"\
 "#define AS_KEY_ITERATOR asObjectIterator\n\n"\
 \
 "#define FIRST first\n"\
@@ -186,6 +190,9 @@ echo -e \
 "#define STDSORTEDSET SORTEDSET\n\n"\
 "#define STDSORTEDMAP SORTEDMAP\n\n"\
 "#define STDARRAYLIST ARRAY_LIST\n\n"\
+"#define KEY_EMPTY_SET ${TYPE_UC[$k]}_EMPTY_SET\n\n"\
+"#define KEY_EMPTY_MAP ${TYPE_UC[$k]}_EMPTY_MAP\n\n"\
+"#define KEY_EMPTY_LIST ${TYPE_UC[$k]}_EMPTY_LIST\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define STACK ${TYPE_CAP[$k]}Stack\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_CAP[$k]}Stack\n\n"\
@@ -216,6 +223,7 @@ echo -e \
 \
 "#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP[$k]}Iterator\n\n"\
+"#define KEY_LIST_ITERATOR_METHOD ${TYPE[$k]}ListIterator\n\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP[$k]}Iterator\n\n"\
 \
 "#define FIRST first${TYPE_CAP[$k]}\n"\
