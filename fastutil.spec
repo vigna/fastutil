@@ -78,6 +78,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Mon Feb 14 2005 Sebastiano Vigna <vigna at acm.org> - 4.4.0-1jpp
+- New I/O features.
+
 * Tue Dec 21 2004 Sebastiano Vigna <vigna at acm.org> - 4.3.2-1jpp
 - Fixed small memory leak in OpenHashMap.
 
