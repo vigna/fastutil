@@ -34,27 +34,34 @@ import java.io.*;
 
 public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable, Hash, SET {
 	/** The array of keys. */
-	transient KEY_TYPE key[];
+	protected transient KEY_TYPE key[];
 	 
 	/** The array of occupancy states. */
-	transient byte state[];
+	protected transient byte state[];
 
 	/** The acceptable load factor. */
-	final float f;
+	protected final float f;
 	 
 	/** Index into the prime list, giving the current table size. */
-	int p;
+	protected int p;
 
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
-	transient int maxFill;
+	protected transient int maxFill;
 
 	/** Number of free entries in the table (may be less than the table size - {@link #count} because of deleted entries). */
-	transient int free;
+	protected transient int free;
 
 	/** Number of entries in the set. */
-	int count;
+	protected int count;
 
-
+#ifdef linked
+	/** The index of the first entry in iteration order. */
+	protected int first = -1;
+	/** The index of the last entry in iteration order. */
+	protected int last = -1;
+	/** For each entry, the next entry in iteration order. */
+	protected transient int next[];
+#endif
 
 	/** Creates a new hash set.
 	 *
@@ -77,6 +84,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		this.maxFill = (int)( free * f );
 		key = new KEY_TYPE[ free ];
 		state = new byte[ free ];
+#ifdef linked
+		next = new int[ free ];
+#endif
 	}
 	 
 	 
@@ -237,8 +247,18 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		if ( state[i] == FREE ) free--;
 		state[i] = OCCUPIED;
 		key[i] = k;
+#ifdef linked
+		if ( first == -1 ) first = last = i;
+		else {
+			next[ last ] = i;
+			last = i;
+		}
+#endif
 		if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
+		System.err.println( cern.colt.Arrays.toString( key ) );
+		System.err.println( cern.colt.Arrays.toString( next ) );
+		System.err.println( "first: " + first + " last: " + last );
 		return true;
 	}
 	 
@@ -252,8 +272,20 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		if ( state[i] == FREE ) free--;
 		state[i] = OCCUPIED;
 		key[i] = k;
+#ifdef linked
+		if ( first == -1 ) first = last = i;
+		else {
+			next[ last ] = i;
+			last = i;
+		}
+#endif
 		if ( ++count >= maxFill ) rehash( Math.min(p+16, primes.length-1) ); // Table too filled, let's rehash
 		if ( free == 0 ) rehash( p );
+		System.err.println( cern.colt.Arrays.toString( key ) );
+		System.err.println( cern.colt.Arrays.toString( next ) );
+		System.err.println( "first: " + first + " last: " + last );
+
+
 		return true;
 	}
 
@@ -261,13 +293,32 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 #endif
 
 
-	public boolean remove(final Object ok) {
+#ifdef linked
+	private void fixPointers( int i ) {
+		final int[] next = this.next;
+		if ( first == i ) {
+			first = next[ i ];
+			if ( last == i ) first = last = -1;
+			return;
+		}
+		
+		int j = first;
+		while( next[ j ] != i ) j = next[ j ];
+		next[ j ] = next[ i ];
+		if ( last == i ) last = j;
+	}
+#endif
+
+	public boolean remove( final Object ok ) {
 		final int i = findKey(KEY2TYPE(ok));
 		if (i < 0) return false;
 		  
 		state[i] = REMOVED;
 #if #keyclass(Object) || #keyclass(Reference)
 		key[i] = HashCommon.removed;
+#endif
+#ifdef linked
+		fixPointers( i );
 #endif
 		count--;
 		return true;
@@ -281,6 +332,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		Arrays.fill(state, FREE);
 #if #keyclass(Object) || #keyclass(Reference)
 		Arrays.fill(key, null);
+#endif
+#ifdef linked
+		first = last = -1;
 #endif
 	}
 
@@ -308,12 +362,20 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	}
 
 
+#if ! #keyclass(Object) && ! #keyclass(Reference)
 	/** Returns an iterator on this set. 
 	 * The iterator can be safely cast to a type-specific iterator.
 	 * @return a type-specific iterator.
 	 */
-
 	public Iterator iterator() {
+		return KEY_ITERATOR_METHOD();
+	}
+#endif
+
+	/** Returns a type-specific iterator on this set. 
+	 * @return a type-specific iterator.
+	 */
+	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
 		return new KEY_ITERATOR() {
 				int pos = 0, last = -1, c = count;
 					 
@@ -360,6 +422,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 					state[last] = REMOVED;
 #if #keyclass(Object) || #keyclass(Reference)
 					key[last] = HashCommon.removed;
+#endif
+#ifdef linked
+					fixPointers( last );
 #endif
 					count--;
 				}
@@ -410,19 +475,28 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	 */
 
 	private void rehash( final int newP ) {
+#ifdef linked
+		int i = first, j = count, last = -1, k2i, h1, h2;
+#else
 		int i = 0, j = count, k2i, h1, h2;
+#endif
 
-		//System.err.println("Rehashing to size " +  primes[newP] + "...");
+		System.err.println("Rehashing to size " +  primes[newP] + "...");
 
 		KEY_TYPE k;
 
 		final int newN = primes[newP];
 		final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[newN];
 		final byte state[] = this.state, newState[] = new byte[newN];
+#ifdef linked
+		final int next[] = this.next, newNext[] = new int[newN];
+#endif
 
 		while(j-- != 0) {
 
+#ifndef linked
 			while(state[i] != OCCUPIED ) i++;
+#endif
 
 			k = key[i];
 			k2i = KEY2INT(k) & 0x7FFFFFFF;
@@ -436,7 +510,14 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 				
 			newState[h1] = OCCUPIED;
 			newKey[h1] = k;
+
+#ifdef linked
+			if ( last != -1 ) last = newNext[ last ] = h1;
+			else last = this.first = h1;
+			i = next[ i ];
+#else
 			i++;
+#endif
 		}
 
 		p = newP;
@@ -444,6 +525,10 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		maxFill = (int)( newN * f );
 		this.key = newKey;
 		this.state = newState;
+#ifdef linked
+		this.next = newNext;
+		this.last = last;
+#endif
 	}
 	 
 	public int size() {
@@ -475,6 +560,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		key[i] = HashCommon.removed;
 #endif
 		count--;
+#ifdef linked
+		fixPointers( i );
+#endif
 		return true;
 	}
 	 
@@ -499,6 +587,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 		}
 		c.key = (KEY_TYPE[])key.clone();
 		c.state = (byte[])state.clone();
+#ifdef linked
+		c.next = (int[])next.clone();
+#endif
 		return c;
 	}
 
@@ -530,15 +621,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 	private void writeObject(java.io.ObjectOutputStream s) throws IOException {
 		final KEY_TYPE key[] = this.key;
 		final byte state[] = this.state;
-		int i = 0, j = count;
+		final KEY_ITERATOR i = (KEY_ITERATOR)iterator();
 
 		s.defaultWriteObject();
-		  
-		while(j-- != 0) {
-			while(state[i] != OCCUPIED ) i++;
-			s.WRITE_KEY(key[i]);
-			i++;
-		}
+
+		while( i.hasNext() ) s.WRITE_KEY( i.NEXT_KEY() );
 	}
 
 	private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException {
@@ -548,6 +635,9 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 		key = new KEY_TYPE[ free ];
 		state = new byte[ free ];
+#ifdef linked
+		next = new int[ free ];
+#endif
 
 		int count = this.count;
 		this.count = 0;
@@ -715,7 +805,11 @@ public class OPENHASHSET extends ABSTRACT_SET implements Serializable, Cloneable
 
 	private static void regressionTest( int n, float f ) {
 		OPENHASHSET m = new OPENHASHSET(Hash.DEFAULT_INITIAL_SIZE, f);
+#ifdef linked
 		Set t = new HashSet();
+#else
+		Set t = new LinkedHashSet();
+#endif
 
 		/* First of all, we fill t with random data. */
 

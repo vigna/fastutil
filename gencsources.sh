@@ -63,6 +63,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#define WRITE_KEY writeObject\n"\
 "#define READ_KEY readObject\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
+"#define KEY_ITERATOR_METHOD iterator\n\n"\
 "#define KEY_LIST_ITERATOR ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR BidirectionalIterator\n\n"\
 "#define KEY_COMPARATOR Comparator\n\n"\
@@ -81,6 +82,7 @@ for ((f=0; f<${#MAP[*]}; f++)); do
 "#else\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
+"#define KEY_ITERATOR_METHOD ${TYPE[$k]}Iterator\n\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP[$k]}BidirectionalIterator\n\n"\
@@ -182,6 +184,7 @@ for ((f=0; f<${#SET[*]}; f++)); do
 		 FILENAME=$DIR/${TYPE_CAP[$k]}${SET[$f]}.c
 		 rm -f $FILENAME
 		 echo -e \
+"#define linked\n"\
 "#assert keyclass(${CLASS[$k]})\n"\
 "#define KEY_TYPE ${TYPE[$k]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
