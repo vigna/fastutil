@@ -8,7 +8,7 @@
 DIR="src/it/unimi/dsi/fastUtil"
 
 # Names of driver files.
-FILE=(Map AbstractMap HashMap AbstractCollection AbstractSet Collection Set HashSet Iterator)
+FILE=(Map SortedMap AbstractMap HashMap TreapMap AbstractCollection AbstractSet Collection Set SortedSet HashSet TreapSet Iterator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
@@ -24,7 +24,7 @@ CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 # array starts from 1, so we avoid boolean keys.
 #
 
-for ((f=0; f<3; f++)); do
+for ((f=0; f<5; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
 		  for ((v=0; v<${#TYPE[*]}; v++)); do
 				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
@@ -40,13 +40,17 @@ for ((f=0; f<3; f++)); do
 "#define WRITE_VALUE write${TYPE_CAP[$v]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
 "#define READ_VALUE read${TYPE_CAP[$v]}\n"\
+"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
+"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
+"#define SORTEDMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#define ABSTRACT_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AbstractMap\n"\
 "#define KEY_ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define VALUE_ABSTRACT_COLLECTION ${TYPE_CAP[$v]}AbstractCollection\n\n"\
 "#define HASHMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}HashMap\n\n"\
+"#define TREAPMAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}TreapMap\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
@@ -54,6 +58,7 @@ for ((f=0; f<3; f++)); do
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
+"#define KEY_COMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
 "#define GET_VALUE get${TYPE_CAP[$v]}\n"\
@@ -70,6 +75,7 @@ for ((f=0; f<3; f++)); do
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
+"#define KEY_COMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
 "#define GET_VALUE get\n"\
@@ -123,7 +129,7 @@ done
 # so we manually delete boolean sets definitions later.
 #
 
-for ((f=3; f<8; f++)); do
+for ((f=5; f<11; f++)); do
 	 for ((k=0; k<${#TYPE[*]}; k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME
@@ -133,12 +139,16 @@ for ((f=3; f<8; f++)); do
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP[$k]}\n"\
+"#define FIRST_KEY first${TYPE_CAP[$k]}Key\n"\
+"#define LAST_KEY last${TYPE_CAP[$k]}Key\n"\
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
+"#define SORTEDSET ${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
 "#define ABSTRACT_SET ${TYPE_CAP[$k]}AbstractSet\n\n"\
 "#define ABSTRACT_COLLECTION ${TYPE_CAP[$k]}AbstractCollection\n\n"\
 "#define HASHSET ${TYPE_CAP[$k]}HashSet\n\n"\
+"#define TREAPSET ${TYPE_CAP[$k]}TreapSet\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_ITERATOR Iterator\n\n"\
 "#define NEXT_KEY next\n"\
@@ -149,6 +159,7 @@ for ((f=3; f<8; f++)); do
 "#define KEY_NULL (null)\n"\
 "#define KEY2INT(x) (x == null ? 0 : x.hashCode())\n"\
 "#define KEY_EQUAL(x,y) ((x) == null ? (y) == null : (x).equals((y)))\n"\
+"#define KEY_COMP(x,y) (((Comparable)(x)).compareTo(y))\n"\
 "#else\n"\
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define NEXT_KEY next${TYPE_CAP[$k]}\n"\
@@ -164,6 +175,7 @@ for ((f=3; f<8; f++)); do
 "#define KEY2INT(x) ((int)(x))\n"\
 "#endif\n"\
 "#define KEY_EQUAL(x,y) ((x) == (y))\n"\
+"#define KEY_COMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#else\n"\
@@ -184,7 +196,7 @@ rm -f $DIR/BooleanHashSet.c
 # boolean iterators for maps with booleans as codomain.
 #
 
-for ((f=8; f<9; f++)); do
+for ((f=11; f<12; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
 					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
 					 rm -f $FILENAME

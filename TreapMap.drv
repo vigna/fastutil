@@ -1,0 +1,512 @@
+/*		 
+ * fastUtil 1.3: Fast & compact specialized hash-based utility classes for Java
+ *
+ * Copyright (C) 2002 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package it.unimi.dsi.fastUtil;
+
+import java.util.*;
+import java.io.*;
+
+/** A type-specific treap map with a very fast, small-footprint implementation.
+ */
+
+public class TREAPMAP extends ABSTRACT_MAP implements SORTEDMAP {
+	 private Entry tree;
+	 private int size;
+
+   /* If during an <code>insert()</code> or <code>delete()</code> it is
+    * found that the key is present in the tree, <code>keyFound</code>
+    * will be <code>true</code> and <code>prevValue</code> will contain
+    * the previous value assosiacted with the key before the update.
+    */
+   private boolean found;
+   private VALUE_TYPE oldValue;
+	private Comparator comparator;
+
+#if ! #valueclass(Object)
+    /**
+     * The default return value for <code>get()</code>, <code>put()</code> and
+     * <code>remove()</code>.  
+	  */
+
+	 private VALUE_TYPE defRetValue = VALUE_NULL;
+#endif
+
+   /** Creates a new treap map.
+    *
+    */
+   public TREAPMAP() {
+      tree = null;
+      size = 0;
+   }
+
+	 public Comparator comparator() {
+		  return comparator;
+	 }
+
+	 public SortedMap headMap(Object toKey) {
+		  return null; // TODO
+	 }
+
+	 public SortedMap tailMap(Object fromKey) {
+		  return null; // TODO
+	 }
+
+	 public SortedMap subMap(Object fromKey, Object toKey) {
+		  return null; // TODO
+	 }
+
+#if !#keyclass(Object)
+	 public SORTEDMAP headMap(KEY_TYPE toKey) {
+		  return null; // TODO
+	 }
+
+	 public SORTEDMAP tailMap(KEY_TYPE fromKey) {
+		  return null; // TODO
+	 }
+
+	 public SORTEDMAP subMap(KEY_TYPE fromKey, KEY_TYPE toKey) {
+		  return null; // TODO
+	 }
+#endif
+	 /*
+	  * The following private methods implements some basic building blocks used by
+	  * all accessors.  They are (and should be maintained) identical to those used in HashSet.drv.
+	  */
+
+
+    private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+        return comparator == null ? KEY_COMP( k1, k2 ) : comparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
+    }
+
+
+
+	 /** Returns the entry corresponding to the given key, if it is in the tree; <code>null</code>, otherwise.
+	  * @param k the key to search for.
+	  * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
+	  */
+
+   private Entry findKey( KEY_TYPE k ) {
+      Entry e = tree;
+      int cmp;
+
+      while ( e != null && ( cmp = compare( k, e.key ) ) != 0 )
+			 if ( cmp < 0  ) e = e.left;
+			 else e = e.right;
+
+      return e;
+   }
+
+	 private VALUE_TYPE insert( final KEY_TYPE k, final VALUE_TYPE v ) {
+#if #valueclass(Object)
+		  oldValue = null;
+#else
+		  oldValue = defRetValue;
+#endif
+		  found = false;
+		  tree = insertRec( k, v, tree );
+		  return oldValue;
+	 }
+
+   /* Inserts a node into tree and returns the updated treap */
+   private Entry insertRec( final KEY_TYPE k, final VALUE_TYPE v, Entry e) {
+		 if ( e == null ) return new Entry( k, v );
+
+      final int cmp = compare( k, e.key );
+
+      if ( cmp < 0 ) {
+         e.left = insertRec( k, v, e.left );
+         if ( e.prio > e.left.prio ) e = e.rotateRight();
+      } 
+		else if ( cmp > 0 ) {
+         e.right = insertRec( k, v, e.right );
+         if (e.prio > e.right.prio) e = e.rotateLeft();
+      }
+		else {
+			 found = true;
+			 oldValue = e.value;
+			 e.value = v;
+			 size++;
+      }
+      return e;
+   }
+
+	 private VALUE_TYPE delete( final KEY_TYPE k ) {
+#if #valueclass(Object)
+		  oldValue = null;
+#else
+		  oldValue = defRetValue;
+#endif
+		  found = false;
+		  tree = deleteRec( k, tree );
+		  return oldValue;
+	 }
+
+
+   /* Searches for a node with this key. If found, deletes this
+    * node and returns the updated treap.
+    */
+   private Entry deleteRec( KEY_TYPE k, Entry e ) {
+      if ( e == null ) return null;
+
+      final int cmp = compare( k, e.key );
+
+      if ( cmp < 0 ) e.left = deleteRec( k, e.left );
+      else if ( cmp > 0 ) e.right = deleteRec( k, e.right );
+      else {
+			 found = true;
+			 oldValue = e.value;
+			 e = e.deleteRoot();
+			 size--;
+      }
+      return e;
+   }
+
+
+
+   public Object put( final Object ok, final Object ov ) {
+		 insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
+		 return found ? VALUE2OBJ( oldValue ) : null;
+   }
+
+
+#if ! ( #valueclass(Object) && #keyclass(Object) )
+
+
+	 public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+		  return insert( k, v );
+	 }
+
+
+#endif
+
+   public Object remove(final Object ok) {
+		 delete( KEY2TYPE( ok ) );
+		 return found ? VALUE2OBJ( oldValue ) : null;
+   }
+
+#if ! #valueclass(Object) 
+	 
+	 public boolean containsValue(final Object v) {
+		  return containsValue(VALUE2TYPE(v));
+	 }
+
+#endif
+
+
+
+	 public boolean containsValue(final VALUE_TYPE v) {
+		  return false; // TODO
+	 }
+
+
+   public synchronized void clear() {
+      tree = null;
+      size = 0;
+   }
+
+
+
+    private static class Entry implements MAP.Entry {
+		  private static Random random = new Random();
+		  Entry left, right;
+		  KEY_TYPE key;
+		  VALUE_TYPE value;
+		  int prio;
+
+		  Entry(Object key, Object value) {
+				this.key = KEY2TYPE(key);
+				this.value = VALUE2TYPE(value);
+				prio = random.nextInt();
+		  }
+
+#if ! #keyclass(Object) || ! #valueclass(Object) 
+		  
+		  Entry(KEY_TYPE key, VALUE_TYPE value) {
+				this.key = key;
+				this.value = value;
+				prio = random.nextInt();
+		  }
+		  
+#endif
+
+		  public Object getKey() {
+				return KEY2OBJ(key);
+		  }
+		  
+#if ! #keyclass(Object)
+		  public KEY_TYPE ENTRY_GET_KEY() {
+				return key;
+		  }
+#endif
+
+		  public Object getValue() {
+				return VALUE2OBJ(value);
+		  }
+		  
+#if ! #valueclass(Object)
+		  public VALUE_TYPE ENTRY_GET_VALUE() {
+				return value;
+		  }
+#endif
+
+		  public VALUE_TYPE setValue(final VALUE_TYPE value) {
+				final VALUE_TYPE oldValue = this.value;
+				this.value = value;
+				return oldValue;
+		  }
+		  
+#if ! #valueclass(Object)
+		  
+		  public Object setValue(final Object value) {
+				return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+		  }
+
+#endif
+
+
+		  public boolean equals(Object o) {
+				if (!(o instanceof Entry)) return false;
+				Entry e = (Entry)o;
+				
+				return KEY_EQUAL(key, e.key) && VALUE_EQUAL(value, e.value);
+		  }
+		  
+		  public int hashCode() {
+				return KEY2INT(key) ^ VALUE2INT(value);
+		  }
+		  
+		  
+		  public String toString() {
+				return key + "=" + value;
+		  }
+
+   /* Rotate this tree to the left
+    */
+   final Entry rotateLeft() {
+      Entry temp = right;
+      right = right.left;
+      temp.left = this;
+      return temp;
+   }
+
+   /* Rotate this tree to the right
+    */
+   final Entry rotateRight() {
+      Entry temp = left;
+      left = left.right;
+      temp.right = this;
+      return temp;
+   }
+
+   /* If one of the children is an empty tree, remove the root
+    * and put the other child in its place. If both children
+    * are nonempty, rotate the tree at the root so that the child
+    * with the smallest prio-number comes to the top, then delete
+    * the root from the other subtee.
+    */
+   final Entry deleteRoot() {
+      Entry temp;
+      
+      if (left == null)
+         return right;
+      if (right == null)
+         return left;
+      if (left.prio < right.prio) {
+         temp = rotateRight();
+         temp.right = deleteRoot();
+      } else {
+         temp = rotateLeft();
+         temp.left = deleteRoot();
+      }
+      return temp;
+   }
+   
+
+    }
+	 
+
+
+    public Set entrySet() {
+		  return null; // TODO
+	 }
+
+    public Set keySet() {
+		  return null; // TODO
+	 }
+
+    public Collection values() {
+		  return null; // TODO
+	 }
+
+		public boolean containsKey( KEY_TYPE k ) {
+			 return findKey( k ) != null;
+		}
+	 
+		public int size() {
+			 return size;
+		}
+
+	 public boolean isEmpty() {
+		  return size == 0;
+	 }
+
+
+   public Object get( final Object ok ) {
+		 final Entry e = findKey( KEY2TYPE( ok ) );
+		 return e == null ? (VALUE_CLASS)null : e.getValue();
+   }
+
+
+#if !#keyclass(Object)
+
+	 public VALUE_TYPE get(final KEY_TYPE k) {
+		  final Entry e = findKey( k );
+
+		  return e == null ? DEF_RET_VALUE : e.value;
+	 }
+
+
+	 public VALUE_TYPE remove(final KEY_TYPE k) {
+		  return delete( k );
+	 }
+
+	 public boolean containsKey(final Object ok) {
+		  return containsKey( KEY2TYPE( ok ) );
+	 }
+
+#else
+#if !#valueclass(Object)
+
+	 public VALUE_TYPE GET_VALUE( final Object k ) {
+		  final Entry e = findKey( k );
+
+		  return e == null ? DEF_RET_VALUE : e.value;
+	 }
+
+
+	 public VALUE_TYPE REMOVE_VALUE(final Object ok) {
+		  return delete( ok );
+	 }
+
+#endif
+#endif
+
+
+   public Object firstKey() {
+		 Entry e = tree;
+
+      if (e == null) throw new NoSuchElementException();
+      while ( e.left != null ) e = e.left;
+      return e.getKey();
+   }
+
+   public Object lastKey() {
+      Entry e = tree;
+
+      if (e == null) throw new NoSuchElementException();
+      while (e.right != null) e = e.right;
+      return e.getKey();
+   }
+
+#if !#keyClass(Object)
+	 public KEY_TYPE FIRST_KEY() {
+		  return KEY_NULL; // TODO
+	 }
+
+	 public KEY_TYPE LAST_KEY() {
+		  return KEY_NULL; // TODO
+	 }
+
+#endif
+
+	 /*
+   public Object clone() {
+      try {
+         Treap treap = (Treap) super.clone();
+
+         treap.tree = (tree != null) ? (Entry) tree.clone() : null;
+         return treap;
+      } catch (CloneNotSupportedException e) {
+         // Cannot happen
+         throw new InternalError(e.toString());
+      }
+   }
+
+	 */
+
+	 /*
+class TreapEnumeration implements Enumeration
+{
+   private Stack stack;
+   private boolean keys;
+   private boolean ascending;
+
+   TreapEnumeration(Entry t, boolean keys, boolean ascending) {
+      stack = new Stack();
+
+      this.keys = keys;
+      this.ascending = ascending;
+      if (ascending)
+         for ( ; t != null; t = t.left)
+            stack.push(t);
+      else // descending
+         for ( ; t != null; t = t.right)
+            stack.push(t);
+   }
+
+   public boolean hasMoreElements() {
+      return !stack.empty();
+   }
+
+   public Object nextElement() {
+      if (stack.empty())
+         throw new NoSuchElementException("TreapEnumeration");
+
+      Entry node = (Entry) stack.peek();
+      if (ascending)
+         if (node.right == null) {
+            Entry t = (Entry) stack.pop();
+            while (!stack.empty() &&
+                   ((Entry) stack.peek()).right == t)
+               t = (Entry) stack.pop();
+         } else
+            for (Entry t = node.right; t != null; t = t.left)
+               stack.push(t);
+      else // descending
+         if (node.left == null) {
+            Entry t = (Entry) stack.pop();
+            while (!stack.empty() &&
+                   ((Entry) stack.peek()).left == t)
+               t = (Entry) stack.pop();
+         } else
+            for (Entry t = node.left; t != null; t = t.right)
+               stack.push(t);
+
+      return keys ? node.key : node.value;
+   }
+}
+	 */
+
+}
+
+// Local Variables:
+// mode: java
+// End:
