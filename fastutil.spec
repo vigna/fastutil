@@ -2,7 +2,7 @@
 
 Name:           fastutil
 Version:        4.3.1
-Release:        0jpp
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
@@ -77,6 +77,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Tue Jul 06 2004 Sebastiano Vigna <vigna at acm.org> - 4.3.1-1jpp
+- New indirect heap-based double priority queues, and fixes to the docs.
+
 * Tue Jun 29 2004 Sebastiano Vigna <vigna at acm.org> - 4.3-1jpp
 - Fixes to trim() methods, and new unmodifiable structures.
 
