@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        4.3.1
+Version:        4.3.2
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.3.1-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.3.2-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -77,6 +77,12 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Tue Dec 21 2004 Sebastiano Vigna <vigna at acm.org> - 4.3.2-1jpp
+- Fixed small memory leak in OpenHashMap.
+
+* Mon Aug 23 2004 Ralph Apel <r.apel at r-apel.de> - 4.3.1-2jpp
+- Build with ant-1.6.2
+
 * Tue Jul 06 2004 Sebastiano Vigna <vigna at acm.org> - 4.3.1-1jpp
 - New indirect heap-based double priority queues, and fixes to the docs.
 
