@@ -21,8 +21,7 @@
 
 package it.unimi.dsi.fastutil;
 
-import java.util.*;
-import java.util.ListIterator;
+import java.util.Iterator;
 
 /** A bidirectional {@link Iterator}.
  *

@@ -533,6 +533,7 @@ done
 
 cp Iterators.drv $DIR/Iterators.c
 
+rm -f $DIR/booleans/BooleanLinkedOpenHashSet.c
 rm -f $DIR/booleans/BooleanSortedSet.c
 rm -f $DIR/booleans/BooleanComparator.c
 rm -f $DIR/booleans/AbstractBooleanComparator.c

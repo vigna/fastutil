@@ -71,20 +71,15 @@ clean:
 	@find . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f */*/*/*/*/*/*.java
-	@rm -f */*/*/*/*/*.{c,h}
+	@rm -f $(SRC)/*/*.java
+	@rm -f $(SRC)/*.{c,h,j} $(SRC)/*/*.{c,h,j}
 	@rm -fr $(DOCSDIR)/*
 
-
-PACKAGES = it.unimi.dsi.fastutil
 
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -overview java/overview.html -link $(APIURL) -sourcepath java $(PACKAGES)
-#	for type in Byte Char Int Long Float Double; do javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR)/$$(echo $$type | tr "[A-Z]" "[a-z]") -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) $(SRC)/{Abstract,}$$type*.java; done
-#	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR)/object -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) $(SRC)/{Abstract,}{Object,Reference}*.java
-#	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -link $(APIURL) -link file:///$$(pwd)/$(DOCSDIR)/int -link file:///$$(pwd)/$(DOCSDIR)/char $(SOURCES)
+	javadoc -J-Xmx256M -source 1.4 -d $(DOCSDIR) -public -windowtitle "fastutil $(VERSION)" -overview java/overview.html -link $(APIURL) -sourcepath java -subpackages it.unimi.dsi.fastutil
 	chmod -R a+rX $(DOCSDIR)
 
 
