@@ -312,6 +312,7 @@ SOURCES = \
 	$(SOURCEDIR)/Sets.java \
 	$(SOURCEDIR)/SortedSets.java \
 	$(SOURCEDIR)/Lists.java \
+	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/AbstractStack.java # These are True Java Sources instead
 
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,

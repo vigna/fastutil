@@ -21,6 +21,8 @@
 
 package PACKAGE;
 
+import it.unimi.dsi.fastutil.Arrays;
+
 /** A class providing static methods that do useful things with type-specific arrays.
  *
  * In particular, the <code>ensureCapacity()</code>, <code>grow()</code>,
@@ -179,6 +181,7 @@ public class ARRAYS {
 	 */
 
 	public static KEY_TYPE[] copy( final KEY_TYPE array[], final int offset, final int length ) {
+		ensureOffsetLength( array, offset, length );
 		if ( length == 0 ) return EMPTY_ARRAY;
 		final KEY_TYPE[] a = new KEY_TYPE[ length ];
 		System.arraycopy( array, offset, a, 0, length );
@@ -193,12 +196,6 @@ public class ARRAYS {
 
 	public static KEY_TYPE[] copy( final KEY_TYPE array[] ) {
 		return copy( array, 0, array.length );
-	}
-
-	private static void ensureRange( final int length, final int from, final int to ) {
-		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
-		if ( from > length ) throw new ArrayIndexOutOfBoundsException( "Start index (" + from + ") is greater than array length (" + length + ")" );
-		if ( to > length ) throw new ArrayIndexOutOfBoundsException( "End index (" + to + ") is greater than array length (" + length + ")" );
 	}
 
 	/** Fills the given array with the given value.
@@ -228,9 +225,38 @@ public class ARRAYS {
 	 */
 
 	public static void fill( final KEY_TYPE array[], final int from, int to, final KEY_TYPE value ) {
-		ensureRange( array.length, from, to );
+		ensureFromTo( array, from, to );
 		if ( from == 0 ) while( to-- != 0 ) array[ to ] = value;
 		else for( int i = from; i < to; i++ ) array[ i ] = value;
+	}
+
+
+	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array.
+	 *
+	 * <P>This method may be used whenever an array range check is needed.
+	 *
+	 * @param a an array.
+	 * @param from a start index (inclusive).
+	 * @param to an end index (inclusive).
+	 * @throws IllegalArgumentException if <code>from</code> is greater than <code>to</code>.
+	 * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than the array length or negative.
+	 */
+	public static void ensureFromTo( final KEY_TYPE[] a, final int from, final int to ) {
+		Arrays.ensureFromTo( a.length, from, to );
+	}
+
+	/** Ensures that a range given by an offset and a length fits an array.
+	 *
+	 * <P>This method may be used whenever an array range check is needed.
+	 *
+	 * @param a an array.
+	 * @param offset a start index.
+	 * @param length a length (the number of elements in the range).
+	 * @throws IllegalArgumentException if <code>length</code> is negative.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than the array length.
+	 */
+	public static void ensureOffsetLength( final KEY_TYPE[] a, final int offset, final int length ) {
+		Arrays.ensureOffsetLength( a.length, offset, length );
 	}
 
 }

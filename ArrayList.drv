@@ -22,6 +22,7 @@
 package PACKAGE;
 
 import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.Arrays;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -147,7 +148,6 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 
 	public ARRAY_LIST( final KEY_TYPE a[], final int offset, final int length ) {
 		this( length );
-		if ( length > a.length ) throw new IllegalArgumentException( "The specified length (" + length + ") is greater than the array size (" + a.length + ")" );
 		System.arraycopy( a, offset, this.a, 0, length );
 		size = length;
 	}
@@ -378,7 +378,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 */
 
 	public void getElements( int from, KEY_TYPE[] a, int offset, int length ) {
-		if ( from + length > size ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than list size (" + size + ")" );
+		ARRAYS.ensureOffsetLength( a, offset, length );
 		System.arraycopy( this.a, from, a, offset, length );
 	}
 
@@ -388,9 +388,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param to the end index (exclusive).
 	 */
 	public void removeElements( final int from, final int to ) {
-		if ( from > size ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than list size (" + size + ")" );
-		if ( to > size ) throw new IndexOutOfBoundsException( "End index (" + to + ") is greater than list size (" + size + ")" );
-		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
+		Arrays.ensureFromTo( size, from, to );
 		System.arraycopy( a, to, a, from, size - to );
 		size -= ( to - from );
 #if #keyclass(Object) || #keyclass(Reference)
@@ -409,8 +407,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 */
 	public void addElements( final int index, final KEY_TYPE a[], final int offset, final int length ) {
 		ensureIndex( index );
-		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
-		if ( offset + length > a.length ) throw new ArrayIndexOutOfBoundsException( "End index (" + ( offset + length ) + ") is greater than array length (" + a.length + ")" );
+		ARRAYS.ensureOffsetLength( a, offset, length );
 		this.a = ARRAYS.grow( this.a, size + length, size );
 		System.arraycopy( this.a, index, this.a, index + length, size - index );
 		System.arraycopy( a, offset, this.a, index, length );
