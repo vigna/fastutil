@@ -334,11 +334,12 @@ echo -e \
 "#define REMOVE rem\n"\
 \
 "#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
-"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 \
 "#if #keyclass(Boolean)\n"\
+"#define KEY2OBJ(x) (Boolean.valueOf(x))\n"\
 "#define KEY_NULL (false)\n"\
 "#else\n"\
+"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#endif\n"\
 \
@@ -381,7 +382,6 @@ echo -e \
 \
 \
 "#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_VALUE())\n"\
-"#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
 \
 "#if #valueclass(Float) || #valueclass(Double) || #valueclass(Long)\n"\
 "#define VALUE2INT(x) HashCommon.${TYPE[$v]}2int(x)\n"\
@@ -392,8 +392,10 @@ echo -e \
 "#endif\n"\
 \
 "#if #valueclass(Boolean)\n"\
+"#define VALUE2OBJ(x) (Boolean.valueOf(x))\n"\
 "#define VALUE_NULL (false)\n"\
 "#else\n"\
+"#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\
 "#endif\n"\
 \

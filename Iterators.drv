@@ -24,6 +24,7 @@ package PACKAGE;
 import it.unimi.dsi.fastutil.Iterators;
 
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 /** A class providing static methods and objects that do useful things with type-specific iterators.
@@ -325,25 +326,65 @@ public class ITERATORS {
 			this.i = i;
 		}
 
-		public boolean hasNext() { return i.hasNext(); };
-		public void remove() { i.remove(); };
-#if ! #keyclass(Object)
-		public Object next() { return i.next(); };
-#endif
-		public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); };
+		public boolean hasNext() { return i.hasNext(); }
+		public void remove() { i.remove(); }
+
+		public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); }
 	}
 
 	/** Wraps a standard iterator into a type-specific iterator.
 	 *
 	 * <P>This method wraps a standard iterator into a type-specific one which will handle the
 	 * type conversions for you. Of course, any attempt to wrap an iterator returning the
-	 * instances of the wrong class will generate a {@link ClassCastException}.
+	 * instances of the wrong class will generate a {@link ClassCastException}. The
+	 * returned iterator is backed by <code>i</code>: changes to one of the iterators
+	 * will affect the other, too.
 	 *
 	 * <P>If <code>i</code> is already type-specific, it will returned and no new object
 	 * will be generated.
 	 *
 	 * @param i an iterator.
-	 * @return a type-specific iterator returning the same element as <code>i</code>.
+	 * @return a type-specific iterator  backed by <code>i</code>.
+	 */
+	public static KEY_LIST_ITERATOR AS_KEY_ITERATOR( final ListIterator i ) {
+		if ( i instanceof KEY_LIST_ITERATOR ) return (KEY_LIST_ITERATOR)i;
+		return new ListIteratorWrapper( i );
+	}
+
+
+	private static class ListIteratorWrapper extends KEY_ABSTRACT_LIST_ITERATOR {
+		final ListIterator i;
+
+		public ListIteratorWrapper( final ListIterator i ) {
+			this.i = i;
+		}
+
+		public boolean hasNext() { return i.hasNext(); }
+		public boolean hasPrevious() { return i.hasPrevious(); }
+		public int nextIndex() { return i.nextIndex(); }
+		public int previousIndex() { return i.previousIndex(); }
+		public void set( KEY_TYPE k ) { i.set( KEY2OBJ( k ) ); }
+		public void add( KEY_TYPE k ) { i.add( KEY2OBJ( k ) ); }
+		public void remove() { i.remove(); }
+
+		public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); }
+		public KEY_TYPE PREV_KEY() { return KEY2TYPE( i.previous() ); }
+	}
+
+	/** Wraps a standard list iterator into a type-specific list iterator.
+	 *
+	 * <P>This method wraps a standard list iterator into a type-specific one
+	 * which will handle the type conversions for you. Of course, any attempt
+	 * to wrap an iterator returning the instances of the wrong class will
+	 * generate a {@link ClassCastException}. The
+	 * returned iterator is backed by <code>i</code>: changes to one of the iterators
+	 * will affect the other, too.
+	 *
+	 * <P>If <code>i</code> is already type-specific, it will returned and no new object
+	 * will be generated.
+	 *
+	 * @param i a list iterator.
+	 * @return a type-specific list iterator backed by <code>i</code>.
 	 */
 	public static KEY_ITERATOR AS_KEY_ITERATOR( final Iterator i ) {
 		if ( i instanceof KEY_ITERATOR ) return (KEY_ITERATOR)i;
@@ -366,17 +407,17 @@ public class ITERATORS {
 			this.to = to;
 		}
 
-		public boolean hasNext() { return curr < to; };
-		public boolean hasPrevious() { return curr > from; };
+		public boolean hasNext() { return curr < to; }
+		public boolean hasPrevious() { return curr > from; }
 
 		public KEY_TYPE NEXT_KEY() { 
 			if ( ! hasNext() ) throw new NoSuchElementException();
 			return curr++; 
-		};
+		}
 		public KEY_TYPE PREV_KEY() { 
 			if ( ! hasPrevious() ) throw new NoSuchElementException();
 			return --curr; 
-		};
+		}
 
 #if ! #keyclass(Long)
 		public int nextIndex() { return curr - from; }
