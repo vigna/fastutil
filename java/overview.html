@@ -106,6 +106,15 @@
     are sorted} and iterators on sorted containers are always {@linkplain
     it.unimi.dsi.fastutil.BidirectionalIterator bidirectional}.
 
+    <p>More generally, the rationale behing <code>fastutil</code> is that
+    <em>you should never need to code explicitly natural
+    transformations</em>. You do to not need to define an anonymous class to
+    iterate over an array of integers&mdash;just {@linkplain
+    it.unimi.dsi.fastutil.ints.IntIterators#wrap(int[]) wrap it}. You do not
+    need to write a loop to put the characters returned by an iterator into a
+    set&mdash;just {@linkplain
+    it.unimi.dsi.fastutil.chars.CharOpenHashSet#CharOpenHashSet(CharIterator)
+    use the right constructor}. And so on.
 
       <h3><A NAME="names"></A>The Names</h3>
 
@@ -131,23 +140,25 @@
       classes are significantly faster.</p>
     
     <P>Thus, an {@link it.unimi.dsi.fastutil.ints.IntOpenHashSet} stores
-    integers efficiently, whereas a {@link
+    integers efficiently and implements {@link it.unimi.dsi.fastutil.ints.IntSet}, whereas a {@link
     it.unimi.dsi.fastutil.longs.Long2IntAVLTreeMap} does the same for maps from
     longs to integers (but the map will be sorted, tree based, and balanced
-    using the AVL criterion). A {@link
+    using the AVL criterion), implementing {@link
+    it.unimi.dsi.fastutil.longs.Long2IntMap}. A {@link
     it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet} stores longs in a hash
     table, but provides a predictable iteration order (the insertion order) and
     access to first/last elements of the order. A {@link
     it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap} is similar to
     an {@link java.util.IdentityHashMap}. You can manage a priority queue of
     characters in a heap using a {@link
-    it.unimi.dsi.fastutil.chars.CharHeapPriorityQueue}.  {@link
+    it.unimi.dsi.fastutil.chars.CharHeapPriorityQueue}, which implements {@link
+    it.unimi.dsi.fastutil.chars.CharPriorityQueue}.  {@link
     it.unimi.dsi.fastutil.bytes.ByteArrayFrontCodedList Front-coded lists} are
     highly specialized immutable data structures that store compactly a large
     number of arrays: if you don't know them you probably don't need them.
 
     <p>Since there are eight primitive types in Java, and we support
-    reference-based containers, we get 1061 (!) classes (some nonsensical
+    reference-based containers, we get 1269 (!) classes (some nonsensical
     classes, such as <code>Boolean2BooleanAVLTreeMap</code>, are not
     generated). Many classes are generated just to mimic the hierarchy of
     {@link java.util} so to redistribute common code in a similar way. There
@@ -195,14 +206,14 @@
     </div>
 
     <P>&dagger;: this class has also a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
-    <P>&Dagger;: this class has <em>only</em< a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
+    <P>&Dagger;: this class has <em>only</em> a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
     
     <P>Note that abstract implementations are named by prefixing the interface
     name with <samp>Abstract</samp>. Thus, if you want to define a
     type-specific structure holding a set of integers without the hassle of
     defining object-based methods, you should inherit from {@link it.unimi.dsi.fastutil.ints.AbstractIntSet}.
 
-    <P>The following table summarizes static containers, which all give rise
+    <P>The following table summarizes static containers, which usually give rise
     both to a type-specific and to a generic class:
       
     <div align=center>
@@ -220,16 +231,19 @@
 	<tr><td>IndirectHeaps
 	<tr><td>Iterators&dagger;
 	<tr><td>Comparators
+	<tr><td>Hash&Dagger;
+	<tr><td>HashCommon&Dagger;
     </table>
     </div>
 
     <P>&dagger;: this class has also a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
+    <P>&Dagger;: this class has <em>only</em> a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
 
     <P>The static containers provide also special-purpose implementations for
     all kinds of {@linkplain it.unimi.dsi.fastutil.Sets#EMPTY_SET empty
     structures} (including {@linkplain
     it.unimi.dsi.fastutil.objects.ObjectArrays#EMPTY_ARRAY arrays}) and
-    {@linkplain it.unimi.dsi.fastutil.ints.Int2IntMaps#singleton(int) singletons}.
+    {@linkplain it.unimi.dsi.fastutil.ints.Int2IntMaps#singleton(int,int) singletons}.
 
     <h3>Warnings</h3>
 
@@ -427,7 +441,7 @@
     <h3>Static Container Classes</h3>
 
     <P><code>fastutil</code> provides a number of static methods and
-      singletons, much like {@link java.util.Collection}. To avoid creating
+      singletons, much like {@link java.util.Collections}. To avoid creating
       classes with hundreds of methods, there are separate containers for
       sets, lists, maps and so on. Generic containers are placed in {@link
       it.unimi.dsi.fastutil}, whereas type-specific containers are in the
@@ -435,12 +449,13 @@
       static classes contained in {@link it.unimi.dsi.fastutil}, and in
       type-specific static classes such as {@link
       it.unimi.dsi.fastutil.chars.CharSets}, {@link
-      it.unimi.dsi.fastutil.floats.Float2ByteSortedMaps}, and {@link
-      it.unimi.dsi.fastutil.longs.LongArrays}.  Presently, you can easily
+      it.unimi.dsi.fastutil.floats.Float2ByteSortedMaps}, {@link
+      it.unimi.dsi.fastutil.longs.LongArrays} and {@link
+      it.unimi.dsi.fastutil.floats.FloatHeaps}.  Presently, you can easily
       obtain {@linkplain it.unimi.dsi.fastutil.Sets#EMPTY_SET empty collections},
       {@linkplain it.unimi.dsi.fastutil.longs.Long2IntMaps#EMPTY_MAP empty
       type-specific collections}, {@linkplain
-      it.unimi.dsi.fastutil.ints.IntLists#singleton(int,int) singletons}, and
+      it.unimi.dsi.fastutil.ints.IntLists#singleton(int) singletons}, and
       {@linkplain
       it.unimi.dsi.fastutil.objects.Object2ReferenceSortedMaps#synchronize(Object2ReferenceSortedMap)
       synchronized versions} of any type-specific container.
@@ -454,6 +469,12 @@
       it.unimi.dsi.fastutil.doubles.DoubleArrayList type-specific
       array-based list} because elements access is syntactically much
       simpler.
+
+    <P>For the same reason, <code>fastutil</code> provides a full
+    implementation of methods that manipulate arrays as type-specific
+    {@linkplain it.unimi.dsi.fastutil.ints.IntHeaps heaps}, {@linkplain
+    it.unimi.dsi.fastutil.ints.IntSemiIndirectHeaps semi-indirect heaps} and
+    {@linkplain it.unimi.dsi.fastutil.ints.IntIndirectHeaps indirect heaps}.
 
 
     <h3>Iterators and Comparators</h3>
@@ -490,7 +511,7 @@
       giving an interval of elements to be returned, {@linkplain
       it.unimi.dsi.fastutil.objects.ObjectIterators#concat(ObjectIterator[])
       concatenate them} or {@linkplain
-      it.unimi.dsi.fastutil.objects.ObjectIterators#pour(Iterator,ObjectSet)
+      it.unimi.dsi.fastutil.objects.ObjectIterators#pour(Iterator,ObjectCollection)
       pour them} into a set.
 
 
@@ -576,7 +597,11 @@
 
     <h3>Memory Usage</h3>
 
-    <h3>Hash Tables</h3>
+    <P>The absence of wrappers makes data structures in <code>fastutil</code>
+    much smaller: even in the case of objects, however, data structures in
+    <code>fastutil</code> try to be space-efficient.
+
+    <h4>Hash Tables</h4>
 
     <p>To avoid memory waste, (unlinked) hash tables in
       <code>fastutil</code> keep no additional information about elements
@@ -629,7 +654,7 @@
       hash classes, which cache hash codes.
 
 
-    <h3>Balanced Trees</h3>
+    <h4>Balanced Trees</h4>
 
     <p>The balanced trees implementation is also very parsimonious.
       <code>fastutil</code> is based on the excellent (and unbelievably well
