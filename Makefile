@@ -1,5 +1,6 @@
 DOCSDIR=doc
 APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
+VERSION=2.0
 
 .SUFFIXES: .java .class
 
@@ -21,7 +22,7 @@ jar: jsources
 	ant dist
 
 tar: jar
-	tar zhcvf fastUtil-1.3.tgz fastUtil-1.3/
+	tar zhcvf fastUtil-$(VERSION).tgz fastUtil-*.*/
 
 jsources: $(SOURCES)
 
@@ -39,7 +40,7 @@ PACKAGES = it.unimi.dsi.fastUtil
 docs: jsources
 	-mkdir -p $(DOCSDIR)
 	-rm -fr $(DOCSDIR)/*
-	javadoc -d $(DOCSDIR) -windowtitle "fastUtil 1.3" -link $(APIURL) -sourcepath src $(PACKAGES)
+	javadoc -d $(DOCSDIR) -windowtitle "fastUtil $(VERSION)" -link $(APIURL) -sourcepath src $(PACKAGES)
 	chmod -R a+rX $(DOCSDIR)
 
 

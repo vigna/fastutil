@@ -47,7 +47,10 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 /** Cached collection of values. */
 	 private transient volatile Collection values;
 
+	 /** Temporary place to keep a key during recursive operations. */
 	 private transient KEY_TYPE key;
+
+	 /** Temporary place to keep a value during recursive operations. */
 	 private transient VALUE_TYPE value;
 
 	 /** The value of this variable remembers, after an <code>insert()</code> 
@@ -152,14 +155,17 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  putAll( m );
 	 }
 
+
 	 /*
 	  * The following private methods implements some basic building blocks used by
 	  * all accessors.  They are (and should be maintained) identical to those used in TreeSet.drv.
 	  */
 
 
-
 	 /** Compares two keys in the right way. 
+	  *
+	  * <P>This method uses the {@link #actualComparator} if it is non-<code>null</code>.
+	  * Otherwise, it resorts to primitive type comparisons or to {@link Comparable#compareTo(Object)}.
 	  *
 	  * @param k1 the first key.
 	  * @param k2 the second key.
@@ -167,7 +173,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
 	  */
 	 
-    protected int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+	 private int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
 		  return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
     }
 
@@ -203,6 +209,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  * <P>After execution of this method, {@link #modified} is true iff a new
 	  * entry has been inserted. Otherwise, {@link #oldValue} contains the value
 	  * previously associated with the key.
+	  *
+	  * <P>Note that if values are not primitive it is a good idea to clear the
+	  * content of {@link #oldValue} after calling this method.
 	  *
 	  * @param k a key.
 	  * @param v a value.
@@ -318,7 +327,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff an 
 	  * entry has been deleted. In this case, {@link #oldValue} contains the value
-	  * previously associated with the key.
+	  * previously associated with the key, {@link #deleted} is the entry that contained
+	  * the deleted key and {@link #change} is the entry actually removed from the tree.
+	  *
+	  * <P>Note that if values are not primitive it is a good idea to clear the
+	  * content of {@link #oldValue} after calling this method. In any case, the content
+	  * of {@link #change} and {@link #deleted} should always be clear.
 	  *
 	  * @param k a key.
 	  * @return the value previously associated to the key (or the default return value, if there 
@@ -346,7 +360,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	  *
 	  * <P>After execution of this method, {@link #modified} is true iff an 
 	  * entry has been deleted. In this case, {@link #oldValue} contains the value
-	  * previously associated with the key.
+	  * previously associated with the key, {@link #deleted} is the entry that contained
+	  * the deleted key and {@link #change} is the entry actually removed from the tree.
 	  *
 	  * @param p the parent of the second argument (i.e., an {@link Entry}.
 	  * @param e a tree (i.e., an {@link Entry}.
@@ -377,7 +392,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				deleted.value = e.value;
 
 				modified = true;
-				//deleted = null;
 				count--;
 
 				if ( p != null ) {
@@ -408,15 +422,17 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return e;
 	 }
 	 
-
-	private boolean searchRef( Entry e, Entry s ) {
-		 if ( e.right == s ) { System.err.println("Got right reference to " + s + " in " + e); return true; }
-		 if ( e.left == s ) { System.err.println("Got left reference to " + s + " in " + e); return true; }
-		 if ( ! e.pred() && searchRef( e.left, s ) ) return true;
-		 if ( ! e.succ() && searchRef( e.right, s ) ) return true;
-		 return false;
-	 }
+	 /*
+		private boolean searchRef( Entry e, Entry s ) {
+		if ( e.right == s ) { System.err.println("Got right reference to " + s + " in " + e); return true; }
+		if ( e.left == s ) { System.err.println("Got left reference to " + s + " in " + e); return true; }
+		if ( ! e.pred() && searchRef( e.left, s ) ) return true;
+		if ( ! e.succ() && searchRef( e.right, s ) ) return true;
+		return false;
+		}
+	 */
 	 
+
 	 public Object put( final Object ok, final Object ov ) {
 		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
 		  return ! modified ? VALUE2OBJ( oldValue ) : null;
@@ -430,7 +446,6 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #endif
 
    public Object remove(final Object ok) {
-		 if ( ok == null ) throw new IllegalArgumentException();
 		 delete( KEY2TYPE( ok ) );
 		 deleted = change = null;
 		 return modified ? VALUE2OBJ( oldValue ) : null;
@@ -469,25 +484,40 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 
 	 /** This class represent an entry in a tree map.
 	  *
+	  * <P>We use the only "metadata", i.e., {@link Entry#mix}, to store
+	  * information about level, predecessor status and successor status.
+	  *
 	  * <P>Note that since the class is recursive, it can be
 	  * considered equivalently a tree.
 	  */
 
     private static final class Entry implements MAP.Entry {
+		  /** If the bit in this mask is true, {@link #right} points to a successor. */
+		  private final static int SUCC_MASK = 1 << 31;
+		  /** If the bit in this mask is true, {@link #left} points to a predecessor. */
+		  private final static int PRED_MASK = 1 << 30;
+		  /** The bits in this mask hold the node level. */
+		  private final static int LEVEL_MASK = ~( SUCC_MASK | PRED_MASK );
+		  /** The key of this entry. */
+		  protected KEY_TYPE key;
+		  /** The value of this entry. */
+		  protected VALUE_TYPE value;
+		  /** The pointers to the left and right subtrees. */
+		  protected Entry left, right;
+		  /** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #LEVEL_MASK}). */
+		  private int mix;
 
-		  final static int SUCC_MASK = 1 << 31;
-		  final static int PRED_MASK = 1 << 30;
-		  final static int LEVEL_MASK = ~( SUCC_MASK | PRED_MASK );
+		  /** Creates a new entry with no explicitly set key/value and <code>null</code> subtrees.
+			*/
 
-		  KEY_TYPE key;
-		  VALUE_TYPE value;
+		  protected Entry() {}
 
-		  Entry left, right;
-		  int mix;
-
-		  Entry() {}
-
-		  Entry( Object k, Object v ) {
+		  /** Creates a new entry with the given key and value.
+			*
+			* @param k a key.
+			* @param v a value.
+			*/
+		  protected Entry( Object k, Object v ) {
 				this.key = KEY2TYPE( k );
 				this.value = VALUE2TYPE( v );
 				mix = 1 | SUCC_MASK | PRED_MASK;
@@ -495,7 +525,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 #if ! #keyclass(Object) || ! #valueclass(Object) 
 		  
-		  Entry( KEY_TYPE k, VALUE_TYPE v ) {
+		  /** Creates a new entry with the given key and value.
+			*
+			* @param k a key.
+			* @param v a value.
+			*/
+		  protected Entry( KEY_TYPE k, VALUE_TYPE v ) {
 				this.key = k;
 				this.value = v;
 				mix = 1 | SUCC_MASK | PRED_MASK;
@@ -503,49 +538,78 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  
 #endif
 
-		  public Entry left() {
+		  /** Returns the left subtree, if it is a real one. 
+			*
+			* @return the left subtree, or {@link #sentinel} if the left
+			* subtree is empty, or it really points to a predecessor.
+			*/
+		  protected Entry left() {
 				if ( ( mix & PRED_MASK ) != 0 || left == null ) return TREEMAP.sentinel;
 				else return left;
 		  }
 		  
-		  public Entry right() {
+		  /** Returns the right subtree, if it is a real one. 
+			*
+			* @return the right subtree, or {@link #sentinel} if the right
+			* subtree is empty, or it really points to a successor.
+			*/
+		  protected Entry right() {
 				if ( ( mix & SUCC_MASK ) != 0 || right == null ) return TREEMAP.sentinel;
 				else return right;
 		  }
 		  
-
-		  public boolean pred() {
+		  /** Checks whether the left pointer is really a predecessor.
+			* @return true if the left pointer is a predecessor.
+			*/
+		  protected boolean pred() {
 				return ( mix & PRED_MASK ) != 0;
 		  }
 		  
-		  public boolean succ() {
+		  /** Checks whether the right pointer is really a successor.
+			* @return true if the right pointer is a successor.
+			*/
+		  protected boolean succ() {
 				return ( mix & SUCC_MASK ) != 0;
 		  }
 		  
-		  public void pred( boolean pred ) {
+		  /** Sets whether the left pointer is really a predecessor.
+			* @param pred if true then the left pointer will be considered a predecessor.
+			*/
+		  protected void pred( boolean pred ) {
 				if ( pred ) mix |= PRED_MASK;
 				else mix &= ~PRED_MASK;
 		  }
 		  
-		  public void succ( boolean succ ) {
+		  /** Sets whether the right pointer is really a successor.
+			* @param succ if true then the right pointer will be considered a successor.
+			*/
+		  protected void succ( boolean succ ) {
 				if ( succ ) mix |= SUCC_MASK;
 				else mix &= ~SUCC_MASK;
 		  }
 		  
-		  public int level() {
+		  /** Returns the current level of the node.
+			* @return the current level of this node.
+			*/
+		  protected int level() {
 				return mix & LEVEL_MASK ;
 		  }
 
-		  public void level( int level ) {
+		  /** Sets the level of this node.
+			* @param level the new level of this node.
+			*/
+		  protected void level( int level ) {
 				mix &= ~LEVEL_MASK;
 				mix |= level;
 		  }
 
-		  public void incLevel() {
+		  /** Increments the level of this node. */
+		  protected void incLevel() {
 				mix++;
 		  }
 		  
-		  public void decLevel() {
+		  /** Decrements the level of this node. */
+		  protected	void decLevel() {
 				mix--;
 		  }
 		  
@@ -600,7 +664,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 		  
 
-		  /** Splits this tree.
+		  /** Splits this subtree.
+			* @return the new top of the subtree.
 			*/
 		  Entry split() {
 				if ( this != sentinel && right().right().level() == level() ) {
@@ -622,7 +687,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				return this;
 		  }
 		  
-		  /** Skews to this tree.
+		  /** Skews this subtree.
+			* @return the new top of the subtree.
 			*/
 		  Entry skew() {
 				if ( this != sentinel && left().level() == level() ) {
@@ -643,18 +709,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 				return this;
 		  }
 		  
-		  public void printDebug() {
-				printDebug(0);
+		  public void prettyPrint() {
+				prettyPrint(0);
 		  }
 
-		  public void printDebug(int level) {
+		  public void prettyPrint(int level) {
 				if ( pred() ) {
 					 for (int i = 0; i < level; i++)
 						  System.err.print("  ");
 					 System.err.println("pred: " + left );
 				}
 				else if (left != null)
-					 left.printDebug(level +1 );
+					 left.prettyPrint(level +1 );
 				for (int i = 0; i < level; i++)
 					 System.err.print("  ");
 				System.err.println(key + "=" + value + " (" + level() + ")");
@@ -664,13 +730,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 System.err.println("succ: " + right );
 				}
 				else if (right != null)
-					 right.printDebug(level + 1);
+					 right.prettyPrint(level + 1);
 		  }
     }
 	 
-   public void printDebug() {
+   public void prettyPrint() {
       System.err.println("size: " + count);
-      if (tree != null) tree.printDebug();
+      if (tree != null) tree.prettyPrint();
    }
 
 	 public boolean containsKey( KEY_TYPE k ) {
@@ -696,10 +762,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 	 public VALUE_TYPE get(final KEY_TYPE k) {
 		  final Entry e = findKey( k );
-		  
 		  return e == null ? defRetValue : e.value;
 	 }
-	 
 
 	 public VALUE_TYPE remove(final KEY_TYPE k) {
 		  final VALUE_TYPE v = delete( k );
@@ -715,14 +779,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #if !#valueclass(Object)
 
 	 public VALUE_TYPE GET_VALUE( final Object k ) {
-		  if ( k == null ) throw new IllegalArgumentException();
 		  final Entry e = findKey( k );
 		  return e == null ? defRetValue : e.value;
 	 }
 
 
 	 public VALUE_TYPE REMOVE_VALUE( final Object k ) {
-		  if ( k == null ) throw new IllegalArgumentException();
 		  final VALUE_TYPE v = delete( k );
 		  change = deleted = null;
 		  return v;
@@ -731,21 +793,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #endif
 #endif
 
-
 	 public KEY_TYPE FIRST_KEY() {
 		  TREEMAP.Entry e = tree;
-		  
-		  if (e == null) throw new NoSuchElementException();
+		  if ( e == null ) throw new NoSuchElementException();
 		  while ( e.left != null ) e = e.left;
-		  return e.ENTRY_GET_KEY();
+		  return e.key;
 	 }
 	 
 	 public KEY_TYPE LAST_KEY() {
 		  TREEMAP.Entry e = tree;
-		  
-		  if (e == null) throw new NoSuchElementException();
-		  while (e.right != null) e = e.right;
-		  return e.ENTRY_GET_KEY();
+		  if ( e == null ) throw new NoSuchElementException();
+		  while ( e.right != null ) e = e.right;
+		  return e.key;
 	 }
 	 
 #if !#keyclass(Object)
@@ -759,13 +818,20 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 #endif
 
+	 /** An iterator on the whole range.
+	  *
+	  * <P>This class can iterate in both directions on a threaded tree.
+	  */
 
 	 private class TreeIterator implements ListIterator {
-		  Entry 
-				prev, // The entry that will be returned by the next call to previous() (or null if no previous entry exists).
-				next, // The entry that will be returned by the next call to next() (or null if no next entry exists).
-				curr; // The last entry that was returned (or null if we did not iterate or used remove()).
-		  int index = 0;
+		  /** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
+		  protected Entry prev;
+		  /** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
+		  protected Entry next;
+		  /** The last entry that was returned (or null if we did not iterate or used {@link #remove()}). */
+		  protected Entry curr;
+		  /** The current index (in the sense of a {@link ListIterator}). */
+		  protected int index = 0;
 		  
 		  TreeIterator() {
 				next = firstEntry;
@@ -844,33 +910,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 	 }
 
-	 private class SubmapIterator extends TreeIterator {
-		  Entry 
-				first, // The first entry in the map.
-				last; // The last entry in the map.
-		  boolean top, bottom;
-		  
-		  SubmapIterator( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
-				first = tree;
-				while ( first != sentinel && ( bottom || TREEMAP.this.compare( from, first.key ) < 0 ) ) first = first.left();
-				if ( first == sentinel ) first = null;
 
-				last = tree;
-				while ( last != sentinel && ( top || TREEMAP.this.compare( to, last.key ) > 0 ) ) last = last.right();
-				if ( last == sentinel ) last = null;
-		  }
-
-		  protected void updatePrevious() {
-				super.updatePrevious();
-				if ( ! bottom && TREEMAP.this.compare( prev.key, first.key ) < 0 ) prev = null;
-		  }
-
-		  protected void updateNext() {
-				super.updateNext();
-				if ( ! top && TREEMAP.this.compare( next.key, last.key ) > 0 ) next = null;
-		  }
-
-	 }
 
 
     public Set entrySet() {
@@ -882,7 +922,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 public boolean contains(Object o) {
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
-						  final Map.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						  final Entry f = findKey( KEY2TYPE( e.getKey() ) );
 						  return e.equals( f );
 					 }					 
 
@@ -908,6 +948,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return entries;
 	 }
 
+	 /** An iterator on the whole range of keys.
+	  *
+	  * <P>This class can iterate in both directions on the keys of a threaded tree. We 
+	  * simply override the {@link #next()}/{@link #previous()} methods (and possibly
+	  * their type-specific counterparts) so that they return keys instead of entries.
+	  */
 	 private class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR {
 		  public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
 		  public KEY_TYPE PREV_KEY() { return previousEntry().key; }
@@ -940,7 +986,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 }					 
 
 					 public boolean remove( Object ok ) {
-						  return remove( KEY2TYPE( ok ) );
+						  TREEMAP.this.remove( KEY2TYPE( ok ) );
+						  return modified;
 					 }
 
 #endif
@@ -958,6 +1005,12 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  return keys;
 	 }
 
+	 /** An iterator on the whole range of values.
+	  *
+	  * <P>This class can iterate in both directions on the values of a threaded tree. We 
+	  * simply override the {@link #next()}/{@link #previous()} methods (and possibly
+	  * their type-specific counterparts) so that they return values instead of entries.
+	  */
 	 private class ValueIterator extends TreeIterator implements VALUE_LIST_ITERATOR {
 		  public VALUE_TYPE NEXT_VALUE() { return nextEntry().value; }
 		  public VALUE_TYPE PREV_VALUE() { return previousEntry().value; }
@@ -979,11 +1032,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 } 
 
 #if ! #valueclass( Object )
-
 					 public boolean contains( Object ok ) {
 						  return containsValue( ok );
 					 }					 
-
 #endif
 
 					 public int size() {
@@ -1029,11 +1080,36 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 	 }
 #endif
 
-
+	 /** A submap with given range.
+	  *
+	  * <P>This class represents a submap. One has to specify the left/right
+	  * limits (which can be set to -&infin; or &infin;). Since the submap is a
+	  * view on the map, at a given moment it could happen that the limits of
+	  * the range are not any longer in the main map. Thus, things such as
+	  * {@link #firstKey()} or {@link #size()} must be always computed
+	  * on-the-fly.  
+	  */
 	 private class Submap extends ABSTRACT_MAP implements Serializable, SORTEDMAP {
-		  KEY_TYPE from, to;
-		  boolean bottom, top;
-
+		  /** The start of the submap range, unless {@link #bottom} is true. */
+		  private KEY_TYPE from;
+		  /** The end of the submap range, unless {@link #top} is true. */
+		  private KEY_TYPE to;
+		  /** If true, the submap range starts from -&infin;. */
+		  private boolean bottom;
+		  /** If true, the submap range goes to &infin;. */
+		  private boolean top;
+		  /** Cached set of entries and keys. */
+		  private transient volatile Set entries, keys;
+		  /** Cached collection of values. */
+		  private transient volatile Collection values;
+		  
+		  /** Creates a new submap with given key range.
+			*
+			* @param from the start of the submap range.
+			* @param bottom if true, the first parameter is ignored and the range starts from -&infin;.
+			* @param to the end of the submap range.
+			* @param top if true, the third parameter is ignored and the range goes to &infin;.
+			*/
 		  public Submap( KEY_TYPE from, boolean bottom, KEY_TYPE to, boolean top ) {
 				this.from = from;
 				this.bottom = bottom;
@@ -1042,13 +1118,17 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 
 		  public void clear() {
-				final SubmapIterator i = new SubmapIterator( from, bottom, to, top );
+				final SubmapIterator i = new SubmapIterator();
 				while( i.hasNext() ) {
 					 i.next();
 					 i.remove();
 				}
 		  }
 
+		  /** Checks whether a key is in the submap range.
+			* @param k a key.
+			* @return true if is the key is in the submap range.
+			*/
 		  private boolean in( KEY_TYPE k ) {
 				return ( bottom || TREEMAP.this.compare( k, from ) >= 0 ) &&
 					 ( top || TREEMAP.this.compare( k, to ) < 0 );
@@ -1057,9 +1137,9 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  public Set entrySet() {
 				if ( entries == null ) entries = new AbstractSet() {
 						  public Iterator iterator() {
-								return new SubmapIterator( from, bottom, to, top );
+								return new SubmapIterator();
 						  }
-
+						  
 						  public boolean contains(Object o) {
 								if (!(o instanceof Map.Entry)) return false;
 								final Map.Entry e = (Map.Entry)o;
@@ -1071,7 +1151,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 								if (!(o instanceof Map.Entry)) return false;
 								final Map.Entry e = (Map.Entry)o;
 								final TREEMAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
-								if ( f != null && in( f.key ) ) TREEMAP.this.remove( f.key );
+								if ( f != null && in( f.key ) ) Submap.this.remove( f.key );
 								change = deleted = null;
 								return f != null;
 						  }
@@ -1084,11 +1164,11 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 					 
 
 						  public boolean isEmpty() {
-								return ! iterator().hasNext();
+								return ! new SubmapIterator().hasNext();
 						  }
 
 						  public void clear() {
-								TREEMAP.this.clear();
+								Submap.this.clear();
 						  }
 					 
 					 };
@@ -1097,12 +1177,74 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 
 		  public Set keySet() {
-				return null; // TODO
-		  }
-		  public Collection values() {
-				return null; // TODO
-		  }
+				if ( keys == null ) keys = new KEY_ABSTRACT_SET() {
+						  
+						  public Iterator iterator() {
+								return new SubmapKeyIterator();
+						  }
 
+						  public boolean contains( KEY_TYPE k ) {
+								return containsKey( k );
+						  }					 
+
+						  public boolean remove( KEY_TYPE k ) {
+								Submap.this.remove( k );
+								return modified;
+						  }					 
+
+#if ! #keyclass( Object )
+						  public boolean contains( Object ok ) {
+								return containsKey( ok );
+						  }					 
+						  
+						  public boolean remove( Object ok ) {
+								Submap.this.remove( KEY2TYPE( ok ) );
+								return modified;
+						  }
+#endif
+						  
+						  public int size() {
+								return Submap.this.size();
+						  }
+						  
+						  public void clear() {
+								Submap.this.clear();
+						  }
+					 
+					 };
+
+				return keys;
+		  }
+		  
+		  public Collection values() {
+				if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
+						  public Iterator iterator() {
+								return new SubmapValueIterator();
+						  }
+
+						  public boolean contains( VALUE_TYPE k ) {
+								return containsValue( k );
+						  } 
+
+#if ! #valueclass( Object )
+						  public boolean contains( Object ok ) {
+								return containsValue( ok );
+						  }					 
+#endif
+
+						  public int size() {
+								return Submap.this.size();
+						  }
+						  
+						  public void clear() {
+								Submap.this.clear();
+						  }
+						  
+					 };
+				
+				return values;
+		  }
+		  
 		  public boolean containsKey( final KEY_TYPE k ) {
 				return in( k ) && TREEMAP.this.containsKey( k );
 		  }
@@ -1115,15 +1257,13 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 
 #if ! #valueclass(Object) 
-		  
 		  public boolean containsValue(final Object v) {
 				return containsValue( VALUE2TYPE( v ) );
 		  }
-		  
 #endif
 
 		  public boolean containsValue(final VALUE_TYPE v) {
-				final SubmapIterator i = new SubmapIterator( from, bottom, to, top );
+				final SubmapIterator i = new SubmapIterator();
 				VALUE_TYPE ev;
 				
 				while( i.hasNext() ) {
@@ -1135,19 +1275,18 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 		  
 
-
 		  public Object get( final Object ok ) {
-				return ! in( KEY2TYPE( ok ) ) ? null : TREEMAP.this.get( ok );
+				return in( KEY2TYPE( ok ) ) ? TREEMAP.this.get( ok ) : null;
 		  }
 		  
 		  
 #if ! #keyclass(Object)
 		  public VALUE_TYPE get(final KEY_TYPE k) {
-				return ! in( k ) ? defRetValue : TREEMAP.this.get( k );
+				return in( k ) ? TREEMAP.this.get( k ) : defRetValue;
 		  }
 #elif ! #valueclass(Object)
 		  public VALUE_TYPE GET_VALUE(final Object k) {
-				return ! in( k ) ? defRetValue: TREEMAP.this.GET_VALUE( k );
+				return in( k ) ? TREEMAP.this.GET_VALUE( k ) : defRetValue;
 		  }
 #endif
 		  
@@ -1184,7 +1323,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 #endif
 
 		  public int size() {
-				final SubmapIterator i = new SubmapIterator( from, bottom, to, top );
+				final SubmapIterator i = new SubmapIterator();
 				int n = 0;
 				
 				while( i.hasNext() ) {
@@ -1197,9 +1336,8 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 
 
 		  public boolean isEmpty() {
-				return entrySet().iterator().hasNext();
+				return ! new SubmapIterator().hasNext();
 		  }
-
 		  
 		  public Comparator comparator() {
 				return storedComparator;
@@ -1250,22 +1388,61 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 #endif
 
+		  /** Locates a key.
+			*
+			* @param k a key.
+			* @return the last entry on a search for the given key; this will be
+			* either the given key, or the smallest greater key, or the greatest smaller key.
+			*/
+		  private TREEMAP.Entry locateKey( KEY_TYPE k ) {
+				TREEMAP.Entry e = tree, last = tree;
+				int cmp = 0;
+				
+				while ( e != sentinel && ( cmp = compare( k, e.key ) ) != 0 ) {
+					 last = e;
+					 e = cmp < 0 ? e.left() : e.right();
+				}
+				
+				return cmp == 0 ? e : last;
+		  }
+
 
 		  public KEY_TYPE FIRST_KEY() {
+				if ( tree == null ) throw new NoSuchElementException();
+				// If this submap goes to -infinity, we return the main map first key.
 				if ( bottom ) return firstEntry.key;
-				TREEMAP.Entry e = tree;
-				
-				// We descend the tree on the left until we find a keys greater than from 
- 				while( e.left() != sentinel && compare( from, e.left.key ) < 0 ) e = e.left;
-				// If we're on the first key, we return it.
-				if ( e.key == from || e.right == null ) return from;
-
-				return firstEntry.key; // TODO
+				// Otherwise, we locate locate the start of the map.
+				TREEMAP.Entry e = locateKey( from );
+				// If we find either the start or something greater we're OK.
+				if ( compare( e.key, from ) >= 0 ) return e.key;
+				// Otherwise, we look for a successor.
+				e = e.right;
+				// Oops, it's already the last element.
+				if ( e == null ) throw new NoSuchElementException();
+				// We descend the tree on the left.
+				if ( ! e.pred() ) while ( e.left() != sentinel ) e = e.left;
+				// Finally, if this submap doesn't go to infinity, we check that the resulting key isn't greater than the end.
+				if ( ! top && compare( e.key, to ) > 0 ) throw new NoSuchElementException();
+				return e.key;
 		  }
 	 
 		  public KEY_TYPE LAST_KEY() {
+				if ( tree == null ) throw new NoSuchElementException();
+				// If this submap goes to infinity, we return the main map last key.
 				if ( top ) return lastEntry.key;
-				return lastEntry.key; // TODO
+				// Otherwise, we locate locate the end of the map.
+				TREEMAP.Entry e = locateKey( to );
+				// If we find either the end or something smaller we're OK.
+				if ( compare( e.key, to ) <= 0 ) return e.key;
+				// Otherwise, we look for a predecessor.
+				e = e.left;
+				// Oops, it's already the first element.
+				if ( e == null ) throw new NoSuchElementException();
+				// We descend the tree on the right.
+				if ( ! e.succ() ) while ( e.right() != sentinel ) e = e.right;
+				// Finally, if this submap doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
+				if ( ! bottom && compare( e.key, from ) <= 0 ) throw new NoSuchElementException();
+				return e.key;
 		  }
 	 
 #if !#keyclass(Object)
@@ -1278,6 +1455,61 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  }
 
 #endif
+
+
+		  /** An iterator for subranges.
+			* 
+			* <P>This class inherits from {@link TreeIterator}, but overrides the methods that
+			* update the pointer after a {@link #next()} or {@link #previous()}. If we would
+			* move out of the range of the submap we just overwrite the next or previous
+			* entry with <code>null</code>.
+			*/
+		  private class SubmapIterator extends TreeIterator {
+				protected void updatePrevious() {
+					 super.updatePrevious();
+					 if ( ! bottom && TREEMAP.this.compare( prev.key, from ) < 0 ) prev = null;
+				}
+				
+				protected void updateNext() {
+					 super.updateNext();
+					 if ( ! top && TREEMAP.this.compare( next.key, to ) >= 0 ) next = null;
+				}
+		  }
+
+		  /** An iterator on a subrange of keys.
+			*
+			* <P>This class can iterate in both directions on a subrange of the
+			* keys of a threaded tree. We simply override the {@link
+			* #next()}/{@link #previous()} methods (and possibly their
+			* type-specific counterparts) so that they return keys instead of
+			* entries.
+			*/
+		  private class SubmapKeyIterator extends SubmapIterator implements KEY_LIST_ITERATOR {
+				public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
+				public KEY_TYPE PREV_KEY() { return previousEntry().key; }
+#if !#keyclass(Object)
+				public Object next() { return KEY2OBJ( nextEntry().key ); }
+				public Object previous() { return KEY2OBJ( previousEntry().key ); }
+#endif									
+		  };
+		  
+		  /** An iterator on a subrange of values.
+			*
+			* <P>This class can iterate in both directions on the values of a
+			* subrange of the keys of a threaded tree. We simply override the
+			* {@link #next()}/{@link #previous()} methods (and possibly their
+			* type-specific counterparts) so that they return values instead of
+			* entries.  
+			*/
+		  private class SubmapValueIterator extends SubmapIterator implements VALUE_LIST_ITERATOR {
+				public VALUE_TYPE NEXT_VALUE() { return nextEntry().value; }
+				public VALUE_TYPE PREV_VALUE() { return previousEntry().value; }
+#if !#valueclass(Object)
+				public Object next() { return VALUE2OBJ( nextEntry().value ); }
+				public Object previous() { return VALUE2OBJ( previousEntry().value ); }
+#endif									
+	 };
+
 
 	 }
 	 
@@ -1309,7 +1541,7 @@ public final class TREEMAP extends ABSTRACT_MAP implements Serializable, SORTEDM
 		  /* This is not very good. There are linear-time ways of rebuilding a
 		  tree.  Maybe in the next release... */
 
-		  while(count-- != 0) put(s.READ_KEY(), s.READ_VALUE());
+		  while( count-- != 0 ) put( s.READ_KEY(), s.READ_VALUE() );
     }
 
 

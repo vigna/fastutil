@@ -7,8 +7,14 @@
 
 DIR="src/it/unimi/dsi/fastUtil"
 
-# Names of driver files.
-FILE=(Map SortedMap AbstractMap HashMap TreeMap AbstractCollection AbstractSet Collection Set SortedSet HashSet TreeSet Iterator ListIterator Comparator)
+# Driver files for sets.
+MAP=(Map SortedMap AbstractMap HashMap TreeMap)
+
+# Driver files for sets.
+SET=(AbstractCollection AbstractSet Collection Set SortedSet HashSet)
+
+# Driver files for interfaces.
+INTERFACE=(Iterator ListIterator Comparator)
 
 # The primitive types we specialize to.
 TYPE=(boolean byte short int long char float double Object)
@@ -24,10 +30,10 @@ CLASS=(Boolean Byte Short Integer Long Character Float Double Object)
 # array starts from 1, so we avoid boolean keys.
 #
 
-for ((f=0; f<5; f++)); do
+for ((f=0; f<${#MAP[*]}; f++)); do
 	 for ((k=1; k<${#TYPE[*]}; k++)); do
 		  for ((v=0; v<${#TYPE[*]}; v++)); do
-				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${FILE[$f]}.c
+				FILENAME=$DIR/${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${MAP[$f]}.c
 				rm -f $FILENAME
 				echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
@@ -128,7 +134,7 @@ for ((f=0; f<5; f++)); do
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\
 "#endif\n"\
 "#endif\n\n"\
-"#include \"${FILE[$f]}.drv\"\n" >$FILENAME
+"#include \"${MAP[$f]}.drv\"\n" >$FILENAME
 			 done
 	  done
 done
@@ -140,9 +146,9 @@ done
 # so we manually delete boolean sets definitions later.
 #
 
-for ((f=5; f<12; f++)); do
+for ((f=0; f<${#SET[*]}; f++)); do
 	 for ((k=0; k<${#TYPE[*]}; k++)); do
-					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
+					 FILENAME=$DIR/${TYPE_CAP[$k]}${SET[$f]}.c
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
@@ -201,7 +207,7 @@ for ((f=5; f<12; f++)); do
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#endif\n"\
 "#endif\n\n"\
-"#include \"${FILE[$f]}.drv\"\n" >$FILENAME
+"#include \"${SET[$f]}.drv\"\n" >$FILENAME
 	  done
 done
 
@@ -215,9 +221,9 @@ rm -f $DIR/BooleanHashSet.c
 # boolean iterators for maps with booleans as codomain.
 #
 
-for ((f=12; f<15; f++)); do
+for ((f=0; f<${#INTERFACE[*]}; f++)); do
 	 for ((k=0; k<$((${#TYPE[*]}-1)); k++)); do
-					 FILENAME=$DIR/${TYPE_CAP[$k]}${FILE[$f]}.c
+					 FILENAME=$DIR/${TYPE_CAP[$k]}${INTERFACE[$f]}.c
 					 rm -f $FILENAME
 					 echo -e \
 "#assert keyclass(${CLASS[$k]})\n"\
@@ -228,7 +234,7 @@ for ((f=12; f<15; f++)); do
 "#define KEY_ITERATOR ${TYPE_CAP[$k]}Iterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP[$k]}ListIterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_CAP[$k]}Comparator\n\n"\
-"#include \"${FILE[$f]}.drv\"\n" >$FILENAME
+"#include \"${INTERFACE[$f]}.drv\"\n" >$FILENAME
 
 	  done
 done
