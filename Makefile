@@ -10,6 +10,12 @@ CLASSES = $(SOURCES:.java=.class)		# The list of respective class files
 .PHONY: all clean depend install docs jar tar jsources
 .SECONDARY: $(SOURCES)
 
+explain:
+	@echo -e "\nTo build fastUtil, you must first use the gencsources.sh shell"
+	@echo "script to generate the fake C sources that will be preprocessed"
+	@echo "to obtain the actual Java files. Then, you can build the jar"
+	@echo -e "file using \"make jar\", or the documentation using \"make docs\".\n"
+
 jar: jsources
 	ant dist
 

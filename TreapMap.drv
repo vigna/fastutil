@@ -263,8 +263,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 }
 	 
 	 
-
+	 
 	 public Object put( final Object ok, final Object ov ) {
+		  if ( ok == null ) throw new IllegalArgumentException();
 		  insert( KEY2TYPE(ok), VALUE2TYPE(ov) );
 		  return found ? VALUE2OBJ( oldValue ) : null;
 	 }
@@ -273,6 +274,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #if ! ( #valueclass(Object) && #keyclass(Object) )
 
 	 public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+#if #keyclass( Object )
+		  if ( k == null ) throw new IllegalArgumentException();
+#endif
 		  return insert( k, v );
 	 }
 	 
@@ -280,6 +284,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #endif
 
    public Object remove(final Object ok) {
+		 if ( ok == null ) throw new IllegalArgumentException();
 		 delete( KEY2TYPE( ok ) );
 		 return found ? VALUE2OBJ( oldValue ) : null;
    }
@@ -293,9 +298,13 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #endif
 
 	 public boolean containsValue(final VALUE_TYPE v) {
-		  TreapIterator i = new TreapIterator();
+		  final TreapIterator i = new TreapIterator();
+		  VALUE_TYPE ev;
 		  
-		  while( i.hasNext() ) if ( VALUE_EQUAL( ((Entry)i.next()).value, v ) ) return true;
+		  while( i.hasNext() ) {
+				ev = ((Entry)i.next()).value;
+				if ( VALUE_EQUAL( ev, v ) ) return true;
+		  }
 		  
 		  return false;
 	 }
@@ -464,6 +473,7 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 	 
 	 
 	 public Object get( final Object ok ) {
+		  if ( ok == null ) throw new IllegalArgumentException();
 		  final Entry e = findKey( KEY2TYPE( ok ) );
 		  return e == null ? (VALUE_CLASS)null : e.getValue();
 	 }
@@ -490,14 +500,15 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 #if !#valueclass(Object)
 
 	 public VALUE_TYPE GET_VALUE( final Object k ) {
+		  if ( k == null ) throw new IllegalArgumentException();
 		  final Entry e = findKey( k );
-		  
 		  return e == null ? DEF_RET_VALUE : e.value;
 	 }
 
 
-	 public VALUE_TYPE REMOVE_VALUE(final Object ok) {
-		  return delete( ok );
+	 public VALUE_TYPE REMOVE_VALUE( final Object k ) {
+		  if ( k == null ) throw new IllegalArgumentException();
+		  return delete( k );
 	 }
 
 #endif
@@ -598,9 +609,9 @@ public final class TREAPMAP extends ABSTRACT_MAP implements Serializable, SORTED
 					 public boolean remove(Object o) {
 						  if (!(o instanceof Map.Entry)) return false;
 						  final Map.Entry e = (Map.Entry)o;
-						  Object v = get(e.getKey());
-						  if ( VALUE_EQUAL(v, e.getValue()) ) return remove(e.getKey());
-						  return false;
+						  final Map.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						  if ( f != null ) TREAPMAP.this.remove( f.getKey() );
+						  return f != null;
 					 }
 
 					 public int size() {
@@ -864,7 +875,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 							 new KEY_CLASS(r.NEXT_KEY()) 
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 new Long(r.nextLong()) 
 #endif
 							 ,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
@@ -872,7 +883,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #valueclass(Object)
 							 new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 new Long(r.nextLong()) 
 #endif
 							 
 							 );
@@ -892,7 +903,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 							 new KEY_CLASS(r.NEXT_KEY())
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+							 new Long(r.nextLong())
 #endif
 							 );
 				}
@@ -931,7 +942,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 							 new KEY_CLASS(r.NEXT_KEY()) 
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 new Long(r.nextLong()) 
 #endif
 							 ,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
@@ -939,7 +950,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #valueclass(Object)
 							 new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+							 new Long(r.nextLong()) 
 #endif
 							 );
 				}
@@ -958,7 +969,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 							 r.NEXT_KEY()
 #else
-							 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+							 new Long(r.nextLong())
 #endif
 							 );
 				}
@@ -1007,7 +1018,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 						new KEY_CLASS(r.NEXT_KEY()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+						new Long(r.nextLong()) 
 #endif
 						,
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
@@ -1015,7 +1026,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #valueclass(Object)
 						new VALUE_CLASS(r.NEXT_VALUE()) 
 #else
-						r.nextInt() % 100 == 0 ? null : new Long(r.nextLong()) 
+						new Long(r.nextLong()) 
 #endif
 						);
 		  }
@@ -1110,7 +1121,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 					 r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+					 new Long(r.nextLong())
 #endif
 					 ;
 
@@ -1144,7 +1155,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 					 r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+					 new Long(r.nextLong())
 #endif
 					 ;
 				if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
@@ -1162,7 +1173,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 					 r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+					 new Long(r.nextLong())
 #endif
 					 ;
 				VALUE_TYPE U =
@@ -1171,7 +1182,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #valueclass(Object)
 					 r.NEXT_VALUE()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+					 new Long(r.nextLong())
 #endif
 					 ;
 				if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
@@ -1184,7 +1195,7 @@ class TreapEnumeration implements Enumeration
 #elif ! #keyclass(Object)
 					 r.NEXT_KEY()
 #else
-					 r.nextInt() % 100 == 0 ? null : new Long(r.nextLong())
+					 new Long(r.nextLong())
 #endif
 					 ;
 				if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
