@@ -62,12 +62,24 @@ cp -p %{name}-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/%{name}-%{version}.jar
 # javadoc
 mkdir -p $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
 cp -pr docs/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
+rm -fr docs
 
 # -----------------------------------------------------------------------------
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+# -----------------------------------------------------------------------------
+
+%post javadoc
+rm -f %{_javadocdir}/%{name}
+ln -s %{name}-%{version} %{_javadocdir}/%{name}
+ 
+%postun javadoc
+if [ "$1" = "0" ]; then
+    rm -f %{_javadocdir}/%{name}
+fi
+ 
 # -----------------------------------------------------------------------------
 
 %files
