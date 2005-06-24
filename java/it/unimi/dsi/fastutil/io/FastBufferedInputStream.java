@@ -220,6 +220,16 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 		buffer = null;
 	}
 
+	/** Resets the internal logic of this fast buffered input stream, clearing the buffer. 
+	 *
+	 *  <p>The underlying input stream is not modified, but its position cannot be easily
+	 *  predicted, due to buffering. This method is thus mainly useful for reading files
+	 *  that are being written by other process (in practice, it makes the current buffer invalid). */
+
+	public void reset() {
+		if ( is == null ) return;
+		avail = pos = 0;
+	}
 }
 	
 
