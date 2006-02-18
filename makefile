@@ -1,4 +1,4 @@
-VERSION=4.4.2
+VERSION=4.4.3
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -85,22 +85,22 @@ bin:
 
 
 LinkedOpenHashSet.drv: OpenHashSet.drv
-	ln -s OpenHashSet.drv $@
+	ln -sf OpenHashSet.drv $@
 
 LinkedOpenHashMap.drv: OpenHashMap.drv
-	ln -s OpenHashMap.drv $@
+	ln -sf OpenHashMap.drv $@
 
 OpenCustomHashSet.drv: OpenHashSet.drv
-	ln -s OpenHashSet.drv $@
+	ln -sf OpenHashSet.drv $@
 
 OpenCustomHashMap.drv: OpenHashMap.drv
-	ln -s OpenHashMap.drv $@
+	ln -sf OpenHashMap.drv $@
 
 LinkedOpenCustomHashSet.drv: OpenHashSet.drv
-	ln -s OpenHashSet.drv $@
+	ln -sf OpenHashSet.drv $@
 
 LinkedOpenCustomHashMap.drv: OpenHashMap.drv
-	ln -s OpenHashMap.drv $@
+	ln -sf OpenHashMap.drv $@
 
 CSOURCES := 
 

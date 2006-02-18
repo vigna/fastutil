@@ -1,7 +1,7 @@
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2005 Sebastiano Vigna 
+ * Copyright (C) 2005, 2006 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -146,7 +146,7 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 
 		avail = is.read( buffer );
 		if ( avail < 0 ) {
-			avail = 0;
+			avail = pos = 0;
 			return result + head > 0 ? result + head : -1;
 		}
 		pos = Math.min( avail, residual );
@@ -231,9 +231,3 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 		avail = pos = 0;
 	}
 }
-	
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
