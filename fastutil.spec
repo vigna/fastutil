@@ -1,18 +1,18 @@
 %define section free
 
 Name:           fastutil
-Version:        4.4.2
+Version:        4.4.3
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.4.2-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-4.4.3-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
 BuildArch:      noarch
-BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.5, /bin/bash
+BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.6, /bin/bash
 BuildRequires:	java-javadoc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -78,6 +78,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Sat Feb 18 2006 Sebastiano Vigna <vigna at acm.org> - 4.4.3-1jpp
+- Important bug fix in FastBufferedInputStream.
+
 * Fri Jun 24 2005 Sebastiano Vigna <vigna at acm.org> - 4.4.2-1jpp
 - New reset() method for FastBufferedInputStream.
 
