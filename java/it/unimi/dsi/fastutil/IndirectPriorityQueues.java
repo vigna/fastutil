@@ -66,19 +66,19 @@ public class IndirectPriorityQueues {
 
 	/** A synchronized wrapper class for indirect priority queues. */
 
-	public static class SynchronizedIndirectPriorityQueue implements IndirectPriorityQueue {
+	public static class SynchronizedIndirectPriorityQueue<K> implements IndirectPriorityQueue<K> {
 		
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		final protected IndirectPriorityQueue q;
+		final protected IndirectPriorityQueue<K> q;
 		final protected Object sync;
 
-		protected SynchronizedIndirectPriorityQueue( final IndirectPriorityQueue q, final Object sync ) {
+		protected SynchronizedIndirectPriorityQueue( final IndirectPriorityQueue<K> q, final Object sync ) {
 			this.q = q;
 			this.sync = sync;
 		}
 
-		protected SynchronizedIndirectPriorityQueue( final IndirectPriorityQueue q ) {
+		protected SynchronizedIndirectPriorityQueue( final IndirectPriorityQueue<K> q ) {
 			this.q = q;
 			this.sync = this;
 		}
@@ -94,7 +94,7 @@ public class IndirectPriorityQueues {
 		public void allChanged() { synchronized( sync ) { q.allChanged(); } }
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
 		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
-		public Comparator comparator() { synchronized( sync ) { return q.comparator(); } }
+		public Comparator<? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
 	}
 
 
@@ -103,7 +103,7 @@ public class IndirectPriorityQueues {
 	 * @param q the indirect priority queue to be wrapped in a synchronized indirect priority queue.
 	 * @return a synchronized view of the specified indirect priority queue.
 	 */
-	public static IndirectPriorityQueue synchronize( final IndirectPriorityQueue q ) {	return new SynchronizedIndirectPriorityQueue( q ); }
+	public static <K> IndirectPriorityQueue<K> synchronize( final IndirectPriorityQueue<K> q ) {	return new SynchronizedIndirectPriorityQueue<K>( q ); }
 
 	/** Returns a synchronized type-specific indirect priority queue backed by the specified type-specific indirect priority queue, using an assigned object to synchronize.
 	 *
@@ -112,6 +112,6 @@ public class IndirectPriorityQueues {
 	 * @return a synchronized view of the specified indirect priority queue.
 	 */
 
-	public static IndirectPriorityQueue synchronize( final IndirectPriorityQueue q, final Object sync ) { return new SynchronizedIndirectPriorityQueue( q, sync ); }
+	public static <K> IndirectPriorityQueue<K> synchronize( final IndirectPriorityQueue<K> q, final Object sync ) { return new SynchronizedIndirectPriorityQueue<K>( q, sync ); }
 
 }

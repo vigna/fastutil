@@ -57,19 +57,19 @@ public class IndirectDoublePriorityQueues {
 
 	/** A synchronized wrapper class for indirect double priority queues. */
 
-	public static class SynchronizedIndirectDoublePriorityQueue implements IndirectDoublePriorityQueue {
+	public static class SynchronizedIndirectDoublePriorityQueue<K> implements IndirectDoublePriorityQueue<K> {
 		
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		final protected IndirectDoublePriorityQueue q;
+		final protected IndirectDoublePriorityQueue<K> q;
 		final protected Object sync;
 
-		protected SynchronizedIndirectDoublePriorityQueue( final IndirectDoublePriorityQueue q, final Object sync ) {
+		protected SynchronizedIndirectDoublePriorityQueue( final IndirectDoublePriorityQueue<K> q, final Object sync ) {
 			this.q = q;
 			this.sync = sync;
 		}
 
-		protected SynchronizedIndirectDoublePriorityQueue( final IndirectDoublePriorityQueue q ) {
+		protected SynchronizedIndirectDoublePriorityQueue( final IndirectDoublePriorityQueue<K> q ) {
 			this.q = q;
 			this.sync = this;
 		}
@@ -87,8 +87,8 @@ public class IndirectDoublePriorityQueues {
 		public void allChanged() { synchronized( sync ) { q.allChanged(); } }
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
 		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
-		public Comparator comparator() { synchronized( sync ) { return q.comparator(); } }
-		public Comparator secondaryComparator() { synchronized( sync ) { return q.secondaryComparator(); } }
+		public Comparator<? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
+		public Comparator<? super K> secondaryComparator() { synchronized( sync ) { return q.secondaryComparator(); } }
 	}
 
 
@@ -97,7 +97,7 @@ public class IndirectDoublePriorityQueues {
 	 * @param q the indirect double priority queue to be wrapped in a synchronized indirect double priority queue.
 	 * @return a synchronized view of the specified indirect double priority queue.
 	 */
-	public static IndirectDoublePriorityQueue synchronize( final IndirectDoublePriorityQueue q ) {	return new SynchronizedIndirectDoublePriorityQueue( q ); }
+	public static <K> IndirectDoublePriorityQueue<K> synchronize( final IndirectDoublePriorityQueue<K> q ) {	return new SynchronizedIndirectDoublePriorityQueue<K>( q ); }
 
 	/** Returns a synchronized type-specific indirect double priority queue backed by the specified type-specific indirect double priority queue, using an assigned object to synchronize.
 	 *
@@ -106,6 +106,6 @@ public class IndirectDoublePriorityQueues {
 	 * @return a synchronized view of the specified indirect double priority queue.
 	 */
 
-	public static IndirectDoublePriorityQueue synchronize( final IndirectDoublePriorityQueue q, final Object sync ) { return new SynchronizedIndirectDoublePriorityQueue( q, sync ); }
+	public static <K> IndirectDoublePriorityQueue<K> synchronize( final IndirectDoublePriorityQueue<K> q, final Object sync ) { return new SynchronizedIndirectDoublePriorityQueue<K>( q, sync ); }
 
 }
