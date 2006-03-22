@@ -376,7 +376,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
 "#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
-"#define KEY_EQUALS_HASH(x,h,y) ( (y) != Maps.MISSING && (h) == strategy.hashCode(y) && strategy.equals((x), (y)) )\n"\
+"#define KEY_EQUALS_HASH(x,h,y) ( (y) != HashCommon.REMOVED && (h) == strategy.hashCode(y) && strategy.equals((x), (y)) )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_HASH(x,h,y) ( (x) == null ? (y) == null : (h) == (y).hashCode() && (x).equals(y) )\n"\

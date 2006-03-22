@@ -69,13 +69,6 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		return true;
 	}
 
-	public boolean rem( KEY_TYPE k ) {
-		int index = indexOf( k );
-		if ( index == -1 ) return false;
-		REMOVE_KEY( index );
-		return true;
-	}
-
 	public KEY_GENERIC_TYPE REMOVE_KEY( int i ) {
 		throw new UnsupportedOperationException();
 	}
@@ -363,6 +356,18 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 
 #if #keys(primitive)
 
+	public boolean rem( KEY_TYPE k ) {
+		int index = indexOf( k );
+		if ( index == -1 ) return false;
+		REMOVE_KEY( index );
+		return true;
+	}
+
+	/** Delegates to <code>rem()</code>. */
+	public boolean remove( final Object o ) {
+		return rem( KEY_OBJ2TYPE( o ) );
+	}
+
 	/** Delegates to a more generic method. */
 	public boolean addAll( final int index, final COLLECTION c ) {
 		return addAll( index, (Collection<? extends KEY_CLASS>)c );
@@ -430,9 +435,6 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	public KEY_CLASS peek( int i ) {
 		return KEY_CLASS.valueOf( PEEK( i ) ); 
 	}
-
-#else
-
 
 #endif
 
@@ -522,15 +524,6 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 			return l.REMOVE_KEY( from + index );
 		}
 
-		public boolean rem( KEY_TYPE k ) {
-			int index = indexOf( k );
-			if ( index == -1 ) return false;
-			to--;
-			l.REMOVE_KEY( from + index );
-			if ( ASSERTS ) assertRange();
-			return true;
-		}
-
 		public KEY_GENERIC_TYPE set( int index, KEY_GENERIC_TYPE k ) {
 			ensureRestrictedIndex( index );
 			return l.set( from + index, k );
@@ -544,7 +537,6 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		public int size() { 
 			return to - from; 
 		}
-
 		
 		public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
 			ensureIndex( from );
@@ -610,6 +602,19 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 
 #if #keys(primitive)
 
+		public boolean rem( KEY_TYPE k ) {
+			int index = indexOf( k );
+			if ( index == -1 ) return false;
+			to--;
+			l.REMOVE_KEY( from + index );
+			if ( ASSERTS ) assertRange();
+			return true;
+		}
+
+		public boolean remove( final Object o ) {
+			return rem( KEY_OBJ2TYPE( o ) );
+		}
+
 		public boolean addAll( final int index, final COLLECTION c ) {
 			ensureIndex( index );
 			to += c.size();
@@ -630,6 +635,15 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 				return retVal;
 			}
 			return this.l.addAll( from + index, l );
+		}
+
+#else
+		@SuppressWarnings("unchecked")
+		public boolean remove( final Object o ) {
+			int index = indexOf( o );
+			if ( index == -1 ) return false;
+			REMOVE_KEY( index );
+			return true;
 		}
 #endif
 
