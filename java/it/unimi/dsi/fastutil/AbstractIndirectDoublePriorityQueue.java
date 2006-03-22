@@ -32,8 +32,3 @@ public abstract class AbstractIndirectDoublePriorityQueue extends AbstractIndire
 	public int secondaryLast() { throw new UnsupportedOperationException(); }
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

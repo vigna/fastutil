@@ -21,13 +21,8 @@
 
 package PACKAGE;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataInputStream;
-
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.HashCommon;
 
 /** A class providing static methods and objects that do useful things with type-specific arrays.
  *
@@ -61,17 +56,16 @@ public class ARRAYS {
 	 * are of the same class as of those of <code>prototype</code>. In case
 	 * of an empty array, it tries to return {@link #EMPTY_ARRAY}, if possible.
 	 *
-	 * @param prototype an array that will be used to type the new one (if <code>null</code>, we will return an array of {@linkplain Object objects}).
+	 * @param prototype an array that will be used to type the new one.
 	 * @param length the length of the new array.
 	 * @return a new array of given type and length.
 	 */
 
-	private static Object[] newArray( final Object[] prototype, final int length ) {
-		if ( prototype == null ) {
-			if ( length == 0 ) return EMPTY_ARRAY;
-			else return new Object[ length ];
-		}
-		else return (Object[])java.lang.reflect.Array.newInstance( prototype.getClass().getComponentType(), length );
+	@SuppressWarnings("unchecked")
+	private static <K> K[] newArray( final K[] prototype, final int length ) {
+		final Class componentType = prototype.getClass().getComponentType();
+		if ( length == 0 && componentType == Object.class ) return (K[])EMPTY_ARRAY;
+		return (K[])java.lang.reflect.Array.newInstance( prototype.getClass().getComponentType(), length );
 	}
 #endif
 
@@ -86,9 +80,9 @@ public class ARRAYS {
 	 * an array with <code>length</code> entries whose first <code>array.length</code>
 	 * entries are the same as those of <code>array</code>.
 	 */
-	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE[] array, final int length ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] ensureCapacity( final KEY_GENERIC_TYPE[] array, final int length ) {
 		if ( length > array.length ) {
-			final KEY_TYPE t[] =
+			final KEY_GENERIC_TYPE t[] =
 #if #keyclass(Object)
 				newArray( array, length );
 #else
@@ -109,9 +103,9 @@ public class ARRAYS {
 	 * an array with <code>length</code> entries whose first <code>preserve</code>
 	 * entries are the same as those of <code>array</code>.
 	 */
-	public static KEY_TYPE[] ensureCapacity( final KEY_TYPE[] array, final int length, final int preserve ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] ensureCapacity( final KEY_GENERIC_TYPE[] array, final int length, final int preserve ) {
 		if ( length > array.length ) {
-			final KEY_TYPE t[] =
+			final KEY_GENERIC_TYPE t[] =
 #if #keyclass(Object)
 				newArray( array, length );
 #else
@@ -139,10 +133,10 @@ public class ARRAYS {
 	 * <code>array.length</code> entries are the same as those of <code>array</code>.
 	 * */
 
-	public static KEY_TYPE[] grow( final KEY_TYPE[] array, final int length ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] grow( final KEY_GENERIC_TYPE[] array, final int length ) {
 		if ( length > array.length ) {
 			final int newLength = (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE );
-			final KEY_TYPE t[] =
+			final KEY_GENERIC_TYPE t[] =
 #if #keyclass(Object)
 				newArray( array, newLength );
 #else
@@ -171,16 +165,13 @@ public class ARRAYS {
 	 * <code>preserve</code> entries are the same as those of <code>array</code>.
 	 * */
 
-	public static KEY_TYPE[] grow( final KEY_TYPE[] array, final int length, final int preserve ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] grow( final KEY_GENERIC_TYPE[] array, final int length, final int preserve ) {
 
 		if ( length > array.length ) {
 			final int newLength = (int)Math.min( Math.max( ( ONEOVERPHI * array.length ) >>> 16, length ), Integer.MAX_VALUE );
 
 		try {
-
-
-
-			final KEY_TYPE t[] =
+			final KEY_GENERIC_TYPE t[] =
 #if #keyclass(Object)
 				newArray( array, newLength );
 #else
@@ -207,9 +198,9 @@ public class ARRAYS {
 	 * 
 	 */
 
-	public static KEY_TYPE[] trim( final KEY_TYPE[] array, final int length ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] trim( final KEY_GENERIC_TYPE[] array, final int length ) {
 		if ( length >= array.length ) return array;
-		final KEY_TYPE t[] =
+		final KEY_GENERIC_TYPE t[] =
 #if #keyclass(Object)
 			newArray( array, length );
 #else
@@ -233,7 +224,7 @@ public class ARRAYS {
 	 * 
 	 */
 
-	public static KEY_TYPE[] setLength( final KEY_TYPE[] array, final int length ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] setLength( final KEY_GENERIC_TYPE[] array, final int length ) {
 		if ( length == array.length ) return array;
 		if ( length < array.length ) return trim( array, length );
 		return ensureCapacity( array, length );
@@ -247,9 +238,9 @@ public class ARRAYS {
 	 * @return a new array containing <code>length</code> elements of <code>array</code> starting at <code>offset</code>.
 	 */
 
-	public static KEY_TYPE[] copy( final KEY_TYPE[] array, final int offset, final int length ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] copy( final KEY_GENERIC_TYPE[] array, final int offset, final int length ) {
 		ensureOffsetLength( array, offset, length );
-		final KEY_TYPE[] a = 
+		final KEY_GENERIC_TYPE[] a = 
 #if #keyclass(Object)
 			newArray( array, length );
 #else
@@ -265,8 +256,8 @@ public class ARRAYS {
 	 * @return a copy of <code>array</code>.
 	 */
 
-	public static KEY_TYPE[] copy( final KEY_TYPE[] array ) {
-		return (KEY_TYPE[])array.clone();
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] copy( final KEY_GENERIC_TYPE[] array ) {
+		return array.clone();
 	}
 
 	/** Fills the given array with the given value.
@@ -278,7 +269,7 @@ public class ARRAYS {
 	 * @param value the new value for all elements of the array.
 	 */
 
-	public static void fill( final KEY_TYPE[] array, final KEY_TYPE value ) {
+	public static KEY_GENERIC void fill( final KEY_GENERIC_TYPE[] array, final KEY_GENERIC_TYPE value ) {
 		int i = array.length;
 		while( i-- != 0 ) array[ i ] = value;
 	}
@@ -295,7 +286,7 @@ public class ARRAYS {
 	 * @param value the new value for all elements of the specified portion of the array.
 	 */
 
-	public static void fill( final KEY_TYPE[] array, final int from, int to, final KEY_TYPE value ) {
+	public static KEY_GENERIC void fill( final KEY_GENERIC_TYPE[] array, final int from, int to, final KEY_GENERIC_TYPE value ) {
 		ensureFromTo( array, from, to );
 		if ( from == 0 ) while( to-- != 0 ) array[ to ] = value;
 		else for( int i = from; i < to; i++ ) array[ i ] = value;
@@ -313,7 +304,7 @@ public class ARRAYS {
 	 * @return true if the two arrays are of the same length, and their elements are equal.
 	 */
 
-	public static boolean equals( final KEY_TYPE[] a1, final KEY_TYPE a2[] ) {
+	public static KEY_GENERIC boolean equals( final KEY_GENERIC_TYPE[] a1, final KEY_GENERIC_TYPE a2[] ) {
 		int i = a1.length;
 		if ( i != a2.length ) return false;
 		while( i-- != 0 ) if (! KEY_EQUALS( a1[ i ], a2[ i ] ) ) return false;
@@ -333,7 +324,7 @@ public class ARRAYS {
 	 * @throws IllegalArgumentException if <code>from</code> is greater than <code>to</code>.
 	 * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than the array length or negative.
 	 */
-	public static void ensureFromTo( final KEY_TYPE[] a, final int from, final int to ) {
+	public static KEY_GENERIC void ensureFromTo( final KEY_GENERIC_TYPE[] a, final int from, final int to ) {
 		Arrays.ensureFromTo( a.length, from, to );
 	}
 
@@ -347,28 +338,22 @@ public class ARRAYS {
 	 * @throws IllegalArgumentException if <code>length</code> is negative.
 	 * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than the array length.
 	 */
-	public static void ensureOffsetLength( final KEY_TYPE[] a, final int offset, final int length ) {
+	public static KEY_GENERIC void ensureOffsetLength( final KEY_GENERIC_TYPE[] a, final int offset, final int length ) {
 		Arrays.ensureOffsetLength( a.length, offset, length );
 	}
 
 
 	/** A type-specific content-based hash strategy for arrays. */
 
-	private static final class ArrayHashStrategy implements Hash.Strategy, java.io.Serializable {
-
-		public int hashCode( final Object o ) {
-			if ( o == null ) return 0;
-			if ( o == HashCommon.REMOVED ) return HashCommon.REMOVED.hashCode();
-			KEY_TYPE[] a = (KEY_TYPE[])o;
-			int i = a.length, hashCode = -1;
-			while( i-- != 0 ) hashCode = 31 * hashCode + KEY2INT( a[ i ] );
-			return hashCode;
+	private static final class ArrayHashStrategy KEY_GENERIC implements Hash.Strategy<KEY_GENERIC_TYPE[]>, java.io.Serializable {
+    	public static final long serialVersionUID = -7046029254386353129L;
+    
+		public int hashCode( final KEY_GENERIC_TYPE[] o ) {
+			return java.util.Arrays.hashCode( o );
 		}
 		
-		public boolean equals( final Object a, final Object b ) {
-			if ( a == null ) return b == null;
-			if ( a == HashCommon.REMOVED || b == HashCommon.REMOVED ) return a == b;
-			return ARRAYS.equals( (KEY_TYPE[])a, (KEY_TYPE[])b );
+		public boolean equals( final KEY_GENERIC_TYPE[] a, final KEY_GENERIC_TYPE[] b ) {
+			return ARRAYS.equals( a, b );
 		}
 	}
 
@@ -383,8 +368,3 @@ public class ARRAYS {
 
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

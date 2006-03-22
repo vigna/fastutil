@@ -25,12 +25,13 @@ import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ITERATOR;
 import VALUE_PACKAGE.VALUE_ABSTRACT_ITERATOR;
-import it.unimi.dsi.fastutil.HashCommon;
+
+#if #keys(primitive) && #values(primitive)
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+#endif
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Collection;
-import java.util.Set;
 
 /** An abstract class providing basic methods for maps implementing a type-specific interface.
  *
@@ -51,7 +52,7 @@ import java.util.Set;
  * entries (e.g., most immutable maps).
  */
 
-public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
+public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC implements MAP KEY_VALUE_GENERIC, java.io.Serializable {
 
 	protected ABSTRACT_MAP() {}
 
@@ -60,32 +61,22 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 * <code>remove()</code>.  
 	 */
 
-	protected VALUE_TYPE defRetValue;
-	 
+	protected VALUE_GENERIC_TYPE defRetValue;
 	
-	public void setDefRetValue( final VALUE_TYPE rv ) {
-		defaultReturnValue( rv );
-	}
-
-	public VALUE_TYPE getDefRetValue() {
-		return defaultReturnValue();
-	}
-
-
-	public void defaultReturnValue( final VALUE_TYPE rv ) {
+	public void defaultReturnValue( final VALUE_GENERIC_TYPE rv ) {
 		defRetValue = rv;
 	}
 
-	public VALUE_TYPE defaultReturnValue() {
+	public VALUE_GENERIC_TYPE defaultReturnValue() {
 		return defRetValue;
 	}
 
 
-	public VALUE_TYPE put( KEY_TYPE key, VALUE_TYPE value ) {
+	public VALUE_GENERIC_TYPE put( KEY_GENERIC_TYPE key, VALUE_GENERIC_TYPE value ) {
 		throw new UnsupportedOperationException();
 	}
 
-	public VALUE_TYPE REMOVE_VALUE( KEY_TYPE key ) {
+	public VALUE_GENERIC_TYPE REMOVE_VALUE( KEY_TYPE key ) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -94,15 +85,15 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	}
 
 
-#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+#if #keys(primitive) || #values(primitive)
                                                                                                                                              
 	/** Delegates to the corresponding type-specific method, taking care of returning <code>null</code> on a missing key.
 	 *
 	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
 	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
 	 */
-	public Object get( Object ok ) {
-		KEY_TYPE k = KEY2TYPE( ok );
+	public VALUE_GENERIC_CLASS get( Object ok ) {
+		KEY_TYPE k = KEY_OBJ2TYPE( ok );
 		return containsKey( k ) ? VALUE2OBJ( GET_VALUE( k ) ) : null;
 	}
                                                                                                                                              
@@ -111,9 +102,9 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
 	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
 	 */
-	public Object put( Object ok, Object ov ) {
-		KEY_TYPE k = KEY2TYPE( ok );
-		VALUE_TYPE v = put( k, VALUE2TYPE( ov ) );
+	public VALUE_GENERIC_CLASS put( KEY_GENERIC_CLASS ok, VALUE_GENERIC_CLASS ov ) {
+		KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( ok );
+		VALUE_GENERIC_TYPE v = put( k, VALUE_CLASS2TYPE( ov ) );
 		return containsKey( k ) ? VALUE2OBJ( v ) : null;
 	}
                                                                                                                                              
@@ -122,34 +113,34 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 * <P>This method must check whether the provided key is in the map using <code>containsKey()</code>. Thus,
 	 * it probes the map <em>twice</em>. Implementors of subclasses should override it with a more efficient method.
 	 */
-	public Object remove( Object ok ) {
-		KEY_TYPE k = KEY2TYPE( ok );
-		VALUE_TYPE v = REMOVE_VALUE( k );
+	public VALUE_GENERIC_CLASS remove( Object ok ) {
+		KEY_TYPE k = KEY_OBJ2TYPE( ok );
+		VALUE_GENERIC_TYPE v = REMOVE_VALUE( k );
 		return containsKey( k ) ? VALUE2OBJ( v ) : null;
 	}
 #endif
                                                                                                                                              
-#if ! #valueclass(Object) && ! #valueclass(Reference)
+#if #values(primitive)
 	public boolean containsValue( Object ov ) {
-		return containsValue( VALUE2TYPE( ov ) );
+		return containsValue( VALUE_OBJ2TYPE( ov ) );
 	}
 #endif
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+#if #keys(primitive)
 	public boolean containsKey( Object ok ) {
-		return containsKey( KEY2TYPE( ok ) );
+		return containsKey( KEY_OBJ2TYPE( ok ) );
 	}
 #endif
 
 
 	/** Checks whether the given value is contained in {@link #values()}. */
 	public boolean containsValue( VALUE_TYPE v ) {
-		return ((VALUE_COLLECTION)values()).contains( v );
+		return values().contains( v );
 	}
 
 	/** Checks whether the given value is contained in {@link #keySet()}. */
 	public boolean containsKey( KEY_TYPE k ) {
-		return ((SET)keySet()).contains( k );
+		return keySet().contains( k );
 	}
 
 	/** Puts all pairs in the given map.
@@ -158,22 +149,22 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 *
 	 * @param m a map.
 	 */
-	 
-	public void putAll(Map m) {
+	@SuppressWarnings("unchecked")
+	public void putAll(Map<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS> m) {
 		int n = m.size();
-		Iterator i = m.entrySet().iterator();
+		final Iterator<? extends Map.Entry<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS>> i = m.entrySet().iterator();
 
 		if (m instanceof MAP) {
-			MAP.Entry e;
+			MAP.Entry KEY_VALUE_EXTENDS_GENERIC e;
 			while(n-- != 0) {
-				e = (MAP.Entry)i.next();
+				e = (MAP.Entry KEY_VALUE_EXTENDS_GENERIC)i.next();
 				put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
 			}
 		}
 		else {
-			Map.Entry e;
+			Map.Entry<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS> e;
 			while(n-- != 0) {
-				e = (Map.Entry)i.next();
+				e = i.next();
 				put(e.getKey(), e.getValue());
 			}
 		} 
@@ -190,52 +181,52 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 * would not be reflected in the base map.
 	 */
 
-	public static class BasicEntry implements MAP.Entry {
-		protected KEY_TYPE key;
-		protected VALUE_TYPE value;
+	public static class BasicEntry KEY_VALUE_GENERIC implements MAP.Entry KEY_VALUE_GENERIC {
+		protected KEY_GENERIC_TYPE key;
+		protected VALUE_GENERIC_TYPE value;
 
-		public BasicEntry( final Object key, final Object value ) {
-			this.key = KEY2TYPE(key);
-			this.value = VALUE2TYPE(value);
+		public BasicEntry( final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value ) {
+			this.key = KEY_CLASS2TYPE(key);
+			this.value = VALUE_CLASS2TYPE(value);
 		}
 
-#if ! #keyclass(Object) && ! #keyclass(Reference) || ! #valueclass(Object) && ! #valueclass(Reference)
+#if #keys(primitive) || #values(primitive)
 		  
-		public BasicEntry( final KEY_TYPE key, final VALUE_TYPE value ) {
+		public BasicEntry( final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value ) {
 			this.key = key;
 			this.value = value;
 		}
 		  
 #endif
 
-		public Object getKey() {
+		public KEY_GENERIC_CLASS getKey() {
 			return KEY2OBJ(key);
 		}
 		  
-#if ! #keyclass(Object) && !#keyclass(Reference)
+#if #keys(primitive)
 		public KEY_TYPE ENTRY_GET_KEY() {
 			return key;
 		}
 #endif
 
-		public Object getValue() {
+		public VALUE_GENERIC_CLASS getValue() {
 			return VALUE2OBJ(value);
 		}
 		  
-#if ! #valueclass(Object) && ! #valueclass(Reference)
+#if #values(primitive)
 		public VALUE_TYPE ENTRY_GET_VALUE() {
 			return value;
 		}
 #endif
 
-		public VALUE_TYPE setValue( final VALUE_TYPE value ) {
+		public VALUE_GENERIC_TYPE setValue( final VALUE_GENERIC_TYPE value ) {
 			throw new UnsupportedOperationException();
 		}
 		  
-#if ! #valueclass(Object) && ! #valueclass(Reference)
+#if #values(primitive)
 		  
-		public Object setValue( final Object value ) {
-			return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+		public VALUE_GENERIC_CLASS setValue( final VALUE_GENERIC_CLASS value ) {
+			return VALUE_CLASS.valueOf(setValue(value.VALUE_VALUE()));
 		}
 
 #endif
@@ -244,7 +235,7 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 			if (!(o instanceof Map.Entry)) return false;
 			Map.Entry e = (Map.Entry)o;
 				
-			return KEY_EQUALS( key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE2TYPE( e.getValue() ) );
+			return KEY_EQUALS( key, KEY_OBJ2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE_OBJ2TYPE( e.getValue() ) );
 		}
 		  
 		public int hashCode() {
@@ -271,18 +262,18 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 */
 
 
-	public Set keySet() {
-		return new ABSTRACT_SET() {
+	public SET KEY_GENERIC keySet() {
+		return new ABSTRACT_SET KEY_GENERIC() {
 
 				public boolean contains( final KEY_TYPE k ) { return containsKey( k ); }
 
 				public int size() { return ABSTRACT_MAP.this.size(); }
 
-				public KEY_ITERATOR KEY_ITERATOR_METHOD() {
-					return new KEY_ABSTRACT_ITERATOR() {
-							final Iterator i = entrySet().iterator();
+				public KEY_ITERATOR KEY_GENERIC iterator() {
+					return new KEY_ABSTRACT_ITERATOR KEY_GENERIC() {
+							final ObjectIterator<Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
 
-							public KEY_TYPE NEXT_KEY() { return ((MAP.Entry)i.next()).ENTRY_GET_KEY(); };
+							public KEY_GENERIC_TYPE NEXT_KEY() { return ((MAP.Entry KEY_VALUE_GENERIC)i.next()).ENTRY_GET_KEY(); };
 
 							public boolean hasNext() { return i.hasNext(); }
 						};
@@ -303,18 +294,18 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 */
 
 
-	public Collection values() {
-		return new VALUE_ABSTRACT_COLLECTION() {
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		return new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
 
 				public boolean contains( final VALUE_TYPE k ) { return containsValue( k ); }
 
 				public int size() { return ABSTRACT_MAP.this.size(); }
 
-				public VALUE_ITERATOR VALUE_ITERATOR_METHOD() {
-					return new VALUE_ABSTRACT_ITERATOR() {
-							final Iterator i = entrySet().iterator();
+				public VALUE_ITERATOR VALUE_GENERIC iterator() {
+					return new VALUE_ABSTRACT_ITERATOR VALUE_GENERIC() {
+							final ObjectIterator<Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
 
-							public VALUE_TYPE NEXT_VALUE() { return ((MAP.Entry)i.next()).ENTRY_GET_VALUE(); };
+							public VALUE_GENERIC_TYPE NEXT_VALUE() { return ((MAP.Entry KEY_VALUE_GENERIC)i.next()).ENTRY_GET_VALUE(); };
 
 							public boolean hasNext() { return i.hasNext(); }
 						};
@@ -332,7 +323,7 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 
 	public int hashCode() {
 		int h = 0, n = size();
-		Iterator i = entrySet().iterator();
+		final ObjectIterator<? extends Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
 
 		while( n-- != 0 ) h += i.next().hashCode();
 		return h;
@@ -349,10 +340,10 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 
 
 	public String toString() {
-		final StringBuffer s = new StringBuffer();
-		final Iterator i = entrySet().iterator();
+		final StringBuilder s = new StringBuilder();
+		final ObjectIterator<? extends Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
 		int n = size();
-		MAP.Entry e;
+		MAP.Entry KEY_VALUE_GENERIC e;
 		boolean first = true;
 
 		s.append("{");
@@ -361,14 +352,14 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 			if (first) first = false;
 			else s.append(", ");
 
-			e = (MAP.Entry)i.next();
+			e = (MAP.Entry KEY_VALUE_GENERIC)i.next();
 
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 			if (this == e.getKey()) s.append("(this map)"); else
 #endif
 				s.append(String.valueOf(e.ENTRY_GET_KEY()));
 			s.append("=>");
-#if #valueclass(Object) || #valueclass(Reference)
+#if #values(reference)
 			if (this == e.getValue()) s.append("(this map)"); else
 #endif
 				s.append(String.valueOf(e.ENTRY_GET_VALUE()));
@@ -380,8 +371,3 @@ public abstract class ABSTRACT_MAP implements MAP, java.io.Serializable {
 	 
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

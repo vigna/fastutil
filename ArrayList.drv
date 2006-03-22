@@ -21,13 +21,10 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.Arrays;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
 
@@ -53,7 +50,7 @@ import java.util.NoSuchElementException;
  * @see java.util.ArrayList
  */
 
-public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable, java.io.Serializable {
+public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
 
 	/** The initial default capacity of an array list. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
@@ -62,7 +59,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	protected static final long ONEOVERPHI = 106039;
 
 	/** The backing array. */
-	protected transient KEY_TYPE a[];
+	protected transient KEY_GENERIC_TYPE a[];
 
 	/** The current actual size of the list (never greater than the backing-array length). */
 	protected int size;
@@ -78,7 +75,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param a the array that will be used to back this array list.
 	 */
 
-	protected ARRAY_LIST( final KEY_TYPE a[], boolean dummy ) {
+	protected ARRAY_LIST( final KEY_GENERIC_TYPE a[], boolean dummy ) {
+		if ( false ) if ( dummy ); // To kill warnings
 		this.a = a;
 	}
 
@@ -87,10 +85,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param capacity the initial capacity of the array list (may be 0).
 	 */
 
+	@SuppressWarnings("unchecked")
 	public ARRAY_LIST( final int capacity ) {
 		if ( capacity < 0 ) throw new IllegalArgumentException( "Initial capacity (" + capacity + ") is negative" );
 
-		a = new KEY_TYPE[ capacity ];
+		a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ capacity ];
 	}
 
 	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity.
@@ -105,9 +104,13 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param c a collection that will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( final Collection c ) {
+	public ARRAY_LIST( final Collection<? extends KEY_GENERIC_CLASS> c ) {
 		this( c.size() );
+#if #keys(primitive)
 		size = ITERATORS.unwrap( ITERATORS.AS_KEY_ITERATOR( c.iterator() ), a );
+#else
+		size = ITERATORS.unwrap( c.iterator(), a );
+#endif
 	}
 
 	/** Creates a new array list and fills it with a given type-specific collection.
@@ -115,9 +118,9 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param c a type-specific collection that will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( final COLLECTION c ) {
+	public ARRAY_LIST( final COLLECTION KEY_EXTENDS_GENERIC c ) {
 		this( c.size() );
-		size = ITERATORS.unwrap( c.KEY_ITERATOR_METHOD(), a );
+		size = ITERATORS.unwrap( c.iterator(), a );
 	}
 
 	/** Creates a new array list and fills it with a given type-specific list.
@@ -125,7 +128,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param l a type-specific list that will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( final LIST l ) {
+	public ARRAY_LIST( final LIST KEY_EXTENDS_GENERIC l ) {
 		this( l.size() );
 		l.getElements( 0, a, 0, size = l.size() );
 	}
@@ -135,7 +138,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param a an array whose elements will be used to fill the array list.
 	 */
 	 
-	public ARRAY_LIST( final KEY_TYPE a[] ) {
+	public ARRAY_LIST( final KEY_GENERIC_TYPE a[] ) {
 		this( a, 0, a.length );
 	}
 
@@ -146,7 +149,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param length the number of elements to use.
 	 */
 	 
-	public ARRAY_LIST( final KEY_TYPE a[], final int offset, final int length ) {
+	public ARRAY_LIST( final KEY_GENERIC_TYPE a[], final int offset, final int length ) {
 		this( length );
 		System.arraycopy( a, offset, this.a, 0, length );
 		size = length;
@@ -157,8 +160,9 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param i an iterator whose returned elements will fill the array list.
 	 */
 	 
-	public ARRAY_LIST( final Iterator i ) {
-		this( ITERATORS.AS_KEY_ITERATOR( i ) );
+	public ARRAY_LIST( final Iterator<? extends KEY_GENERIC_CLASS> i ) {
+		this();
+		while( i.hasNext() ) this.add( i.next() );
 	}
 
 	/** Creates a new array list and fills it with the elements returned by a type-specific iterator..
@@ -166,7 +170,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param i a type-specific iterator whose returned elements will fill the array list.
 	 */
 	 
-	public ARRAY_LIST( final KEY_ITERATOR i ) {
+	public ARRAY_LIST( final KEY_ITERATOR KEY_EXTENDS_GENERIC i ) {
 		this();
 		while( i.hasNext() ) this.add( i.NEXT_KEY() );
 	}
@@ -177,7 +181,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @return the backing array.
 	 */
 
-	public KEY_TYPE[] elements() {
+	public KEY_GENERIC_TYPE[] elements() {
 		return a;
 	}
 
@@ -188,9 +192,9 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @return a new array list of the given size, wrapping the given array.
 	 */
 
-	public static ARRAY_LIST wrap( final KEY_TYPE a[], final int length ) {
+	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC wrap( final KEY_GENERIC_TYPE a[], final int length ) {
 		if ( length > a.length ) throw new IllegalArgumentException( "The specified length (" + length + ") is greater than the array size (" + a.length + ")" );
-		final ARRAY_LIST l = new ARRAY_LIST( a, false );
+		final ARRAY_LIST KEY_GENERIC l = new ARRAY_LIST KEY_GENERIC( a, false );
 		l.size = length;
 		return l;
 	}
@@ -201,7 +205,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @return a new array list wrapping the given array.
 	 */
 
-	public static ARRAY_LIST wrap( final KEY_TYPE a[] ) {
+	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC wrap( final KEY_GENERIC_TYPE a[] ) {
 		return wrap( a, a.length );
 	}
 
@@ -215,7 +219,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		if ( ASSERTS ) assert size <= a.length;
 	}
 
-	public void add( final int index, final KEY_TYPE k ) {
+	public void add( final int index, final KEY_GENERIC_TYPE k ) {
 		ensureIndex( index );
 		a = ARRAYS.grow( a, size + 1, size );
 		if ( index != size ) System.arraycopy( a, index, a, index + 1, size - index );
@@ -224,43 +228,14 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		if ( ASSERTS ) assert size <= a.length;
 	}
 
-	public boolean add( final KEY_TYPE k ) {
+	public boolean add( final KEY_GENERIC_TYPE k ) {
 		a = ARRAYS.grow( a, size + 1, size );
 		a[ size++ ] = k;
 		if ( ASSERTS ) assert size <= a.length;
 		return true;
 	}
 
-	public boolean addAll( int index, final COLLECTION c ) {
-		ensureIndex( index );
-		int n = c.size();
-		if ( n == 0 ) return false;
-		a = ARRAYS.grow( a, size + n, size );
-		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
-		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
-		size += n;
-		while( n-- != 0 ) a[ index++ ] = i.NEXT_KEY();
-		if ( ASSERTS ) assert size <= a.length;
-		return true;
-	}
-
-	public boolean addAll( final int index, final LIST l ) {
-		ensureIndex( index );
-		final int n = l.size();
-		if ( n == 0 ) return false;
-		a = ARRAYS.grow( a, size + n, size );
-		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
-		l.getElements( 0, a, index, n );
-		size += n;
-		if ( ASSERTS ) assert size <= a.length;
-		return true;
-	}
-
-	public boolean addAll( final LIST l ) {
-		return addAll( size, l );
-	}
-
-	public KEY_TYPE GET_KEY( final int index ) {
+	public KEY_GENERIC_TYPE GET_KEY( final int index ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		return a[ index ];
 	}
@@ -283,12 +258,12 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return -1;
 	}
 
-	public KEY_TYPE REMOVE_KEY( final int index ) {
+	public KEY_GENERIC_TYPE REMOVE_KEY( final int index ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
-		final KEY_TYPE old = a[ index ];
+		final KEY_GENERIC_TYPE old = a[ index ];
 		size--;
 		if ( index != size ) System.arraycopy( a, index + 1, a, index, size - index );
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 		a[ size ] = null;
 #endif
 		if ( ASSERTS ) assert size <= a.length;
@@ -303,15 +278,15 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return true;
 	}
 
-	public KEY_TYPE set( final int index, final KEY_TYPE k ) {
+	public KEY_GENERIC_TYPE set( final int index, final KEY_GENERIC_TYPE k ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
-		KEY_TYPE old = a[ index ];
+		KEY_GENERIC_TYPE old = a[ index ];
 		a[ index ] = k;
 		return old;
 	}
 
 	public void clear() {
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 		ARRAYS.fill( a, 0, size, null );
 #endif
 		size = 0;
@@ -325,7 +300,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	public void size( final int size ) {
 		if ( size > a.length ) ensureCapacity( size );
 		if ( size > this.size ) for( int i = this.size; i < size; i++ ) a[ i ] = KEY_NULL;
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 		else for( int i = size; i < this.size; i++ ) a[ i ] = KEY_NULL;
 #endif
 		this.size = size;
@@ -358,9 +333,10 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param n the threshold for the trimming.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public void trim( final int n ) {
 		if ( n >= a.length || size == a.length ) return;
-		final KEY_TYPE t[] = new KEY_TYPE[ Math.max( n, size )  ];
+		final KEY_GENERIC_TYPE t[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ Math.max( n, size )  ];
 		System.arraycopy( a, 0, t, 0, size );
 		a = t;
 		if ( ASSERTS ) assert size <= a.length;
@@ -389,7 +365,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		Arrays.ensureFromTo( size, from, to );
 		System.arraycopy( a, to, a, from, size - to );
 		size -= ( to - from );
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 		int i = to - from;
 		while( i-- != 0 ) a[ size + i ] = null;
 #endif
@@ -403,7 +379,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param offset the offset of the first element to add.
 	 * @param length the number of elements to add.
 	 */
-	public void addElements( final int index, final KEY_TYPE a[], final int offset, final int length ) {
+	public void addElements( final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length ) {
 		ensureIndex( index );
 		ARRAYS.ensureOffsetLength( a, offset, length );
 		this.a = ARRAYS.grow( this.a, size + length, size );
@@ -414,7 +390,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 
 
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+#if #keys(primitive)
 	
 	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
 		if ( a == null || a.length < size ) a = new KEY_TYPE[ size ];
@@ -422,26 +398,51 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return a;
 	}
 
+	public boolean addAll( int index, final COLLECTION c ) {
+		ensureIndex( index );
+		int n = c.size();
+		if ( n == 0 ) return false;
+		a = ARRAYS.grow( a, size + n, size );
+		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
+		final KEY_ITERATOR i = c.iterator();
+		size += n;
+		while( n-- != 0 ) a[ index++ ] = i.NEXT_KEY();
+		if ( ASSERTS ) assert size <= a.length;
+		return true;
+	}
+
+	public boolean addAll( final int index, final LIST l ) {
+		ensureIndex( index );
+		final int n = l.size();
+		if ( n == 0 ) return false;
+		a = ARRAYS.grow( a, size + n, size );
+		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
+		l.getElements( 0, a, index, n );
+		size += n;
+		if ( ASSERTS ) assert size <= a.length;
+		return true;
+	}
+
 #endif
 
-	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+	public KEY_LIST_ITERATOR KEY_GENERIC listIterator( final int index ) {
 		ensureIndex( index );
 
-		return new KEY_ABSTRACT_LIST_ITERATOR() {
+		return new KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC() {
 				int pos = index, last = -1;
 
 				public boolean hasNext() { return pos < size; }
 				public boolean hasPrevious() { return pos > 0; }
-				public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return a[ last = pos++ ]; }
-				public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return a[ last = --pos ]; }
+				public KEY_GENERIC_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return a[ last = pos++ ]; }
+				public KEY_GENERIC_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return a[ last = --pos ]; }
 				public int nextIndex() { return pos; }
 				public int previousIndex() { return pos - 1; }
-				public void add( KEY_TYPE k ) { 
+				public void add( KEY_GENERIC_TYPE k ) { 
 					if ( last == -1 ) throw new IllegalStateException();
 					ARRAY_LIST.this.add( pos++, k ); 
 					last = -1;
 				}
-				public void set( KEY_TYPE k ) { 
+				public void set( KEY_GENERIC_TYPE k ) { 
 					if ( last == -1 ) throw new IllegalStateException();
 					ARRAY_LIST.this.set( last, k );
 				}
@@ -456,6 +457,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public Object clone() {
 		ARRAY_LIST c = new ARRAY_LIST( size );
 		System.arraycopy( a, 0, c.a, 0, size );
@@ -463,9 +465,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		return c;
 	}
 
-	private boolean valEquals( final Object a, final Object b ) {
+#if #keyclass(Object)
+	private boolean valEquals( final K a, final K b ) {
 		return a == null ? b == null : a.equals( b );
 	}
+#endif
 
     /** Compares this type-specific array list to another one.
 	 *
@@ -475,12 +479,12 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	 * @param l a type-specific array list.
      * @return true if the argument contains the same elements of this type-specific array list.
 	 */
-	public boolean equals( final ARRAY_LIST l ) {
+	public boolean equals( final ARRAY_LIST KEY_GENERIC l ) {
 		if ( l == this ) return true;
 		int s = size();
 		if ( s != l.size() ) return false;
-		final KEY_TYPE[] a1 = a;
-		final KEY_TYPE[] a2 = l.a;
+		final KEY_GENERIC_TYPE[] a1 = a;
+		final KEY_GENERIC_TYPE[] a2 = l.a;
 
 #if #keyclass(Object)
 		while( s-- !=  0 ) if ( ! valEquals( a1[ s ], a2[ s ] ) ) return false;
@@ -491,11 +495,24 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	}
 
 
-#if ! #keyclass(Reference) && ! #keyclass(Boolean)
+#if ! #keyclass(Reference)
 
-	public int compareTo( final ARRAY_LIST l ) {
+    /** Compares this list to another object. If the
+     * argument is a {@link java.util.List}, this method performs a lexicographical comparison; otherwise,
+     * it throws a <code>ClassCastException</code>.
+     *
+	 * <P>This method exists only for sake of efficiency. The implementation
+	 * inherited from the abstract implementation would already work.
+	 *
+     * @param l an list.
+     * @return if the argument is a {@link java.util.List}, a negative integer,
+     * zero, or a positive integer as this list is lexicographically less than, equal
+     * to, or greater than the argument.
+     * @throws ClassCastException if the argument is not a list.
+     */
+	public int compareTo( final ARRAY_LIST KEY_GENERIC l ) {
 		final int s1 = size(), s2 = l.size();
-		final KEY_TYPE a1[] = a, a2[] = l.a;
+		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
 		int r, i1 = 0, i2 = 0;
 		
 		while( i1 < s1 && i2 < s2 ) {
@@ -513,10 +530,11 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		for( int i = 0; i < size; i++ ) s.WRITE_KEY( a[ i ] );
 	}
 
+	@SuppressWarnings("unchecked")
 	private void readObject( java.io.ObjectInputStream s ) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		a = new KEY_TYPE[ size ];
-		for( int i = 0; i < size; i++ ) a[ i ] = s.READ_KEY();
+		a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ size ];
+		for( int i = 0; i < size; i++ ) a[ i ] = KEY_GENERIC_CAST s.READ_KEY();
 	}
 
 
@@ -528,7 +546,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
@@ -565,7 +583,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 	private static KEY_TYPE nkt[];
 	private static ARRAY_LIST topList;
 
-	protected static void testLists( LIST m, List t, int n, int level ) {
+	protected static void testLists( LIST m, java.util.List t, int n, int level ) {
 		long ms;
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds;
 		Object rt = null;
@@ -646,7 +664,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(Iterator i=m.listIterator(); i.hasNext();  ) {
 			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after insertion (iterating on m)" );
 		}
 
@@ -863,7 +881,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(Iterator i=m.listIterator(); i.hasNext();  ) {
 			ensure( t.contains( i.next() ), "Error (" + level + ", " + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		}
 
@@ -916,8 +934,8 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		ensure( ( new ARRAY_LIST( (COLLECTION)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific Collection m ) does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( (LIST)m ) ), "Error (" + level + ", " + seed + "): m does not equal new ( type-specific List m )" );
 		ensure( ( new ARRAY_LIST( (LIST)m ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( type-specific List m ) does not equal m" );
-		ensure( m.equals( new ARRAY_LIST( m.iterator() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.iterator() )" );
-		ensure( ( new ARRAY_LIST( m.iterator() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.iterator() ) does not equal m" );
+		ensure( m.equals( new ARRAY_LIST( m.listIterator() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.listIterator() )" );
+		ensure( ( new ARRAY_LIST( m.listIterator() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.listIterator() ) does not equal m" );
 		ensure( m.equals( new ARRAY_LIST( m.KEY_ITERATOR_METHOD() ) ), "Error (" + level + ", " + seed + "): m does not equal new ( m.type_specific_iterator() )" );
 		ensure( ( new ARRAY_LIST( m.KEY_ITERATOR_METHOD() ) ).equals( m ), "Error (" + level + ", " + seed + "): new ( m.type_specific_iterator() ) does not equal m" );
 
@@ -1115,7 +1133,7 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 		nkt = new KEY_TYPE[n];
 
 		for( int i = 0; i < n; i++ ) {
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 			k[i] = kt[i] = genKey();
 			nk[i] = nkt[i] = genKey();
 #else
@@ -1154,8 +1172,3 @@ public class ARRAY_LIST extends ABSTRACT_LIST implements RandomAccess, Cloneable
 #endif
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

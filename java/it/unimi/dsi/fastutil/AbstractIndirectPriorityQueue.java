@@ -27,7 +27,7 @@ package it.unimi.dsi.fastutil;
  * {@link UnsupportedOperationException}.
  */
 
-public abstract class AbstractIndirectPriorityQueue implements IndirectPriorityQueue {
+public abstract class AbstractIndirectPriorityQueue<K> implements IndirectPriorityQueue<K> {
 
 	public int last() { throw new UnsupportedOperationException(); }
 
@@ -42,8 +42,3 @@ public abstract class AbstractIndirectPriorityQueue implements IndirectPriorityQ
 	public boolean isEmpty() { return size() == 0; }
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

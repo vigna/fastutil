@@ -10,9 +10,6 @@
 # The types we specialise to (these are actual Java types, so references appear here as Object).
 TYPE=(boolean byte short int long char float double Object Object)
 
-# The same types, but in lower case and plural (to build package names; singular forms are reserved keywords).
-PACKAGE=(booleans bytes shorts ints longs chars floats doubles objects objects)
-
 # The capitalized types used to build class and method names (now references appear as Reference).
 TYPE_CAP=(Boolean Byte Short Int Long Char Float Double Object Reference)
 
@@ -33,11 +30,6 @@ TYPE_LC2=(boolean byte short int long char float double object object)
 
 # The corresponding classes (in few cases, there are differences with $TYPE_CAP).
 CLASS=(Boolean Byte Short Integer Long Character Float Double Object Reference)
-
-# The corresponding byte size or 0 for unknown.
-SIZE=(0 1 2 4 8 2 4 8 0 0)
-
-# We perform some basic parsing on the filename.
 
 export LC_ALL=C
 shopt -s extglob
@@ -89,15 +81,29 @@ echo -e \
 \
 "${Linked:+#define Linked}\n"\
 "${Custom:+#define Custom}\n"\
-"#define PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$k]}\n"\
-"#define VALUE_PACKAGE it.unimi.dsi.fastutil.${PACKAGE[$v]}\n"\
+"#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$k]}s\n"\
+"#define VALUE_PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$v]}s\n"\
 \
 \
 "/* Assertions (useful to generate conditional code) */\n"\
 \
 \
-$(if [[ "${CLASS[$k]}" != "" ]]; then echo "#assert keyclass(${CLASS[$k]})\\n"; fi)\
-$(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"; fi)\
+$(if [[ "${CLASS[$k]}" != "" ]]; then\
+	echo "#assert keyclass(${CLASS[$k]})\\n";\
+	if [[ "${CLASS[$k]}" != "Object" && "${CLASS[$k]}" != "Reference" ]]; then\
+		echo "#assert keys(primitive)\\n";\
+	else\
+		echo "#assert keys(reference)\\n";\
+	fi;\
+ fi)\
+$(if [[ "${CLASS[$v]}" != "" ]]; then\
+	echo "#assert valueclass(${CLASS[$v]})\\n";\
+	if [[ "${CLASS[$v]}" != "Object" && "${CLASS[$v]}" != "Reference" ]]; then\
+		echo "#assert values(primitive)\\n";\
+	else\
+		echo "#assert values(reference)\\n";\
+	fi;\
+ fi)\
 \
 \
 "/* Current type and class (and size, if applicable) */\n"\
@@ -107,8 +113,59 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_CLASS ${CLASS[$v]}\n"\
-"#define KEY_SIZE ${SIZE[$k]}\n"\
-"#define VALUE_SIZE ${SIZE[$v]}\n"\
+\
+\
+"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#define KEY_GENERIC_CLASS K\n"\
+"#define KEY_GENERIC_TYPE K\n"\
+"#define KEY_GENERIC <K>\n"\
+"#define KEY_EXTENDS_GENERIC <? extends K>\n"\
+"#define KEY_SUPER_GENERIC <? super K>\n"\
+"#define KEY_GENERIC_CAST (K)\n"\
+"#define KEY_GENERIC_ARRAY_CAST (K[])\n"\
+"#else\n"\
+"#define KEY_GENERIC_CLASS KEY_CLASS\n"\
+"#define KEY_GENERIC_TYPE KEY_TYPE\n"\
+"#define KEY_GENERIC\n"\
+"#define KEY_EXTENDS_GENERIC\n"\
+"#define KEY_SUPER_GENERIC\n"\
+"#define KEY_GENERIC_CAST\n"\
+"#define KEY_GENERIC_ARRAY_CAST\n"\
+"#endif\n"\
+\
+"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#define VALUE_GENERIC_CLASS V\n"\
+"#define VALUE_GENERIC_TYPE V\n"\
+"#define VALUE_GENERIC <V>\n"\
+"#define VALUE_EXTENDS_GENERIC <? extends V>\n"\
+"#define VALUE_GENERIC_CAST (V)\n"\
+"#define VALUE_GENERIC_ARRAY_CAST (V[])\n"\
+"#else\n"\
+"#define VALUE_GENERIC_CLASS VALUE_CLASS\n"\
+"#define VALUE_GENERIC_TYPE VALUE_TYPE\n"\
+"#define VALUE_GENERIC\n"\
+"#define VALUE_EXTENDS_GENERIC\n"\
+"#define VALUE_GENERIC_CAST\n"\
+"#define VALUE_GENERIC_ARRAY_CAST\n"\
+"#endif\n"\
+\
+"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#define KEY_VALUE_GENERIC <K,V>\n"\
+"#define KEY_VALUE_EXTENDS_GENERIC <? extends K, ? extends V>\n"\
+"#else\n"\
+"#define KEY_VALUE_GENERIC <K>\n"\
+"#define KEY_VALUE_EXTENDS_GENERIC <? extends K>\n"\
+"#endif\n"\
+"#else\n"\
+"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#define KEY_VALUE_GENERIC <V>\n"\
+"#define KEY_VALUE_EXTENDS_GENERIC <? extends V>\n"\
+"#else\n"\
+"#define KEY_VALUE_GENERIC\n"\
+"#define KEY_VALUE_EXTENDS_GENERIC\n"\
+"#endif\n"\
+"#endif\n"\
 \
 \
 "/* Value methods */\n"\
@@ -135,6 +192,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
 "#define STACK ${TYPE_STD[$k]}Stack\n\n"\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n\n"\
+"#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n\n"\
+"#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n\n"\
@@ -177,6 +236,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 \
 "#define VALUE_ABSTRACT_COLLECTION Abstract${TYPE_CAP[$v]}Collection\n\n"\
 "#define VALUE_ABSTRACT_ITERATOR Abstract${TYPE_CAP2[$v]}Iterator\n\n"\
+"#define VALUE_ABSTRACT_BIDI_ITERATOR Abstract${TYPE_CAP2[$v]}BidirectionalIterator\n\n"\
 \
 \
 "/* Static containers (keys) */\n"\
@@ -316,7 +376,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
 "#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
-"#define KEY_EQUALS_HASH(x,h,y) ( (h) == strategy.hashCode(y) && strategy.equals((x), (y)) )\n"\
+"#define KEY_EQUALS_HASH(x,h,y) ( (y) != Maps.MISSING && (h) == strategy.hashCode(y) && strategy.equals((x), (y)) )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_HASH(x,h,y) ( (x) == null ? (y) == null : (h) == (y).hashCode() && (x).equals(y) )\n"\
@@ -341,10 +401,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 \
 "#define REMOVE remove\n"\
 \
-"#define KEY2TYPE(x) (x)\n"\
+"#define KEY_OBJ2TYPE(x) (x)\n"\
+"#define KEY_CLASS2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
-\
-"#define KEY_NULL (null)\n"\
 \
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
@@ -356,9 +415,11 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "#define KEY2INT(x) (System.identityHashCode(x))\n"\
 "#endif\n"\
 \
-"#define KEY_CMP(x,y) ( ((Comparable)(x)).compareTo(y) )\n"\
-"#define KEY_LESS(x,y) ( ((Comparable)(x)).compareTo(y) < 0 )\n"\
-"#define KEY_LESSEQ(x,y) ( ((Comparable)(x)).compareTo(y) <= 0 )\n"\
+"#define KEY_CMP(x,y) ( ((Comparable<? super KEY_GENERIC_CLASS>)(x)).compareTo(y) )\n"\
+"#define KEY_LESS(x,y) ( ((Comparable<? super KEY_GENERIC_CLASS>)(x)).compareTo(y) < 0 )\n"\
+"#define KEY_LESSEQ(x,y) ( ((Comparable<? super KEY_GENERIC_CLASS>)(x)).compareTo(y) <= 0 )\n"\
+\
+"#define KEY_NULL (null)\n"\
 \
 \
 "#else\n"\
@@ -369,28 +430,33 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 \
 "#define REMOVE rem\n"\
 \
-"#define KEY2TYPE(x) (((KEY_CLASS)(x)).KEY_VALUE())\n"\
+"#define KEY_CLASS2TYPE(x) ((x).KEY_VALUE())\n"\
+"#define KEY_OBJ2TYPE(x) (KEY_CLASS2TYPE((KEY_CLASS)(x)))\n"\
+"#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
 \
 "#if #keyclass(Boolean)\n"\
-"#define KEY2OBJ(x) (Boolean.valueOf(x))\n"\
-"#define KEY_NULL (false)\n"\
 "#define KEY_CMP(x,y) ( !(x) && (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( !(x) && (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( !(x) || (y) )\n"\
 "#else\n"\
-"#define KEY2OBJ(x) (new KEY_CLASS(x))\n"\
-"#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( (x) < (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
 "#endif\n"\
 \
 "#if #keyclass(Float) || #keyclass(Double) || #keyclass(Long)\n"\
-"#define KEY2INT(x) HashCommon.${TYPE[$k]}2int(x)\n"\
+"#define KEY_NULL (0)\n"\
+"#define KEY2INT(x) it.unimi.dsi.fastutil.HashCommon.${TYPE[$k]}2int(x)\n"\
 "#elif #keyclass(Boolean)\n"\
+"#define KEY_NULL (false)\n"\
 "#define KEY2INT(x) (x ? 1231 : 1237)\n"\
 "#else\n"\
-"#define KEY2INT(x) ((int)(x))\n"\
+"#if #keyclass(Integer)\n"\
+"#define KEY_NULL (0)\n"\
+"#else\n"\
+"#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#endif\n"\
+"#define KEY2INT(x) (x)\n"\
 "#endif\n"\
 \
 "#endif\n"\
@@ -401,7 +467,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 \
 \
 "#if #valueclass(Object) || #valueclass(Reference)\n"\
-"#define VALUE2TYPE(x) (x)\n"\
+"#define VALUE_OBJ2TYPE(x) (x)\n"\
+"#define VALUE_CLASS2TYPE(x) (x)\n"\
 "#define VALUE2OBJ(x) (x)\n"\
 \
 "#if #valueclass(Object)\n"\
@@ -419,22 +486,23 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then echo "#assert valueclass(${CLASS[$v]})\\n"
 "/* Primitive-type-only definitions (values) */\n"\
 \
 \
-"#define VALUE2TYPE(x) (((VALUE_CLASS)(x)).VALUE_VALUE())\n"\
+"#define VALUE_CLASS2TYPE(x) ((x).VALUE_VALUE())\n"\
+"#define VALUE_OBJ2TYPE(x) (VALUE_CLASS2TYPE((VALUE_CLASS)(x)))\n"\
+"#define VALUE2OBJ(x) (VALUE_CLASS.valueOf(x))\n"\
 \
 "#if #valueclass(Float) || #valueclass(Double) || #valueclass(Long)\n"\
-"#define VALUE2INT(x) HashCommon.${TYPE[$v]}2int(x)\n"\
+"#define VALUE_NULL (0)\n"\
+"#define VALUE2INT(x) it.unimi.dsi.fastutil.HashCommon.${TYPE[$v]}2int(x)\n"\
 "#elif #valueclass(Boolean)\n"\
+"#define VALUE_NULL (false)\n"\
 "#define VALUE2INT(x) (x ? 1231 : 1237)\n"\
 "#else\n"\
-"#define VALUE2INT(x) ((int)(x))\n"\
-"#endif\n"\
-\
-"#if #valueclass(Boolean)\n"\
-"#define VALUE2OBJ(x) (Boolean.valueOf(x))\n"\
-"#define VALUE_NULL (false)\n"\
+"#if #valueclass(Integer)\n"\
+"#define VALUE_NULL (0)\n"\
 "#else\n"\
-"#define VALUE2OBJ(x) (new VALUE_CLASS(x))\n"\
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\
+"#endif\n"\
+"#define VALUE2INT(x) (x)\n"\
 "#endif\n"\
 \
 "#define OBJECT_DEFAULT_RETURN_VALUE (null)\n"\

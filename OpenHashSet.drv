@@ -24,17 +24,21 @@ package PACKAGE;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
-import it.unimi.dsi.fastutil.objects.ObjectArrays;
+#ifdef Custom
+import it.unimi.dsi.fastutil.Maps;
+#endif
 
 import java.util.Arrays;
 import java.util.Collection;
+#if #keys(primitive)
 import java.util.Iterator;
-import java.util.Set;
+#endif
 import java.util.NoSuchElementException;
 
 #ifdef Linked
+#if #keys(reference)
 import java.util.Comparator;
-import java.util.SortedSet;
+#endif
 
 /**  A type-specific linked hash set with with a fast, small-footprint implementation.
  *
@@ -73,7 +77,7 @@ import java.util.SortedSet;
  * @see HashCommon
  */
 
-public class OPEN_HASH_SET extends ABSTRACT_SORTED_SET implements java.io.Serializable, Cloneable, Hash, SORTED_SET {
+public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC implements java.io.Serializable, Cloneable, Hash {
 
 #else
 
@@ -100,7 +104,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SORTED_SET implements java.io.Serial
  * @see HashCommon
  */
 
-public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, Hash, SET {
+public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements java.io.Serializable, Cloneable, Hash {
 
 #else
 
@@ -126,14 +130,14 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
  * @see HashCommon
  */
 
-public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable, Cloneable, Hash, SET {
+public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements java.io.Serializable, Cloneable, Hash {
 
 #endif
 
 #endif
 
 	/** The array of keys. */
-	protected transient KEY_TYPE key[];
+	protected transient KEY_GENERIC_TYPE key[];
 	 
 	/** The array of occupancy states. */
 	protected transient byte state[];
@@ -170,7 +174,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 #ifdef Custom
 	/** The hash strategy of this custom set. */
-	protected Strategy strategy;
+	protected Strategy<K> strategy;
 #endif
 
     public static final long serialVersionUID = -7046029254386353129L;
@@ -187,7 +191,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 * @see Hash#PRIMES
 	 */
-	public OPEN_HASH_SET( final int n, final float f, final Strategy strategy ) {
+	@SuppressWarnings("unchecked")
+	public OPEN_HASH_SET( final int n, final float f, final Strategy<K> strategy ) {
 		this.strategy = strategy;
 #else
 	/** Creates a new hash set.
@@ -198,6 +203,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 * @see Hash#PRIMES
 	 */
+	@SuppressWarnings("unchecked")
 	public OPEN_HASH_SET( final int n, final float f ) {
 #endif
 		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
@@ -209,7 +215,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		free = PRIMES[ p = l ];
 		this.f = f;
 		this.maxFill = (int)( free * f );
-		key = new KEY_TYPE[ free ];
+		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ free ];
 		state = new byte[ free ];
 #ifdef Linked
 		link = new int[ free ];
@@ -224,7 +230,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final int n, final Strategy strategy ) {
+	public OPEN_HASH_SET( final int n, final Strategy<K> strategy ) {
 		this( n, DEFAULT_LOAD_FACTOR, strategy );
 	}
 
@@ -247,7 +253,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final Strategy strategy ) {
+	public OPEN_HASH_SET( final Strategy<K> strategy ) {
 	this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR, strategy );
 	}
 #else
@@ -269,7 +275,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final Collection c, final float f, final Strategy strategy ) {
+	public OPEN_HASH_SET( final Collection<? extends KEY_GENERIC_CLASS> c, final float f, final Strategy<K> strategy ) {
 	this( c.size(), f, strategy );
 		addAll( c );
 	}
@@ -280,7 +286,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 */
 	 
-	public OPEN_HASH_SET( final Collection c, final float f ) {
+	public OPEN_HASH_SET( final Collection<? extends KEY_GENERIC_CLASS> c, final float f ) {
 		this( c.size(), f );
 		addAll( c );
 	}
@@ -296,7 +302,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final Collection c, final Strategy strategy ) {
+	public OPEN_HASH_SET( final Collection<? extends KEY_GENERIC_CLASS> c, final Strategy<K> strategy ) {
 		this( c, DEFAULT_LOAD_FACTOR, strategy );
 	}
 
@@ -307,7 +313,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param c a {@link Collection} to be copied into the new hash set. 
 	 */
 	 
-	public OPEN_HASH_SET( final Collection c ) {
+	public OPEN_HASH_SET( final Collection<? extends KEY_GENERIC_CLASS> c ) {
 		this( c, DEFAULT_LOAD_FACTOR );
 	}
 #endif
@@ -321,7 +327,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final COLLECTION c, final float f, Strategy strategy ) {
+	public OPEN_HASH_SET( final COLLECTION KEY_EXTENDS_GENERIC c, final float f, Strategy<K> strategy ) {
 	this( c.size(), f, strategy );
 		addAll( c );
 	}
@@ -332,7 +338,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 */
 	 
-	public OPEN_HASH_SET( final COLLECTION c, final float f ) {
+	public OPEN_HASH_SET( final COLLECTION KEY_EXTENDS_GENERIC c, final float f ) {
 		this( c.size(), f );
 		addAll( c );
 	}
@@ -347,7 +353,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final COLLECTION c, final Strategy strategy ) {
+	public OPEN_HASH_SET( final COLLECTION KEY_EXTENDS_GENERIC c, final Strategy<K> strategy ) {
 		this( c, DEFAULT_LOAD_FACTOR, strategy );
 	}
 #else
@@ -357,7 +363,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param c a type-specific collection to be copied into the new hash set. 
 	 */
 	 
-	public OPEN_HASH_SET( final COLLECTION c ) {
+	public OPEN_HASH_SET( final COLLECTION KEY_EXTENDS_GENERIC c ) {
 		this( c, DEFAULT_LOAD_FACTOR );
 	}
 #endif
@@ -371,7 +377,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_ITERATOR i, final float f, final Strategy strategy ) {
+	public OPEN_HASH_SET( final KEY_ITERATOR KEY_GENERIC i, final float f, final Strategy<K> strategy ) {
 		this( DEFAULT_INITIAL_SIZE, f, strategy );
 		while( i.hasNext() ) add( i.NEXT_KEY() );
 	}
@@ -382,7 +388,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_ITERATOR i, final float f ) {
+	public OPEN_HASH_SET( final KEY_ITERATOR KEY_GENERIC i, final float f ) {
 		this( DEFAULT_INITIAL_SIZE, f );
 		while( i.hasNext() ) add( i.NEXT_KEY() );
 	}
@@ -395,7 +401,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_ITERATOR i, final Strategy strategy ) {
+	public OPEN_HASH_SET( final KEY_ITERATOR KEY_GENERIC i, final Strategy<K> strategy ) {
 		this( i, DEFAULT_LOAD_FACTOR, strategy );
 	}
 #else
@@ -404,14 +410,14 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param i a type-specific iterator whose elements will fill the set.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_ITERATOR i ) {
+	public OPEN_HASH_SET( final KEY_ITERATOR KEY_GENERIC i ) {
 		this( i, DEFAULT_LOAD_FACTOR );
 	}
 #endif
 
 
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+#if #keys(primitive)
 
 #ifdef Custom
 	/** Creates a new hash set using elements provided by an iterator.
@@ -421,7 +427,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final Iterator i, final float f, final Strategy strategy ) {
+	public OPEN_HASH_SET( final Iterator i, final float f, final Strategy<K> strategy ) {
 		this( ITERATORS.AS_KEY_ITERATOR( i ), f, strategy );
 	}
 #else
@@ -443,7 +449,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final Iterator i, final Strategy strategy ) {
+	public OPEN_HASH_SET( final Iterator i, final Strategy<K> strategy ) {
 		this( ITERATORS.AS_KEY_ITERATOR( i, strategy ) );
 	}
 #else
@@ -471,7 +477,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length, final float f, final Strategy strategy ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length, final float f, final Strategy<K> strategy ) {
 	this( length < 0 ? 0 : length, f, strategy );
 		ARRAYS.ensureOffsetLength( a, offset, length );
 		for( int i = 0; i < length; i++ ) add( a[ offset + i ] );
@@ -485,7 +491,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length, final float f ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length, final float f ) {
 		this( length < 0 ? 0 : length, f );
 		ARRAYS.ensureOffsetLength( a, offset, length );
 		for( int i = 0; i < length; i++ ) add( a[ offset + i ] );
@@ -501,7 +507,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length, final Strategy strategy ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length, final Strategy<K> strategy ) {
 		this( a, offset, length, DEFAULT_LOAD_FACTOR, strategy );
 	}
 #else
@@ -512,7 +518,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param length the number of elements to use.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final int offset, final int length ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length ) {
 		this( a, offset, length, DEFAULT_LOAD_FACTOR );
 	}
 #endif
@@ -525,7 +531,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final float f, final Strategy strategy ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final float f, final Strategy<K> strategy ) {
 		this( a, 0, a.length, f, strategy );
 	}
 #else
@@ -535,7 +541,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param f the load factor.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final float f ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final float f ) {
 		this( a, 0, a.length, f );
 	}
 #endif
@@ -548,7 +554,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a, final Strategy strategy ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a, final Strategy<K> strategy ) {
 		this( a, DEFAULT_LOAD_FACTOR, strategy );
 	}
 #else
@@ -558,7 +564,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param a an array to be copied into the new hash set. 
 	 */
 	 
-	public OPEN_HASH_SET( final KEY_TYPE[] a ) {
+	public OPEN_HASH_SET( final KEY_GENERIC_TYPE[] a ) {
 		this( a, DEFAULT_LOAD_FACTOR );
 	}
 #endif
@@ -570,7 +576,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @return the hashing strategy of this custom hash set.
 	 */
 
-	public Strategy strategy() {
+	public Strategy<K> strategy() {
 		return strategy;
 	}
 #endif
@@ -610,8 +616,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
 	 */
 
-	private int findInsertionPoint( final KEY_TYPE k ) {
-		final KEY_TYPE key[] = this.key;
+	private int findInsertionPoint( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
 		final byte state[] = this.state;
 		final int n = key.length;
 
@@ -638,7 +644,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		final int i = h1; // Remember first available bucket for later.
 		  
 		/** See the comments in the documentation of the interface Hash. */
-		if ( state[ h1 ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ) {
+		if ( ASSERTS ) assert state[ h1 ] == REMOVED;
+		if ( ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) ) {
 			// The secondary hash.
 			final int h2 = ( k2i % ( n - 2 ) ) + 1;
 			do h1 = ( h1 + h2 ) % n;  while( state[ h1 ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ h1 ] ) );
@@ -654,8 +661,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @return the index of the entry containing the key, or -1 if the key wasn't found.
 	 */
 
-	private int findKey( final KEY_TYPE k ) {
-		final KEY_TYPE key[] = this.key;
+	private int findKey( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
 		final byte state[] = this.state;
 		final int n = key.length;
 
@@ -680,7 +687,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
  
 
 
-	public boolean add( final KEY_TYPE k ) {
+	public boolean add( final KEY_GENERIC_TYPE k ) {
 		final int i = findInsertionPoint( k );
 		if ( i < 0 ) return false;
 
@@ -713,14 +720,15 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 
 
+	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
-		final int i = findKey( k );
+		final int i = findKey( KEY_GENERIC_CAST k );
 		if ( i < 0 ) return false;
 		state[ i ] = REMOVED;
 		count--;
 
-#if #keyclass(Object) || #keyclass(Reference)
-		key[ i ] = HashCommon.REMOVED;
+#if #keys(reference)
+		key[ i ] = KEY_GENERIC_CAST HashCommon.REMOVED;
 #endif
 
 #ifdef Linked
@@ -731,8 +739,9 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		return true;
 	}
 	 
+	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
-		return findKey( k ) >= 0;
+		return findKey( KEY_GENERIC_CAST k ) >= 0;
 	}
 
 	/* Removes all elements from this set.
@@ -750,7 +759,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		ByteArrays.fill( state, FREE );
 
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 		ObjectArrays.fill( key, null );
 #endif
 
@@ -768,7 +777,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * <P>If the given entry is the first or the last one, this method will complete
 	 * in constant time; otherwise, it will have to search for the given entry.
 	 *
-	 * @param the index of an entry. 
+	 * @param i the index of an entry. 
 	 */
 	private void fixPointers( int i ) {
 		if ( count == 0 ) {
@@ -802,7 +811,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 *
 	 * @return the first element in iteration order.
 	 */
-	public KEY_TYPE FIRST() {
+	public KEY_GENERIC_TYPE FIRST() {
 		if ( count == 0 ) throw new NoSuchElementException();
 		return key[ first ];
 	}
@@ -812,17 +821,17 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 *
 	 * @return the last element in iteration order.
 	 */
-	public KEY_TYPE LAST() {
+	public KEY_GENERIC_TYPE LAST() {
 		if ( count == 0 ) throw new NoSuchElementException();
 		return key[ last ];
 	}
 
 
-	public STD_SORTED_SET tailSet( KEY_TYPE from ) { throw new UnsupportedOperationException(); }
-	public STD_SORTED_SET headSet( KEY_TYPE to ) { throw new UnsupportedOperationException(); }
-	public STD_SORTED_SET subSet( KEY_TYPE from, KEY_TYPE to ) { throw new UnsupportedOperationException(); }
+	public SORTED_SET KEY_GENERIC tailSet( KEY_GENERIC_TYPE from ) { throw new UnsupportedOperationException(); }
+	public SORTED_SET KEY_GENERIC headSet( KEY_GENERIC_TYPE to ) { throw new UnsupportedOperationException(); }
+	public SORTED_SET KEY_GENERIC subSet( KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to ) { throw new UnsupportedOperationException(); }
 	
-	public Comparator comparator() { return null; }
+	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return null; }
 
 
 
@@ -830,23 +839,23 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 *
 	 * <P>This class provides a list iterator over a linked hash set. The empty constructor runs in 
 	 * constant time. The one-argoument constructor needs to search for the given element, but it is 
-	 * optimized for the case of {@link #last()}, in which case runs in constant time, too.
+	 * optimized for the case of {@link java.util.SortedSet#last()}, in which case runs in constant time, too.
 	 */
-	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR {
-		/** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
+	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists). */
 		int prev = -1;
-		/** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists). */
 		int next = -1;
 		/** The last entry that was returned (or -1 if we did not iterate or used {@link #remove()}). */
 		int curr = -1;
-		/** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link SetIterator} has been created using the nonempty constructor.*/
+		/** The current index (in the sense of a {@link java.util.ListIterator}). Note that this value is not meaningful when this {@link SetIterator} has been created using the nonempty constructor.*/
 		int index = 0;
 
 		SetIterator() {
 			next = first;
 		}
 
-		SetIterator( KEY_TYPE from ) {
+		SetIterator( KEY_GENERIC_TYPE from ) {
 			if ( KEY_EQUALS( key[ last ], from ) ) {
 				prev = last;
 				index = count;
@@ -854,7 +863,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			else {
 				if ( ! contains( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
 				next = first;
-				KEY_TYPE k;
+				KEY_GENERIC_TYPE k;
 				do k = NEXT_KEY(); while( ! KEY_EQUALS( k, from ) );
 				curr = -1;
 			}
@@ -863,7 +872,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		public boolean hasNext() { return next != -1; }
 		public boolean hasPrevious() { return prev != -1; }
 					 
-		public KEY_TYPE NEXT_KEY() {
+		public KEY_GENERIC_TYPE NEXT_KEY() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
 
 			curr = next;
@@ -875,7 +884,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			return key[ curr ];
 		}
 
-		public KEY_TYPE PREV_KEY() {
+		public KEY_GENERIC_TYPE PREV_KEY() {
 			if ( ! hasPrevious() ) throw new NoSuchElementException();
 
 			curr = prev;
@@ -896,11 +905,12 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		}
 
 		
+		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( curr == -1 ) throw new IllegalStateException();
 			state[ curr ] = REMOVED;
-#if #keyclass(Object) || #keyclass(Reference)
-			key[ curr ] = HashCommon.REMOVED;
+#if #keys(reference)
+			key[ curr ] = KEY_GENERIC_CAST HashCommon.REMOVED;
 #endif
 			if ( curr == prev ) {
 				/* If the last operation was a next(), we are removing an entry that preceeds
@@ -942,23 +952,19 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @return a type-specific list iterator starting at the given element.
 	 * @throws IllegalArgumentException if <code>from</code> does not belong to the set.
 	 */
-	public KEY_BIDI_ITERATOR iterator( KEY_TYPE from ) {
+	public KEY_BIDI_ITERATOR KEY_GENERIC iterator( KEY_GENERIC_TYPE from ) {
 		return new SetIterator( from );
 	}
 
-	/** Returns a type-specific list iterator on the elements in this set, starting from the first element.
-	 *
-	 * <P>Note that this method returns a bidirectional iterator, which, however, can be safely cast to 
-	 * a type-specific list iterator.
-	 *
-	 * @return a type-specific list iterator.
-	 */
+	public KEY_BIDI_ITERATOR KEY_GENERIC iterator() {
+		return new SetIterator();
+	}
 
 #else	 
 
 	/** An iterator over a hash set. */
 
-	private class SetIterator extends KEY_ABSTRACT_ITERATOR {
+	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
 		/** The index of the next entry to be returned. */
 		int pos = 0;
 		/** The index of the last entry that has been returned. */
@@ -977,8 +983,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			return c != 0 && pos < OPEN_HASH_SET.this.state.length;
 		}
 		
-		public KEY_TYPE NEXT_KEY() {
-			KEY_TYPE retVal;
+		public KEY_GENERIC_TYPE NEXT_KEY() {
+			KEY_GENERIC_TYPE retVal;
 			final byte state[] = OPEN_HASH_SET.this.state;
 			final int n = state.length;
 			
@@ -989,21 +995,22 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			return retVal;
 		}
 		
+		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 || state[ last ] != OCCUPIED ) throw new IllegalStateException();
 			state[last] = REMOVED;
-#if #keyclass(Object) || #keyclass(Reference)
-			key[ last ] = HashCommon.REMOVED;
+#if #keys(reference)
+			key[ last ] = KEY_GENERIC_CAST HashCommon.REMOVED;
 #endif
 			count--;
 		}
 	}
 
-#endif
-
-	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+	public KEY_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
 	}
+
+#endif
 
 
 
@@ -1098,6 +1105,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 * @param newP the new size as an index in {@link Hash#PRIMES}.
 	 */
 
+	@SuppressWarnings("unchecked")
 	protected void rehash( final int newP ) {
 #ifdef Linked
 		int i = first, j = count, prev = -1, newPrev = -1, t, k2i, h1, h2;
@@ -1107,10 +1115,10 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		//System.err.println("Rehashing to size " +  PRIMES[newP] + "...");
 
-		KEY_TYPE k;
+		KEY_GENERIC_TYPE k;
 
 		final int newN = PRIMES[ newP ];
-		final KEY_TYPE key[] = this.key, newKey[] = new KEY_TYPE[ newN ];
+		final KEY_GENERIC_TYPE key[] = this.key, newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN ];
 		final byte state[] = this.state, newState[] = new byte[ newN ];
 #ifdef Linked
 		final int link[] = this.link, newLink[] = new int[ newN ];
@@ -1185,18 +1193,19 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	 *  @return a deep copy of this set.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public Object clone() {
-		OPEN_HASH_SET c;
+		OPEN_HASH_SET KEY_GENERIC c;
 		try {
-			c = (OPEN_HASH_SET)super.clone();
+			c = (OPEN_HASH_SET KEY_GENERIC)super.clone();
 		}
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
 		}
-		c.key = (KEY_TYPE[])key.clone();
-		c.state = (byte[])state.clone();
+		c.key = key.clone();
+		c.state = state.clone();
 #ifdef Linked
-		c.link = (int[])link.clone();
+		c.link = link.clone();
 #endif
 #ifdef Custom
 		c.strategy = strategy;
@@ -1219,7 +1228,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		int h = 0, i = 0, j = count;
 		while( j-- != 0 ) {
 			while( state[ i ] != OCCUPIED ) i++;
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 			if ( this != key[ i ] )
 #endif
 				h += KEY2INT( key[ i ] );
@@ -1230,7 +1239,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
-		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		final KEY_ITERATOR KEY_GENERIC i = iterator();
 		int j = count;
 		s.defaultWriteObject();
 		while( j-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
@@ -1243,8 +1252,8 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
 
 #ifdef Linked
-		KEY_BIDI_ITERATOR i = (KEY_BIDI_ITERATOR)iterator();
-		KEY_TYPE k;
+		KEY_BIDI_ITERATOR KEY_GENERIC i = iterator();
+		KEY_GENERIC_TYPE k;
 		n = size();
 		while( n-- != 0 ) 
 			if ( ! contains( k = i.NEXT_KEY() ) ) 
@@ -1264,7 +1273,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 #endif
 	}
 
-
+	@SuppressWarnings("unchecked")
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		// We restore the default growth factor.
@@ -1277,7 +1286,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		maxFill = (int)( n * f );
 		free = n - count;;
 		
-		final KEY_TYPE key[] = this.key = new KEY_TYPE[ n ];
+		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
 		final byte state[] = this.state = new byte[ n ];
 #ifdef Linked
 		final int link[] = this.link = new int[ n ];
@@ -1286,12 +1295,12 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 #endif
 
 		int i, k2i, h1, h2;
-		KEY_TYPE k;
+		KEY_GENERIC_TYPE k;
 
 		i = count;
 		while( i-- != 0 ) {
 
-			k = s.READ_KEY();
+			k = KEY_GENERIC_CAST s.READ_KEY();
 			k2i = KEY2INT( k ) & 0x7FFFFFFF;
 
 			h1 = k2i % n;
@@ -1334,7 +1343,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #elif #keyclass(Object)
 #ifdef Custom
@@ -1375,14 +1384,14 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 		}
 
 		public boolean addAll( Collection c ) {
-			Iterator i = c.iterator();
+			java.util.Iterator i = c.iterator();
 			boolean result = false;
 			while( i.hasNext() ) result |= add( i.next() );
 			return result;
 		}
 
 		public boolean removeAll( Collection c ) {
-			Iterator i = c.iterator();
+			java.util.Iterator i = c.iterator();
 			boolean result = false;
 			while( i.hasNext() ) result |= remove( i.next() );
 			return result;
@@ -1401,9 +1410,9 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		private void justRemove( Object k ) { super.remove( k ); }
 
-		public Iterator iterator() {
-			return new Iterator() {
-					final Iterator iterator = list.iterator();
+		public java.util.Iterator iterator() {
+			return new java.util.Iterator() {
+					final java.util.Iterator iterator = list.iterator();
 					Object curr;
 					public Object next() { return curr = iterator.next(); }
 					public boolean hasNext() { return iterator.hasNext(); }
@@ -1475,7 +1484,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 			/* We iterate on t. */
 			ms = System.currentTimeMillis();
-			for( Iterator it = t.iterator(); it.hasNext(); it.next() );
+			for( java.util.Iterator it = t.iterator(); it.hasNext(); it.next() );
 			d = 1.0 * n / (System.currentTimeMillis() - ms );
 			if ( j > 2 ) totIter += d; 				
 			System.out.print("Iter: " + format( d ) +" K/s " );
@@ -1583,15 +1592,15 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 #endif
 #ifdef Linked
 #ifdef Custom
-		Set t = new MockSet(new ArrayComparator());
+		java.util.Set t = new MockSet(new ArrayComparator());
 #else
-		Set t = new java.util.LinkedHashSet();
+		java.util.Set t = new java.util.LinkedHashSet();
 #endif
 #else
 #ifdef Custom
-		Set t = new java.util.TreeSet(new ArrayComparator());
+		java.util.Set t = new java.util.TreeSet(new ArrayComparator());
 #else 
-		Set t = new java.util.HashSet();
+		java.util.Set t = new java.util.HashSet();
 #endif
 #endif
 
@@ -1608,7 +1617,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		/* Now we check that m actually holds that data. */
 		  
-		for(Iterator i=t.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=t.iterator(); i.hasNext();  ) {
 			Object e = i.next();
 			if (!m.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on t)");
@@ -1618,7 +1627,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
 			Object e = i.next();
 			if (!t.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on m)");
@@ -1669,7 +1678,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		/* Now we check that m actually holds that data. */
 		  
-		for(Iterator i=t.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=t.iterator(); i.hasNext();  ) {
 			Object e = i.next();
 			if (!m.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on t)");
@@ -1679,7 +1688,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
 			Object e = i.next();
 			if (!t.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on m)");
@@ -1732,7 +1741,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
 			Object e = i.next();
 			if (!t.contains(e)) {
 				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after save/read");
@@ -1818,7 +1827,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 			Object from;
 			do from = j.next(); while( e-- != 0 );
 
-			i = (java.util.ListIterator)m.iterator( KEY2TYPE( from ) ); 
+			i = (java.util.ListIterator)m.iterator( KEY_OBJ2TYPE( from ) ); 
 
 			for( int k = 0; k < 2*n; k++ ) {
 				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
@@ -1869,7 +1878,7 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 
 		/* Now we take out of m everything, and check that it is empty. */
 
-		for(Iterator i=m.iterator(); i.hasNext(); ) { i.next(); i.remove();} 
+		for(java.util.Iterator i=m.iterator(); i.hasNext(); ) { i.next(); i.remove();} 
 
 		if (!m.isEmpty())  {
 			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
@@ -1959,9 +1968,3 @@ public class OPEN_HASH_SET extends ABSTRACT_SET implements java.io.Serializable,
 #endif
 
 }
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

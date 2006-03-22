@@ -66,8 +66,3 @@ public class HashCommon {
 		return (int)( l ^ ( l >>> 32 ) );
 	}
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

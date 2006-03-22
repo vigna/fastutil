@@ -21,29 +21,16 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.Iterators;
-import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.Sets;
-
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_COLLECTIONS;
+#if ! #valueclass(Object)
 import VALUE_PACKAGE.VALUE_SETS;
-import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
-import VALUE_PACKAGE.VALUE_ITERATOR;
-import VALUE_PACKAGE.VALUE_LIST_ITERATOR;
+#endif
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.SortedMap;
-import java.util.NoSuchElementException;
 
 /** A class providing static methods and objects that do useful things with type-specific maps.
  *
@@ -62,43 +49,44 @@ public class MAPS {
 	 * a type-specific map.
 	 */
 
-	public static class EmptyMap extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
+	public static class EmptyMap KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
 		protected EmptyMap() {}
 	
-		public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
-		public Object get( final Object ok ) { return null; }
+		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { return VALUE_NULL; }
 
 		public boolean containsKey( final KEY_TYPE k ) { return false; }
 		public boolean containsValue( final VALUE_TYPE v ) { return false; }
 
-		public VALUE_TYPE defaultReturnValue()  { return VALUE_NULL; }
-		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE defaultReturnValue()  { return VALUE_NULL; }
+		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
 	
-		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
+		public void putAll( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) { throw new UnsupportedOperationException(); }
 
-		public Set entrySet() { return Sets.EMPTY_SET; }
-		public Set keySet() { return Sets.EMPTY_SET; }
-		public Collection values() { return Sets.EMPTY_SET; }
+		@SuppressWarnings("unchecked")
+		public ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entrySet() { return ObjectSets.EMPTY_SET; }
+
+		@SuppressWarnings("unchecked")
+		public SET KEY_GENERIC keySet() { return SETS.EMPTY_SET; }
+
+		@SuppressWarnings("unchecked")
+		public VALUE_COLLECTION VALUE_GENERIC values() { return VALUE_SETS.EMPTY_SET; }
 
 
-#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public Object put( final Object k, final Object v ) { throw new UnsupportedOperationException(); }
+#if #keys(primitive) || #values(primitive)
+		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) { throw new UnsupportedOperationException(); }
 #endif
 
-#if ! #keyclass( Object ) && ! #keyclass( Reference )
-		public VALUE_TYPE get( final KEY_TYPE k ) { return VALUE_NULL; }
+#if #keys(primitive)
+		public VALUE_GENERIC_CLASS get( final Object k ) { return null; }
 		public boolean containsKey( final Object ok ) { return false; }
 #endif
 
-#if ! #valueclass( Object ) && ! #valueclass( Reference )
+#if #values(primitive)
 		public boolean containsValue( final Object ov ) { return false; }
-#endif
-
-#if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public VALUE_TYPE GET_VALUE( final Object k ) { return VALUE_NULL; }
 #endif
 
 		public int size() { return 0; }
@@ -122,17 +110,18 @@ public class MAPS {
 	 * a type-specific map.
 	 */
 
-	public static class Singleton extends ABSTRACT_MAP implements java.io.Serializable, Cloneable {
+	public static class Singleton KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
-		protected final KEY_TYPE key;
-		protected final VALUE_TYPE value;
+		protected final KEY_GENERIC_TYPE key;
+		protected final VALUE_GENERIC_TYPE value;
 
-		protected transient volatile Set entries, keys;
-		protected transient volatile Collection values;
+		protected transient volatile ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entries;
+		protected transient volatile SET KEY_GENERIC keys;
+		protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
 
-		protected Singleton( final KEY_TYPE key, final VALUE_TYPE value ) {
+		protected Singleton( final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value ) {
 			this.key = key;
 			this.value = value;
 		}
@@ -140,32 +129,32 @@ public class MAPS {
 		public boolean containsKey( final KEY_TYPE k ) { return KEY_EQUALS( key, k ); }
 		public boolean containsValue( final VALUE_TYPE v ) { return VALUE_EQUAL( value, v ); }
 
-		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
+		public void putAll( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) { throw new UnsupportedOperationException(); }
 
-		public Set entrySet() { if ( entries == null ) entries = ObjectSets.singleton( new SingletonEntry() ); return entries; }
-		public Set keySet() { if ( keys == null ) keys = SETS.singleton( key ); return keys; }
-		public Collection values() { if ( values == null ) values = VALUE_SETS.singleton( value ); return values; }
+		public ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entrySet() { if ( entries == null ) entries = ObjectSets.singleton( (Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>)new SingletonEntry() ); return entries; }
+		public SET KEY_GENERIC keySet() { if ( keys == null ) keys = SETS.singleton( key ); return keys; }
+		public VALUE_COLLECTION VALUE_GENERIC values() { if ( values == null ) values = VALUE_SETS.singleton( value ); return values; }
 
-		private class SingletonEntry implements MAP.Entry {
-			public Object getKey() { return KEY2OBJ( Singleton.this.key ); }
-			public Object getValue() { return VALUE2OBJ( Singleton.this.value ); }
+		protected class SingletonEntry implements MAP.Entry KEY_VALUE_GENERIC, Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS> {
+			public KEY_GENERIC_CLASS getKey() { return KEY2OBJ( Singleton.this.key ); }
+			public VALUE_GENERIC_CLASS getValue() { return VALUE2OBJ( Singleton.this.value ); }
 
-#if !#keyclass(Object) && ! #keyclass(Reference)
-			public KEY_TYPE ENTRY_GET_KEY() { return Singleton.this.key; }
+#if #keys(primitive)
+			public KEY_GENERIC_TYPE ENTRY_GET_KEY() { return Singleton.this.key; }
 #endif
 
-#if !#valueclass(Object) && ! #valueclass(Reference)
-			public VALUE_TYPE ENTRY_GET_VALUE() { return Singleton.this.value; }
-			public VALUE_TYPE setValue( final VALUE_TYPE value ) { throw new UnsupportedOperationException(); }
+#if #values(primitive)
+			public VALUE_GENERIC_TYPE ENTRY_GET_VALUE() { return Singleton.this.value; }
+			public VALUE_GENERIC_TYPE setValue( final VALUE_GENERIC_TYPE value ) { throw new UnsupportedOperationException(); }
 #endif
 
-			public Object setValue( final Object value ) { throw new UnsupportedOperationException(); }
+			public VALUE_GENERIC_CLASS setValue( final VALUE_GENERIC_CLASS value ) { throw new UnsupportedOperationException(); }
 			
 			public boolean equals( final Object o ) {
 				if (!(o instanceof Map.Entry)) return false;
 				Map.Entry e = (Map.Entry)o;
 			
-				return KEY_EQUALS( Singleton.this.key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( Singleton.this.value, VALUE2TYPE( e.getValue() ) );
+				return KEY_EQUALS( Singleton.this.key, KEY_OBJ2TYPE( e.getKey() ) ) && VALUE_EQUAL( Singleton.this.value, VALUE_OBJ2TYPE( e.getValue() ) );
 			}
 			
 			public int hashCode() { return KEY2INT( Singleton.this.key ) ^ VALUE2INT( Singleton.this.value ); }
@@ -173,7 +162,7 @@ public class MAPS {
 		}
 
 
-		public VALUE_TYPE GET_VALUE( final KEY_TYPE k ) { if ( KEY_EQUALS( key, k ) ) return value; else return defRetValue; }
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { if ( KEY_EQUALS( key, k ) ) return value; return defRetValue; }
 
 		public int size() { return 1; }
 	
@@ -189,11 +178,11 @@ public class MAPS {
 	 * @return a type-specific immutable map containing just the pair <code>&lt;key,value></code>.
 	 */
 
-	public static MAP singleton( final KEY_TYPE key, VALUE_TYPE value ) {
-		return new Singleton( key, value );
+	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC singleton( final KEY_GENERIC_TYPE key, VALUE_GENERIC_TYPE value ) {
+		return new Singleton KEY_VALUE_GENERIC( key, value );
 	}
 
-#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
+#if #keys(primitive) || #values(primitive)
 
 	/** Returns a type-specific immutable map containing only the specified pair. The returned map is serializable and cloneable.
 	 *
@@ -204,8 +193,8 @@ public class MAPS {
 	 * @return a type-specific immutable map containing just the pair <code>&lt;key,value></code>.
 	 */
 
-	public static MAP singleton( final Object key, final Object value ) {
-		return new Singleton( KEY2TYPE( key ), VALUE2TYPE( value ) );
+	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC singleton( final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value ) {
+		return new Singleton KEY_VALUE_GENERIC( KEY_CLASS2TYPE( key ), VALUE_CLASS2TYPE( value ) );
 	}
 
 #endif
@@ -213,67 +202,65 @@ public class MAPS {
 
 	/** A synchronized wrapper class for maps. */
 
-	public static class SynchronizedMap extends ABSTRACT_MAP implements MAP, java.io.Serializable {
+	public static class SynchronizedMap KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		protected final MAP map;
+		protected final MAP KEY_VALUE_GENERIC map;
 		protected final Object sync;
 
-		protected transient volatile Set entries, keys;
-		protected transient volatile Collection values;
+		protected transient volatile ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entries;
+		protected transient volatile SET KEY_GENERIC keys;
+		protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
 
-		protected SynchronizedMap( final MAP m, final Object sync ) {
+		protected SynchronizedMap( final MAP KEY_VALUE_GENERIC m, final Object sync ) {
 			if ( m == null ) throw new NullPointerException();
 			this.map = m;
 			this.sync = sync;
 		}
 
-		protected SynchronizedMap( final MAP m ) {
+		protected SynchronizedMap( final MAP KEY_VALUE_GENERIC m ) {
 			if ( m == null ) throw new NullPointerException();
 			this.map = m;
 			this.sync = this;
 		}
 
-		public Object remove( final Object ok ) { synchronized( sync ) { return map.remove( ok ); } }
-		public Object get( final Object ok ) { synchronized( sync ) { return map.get( ok ); } }
-
 		public int size() { synchronized( sync ) { return map.size(); } }
 		public boolean containsKey( final KEY_TYPE k ) { synchronized( sync ) { return map.containsKey( k ); } }
 		public boolean containsValue( final VALUE_TYPE v ) { synchronized( sync ) { return map.containsValue( v ); } }
 
-		public VALUE_TYPE defaultReturnValue()  { synchronized( sync ) { return map.defaultReturnValue(); } }
-		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { synchronized( sync ) { map.defaultReturnValue( defRetValue ); } }
+		public VALUE_GENERIC_TYPE defaultReturnValue()  { synchronized( sync ) { return map.defaultReturnValue(); } }
+		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { synchronized( sync ) { map.defaultReturnValue( defRetValue ); } }
 
-		public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) { synchronized( sync ) { return map.put( k, v ); } }
+		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { synchronized( sync ) { return map.put( k, v ); } }
 
-		public void putAll( final MAP c ) { synchronized( sync ) { map.putAll( c ); } }
-		public void putAll( final Map m ) { synchronized( sync ) { map.putAll( m ); } }
+		//public void putAll( final MAP KEY_VALUE_EXTENDS_GENERIC c ) { synchronized( sync ) { map.putAll( c ); } }
+		public void putAll( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) { synchronized( sync ) { map.putAll( m ); } }
 
-		public Set entrySet() { if ( entries == null ) entries = ObjectSets.synchronize( (ObjectSet)map.entrySet(), sync ); return entries; }
-		public Set keySet() { if ( keys == null ) keys = SETS.synchronize( (SET)map.keySet(), sync ); return keys; }
-		public Collection values() { if ( values == null ) return VALUE_COLLECTIONS.synchronize( (VALUE_COLLECTION)map.values(), sync ); return values; }
+		public ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entrySet() { if ( entries == null ) entries = ObjectSets.synchronize( map.entrySet(), sync ); return entries; }
+		public SET KEY_GENERIC keySet() { if ( keys == null ) keys = SETS.synchronize( map.keySet(), sync ); return keys; }
+		public VALUE_COLLECTION VALUE_GENERIC values() { if ( values == null ) return VALUE_COLLECTIONS.synchronize( map.values(), sync ); return values; }
 
 		public void clear() { synchronized( sync ) { map.clear(); } }
 		public String toString() { synchronized( sync ) { return map.toString(); } }
 
-#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public Object put( final Object k, final Object v ) { synchronized( sync ) { return map.put( k, v ); } }
+#if #keys(primitive) || #values(primitive)
+		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) { synchronized( sync ) { return map.put( k, v ); } }
 #endif
 
-#if ! #keyclass( Object ) && ! #keyclass( Reference )
-		public VALUE_TYPE remove( final KEY_TYPE k ) { synchronized( sync ) { return map.remove( k ); } }
-		public VALUE_TYPE get( final KEY_TYPE k ) { synchronized( sync ) { return map.get( k ); } }
+#if #keys(primitive)
+		public VALUE_GENERIC_TYPE remove( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return map.remove( k ); } }
+		public VALUE_GENERIC_TYPE get( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return map.get( k ); } }
 		public boolean containsKey( final Object ok ) { synchronized( sync ) { return map.containsKey( ok ); } }
 #endif
 
-#if ! #valueclass( Object ) && ! #valueclass( Reference )
+#if #values(primitive)
 		public boolean containsValue( final Object ov ) { synchronized( sync ) { return map.containsValue( ov ); } }
 #endif
 
-#if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public VALUE_TYPE REMOVE_VALUE( final Object k ) { synchronized( sync ) { return map.REMOVE_VALUE( k ); } }
-		public VALUE_TYPE GET_VALUE( final Object k ) { synchronized( sync ) { return map.GET_VALUE( k ); } }
+#if #keys(reference)
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final Object k ) { synchronized( sync ) { return map.REMOVE_VALUE( k ); } }
+		public VALUE_GENERIC_TYPE GET_VALUE( final Object k ) { synchronized( sync ) { return map.GET_VALUE( k ); } }
 #endif
 
 	}
@@ -284,7 +271,7 @@ public class MAPS {
 	 * @return a synchronized view of the specified map.
 	 * @see java.util.Collections#synchronizedMap(Map)
 	 */
-	public static MAP synchronize( final MAP m ) { return new SynchronizedMap( m ); }
+	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC synchronize( final MAP KEY_VALUE_GENERIC m ) { return new SynchronizedMap KEY_VALUE_GENERIC( m ); }
 
 	/** Returns a synchronized type-specific map backed by the given type-specific map, using an assigned object to synchronize.
 	 *
@@ -294,65 +281,63 @@ public class MAPS {
 	 * @see java.util.Collections#synchronizedMap(Map)
 	 */
 
-	public static MAP synchronize( final MAP m, final Object sync ) { return new SynchronizedMap( m, sync ); }
+	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC synchronize( final MAP KEY_VALUE_GENERIC m, final Object sync ) { return new SynchronizedMap KEY_VALUE_GENERIC( m, sync ); }
 
 
 
 	/** An unmodifiable wrapper class for maps. */
 
-	public static class UnmodifiableMap extends ABSTRACT_MAP implements MAP, java.io.Serializable {
+	public static class UnmodifiableMap KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		protected final MAP map;
+		protected final MAP KEY_VALUE_GENERIC map;
 
-		protected transient volatile Set entries, keys;
-		protected transient volatile Collection values;
+		protected transient volatile ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entries;
+		protected transient volatile SET KEY_GENERIC keys;
+		protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
 
-		protected UnmodifiableMap( final MAP m ) {
+		protected UnmodifiableMap( final MAP KEY_VALUE_GENERIC m ) {
 			if ( m == null ) throw new NullPointerException();
 			this.map = m;
 		}
-
-		public Object remove( final Object ok ) { throw new UnsupportedOperationException(); }
-		public Object get( final Object ok ) { return map.get( ok ); }
 
 		public int size() { return map.size(); }
 		public boolean containsKey( final KEY_TYPE k ) { return map.containsKey( k ); }
 		public boolean containsValue( final VALUE_TYPE v ) { return map.containsValue( v ); }
 
-		public VALUE_TYPE defaultReturnValue()  { throw new UnsupportedOperationException(); }
-		public void defaultReturnValue( final VALUE_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE defaultReturnValue()  { throw new UnsupportedOperationException(); }
+		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
 
-		public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
 
-		public void putAll( final MAP c ) { throw new UnsupportedOperationException(); }
-		public void putAll( final Map m ) { throw new UnsupportedOperationException(); }
+		//public void putAll( final MAP KEY_VALUE_EXTENDS_GENERIC c ) { throw new UnsupportedOperationException(); }
+		public void putAll( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) { throw new UnsupportedOperationException(); }
 
-		public Set entrySet() { if ( entries == null ) entries = ObjectSets.unmodifiable( (ObjectSet)map.entrySet() ); return entries; }
-		public Set keySet() { if ( keys == null ) keys = SETS.unmodifiable( (SET)map.keySet() ); return keys; }
-		public Collection values() { if ( values == null ) return VALUE_COLLECTIONS.unmodifiable( (VALUE_COLLECTION)map.values() ); return values; }
+		public ObjectSet<Map.Entry <KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> entrySet() { if ( entries == null ) entries = ObjectSets.unmodifiable( map.entrySet() ); return entries; }
+		public SET KEY_GENERIC keySet() { if ( keys == null ) keys = SETS.unmodifiable( map.keySet() ); return keys; }
+		public VALUE_COLLECTION VALUE_GENERIC values() { if ( values == null ) return VALUE_COLLECTIONS.unmodifiable( map.values() ); return values; }
 
 		public void clear() { throw new UnsupportedOperationException(); }
 		public String toString() { return map.toString(); }
 
-#if ( ! #keyclass( Object ) && ! #keyclass( Reference ) ) || ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public Object put( final Object k, final Object v ) { throw new UnsupportedOperationException(); }
+#if #keys(primitive) && #values(primitive)
+		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) { throw new UnsupportedOperationException(); }
 #endif
 
-#if ! #keyclass( Object ) && ! #keyclass( Reference )
-		public VALUE_TYPE remove( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
-		public VALUE_TYPE get( final KEY_TYPE k ) { return map.get( k ); }
+#if #keys(primitive)
+		public VALUE_GENERIC_TYPE remove( final KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE get( final KEY_GENERIC_TYPE k ) { return map.get( k ); }
 		public boolean containsKey( final Object ok ) { return map.containsKey( ok ); }
 #endif
 
-#if ! #valueclass( Object ) && ! #valueclass( Reference )
+#if #values(primitive)
 		public boolean containsValue( final Object ov ) { return map.containsValue( ov ); }
 #endif
 
-#if ( #keyclass( Object ) || #keyclass( Reference ) ) && ( ! #valueclass( Object ) && ! #valueclass( Reference ) )
-		public VALUE_TYPE REMOVE_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
-		public VALUE_TYPE GET_VALUE( final Object k ) { return map.GET_VALUE( k ); }
+#if #keys(reference) || #values(reference)
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE GET_VALUE( final Object k ) { return map.GET_VALUE( k ); }
 #endif
 
 	}
@@ -363,14 +348,6 @@ public class MAPS {
 	 * @return an unmodifiable view of the specified map.
 	 * @see java.util.Collections#unmodifiableMap(Map)
 	 */
-	public static MAP unmodifiable( final MAP m ) { return new UnmodifiableMap( m ); }
+	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC unmodifiable( final MAP KEY_VALUE_GENERIC m ) { return new UnmodifiableMap KEY_VALUE_GENERIC( m ); }
 
-
-
-	
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

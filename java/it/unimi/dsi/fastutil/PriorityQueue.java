@@ -22,6 +22,7 @@
 package it.unimi.dsi.fastutil;
 
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 
 /** A priority queue.
  *
@@ -40,14 +41,14 @@ import java.util.Comparator;
  * changed its relative position in the order}.
  */
 
-public interface PriorityQueue {
+public interface PriorityQueue<K> {
 
 	/** Enqueues a new element.
 	 *
 	 * @param x the element to enqueue..
 	 */
 
-	void enqueue( Object x );
+	void enqueue( K x );
 
 	/** Dequeues the {@link #first()} element from the queue.
 	 *
@@ -55,7 +56,7 @@ public interface PriorityQueue {
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
-	Object dequeue();
+	K dequeue();
 
 	/** Checks whether the queue is empty.
 	 *
@@ -82,7 +83,7 @@ public interface PriorityQueue {
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
-	Object first();
+	K first();
 
 	/** Returns the last element of the queue, that is, the element the would be dequeued last (optional operation).
 	 *
@@ -90,7 +91,7 @@ public interface PriorityQueue {
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
-	Object last();
+	K last();
 
 	/** Notifies the queue that the {@linkplain #first() first element} has changed (optional operation).
 	 */
@@ -101,10 +102,5 @@ public interface PriorityQueue {
 	 *
 	 * @return the comparator associated with this sorted set, or <code>null</code> if it uses its elements' natural ordering.
 	 */
-	Comparator comparator();
+	Comparator<? super K> comparator();
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

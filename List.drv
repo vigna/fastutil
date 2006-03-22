@@ -31,6 +31,9 @@ import java.util.List;
  * classes perform a lexicographical comparison using the standard operator "less then" for primitive types,
  * and the usual {@link Comparable#compareTo(Object) compareTo()} method for objects.
  *
+ * <P>Additionally, this interface strengthens {@link #listIterator()},
+ * {@link #listIterator(int)} and {@link #subList(int,int)}.
+ *
  * <P>Besides polymorphic methods, this interfaces specifies methods to copy into an array or remove contiguous
  * sublists. Although the abstract implementation of this interface provides simple, one-by-one implementations
  * of these methods, it is expected that concrete implementation override them with optimized versions.
@@ -38,11 +41,14 @@ import java.util.List;
  * @see List
  */
 
-public interface LIST extends List, Comparable, COLLECTION {
+public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, Comparable<List<? extends KEY_GENERIC_CLASS>>, COLLECTION KEY_GENERIC {
 #else
 
 /** A type-specific {@link List}; provides some additional methods that use polymorphism to reduce type juggling. 
  *
+ * <P>Additionally, this interface strengthens {@link #listIterator()},
+ * {@link #listIterator(int)} and {@link #subList(int,int)}.
+ *
  * <P>Besides polymorphic methods, this interfaces specifies methods to copy into an array or remove contiguous
  * sublists. Although the abstract implementation of this interface provides simple, one-by-one implementations
  * of these methods, it is expected that concrete implementation override them with optimized versions.
@@ -50,32 +56,52 @@ public interface LIST extends List, Comparable, COLLECTION {
  * @see List
  */
 
-public interface LIST extends List, COLLECTION {
+public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KEY_GENERIC {
 #endif
 
 	/** Returns a type-specific list iterator on the list.
 	 *
-	 * <P>The iterator returned by the {@link #listIterator()} method and by this
-	 * method are identical; however, using this method you can save a type casting.
-	 *
 	 * @see #listIterator()
+	 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #listIterator()}.
 	 */
-	KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD();
+	@Deprecated
+	KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD();
 
 	/** Returns a type-specific list iterator on the list starting at a given index.
 	 *
-	 * <P>The iterator returned by the {@link #listIterator()} method and by this
-	 * method are identical; however, using this method you can save a type casting.
+	 * @see #listIterator(int)
+	 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #listIterator(int)}.
+	 */
+	@Deprecated
+	KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD( int index );
+
+	/** Returns a type-specific list iterator on the list.
+	 *
+	 * @see #listIterator()
+	 */
+	KEY_LIST_ITERATOR KEY_GENERIC listIterator();
+
+	/** Returns a type-specific list iterator on the list starting at a given index.
 	 *
 	 * @see #listIterator(int)
 	 */
-	KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( int index );
+	KEY_LIST_ITERATOR KEY_GENERIC listIterator( int index );
 
-	/**
+	/** Returns a type-specific view of the portion of this list from the index <code>from</code>, inclusive, to the index <code>to</code>, exclusive.
+	 * @see List#subList(int,int)
+	 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #subList(int,int)}.
+	 */
+	@Deprecated
+	LIST KEY_GENERIC SUBLIST_METHOD( int from, int to );
+
+	/** Returns a type-specific view of the portion of this list from the index <code>from</code>, inclusive, to the index <code>to</code>, exclusive.
+	 *
+	 * <P>Note that this specification strengthens the one given in {@link List#subList(int,int)}.
+	 *
 	 * @see List#subList(int,int)
 	 */
+	LIST KEY_GENERIC subList(int from, int to);
 
-	LIST SUBLIST_METHOD( int from, int to );
 
 	/** Sets the size of this list.
 	 *
@@ -108,7 +134,7 @@ public interface LIST extends List, COLLECTION {
 	 * @param index the index at which to add elements.
 	 * @param a the array containing the elements.
 	 */
-	void addElements( int index, KEY_TYPE a[] );
+	void addElements( int index, KEY_GENERIC_TYPE a[] );
 
 	/** Add (hopefully quickly) elements to this type-specific list.
 	 *
@@ -117,9 +143,9 @@ public interface LIST extends List, COLLECTION {
 	 * @param offset the offset of the first element to add.
 	 * @param length the number of elements to add.
 	 */
-	void addElements( int index, KEY_TYPE a[], int offset, int length );
+	void addElements( int index, KEY_GENERIC_TYPE a[], int offset, int length );
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+#if #keys(primitive)
 
 	/**
 	 * @see List#add(int,Object)
@@ -170,8 +196,3 @@ public interface LIST extends List, COLLECTION {
 
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

@@ -39,7 +39,7 @@ import java.util.ListIterator;
  * @see ListIterator
  */
 
-public interface BidirectionalIterator extends Iterator {
+public interface BidirectionalIterator<K> extends Iterator<K> {
 
 	/** Returns the previous element from the collection.
 	 *
@@ -47,7 +47,7 @@ public interface BidirectionalIterator extends Iterator {
 	 * @see java.util.ListIterator#previous()
 	 */
 
-	Object previous();
+	K previous();
 
 	/** Returns whether there is a previous element.
 	 *
@@ -57,8 +57,3 @@ public interface BidirectionalIterator extends Iterator {
 
 	boolean hasPrevious();
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

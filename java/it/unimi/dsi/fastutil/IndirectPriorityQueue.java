@@ -22,6 +22,7 @@
 package it.unimi.dsi.fastutil;
 
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 
 /** An indirect priority queue.
  *
@@ -56,7 +57,7 @@ import java.util.Comparator;
  * <P>Note that <em>all element manipulation happens via indices</em>.
  */
 
-public interface IndirectPriorityQueue {
+public interface IndirectPriorityQueue<K> {
 
 	/** Enqueues a new element.
 	 *
@@ -118,7 +119,7 @@ public interface IndirectPriorityQueue {
 	 *
 	 * @return the comparator associated with this sorted set, or <code>null</code> if it uses its elements' natural ordering.
 	 */
-	Comparator comparator();
+	Comparator <? super K> comparator();
 
 	/** Notifies the queue that the specified element has changed (optional operation).
 	 *
@@ -147,8 +148,3 @@ public interface IndirectPriorityQueue {
 
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

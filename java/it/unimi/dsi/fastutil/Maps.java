@@ -23,7 +23,7 @@ package it.unimi.dsi.fastutil;
 
 /** A class providing static methods and objects that do useful things with maps.
  *
- * @see Collections
+ * @see java.util.Collections
  */
 
 public class Maps {
@@ -50,8 +50,3 @@ public class Maps {
 
 	public static final Object MISSING = new Object();
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

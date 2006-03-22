@@ -21,25 +21,24 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
-import it.unimi.dsi.fastutil.objects.AbstractObjectListIterator;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.AbstractObjectSortedSet;
+import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
 
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ITERATOR;
-import VALUE_PACKAGE.VALUE_LIST_ITERATOR;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.NoSuchElementException;
+
+#if #values(primitive)
+import VALUE_PACKAGE.VALUE_LIST_ITERATOR;
+#endif
 
 /** A type-specific AVL tree map with a fast, small-footprint implementation.
  *
@@ -49,28 +48,28 @@ import java.util.NoSuchElementException;
  * to a type-specific {@linkplain java.util.ListIterator list iterator}.
  */
 
-public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Serializable, Cloneable, SORTED_MAP {
+public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
 
 	/** A reference to the root entry. */
-	protected transient Entry tree;
+	protected transient Entry KEY_VALUE_GENERIC tree;
 
 	/** Number of entries in this map. */
 	protected int count;
 
 	/** The first key in this map. */
-	protected transient Entry firstEntry;
+	protected transient Entry KEY_VALUE_GENERIC firstEntry;
 
 	/** The last key in this map. */
-	protected transient Entry lastEntry;
+	protected transient Entry KEY_VALUE_GENERIC lastEntry;
 
 	/** Cached set of entries. */
-	protected transient volatile ObjectSet entries;
+	protected transient volatile ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entries;
 
 	/** Cached set of keys. */
-	protected transient volatile SET keys;
+	protected transient volatile SORTED_SET KEY_GENERIC keys;
 
 	/** Cached collection of values. */
-	protected transient volatile VALUE_COLLECTION values;
+	protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
 
 	/** The value of this variable remembers, after a <code>put()</code> 
 	 * or a <code>remove()</code>, whether the <em>domain</em> of the map
@@ -78,11 +77,11 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	protected transient boolean modified;
 
 	/** This map's comparator, as provided in the constructor. */
-	protected Comparator storedComparator;
+	protected Comparator<? super KEY_GENERIC_CLASS> storedComparator;
 
 	/** This map's actual comparator; it may differ from {@link #storedComparator} because it is
 		always a type-specific comparator, so it could be derived from the former by wrapping. */
-	protected transient KEY_COMPARATOR actualComparator;
+	protected transient KEY_COMPARATOR KEY_SUPER_GENERIC actualComparator;
 
 	public static final long serialVersionUID = -7046029254386353129L;
 
@@ -108,6 +107,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * we generate on-the-fly an anonymous class that wraps the non-specific {@link Comparator}
 	 * and makes it into a type-specific one.
 	 */
+	@SuppressWarnings("unchecked")
 	private void setActualComparator() {
 #if #keyclass(Object)
 		actualComparator = storedComparator;
@@ -115,11 +115,11 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		/* If the provided comparator is already type-specific, we use it. Otherwise,
 		   we use a wrapper anonymous class to fake that it is type-specific. */
 		if ( storedComparator == null || storedComparator instanceof KEY_COMPARATOR ) actualComparator = (KEY_COMPARATOR)storedComparator;
-		else actualComparator =	new KEY_COMPARATOR() {
-				public int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+		else actualComparator =	new KEY_COMPARATOR KEY_SUPER_GENERIC() {
+				public int compare( KEY_GENERIC_TYPE k1, KEY_GENERIC_TYPE k2 ) {
 					return storedComparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
 				}
-				public int compare( Object ok1, Object ok2 ) {
+				public int compare( KEY_GENERIC_CLASS ok1, KEY_GENERIC_CLASS ok2 ) {
 					return storedComparator.compare( ok1, ok2 );
 				}
 			};
@@ -132,7 +132,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @param c a (possibly type-specific) comparator.
 	 */
 
-	public AVL_TREE_MAP( final Comparator c ) {
+	public AVL_TREE_MAP( final Comparator<? super KEY_GENERIC_CLASS> c ) {
 		this();
 		storedComparator = c;
 		setActualComparator();
@@ -144,7 +144,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @param m a {@link Map} to be copied into the new tree map. 
 	 */
 	 
-	public AVL_TREE_MAP( final Map m ) {
+	public AVL_TREE_MAP( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) {
 		this();
 		putAll( m );
 	}
@@ -154,18 +154,17 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @param m a {@link SortedMap} to be copied into the new tree map. 
 	 */
 	 
-	public AVL_TREE_MAP( final SortedMap m ) {
+	public AVL_TREE_MAP( final SortedMap<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS> m ) {
 		this( m.comparator() );
 		putAll( m );
 	}
-
 
 	/** Creates a new tree map copying a given map.
 	 *
 	 * @param m a type-specific map to be copied into the new tree map. 
 	 */
 	 
-	public AVL_TREE_MAP( final MAP m ) {
+	public AVL_TREE_MAP( final MAP KEY_VALUE_EXTENDS_GENERIC m ) {
 		this();
 		putAll( m );
 	}
@@ -175,7 +174,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @param m a type-specific sorted map to be copied into the new tree map. 
 	 */
 	 
-	public AVL_TREE_MAP( final SORTED_MAP m ) {
+	public AVL_TREE_MAP( final SORTED_MAP KEY_VALUE_GENERIC m ) {
 		this( m.comparator() );
 		putAll( m );
 	}
@@ -188,7 +187,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @throws IllegalArgumentException if <code>k</code> and <code>v</code> have different lengths.
 	 */
 	 
-	public AVL_TREE_MAP( final KEY_TYPE[] k, final VALUE_TYPE v[], final Comparator c ) {
+	public AVL_TREE_MAP( final KEY_GENERIC_TYPE[] k, final VALUE_GENERIC_TYPE v[], final Comparator<? super KEY_GENERIC_CLASS> c ) {
 		this( c );
 		if ( k.length != v.length ) throw new IllegalArgumentException( "The key array and the value array have different lengths (" + k.length + " and " + v.length + ")" );
 		for( int i = 0; i < k.length; i++ ) this.put( k[ i ], v[ i ] );
@@ -201,7 +200,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @throws IllegalArgumentException if <code>k</code> and <code>v</code> have different lengths.
 	 */
 	 
-	public AVL_TREE_MAP( final KEY_TYPE[] k, final VALUE_TYPE v[] ) {
+	public AVL_TREE_MAP( final KEY_GENERIC_TYPE[] k, final VALUE_GENERIC_TYPE v[] ) {
 		this( k, v, null );
 	}
 
@@ -227,7 +226,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
 	 */
 	 
-	final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
+	final int compare( final KEY_GENERIC_TYPE k1, final KEY_GENERIC_TYPE k2 ) {
 		return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
 	}
 
@@ -239,8 +238,8 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
 	 */
 
-	final Entry findKey( final KEY_TYPE k ) {
-		Entry e = tree;
+	final Entry KEY_VALUE_GENERIC findKey( final KEY_GENERIC_TYPE k ) {
+		Entry KEY_VALUE_GENERIC e = tree;
 		int cmp;
 		 
 		while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) e = cmp < 0 ? e.left() : e.right();
@@ -255,8 +254,8 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
 	 */
 
-	final Entry locateKey( final KEY_TYPE k ) {
-		Entry e = tree, last = tree;
+	final Entry KEY_VALUE_GENERIC locateKey( final KEY_GENERIC_TYPE k ) {
+		Entry KEY_VALUE_GENERIC e = tree, last = tree;
 		int cmp = 0;
 		  
 		while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
@@ -267,8 +266,8 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		return cmp == 0 ? e : last;
 	}
 
-	/** This vector remembers the directions followed during the current insertion. It suffices for
-	 *  about 2<sup>32</sup> entries. */
+	/** This vector remembers the directions followed during 
+	 * the current insertion. It suffices for about 2<sup>32</sup> entries. */
 	private transient boolean dirPath[];
 
 	private void allocatePaths() {
@@ -279,21 +278,21 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	/* After execution of this method, modified is true iff a new entry has
 	been inserted. */
 	 
-	public VALUE_TYPE put( final KEY_TYPE k, final VALUE_TYPE v ) {
+	public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
 		modified = false;
 
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
-			tree = lastEntry = firstEntry = new Entry( k, v );
+			tree = lastEntry = firstEntry = new Entry KEY_VALUE_GENERIC( k, v );
 			modified = true;
 		}
 		else {
-			Entry p = tree, q = null, y = tree, z = null, e = null, w = null;
+			Entry KEY_VALUE_GENERIC p = tree, q = null, y = tree, z = null, e = null, w = null;
 			int cmp, i = 0;
 
 			while( true ) {
 				if ( ( cmp = compare( k, p.key ) ) == 0 ) {
-					final VALUE_TYPE oldValue = p.value;
+					final VALUE_GENERIC_TYPE oldValue = p.value;
 					p.value = v;
 					return oldValue;
 				}
@@ -307,7 +306,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				if ( dirPath[ i++ ] = cmp > 0 ) {
 					if ( p.succ() ) {
 						count++;
-						e = new Entry( k, v );
+						e = new Entry KEY_VALUE_GENERIC( k, v );
 								
 						modified = true; 
 						if ( p.right == null ) lastEntry = e;
@@ -326,7 +325,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				else {
 					if ( p.pred() ) {
 						count++;
-						e = new Entry( k, v );
+						e = new Entry KEY_VALUE_GENERIC( k, v );
 								
 						modified = true;
 						if ( p.left == null ) firstEntry = e;
@@ -355,7 +354,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			}
 				
 			if ( (byte)y.info == -2 ) {
-				Entry x = y.left;
+				Entry KEY_VALUE_GENERIC x = y.left;
 
 				if ( (byte)x.info == -1 ) {
 					w = x;
@@ -404,7 +403,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				}
 			}
 			else if ( (byte)y.info == +2 ) {
-				Entry x = y.right;
+				Entry KEY_VALUE_GENERIC x = y.right;
 
 				if ( (byte)x.info == 1 ) {
 					w = x;
@@ -471,10 +470,10 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @return the parent of the given node, or <code>null</code> for the root.
 	 */
 
-	private Entry parent( final Entry e ) {
+	private Entry KEY_VALUE_GENERIC parent( final Entry KEY_VALUE_GENERIC e ) {
 		if ( e == tree ) return null;
 
-		Entry x, y, p;
+		Entry KEY_VALUE_GENERIC x, y, p;
 		x = y = e;
 
 		while( true ) {
@@ -504,17 +503,19 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	/* After execution of this method, {@link #modified} is true iff an entry
 	has been deleted. */
 
-	public VALUE_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
 		modified = false;
 
 		if ( tree == null ) return defRetValue;
 
 		int cmp;
-		Entry p = tree, q = null;
+		Entry KEY_VALUE_GENERIC p = tree, q = null;
 		boolean dir = false;
+		final KEY_GENERIC_TYPE kk = KEY_GENERIC_CAST k;
 
 		while( true ) {
-			if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
+			if ( ( cmp = compare( kk, p.key ) ) == 0 ) break;
 			else if ( dir = cmp > 0 ) {
 				q = p;
 				if ( ( p = p.right() ) == null ) return defRetValue;
@@ -547,7 +548,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			}
 		}
 		else {
-			Entry r = p.right;
+			Entry KEY_VALUE_GENERIC r = p.right;
 
 			if ( r.pred() ) {
 				r.left = p.left;
@@ -565,7 +566,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 			}
 			else {
-				Entry s;
+				Entry KEY_VALUE_GENERIC s;
 
 				while( true ) {
 					s = r.left;
@@ -598,7 +599,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			}
 		}
 
-		Entry y;
+		Entry KEY_VALUE_GENERIC y;
 
 		while( q != null ) {
 			y = q;
@@ -611,11 +612,11 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				if ( (byte)y.info == 1 ) break;
 				else if ( (byte)y.info == 2 ) {
 
-					Entry x = y.right;
+					Entry KEY_VALUE_GENERIC x = y.right;
 					if ( ASSERTS ) assert x != null;
 									 
 					if ( (byte)x.info == -1 ) {
-						Entry w;
+						Entry KEY_VALUE_GENERIC w;
 								
 						if ( ASSERTS ) assert (byte)x.info == -1;
 
@@ -671,19 +672,17 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 							y.balance( +1 );
 							break;
 						}
-						else {
-							if ( ASSERTS ) assert (byte)x.info == 1;
+						if ( ASSERTS ) assert (byte)x.info == 1;
 
-							if ( x.pred() ) {
-								y.succ( true );
-								x.pred( false );
-							}
-							else y.right = x.left;
-
-							x.left = y;
-							y.balance( 0 );
-							x.balance( 0 );
+						if ( x.pred() ) {
+							y.succ( true );
+							x.pred( false );
 						}
+						else y.right = x.left;
+
+						x.left = y;
+						y.balance( 0 );
+						x.balance( 0 );
 					}
 				}
 			}
@@ -694,11 +693,11 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				if ( (byte)y.info == -1 ) break;
 				else if ( (byte)y.info == -2 ) {
 
-					Entry x = y.left;
+					Entry KEY_VALUE_GENERIC x = y.left;
 					if ( ASSERTS ) assert x != null;
 									 
 					if ( (byte)x.info == 1 ) {
-						Entry w;
+						Entry KEY_VALUE_GENERIC w;
 								
 						if ( ASSERTS ) assert (byte)x.info == 1;
 
@@ -754,19 +753,17 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 							y.balance( -1 );
 							break;
 						}
-						else {
-							if ( ASSERTS ) assert (byte)x.info == -1;
+						if ( ASSERTS ) assert (byte)x.info == -1;
 
-							if ( x.succ() ) {
-								y.pred( true );
-								x.succ( false );
-							}
-							else y.left = x.right;
-
-							x.right = y;
-							y.balance( 0 );
-							x.balance( 0 );
+						if ( x.succ() ) {
+							y.pred( true );
+							x.succ( false );
 						}
+						else y.left = x.right;
+
+						x.right = y;
+						y.balance( 0 );
+						x.balance( 0 );
 					}
 				}  
 			}
@@ -779,35 +776,35 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	}
 	 
 
-#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
-	public Object put( final Object ok, final Object ov ) {
-		final VALUE_TYPE oldValue = put( KEY2TYPE(ok), VALUE2TYPE(ov) );
+#if ! #keyclass(Object) || #values(primitive)
+	public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
+		final VALUE_GENERIC_TYPE oldValue = put( KEY_CLASS2TYPE(ok), VALUE_CLASS2TYPE(ov) );
 		return modified ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ( oldValue );
 	}
 #endif
 
 
 
-#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
-	public Object remove( final Object ok ) {
-		final VALUE_TYPE oldValue = REMOVE_VALUE( KEY2TYPE( ok ) );
+#if ! #keyclass(Object) || #values(primitive)
+	public VALUE_GENERIC_CLASS remove( final Object ok ) {
+		final VALUE_GENERIC_TYPE oldValue = REMOVE_VALUE( KEY_OBJ2TYPE( ok ) );
 		return modified ? VALUE2OBJ( oldValue ) : OBJECT_DEFAULT_RETURN_VALUE;
 	}
 #endif
 
 
 	public boolean containsValue( final VALUE_TYPE v ) {
-		final TreeIterator i = new TreeIterator();
-		VALUE_TYPE ev;
+		final ValueIterator i = new ValueIterator();
+		VALUE_GENERIC_TYPE ev;
 		  
-		while( i.hasNext() ) {
-			ev = ((Entry)i.next()).value;
+		int j = count;
+		while( j-- != 0 ) {
+			ev = i.NEXT_VALUE();
 			if ( VALUE_EQUAL( ev, v ) ) return true;
 		}
 		  
 		return false;
 	}
-
 
 	public void clear() {
 		count = 0;
@@ -828,7 +825,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * considered equivalently a tree.
 	 */
 
-	private static final class Entry implements Cloneable, MAP.Entry {
+	private static final class Entry KEY_VALUE_GENERIC implements Cloneable, MAP.Entry KEY_VALUE_GENERIC {
 		/** If the bit in this mask is true, {@link #right} points to a successor. */
 		private final static int SUCC_MASK = 1 << 31;
 		/** If the bit in this mask is true, {@link #left} points to a predecessor. */
@@ -836,11 +833,11 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		/** The bits in this mask hold the node balance info. You can get it just by casting to byte. */
 		private final static int BALANCE_MASK = 0xFF;
 		/** The key of this entry. */
-		KEY_TYPE key;
+		KEY_GENERIC_TYPE key;
 		/** The value of this entry. */
-		VALUE_TYPE value;
+		VALUE_GENERIC_TYPE value;
 		/** The pointers to the left and right subtrees. */
-		Entry left, right;
+		Entry KEY_VALUE_GENERIC left, right;
 		/** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
 		int info;
 
@@ -851,20 +848,20 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @param k a key.
 		 * @param v a value.
 		 */
-		Entry( final Object k, final Object v ) {
-			this.key = KEY2TYPE( k );
-			this.value = VALUE2TYPE( v );
+		Entry( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) {
+			this.key = KEY_CLASS2TYPE( k );
+			this.value = VALUE_CLASS2TYPE( v );
 			info = SUCC_MASK | PRED_MASK;
 		}
 
-#if ! #keyclass(Object) || ! ( #valueclass(Object) || #valueclass(Reference) )
+#if ! #keyclass(Object) || #values(primitive)
 		  
 		/** Creates a new entry with the given key and value.
 		 *
 		 * @param k a key.
 		 * @param v a value.
 		 */
-		Entry( final KEY_TYPE k, final VALUE_TYPE v ) {
+		Entry( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
 			this.key = k;
 			this.value = v;
 			info = SUCC_MASK | PRED_MASK;
@@ -877,7 +874,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @return the left subtree (<code>null</code> if the left
 		 * subtree is empty).
 		 */
-		Entry left() {
+		Entry KEY_VALUE_GENERIC left() {
 			return ( info & PRED_MASK ) != 0 ? null : left;
 		}
 		  
@@ -886,7 +883,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @return the right subtree (<code>null</code> if the right
 		 * subtree is empty).
 		 */
-		Entry right() {
+		Entry KEY_VALUE_GENERIC right() {
 			return ( info & SUCC_MASK ) != 0 ? null : right;
 		}
 		  
@@ -923,7 +920,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		/** Sets the left pointer to a predecessor.
 		 * @param pred the predecessr.
 		 */
-		void pred( final Entry pred ) {
+		void pred( final Entry KEY_VALUE_GENERIC pred ) {
 			info |= PRED_MASK;
 			left = pred;
 		}
@@ -931,7 +928,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		/** Sets the right pointer to a successor.
 		 * @param succ the successor.
 		 */
-		void succ( final Entry succ ) {
+		void succ( final Entry KEY_VALUE_GENERIC succ ) {
 			info |= SUCC_MASK;
 			right = succ;
 		}
@@ -939,7 +936,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		/** Sets the left pointer to the given subtree.
 		 * @param left the new left subtree.
 		 */
-		void left( final Entry left ) {
+		void left( final Entry KEY_VALUE_GENERIC left ) {
 			info &= ~PRED_MASK;
 			this.left = left;
 		}
@@ -947,7 +944,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		/** Sets the right pointer to the given subtree.
 		 * @param right the new right subtree.
 		 */
-		void right( final Entry right ) {
+		void right( final Entry KEY_VALUE_GENERIC right ) {
 			info &= ~SUCC_MASK;
 			this.right = right;
 		}
@@ -982,8 +979,8 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @return the next entry (<code>null</code>) if this is the last entry).
 		 */
 
-		Entry next() {
-			Entry next = this.right;
+		Entry KEY_VALUE_GENERIC next() {
+			Entry KEY_VALUE_GENERIC next = this.right;
 			if ( ( info & SUCC_MASK ) == 0 ) while ( ( next.info & PRED_MASK ) == 0 ) next = next.left;
 			return next;
 		}
@@ -993,50 +990,51 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @return the previous entry (<code>null</code>) if this is the first entry).
 		 */
 
-		Entry prev() {
-			Entry prev = this.left;
+		Entry KEY_VALUE_GENERIC prev() {
+			Entry KEY_VALUE_GENERIC prev = this.left;
 			if ( ( info & PRED_MASK ) == 0 ) while ( ( prev.info & SUCC_MASK ) == 0 ) prev = prev.right;
 			return prev;
 		}
 
-		public Object getKey() {
+		public KEY_GENERIC_CLASS getKey() {
 			return KEY2OBJ(key);
 		}
 		  
 #if ! #keyclass(Object)
-		public KEY_TYPE ENTRY_GET_KEY() {
+		public KEY_GENERIC_TYPE ENTRY_GET_KEY() {
 			return key;
 		}
 #endif
 		  
-		public Object getValue() {
+		public VALUE_GENERIC_CLASS getValue() {
 			return VALUE2OBJ(value);
 		}
 		  
-#if ! #valueclass(Object) && ! #valueclass(Reference)
+#if #values(primitive)
 		public VALUE_TYPE ENTRY_GET_VALUE() {
 			return value;
 		}
 #endif
 		  
-		public VALUE_TYPE setValue(final VALUE_TYPE value) {
-			final VALUE_TYPE oldValue = this.value;
+		public VALUE_GENERIC_TYPE setValue(final VALUE_GENERIC_TYPE value) {
+			final VALUE_GENERIC_TYPE oldValue = this.value;
 			this.value = value;
 			return oldValue;
 		}
 		  
-#if ! #valueclass(Object) && ! #valueclass(Reference)
+#if #values(primitive)
 		  
-		public Object setValue(final Object value) {
-			return VALUE2OBJ(setValue(VALUE2TYPE(value)));
+		public VALUE_GENERIC_CLASS setValue(final VALUE_GENERIC_CLASS value) {
+			return VALUE2OBJ(setValue(VALUE_CLASS2TYPE(value)));
 		}
 		  
 #endif
-		  
+
+		@SuppressWarnings("unchecked")
 		public Object clone() {
-			Entry c;
+			Entry KEY_VALUE_GENERIC c;
 			try {
-				c = (Entry)super.clone();
+				c = (Entry KEY_VALUE_GENERIC)super.clone();
 			}
 			catch(CloneNotSupportedException cantHappen) {
 				throw new InternalError();
@@ -1049,11 +1047,12 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			return c;
 		}
 
+		@SuppressWarnings("unchecked")
 		public boolean equals( final Object o ) {
 			if (!(o instanceof Map.Entry)) return false;
-			Map.Entry e = (Map.Entry)o;
+			Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
 				
-			return KEY_EQUALS( key, KEY2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE2TYPE( e.getValue() ) );
+			return KEY_EQUALS( key, KEY_CLASS2TYPE( e.getKey() ) ) && VALUE_EQUAL( value, VALUE_CLASS2TYPE( e.getValue() ) );
 		}
 		  
 		public int hashCode() {
@@ -1100,8 +1099,9 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	}
 	*/
 
+	@SuppressWarnings("unchecked")
 	public boolean containsKey( final KEY_TYPE k ) {
-		return findKey( k ) != null;
+		return findKey( KEY_GENERIC_CAST k ) != null;
 	}
 	 
 	public int size() {
@@ -1113,62 +1113,53 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	}
 	 
 	 
-	public VALUE_TYPE GET_VALUE(final KEY_TYPE k) {
-		final Entry e = findKey( k );
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
+		final Entry KEY_VALUE_GENERIC e = findKey( KEY_GENERIC_CAST k );
 		return e == null ? defRetValue : e.value;
 	}
 
+#if #keyclass(Object) && #values(primitive)
 
-#if !#keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
-
-	public Object get( final Object ok ) {
-		final Entry e = findKey( KEY2TYPE( ok ) );
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_CLASS get( final Object ok ) {
+		final Entry KEY_VALUE_GENERIC e = findKey( KEY_GENERIC_CAST ok );
 		return e == null ? OBJECT_DEFAULT_RETURN_VALUE : e.getValue();
 	}
 
 #endif
 
-	public KEY_TYPE FIRST_KEY() {
+	public KEY_GENERIC_TYPE FIRST_KEY() {
 		if ( tree == null ) throw new NoSuchElementException();
 		return firstEntry.key;
 	}
 
-	public KEY_TYPE LAST_KEY() {
+	public KEY_GENERIC_TYPE LAST_KEY() {
 		if ( tree == null ) throw new NoSuchElementException();
 		return lastEntry.key;
 	}
 
-#if !#keyclass(Object)
-	public Object firstKey() {
-		return KEY2OBJ( FIRST_KEY() );
-	}
-	 
-	public Object lastKey() {
-		return KEY2OBJ( LAST_KEY() );
-	}
 
-#endif
-
-	/** An iterator on the whole range.
+	/** An abstract iterator on the whole range.
 	 *
 	 * <P>This class can iterate in both directions on a threaded tree.
 	 */
 
-	private class TreeIterator extends AbstractObjectListIterator {
-		/** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
-		Entry prev;
-		/** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
-		Entry next;
+	private class TreeIterator {
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists). */
+		Entry KEY_VALUE_GENERIC prev;
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists). */
+		Entry KEY_VALUE_GENERIC next;
 		/** The last entry that was returned (or <code>null</code> if we did not iterate or used {@link #remove()}). */
-		Entry curr;
-		/** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link TreeIterator} has been created using the nonempty constructor.*/
+		Entry KEY_VALUE_GENERIC curr;
+		/** The current index (in the sense of a {@link java.util.ListIterator}). Note that this value is not meaningful when this {@link TreeIterator} has been created using the nonempty constructor.*/
 		int index = 0;
 		  
 		TreeIterator() {
 			next = firstEntry;
 		}
 
-		TreeIterator( final KEY_TYPE k ) {
+		TreeIterator( final KEY_GENERIC_TYPE k ) {
 			if ( ( next = locateKey( k ) ) != null ) {
 				if ( compare( next.key, k ) <= 0 ) {
 					prev = next;
@@ -1185,7 +1176,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			next = next.next();
 		}
 
-		Entry nextEntry() {
+		Entry KEY_VALUE_GENERIC nextEntry() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
 			curr = prev = next;
 			index++;
@@ -1193,21 +1184,17 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			return curr;
 		}
 
-		public Object next() { return nextEntry(); }
-
 		void updatePrevious() {
 			prev = prev.prev();
 		}
 
-		Entry previousEntry() {
+		Entry KEY_VALUE_GENERIC previousEntry() {
 			if ( ! hasPrevious() ) throw new NoSuchElementException();
 			curr = next = prev;
 			index--;
 			updatePrevious();
 			return curr;
 		}
-
-		public Object previous() { return previousEntry(); }
 
 		public int nextIndex() {
 			return index;
@@ -1228,40 +1215,86 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			AVL_TREE_MAP.this.REMOVE_VALUE( curr.key );
 			curr = null;
 		}
+
+		public int skip( final int n ) { 
+			int i = n;
+			while( i-- != 0 && hasNext() ) nextEntry(); 
+			return n - i - 1;
+		}
+
+		public int back( final int n ) { 
+			int i = n;
+			while( i-- != 0 && hasPrevious() ) previousEntry(); 
+			return n - i - 1;
+		}
 	}
 
 
+	/** An iterator on the whole range.
+	 *
+	 * <P>This class can iterate in both directions on a threaded tree.
+	 */
+
+	private class EntryIterator extends TreeIterator implements ObjectListIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> {
+		EntryIterator() {}
+
+		EntryIterator( final KEY_GENERIC_TYPE k ) {
+			super( k );
+		}
+
+		public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> next() { return nextEntry(); }
+		public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> previous() { return previousEntry(); }
+
+		public void set( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> ok ) { throw new UnsupportedOperationException(); }
+		public void add( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> ok ) { throw new UnsupportedOperationException(); }
+	}
 
 
-	public Set entrySet() {
-		if ( entries == null ) entries = new AbstractObjectSet() {
-				public ObjectIterator objectIterator() {
-					return new TreeIterator();
+	public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
+		if ( entries == null ) entries = new AbstractObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>() {
+				final Comparator<? super Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> comparator = new Comparator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> () {
+					public int compare( final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> x, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> y ) {
+						return AVL_TREE_MAP.this.storedComparator.compare( x.getKey(), y.getKey() );
+					}
+				};
+
+				public Comparator<? super Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> comparator() {
+					return comparator;
 				}
 
+				public ObjectBidirectionalIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> iterator() {
+					return new EntryIterator();
+				}
+
+				public ObjectBidirectionalIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> iterator( final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> from ) {
+					return new EntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
+				}
+
+				@SuppressWarnings("unchecked")
 				public boolean contains( final Object o ) {
 					if (!(o instanceof Map.Entry)) return false;
-					final Map.Entry e = (Map.Entry)o;
-					final Entry f = findKey( KEY2TYPE( e.getKey() ) );
+					final Map.Entry <KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+					final Entry KEY_VALUE_GENERIC f = findKey( KEY_CLASS2TYPE( e.getKey() ) );
 					return e.equals( f );
 				}					 
 
+				@SuppressWarnings("unchecked")
 				public boolean remove( final Object o ) {
 					if (!(o instanceof Map.Entry)) return false;
-					final Map.Entry e = (Map.Entry)o;
-					final Entry f = findKey( KEY2TYPE( e.getKey() ) );
+					final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+					final Entry KEY_VALUE_GENERIC f = findKey( KEY_CLASS2TYPE( e.getKey() ) );
 					if ( f != null ) AVL_TREE_MAP.this.REMOVE_VALUE( f.key );
 					return f != null;
 				}
 
-				public int size() {
-					return count;
-				}
+				public int size() { return count; }
+				public void clear() { AVL_TREE_MAP.this.clear(); }
 					 
-				public void clear() {
-					AVL_TREE_MAP.this.clear();
-				}
-					 
+				public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> first() { return firstEntry; }
+				public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> last() { return lastEntry; }
+				public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> subSet( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> from, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> to  ) { return subMap( from.getKey(), to.getKey() ).entrySet(); }
+				public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> headSet( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> to  ) { return headMap( to.getKey() ).entrySet(); }
+				public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> tailSet( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> from  ) { return tailMap( from.getKey() ).entrySet(); }
 			};
 
 		return entries;
@@ -1270,21 +1303,31 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	/** An iterator on the whole range of keys.
 	 *
 	 * <P>This class can iterate in both directions on the keys of a threaded tree. We 
-	 * simply override the {@link #next()}/{@link #previous()} methods (and possibly
+	 * simply override the {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods (and possibly
 	 * their type-specific counterparts) so that they return keys instead of entries.
 	 */
-	private final class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR {
-		public KeyIterator() { super(); }
-		public KeyIterator( final KEY_TYPE k ) { super( k ); }
-		public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
-		public KEY_TYPE PREV_KEY() { return previousEntry().key; }
+	private final class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+		public KeyIterator() {}
+		public KeyIterator( final KEY_GENERIC_TYPE k ) { super( k ); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
+		public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
+
+		public void set( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+		public void add( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+
 #if !#keyclass(Object)
-		public Object next() { return KEY2OBJ( nextEntry().key ); }
-		public Object previous() { return KEY2OBJ( previousEntry().key ); }
+		public KEY_GENERIC_CLASS next() { return KEY2OBJ( nextEntry().key ); }
+		public KEY_GENERIC_CLASS previous() { return KEY2OBJ( previousEntry().key ); }
+		public void set( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
+		public void add( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
 #endif						
-		public void set( KEY_TYPE k ) { throw new UnsupportedOperationException(); }
-		public void add( KEY_TYPE k ) { throw new UnsupportedOperationException(); }
 	};
+
+	/** A keyset implementation using a more direct implementation for iterators. */
+	private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new KeyIterator(); }
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) { return new KeyIterator( from ); }
+	}
 
 	/** Returns a type-specific sorted set view of the keys contained in this map.
 	 *
@@ -1294,49 +1337,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 *
 	 * @return a type-specific sorted set view of the keys contained in this map.
 	 */
-	public Set keySet() {
-		class KeySet extends ABSTRACT_SORTED_SET {
-
-			public KEY_ITERATOR KEY_ITERATOR_METHOD() {
-				return new KeyIterator();
-			}
-
-			public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
-				return new KeyIterator( from );
-			}
-
-			public Comparator comparator() {
-				return storedComparator;
-			}
-
-			public boolean contains( final KEY_TYPE k ) {
-				return containsKey( k );
-			}					 
-
-			public boolean remove( final KEY_TYPE k ) {
-				AVL_TREE_MAP.this.REMOVE_VALUE( k );
-				return modified;
-			}					 
-
-#if #keyclass(Integer)
-			public boolean rem( final KEY_TYPE k ) { return remove( k ); }
-#endif
-
-			public int size() {
-				return count;
-			}
-					 
-			public void clear() {
-				AVL_TREE_MAP.this.clear();
-			}
-			
-			public KEY_TYPE FIRST() { return firstEntry.key; }
-			public KEY_TYPE LAST() { return lastEntry.key; }
-			public STD_SORTED_SET headSet( final KEY_TYPE to  ) { return (STD_SORTED_SET)AVL_TREE_MAP.this.headMap( to ).keySet(); }
-			public STD_SORTED_SET tailSet( final KEY_TYPE from ) { return  (STD_SORTED_SET)AVL_TREE_MAP.this.tailMap( from ).keySet(); }
-			public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (STD_SORTED_SET)AVL_TREE_MAP.this.subMap( from, to ).keySet(); }
-		};
-
+	public SORTED_SET KEY_GENERIC keySet() {
 		if ( keys == null ) keys = new KeySet();
 		return keys;
 	}
@@ -1344,20 +1345,22 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	/** An iterator on the whole range of values.
 	 *
 	 * <P>This class can iterate in both directions on the values of a threaded tree. We 
-	 * simply override the {@link #next()}/{@link #previous()} methods (and possibly
+	 * simply override the {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods (and possibly
 	 * their type-specific counterparts) so that they return values instead of entries.
 	 */
-	private final class ValueIterator extends TreeIterator implements VALUE_LIST_ITERATOR {
-		public VALUE_TYPE NEXT_VALUE() { return nextEntry().value; }
-		public VALUE_TYPE PREV_VALUE() { return previousEntry().value; }
-#if !#valueclass(Object) && ! #valueclass(Reference)
-		public Object next() { return VALUE2OBJ( nextEntry().value ); }
-		public Object previous() { return VALUE2OBJ( previousEntry().value ); }
-#endif									
-		public void set( VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
-		public void add( VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
-	};
+	private final class ValueIterator extends TreeIterator implements VALUE_LIST_ITERATOR VALUE_GENERIC {
+		public VALUE_GENERIC_TYPE NEXT_VALUE() { return nextEntry().value; }
+		public VALUE_GENERIC_TYPE PREV_VALUE() { return previousEntry().value; }
+		public void set( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+		public void add( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
 
+#if #values(primitive)
+		public VALUE_GENERIC_CLASS next() { return VALUE2OBJ( nextEntry().value ); }
+		public VALUE_GENERIC_CLASS previous() { return VALUE2OBJ( previousEntry().value ); }
+		public void set( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+		public void add( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+#endif									
+	};
 
 	/** Returns a type-specific collection view of the values contained in this map.
 	 *
@@ -1368,9 +1371,9 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @return a type-specific collection view of the values contained in this map.
 	 */
 
-	public Collection values() {
-		if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
-				public VALUE_ITERATOR VALUE_ITERATOR_METHOD() {
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
+				public VALUE_ITERATOR VALUE_GENERIC iterator() {
 					return new ValueIterator();
 				}
 
@@ -1391,19 +1394,19 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		return values;
 	}
 
-	public Comparator comparator() {
-		return storedComparator;
+	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
+		return actualComparator;
 	}
 
-	public STD_SORTED_MAP headMap( KEY_TYPE to ) {
+	public SORTED_MAP KEY_VALUE_GENERIC headMap( KEY_GENERIC_TYPE to ) {
 		return new Submap( KEY_NULL, true, to, false );
 	}
 
-	public STD_SORTED_MAP tailMap( KEY_TYPE from ) {
+	public SORTED_MAP KEY_VALUE_GENERIC tailMap( KEY_GENERIC_TYPE from ) {
 		return new Submap( from, false, KEY_NULL, true );
 	}
 
-	public STD_SORTED_MAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
+	public SORTED_MAP KEY_VALUE_GENERIC subMap( KEY_GENERIC_TYPE from,  KEY_GENERIC_TYPE to ) {
 		return new Submap( from, false, to, false );
 	}
 
@@ -1413,24 +1416,26 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * limits (which can be set to -&infin; or &infin;). Since the submap is a
 	 * view on the map, at a given moment it could happen that the limits of
 	 * the range are not any longer in the main map. Thus, things such as
-	 * {@link #firstKey()} or {@link #size()} must be always computed
+	 * {@link java.util.SortedMap#firstKey()} or {@link java.util.Collection#size()} must be always computed
 	 * on-the-fly.  
 	 */
-	private final class Submap extends ABSTRACT_SORTED_MAP implements java.io.Serializable, SORTED_MAP {
+	private final class Submap extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC implements java.io.Serializable {
+    	public static final long serialVersionUID = -7046029254386353129L;
+
 		/** The start of the submap range, unless {@link #bottom} is true. */
-		KEY_TYPE from;
+		KEY_GENERIC_TYPE from;
 		/** The end of the submap range, unless {@link #top} is true. */
-		KEY_TYPE to;
+		KEY_GENERIC_TYPE to;
 		/** If true, the submap range starts from -&infin;. */
 		boolean bottom;
 		/** If true, the submap range goes to &infin;. */
 		boolean top;
 		/** Cached set of entries. */
-		protected transient volatile ObjectSet entries;
+		protected transient volatile ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entries;
 		/** Cached set of keys. */
-		protected transient volatile SET keys;
+		protected transient volatile SORTED_SET KEY_GENERIC keys;
 		/** Cached collection of values. */
-		protected transient volatile VALUE_COLLECTION values;
+		protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
 
 		/** Creates a new submap with given key range.
 		 *
@@ -1439,7 +1444,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @param to the end of the submap range.
 		 * @param top if true, the third parameter is ignored and the range goes to &infin;.
 		 */
-		public Submap( final KEY_TYPE from, final boolean bottom, final KEY_TYPE to, final boolean top ) {
+		public Submap( final KEY_GENERIC_TYPE from, final boolean bottom, final KEY_GENERIC_TYPE to, final boolean top ) {
 			if ( ! bottom && ! top && AVL_TREE_MAP.this.compare( from, to ) > 0 ) throw new IllegalArgumentException( "Start key (" + from  + ") is larger than end key (" + to + ")" );
 
 			this.from = from;
@@ -1452,7 +1457,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		public void clear() {
 			final SubmapIterator i = new SubmapIterator();
 			while( i.hasNext() ) {
-				i.next();
+				i.nextEntry();
 				i.remove();
 			}
 		}
@@ -1461,28 +1466,36 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		 * @param k a key.
 		 * @return true if is the key is in the submap range.
 		 */
-		final boolean in( final KEY_TYPE k ) {
+		final boolean in( final KEY_GENERIC_TYPE k ) {
 			return ( bottom || AVL_TREE_MAP.this.compare( k, from ) >= 0 ) &&
 				( top || AVL_TREE_MAP.this.compare( k, to ) < 0 );
 		}
 
-		public Set entrySet() {
-			if ( entries == null ) entries = new AbstractObjectSet() {
-					public ObjectIterator objectIterator() {
-						return new SubmapIterator();
+		public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
+			if ( entries == null ) entries = new AbstractObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>() {
+					public ObjectBidirectionalIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> iterator() {
+						return new SubmapEntryIterator();
 					}
 						  
+					public ObjectBidirectionalIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> iterator( final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> from ) {
+						return new SubmapEntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
+					}
+
+					public Comparator<? super Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> comparator() { return AVL_TREE_MAP.this.entrySet().comparator(); }
+
+					@SuppressWarnings("unchecked")
 					public boolean contains( final Object o ) {
 						if (!(o instanceof Map.Entry)) return false;
-						final Map.Entry e = (Map.Entry)o;
-						final AVL_TREE_MAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+						final AVL_TREE_MAP.Entry KEY_VALUE_GENERIC f = findKey( KEY_CLASS2TYPE( e.getKey() ) );
 						return f != null && in( f.key ) && e.equals( f );
 					}					 
 
+					@SuppressWarnings("unchecked")
 					public boolean remove( final Object o ) {
 						if (!(o instanceof Map.Entry)) return false;
-						final Map.Entry e = (Map.Entry)o;
-						final AVL_TREE_MAP.Entry f = findKey( KEY2TYPE( e.getKey() ) );
+						final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+						final AVL_TREE_MAP.Entry KEY_VALUE_GENERIC f = findKey( KEY_CLASS2TYPE( e.getKey() ) );
 						if ( f != null && in( f.key ) ) Submap.this.REMOVE_VALUE( f.key );
 						return f != null;
 					}
@@ -1502,60 +1515,29 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 						Submap.this.clear();
 					}
 					 
+					public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> first() { return firstEntry(); }
+					public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> last() { return lastEntry(); }
+					public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> subSet( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> from, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> to  ) { return subMap( from.getKey(), to.getKey() ).entrySet(); }
+					public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> headSet( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> to  ) { return headMap( to.getKey() ).entrySet(); }
+					public ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> tailSet( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> from  ) { return tailMap( from.getKey() ).entrySet(); }
 				};
 
 			return entries;
 		}
 
-		public Set keySet() {
-			class KeySet extends ABSTRACT_SORTED_SET implements SORTED_SET {
-				public KEY_ITERATOR KEY_ITERATOR_METHOD() {
-					return new SubmapKeyIterator();
-				}
-		
-				public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
-					return new SubmapKeyIterator( from );
-				}
+		private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
+			public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubmapKeyIterator();	}
+			public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) { return new SubmapKeyIterator( from ); }
+		}
 
-				public Comparator comparator() {
-					return storedComparator;
-				}
-
-
-				public boolean contains( final KEY_TYPE k ) {
-					return containsKey( k );
-				}					 
-
-				public boolean remove( final KEY_TYPE k ) {
-					Submap.this.REMOVE_VALUE( k );
-					return modified;
-				}					 
-
-#if #keyclass(Integer)
-				public boolean rem( final KEY_TYPE k ) { return remove( k ); }
-#endif
-				public int size() {
-					return Submap.this.size();
-				}
-						  
-				public void clear() {
-					Submap.this.clear();
-				}
-
-				public KEY_TYPE FIRST() { return firstEntry().key; }
-				public KEY_TYPE LAST() { return lastEntry().key; }
-				public STD_SORTED_SET headSet( final KEY_TYPE to  ) { return (STD_SORTED_SET)Submap.this.headMap( to ).keySet(); }
-				public STD_SORTED_SET tailSet( final KEY_TYPE from ) { return  (STD_SORTED_SET)Submap.this.tailMap( from ).keySet(); }
-				public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (STD_SORTED_SET)Submap.this.subMap( from, to ).keySet(); }
-			};
-
+		public SORTED_SET KEY_GENERIC keySet() {
 			if ( keys == null ) keys = new KeySet();
 			return keys;
 		}
 		  
-		public Collection values() {
-			if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION() {
-					public VALUE_ITERATOR VALUE_ITERATOR_METHOD() {
+		public VALUE_COLLECTION VALUE_GENERIC values() {
+			if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
+					public VALUE_ITERATOR VALUE_GENERIC iterator() {
 						return new SubmapValueIterator();
 					}
 
@@ -1576,8 +1558,9 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			return values;
 		}
 		  
+		@SuppressWarnings("unchecked")
 		public boolean containsKey( final KEY_TYPE k ) {
-			return in( k ) && AVL_TREE_MAP.this.containsKey( k );
+			return in( KEY_GENERIC_CAST k ) && AVL_TREE_MAP.this.containsKey( k );
 		}
 
 		public boolean containsValue( final VALUE_TYPE v ) {
@@ -1585,7 +1568,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			VALUE_TYPE ev;
 				
 			while( i.hasNext() ) {
-				ev = ((AVL_TREE_MAP.Entry)i.next()).value;
+				ev = i.nextEntry().value;
 				if ( VALUE_EQUAL( ev, v ) ) return true;
 			}
 				
@@ -1593,44 +1576,50 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		}
 		  
 
-		public VALUE_TYPE GET_VALUE(final KEY_TYPE k) {
-			final AVL_TREE_MAP.Entry e;
-			return in( k ) && ( e = findKey( k ) ) != null ? e.value : this.defRetValue;
+		@SuppressWarnings("unchecked")
+		public VALUE_GENERIC_TYPE GET_VALUE(final KEY_TYPE k) {
+			final AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e;
+			final KEY_GENERIC_TYPE kk = KEY_GENERIC_CAST k;
+			return in( kk ) && ( e = findKey( kk ) ) != null ? e.value : this.defRetValue;
 		}
 		  
 		  
-#if ! #keyclass(Object) || ! #valueclass(Object) && ! #valueclass(Reference)
-		public Object get( final Object ok ) {
-			final AVL_TREE_MAP.Entry e;
-			return in( KEY2TYPE( ok ) ) &&  ( e = findKey( KEY2TYPE( ok ) ) ) != null ? e.getValue() : OBJECT_DEFAULT_RETURN_VALUE;
+#if #keyclass(Object) && #values(primitive)
+
+		@SuppressWarnings("unchecked")
+		public VALUE_GENERIC_CLASS get( final Object ok ) {
+			final AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e;
+			final KEY_GENERIC_TYPE kk = KEY_GENERIC_CAST KEY_OBJ2TYPE( ok );
+			return in( kk ) && ( e = findKey( kk ) ) != null ? e.getValue() : OBJECT_DEFAULT_RETURN_VALUE;
 		}
 #endif
 		  
-		public VALUE_TYPE put(final KEY_TYPE k, final VALUE_TYPE v) {
+		public VALUE_GENERIC_TYPE put(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
 			modified = false;
 			if ( ! in( k ) ) throw new IllegalArgumentException( "Key (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
-			final VALUE_TYPE oldValue = AVL_TREE_MAP.this.put( k, v );
+			final VALUE_GENERIC_TYPE oldValue = AVL_TREE_MAP.this.put( k, v );
 			return modified ? this.defRetValue : oldValue;
 		}
 
 		  
-#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
-		public Object put( final Object ok, final Object ov ) {
-			final VALUE_TYPE oldValue = put( KEY2TYPE(ok), VALUE2TYPE(ov) );
+#if ! #keyclass(Object) || #values(primitive)
+		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
+			final VALUE_GENERIC_TYPE oldValue = put( KEY_CLASS2TYPE(ok), VALUE_CLASS2TYPE(ov) );
 			return modified ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ( oldValue );
 		}
 #endif
 
-		public VALUE_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
+		@SuppressWarnings("unchecked")
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
 			modified = false;
-			if ( ! in( k ) ) return this.defRetValue;
-			final VALUE_TYPE oldValue = AVL_TREE_MAP.this.REMOVE_VALUE( k );
+			if ( ! in( KEY_GENERIC_CAST k ) ) return this.defRetValue;
+			final VALUE_GENERIC_TYPE oldValue = AVL_TREE_MAP.this.REMOVE_VALUE( k );
 			return modified ? oldValue : this.defRetValue;
 		}
 
-#if ! #keyclass(Object) || !#valueclass(Object) && ! #valueclass(Reference)
-		public Object remove( final Object ok ) {
-			final VALUE_TYPE oldValue = REMOVE_VALUE( KEY2TYPE( ok ) );
+#if ! #keyclass(Object) || #values(primitive)
+		public VALUE_GENERIC_CLASS remove( final Object ok ) {
+			final VALUE_GENERIC_TYPE oldValue = REMOVE_VALUE( KEY_OBJ2TYPE( ok ) );
 			return modified ? VALUE2OBJ( oldValue ) : OBJECT_DEFAULT_RETURN_VALUE;
 		}
 #endif
@@ -1641,7 +1630,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				
 			while( i.hasNext() ) {
 				n++;
-				i.next();
+				i.nextEntry();
 			}
 				
 			return n;
@@ -1652,21 +1641,21 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			return ! new SubmapIterator().hasNext();
 		}
 		  
-		public Comparator comparator() {
-			return storedComparator;
+		public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
+			return actualComparator;
 		}
 		  
-		public STD_SORTED_MAP headMap( final KEY_TYPE to ) {
+		public SORTED_MAP KEY_VALUE_GENERIC headMap( final KEY_GENERIC_TYPE to ) {
 			if ( top ) return new Submap( from, bottom, to, false );
 			return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
 		}
 		  
-		public STD_SORTED_MAP tailMap( final KEY_TYPE from ) {
+		public SORTED_MAP KEY_VALUE_GENERIC tailMap( final KEY_GENERIC_TYPE from ) {
 			if ( bottom ) return new Submap( from, false, to, top );
 			return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
 		}
 		  
-		public STD_SORTED_MAP subMap( KEY_TYPE from,  KEY_TYPE to ) {
+		public SORTED_MAP KEY_VALUE_GENERIC subMap( KEY_GENERIC_TYPE from,  KEY_GENERIC_TYPE to ) {
 			if ( top && bottom ) return new Submap( from, false, to, false );
 			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
 			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
@@ -1676,13 +1665,12 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 		/** Locates the first entry.
 		 *
-		 * @param k a key.
 		 * @return the first entry of this submap, or <code>null</code> if the submap is empty.
 		 */
-		public AVL_TREE_MAP.Entry firstEntry() {
+		public AVL_TREE_MAP.Entry KEY_VALUE_GENERIC firstEntry() {
 			if ( tree == null ) return null;
 			// If this submap goes to -infinity, we return the main map first entry; otherwise, we locate the start of the map.
-			AVL_TREE_MAP.Entry e;
+			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e;
 			if ( bottom ) e = firstEntry;
 			else {
 				e = locateKey( from );
@@ -1696,13 +1684,12 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 
 		/** Locates the last entry.
 		 *
-		 * @param k a key.
 		 * @return the last entry of this submap, or <code>null</code> if the submap is empty.
 		 */
-		public AVL_TREE_MAP.Entry lastEntry() {
+		public AVL_TREE_MAP.Entry KEY_VALUE_GENERIC lastEntry() {
 			if ( tree == null ) return null;
 			// If this submap goes to infinity, we return the main map last entry; otherwise, we locate the end of the map.
-			AVL_TREE_MAP.Entry e;
+			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e;
 			if ( top ) e = lastEntry;
 			else {
 				e = locateKey( to );
@@ -1711,39 +1698,38 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			}
 			// Finally, if this subset doesn't go to -infinity, we check that the resulting key isn't smaller than the start.
 			if ( e == null || ! bottom && compare( e.key, from ) < 0 ) return null;
-			return e;		  }
+			return e;
+		}
 
-
-		public KEY_TYPE FIRST_KEY() {
-			AVL_TREE_MAP.Entry e = firstEntry();
+		public KEY_GENERIC_TYPE FIRST_KEY() {
+			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e = firstEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
-		public KEY_TYPE LAST_KEY() {
-			AVL_TREE_MAP.Entry e = lastEntry();
+		public KEY_GENERIC_TYPE LAST_KEY() {
+			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e = lastEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
 	 
 #if !#keyclass(Object)
-		public Object firstKey() {
-			AVL_TREE_MAP.Entry e = firstEntry();
+		public KEY_GENERIC_CLASS firstKey() {
+			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e = firstEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.getKey();
 		}
 	 
-		public Object lastKey() {
-			AVL_TREE_MAP.Entry e = lastEntry();
+		public KEY_GENERIC_CLASS lastKey() {
+			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e = lastEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.getKey();
 		}
-
 #endif
 
 		/** An iterator for subranges.
 		 * 
 		 * <P>This class inherits from {@link TreeIterator}, but overrides the methods that
-		 * update the pointer after a {@link #next()} or {@link #previous()}. If we would
+		 * update the pointer after a {@link java.util.ListIterator#next()} or {@link java.util.ListIterator#previous()}. If we would
 		 * move out of the range of the submap we just overwrite the next or previous
 		 * entry with <code>null</code>.
 		 */
@@ -1752,7 +1738,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				next = firstEntry();
 			}
 
-			SubmapIterator( final KEY_TYPE k ) {
+			SubmapIterator( final KEY_GENERIC_TYPE k ) {
 				this();
 					 
 				if ( next != null ) {
@@ -1781,44 +1767,64 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			}
 		}
 
+		private class SubmapEntryIterator extends SubmapIterator implements ObjectListIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>  {
+			SubmapEntryIterator() {}
+
+			SubmapEntryIterator( final KEY_GENERIC_TYPE k ) {
+				super( k );
+			}
+
+			public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> next() { return nextEntry(); }
+			public Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> previous() { return previousEntry(); }
+
+			public void set( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> ok ) { throw new UnsupportedOperationException(); }
+			public void add( Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> ok ) { throw new UnsupportedOperationException(); }
+		}
+
+
 		/** An iterator on a subrange of keys.
 		 *
 		 * <P>This class can iterate in both directions on a subrange of the
 		 * keys of a threaded tree. We simply override the {@link
-		 * #next()}/{@link #previous()} methods (and possibly their
+		 * java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods (and possibly their
 		 * type-specific counterparts) so that they return keys instead of
 		 * entries.
 		 */
-		private final class SubmapKeyIterator extends SubmapIterator implements KEY_LIST_ITERATOR {
+		private final class SubmapKeyIterator extends SubmapIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
 			public SubmapKeyIterator() { super(); }
-			public SubmapKeyIterator( KEY_TYPE from ) { super( from ); }
-			public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
-			public KEY_TYPE PREV_KEY() { return previousEntry().key; }
+			public SubmapKeyIterator( KEY_GENERIC_TYPE from ) { super( from ); }
+			public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
+			public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
+			public void set( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+			public void add( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
 #if !#keyclass(Object)
-			public Object next() { return KEY2OBJ( nextEntry().key ); }
-			public Object previous() { return KEY2OBJ( previousEntry().key ); }
+			public KEY_GENERIC_CLASS next() { return KEY2OBJ( nextEntry().key ); }
+			public KEY_GENERIC_CLASS previous() { return KEY2OBJ( previousEntry().key ); }
+			public void set( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
+			public void add( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
 #endif									
-			public void set( KEY_TYPE k ) { throw new UnsupportedOperationException(); }
-			public void add( KEY_TYPE k ) { throw new UnsupportedOperationException(); }
 		};
 		  
 		/** An iterator on a subrange of values.
 		 *
 		 * <P>This class can iterate in both directions on the values of a
 		 * subrange of the keys of a threaded tree. We simply override the
-		 * {@link #next()}/{@link #previous()} methods (and possibly their
+		 * {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods (and possibly their
 		 * type-specific counterparts) so that they return values instead of
 		 * entries.  
 		 */
-		private final class SubmapValueIterator extends SubmapIterator implements VALUE_LIST_ITERATOR {
-			public VALUE_TYPE NEXT_VALUE() { return nextEntry().value; }
-			public VALUE_TYPE PREV_VALUE() { return previousEntry().value; }
-#if !#valueclass(Object) && ! #valueclass(Reference)
-			public Object next() { return VALUE2OBJ( nextEntry().value ); }
-			public Object previous() { return VALUE2OBJ( previousEntry().value ); }
-#endif									
-			public void set( VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
-			public void add( VALUE_TYPE v ) { throw new UnsupportedOperationException(); }
+		private final class SubmapValueIterator extends SubmapIterator implements VALUE_LIST_ITERATOR VALUE_GENERIC {
+			public VALUE_GENERIC_TYPE NEXT_VALUE() { return nextEntry().value; }
+			public VALUE_GENERIC_TYPE PREV_VALUE() { return previousEntry().value; }
+			public void set( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+			public void add( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+
+#if #values(primitive)
+			public VALUE_GENERIC_CLASS next() { return VALUE2OBJ( nextEntry().value ); }
+			public VALUE_GENERIC_CLASS previous() { return VALUE2OBJ( previousEntry().value ); }
+			public void set( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+			public void add( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+#endif			
 		};
 
 
@@ -1833,10 +1839,11 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @return a deep copy of this tree map.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public Object clone() {
-		AVL_TREE_MAP c;
+		AVL_TREE_MAP KEY_VALUE_GENERIC c;
 		try {
-			c = (AVL_TREE_MAP)super.clone();
+			c = (AVL_TREE_MAP KEY_VALUE_GENERIC)super.clone();
 		}
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
@@ -1849,7 +1856,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 		if ( count != 0 ) {
 			// Also this apparently unfathomable code is derived from GNU libavl.
-			Entry e, p, q, rp = new Entry(), rq = new Entry();
+			Entry KEY_VALUE_GENERIC e, p, q, rp = new Entry KEY_VALUE_GENERIC(), rq = new Entry KEY_VALUE_GENERIC();
 
 			p = rp;
 			rp.left( tree );
@@ -1859,7 +1866,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 			while( true ) {
 				if ( ! p.pred() ) {
-					e = (Entry)p.left.clone();
+					e = (Entry KEY_VALUE_GENERIC)p.left.clone();
 					e.pred( q.left );
 					e.succ( q );
 					q.left( e );
@@ -1890,7 +1897,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 				}
 
 				if ( ! p.succ() ) {
-					e = (Entry)p.right.clone();
+					e = (Entry KEY_VALUE_GENERIC)p.right.clone();
 					e.succ( q.right );
 					e.pred( q );
 					q.right( e );
@@ -1900,18 +1907,17 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 		return c;
 	}
-
 	 
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		int n = count;
-		Iterator i = new TreeIterator();
-		Entry e;
+		EntryIterator i = new EntryIterator();
+		Entry KEY_VALUE_GENERIC e;
 
 		s.defaultWriteObject();
 
 		while(n-- != 0) {
-			e = (Entry)i.next();
+			e = i.nextEntry();
 			s.WRITE_KEY( e.key );
 			s.WRITE_VALUE( e.value );
 		}
@@ -1925,9 +1931,10 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	 * @param pred the entry containing the key that preceeds the first key in the tree.
 	 * @param succ the entry containing the key that follows the last key in the tree.
 	 */
-	private Entry readTree( final java.io.ObjectInputStream s, final int n, final Entry pred, final Entry succ ) throws java.io.IOException, ClassNotFoundException {
+	@SuppressWarnings("unchecked")
+	private Entry KEY_VALUE_GENERIC readTree( final java.io.ObjectInputStream s, final int n, final Entry KEY_VALUE_GENERIC pred, final Entry KEY_VALUE_GENERIC succ ) throws java.io.IOException, ClassNotFoundException {
 		if ( n == 1 ) {
-			final Entry top = new Entry( s.READ_KEY(), s.READ_VALUE() );
+			final Entry KEY_VALUE_GENERIC top = new Entry KEY_VALUE_GENERIC( KEY_GENERIC_CAST s.READ_KEY(), VALUE_GENERIC_CAST s.READ_VALUE() );
 			top.pred( pred );
 			top.succ( succ );
 
@@ -1937,8 +1944,8 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		if ( n == 2 ) {
 			/* We handle separately this case so that recursion will
 			 *always* be on nonempty subtrees. */
-			final Entry top = new Entry( s.READ_KEY(), s.READ_VALUE() );
-			top.right( new Entry( s.READ_KEY(), s.READ_VALUE() ) );
+			final Entry KEY_VALUE_GENERIC top = new Entry KEY_VALUE_GENERIC( KEY_GENERIC_CAST s.READ_KEY(), VALUE_GENERIC_CAST s.READ_VALUE() );
+			top.right( new Entry KEY_VALUE_GENERIC( KEY_GENERIC_CAST s.READ_KEY(), VALUE_GENERIC_CAST s.READ_VALUE() ) );
 			top.right.pred( top );
 			top.balance( 1 );
 			top.pred( pred );
@@ -1950,12 +1957,12 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 		// The right subtree is the largest one.
 		final int rightN = n / 2, leftN = n - rightN - 1;
 
-		final Entry top = new Entry();
+		final Entry KEY_VALUE_GENERIC top = new Entry KEY_VALUE_GENERIC();
 
 		top.left( readTree( s, leftN, pred, top ) );
 		
-		top.key = s.READ_KEY();
-		top.value = s.READ_VALUE();
+		top.key = KEY_GENERIC_CAST s.READ_KEY();
+		top.value = VALUE_GENERIC_CAST s.READ_VALUE();
 
 		top.right( readTree( s, rightN, top, succ ) );
 
@@ -1984,7 +1991,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 		if ( count != 0 ) {
 			tree = readTree( s, count, null, null );
-			Entry e;
+			Entry KEY_VALUE_GENERIC e;
 
 			e = tree;
 			while( e.left() != null ) e = e.left();
@@ -2008,7 +2015,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #else
 		return Integer.toBinaryString( r.nextInt() );
@@ -2018,7 +2025,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 	private static VALUE_TYPE genValue() {
 #if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
 		return (VALUE_TYPE)(r.nextInt());
-#elif !#valueclass(Object) && !#valueclass(Reference)
+#elif #values(primitive)
 		return r.NEXT_VALUE();
 #elif !#valueclass(Reference) || #keyclass(Reference)
 		return Integer.toBinaryString( r.nextInt() );
@@ -2334,12 +2341,12 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			if ( !mThrowsNoElement && !mThrowsIllegal ) {
 				ensure( m.containsKey(KEY2OBJ(T)) == t.containsKey(KEY2OBJ(T)), "Error (" + level + ", " + seed + "): divergence in keys between t and m (polymorphic method)" );
 					 
-#if #keyclass(Object) && ! ( #valueclass(Object) || #valueclass(Reference) )
-				if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+#if #keyclass(Object) && ! ( #values(reference) )
+				if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE_OBJ2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
 					t.get(KEY2OBJ(T)) != null && 
 					! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
 #else
-					if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+					if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE_OBJ2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
 						t.get(KEY2OBJ(T)) != null && 
 						! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
 #endif
@@ -2670,19 +2677,19 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			for( ; i.hasNext() && r.nextFloat() < .95; end = i.next() );
 				
 			//System.err.println("Checking subMap from " + start + " to " + end + " (level=" + (level+1) + ")..." );
-			testMaps( (SORTED_MAP)m.subMap( start, end ), t.subMap( start, end ), n, level + 1 );
+			testMaps( (SORTED_MAP)m.subMap( (KEY_CLASS)start, (KEY_CLASS)end ), t.subMap( start, end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subMap" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subMap" );
 
 			//System.err.println("Checking headMap to " + end + " (level=" + (level+1) + ")..." );
-			testMaps( (SORTED_MAP)m.headMap( end ), t.headMap( end ), n, level + 1 );
+			testMaps( (SORTED_MAP)m.headMap( (KEY_CLASS)end ), t.headMap( end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headMap" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headMap" );
 
 			//System.err.println("Checking tailMap from " + start + " (level=" + (level+1) + ")..." );
-			testMaps( (SORTED_MAP)m.tailMap( start ), t.tailMap( start ), n, level + 1 );
+			testMaps( (SORTED_MAP)m.tailMap( (KEY_CLASS)start ), t.tailMap( start ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailMap" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailMap" );
@@ -2711,7 +2718,7 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 			k[i] = new KEY_CLASS( kt[i] = genKey() );
 			nk[i] = new KEY_CLASS( nkt[i] = genKey() );
 #endif
-#if #valueclass(Object) || #valueclass(Reference)
+#if #values(reference)
 			v[i] = vt[i] = genValue();
 #else
 			v[i] = new VALUE_CLASS( vt[i] = genValue() );
@@ -2748,9 +2755,3 @@ public class AVL_TREE_MAP extends ABSTRACT_SORTED_MAP implements java.io.Seriali
 
 
 }
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

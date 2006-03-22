@@ -26,15 +26,15 @@ import java.util.Iterator;
 
 /** An abstract class providing basic methods for collections implementing a type-specific interface.
  *
- * <P>In particular, this class provide {@link #iterator()}, {@link #add(Object)}, {@link #remove(Object)} and
+ * <P>In particular, this class provide {@link #iterator()}, <code>add()</code>, {@link #remove(Object)} and
  * {@link #contains(Object)} methods that just call the type-specific counterpart. 
  */
 
-public abstract class ABSTRACT_COLLECTION implements COLLECTION {
+public abstract class ABSTRACT_COLLECTION KEY_GENERIC implements COLLECTION KEY_GENERIC {
 
 	protected ABSTRACT_COLLECTION() {}
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+#if #keys(primitive)
 
 	public KEY_TYPE[] toArray( KEY_TYPE a[] ) {
 		return TO_KEY_ARRAY( a );
@@ -46,8 +46,12 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 	public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE a[] ) {
 		if ( a == null || a.length < size() ) a = new KEY_TYPE[ size() ];
-		ITERATORS.unwrap( KEY_ITERATOR_METHOD(), a );
+		ITERATORS.unwrap( iterator(), a );
 		return a;
+	}
+
+	public boolean rem( KEY_TYPE k ) {
+		throw new UnsupportedOperationException();
 	}
 
 	/** Adds all elements of the given type-specific collection to this collection.
@@ -58,7 +62,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 	public boolean addAll( COLLECTION c ) {
 		boolean retVal = false;
-		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+		final KEY_ITERATOR i = c.iterator();
 		int n = c.size();
 
 		while( n-- != 0 ) if ( add( i.NEXT_KEY() ) ) retVal = true;
@@ -72,7 +76,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	 */
 
 	public boolean containsAll( COLLECTION c ) {
-		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+		final KEY_ITERATOR i = c.iterator();
 		int n = c.size();
 
 		while( n-- != 0 ) if ( ! contains( i.NEXT_KEY() ) ) return false;
@@ -90,7 +94,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 		boolean retVal = false;
 		int n = size();
 
-		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		final KEY_ITERATOR i = iterator();
 
 		while( n-- != 0 ) {
 			if ( ! c.contains( i.NEXT_KEY() ) ) {
@@ -112,7 +116,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 		boolean retVal = false;
 		int n = c.size();
 
-		final KEY_ITERATOR i = c.KEY_ITERATOR_METHOD();
+		final KEY_ITERATOR i = c.iterator();
 
 		while( n-- != 0 ) if ( rem( i.NEXT_KEY() ) ) retVal = true;
 
@@ -122,13 +126,15 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 #endif
 
 	public Object[] toArray() {
-		return toArray( (Object[])null );
+		final Object[] a = new Object[ size() ];
+		it.unimi.dsi.fastutil.objects.ObjectIterators.unwrap( iterator(), a );
+		return a;
 	}
 
-	public Object[] toArray( Object a[] ) {
-		if ( a == null ) a = new Object[ size() ];
-		else if ( a.length < size() ) a = (Object[])java.lang.reflect.Array.newInstance( a.getClass().getComponentType(), size() );
-		it.unimi.dsi.fastutil.objects.ObjectIterators.unwrap( KEY_ITERATOR_METHOD(), a );
+	@SuppressWarnings("unchecked")
+	public <T> T[] toArray( T[] a ) {
+		if ( a.length < size() ) a = (T[])java.lang.reflect.Array.newInstance( a.getClass().getComponentType(), size() );
+		it.unimi.dsi.fastutil.objects.ObjectIterators.unwrap( iterator(), a );
 		return a;
 	}
 
@@ -138,9 +144,9 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	 * @return <code>true</code> if this collection changed as a result of the call.
 	 */
 
-	public boolean addAll( Collection c ) {
+	public boolean addAll( Collection<? extends KEY_GENERIC_CLASS> c ) {
 		boolean retVal = false;
-		final Iterator i = c.iterator();
+		final Iterator<? extends KEY_GENERIC_CLASS> i = c.iterator();
 		int n = c.size();
 
 		while( n-- != 0 ) if ( add( i.next() ) ) retVal = true;
@@ -149,42 +155,46 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 
 
 
-	public boolean add( KEY_TYPE k ) {
+	public boolean add( KEY_GENERIC_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 	 
-	public boolean rem( KEY_TYPE k ) {
-		throw new UnsupportedOperationException();
-	}
-
 	public boolean remove( Object ok ) {
-		return rem( KEY2TYPE( ok ) );
+#if #keys(primitive)
+		return rem( KEY_OBJ2TYPE( ok ) );
+#else
+		throw new UnsupportedOperationException();
+#endif
 	}
 
 	public void clear() {
 		throw new UnsupportedOperationException();
 	}
 
-	/** Delegates to the corresponding type-specific method. */
-	public Iterator iterator() {
-		return KEY_ITERATOR_METHOD();
+	/** Delegates to the new covariantly stronger generic method. */
+	
+	@Deprecated
+	public KEY_ITERATOR KEY_GENERIC KEY_ITERATOR_METHOD() {
+		return iterator();
 	}
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+	public abstract KEY_ITERATOR KEY_GENERIC iterator();
+
+#if #keys(primitive)
 
 	/** Delegates to the corresponding type-specific method. */
-	public boolean add( Object o ) {
-		return add( KEY2TYPE( o ) );
+	public boolean add( final KEY_CLASS o ) {
+		return add( o.KEY_VALUE() );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
 	public boolean rem( final Object o ) {
-		return rem( KEY2TYPE( o ) );
+		return rem( KEY_OBJ2TYPE(o) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
 	public boolean contains( final Object o ) {
-		return contains( KEY2TYPE( o ) );
+		return contains( KEY_OBJ2TYPE(o) );
 	}
 #endif
 
@@ -194,7 +204,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	 * @return <code>true</code> if this collection contains all elements of the argument.
 	 */
 
-	public boolean containsAll( Collection c ) {
+	public boolean containsAll( Collection<?> c ) {
 		int n = c.size();
 
 		final Iterator i = c.iterator();
@@ -210,7 +220,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	 * @return <code>true</code> if this collection changed as a result of the call.
 	 */
 
-	public boolean retainAll( Collection c ) {
+	public boolean retainAll( Collection<?> c ) {
 		boolean retVal = false;
 		int n = size();
 
@@ -232,7 +242,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	 * @return <code>true</code> if this collection changed as a result of the call.
 	 */
 
-	public boolean removeAll( Collection c ) {
+	public boolean removeAll( Collection<?> c ) {
 		boolean retVal = false;
 		int n = c.size();
 
@@ -247,8 +257,8 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	}
 
 	public String toString() {
-		final StringBuffer s = new StringBuffer();
-		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		final StringBuilder s = new StringBuilder();
+		final KEY_ITERATOR KEY_GENERIC i = iterator();
 		int n = size();
 		KEY_TYPE k;
 		boolean first = true;
@@ -259,7 +269,7 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 			if (first) first = false;
 			else s.append(", ");
 			k = i.NEXT_KEY();
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 			if (this == k) s.append("(this collection)"); else
 #endif
 				s.append(String.valueOf(k));
@@ -270,8 +280,3 @@ public abstract class ABSTRACT_COLLECTION implements COLLECTION {
 	}
 	 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

@@ -29,17 +29,12 @@ import it.unimi.dsi.fastutil.PriorityQueue;
  * {@link UnsupportedOperationException}.
  */
 
-public abstract class AbstractPriorityQueue implements PriorityQueue {
+public abstract class AbstractPriorityQueue<K> implements PriorityQueue<K> {
 
 	public void changed() { throw new UnsupportedOperationException(); }
 
-	public Object last() { throw new UnsupportedOperationException(); }
+	public K last() { throw new UnsupportedOperationException(); }
 
 	public boolean isEmpty() { return size() == 0; }
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

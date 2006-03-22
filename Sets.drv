@@ -21,19 +21,11 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.Collections;
-
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.NoSuchElementException;
 
 /** A class providing static methods and objects that do useful things with type-specific sets.
  *
- * @see it.unimi.dsi.fastutil.Sets
  * @see java.util.Collections
  */
 
@@ -41,37 +33,57 @@ public class SETS {
 
 	private SETS() {}
 
+	/** An immutable class representing the empty set and implementing a type-specific set interface.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific set.
+	 */
+
+	public static class EmptySet KEY_GENERIC extends COLLECTIONS.EmptyCollection KEY_GENERIC implements SET KEY_GENERIC, java.io.Serializable, Cloneable {
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		protected EmptySet() {}
+
+		public boolean remove( KEY_TYPE ok ) { throw new UnsupportedOperationException(); }
+		public Object clone() { return EMPTY_SET; }
+        private Object readResolve() { return EMPTY_SET; }
+	}
+
+
+	/** An empty set (immutable). It is serializable and cloneable.
+	 *
+	 * <P>The class of this objects represent an abstract empty set
+	 * that is a subset of a (sorted) type-specific set.
+	 */
+
+	public static final EmptySet EMPTY_SET = new EmptySet();
+
+
+
 	/** An immutable class representing a type-specific singleton set.
 	 *
 	 * <P>This class may be useful to implement your own in case you subclass
 	 * a type-specific set.	 */
 
-	public static class Singleton extends ABSTRACT_SET implements java.io.Serializable, Cloneable {
+	public static class Singleton KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements java.io.Serializable, Cloneable {
 	
 		public static final long serialVersionUID = -7046029254386353129L;
 	
-		protected final KEY_TYPE element;
+		protected final KEY_GENERIC_TYPE element;
 	
-		protected Singleton( final KEY_TYPE element ) {
+		protected Singleton( final KEY_GENERIC_TYPE element ) {
 			this.element = element;
 		}
 	
-		public boolean add( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		public boolean add( final KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
 
 		public boolean contains( final KEY_TYPE k ) { return KEY_EQUALS( k, element ); }
 	
-		public boolean addAll( final List l ) { throw new UnsupportedOperationException(); }
 		public boolean addAll( final Collection c ) { throw new UnsupportedOperationException(); }
 		public boolean removeAll( final Collection c ) { throw new UnsupportedOperationException(); }
 		public boolean retainAll( final Collection c ) { throw new UnsupportedOperationException(); }
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-		public boolean addAll( final LIST l ) { throw new UnsupportedOperationException(); }
-		public boolean addAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean removeAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean retainAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-#endif
-
+#if #keys(primitive)
 		/* Slightly optimized w.r.t. the one in ABSTRACT_SET. */
 	
 		public KEY_TYPE[] TO_KEY_ARRAY() {
@@ -80,7 +92,12 @@ public class SETS {
 			return a;
 		}
 	
-		public KEY_ITERATOR KEY_ITERATOR_METHOD() { return ITERATORS.wrap( TO_KEY_ARRAY() ); }
+		public boolean addAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+		public boolean removeAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+		public boolean retainAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
+#endif
+		@SuppressWarnings("unchecked")
+		public KEY_ITERATOR KEY_GENERIC iterator() { return ITERATORS.singleton( element ); }
 	
 		public int size() { return 1; }
 	
@@ -95,8 +112,8 @@ public class SETS {
 	 * @return a type-specific immutable set containing just <code>element</code>.
 	 */
 
-	public static SET singleton( final KEY_TYPE element ) {
-		return new Singleton( element );
+	public static KEY_GENERIC SET KEY_GENERIC singleton( final KEY_GENERIC_TYPE element ) {
+		return new Singleton KEY_GENERIC( element );
 	}
 
 #endif
@@ -109,27 +126,27 @@ public class SETS {
 	 * @return a type-specific immutable set containing just <code>element</code>.
 	 */
 
-	public static SET singleton( final Object element ) {
-		return new Singleton( KEY2TYPE( element ) );
+	public static KEY_GENERIC SET KEY_GENERIC singleton( final KEY_GENERIC_CLASS element ) {
+		return new Singleton KEY_GENERIC( KEY_CLASS2TYPE( element ) );
 	}
 
 #endif
 
 	/** A synchronized wrapper class for sets. */
 
-	public static class SynchronizedSet extends COLLECTIONS.SynchronizedCollection implements SET, java.io.Serializable {
+	public static class SynchronizedSet KEY_GENERIC extends COLLECTIONS.SynchronizedCollection KEY_GENERIC implements SET KEY_GENERIC, java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		protected SynchronizedSet( final SET s, final Object sync ) {
+		protected SynchronizedSet( final SET KEY_GENERIC s, final Object sync ) {
 			super( s, sync );
 		}
 
-		protected SynchronizedSet( final SET s ) {
+		protected SynchronizedSet( final SET KEY_GENERIC s ) {
 			super( s );
 		}
 
-		public boolean remove( final KEY_TYPE k ) { synchronized( sync ) { return ((SET)collection).remove( k ); } }
+		public boolean remove( final KEY_TYPE k ) { synchronized( sync ) { return collection.remove( KEY2OBJ( k ) ); } }
 		public boolean equals( final Object o ) { synchronized( sync ) { return collection.equals( o ); } }
 		public int hashCode() { synchronized( sync ) { return collection.hashCode(); } }
 	}
@@ -141,7 +158,7 @@ public class SETS {
 	 * @return a synchronized view of the specified set.
 	 * @see java.util.Collections#synchronizedSet(Set)
 	 */
-	public static SET synchronize( final SET s ) {	return new SynchronizedSet( s ); }
+	public static KEY_GENERIC SET KEY_GENERIC synchronize( final SET KEY_GENERIC s ) {	return new SynchronizedSet KEY_GENERIC( s ); }
 
 	/** Returns a synchronized type-specific set backed by the given type-specific set, using an assigned object to synchronize.
 	 *
@@ -151,17 +168,17 @@ public class SETS {
 	 * @see java.util.Collections#synchronizedSet(Set)
 	 */
 
-	public static SET synchronize( final SET s, final Object sync ) { return new SynchronizedSet( s, sync ); }
+	public static KEY_GENERIC SET KEY_GENERIC synchronize( final SET KEY_GENERIC s, final Object sync ) { return new SynchronizedSet KEY_GENERIC( s, sync ); }
 
 
 
 	/** An unmodifiable wrapper class for sets. */
 
-	public static class UnmodifiableSet extends COLLECTIONS.UnmodifiableCollection implements SET, java.io.Serializable {
+	public static class UnmodifiableSet KEY_GENERIC extends COLLECTIONS.UnmodifiableCollection KEY_GENERIC implements SET KEY_GENERIC, java.io.Serializable {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		protected UnmodifiableSet( final SET s ) {
+		protected UnmodifiableSet( final SET KEY_GENERIC s ) {
 			super( s );
 		}
 
@@ -177,7 +194,7 @@ public class SETS {
 	 * @return an unmodifiable view of the specified set.
 	 * @see java.util.Collections#unmodifiableSet(Set)
 	 */
-	public static SET unmodifiable( final SET s ) {	return new UnmodifiableSet( s ); }
+	public static KEY_GENERIC SET KEY_GENERIC unmodifiable( final SET KEY_GENERIC s ) {	return new UnmodifiableSet KEY_GENERIC( s ); }
 
 
 
@@ -186,7 +203,7 @@ public class SETS {
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
@@ -215,12 +232,12 @@ public class SETS {
 		ensure( t.equals( m ), "Error (" + seed + "): ! t.equals( m ) at start" );
 
 		/* Now we check that m actually holds that data. */
-		for(Iterator i=t.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=t.iterator(); i.hasNext();  ) {
 			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on t)" );
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
 			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after insertion (iterating on m)" );
 		}
 
@@ -235,18 +252,18 @@ public class SETS {
 			try {
 				m.contains(T);
 			}
-			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
 
 			try {
 				t.contains(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { tThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in java.util.NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
 			if ( !mThrowsNoElement && !mThrowsIllegal && !mThrowsIndex) ensure( m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method) " + m );
@@ -263,7 +280,7 @@ public class SETS {
 			try {
 				m.contains(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
@@ -271,12 +288,12 @@ public class SETS {
 			try {
 				t.contains(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { tThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): contains() divergence in java.util.NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): contains() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): contains() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
 			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): contains() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
@@ -293,7 +310,7 @@ public class SETS {
 			try {
 				rm = m.add(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
@@ -301,12 +318,12 @@ public class SETS {
 			try {
 				rt = t.add(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { tThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): add() divergence in java.util.NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): add() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): add() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
 			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): add() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
@@ -319,7 +336,7 @@ public class SETS {
 			try {
 				rm = m.remove(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
@@ -327,14 +344,14 @@ public class SETS {
 			try {
 				rt = t.remove(KEY2OBJ(T));
 			}
-			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { tThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
 			if ( ! KEY_EQUALS( T, k ) && mThrowsUnsupp && ! tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): remove() divergence in java.util.NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): remove() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): remove() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
 			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): remove() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
@@ -354,7 +371,7 @@ public class SETS {
 			try {
 				rm = m.addAll(java.util.Collections.singleton(KEY2OBJ(T)));
 			}
-			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
@@ -362,12 +379,12 @@ public class SETS {
 			try {
 				rt = t.addAll(java.util.Collections.singleton(KEY2OBJ(T)));
 			}
-			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { tThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): addAll() divergence in java.util.NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): addAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): addAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
 			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): addAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
@@ -380,7 +397,7 @@ public class SETS {
 			try {
 				rm = m.removeAll(java.util.Collections.singleton(KEY2OBJ(T)));
 			}
-			catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { mThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { mThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { mThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { mThrowsUnsupp = true; }
@@ -388,14 +405,14 @@ public class SETS {
 			try {
 				rt = t.removeAll(java.util.Collections.singleton(KEY2OBJ(T)));
 			}
-			catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+			catch ( java.util.NoSuchElementException e ) { tThrowsNoElement = true; }
 			catch ( IllegalArgumentException e ) { tThrowsIllegal = true; }
 			catch ( IndexOutOfBoundsException e ) { tThrowsIndex = true; }
 			catch ( UnsupportedOperationException e ) { tThrowsUnsupp = true; }
 
 			if ( ! KEY_EQUALS( T, k ) && mThrowsUnsupp && ! tThrowsUnsupp ) mThrowsUnsupp = false; // Stupid bug in Collections.singleton()
 
-			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
+			ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + seed + "): removeAll() divergence in java.util.NoSuchElementException for " + T + " (" + mThrowsNoElement + ", " + tThrowsNoElement + ") " + m );
 			ensure( mThrowsIllegal == tThrowsIllegal, "Error (" + seed + "): removeAll() divergence in IllegalArgumentException for " + T + " (" + mThrowsIllegal + ", " + tThrowsIllegal + ") " + m );
 			ensure( mThrowsIndex == tThrowsIndex, "Error (" + seed + "): removeAll() divergence in IndexOutOfBoundsException for " + T + " (" + mThrowsIndex + ", " + tThrowsIndex + ") " + m );
 			ensure( mThrowsUnsupp == tThrowsUnsupp, "Error (" + seed + "): removeAll() divergence in UnsupportedOperationException for " + T + " (" + mThrowsUnsupp + ", " + tThrowsUnsupp + ") " + m );
@@ -407,13 +424,13 @@ public class SETS {
 
 		/* Now we check that m actually holds the same data. */
 		  
-		for(Iterator i=t.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=t.iterator(); i.hasNext();  ) {
 			ensure( m.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 		  
-		for(Iterator i=m.iterator(); i.hasNext();  ) {
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
 			ensure( t.contains( i.next() ), "Error (" + seed + "): m and t differ on an entry after removal (iterating on m)" );
 		}
 
@@ -500,8 +517,3 @@ public class SETS {
 #endif
 	
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

@@ -94,7 +94,7 @@ import java.util.NoSuchElementException;
  * build incrementally the previous array (whereas ({@link java.util.ListIterator#next() next()} can).
  */
 
-public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serializable, Cloneable {
+public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> implements Serializable, Cloneable {
 
 	public static final long serialVersionUID = -7046029254386353130L;
 
@@ -106,8 +106,6 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 	protected KEY_TYPE[] array;
 	/** The pointers to entire arrays in the list. */
 	transient protected int[] p;
-
-	private final static boolean ASSERTS = true;
 
 	/** Creates a new front-coded list containing the arrays returned by the given iterator.
 	 * 
@@ -182,7 +180,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 	 * @return the length coded at <code>pos</code>.
 	 */
 	private static int readInt( final KEY_TYPE a[], int pos ) {
-#if #keyclass(Integer) || #keyclass(Long)
+#if #keyclass(Integer)
+		return a[ pos ];
+#elif #keyclass(Long)
 		return (int)a[ pos ];
 #elif #keyclass(Character)
 		return a[ pos ] < 0x8000 ? a[ pos ] : ( a[ pos ] & 0x7FFF ) << 16 | a[ pos + 1 ];
@@ -197,32 +197,11 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 #endif
 	}
 
-	/** Computes the number of elements coding the length at a given position.
-	 * @param a the data array.
-	 * @param pos the starting position.
-	 * @return the number of elements coding the length stored at <code>pos</code>.
-	 */
-	private static int readCount( final KEY_TYPE a[], int pos ) {
-#if #keyclass(Integer) || #keyclass(Long)
-		return 1;
-#elif #keyclass(Character)
-		return a[ pos ] < ( 1 << 15 ) ? 1 : 2;
-#elif #keyclass(Short)
-		return a[ pos ] >= 0 ? 1 : 2;
-#else
-		if ( a[ pos++ ] >= 0 ) return 1;
-		if ( a[ pos++ ] >= 0 ) return 2;
-		if ( a[ pos++ ] >= 0 ) return 3;
-		if ( a[ pos++ ] >= 0 ) return 4;
-		return 5;
-#endif
-	}
-
-
 	/** Computes the number of elements coding a given length.
 	 * @param length the length to be coded.
 	 * @return the number of elements coding <code>length</code>.
 	 */
+	@SuppressWarnings("unused")
 	private static int count( final int length ) {
 #if #keyclass(Integer) || #keyclass(Long)
 		return 1;
@@ -252,21 +231,17 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 			a[ pos ] = (char)length;
 			return 1;
 		}
-		else {
-			a[ pos++ ] =  (char)( length >>> 16 | 0x8000 );
-			a[ pos ] = (char)( length & 0xFFFF );
-			return 2;
-		}
+		a[ pos++ ] =  (char)( length >>> 16 | 0x8000 );
+		a[ pos ] = (char)( length & 0xFFFF );
+		return 2;
 #elif #keyclass(Short)
 		if ( length < ( 1 << 15 ) ) {
 			a[ pos ] = (short)length;
 			return 1;
 		}
-		else {
-			a[ pos++ ] =  (short)( - ( length >>> 16 ) - 1 );
-			a[ pos ] = (short)( length & 0xFFFF );
-			return 2;
-		}
+		a[ pos++ ] =  (short)( - ( length >>> 16 ) - 1 );
+		a[ pos ] = (short)( length & 0xFFFF );
+		return 2;
 #else
 		final int count = count( length );
 		a[ pos + count - 1 ] = (byte)( length & 0x7F );
@@ -378,7 +353,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 		return arrayLength + common;
 	}
 
-	public Object get( final int index ) {
+	public KEY_TYPE[] get( final int index ) {
 		return getArray( index );
 	}
 
@@ -409,7 +384,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 
 		final int arrayLength = extract( index, a, offset, length );
 		if ( length >= arrayLength ) return arrayLength;
-		else return length - arrayLength;
+		return length - arrayLength;
 	}
 
 	/** Stores in the given array an array stored in this front-coded list.
@@ -427,10 +402,10 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 		return n;
 	}
 
-	public ObjectListIterator objectListIterator( final int start ) {
+	public ObjectListIterator<KEY_TYPE[]> listIterator( final int start ) {
 		ensureIndex( start );
 
-		return new AbstractObjectListIterator() {
+		return new AbstractObjectListIterator<KEY_TYPE[]>() {
 				KEY_TYPE a[] = ARRAYS.EMPTY_ARRAY;
 				int i = 0, pos = 0;
 				boolean inSync; // Whether the current value in a is the string just before the next to be produced.
@@ -463,7 +438,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 					return i;
 				}
 				
-				public Object next() {
+				public KEY_TYPE[] next() {
 					int length, common;
 
 					if ( ! hasNext() ) throw new NoSuchElementException();
@@ -494,10 +469,10 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 					return ARRAYS.copy( a, 0, length );
 				}
 
-				public Object previous() {
+				public KEY_TYPE[] previous() {
 					if ( ! hasPrevious() ) throw new NoSuchElementException();
 					inSync = false;
-					return (KEY_TYPE[])get( --i );
+					return getArray( --i );
 				}
 			};
 	}
@@ -516,8 +491,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 		catch( CloneNotSupportedException cantHappen ) {
 			throw new InternalError();
 		}
-		c.array = (KEY_TYPE[]) array.clone();
-		c.p = (int[]) p.clone();
+		c.array = array.clone();
+		c.p = p.clone();
 		return c;
 	}
 
@@ -566,7 +541,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
@@ -733,9 +708,3 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList implements Serial
 
 
 }
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

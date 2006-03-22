@@ -146,7 +146,7 @@ public interface Hash {
 	 * {@link HashCommon#REMOVED}, too.
 	 */
 
-	public interface Strategy {
+	public interface Strategy<K> {
 
 		/** Returns the hash code of the specified object with respect to this hash strategy.
 		 *
@@ -154,7 +154,7 @@ public interface Hash {
 		 * @return the hash code of the given object with respect to this hash strategy.
 		 */
 
-		public int hashCode( Object o );
+		public int hashCode( K o );
 
 		/** Returns true if the given objects are equal with respect to this hash strategy.
 		 *
@@ -162,12 +162,7 @@ public interface Hash {
 		 * @param b another object (or <code>null</code>).
 		 * @return true if the two specified objects are equal with respect to this hash strategy.
 		 */
-		public boolean equals( Object a, Object b );
+		public boolean equals( K a, K b );
 	}
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

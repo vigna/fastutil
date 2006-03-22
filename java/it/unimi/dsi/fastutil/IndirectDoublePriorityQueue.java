@@ -33,7 +33,7 @@ import java.util.Comparator;
  * primary comparator.
  */
 
-public interface IndirectDoublePriorityQueue extends IndirectPriorityQueue {
+public interface IndirectDoublePriorityQueue<K> extends IndirectPriorityQueue<K> {
 
 	/** Returns the first element of this queue with respect to the {@linkplain #secondaryComparator() secondary comparator}.
 	 *
@@ -52,10 +52,5 @@ public interface IndirectDoublePriorityQueue extends IndirectPriorityQueue {
 	 * @return the secondary comparator of this queue.
 	 * @see #secondaryFirst()
 	 */
-	public Comparator secondaryComparator();
+	public Comparator<? super K> secondaryComparator();
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

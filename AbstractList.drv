@@ -21,9 +21,9 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.Iterators;
+#if #keys(reference)
 import it.unimi.dsi.fastutil.Stack;
+#endif
 
 import java.util.List;
 import java.util.Iterator;
@@ -36,9 +36,7 @@ import java.util.NoSuchElementException;
  * <P>As an additional bonus, this class implements on top of the list operations a type-specific stack.
  */
 
-public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST, STACK {
-
-	private static final boolean ASSERTS = ASSERTS_VALUE;
+public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_GENERIC implements LIST KEY_GENERIC, STACK KEY_GENERIC {
 
 	protected ABSTRACT_LIST() {}
 	
@@ -62,11 +60,11 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 		if ( index >= size() ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + ( size() ) + ")" );
 	}
 
-	public void add( final int index, final KEY_TYPE k ) {
+	public void add( final int index, final KEY_GENERIC_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean add( final KEY_TYPE k ) {
+	public boolean add( final KEY_GENERIC_TYPE k ) {
 		add( size(), k );
 		return true;
 	}
@@ -78,84 +76,66 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 		return true;
 	}
 
-	public KEY_TYPE REMOVE_KEY( int i ) {
+	public KEY_GENERIC_TYPE REMOVE_KEY( int i ) {
 		throw new UnsupportedOperationException();
 	}
 
-	public KEY_TYPE set( final int index, final KEY_TYPE k ) {
+	public KEY_GENERIC_TYPE set( final int index, final KEY_GENERIC_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean addAll( int index, final Collection c ) {
+	public boolean addAll( int index, final Collection<? extends KEY_GENERIC_CLASS> c ) {
 		ensureIndex( index );
 		int n = c.size();
 		if ( n == 0 ) return false;
-		Iterator i = c.iterator();
+		Iterator<? extends KEY_GENERIC_CLASS> i = c.iterator();
 		while( n-- != 0 ) add( index++, i.next() );
 		return true;
 	}
 
 	/** Delegates to a more generic method. */
-	public boolean addAll( final int index, COLLECTION c ) {
-		return addAll( index, (Collection)c );
-	}
-
-	/** Delegates to a more generic method. */
-	public boolean addAll( final int index, LIST l ) {
-		return addAll( index, (COLLECTION)l );
-	}
-
-	/** Delegates to a more generic method. */
-	public boolean addAll( final Collection c ) {
+	public boolean addAll( final Collection<? extends KEY_GENERIC_CLASS> c ) {
 		return addAll( size(), c );
 	}
 
-	/** Delegates to a more generic method. */
-	public boolean addAll( final COLLECTION c ) {
-		return addAll( size(), c );
+	/** Delegates to the new covariantly stronger generic method. */
+	
+	@Deprecated
+	public KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD() {
+		return listIterator();
 	}
 
-	/** Delegates to a more generic method. */
-	public boolean addAll( final LIST l ) {
-		return addAll( size(), l );
+	/** Delegates to the new covariantly stronger generic method. */
+	
+	@Deprecated
+	public KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD( final int index ) {
+		return listIterator( index );
 	}
 
-	/** Delegates to the corresponding type-specific method. */
-	public ListIterator listIterator() {
-		return KEY_LIST_ITERATOR_METHOD();
+	public KEY_ITERATOR KEY_GENERIC iterator() {
+		return listIterator();
 	}
 
-	/** Delegates to the corresponding type-specific method. */
-	public ListIterator listIterator( final int index ) {
-		return KEY_LIST_ITERATOR_METHOD( index );
+	public KEY_LIST_ITERATOR KEY_GENERIC listIterator() {
+		return listIterator( 0 );
 	}
 
-	/** Delegates to the corresponding list-iterator method. */
-	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
-		return KEY_LIST_ITERATOR_METHOD();
-	}
-
-	/** Delegates to the corresponding list-iterator method. */
-	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD() {
-		return KEY_LIST_ITERATOR_METHOD( 0 );
-	}
-
-	public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
-		return new KEY_ABSTRACT_LIST_ITERATOR() {
+	public KEY_LIST_ITERATOR KEY_GENERIC listIterator( final int index ) {
+		return new KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC() {
 				int pos = index, last = -1;
 							
 				public boolean hasNext() { return pos < ABSTRACT_LIST.this.size(); }
 				public boolean hasPrevious() { return pos > 0; }
-				public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY( last = pos++ ); }
-				public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY( last = --pos ); }
+				public KEY_GENERIC_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY( last = pos++ ); }
+				public KEY_GENERIC_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY( last = --pos ); }
 				public int nextIndex() { return pos; }
 				public int previousIndex() { return pos - 1; }
-				public void add( KEY_TYPE k ) { 
+				public void add( KEY_GENERIC_TYPE k ) { 
 					if ( last == -1 ) throw new IllegalStateException();
 					ABSTRACT_LIST.this.add( pos++, k ); 
 					last = -1;
 				}
-				public void set( KEY_TYPE k ) { 
+				public void set( KEY_GENERIC_TYPE k ) { 
 					if ( last == -1 ) throw new IllegalStateException();
 					ABSTRACT_LIST.this.set( last, k ); 
 				}
@@ -179,8 +159,8 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 #if #keyclass(Object)
 		int h = KEY2INT( k );
 #endif
-		final KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD();
-		KEY_TYPE e;
+		final KEY_LIST_ITERATOR KEY_GENERIC i = KEY_LIST_ITERATOR_METHOD();
+		KEY_GENERIC_TYPE e;
 		while( i.hasNext() ) {
 			e = i.NEXT_KEY();
 			if ( KEY_EQUALS_HASH( k, h, e ) ) return i.previousIndex(); 
@@ -192,8 +172,8 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 #if #keyclass(Object)
 		int h = KEY2INT( k );
 #endif
-		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( size() );
-		KEY_TYPE e;
+		KEY_LIST_ITERATOR KEY_GENERIC i = KEY_LIST_ITERATOR_METHOD( size() );
+		KEY_GENERIC_TYPE e;
 		while( i.hasPrevious() ) {
 			e = i.PREV_KEY();
 			if ( KEY_EQUALS_HASH( k, h, e ) ) return i.nextIndex(); 
@@ -208,17 +188,19 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	}		
 
 
-	public LIST SUBLIST_METHOD( final int from, final int to ) {
+	public LIST KEY_GENERIC subList( final int from, final int to ) {
 		ensureIndex( from );
 		ensureIndex( to );
 		if ( from > to ) throw new IndexOutOfBoundsException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 		
-		return new SUBLIST( this, from, to );
+		return new SUBLIST KEY_GENERIC( this, from, to );
 	}
 	
-	/** Delegates to the corresponding type-specific method. */
-	public List subList( final int from, final int to ) {
-		return SUBLIST_METHOD( from, to );
+	/** Delegates to the new covariantly stronger generic method. */
+
+	@Deprecated
+	public LIST KEY_GENERIC SUBLIST_METHOD( final int from, final int to ) {
+		return subList( from, to );
 	}
 
 	/** Removes elements of this type-specific list one-by-one. 
@@ -233,7 +215,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	
 	public void removeElements( final int from, final int to ) {
 		ensureIndex( to );
-		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( from );
+		KEY_LIST_ITERATOR KEY_GENERIC i = KEY_LIST_ITERATOR_METHOD( from );
 		int n = to - from;
 		if ( n < 0 ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 		while( n-- != 0 ) {
@@ -253,14 +235,14 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	 * @param length the number of elements to add.
 	 */
 	
-	public void addElements( int index, final KEY_TYPE a[], int offset, int length ) {
+	public void addElements( int index, final KEY_GENERIC_TYPE a[], int offset, int length ) {
 		ensureIndex( index );
 		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
 		if ( offset + length > a.length ) throw new ArrayIndexOutOfBoundsException( "End index (" + ( offset + length ) + ") is greater than array length (" + a.length + ")" );
 		while( length-- != 0 ) add( index++, a[ offset++ ] );
 	}
 
-	public void addElements( final int index, final KEY_TYPE a[] ) {
+	public void addElements( final int index, final KEY_GENERIC_TYPE a[] ) {
 		addElements( index, a, 0, a.length );
 	}
 
@@ -276,16 +258,18 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	 */
 	 
 	public void getElements( final int from, final KEY_TYPE a[], int offset, int length ) {
-		KEY_LIST_ITERATOR i = KEY_LIST_ITERATOR_METHOD( from );
+		KEY_LIST_ITERATOR KEY_GENERIC i = KEY_LIST_ITERATOR_METHOD( from );
 		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
 		if ( offset + length > a.length ) throw new ArrayIndexOutOfBoundsException( "End index (" + ( offset + length ) + ") is greater than array length (" + a.length + ")" );
 		if ( from + length > size() ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than list size (" + size() + ")" );
 		while( length-- != 0 ) a[ offset++ ] = i.NEXT_KEY();
 	}
 
+#if ! #keyclass(Reference)
 	private boolean valEquals( final Object a, final Object b ) {
 		return a == null ? b == null : a.equals( b );
 	}
+#endif
 
 	public boolean equals( final Object o ) {
 		if ( o == this ) return true;
@@ -309,21 +293,22 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
      * argument is a {@link java.util.List}, this method performs a lexicographical comparison; otherwise,
      * it throws a <code>ClassCastException</code>.
      *
-     * @param o an object.
+     * @param l an list.
      * @return if the argument is a {@link java.util.List}, a negative integer,
      * zero, or a positive integer as this list is lexicographically less than, equal
      * to, or greater than the argument.
      * @throws ClassCastException if the argument is not a list.
      */
 
-	public int compareTo( final Object o ) {
-		if ( o == this ) return 0;
-		if ( o instanceof LIST ) {
-			final LIST l = (LIST)o;
+	@SuppressWarnings("unchecked")
+	public int compareTo( final List<? extends KEY_GENERIC_CLASS> l ) {
+		if ( l == this ) return 0;
+
+		if ( l instanceof LIST ) {
 			
-			final KEY_LIST_ITERATOR i1 = KEY_LIST_ITERATOR_METHOD(), i2 = ((LIST)l).KEY_LIST_ITERATOR_METHOD();
+			final KEY_LIST_ITERATOR KEY_GENERIC i1 = listIterator(), i2 = ((LIST)l).listIterator();
 			int r;
-			KEY_TYPE e1, e2;
+			KEY_GENERIC_TYPE e1, e2;
 			
 			while( i1.hasNext() && i2.hasNext() ) {
 				e1 = i1.NEXT_KEY();
@@ -333,13 +318,12 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 			return i2.hasNext() ? -1 : ( i1.hasNext() ? 1 : 0 );
 		}
 		
-		List l = (List)o;
-		
-		ListIterator i1 = listIterator(), i2 = ((List)l).listIterator();
+		ListIterator<? extends KEY_GENERIC_CLASS> i1 = listIterator(), i2 = l.listIterator();
 		int r;
 
-		while( i1.hasNext() && i2.hasNext() ) 
-			if ( ( r = ((Comparable)i1.next()).compareTo( i2.next() ) ) != 0 ) return r;
+		while( i1.hasNext() && i2.hasNext() ) {
+			if ( ( r = ((Comparable<? super KEY_GENERIC_CLASS>)i1.next()).compareTo( i2.next() ) ) != 0 ) return r;
+		}
 		return i2.hasNext() ? -1 : ( i1.hasNext() ? 1 : 0 );
 	}
 #endif
@@ -349,84 +333,102 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	 * @return the hash code for this list.
 	 */
 	public int hashCode() {
-		KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		KEY_ITERATOR KEY_GENERIC i = iterator();
 		int h = 1, s = size();
 		while ( s-- != 0 ) {
-			KEY_TYPE k = i.NEXT_KEY(); 
+			KEY_GENERIC_TYPE k = i.NEXT_KEY(); 
 			h = 31 * h + KEY2INT( k );
 		}
 		return h;
 	}
 
 	
-	public void push( KEY_TYPE o ) {
+	public void push( KEY_GENERIC_TYPE o ) {
 		add( o ); 
 	}
 
-	public KEY_TYPE POP() {
+	public KEY_GENERIC_TYPE POP() {
 		if ( isEmpty() ) throw new NoSuchElementException();
 		return REMOVE_KEY( size() - 1 );
 	}
 
-	public KEY_TYPE TOP() {
+	public KEY_GENERIC_TYPE TOP() {
 		if ( isEmpty() ) throw new NoSuchElementException();
 		return GET_KEY( size() - 1 );
 	}
 
-	public KEY_TYPE PEEK( int i ) {
+	public KEY_GENERIC_TYPE PEEK( int i ) {
 		return GET_KEY( size() - 1 - i );
 	}
 
-#if ! #keyclass(Object) && ! #keyclass(Reference)
+#if #keys(primitive)
 
-	/** Delegates to the corresponding type-specific method. */
-	public void add( final int index, final Object ok) {
-		add( index, KEY2TYPE( ok) );
+	/** Delegates to a more generic method. */
+	public boolean addAll( final int index, final COLLECTION c ) {
+		return addAll( index, (Collection<? extends KEY_CLASS>)c );
+	}
+
+	/** Delegates to a more generic method. */
+	public boolean addAll( final int index, final LIST l ) {
+		return addAll( index, (COLLECTION)l );
+	}
+
+	public boolean addAll( final COLLECTION c ) {
+		return addAll( size(), c );
+	}
+
+	public boolean addAll( final LIST l ) {
+		return addAll( size(), l );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public Object set( final int index, final Object ok) {
-		return KEY2OBJ( set( index, KEY2TYPE( ok) ) );
+	public void add( final int index, final KEY_CLASS ok ) {
+		add( index, ok.KEY_VALUE() );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public Object get( final int index ) {
+	public KEY_CLASS set( final int index, final KEY_CLASS ok ) {
+		return KEY2OBJ( set( index, ok.KEY_VALUE() ) );
+	}
+
+	/** Delegates to the corresponding type-specific method. */
+	public KEY_CLASS get( final int index ) {
 		return KEY2OBJ( GET_KEY( index ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
 	public int indexOf( final Object ok) {
-		return indexOf( KEY2TYPE( ok) );
+		return indexOf( KEY_OBJ2TYPE( ok ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
 	public int lastIndexOf( final Object ok ) {
-		return lastIndexOf( KEY2TYPE( ok) );
+		return lastIndexOf( KEY_OBJ2TYPE( ok ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public Object remove( final int index ) {
+	public KEY_CLASS remove( final int index ) {
 		return KEY2OBJ( REMOVE_KEY( index ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public void push( Object o ) {
-		push( KEY2TYPE( o ) ); 
+	public void push( KEY_CLASS o ) {
+		push( o.KEY_VALUE() ); 
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public Object pop() {
-		return KEY2OBJ( POP() ); 
+	public KEY_CLASS pop() {
+		return KEY_CLASS.valueOf( POP() ); 
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public Object top() {
-		return KEY2OBJ( TOP() ); 
+	public KEY_CLASS top() {
+		return KEY_CLASS.valueOf( TOP() ); 
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public Object peek( int i ) {
-		return KEY2OBJ( PEEK( i ) ); 
+	public KEY_CLASS peek( int i ) {
+		return KEY_CLASS.valueOf( PEEK( i ) ); 
 	}
 
 #else
@@ -436,10 +438,10 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 
 
 	public String toString() {
-		final StringBuffer s = new StringBuffer();
-		final KEY_ITERATOR i = KEY_ITERATOR_METHOD();
+		final StringBuilder s = new StringBuilder();
+		final KEY_ITERATOR KEY_GENERIC i = iterator();
 		int n = size();
-		KEY_TYPE k;
+		KEY_GENERIC_TYPE k;
 		boolean first = true;
 
 		s.append("[");
@@ -448,7 +450,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 			if (first) first = false;
 			else s.append(", ");
 			k = i.NEXT_KEY();
-#if #keyclass(Object) || #keyclass(Reference)
+#if #keys(reference)
 			if (this == k) s.append("(this list)"); else
 #endif
 				s.append( String.valueOf( k ) );
@@ -459,14 +461,18 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 	}
 
 
-	public static class SUBLIST extends ABSTRACT_LIST implements java.io.Serializable {
-		protected final LIST l; // The list this sublist restricts.
-		protected final int from; // Initial (inclusive) index of this sublist.
-		protected int to; //  Final (exclusive) index of this sublist.
+	public static class SUBLIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements java.io.Serializable {
+    	public static final long serialVersionUID = -7046029254386353129L;
+		/** The list this sublist restricts. */
+		protected final LIST KEY_GENERIC l;
+		/** Initial (inclusive) index of this sublist. */
+		protected final int from;
+		/** Final (exclusive) index of this sublist. */
+		protected int to;
 	
 		private static final boolean ASSERTS = ASSERTS_VALUE;
 	
-		public SUBLIST( final LIST l, final int from, final int to ) {
+		public SUBLIST( final LIST KEY_GENERIC l, final int from, final int to ) {
 			this.l = l;
 			this.from = from;
 			this.to = to;
@@ -480,21 +486,21 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 			}
 		}
 
-		public boolean add( final KEY_TYPE k ) {
+		public boolean add( final KEY_GENERIC_TYPE k ) {
 			l.add( to, k );
 			to++;
 			if ( ASSERTS ) assertRange();
 			return true;
 		}
 
-		public void add( final int index, final KEY_TYPE k ) {
+		public void add( final int index, final KEY_GENERIC_TYPE k ) {
 			ensureIndex( index );
 			l.add( from + index, k );
 			to++;
 			if ( ASSERTS ) assertRange();
 		}
 
-		public boolean addAll( final int index, final Collection c ) {
+		public boolean addAll( final int index, final Collection<? extends KEY_GENERIC_CLASS> c ) {
 			ensureIndex( index );
 			to += c.size();
 			if ( ASSERTS ) {
@@ -502,37 +508,15 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 				assertRange();
 				return retVal;
 			}
-			else return l.addAll( from + index, c );
+			return l.addAll( from + index, c );
 		}
 
-		public boolean addAll( final int index, final COLLECTION c ) {
-			ensureIndex( index );
-			to += c.size();
-			if ( ASSERTS ) {
-				boolean retVal = l.addAll( from + index, c );
-				assertRange();
-				return retVal;
-			}
-			else return l.addAll( from + index, c );
-		}
-
-		public boolean addAll( final int index, final LIST l ) {
-			ensureIndex( index );
-			to += l.size();
-			if ( ASSERTS ) {
-				boolean retVal = this.l.addAll( from + index, l );
-				assertRange();
-				return retVal;
-			}
-			else return this.l.addAll( from + index, l );
-		}
-
-		public KEY_TYPE GET_KEY( int index ) {
+		public KEY_GENERIC_TYPE GET_KEY( int index ) {
 			ensureRestrictedIndex( index );
 			return l.GET_KEY( from + index );
 		}
 
-		public KEY_TYPE REMOVE_KEY( int index ) {
+		public KEY_GENERIC_TYPE REMOVE_KEY( int index ) {
 			ensureRestrictedIndex( index );
 			to--;
 			return l.REMOVE_KEY( from + index );
@@ -547,7 +531,7 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 			return true;
 		}
 
-		public KEY_TYPE set( int index, KEY_TYPE k ) {
+		public KEY_GENERIC_TYPE set( int index, KEY_GENERIC_TYPE k ) {
 			ensureRestrictedIndex( index );
 			return l.set( from + index, k );
 		}
@@ -576,32 +560,32 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 			if ( ASSERTS ) assertRange();
 		}
 
-		public void addElements( int index, final KEY_TYPE a[], int offset, int length ) {
+		public void addElements( int index, final KEY_GENERIC_TYPE a[], int offset, int length ) {
 			ensureIndex( index );
 			l.addElements( this.from + index, a, offset, length );
 			this.to += length;
 			if ( ASSERTS ) assertRange();
 		}
 
-		public KEY_LIST_ITERATOR KEY_LIST_ITERATOR_METHOD( final int index ) {
+		public KEY_LIST_ITERATOR KEY_GENERIC listIterator( final int index ) {
 			ensureIndex( index );
 
-			return new KEY_ABSTRACT_LIST_ITERATOR() {
+			return new KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC() {
 					int pos = index, last = -1;
 							
 					public boolean hasNext() { return pos < size(); }
 					public boolean hasPrevious() { return pos > 0; }
-					public KEY_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
-					public KEY_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
+					public KEY_GENERIC_TYPE NEXT_KEY() { if ( ! hasNext() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = pos++ ) ); }
+					public KEY_GENERIC_TYPE PREV_KEY() { if ( ! hasPrevious() ) throw new NoSuchElementException(); return l.GET_KEY( from + ( last = --pos ) ); }
 					public int nextIndex() { return pos; }
 					public int previousIndex() { return pos - 1; }
-					public void add( KEY_TYPE k ) { 
+					public void add( KEY_GENERIC_TYPE k ) { 
 						if ( last == -1 ) throw new IllegalStateException();
 						SUBLIST.this.add( pos++, k ); 
 						last = -1;
 						if ( ASSERTS ) assertRange();
 					}
-					public void set( KEY_TYPE k ) { 
+					public void set( KEY_GENERIC_TYPE k ) { 
 						if ( last == -1 ) throw new IllegalStateException();
 						SUBLIST.this.set( last, k ); 
 					}
@@ -616,25 +600,39 @@ public abstract class ABSTRACT_LIST extends ABSTRACT_COLLECTION implements LIST,
 				};
 		}
 
-		public LIST SUBLIST_METHOD( final int from, final int to ) {
+		public LIST KEY_GENERIC subList( final int from, final int to ) {
 			ensureIndex( from );
 			ensureIndex( to );
 			if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
 			
-			return new SUBLIST( this, from, to );
+			return new SUBLIST KEY_GENERIC( this, from, to );
 		}
+
+#if #keys(primitive)
+
+		public boolean addAll( final int index, final COLLECTION c ) {
+			ensureIndex( index );
+			to += c.size();
+			if ( ASSERTS ) {
+				boolean retVal = l.addAll( from + index, c );
+				assertRange();
+				return retVal;
+			}
+			return l.addAll( from + index, c );
+		}
+
+		public boolean addAll( final int index, final LIST l ) {
+			ensureIndex( index );
+			to += l.size();
+			if ( ASSERTS ) {
+				boolean retVal = this.l.addAll( from + index, l );
+				assertRange();
+				return retVal;
+			}
+			return this.l.addAll( from + index, l );
+		}
+#endif
 
 	}
 
 }
-
-
-
-
-
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

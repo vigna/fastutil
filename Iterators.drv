@@ -21,8 +21,6 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.Iterators;
-
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
@@ -36,23 +34,93 @@ public class ITERATORS {
 
 	private ITERATORS() {}
 	
-	/** Returns an empty type-specific list iterator.
+	/** A class returning no elements and a type-specific iterator interface.
 	 *
-	 * @return an empty type-specific list iterator.
-	 * @deprecated As of <code>fastutil</code> 3.1, replaced by {@link Iterators#EMPTY_ITERATOR}.
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific iterator.
 	 */
-	public static KEY_LIST_ITERATOR KEY_EMPTY_ITERATOR_METHOD() {
-		return Iterators.EMPTY_ITERATOR;
+
+	public static class EmptyIterator KEY_GENERIC extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		protected EmptyIterator() {}
+
+		public boolean hasNext() { return false; }
+		public boolean hasPrevious() { return false; }
+		public KEY_GENERIC_TYPE NEXT_KEY() { throw new NoSuchElementException(); }
+		public KEY_GENERIC_TYPE PREV_KEY() { throw new NoSuchElementException(); }
+		public int nextIndex() { return 0; }
+		public int previousIndex() { return -1; }
+		public int skip( int n ) { return 0; };
+		public int back( int n ) { return 0; };
+		public Object clone() { return EMPTY_ITERATOR; }
+        private Object readResolve() { return EMPTY_ITERATOR; }
 	}
+
+	/** An empty iterator (immutable). It is serializable and cloneable.
+	 *
+	 * <P>The class of this objects represent an abstract empty iterator
+	 * that can iterate as a type-specific (list) iterator.
+	 */
+
+	public final static EmptyIterator EMPTY_ITERATOR = new EmptyIterator();
+
+
+
+	/** An iterator returning a single element. */
+
+	private static class SingletonIterator KEY_GENERIC extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		private final KEY_GENERIC_TYPE element;
+		private int curr;
+
+		public SingletonIterator( final KEY_GENERIC_TYPE element ) {
+			this.element = element;
+		}
+	
+		public boolean hasNext() { return curr == 0; }
+		public boolean hasPrevious() { return curr == 1; }
+
+		public KEY_GENERIC_TYPE NEXT_KEY() {
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			curr = 1;
+			return element;
+		}
+
+		public KEY_GENERIC_TYPE PREV_KEY() {
+			if ( ! hasPrevious() ) throw new NoSuchElementException();
+			curr = 0;
+			return element;
+		}
+
+		public int nextIndex() {
+			return curr;
+		}
+
+		public int previousIndex() {
+			return curr - 1;
+		}
+	}
+
+
+	/** Returns an iterator that iterates just over the given element.
+	 *
+	 * @param element the only element to be returned by a type-specific list iterator.
+	 * @return  an iterator that iterates just over <code>element</code>.
+	 */
+	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC singleton( final KEY_GENERIC_TYPE element ) {
+		return new SingletonIterator KEY_GENERIC( element );
+	}
+
 
 	/** A class to wrap arrays in iterators. */
 
-	private static class ArrayIterator extends KEY_ABSTRACT_LIST_ITERATOR {
-		private final KEY_TYPE array[];
+	private static class ArrayIterator KEY_GENERIC extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		private final KEY_GENERIC_TYPE[] array;
 		private final int offset, length;
 		private int curr;
 
-		public ArrayIterator( final KEY_TYPE array[], final int offset, final int length ) {
+		public ArrayIterator( final KEY_GENERIC_TYPE[] array, final int offset, final int length ) {
 			this.array = array;
 			this.offset = offset;
 			this.length = length;
@@ -61,12 +129,12 @@ public class ITERATORS {
 		public boolean hasNext() { return curr < length; }
 		public boolean hasPrevious() { return curr > 0; }
 
-		public KEY_TYPE NEXT_KEY() {
+		public KEY_GENERIC_TYPE NEXT_KEY() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
 			return array[ offset + curr++ ];
 		}
 
-		public KEY_TYPE PREV_KEY() {
+		public KEY_GENERIC_TYPE PREV_KEY() {
 			if ( ! hasPrevious() ) throw new NoSuchElementException();
 			return array[ offset + --curr ];
 		}
@@ -76,11 +144,9 @@ public class ITERATORS {
 				curr += n;
 				return n;
 			}
-			else {
-				n = length - curr;
-				curr = length;
-				return n;
-			}
+			n = length - curr;
+			curr = length;
+			return n;
 		}
 
 		public int back( int n ) {
@@ -88,11 +154,9 @@ public class ITERATORS {
 				curr -= n;
 				return n;
 			}
-			else {
-				n = curr;
-				curr = 0;
-				return n;
-			}
+			n = curr;
+			curr = 0;
+			return n;
 		}
 
 		public int nextIndex() {
@@ -115,9 +179,9 @@ public class ITERATORS {
 	 * @param offset the first element of the array to be returned.
 	 * @param length the number of elements to return.
 	 */
-	public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[], final int offset, final int length ) {
+	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC wrap( final KEY_GENERIC_TYPE[] array, final int offset, final int length ) {
 		ARRAYS.ensureOffsetLength( array, offset, length );
-		return new ArrayIterator( array, offset, length );
+		return new ArrayIterator KEY_GENERIC( array, offset, length );
 	}
 
 	/** Wraps the given array into a type-specific list iterator.
@@ -127,8 +191,8 @@ public class ITERATORS {
 	 *
 	 * @param array an array to wrap into a type-specific list iterator.
 	 */
-	public static KEY_LIST_ITERATOR wrap( final KEY_TYPE array[] ) {
-		return new ArrayIterator( array, 0, array.length );
+	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC wrap( final KEY_GENERIC_TYPE[] array ) {
+		return new ArrayIterator KEY_GENERIC( array, 0, array.length );
 	}
 
 
@@ -145,7 +209,7 @@ public class ITERATORS {
 	 * @param max the maximum number of elements to unwrap.
 	 * @return the number of elements unwrapped.
 	 */
-	public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[], int offset, final int max ) {
+	public static KEY_GENERIC int unwrap( final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i, final KEY_GENERIC_TYPE array[], int offset, final int max ) {
 		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
 		if ( offset < 0 || offset + max > array.length ) throw new IllegalArgumentException();
 		int j = max;
@@ -163,7 +227,7 @@ public class ITERATORS {
 	 * @param array an array to contain the output of the iterator.
 	 * @return the number of elements unwrapped.
 	 */
-	public static int unwrap( final STD_KEY_ITERATOR i, final KEY_TYPE array[] ) {
+	public static KEY_GENERIC int unwrap( final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i, final KEY_GENERIC_TYPE array[] ) {
 		return unwrap( i, array, 0, array.length );
 	}
 
@@ -177,9 +241,10 @@ public class ITERATORS {
 	 * @param max the maximum number of elements to be unwrapped.
 	 * @return an array containing the elements returned by the iterator (at most <ocde>max</code>).
 	 */
-	public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i, int max ) {
+	@SuppressWarnings("unchecked")
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] unwrap( final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i, int max ) {
 		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
-		KEY_TYPE array[] = new KEY_TYPE[ 16 ];
+		KEY_GENERIC_TYPE array[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ 16 ];
 		int j = 0;
 
 		while( max-- != 0 && i.hasNext() ) {
@@ -200,7 +265,7 @@ public class ITERATORS {
 	 * @return an array containing the elements returned by the iterator.
 	 */
 
-	public static KEY_TYPE[] unwrap( final STD_KEY_ITERATOR i ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] unwrap( final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i ) {
 		return unwrap( i, Integer.MAX_VALUE );
 	}
 
@@ -219,7 +284,7 @@ public class ITERATORS {
 	 * this is the number of elements returned by the iterator, which is not necessarily the number
 	 * of elements that have been added to the collection (because of duplicates).
 	 */
-	public static int unwrap( final STD_KEY_ITERATOR i, final COLLECTION c, final int max ) {
+	public static KEY_GENERIC int unwrap( final STD_KEY_ITERATOR KEY_GENERIC i, final COLLECTION KEY_SUPER_GENERIC c, final int max ) {
 		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
 		int j = max;
 		while( j-- != 0 && i.hasNext() ) c.add( i.NEXT_KEY() );
@@ -238,7 +303,7 @@ public class ITERATORS {
 	 * this is the number of elements returned by the iterator, which is not necessarily the number
 	 * of elements that have been added to the collection (because of duplicates).
 	 */
-	public static long unwrap( final STD_KEY_ITERATOR i, final COLLECTION c ) {
+	public static KEY_GENERIC long unwrap( final STD_KEY_ITERATOR KEY_GENERIC i, final COLLECTION KEY_SUPER_GENERIC c ) {
 		long n = 0;
 		while( i.hasNext() ) {
 			c.add( i.NEXT_KEY() );
@@ -261,7 +326,7 @@ public class ITERATORS {
 	 * of elements that have been added to the collection (because of duplicates).
 	 */
 
-	public static int pour( final STD_KEY_ITERATOR i, final COLLECTION s, final int max ) {
+	public static KEY_GENERIC int pour( final STD_KEY_ITERATOR KEY_GENERIC i, final COLLECTION KEY_SUPER_GENERIC s, final int max ) {
 		if ( max < 0 ) throw new IllegalArgumentException( "The maximum number of elements (" + max + ") is negative" );
 		int j = max;
 		while( j-- != 0 && i.hasNext() ) s.add( i.NEXT_KEY() );
@@ -280,7 +345,7 @@ public class ITERATORS {
 	 * of elements that have been added to the collection (because of duplicates).
 	 */
 
-	public static int pour( final STD_KEY_ITERATOR i, final COLLECTION s ) {
+	public static KEY_GENERIC int pour( final STD_KEY_ITERATOR KEY_GENERIC i, final COLLECTION KEY_SUPER_GENERIC s ) {
 		return pour( i, s, Integer.MAX_VALUE );
 	}
 
@@ -297,8 +362,8 @@ public class ITERATORS {
 	 * @return a type-specific list containing the returned elements, up to <code>max</code>.
 	 */
 
-	public static LIST pour( final STD_KEY_ITERATOR i, int max ) {
-		final ARRAY_LIST l = new ARRAY_LIST();
+	public static KEY_GENERIC LIST KEY_GENERIC pour( final STD_KEY_ITERATOR KEY_GENERIC i, int max ) {
+		final ARRAY_LIST KEY_GENERIC l = new ARRAY_LIST KEY_GENERIC();
 		pour( i, l, max );
 		l.trim();
 		return l;
@@ -315,13 +380,14 @@ public class ITERATORS {
 	 * @return a type-specific list containing the returned elements.
 	 */
 
-	public static LIST pour( final STD_KEY_ITERATOR i ) {
+	public static KEY_GENERIC LIST KEY_GENERIC pour( final STD_KEY_ITERATOR KEY_GENERIC i ) {
 		return pour( i, Integer.MAX_VALUE );
 	}
 
-	private static class IteratorWrapper extends KEY_ABSTRACT_ITERATOR {
-		final Iterator i;
+	private static class IteratorWrapper KEY_GENERIC extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
+		final Iterator KEY_GENERIC  i;
 
+		@SuppressWarnings("unchecked")
 		public IteratorWrapper( final Iterator i ) {
 			this.i = i;
 		}
@@ -329,7 +395,7 @@ public class ITERATORS {
 		public boolean hasNext() { return i.hasNext(); }
 		public void remove() { i.remove(); }
 
-		public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_OBJ2TYPE( i.next() ); }
 	}
 
 	/** Wraps a standard iterator into a type-specific iterator.
@@ -346,15 +412,16 @@ public class ITERATORS {
 	 * @param i an iterator.
 	 * @return a type-specific iterator  backed by <code>i</code>.
 	 */
-	public static KEY_LIST_ITERATOR AS_KEY_ITERATOR( final ListIterator i ) {
-		if ( i instanceof KEY_LIST_ITERATOR ) return (KEY_LIST_ITERATOR)i;
-		return new ListIteratorWrapper( i );
+	public static KEY_ITERATOR AS_KEY_ITERATOR( final Iterator i ) {
+		if ( i instanceof KEY_ITERATOR ) return (KEY_ITERATOR)i;
+		return new IteratorWrapper( i );
 	}
 
 
-	private static class ListIteratorWrapper extends KEY_ABSTRACT_LIST_ITERATOR {
-		final ListIterator i;
+	private static class ListIteratorWrapper KEY_GENERIC extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		final ListIterator KEY_GENERIC i;
 
+		@SuppressWarnings("unchecked")
 		public ListIteratorWrapper( final ListIterator i ) {
 			this.i = i;
 		}
@@ -363,12 +430,14 @@ public class ITERATORS {
 		public boolean hasPrevious() { return i.hasPrevious(); }
 		public int nextIndex() { return i.nextIndex(); }
 		public int previousIndex() { return i.previousIndex(); }
-		public void set( KEY_TYPE k ) { i.set( KEY2OBJ( k ) ); }
-		public void add( KEY_TYPE k ) { i.add( KEY2OBJ( k ) ); }
+		@SuppressWarnings("unchecked")
+		public void set( KEY_GENERIC_TYPE k ) { i.set( KEY2OBJ( k ) ); }
+		@SuppressWarnings("unchecked")
+		public void add( KEY_GENERIC_TYPE k ) { i.add( KEY2OBJ( k ) ); }
 		public void remove() { i.remove(); }
 
-		public KEY_TYPE NEXT_KEY() { return KEY2TYPE( i.next() ); }
-		public KEY_TYPE PREV_KEY() { return KEY2TYPE( i.previous() ); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_OBJ2TYPE( i.next() ); }
+		public KEY_GENERIC_TYPE PREV_KEY() { return KEY_OBJ2TYPE( i.previous() ); }
 	}
 
 	/** Wraps a standard list iterator into a type-specific list iterator.
@@ -386,9 +455,9 @@ public class ITERATORS {
 	 * @param i a list iterator.
 	 * @return a type-specific list iterator backed by <code>i</code>.
 	 */
-	public static KEY_ITERATOR AS_KEY_ITERATOR( final Iterator i ) {
-		if ( i instanceof KEY_ITERATOR ) return (KEY_ITERATOR)i;
-		return new IteratorWrapper( i );
+	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC AS_KEY_ITERATOR( final ListIterator KEY_GENERIC i ) {
+		if ( i instanceof KEY_LIST_ITERATOR ) return (KEY_LIST_ITERATOR KEY_GENERIC)i;
+		return new ListIteratorWrapper KEY_GENERIC( i );
 	}
 
 
@@ -429,11 +498,13 @@ public class ITERATORS {
 				curr += n;
 				return n;
 			}
-			else {
-				n = (int)( to - curr );
-				curr = to;
-				return n;
-			}
+#if ! #keyclass(Long)
+			n = to - curr;
+#else
+			n = (int)( to - curr );
+#endif
+			curr = to;
+			return n;
 		}
 
 		public int back( int n ) {
@@ -441,11 +512,13 @@ public class ITERATORS {
 				curr -= n;
 				return n;
 			}
-			else {
-				n = (int)( curr - from );
-				curr = from;
-				return n;
-			}
+#if ! #keyclass(Long)
+			n = curr - from ;
+#else
+			n = (int)( curr - from );
+#endif
+			curr = from;
+			return n;
 		}
 	}
 		
@@ -486,11 +559,11 @@ public class ITERATORS {
 
 #endif
 
-	private static class IteratorConcatenator extends KEY_ABSTRACT_ITERATOR {
-		final KEY_ITERATOR a[];
+	private static class IteratorConcatenator KEY_GENERIC extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
+		final KEY_ITERATOR KEY_EXTENDS_GENERIC a[];
 		int offset, length, lastOffset = -1;
 
-		public IteratorConcatenator( final KEY_ITERATOR a[], int offset, int length ) {
+		public IteratorConcatenator( final KEY_ITERATOR KEY_EXTENDS_GENERIC a[], int offset, int length ) {
 			this.a = a;
 			this.offset = offset;
 			this.length = length;
@@ -511,9 +584,9 @@ public class ITERATORS {
 			return length > 0;
 		}
 
-		public KEY_TYPE NEXT_KEY() {
+		public KEY_GENERIC_TYPE NEXT_KEY() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
-			KEY_TYPE next = a[ lastOffset = offset ].NEXT_KEY();
+			KEY_GENERIC_TYPE next = a[ lastOffset = offset ].NEXT_KEY();
 			advance();
 			return next;
 		}
@@ -550,7 +623,7 @@ public class ITERATORS {
 	 * @return an iterator obtained by concatenation.
 	 */
 
-	public static KEY_ITERATOR concat( final KEY_ITERATOR a[] ) {
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC concat( final KEY_ITERATOR KEY_EXTENDS_GENERIC a[] ) {
 		return concat( a, 0, a.length );
 	}
 
@@ -568,26 +641,27 @@ public class ITERATORS {
 	 * @return an iterator obtained by concatenation of <code>length</code> elements of <code>a</code> starting at <code>offset</code>.
 	 */
 
-	public static KEY_ITERATOR concat( final KEY_ITERATOR a[], final int offset, final int length ) {
-		return new IteratorConcatenator( a, offset, length );
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC concat( final KEY_ITERATOR KEY_EXTENDS_GENERIC a[], final int offset, final int length ) {
+		return new IteratorConcatenator KEY_GENERIC( a, offset, length );
 	}
 
 
   	/** An unmodifiable wrapper class for iterators. */
 
 
-	public static class UnmodifiableIterator extends KEY_ABSTRACT_ITERATOR {
-		final protected KEY_ITERATOR i;
+	public static class UnmodifiableIterator KEY_GENERIC extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
+		final protected KEY_ITERATOR KEY_GENERIC i;
 
-		public UnmodifiableIterator( final KEY_ITERATOR i ) {
+		@SuppressWarnings("unchecked")
+		public UnmodifiableIterator( final KEY_ITERATOR KEY_GENERIC i ) {
 			this.i = i;
 		}
 
 		public boolean hasNext() { return i.hasNext(); }
 
-		public KEY_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-		public Object next() { return i.next(); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
+#if #keys(primitive)
+		public KEY_GENERIC_CLASS next() { return i.next(); }
 #endif
 	}
 
@@ -597,26 +671,27 @@ public class ITERATORS {
 	 * @param i the iterator to be wrapped in an unmodifiable iterator.
 	 * @return an unmodifiable view of the specified iterator.
 	 */
-	public static KEY_ITERATOR unmodifiable( final KEY_ITERATOR i ) { return new UnmodifiableIterator( i ); }
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC unmodifiable( final KEY_ITERATOR KEY_GENERIC i ) { return new UnmodifiableIterator KEY_GENERIC( i ); }
 
 
 
   	/** An unmodifiable wrapper class for bidirectional iterators. */
 
-	public static class UnmodifiableBidirectionalIterator extends KEY_ABSTRACT_BIDI_ITERATOR  {
-		final protected KEY_BIDI_ITERATOR i;
+	public static class UnmodifiableBidirectionalIterator KEY_GENERIC extends KEY_ABSTRACT_BIDI_ITERATOR KEY_GENERIC {
+		final protected KEY_BIDI_ITERATOR KEY_GENERIC i;
 
-		public UnmodifiableBidirectionalIterator( final KEY_BIDI_ITERATOR i ) {
+		@SuppressWarnings("unchecked")
+		public UnmodifiableBidirectionalIterator( final KEY_BIDI_ITERATOR KEY_GENERIC i ) {
 			this.i = i;
 		}
 
 		public boolean hasNext() { return i.hasNext(); }
 		public boolean hasPrevious() { return i.hasPrevious(); }
-		public KEY_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
-		public KEY_TYPE PREV_KEY() { return i.PREV_KEY(); }
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-		public Object next() { return i.next(); }
-		public Object previous() { return i.previous(); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
+		public KEY_GENERIC_TYPE PREV_KEY() { return i.PREV_KEY(); }
+#if #keys(primitive)
+		public KEY_GENERIC_CLASS next() { return i.next(); }
+		public KEY_GENERIC_CLASS previous() { return i.previous(); }
 #endif
 	}
 
@@ -626,27 +701,28 @@ public class ITERATORS {
 	 * @param i the bidirectional iterator to be wrapped in an unmodifiable bidirectional iterator.
 	 * @return an unmodifiable view of the specified bidirectional iterator.
 	 */
-	public static KEY_BIDI_ITERATOR unmodifiable( final KEY_BIDI_ITERATOR i ) { return new UnmodifiableBidirectionalIterator( i ); }
+	public static KEY_GENERIC KEY_BIDI_ITERATOR KEY_GENERIC unmodifiable( final KEY_BIDI_ITERATOR KEY_GENERIC i ) { return new UnmodifiableBidirectionalIterator KEY_GENERIC( i ); }
 
 
   	/** An unmodifiable wrapper class for list iterators. */
 
-	public static class UnmodifiableListIterator extends KEY_ABSTRACT_LIST_ITERATOR {
-		final protected KEY_LIST_ITERATOR i;
+	public static class UnmodifiableListIterator KEY_GENERIC extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		final protected KEY_LIST_ITERATOR KEY_GENERIC i;
 
-		public UnmodifiableListIterator( final KEY_LIST_ITERATOR i ) {
+		@SuppressWarnings("unchecked")
+		public UnmodifiableListIterator( final KEY_LIST_ITERATOR KEY_GENERIC i ) {
 			this.i = i;
 		}
 
 		public boolean hasNext() { return i.hasNext(); }
 		public boolean hasPrevious() { return i.hasPrevious(); }
-		public KEY_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
-		public KEY_TYPE PREV_KEY() { return i.PREV_KEY(); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
+		public KEY_GENERIC_TYPE PREV_KEY() { return i.PREV_KEY(); }
 		public int nextIndex() { return i.nextIndex(); }
 		public int previousIndex() { return i.previousIndex(); }
-#if ! #keyclass(Object) && ! #keyclass(Reference)
-		public Object next() { return i.next(); }
-		public Object previous() { return i.previous(); }
+#if #keys(primitive)
+		public KEY_GENERIC_CLASS next() { return i.next(); }
+		public KEY_GENERIC_CLASS previous() { return i.previous(); }
 #endif
 	}
 
@@ -655,11 +731,6 @@ public class ITERATORS {
 	 * @param i the list iterator to be wrapped in an unmodifiable list iterator.
 	 * @return an unmodifiable view of the specified list iterator.
 	 */
-	public static KEY_LIST_ITERATOR unmodifiable( final KEY_LIST_ITERATOR i ) { return new UnmodifiableListIterator( i ); }
+	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC unmodifiable( final KEY_LIST_ITERATOR KEY_GENERIC i ) { return new UnmodifiableListIterator KEY_GENERIC( i ); }
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

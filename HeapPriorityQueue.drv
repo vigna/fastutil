@@ -22,13 +22,13 @@
 package PACKAGE;
 
 #if #keyclass(Object)
+import java.util.Comparator;
+
 import it.unimi.dsi.fastutil.AbstractPriorityQueue;
 #endif
 
-import it.unimi.dsi.fastutil.HashCommon;
-
 import java.util.NoSuchElementException;
-import java.util.Comparator;
+
 
 /** A type-specific heap-based priority queue.
  *
@@ -36,24 +36,26 @@ import java.util.Comparator;
  * it is never shrunk. Use the {@link #trim()} method to reduce its size, if necessary.
  */
 
-public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
+public class HEAP_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GENERIC {
 
 	/** The heap array. */
-	protected KEY_TYPE heap[] = ARRAYS.EMPTY_ARRAY;
+	@SuppressWarnings("unchecked")
+	protected KEY_GENERIC_TYPE[] heap = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
 
 	/** The number of elements in this queue. */
 	protected int size;
 	
 	/** The type-specific comparator used in this queue. */
-	protected KEY_COMPARATOR c;
+	protected KEY_COMPARATOR KEY_SUPER_GENERIC c;
 
 	/** Creates a new empty queue with a given capacity and comparator.
 	 *
 	 * @param capacity the initial capacity of this queue.
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_PRIORITY_QUEUE( int capacity, KEY_COMPARATOR c ) {
-		if ( capacity > 0 ) this.heap = new KEY_TYPE[ capacity ];
+	@SuppressWarnings("unchecked")
+	public HEAP_PRIORITY_QUEUE( int capacity, KEY_COMPARATOR KEY_SUPER_GENERIC c ) {
+		if ( capacity > 0 ) this.heap = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ capacity ];
 		this.c = c;
 	}
 
@@ -69,7 +71,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	 *
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_PRIORITY_QUEUE( KEY_COMPARATOR c ) {
+	public HEAP_PRIORITY_QUEUE( KEY_COMPARATOR KEY_SUPER_GENERIC c ) {
 		this( 0, c );
 	}
 
@@ -89,7 +91,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	 * @param size the number of elements to be included in the queue.
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_PRIORITY_QUEUE( final KEY_TYPE[] a, int size, final KEY_COMPARATOR c ) {
+	public HEAP_PRIORITY_QUEUE( final KEY_GENERIC_TYPE[] a, int size, final KEY_COMPARATOR KEY_SUPER_GENERIC c ) {
 		this( c );
 		this.heap = a;
 		this.size = size;
@@ -106,7 +108,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	 * @param a an array.
 	 * @param c the comparator used in this queue, or <code>null</code> for the natural order.
 	 */
-	public HEAP_PRIORITY_QUEUE( final KEY_TYPE[] a, final KEY_COMPARATOR c ) {
+	public HEAP_PRIORITY_QUEUE( final KEY_GENERIC_TYPE[] a, final KEY_COMPARATOR KEY_SUPER_GENERIC c ) {
 		this( a, a.length, c );
 	}
 
@@ -119,7 +121,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	 * @param a an array.
 	 * @param size the number of elements to be included in the queue.
 	 */
-	public HEAP_PRIORITY_QUEUE( final KEY_TYPE[] a, int size ) {
+	public HEAP_PRIORITY_QUEUE( final KEY_GENERIC_TYPE[] a, int size ) {
 		this( a, size, null );
 	}
 
@@ -132,7 +134,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	 *
 	 * @param a an array.
 	 */
-	public HEAP_PRIORITY_QUEUE( final KEY_TYPE[] a ) {
+	public HEAP_PRIORITY_QUEUE( final KEY_GENERIC_TYPE[] a ) {
 		this( a, a.length );
 	}
 
@@ -144,17 +146,17 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 		if ( size == 0 ) throw new NoSuchElementException();
 	}
 
-	public void enqueue( KEY_TYPE x ) {
+	public void enqueue( KEY_GENERIC_TYPE x ) {
 		if ( size == heap.length ) heap = ARRAYS.grow( heap, size + 1 );
 
 		heap[ size++ ] = x;
 		HEAPS.upHeap( heap, size, size - 1, c );
 	}
 
-	public KEY_TYPE DEQUEUE() {
+	public KEY_GENERIC_TYPE DEQUEUE() {
 		ensureNonEmpty();
 
-		final KEY_TYPE result = heap[ 0 ];
+		final KEY_GENERIC_TYPE result = heap[ 0 ];
 		heap[ 0 ] = heap[ --size ];
 #if #keyclass(Object)
 		heap[ size ] = null;
@@ -163,7 +165,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 		return result;
 	}
 
-	public KEY_TYPE FIRST() {
+	public KEY_GENERIC_TYPE FIRST() {
 		ensureNonEmpty();
 		return heap[ 0 ];
 	}
@@ -190,7 +192,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 		heap = ARRAYS.trim( heap, size );
 	}
 
-	public Comparator comparator() { return c; }
+	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return c; }
 
 
 #ifdef TEST
@@ -201,7 +203,7 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #elif #keyclass(Object)
 		return Integer.toBinaryString( r.nextInt() );
@@ -348,7 +350,11 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 			if ( m.size() != 0 && ( ( new OPEN_HASH_SET( m.heap, 0, m.size ) ).size() == m.size() ) ) {
 
 				int j = t.size(), M = --j;
+#if #keys(primitive)
 				while( j-- != 0 ) if ( KEY_LESS( t.array[ j ], t.array[ M ] ) ) M = j;
+#else
+				while( j-- != 0 ) if ( ((Comparable)t.array[ j ]).compareTo( t.array[ M ] )< 0 ) M = j;
+#endif
 
 				m.heap[ 0 ] = t.array[ M ] = genKey();
 
@@ -391,8 +397,3 @@ public class HEAP_PRIORITY_QUEUE extends ABSTRACT_PRIORITY_QUEUE {
 #endif
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

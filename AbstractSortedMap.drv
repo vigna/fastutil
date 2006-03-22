@@ -21,45 +21,49 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.BidirectionalIterator;
-import java.util.Set;
+import VALUE_PACKAGE.VALUE_COLLECTION;
+import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
+import VALUE_PACKAGE.VALUE_ABSTRACT_ITERATOR;
+import VALUE_PACKAGE.VALUE_ITERATOR;
+import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
+import java.util.Map;
+
+#if #keys(reference)
 import java.util.Comparator;
-import java.util.SortedMap;
-import java.util.SortedSet;
+#endif
 
-/** An abstract class providing basic methods for sorted maps implementing a type-specific interface.
- *
- */
+/** An abstract class providing basic methods for sorted maps implementing a type-specific interface. */
 
-public abstract class ABSTRACT_SORTED_MAP extends ABSTRACT_MAP implements SORTED_MAP {
+public abstract class ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements SORTED_MAP KEY_VALUE_GENERIC {
 
 	protected ABSTRACT_SORTED_MAP() {}
 
 	/** Delegates to the corresponding type-specific method. */
-	public SortedMap headMap( Object to  ) {
-		return headMap( KEY2TYPE( to ) );
+	public SORTED_MAP KEY_VALUE_GENERIC headMap( final KEY_GENERIC_CLASS to  ) {
+		return headMap( KEY_CLASS2TYPE( to ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public SortedMap tailMap( Object from ) {
-		return tailMap( KEY2TYPE( from ) );
+	public SORTED_MAP KEY_VALUE_GENERIC tailMap( final KEY_GENERIC_CLASS from ) {
+		return tailMap( KEY_CLASS2TYPE( from ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
-	public SortedMap subMap( Object from, Object to ) {
-		return subMap( KEY2TYPE( from ), KEY2TYPE( to ) );
+	public SORTED_MAP KEY_VALUE_GENERIC subMap( final KEY_GENERIC_CLASS from, final KEY_GENERIC_CLASS to ) {
+		return subMap( KEY_CLASS2TYPE( from ), KEY_CLASS2TYPE( to ) );
 	}
 
+#if !#keyclass(Object)
 	/** Delegates to the corresponding type-specific method. */
-	public Object firstKey() {
+	public KEY_GENERIC_CLASS firstKey() {
 		return KEY2OBJ( FIRST_KEY() );
 	}
 	 
 	/** Delegates to the corresponding type-specific method. */
-	public Object lastKey() {
+	public KEY_GENERIC_CLASS lastKey() {
 		return KEY2OBJ( LAST_KEY() );
 	}
-
+#endif
 
 
 	/** Returns a type-specific-sorted-set view of the keys of this map.
@@ -75,45 +79,91 @@ public abstract class ABSTRACT_SORTED_MAP extends ABSTRACT_MAP implements SORTED
 	 */
 
 
-	public Set keySet() {
-		return new ABSTRACT_SORTED_SET() {
+	public SORTED_SET KEY_GENERIC keySet() {
+		return new KeySet();
+	}
+	
+	/** A wrapper exhibiting the keys of a map. */
 
-				public boolean contains( final KEY_TYPE k ) { return containsKey( k ); }
+	protected class KeySet extends ABSTRACT_SORTED_SET KEY_GENERIC {
+		public boolean contains( final KEY_TYPE k ) { return containsKey( k ); }
+		public int size() { return size(); }
 
-				public int size() { return ABSTRACT_SORTED_MAP.this.size(); }
+		public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return comparator(); }
 
-				public KEY_ITERATOR KEY_ITERATOR_METHOD() {
-					return new KEY_ABSTRACT_BIDI_ITERATOR() {
-							final BidirectionalIterator i = (BidirectionalIterator)entrySet().iterator();
+		public KEY_GENERIC_TYPE FIRST() { return FIRST_KEY(); }
+		public KEY_GENERIC_TYPE LAST() { return LAST_KEY(); }
 
-							public KEY_TYPE NEXT_KEY() { return ((MAP.Entry)i.next()).ENTRY_GET_KEY(); };
+		public SORTED_SET KEY_GENERIC headSet( final KEY_GENERIC_TYPE to  ) { return headMap( to ).keySet(); }
+		public SORTED_SET KEY_GENERIC tailSet( final KEY_GENERIC_TYPE from ) { return tailMap( from ).keySet(); }
+		public SORTED_SET KEY_GENERIC subSet( final KEY_GENERIC_TYPE from, final KEY_GENERIC_TYPE to ) { return subMap( from, to ).keySet(); }
 
-							public KEY_TYPE PREV_KEY() { return ((MAP.Entry)i.previous()).ENTRY_GET_KEY(); };
-
-							public boolean hasNext() { return i.hasNext(); }
-
-							public boolean hasPrevious() { return i.hasPrevious(); }
-						};
-				}
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) { return new KeySetIterator KEY_VALUE_GENERIC( entrySet().iterator( new BasicEntry KEY_VALUE_GENERIC( from, VALUE_NULL ) ) ); }
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new KeySetIterator KEY_VALUE_GENERIC( entrySet().iterator() ); }
 
 
-				public Comparator comparator() { return ABSTRACT_SORTED_MAP.this.comparator(); }
+	}
+	/** A wrapper exhibiting a map iterator as an iterator on keys.
+	 *
+	 * <P>To provide an iterator on keys, just create an instance of this
+	 * class using the corresponding iterator on entries.
+	 */
 
-				public KEY_TYPE FIRST() { return ABSTRACT_SORTED_MAP.this.FIRST_KEY(); }
+	protected static class KeySetIterator KEY_VALUE_GENERIC extends KEY_ABSTRACT_BIDI_ITERATOR KEY_GENERIC {
+		protected final ObjectBidirectionalIterator<Map.Entry <KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> i;
 
-				public KEY_TYPE LAST() { return ABSTRACT_SORTED_MAP.this.LAST_KEY(); }
+		public KeySetIterator( ObjectBidirectionalIterator<Map.Entry <KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> i ) {
+			this.i = i;
+		}
 
-				public STD_SORTED_SET headSet( final KEY_TYPE to  ) { return (STD_SORTED_SET)ABSTRACT_SORTED_MAP.this.headMap( to ).keySet(); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_CLASS2TYPE( i.next().getKey() ); };
+		public KEY_GENERIC_TYPE PREV_KEY() { return KEY_CLASS2TYPE( i.previous().getKey() ); };
 
-				public STD_SORTED_SET tailSet( final KEY_TYPE from ) { return  (STD_SORTED_SET)ABSTRACT_SORTED_MAP.this.tailMap( from ).keySet(); }
+		public boolean hasNext() { return i.hasNext(); }
+		public boolean hasPrevious() { return i.hasPrevious(); }
+	}
+	
 
-				public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) { return  (STD_SORTED_SET)ABSTRACT_SORTED_MAP.this.subMap( from, to ).keySet(); }
-			};
+
+	/** Returns a type-specific collection view of the values contained in this map.
+	 *
+	 * <P>The view is backed by the sorted set returned by {@link #entrySet()}. Note that
+	 * <em>no attempt is made at caching the result of this method</em>, as this would
+	 * require adding some attributes that lightweight implementations would
+	 * not need. Subclasses may easily override this policy by calling
+	 * this method and caching the result, but implementors are encouraged to
+	 * write more efficient ad-hoc implementations.
+	 *
+	 * @return a type-specific collection view of the values contained in this map.
+	 */
+
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		return new ValuesCollection();
 	}
 
-}
+	/** A wrapper exhibiting the values of a map. */
+	protected class ValuesCollection extends VALUE_ABSTRACT_COLLECTION VALUE_GENERIC {
+		public VALUE_ITERATOR VALUE_GENERIC iterator() { return new ValuesIterator KEY_VALUE_GENERIC( entrySet().iterator() ); }
+		public boolean contains( final VALUE_TYPE k ) { return containsValue( k ); } 
+		public int size() { return size(); }
+		public void clear() { clear(); }
 
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
+	}
+
+	/** A wrapper exhibiting a map iterator as an iterator on values.
+	 *
+	 * <P>To provide an iterator on values, just create an instance of this
+	 * class using the corresponding iterator on entries.
+	 */
+
+	protected static class ValuesIterator KEY_VALUE_GENERIC extends VALUE_ABSTRACT_ITERATOR VALUE_GENERIC {
+		protected final ObjectBidirectionalIterator<Map.Entry <KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> i;
+
+		public ValuesIterator( ObjectBidirectionalIterator<Map.Entry <KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> i ) {
+			this.i = i;
+		}
+
+		public VALUE_GENERIC_TYPE NEXT_VALUE() { return VALUE_CLASS2TYPE( i.next().getValue() ); };
+		public boolean hasNext() { return i.hasNext(); }
+	}
+}

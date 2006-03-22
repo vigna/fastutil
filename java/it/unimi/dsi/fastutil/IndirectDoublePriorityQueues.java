@@ -109,8 +109,3 @@ public class IndirectDoublePriorityQueues {
 	public static IndirectDoublePriorityQueue synchronize( final IndirectDoublePriorityQueue q, final Object sync ) { return new SynchronizedIndirectDoublePriorityQueue( q, sync ); }
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

@@ -33,19 +33,14 @@ package it.unimi.dsi.fastutil;
  * Stack#peek(int)}.
  */
 
-public abstract class AbstractStack implements Stack {
+public abstract class AbstractStack<K> implements Stack<K> {
 
-	public Object top() {
+	public K top() {
 		return peek( 0 );
 	}
 
-	public Object peek( int i ) {
+	public K peek( int i ) {
 		throw new UnsupportedOperationException();
 	}
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

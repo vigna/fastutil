@@ -21,12 +21,9 @@
 
 package PACKAGE;
 
-import it.unimi.dsi.fastutil.HashCommon;
-
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.NoSuchElementException;
 
@@ -38,26 +35,26 @@ import java.util.NoSuchElementException;
  * to a type-specific {@linkplain java.util.ListIterator list iterator}.
  */
 
-public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Serializable, Cloneable, SORTED_SET {
+public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC implements java.io.Serializable, Cloneable, SORTED_SET KEY_GENERIC {
 
 	/** A reference to the root entry. */
-	protected transient Entry tree;
+	protected transient Entry KEY_GENERIC tree;
 
 	/** Number of elements in this set. */
 	protected int count;
 
 	/** The entry of the first element of this set. */
-	protected transient Entry firstEntry;
+	protected transient Entry KEY_GENERIC firstEntry;
 
 	/** The entry of the last element of this set. */
-	protected transient Entry lastEntry;
+	protected transient Entry KEY_GENERIC lastEntry;
 
 	/** This set's comparator, as provided in the constructor. */
-	protected Comparator storedComparator;
+	protected Comparator KEY_SUPER_GENERIC storedComparator;
 
 	/** This set's actual comparator; it may differ from {@link #storedComparator} because it is
 		always a type-specific comparator, so it could be derived from the former by wrapping. */
-	protected transient KEY_COMPARATOR actualComparator;
+	protected transient KEY_COMPARATOR KEY_SUPER_GENERIC actualComparator;
 
     public static final long serialVersionUID = -7046029254386353130L;
 
@@ -83,6 +80,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * we generate on-the-fly an anonymous class that wraps the non-specific {@link Comparator}
 	 * and makes it into a type-specific one.
 	 */
+	@SuppressWarnings("unchecked")
 	private void setActualComparator() {
 #if #keyclass(Object)
 		actualComparator = storedComparator;
@@ -90,11 +88,11 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/* If the provided comparator is already type-specific, we use it. Otherwise,
 		   we use a wrapper anonymous class to fake that it is type-specific. */
 		if ( storedComparator == null || storedComparator instanceof KEY_COMPARATOR ) actualComparator = (KEY_COMPARATOR)storedComparator;
-		else actualComparator =	new KEY_COMPARATOR() {
-				public int compare( KEY_TYPE k1, KEY_TYPE k2 ) {
+		else actualComparator =	new KEY_COMPARATOR KEY_GENERIC() {
+				public int compare( KEY_GENERIC_TYPE k1, KEY_GENERIC_TYPE k2 ) {
 					return storedComparator.compare( KEY2OBJ( k1 ), KEY2OBJ( k2 ) );
 				}
-				public int compare( Object ok1, Object ok2 ) {
+				public int compare( KEY_CLASS ok1, KEY_CLASS ok2 ) {
 					return storedComparator.compare( ok1, ok2 );
 				}
 			};
@@ -107,7 +105,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param c a {@link Comparator} (even better, a type-specific comparator).
 	 */
 
-	public AVL_TREE_SET( final Comparator c ) {
+	public AVL_TREE_SET( final Comparator<? super KEY_GENERIC_CLASS> c ) {
 		this();
 		storedComparator = c;
 		setActualComparator();
@@ -119,7 +117,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param c a collection to be copied into the new tree set. 
 	 */
 	 
-	public AVL_TREE_SET( final Collection c ) {
+	public AVL_TREE_SET( final Collection<? extends KEY_GENERIC_CLASS> c ) {
 		this();
 		addAll( c );
 	}
@@ -129,18 +127,17 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param s a {@link SortedSet} to be copied into the new tree set. 
 	 */
 	 
-	public AVL_TREE_SET( final SortedSet s ) {
+	public AVL_TREE_SET( final SortedSet <KEY_GENERIC_CLASS> s ) {
 		this( s.comparator() );
 		addAll( s );
 	}
-
 
 	/** Creates a new tree set copying a given type-specific collection.
 	 *
 	 * @param c a type-specific collection to be copied into the new tree set. 
 	 */
 	 
-	public AVL_TREE_SET( final COLLECTION c ) {
+	public AVL_TREE_SET( final COLLECTION KEY_EXTENDS_GENERIC c ) {
 		this();
 		addAll( c );
 	}
@@ -150,17 +147,18 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param s a type-specific sorted set to be copied into the new tree set. 
 	 */
 	 
-	public AVL_TREE_SET( final SORTED_SET s ) {
+	public AVL_TREE_SET( final SORTED_SET KEY_GENERIC s ) {
 		this( s.comparator() );
 		addAll( s );
 	}
+
 
 	/** Creates a new tree set using elements provided by a type-specific iterator.
 	 *
 	 * @param i a type-specific iterator whose elements will fill the set.
 	 */
 	 
-	public AVL_TREE_SET( final KEY_ITERATOR i ) {
+	public AVL_TREE_SET( final KEY_ITERATOR KEY_GENERIC i ) {
 		while( i.hasNext() ) add( i.NEXT_KEY() );
 	}
 
@@ -170,9 +168,11 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param i an iterator whose elements will fill the set.
 	 */
 	 
+	@SuppressWarnings("unchecked")
 	public AVL_TREE_SET( final Iterator i ) {
 		this( ITERATORS.AS_KEY_ITERATOR( i ) );
 	}
+
 
 	/** Creates a new tree set and fills it with the elements of a given array using a given {@link Comparator}.
 	 *
@@ -182,7 +182,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param c a {@link Comparator} (even better, a type-specific comparator).
 	 */
 	 
-	public AVL_TREE_SET( final KEY_TYPE[] a, final int offset, final int length, final Comparator c ) {
+	public AVL_TREE_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length, final Comparator<? super KEY_GENERIC_CLASS> c ) {
 		this( c );
 		ARRAYS.ensureOffsetLength( a, offset, length );
 		for( int i = 0; i < length; i++ ) add( a[ offset + i ] );
@@ -196,7 +196,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param length the number of elements to use.
 	 */
 	 
-	public AVL_TREE_SET( final KEY_TYPE[] a, final int offset, final int length ) {
+	public AVL_TREE_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length ) {
 		this( a, offset, length, null );
 	}
 
@@ -206,7 +206,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param a an array to be copied into the new tree set. 
 	 */
 
-	public AVL_TREE_SET( final KEY_TYPE[] a ) {
+	public AVL_TREE_SET( final KEY_GENERIC_TYPE[] a ) {
 		this();
 		int i = a.length;
 		while( i-- != 0 ) add( a[ i ] );
@@ -219,11 +219,13 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param c a {@link Comparator} (even better, a type-specific comparator).
 	 */
 	 
-	public AVL_TREE_SET( final KEY_TYPE[] a, final Comparator c ) {
+	public AVL_TREE_SET( final KEY_GENERIC_TYPE[] a, final Comparator<? super KEY_GENERIC_CLASS> c ) {
 		this( c );
 		int i = a.length;
 		while( i-- != 0 ) add( a[ i ] );
 	}
+
+
 
 
 	/*
@@ -248,7 +250,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * (i.e., when k1 &lt; k2, k1 = k2 or k1 &gt; k2, respectively).
 	 */
 	 
-	final int compare( final KEY_TYPE k1, final KEY_TYPE k2 ) {
+	final int compare( final KEY_GENERIC_TYPE k1, final KEY_GENERIC_TYPE k2 ) {
 		return actualComparator == null ? KEY_CMP( k1, k2 ) : actualComparator.compare( k1, k2 );
 	}
 
@@ -260,8 +262,8 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @return the corresponding entry, or <code>null</code> if no entry with the given key exists.
 	 */
 
-	private Entry findKey( final KEY_TYPE k ) {
-		Entry e = tree;
+	private Entry KEY_GENERIC findKey( final KEY_GENERIC_TYPE k ) {
+		Entry KEY_GENERIC e = tree;
 		int cmp;
 		  
 		while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) 
@@ -277,8 +279,8 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * the given key, if it present; otherwise, it will be either the smallest greater key or the greatest smaller key.
 	 */
 
-	final Entry locateKey( final KEY_TYPE k ) {
-		Entry e = tree, last = tree;
+	final Entry KEY_GENERIC locateKey( final KEY_GENERIC_TYPE k ) {
+		Entry KEY_GENERIC e = tree, last = tree;
 		int cmp = 0;
 		  
 		while ( e != null && ( cmp = compare( k, e.key ) ) != 0 ) {
@@ -299,14 +301,14 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	}
 
 
-	public boolean add( final KEY_TYPE k ) {
+	public boolean add( final KEY_GENERIC_TYPE k ) {
 
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
-			tree = lastEntry = firstEntry = new Entry( k );
+			tree = lastEntry = firstEntry = new Entry KEY_GENERIC( k );
 		}
 		else {
-			Entry p = tree, q = null, y = tree, z = null, e = null, w = null;
+			Entry KEY_GENERIC p = tree, q = null, y = tree, z = null, e = null, w = null;
 			int cmp, i = 0;
 
 			while( true ) {
@@ -321,7 +323,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				if ( dirPath[ i++ ] = cmp > 0 ) {
 					if ( p.succ() ) {
 						count++;
-						e = new Entry( k );
+						e = new Entry KEY_GENERIC( k );
 								
 						if ( p.right == null ) lastEntry = e;
 								
@@ -339,7 +341,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				else {
 					if ( p.pred() ) {
 						count++;
-						e = new Entry( k );
+						e = new Entry KEY_GENERIC( k );
 								
 						if ( p.left == null ) firstEntry = e;
 								
@@ -367,7 +369,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			}
 				
 			if ( (byte)y.info == -2 ) {
-				Entry x = y.left;
+				Entry KEY_GENERIC x = y.left;
 
 				if ( (byte)x.info == -1 ) {
 					w = x;
@@ -416,7 +418,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				}
 			}
 			else if ( (byte)y.info == +2 ) {
-				Entry x = y.right;
+				Entry KEY_GENERIC x = y.right;
 
 				if ( (byte)x.info == 1 ) {
 					w = x;
@@ -486,10 +488,10 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @return the parent of the given node, or <code>null</code> for the root.
 	 */
 
-	private Entry parent( final Entry e ) {
+	private Entry KEY_GENERIC parent( final Entry KEY_GENERIC e ) {
 		if ( e == tree ) return null;
 
-		Entry x, y, p;
+		Entry KEY_GENERIC x, y, p;
 		x = y = e;
 
 		while( true ) {
@@ -514,18 +516,19 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			y = y.right;
 		}
 	}
+ 
 
-	 
-	 
+	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
 		if ( tree == null ) return false;
 
 		int cmp;
-		Entry p = tree, q = null;
+		Entry KEY_GENERIC p = tree, q = null;
 		boolean dir = false;
+		final KEY_GENERIC_TYPE kk = KEY_GENERIC_CAST k;
 
 		while( true ) {
-			if ( ( cmp = compare( k, p.key ) ) == 0 ) break;
+			if ( ( cmp = compare( kk, p.key ) ) == 0 ) break;
 			else if ( dir = cmp > 0 ) {
 				q = p;
 				if ( ( p = p.right() ) == null ) return false;
@@ -558,7 +561,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			}
 		}
 		else {
-			Entry r = p.right;
+			Entry KEY_GENERIC r = p.right;
 
 			if ( r.pred() ) {
 				r.left = p.left;
@@ -576,7 +579,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 
 			}
 			else {
-				Entry s;
+				Entry KEY_GENERIC s;
 
 				while( true ) {
 					s = r.left;
@@ -609,7 +612,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			}
 		}
 
-		Entry y;
+		Entry KEY_GENERIC y;
 
 		while( q != null ) {
 			y = q;
@@ -622,11 +625,11 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				if ( (byte)y.info == 1 ) break;
 				else if ( (byte)y.info == 2 ) {
 
-					Entry x = y.right;
+					Entry KEY_GENERIC x = y.right;
 					if ( ASSERTS ) assert x != null;
 									 
 					if ( (byte)x.info == -1 ) {
-						Entry w;
+						Entry KEY_GENERIC w;
 								
 						if ( ASSERTS ) assert (byte)x.info == -1;
 
@@ -682,19 +685,18 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 							y.balance( +1 );
 							break;
 						}
-						else {
-							if ( ASSERTS ) assert (byte)x.info == 1;
 
-							if ( x.pred() ) {
-								y.succ( true );
-								x.pred( false );
-							}
-							else y.right = x.left;
+						if ( ASSERTS ) assert (byte)x.info == 1;
 
-							x.left = y;
-							y.balance( 0 );
-							x.balance( 0 );
+						if ( x.pred() ) {
+							y.succ( true );
+							x.pred( false );
 						}
+						else y.right = x.left;
+
+						x.left = y;
+						y.balance( 0 );
+						x.balance( 0 );
 					}
 				}
 			}
@@ -705,11 +707,11 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				if ( (byte)y.info == -1 ) break;
 				else if ( (byte)y.info == -2 ) {
 
-					Entry x = y.left;
+					Entry KEY_GENERIC x = y.left;
 					if ( ASSERTS ) assert x != null;
 									 
 					if ( (byte)x.info == 1 ) {
-						Entry w;
+						Entry KEY_GENERIC w;
 								
 						if ( ASSERTS ) assert (byte)x.info == 1;
 
@@ -765,19 +767,18 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 							y.balance( -1 );
 							break;
 						}
-						else {
-							if ( ASSERTS ) assert (byte)x.info == -1;
 
-							if ( x.succ() ) {
-								y.pred( true );
-								x.succ( false );
-							}
-							else y.left = x.right;
+						if ( ASSERTS ) assert (byte)x.info == -1;
 
-							x.right = y;
-							y.balance( 0 );
-							x.balance( 0 );
+						if ( x.succ() ) {
+							y.pred( true );
+							x.succ( false );
 						}
+						else y.left = x.right;
+
+						x.right = y;
+						y.balance( 0 );
+						x.balance( 0 );
 					}
 				}  
 			}
@@ -788,8 +789,9 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
-		return findKey( k ) != null;
+		return findKey( KEY_GENERIC_CAST k ) != null;
 	}
 
 	public void clear() {
@@ -808,7 +810,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * considered equivalently a tree.
 	 */
 
-	private static final class Entry implements Cloneable {
+	private static final class Entry KEY_GENERIC implements Cloneable {
 		/** If the bit in this mask is true, {@link #right} points to a successor. */
 		private final static int SUCC_MASK = 1 << 31;
 		/** If the bit in this mask is true, {@link #left} points to a predecessor. */
@@ -816,9 +818,9 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/** The bits in this mask hold the node balance info. You can get it just by casting to byte. */
 		private final static int BALANCE_MASK = 0xFF;
 		/** The key of this entry. */
-		KEY_TYPE key;
+		KEY_GENERIC_TYPE key;
 		/** The pointers to the left and right subtrees. */
-		Entry left, right;
+		Entry KEY_GENERIC left, right;
 		/** This integers holds different information in different bits (see {@link #SUCC_MASK}, {@link #PRED_MASK} and {@link #BALANCE_MASK}). */
 		int info;
 
@@ -828,8 +830,8 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 *
 		 * @param k a key.
 		 */
-		Entry( final Object k ) {
-			this.key = KEY2TYPE( k );
+		Entry( final KEY_GENERIC_CLASS k ) {
+			this.key = KEY_CLASS2TYPE( k );
 			info = SUCC_MASK | PRED_MASK;
 		}
 
@@ -851,7 +853,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 * @return the left subtree (<code>null</code> if the left
 		 * subtree is empty).
 		 */
-		Entry left() {
+		Entry KEY_GENERIC left() {
 			return ( info & PRED_MASK ) != 0 ? null : left;
 		}
 		  
@@ -860,7 +862,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 * @return the right subtree (<code>null</code> if the right
 		 * subtree is empty).
 		 */
-		Entry right() {
+		Entry KEY_GENERIC right() {
 			return ( info & SUCC_MASK ) != 0 ? null : right;
 		}
 		  
@@ -897,7 +899,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/** Sets the left pointer to a predecessor.
 		 * @param pred the predecessr.
 		 */
-		void pred( final Entry pred ) {
+		void pred( final Entry KEY_GENERIC pred ) {
 			info |= PRED_MASK;
 			left = pred;
 		}
@@ -905,7 +907,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/** Sets the right pointer to a successor.
 		 * @param succ the successor.
 		 */
-		void succ( final Entry succ ) {
+		void succ( final Entry KEY_GENERIC succ ) {
 			info |= SUCC_MASK;
 			right = succ;
 		}
@@ -913,7 +915,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/** Sets the left pointer to the given subtree.
 		 * @param left the new left subtree.
 		 */
-		void left( final Entry left ) {
+		void left( final Entry KEY_GENERIC left ) {
 			info &= ~PRED_MASK;
 			this.left = left;
 		}
@@ -921,7 +923,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/** Sets the right pointer to the given subtree.
 		 * @param right the new right subtree.
 		 */
-		void right( final Entry right ) {
+		void right( final Entry KEY_GENERIC right ) {
 			info &= ~SUCC_MASK;
 			this.right = right;
 		}
@@ -956,8 +958,8 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 * @return the next entry (<code>null</code>) if this is the last entry).
 		 */
 
-		Entry next() {
-			Entry next = this.right;
+		Entry KEY_GENERIC next() {
+			Entry KEY_GENERIC next = this.right;
 			if ( ( info & SUCC_MASK ) == 0 ) while ( ( next.info & PRED_MASK ) == 0 ) next = next.left;
 			return next;
 		}
@@ -967,8 +969,8 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 * @return the previous entry (<code>null</code>) if this is the first entry).
 		 */
 
-		Entry prev() {
-			Entry prev = this.left;
+		Entry KEY_GENERIC prev() {
+			Entry KEY_GENERIC prev = this.left;
 			if ( ( info & PRED_MASK ) == 0 ) while ( ( prev.info & SUCC_MASK ) == 0 ) prev = prev.right;
 			return prev;
 		}
@@ -982,11 +984,12 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			return key;
 		}
 #endif
-		  
+
+		@SuppressWarnings("unchecked")
 		public Object clone() {
-			Entry c;
+			Entry KEY_GENERIC c;
 			try {
-				c = (Entry)super.clone();
+				c = (Entry KEY_GENERIC)super.clone();
 			}
 			catch(CloneNotSupportedException cantHappen) {
 				throw new InternalError();
@@ -1056,12 +1059,12 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		return count == 0;
 	}
 	 
-	public KEY_TYPE FIRST() {
+	public KEY_GENERIC_TYPE FIRST() {
 		if ( tree == null ) throw new NoSuchElementException();
 		return firstEntry.key;
 	}
 	 
-	public KEY_TYPE LAST() {
+	public KEY_GENERIC_TYPE LAST() {
 		if ( tree == null ) throw new NoSuchElementException();
 		return lastEntry.key;
 	}
@@ -1072,21 +1075,21 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * <P>This class can iterate in both directions on a threaded tree.
 	 */
 
-	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR {
-		/** The entry that will be returned by the next call to {@link #previous()} (or <code>null</code> if no previous entry exists). */
-		Entry prev;
-		/** The entry that will be returned by the next call to {@link #next()} (or <code>null</code> if no next entry exists). */
-		Entry next;
+	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists). */
+		Entry KEY_GENERIC prev;
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists). */
+		Entry KEY_GENERIC next;
 		/** The last entry that was returned (or <code>null</code> if we did not iterate or used {@link #remove()}). */
-		Entry curr;
-		/** The current index (in the sense of a {@link ListIterator}). Note that this value is not meaningful when this {@link SetIterator} has been created using the nonempty constructor.*/
+		Entry KEY_GENERIC curr;
+		/** The current index (in the sense of a {@link java.util.ListIterator}). Note that this value is not meaningful when this {@link SetIterator} has been created using the nonempty constructor.*/
 		int index = 0;
 		  
 		SetIterator() {
 			next = firstEntry;
 		}
 
-		SetIterator( final KEY_TYPE k ) {
+		SetIterator( final KEY_GENERIC_TYPE k ) {
 			if ( ( next = locateKey( k ) ) != null ) {
 				if ( compare( next.key, k ) <= 0 ) {
 					prev = next;
@@ -1103,7 +1106,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			next = next.next();
 		}
 
-		Entry nextEntry() {
+		Entry KEY_GENERIC nextEntry() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
 			curr = prev = next;
 			index++;
@@ -1111,14 +1114,14 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			return curr;
 		}
 
-		public KEY_TYPE NEXT_KEY() { return nextEntry().key; }
-		public KEY_TYPE PREV_KEY() { return previousEntry().key; }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
+		public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
 
 		void updatePrevious() {
 			prev = prev.prev();
 		}
 
-		Entry previousEntry() {
+		Entry KEY_GENERIC previousEntry() {
 			if ( ! hasPrevious() ) throw new NoSuchElementException();
 			curr = next = prev;
 			index--;
@@ -1148,27 +1151,27 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	}
 
 
-	public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+	public KEY_BIDI_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
 	}
 
-	public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
+	public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) {
 		return new SetIterator( from );
 	}
 
-	public Comparator comparator() {
-		return storedComparator;
+	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
+		return actualComparator;
 	}
 
-	public STD_SORTED_SET headSet( final KEY_TYPE to ) {
+	public SORTED_SET KEY_GENERIC headSet( final KEY_GENERIC_TYPE to ) {
 		return new Subset( KEY_NULL, true, to, false );
 	}
 
-	public STD_SORTED_SET tailSet( final KEY_TYPE from ) {
+	public SORTED_SET KEY_GENERIC tailSet( final KEY_GENERIC_TYPE from ) {
 		return new Subset( from, false, KEY_NULL, true );
 	}
 
-	public STD_SORTED_SET subSet( final KEY_TYPE from, final KEY_TYPE to ) {
+	public SORTED_SET KEY_GENERIC subSet( final KEY_GENERIC_TYPE from, final KEY_GENERIC_TYPE to ) {
 		return new Subset( from, false, to, false );
 	}
 
@@ -1180,14 +1183,16 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * limits (which can be set to -&infin; or &infin;). Since the subset is a
 	 * view on the set, at a given moment it could happen that the limits of
 	 * the range are not any longer in the main set. Thus, things such as
-	 * {@link #first()} or {@link #size()} must be always computed
+	 * {@link java.util.SortedSet#first()} or {@link java.util.SortedSet#size()} must be always computed
 	 * on-the-fly.  
 	 */
-	private final class Subset extends ABSTRACT_SORTED_SET implements java.io.Serializable, SORTED_SET {
+	private final class Subset extends ABSTRACT_SORTED_SET KEY_GENERIC implements java.io.Serializable, SORTED_SET KEY_GENERIC {
+    	public static final long serialVersionUID = -7046029254386353129L;
+
 		/** The start of the subset range, unless {@link #bottom} is true. */
-		KEY_TYPE from;
+		KEY_GENERIC_TYPE from;
 		/** The end of the subset range, unless {@link #top} is true. */
-		KEY_TYPE to;
+		KEY_GENERIC_TYPE to;
 		/** If true, the subset range starts from -&infin;. */
 		boolean bottom;
 		/** If true, the subset range goes to &infin;. */
@@ -1200,7 +1205,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 * @param to the end of the subset range.
 		 * @param top if true, the third parameter is ignored and the range goes to &infin;.
 		 */
-		public Subset( final KEY_TYPE from, final boolean bottom, final KEY_TYPE to, final boolean top ) {
+		public Subset( final KEY_GENERIC_TYPE from, final boolean bottom, final KEY_GENERIC_TYPE to, final boolean top ) {
 			if ( ! bottom && ! top && AVL_TREE_SET.this.compare( from, to ) > 0 ) throw new IllegalArgumentException( "Start element (" + from  + ") is larger than end element (" + to + ")" );
 
 			this.from = from;
@@ -1221,22 +1226,24 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		 * @param k a key.
 		 * @return true if is the key is in the subset range.
 		 */
-		final boolean in( final KEY_TYPE k ) {
+		final boolean in( final KEY_GENERIC_TYPE k ) {
 			return ( bottom || AVL_TREE_SET.this.compare( k, from ) >= 0 ) &&
 				( top || AVL_TREE_SET.this.compare( k, to ) < 0 );
 		}
 
+		@SuppressWarnings("unchecked")
 		public boolean contains( final KEY_TYPE k ) {
-			return in( k ) && AVL_TREE_SET.this.contains( k );
+			return in( KEY_GENERIC_CAST k ) && AVL_TREE_SET.this.contains( k );
 		}
 
-		public boolean add( final KEY_TYPE  k ) {
+		public boolean add( final KEY_GENERIC_TYPE  k ) {
 			if ( ! in( k ) ) throw new IllegalArgumentException( "Element (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
 			return AVL_TREE_SET.this.add( k );
 		}
 
+		@SuppressWarnings("unchecked")
 		public boolean remove( final KEY_TYPE k ) {
-			if ( ! in( k ) ) return false;
+			if ( ! in( KEY_GENERIC_CAST k ) ) return false;
 			return AVL_TREE_SET.this.remove( k );
 		}
 
@@ -1257,29 +1264,29 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			return ! new SubsetIterator().hasNext();
 		}
 		  
-		public Comparator comparator() {
-			return storedComparator;
+		public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
+			return actualComparator;
 		}
 
-		public KEY_ITERATOR KEY_ITERATOR_METHOD() {
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() {
 			return new SubsetIterator();
 		}
 
-		public KEY_BIDI_ITERATOR iterator( final KEY_TYPE from ) {
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) {
 			return new SubsetIterator( from );
 		}
 
-		public STD_SORTED_SET headSet( final KEY_TYPE to ) {
+		public SORTED_SET KEY_GENERIC headSet( final KEY_GENERIC_TYPE to ) {
 			if ( top ) return new Subset( from, bottom, to, false );
 			return compare( to, this.to ) < 0 ? new Subset( from, bottom, to, false ) : this;
 		}
 		  
-		public STD_SORTED_SET tailSet( final KEY_TYPE from ) {
+		public SORTED_SET KEY_GENERIC tailSet( final KEY_GENERIC_TYPE from ) {
 			if ( bottom ) return new Subset( from, false, to, top );
 			return compare( from, this.from ) > 0 ? new Subset( from, false, to, top ) : this;
 		}
 		  
-		public STD_SORTED_SET subSet( KEY_TYPE from, KEY_TYPE to ) {
+		public SORTED_SET KEY_GENERIC subSet( KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to ) {
 			if ( top && bottom ) return new Subset( from, false, to, false );
 			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
 			if ( ! bottom ) from = compare( from, this.from ) > 0 ? from : this.from;
@@ -1290,13 +1297,12 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 
 		/** Locates the first entry.
 		 *
-		 * @param k a key.
 		 * @return the first entry of this subset, or <code>null</code> if the subset is empty.
 		 */
-		public AVL_TREE_SET.Entry firstEntry() {
+		public AVL_TREE_SET.Entry KEY_GENERIC firstEntry() {
 			if ( tree == null ) return null;
 			// If this subset goes to -infinity, we return the main set first entry; otherwise, we locate the start of the set.
-			AVL_TREE_SET.Entry e;
+			AVL_TREE_SET.Entry KEY_GENERIC e;
 			if ( bottom ) e = firstEntry;
 			else {
 				e = locateKey( from );
@@ -1310,13 +1316,12 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 
 		/** Locates the last entry.
 		 *
-		 * @param k a key.
 		 * @return the last entry of this subset, or <code>null</code> if the subset is empty.
 		 */
-		public AVL_TREE_SET.Entry lastEntry() {
+		public AVL_TREE_SET.Entry KEY_GENERIC lastEntry() {
 			if ( tree == null ) return null;
 			// If this subset goes to infinity, we return the main set last entry; otherwise, we locate the end of the set.
-			AVL_TREE_SET.Entry e;
+			AVL_TREE_SET.Entry KEY_GENERIC e;
 			if ( top ) e = lastEntry;
 			else {
 				e = locateKey( to );
@@ -1329,13 +1334,14 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		}
 
 
-		public KEY_TYPE FIRST() {
-			AVL_TREE_SET.Entry e = firstEntry();
+		public KEY_GENERIC_TYPE FIRST() {
+			AVL_TREE_SET.Entry KEY_GENERIC e = firstEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
-		public KEY_TYPE LAST() {
-			AVL_TREE_SET.Entry e = lastEntry();
+
+		public KEY_GENERIC_TYPE LAST() {
+			AVL_TREE_SET.Entry KEY_GENERIC e = lastEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
@@ -1343,7 +1349,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		/** An iterator for subranges.
 		 * 
 		 * <P>This class inherits from {@link SetIterator}, but overrides the methods that
-		 * update the pointer after a {@link #next()} or {@link #previous()}. If we would
+		 * update the pointer after a {@link java.util.ListIterator#next()} or {@link java.util.ListIterator#previous()}. If we would
 		 * move out of the range of the subset we just overwrite the next or previous
 		 * entry with <code>null</code>.
 		 */
@@ -1352,7 +1358,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				next = firstEntry();
 			}
 
-			SubsetIterator( final KEY_TYPE k ) {
+			SubsetIterator( final KEY_GENERIC_TYPE k ) {
 				this();
 
 				if ( next != null ) {
@@ -1392,10 +1398,11 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @return a deep copy of this tree set.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public Object clone() {
-		AVL_TREE_SET c;
+		AVL_TREE_SET KEY_GENERIC c;
 		try {
-			c = (AVL_TREE_SET)super.clone();
+			c = (AVL_TREE_SET KEY_GENERIC)super.clone();
 		}
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
@@ -1405,7 +1412,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 
 		if ( count != 0 ) {
 			// Also this apparently unfathomable code is derived from GNU libavl.
-			Entry e, p, q, rp = new Entry(), rq = new Entry();
+			Entry KEY_GENERIC e, p, q, rp = new Entry KEY_GENERIC(), rq = new Entry KEY_GENERIC();
 
 			p = rp;
 			rp.left( tree );
@@ -1415,7 +1422,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 
 			while( true ) {
 				if ( ! p.pred() ) {
-					e = (Entry)p.left.clone();
+					e = (Entry KEY_GENERIC)p.left.clone();
 					e.pred( q.left );
 					e.succ( q );
 					q.left( e );
@@ -1446,7 +1453,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 				}
 
 				if ( ! p.succ() ) {
-					e = (Entry)p.right.clone();
+					e = (Entry KEY_GENERIC)p.right.clone();
 					e.succ( q.right );
 					e.pred( q );
 					q.right( e );
@@ -1456,8 +1463,6 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 
 		return c;
 	}
-
-	 
 	 
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
@@ -1476,9 +1481,10 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	 * @param pred the entry containing the key that preceeds the first key in the tree.
 	 * @param succ the entry containing the key that follows the last key in the tree.
 	 */
-	private Entry readTree( final java.io.ObjectInputStream s, final int n, final Entry pred, final Entry succ ) throws java.io.IOException, ClassNotFoundException {
+	@SuppressWarnings("unchecked")
+	private Entry KEY_GENERIC readTree( final java.io.ObjectInputStream s, final int n, final Entry KEY_GENERIC pred, final Entry KEY_GENERIC succ ) throws java.io.IOException, ClassNotFoundException {
 		if ( n == 1 ) {
-			final Entry top = new Entry( s.READ_KEY() );
+			final Entry KEY_GENERIC top = new Entry KEY_GENERIC( KEY_GENERIC_CAST s.READ_KEY() );
 			top.pred( pred );
 			top.succ( succ );
 
@@ -1488,8 +1494,8 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		if ( n == 2 ) {
 			/* We handle separately this case so that recursion will
 			 *always* be on nonempty subtrees. */
-			final Entry top = new Entry( s.READ_KEY() );
-			top.right( new Entry( s.READ_KEY() ) );
+			final Entry KEY_GENERIC top = new Entry KEY_GENERIC( KEY_GENERIC_CAST s.READ_KEY() );
+			top.right( new Entry KEY_GENERIC( KEY_GENERIC_CAST s.READ_KEY() ) );
 			top.right.pred( top );
 			top.balance( 1 );
 			top.pred( pred );
@@ -1501,11 +1507,11 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		// The right subtree is the largest one.
 		final int rightN = n / 2, leftN = n - rightN - 1;
 
-		final Entry top = new Entry();
+		final Entry KEY_GENERIC top = new Entry KEY_GENERIC();
 
 		top.left( readTree( s, leftN, pred, top ) );
 		
-		top.key = s.READ_KEY();
+		top.key = KEY_GENERIC_CAST s.READ_KEY();
 
 		top.right( readTree( s, rightN, top, succ ) );
 
@@ -1514,8 +1520,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 		return top;
 	}
 
-
-	private static int checkTree( Entry e ) {
+	private static KEY_GENERIC int checkTree( Entry KEY_GENERIC e ) {
 		if ( e == null ) return 0;
 
 		final int leftN = checkTree( e.left() ), rightN = checkTree( e.right() );
@@ -1534,7 +1539,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 
 		if ( count != 0 ) {
 			tree = readTree( s, count, null, null );
-			Entry e;
+			Entry KEY_GENERIC e;
 
 			e = tree;
 			while( e.left() != null ) e = e.left();
@@ -1557,7 +1562,7 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 	private static KEY_TYPE genKey() {
 #if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
 		return (KEY_TYPE)(r.nextInt());
-#elif !#keyclass(Object) && !#keyclass(Reference)
+#elif #keys(primitive)
 		return r.NEXT_KEY(); 
 #else
 		return Integer.toBinaryString( r.nextInt() );
@@ -2100,19 +2105,19 @@ public class AVL_TREE_SET extends ABSTRACT_SORTED_SET implements java.io.Seriali
 			for( ; i.hasNext() && r.nextFloat() < .95; end = i.next() );
 
 			//System.err.println("Checking subSet from " + start + " to " + end + " (level=" + (level+1) + ")..." );
-			testSets( (SORTED_SET)m.subSet( start, end ), t.subSet( start, end ), n, level + 1 );
+			testSets( (SORTED_SET)m.subSet( (KEY_CLASS)start, (KEY_CLASS)end ), t.subSet( start, end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after subSet" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after subSet" );
 
 			//System.err.println("Checking headSet to " + end + " (level=" + (level+1) + ")..." );
-			testSets( (SORTED_SET)m.headSet( end ), t.headSet( end ), n, level + 1 );
+			testSets( (SORTED_SET)m.headSet( (KEY_CLASS)end ), t.headSet( end ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after headSet" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after headSet" );
 
 			//System.err.println("Checking tailSet from " + start + " (level=" + (level+1) + ")..." );
-			testSets( (SORTED_SET)m.tailSet( start ), t.tailSet( start ), n, level + 1 );
+			testSets( (SORTED_SET)m.tailSet( (KEY_CLASS)start ), t.tailSet( start ), n, level + 1 );
 
 			ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after tailSet" );
 			ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after tailSet" );

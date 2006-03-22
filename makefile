@@ -1,9 +1,9 @@
-VERSION=4.4.3
+VERSION=5.0
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
 
-APIURL=http://java.sun.com/j2se/1.4/docs/api # External URLs in the docs will point here
+APIURL=http://java.sun.com/j2se/5.0/docs/api # External URLs in the docs will point here
 
 .SUFFIXES: .java .j
 
@@ -48,9 +48,7 @@ explain:
 	@echo -e "If you set the make variable TEST (e.g., make sources TEST=1), you"
 	@echo -e "will compile behavioral and speed tests into the classes.\n"
 	@echo -e "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1), you"
-	@echo -e "will compile assertions into the classes.\n"
-	@echo -e "The special target \"sources13\" will create sources that"
-	@echo -e "can be compiled with JDK 1.3 using \"ant jar -Dsource=1.3\".\n\n"
+	@echo -e "will compile assertions into the classes.\n\n"
 
 source:
 	-rm -f fastutil-$(VERSION)
@@ -147,6 +145,16 @@ PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k)
 $(PRIORITY_QUEUES): PriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(PRIORITY_QUEUES)
+
+INDIRECT_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)IndirectPriorityQueue.c)
+$(INDIRECT_PRIORITY_QUEUES): IndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(INDIRECT_PRIORITY_QUEUES)
+
+INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)IndirectDoublePriorityQueue.c)
+$(INDIRECT_DOUBLE_PRIORITY_QUEUES): IndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 COMPARATORS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Comparator.c)
 $(COMPARATORS): Comparator.drv; ./gencsource.sh $< $@ >$@
@@ -386,7 +394,7 @@ $(ARRAYS_STATIC): Arrays.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ARRAYS_STATIC)
 
 
-PRIORITY_QUEUES_STATIC := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)PriorityQueues.c)
+PRIORITY_QUEUES_STATIC := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)PriorityQueues.c)
 $(PRIORITY_QUEUES_STATIC): PriorityQueues.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(PRIORITY_QUEUES_STATIC)
@@ -500,9 +508,6 @@ clean:
 
 
 sources: $(JSOURCES)
-
-sources13: sources
-	sh make-1.3-compatible.sh
 
 csources: $(CSOURCES)
 

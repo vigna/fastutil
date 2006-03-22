@@ -21,103 +21,63 @@
 
 package it.unimi.dsi.fastutil;
 
-import it.unimi.dsi.fastutil.bytes.*;
-import it.unimi.dsi.fastutil.shorts.*;
-import it.unimi.dsi.fastutil.chars.*;
-import it.unimi.dsi.fastutil.ints.*;
-import it.unimi.dsi.fastutil.longs.*;
-import it.unimi.dsi.fastutil.floats.*;
-import it.unimi.dsi.fastutil.doubles.*;
-import it.unimi.dsi.fastutil.objects.*;
-
 import java.util.Comparator;
-import java.util.NoSuchElementException;
+
+import it.unimi.dsi.fastutil.PriorityQueue;
 
 /** A class providing static methods and objects that do useful things with priority queues.
  *
- * @see PriorityQueue
+ * @see it.unimi.dsi.fastutil.PriorityQueue
  */
 
 public class PriorityQueues {
 
 	private PriorityQueues() {}
 
-	/** An immutable class representing the empty priority queue and implementing all type-specific priority queue interfaces.
-	 *
-	 * <P>This class may be useful to implement your own in case you subclass
-	 * a type-specific priority queue.
-	 */
+	/** A synchronized wrapper class for priority queues. */
 
-	public static class EmptyPriorityQueue implements 
-		BytePriorityQueue, ShortPriorityQueue, IntPriorityQueue, LongPriorityQueue, CharPriorityQueue,
-		FloatPriorityQueue, DoublePriorityQueue, PriorityQueue {
+	public static class SynchronizedPriorityQueue<K> implements PriorityQueue<K> {
 		
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		protected EmptyPriorityQueue() {}
+		final protected PriorityQueue <K> q;
+		final protected Object sync;
 
-		public void enqueue( Object ok ) { throw new UnsupportedOperationException(); }
+		protected SynchronizedPriorityQueue( final PriorityQueue <K> q, final Object sync ) {
+			this.q = q;
+			this.sync = sync;
+		}
 
-		public void enqueue( byte k ) { throw new UnsupportedOperationException(); }
-		public void enqueue( char k ) { throw new UnsupportedOperationException(); }
-		public void enqueue( short k ) { throw new UnsupportedOperationException(); }
-		public void enqueue( int k ) { throw new UnsupportedOperationException(); }
-		public void enqueue( long k ) { throw new UnsupportedOperationException(); }
-		public void enqueue( float k ) { throw new UnsupportedOperationException(); }
-		public void enqueue( double k ) { throw new UnsupportedOperationException(); }
+		protected SynchronizedPriorityQueue( final PriorityQueue <K> q ) {
+			this.q = q;
+			this.sync = this;
+		}
 
-		public Object dequeue() { throw new NoSuchElementException(); }
-
-		public byte dequeueByte() { throw new NoSuchElementException(); }
-		public char dequeueChar() { throw new NoSuchElementException(); }
-		public short dequeueShort() { throw new NoSuchElementException(); }
-		public int dequeueInt() { throw new NoSuchElementException(); }
-		public long dequeueLong() { throw new NoSuchElementException(); }
-		public float dequeueFloat() { throw new NoSuchElementException(); }
-		public double dequeueDouble() { throw new NoSuchElementException(); }
-
-		public Object first() { throw new NoSuchElementException(); }
-
-		public byte firstByte() { throw new NoSuchElementException(); }
-		public char firstChar() { throw new NoSuchElementException(); }
-		public short firstShort() { throw new NoSuchElementException(); }
-		public int firstInt() { throw new NoSuchElementException(); }
-		public long firstLong() { throw new NoSuchElementException(); }
-		public float firstFloat() { throw new NoSuchElementException(); }
-		public double firstDouble() { throw new NoSuchElementException(); }
-
-		public Object last() { throw new NoSuchElementException(); }
-
-		public byte lastByte() { throw new NoSuchElementException(); }
-		public char lastChar() { throw new NoSuchElementException(); }
-		public short lastShort() { throw new NoSuchElementException(); }
-		public int lastInt() { throw new NoSuchElementException(); }
-		public long lastLong() { throw new NoSuchElementException(); }
-		public float lastFloat() { throw new NoSuchElementException(); }
-		public double lastDouble() { throw new NoSuchElementException(); }
-
-		public Comparator comparator() { return null; }
-
-		public void changed() { throw new NoSuchElementException(); }
-		public int size() { return 0; }
-		public void clear() {}
-		public boolean isEmpty() { return true; }
-
+		public void enqueue( K x ) { synchronized( sync ) { q.enqueue( x ); } }
+		public K dequeue() { synchronized( sync ) { return q.dequeue(); } }
+		public K first() { synchronized( sync ) { return q.first(); } }
+		public K last() { synchronized( sync ) { return q.last(); } }
+		public boolean isEmpty() { synchronized( sync ) { return q.isEmpty(); } }
+		public int size() { synchronized( sync ) { return q.size(); } }
+		public void clear() { synchronized( sync ) { q.clear(); } }
+		public void changed() { synchronized( sync ) { q.changed(); } }
+		public Comparator <? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
 	}
 
 
-	/** An empty priority queue (immutable).
+	/** Returns a synchronized priority queue backed by the specified priority queue.
 	 *
-	 * <P>The class of this objects represent an abstract empty priority queue
-	 * that implements any type of priority queue. Thus, {@link #EMPTY_QUEUE}
-	 * may be assigned to a variable of any type-specific priority queue.
+	 * @param q the priority queue to be wrapped in a synchronized priority queue.
+	 * @return a synchronized view of the specified priority queue.
+	 */
+	public static <K> PriorityQueue <K> synchronize( final PriorityQueue <K> q ) {	return new SynchronizedPriorityQueue<K>( q ); }
+
+	/** Returns a synchronized priority queue backed by the specified priority queue, using an assigned object to synchronize.
+	 *
+	 * @param q the priority queue to be wrapped in a synchronized priority queue.
+	 * @param sync an object that will be used to synchronize the access to the priority queue.
+	 * @return a synchronized view of the specified priority queue.
 	 */
 
-	public static final EmptyPriorityQueue EMPTY_QUEUE = new EmptyPriorityQueue();
-
+	public static <K> PriorityQueue <K> synchronize( final PriorityQueue <K> q, final Object sync ) { return new SynchronizedPriorityQueue<K>( q, sync ); }
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

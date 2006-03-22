@@ -21,6 +21,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import java.util.NoSuchElementException;
+
 /** A stack.
  *
  * <P>A stack must provide the classical {@link #push(Object)} and 
@@ -31,14 +33,14 @@ package it.unimi.dsi.fastutil;
  * has index 0).
  */
 
-public interface Stack {
+public interface Stack<K> {
 
 	/** Pushes the given object on the stack.
 	 *
 	 * @param o the object that will become the new top of the stack.
 	 */
 
-	void push( Object o );
+	void push( K o );
 
 	/** Pops the top off the stack.
 	 *
@@ -46,7 +48,7 @@ public interface Stack {
 	 * @throws NoSuchElementException if the stack is empty.
 	 */
 
-	Object pop();
+	K pop();
 
 	/** Checks whether the stack is empty.
 	 *
@@ -61,19 +63,14 @@ public interface Stack {
 	 * @throws NoSuchElementException if the stack is empty.
 	 */
 
-	Object top();
+	K top();
 
 	/** Peeks at an element on the stack (optional operation).
 	 *
 	 * @return the <code>i</code>-th element on the stack; 0 represents the top.
-	 * @throws IndexOutOfBoundException if the designated element does not exist..
+	 * @throws IndexOutOfBoundsException if the designated element does not exist..
 	 */
 
-	Object peek( int i );
+	K peek( int i );
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
