@@ -115,8 +115,3 @@ public class IndirectPriorityQueues {
 	public static IndirectPriorityQueue synchronize( final IndirectPriorityQueue q, final Object sync ) { return new SynchronizedIndirectPriorityQueue( q, sync ); }
 
 }
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
