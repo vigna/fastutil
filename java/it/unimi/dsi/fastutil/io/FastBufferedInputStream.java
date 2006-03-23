@@ -25,18 +25,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 
-/** Lightweight, unsynchronised, aligned input stream buffering class.
+/** Lightweight, unsynchronized, aligned input stream buffering class.
  *
  * <P>This class provides buffering for input streams, but it does so with 
  * purposes and an internal logic that are radically different from the ones
  * adopted in {@link java.io.BufferedInputStream}.
  * 
- * <P>There is no support for marking. All methods are unsychronised. Moreover,
+ * <P>There is no support for marking. All methods are unsychronized. Moreover,
  * it is guaranteed that <em>all reads performed by this class will be
  * multiples of the given buffer size</em>.  If, for instance, you use the
  * default buffer size, reads will be performed on the underlying input stream
  * in multiples of 16384 bytes. This is very important on operating systems
- * that optimise disk reads on disk block boundaries.
+ * that optimize disk reads on disk block boundaries.
  * 
  * <P>As an additional feature, this class implements the {@link
  * RepositionableStream} interface.  An instance of this class will try to cast

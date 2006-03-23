@@ -25,19 +25,19 @@ package it.unimi.dsi.fastutil.io;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/** Lightweight, unsynchronised, aligned output stream buffering class.
+/** Lightweight, unsynchronized, aligned output stream buffering class.
  *
  * <P>This class provides buffering for output streams, but it does so with 
  * purposes and an internal logic that are radically different from the ones
  * adopted in {@link java.io.BufferedOutputStream}.
  * 
- * <P>All methods are unsychronised. Moreover,
+ * <P>All methods are unsychronized. Moreover,
  * it is guaranteed that
  * <em>all writes performed by this class will be
  * multiples of the given buffer size</em>.  If, for instance, you use the
  * default buffer size, writes will be performed on the underlying input stream
  * in multiples of 16384 bytes. This is very important on operating systems
- * that optimise disk reads on disk block boundaries. If you {@link #flush()} the stream,
+ * that optimize disk reads on disk block boundaries. If you {@link #flush()} the stream,
  * the buffer will be emptied, but it will realign again as soon as possible.
  *
  * @since 4.4
