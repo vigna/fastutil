@@ -22,6 +22,7 @@
 package it.unimi.dsi.fastutil;
 
 import java.util.Comparator;
+import java.util.NoSuchElementException;
 
 import it.unimi.dsi.fastutil.PriorityQueue;
 
@@ -33,6 +34,34 @@ import it.unimi.dsi.fastutil.PriorityQueue;
 public class PriorityQueues {
 
 	private PriorityQueues() {}
+
+	/** An immutable class representing the empty priority queue.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * {@link PriorityQueue}.
+	 */
+
+	public static class EmptyPriorityQueue extends AbstractPriorityQueue {
+
+		protected EmptyPriorityQueue() {}
+
+		public void enqueue( Object o ) { throw new UnsupportedOperationException(); }
+		public Object dequeue() { throw new NoSuchElementException(); }
+		public boolean isEmpty() { return true; }
+		public int size() { return 0; }
+		public void clear() {}
+		public Object first() { throw new NoSuchElementException(); }
+		public Object last() { throw new NoSuchElementException(); }
+		public void changed() { throw new NoSuchElementException(); }
+		public Comparator comparator() { return null; }
+		
+	}
+
+	/** An empty indirect priority queue (immutable).
+	 */
+
+	public final static EmptyPriorityQueue EMPTY_QUEUE = new EmptyPriorityQueue();
+
 
 	/** A synchronized wrapper class for priority queues. */
 
