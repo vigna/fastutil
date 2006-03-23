@@ -101,16 +101,16 @@
     <p>Of course, the main point of type-specific data structures is that the
     absence of wrappers around primitive types can increas speed and reduce
     space occupancy by several times. The presence  of generics in Java
-    will not change this fact, since there is no genericity for primitive
+    does not change this fact, since there is no genericity for primitive
     types: if you are interested in performance, I suggest to turn on warnings
     for automatic boxing/unboxing of primitive types, and use type-specific methods instead.
 
     <p>The implementation techniques used in <code>fastutil</code> are quite
     different than those of {@link java.util}: for instance, open-addressing
     hash tables, threaded AVL trees, threaded red-black trees and exclusive-or
-    lists. An effort has also been made to provide powerful derived objects:
-    for instance, the {@linkplain
-    it.unimi.dsi.fastutil.objects.Object2IntSortedMap#keySet() keys of sorted maps
+    lists. An effort has also been made to provide powerful derived objects and
+    to expose them overriding covariantly return types:
+    for instance, the {@linkplain it.unimi.dsi.fastutil.objects.Object2IntSortedMap#keySet() keys of sorted maps
     are sorted} and iterators on sorted containers are always {@linkplain
     it.unimi.dsi.fastutil.BidirectionalIterator bidirectional}.
 
@@ -171,8 +171,14 @@
     highly specialized immutable data structures that store compactly a large
     number of arrays: if you don't know them you probably don't need them.
 
+	 <p>For a number of data structures that were not available in the 
+	  <a href="http://java.sun.com/j2se/1.4.2/docs/guide/collections/">Java&trade; Collections Framework</a>
+	  when <code>fastutil</code> was created, an object-based version is
+	  contained {@link it.unimi.dsi.fastutil}, and in that case the prefix
+	  <code>Object</code> is not used (see, e.g., {@link it.unimi.dsi.fastutil.PriorityQueue}).
+	  
     <p>Since there are eight primitive types in Java, and we support
-    reference-based containers, we get 1315 (!) classes (some nonsensical
+    reference-based containers, we get 1323 (!) classes (some nonsensical
     classes, such as <code>Boolean2BooleanAVLTreeMap</code>, are not
     generated). Many classes are generated just to mimic the hierarchy of
     {@link java.util} so to redistribute common code in a similar way. There
@@ -209,8 +215,8 @@
 	<tr><td>SortedMap<td>AbstractSortedMap<td>RBTreeMap, AVLTreeMap, LinkedOpenHashMap
 	<tr><td>List<td>AbstractList<td>ArrayList, ArrayFrontCodedList
 	<tr><td>PriorityQueue&dagger;<td>AbstractPriorityQueue&dagger;<td>HeapPriorityQueue, ArrayPriorityQueue
-	<tr><td>IndirectPriorityQueue&Dagger;<td>AbstractIndirectPriorityQueue&Dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
-	<tr><td>IndirectDoublePriorityQueue&Dagger;<td>AbstractIndirectDoublePriorityQueue&Dagger;<td>HeapSesquiIndirectDoublePriorityQueue, HeapIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
+	<tr><td>IndirectPriorityQueue&dagger;<td>AbstractIndirectPriorityQueue&dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
+	<tr><td>IndirectDoublePriorityQueue&dagger;<td>AbstractIndirectDoublePriorityQueue&dagger;<td>HeapSesquiIndirectDoublePriorityQueue, HeapIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
 	<tr><td>Stack&dagger;<td>AbstractStack&dagger;<td>ArrayList
 	<tr><td>Iterator<td>AbstractIterator
 	<tr><td>Comparator<td>AbstractComparator
@@ -220,7 +226,6 @@
     </div>
 
     <P>&dagger;: this class has also a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
-    <P>&Dagger;: this class has <em>only</em> a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
     
     <P>Note that abstract implementations are named by prefixing the interface
     name with <samp>Abstract</samp>. Thus, if you want to define a
@@ -233,20 +238,20 @@
     <div align=center>
     <table border=1 style="border: solid thin black" title="Static Containers">
 	<tr><th>Static Containers
-	<tr><td>Collections&dagger;
-	<tr><td>Sets&dagger;
-	<tr><td>SortedSets&dagger;
+	<tr><td>Collections
+	<tr><td>Sets
+	<tr><td>SortedSets
 	<tr><td>Maps&dagger;
 	<tr><td>SortedMaps
-	<tr><td>Lists&dagger;
+	<tr><td>Lists
 	<tr><td>Arrays&dagger;
 	<tr><td>Heaps
 	<tr><td>SemiIndirectHeaps
 	<tr><td>IndirectHeaps
 	<tr><td>PriorityQueues&dagger;
-	<tr><td>IndirectPriorityQueues&Dagger;
-	<tr><td>IndirectDoublePriorityQueues&Dagger;
-	<tr><td>Iterators&dagger;
+	<tr><td>IndirectPriorityQueues&dagger;
+	<tr><td>IndirectDoublePriorityQueues&dagger;
+	<tr><td>Iterators
 	<tr><td>Comparators
 	<tr><td>Hash&Dagger;
 	<tr><td>HashCommon&Dagger;
@@ -257,10 +262,15 @@
     <P>&Dagger;: this class has <em>only</em> a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
 
     <P>The static containers provide also special-purpose implementations for
-    all kinds of {@linkplain it.unimi.dsi.fastutil.Sets#EMPTY_SET empty
+    all kinds of {@linkplain it.unimi.dsi.fastutil.ObjectSets#EMPTY_SET empty
     structures} (including {@linkplain
     it.unimi.dsi.fastutil.objects.ObjectArrays#EMPTY_ARRAY arrays}) and
     {@linkplain it.unimi.dsi.fastutil.ints.Int2IntMaps#singleton(int,int) singletons}.
+    
+    <strong>Note</strong>: before <code>fastutil</code> 5, all empty set and
+    iterator structures had a single implementation. The introduction of generics
+    has made necessary an {@linkplain it.unimi.dsi.fastutil.ints.IntSets#EMPTY_SET empty set of integers},
+	  an {@linkplain it.unimi.dsi.fastutil.bytes.ByteSets#EMPTY_SET empty set of bytes}, etc.
 
     <h3>Warnings</h3>
 
@@ -285,15 +295,14 @@
     <p><strong>Substructures in sorted classes allow the creation of
 	arbitrary substructures</strong>. In {@link java.util}, instead, you
       can only create contained sub-substructures (BTW, why?). For instance,
-      <code>(new TreeSet()).tailSet(new Integer(1)).tailSet(new
-	Integer(0))</code> will throw an exception, but {@link
+      <code>(new TreeSet()).tailSet(1).tailSet(0)</code> will throw an exception, but {@link
       it.unimi.dsi.fastutil.ints.IntRBTreeSet (new
       IntRBTreeSet()).tailSet(1).tailSet(0)} won't.
 
     <p><strong>Immutability is syntactically based (as opposed to
 	semantically based)</strong>. All methods that are known not to be
       causing modifications to the structure at compile time will not throw
-      exceptions (e.g., {@link it.unimi.dsi.fastutil.Sets#EMPTY_SET
+      exceptions (e.g., {@link it.unimi.dsi.fastutil.objects.ObjectSets#EMPTY_SET
       EMPTY_SET.clear()}). All other methods will cause an {@link
       java.lang.UnsupportedOperationException}.  Note that (as of Java 1.4)
       the situation in {@link java.util} is definitely different, and
@@ -302,17 +311,13 @@
       singleton would be modified. This behaviour agrees with the interface documentation, 
       but it is nonetheless confusing.
 
-    
     <h3>Additional Features and Methods</h3>
 
-    <p>The new interfaces add some very natural methods. Moreover, whenever
-      possible, the object returned is type-specific, or even implements a more
-      powerful interface.
-
-    <p>Due to some limitations of Java (you cannot override covariantly the
-      return value of an interface, i.e., with a method returning a more
-      specific value), however, sometimes these features are available only
-      by means of type casting.
+    <p>The new interfaces add some very natural methods and strengthen many of
+    the old ones. Moreover, whenever possible, the object returned is type-specific, 
+    or implements a more powerful interface. Before <code>fastutil</code> 5, the 
+    impossibility of overriding covariantly return types made these features
+    accessible only by means of type casting, but fortunately this is no longer true. 
 
     <P>More in detail:
     <UL>
@@ -321,41 +326,18 @@
 	would expect (e.g., the keys of an {@link
 	it.unimi.dsi.fastutil.ints.Int2LongSortedMap} are an {@link
 	it.unimi.dsi.fastutil.ints.IntSortedSet} and the values are a {@link
-	it.unimi.dsi.fastutil.longs.LongCollection}), but you must explicitly cast the
-	objects returned by {@link java.util.Map#keySet() keySet()} and {@link
-	java.util.Map#values() values()} to the appropriate type.
+	it.unimi.dsi.fastutil.longs.LongCollection}).
 
       <LI>Submaps of a sorted map and subsets of a sorted sets are of the
-	<code>fastutil</code> type you would expect, too. The standard
-	constructors return a {@link java.util.SortedMap} or a {@link
-	java.util.SortedSet}, respectively, which can be safely cast to
-	the right type-specific interface. However, if you use extended
-	interfaces and keys are not objects, then there are new methods accepting
-	primitive keys and returning a type-specific sorted structure directly
-	(see, e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntSortedMap}).
+	<code>fastutil</code> type you would expect, too. 
 
-      <LI>Iterators returned by {@link java.util.Set#iterator()
-	iterator()} can be cast to the obvious type (e.g., {@link
-	it.unimi.dsi.fastutil.chars.CharIterator} for a {@link
-	it.unimi.dsi.fastutil.chars.CharSet}), too. There is also an
-	additional method returning directly a type-specific iterator
-	(see, e.g., {@link
-	it.unimi.dsi.fastutil.ints.IntCollection#intIterator()
-	intIterator()}). See below for more information on
-	<code>fastutil</code> iterators.
+      <LI>Iterators returned by <code>iterator()</code> are type-specific.
 
-      <LI>Sorted structures in <code>fastutil</code> return (possibly
-	type-specific) {@linkplain
+      <LI>Sorted structures in <code>fastutil</code> return
+	type-specific {@linkplain
 	it.unimi.dsi.fastutil.BidirectionalIterator bidirectional
 	iterators}. This means that you can move back and forth among
-	entries, keys or values. Again, you must manually cast the
-	result of a call to {@link java.util.Set#iterator() iterator()}
-	to {@link it.unimi.dsi.fastutil.BidirectionalIterator} or, even
-	better, to a type-specific bidirectional iterator such as
-	{@link it.unimi.dsi.fastutil.ints.IntBidirectionalIterator}. Note that
-	sometimes the return value is explicitly marked to be castable
-	to an even more powerful type-specific {@linkplain
-	java.util.ListIterator list iterator}.
+	entries, keys or values.
 
       <LI>The type-specific sorted set interfaces, moreover, feature an optional
 	method <code>iterator(from)</code> which creates a type-specific {@link
@@ -404,7 +386,7 @@
 	however is initialized to the default return value of the
 	originator).</li>
 
-      <li>For all maps that have object as keys, the {@link
+      <li>For all maps that have objects as keys, the {@link
 	java.util.Map#get(Object) get()} and {@link
 	java.util.Map#remove(Object) remove()} methods do not admit
 	polymorphic versions, as Java does not allow return-value
@@ -471,7 +453,7 @@
       it.unimi.dsi.fastutil.longs.LongArrays}, {@link
       it.unimi.dsi.fastutil.floats.FloatHeaps} and  {@link
       it.unimi.dsi.fastutil.doubles.DoublePriorityQueues}.  Presently, you can easily
-      obtain {@linkplain it.unimi.dsi.fastutil.Sets#EMPTY_SET empty collections},
+      obtain {@linkplain it.unimi.dsi.fastutil.object.ObjectSets#EMPTY_SET empty collections},
       {@linkplain it.unimi.dsi.fastutil.longs.Long2IntMaps#EMPTY_MAP empty
       type-specific collections}, {@linkplain
       it.unimi.dsi.fastutil.ints.IntLists#singleton(int) singletons}, 
@@ -568,7 +550,7 @@
       element}. Finally, {@linkplain it.unimi.dsi.fastutil.IndirectDoublePriorityQueue double indirect queues} maintain at the same time <em>two</em> orders
       (very commonly, opposite orders).
 
-    <P>Queues have two type of implementations: a trivial array-based
+    <P>Queues have two implementations: a trivial array-based
     implementation, and a heap-based implementation. In particular, heap-based
     indirect queues may be {@linkplain
     it.unimi.dsi.fastutil.objects.ObjectHeapIndirectPriorityQueue fully
@@ -774,17 +756,9 @@ m.get( 4 ); // This method call will return 0
 m.defaultReturnValue( -1 );
 m.get( 4 ); // This method call will return -1
     </PRE>
-    <P>By suitable type casting, we can obtain a very powerful iterator:
+    <P>We can obtain a type-specific iterator on the key set:
     <PRE>
-LongListIterator i = (LongListIterator)((LongSortedSet)m.keySet()).iterator();
-// Now we sum all keys
-long s = 0;
-while( i.hasNext() ) s += i.nextLong();
-    </PRE>
-    <P>If one just needs a type-specific iterator, there is a special
-      method that avoids casting:
-    <PRE>
-LongIterator i = ((LongSortedSet)m.keySet()).longIterator();
+LongBidirectionalIterator i = m.keySet().iterator();
 // Now we sum all keys
 long s = 0;
 while( i.hasNext() ) s += i.nextLong();
@@ -795,7 +769,7 @@ while( i.hasNext() ) s += i.nextLong();
 // This map contains only keys smaller than 4
 Long2IntSortedMap m1 = m.headMap( 4 );
 // This iterator is positioned between 2 and 3
-LongBidirectionalIterator t = ((LongSortedSet)m1.keySet()).iterator( 2 );
+LongBidirectionalIterator t = m1.keySet().iterator( 2 );
 t.previous(); // This method call will return 2 (t.next() would return 3)
     </PRE>
     <P>Should we need to access the map concurrently, we can wrap it:
