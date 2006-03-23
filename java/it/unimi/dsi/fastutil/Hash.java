@@ -141,9 +141,7 @@ public interface Hash {
 	 * equal objects must have the same hash code.
 	 *
 	 * <P>If your custom collection must be able to contain <code>null</code>,
-	 * then your strategy must be able to handle <code>null</code>, too. If you plan on
-	 * removing element from the collection, then your strategy must be able to handle
-	 * {@link HashCommon#REMOVED}, too.
+	 * then your strategy must be able to handle <code>null</code>, too.
 	 */
 
 	public interface Strategy<K> {

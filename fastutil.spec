@@ -1,12 +1,12 @@
 %define section free
 
 Name:           fastutil
-Version:        4.4.3
+Version:        5.0
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-4.4.3-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Group:          Development/Libraries/Java
 Vendor:         JPackage Project
@@ -78,6 +78,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Fri Mar 24 2006 Sebastiano Vigna <vigna at acm.org> - 5.0-1jpp
+- First release for the 5.0 (Java 5-only) series.
+
 * Sat Feb 18 2006 Sebastiano Vigna <vigna at acm.org> - 4.4.3-1jpp
 - Important bug fix in FastBufferedInputStream.
 
