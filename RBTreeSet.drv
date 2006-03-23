@@ -308,6 +308,7 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 
 
 	public boolean add( final KEY_GENERIC_TYPE k ) {
+		int maxDepth = 0;
 
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
@@ -318,7 +319,11 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 			int cmp, i = 0;
 
 			while( true ) {
-				if ( ( cmp = compare( k, p.key ) ) == 0 ) return false;
+				if ( ( cmp = compare( k, p.key ) ) == 0 ) {
+					// We clean up the node path, or we could have stale references later.
+					while( i-- != 0 ) nodePath[ i ] = null;
+					return false;
+				}
 					 
 				nodePath[ i ] = p;
 					 
@@ -358,7 +363,7 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 				}
 			}
 
-			i--;
+			maxDepth = i--;
 
 			while( i > 0 && ! nodePath[ i ].black() ) {
 				if ( ! dirPath[ i - 1 ] ) {
@@ -456,7 +461,12 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 			}
 		}
 		tree.black( true );
-		if ( ASSERTS ) checkTree( tree, 0, -1 );
+		// We clean up the node path, or we could have stale references later.
+		while( maxDepth-- != 0 ) nodePath[ maxDepth ] = null;
+		if ( ASSERTS ) {
+			checkNodePath();
+			checkTree( tree, 0, -1 );
+		}
 		return true;
 	}
 
@@ -477,10 +487,18 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 			nodePath[ i ] = p;
 
 			if ( dirPath[ i++ ] ) {
-				if ( ( p = p.right() ) == null ) return false;
+				if ( ( p = p.right() ) == null ) {
+					// We clean up the node path, or we could have stale references later.
+					while( i-- != 0 ) nodePath[ i ] = null;
+					return false;
+				}
 			}
 			else {
-				if ( ( p = p.left() ) == null ) return false;
+				if ( ( p = p.left() ) == null ) {
+					// We clean up the node path, or we could have stale references later.
+					while( i-- != 0 ) nodePath[ i ] = null;
+					return false;
+				}
 			}
 		}
 
@@ -564,6 +582,8 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 			}
 		}
 
+		int maxDepth = i;
+
 		if ( p.black() ) {
 			for( ; i > 0; i-- ) {
 				if ( dirPath[ i - 1 ] && ! nodePath[ i - 1 ].succ() ||
@@ -595,7 +615,7 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 						nodePath[ i ] = nodePath[ i - 1 ];
 						dirPath[ i ] = false;
 						nodePath[ i - 1 ] = w;
-						i++;
+						if ( maxDepth == i++ ) maxDepth++;
 
 						w = nodePath[ i - 1 ].right;
 					}
@@ -659,7 +679,7 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 						nodePath[ i ] = nodePath[ i - 1 ];
 						dirPath[ i ] = true;
 						nodePath[ i - 1 ] = w;
-						i++;
+						if ( maxDepth == i++ ) maxDepth++;
 
 						w = nodePath[ i - 1 ].left;
 					}
@@ -710,7 +730,12 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 		}
 
 		count--;
-		if ( ASSERTS ) checkTree( tree, 0, -1 );
+		// We clean up the node path, or we could have stale references later.
+		while( maxDepth-- != 0 ) nodePath[ maxDepth ] = null;
+		if ( ASSERTS ) {
+			checkNodePath();
+			checkTree( tree, 0, -1 );
+		}
 		return true;
 	}
 
@@ -1435,6 +1460,10 @@ public class RB_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC imp
 		if ( n + 2 == ( ( n + 2 )  & -( n + 2 ) ) ) top.right.black( false ); // Quick test for determining whether n + 2 is a power of 2.
 
 		return top;
+	}
+
+	private void checkNodePath() {
+		for( int i = nodePath.length; i-- != 0; ) assert nodePath[ i ] == null : i;
 	}
 
 	private static KEY_GENERIC int checkTree( Entry KEY_GENERIC e, int d, int D ) {

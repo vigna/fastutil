@@ -287,6 +287,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	 
 	public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
 		modified = false;
+		int maxDepth = 0;
 
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
@@ -300,6 +301,8 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 				if ( ( cmp = compare( k, p.key ) ) == 0 ) {
 					final VALUE_GENERIC_TYPE oldValue = p.value;
 					p.value = v;
+					// We clean up the node path, or we could have stale references later.
+					while( i-- != 0 ) nodePath[ i ] = null;
 					return oldValue;
 				}
 					 
@@ -342,7 +345,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			}
 
 			modified = true;
-			i--;
+			maxDepth = i--;
 
 			while( i > 0 && ! nodePath[ i ].black() ) {
 				if ( ! dirPath[ i - 1 ] ) {
@@ -440,7 +443,12 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			}
 		}
 		tree.black( true );
-		if ( ASSERTS ) checkTree( tree, 0, -1 );
+		// We clean up the node path, or we could have stale references later.
+		while( maxDepth-- != 0 ) nodePath[ maxDepth ] = null;
+		if ( ASSERTS ) {
+			checkNodePath();
+			checkTree( tree, 0, -1 );
+		}
 		return defRetValue;
 	}
 
@@ -466,10 +474,18 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			nodePath[ i ] = p;
 
 			if ( dirPath[ i++ ] ) {
-				if ( ( p = p.right() ) == null ) return defRetValue;
+				if ( ( p = p.right() ) == null ) {
+					// We clean up the node path, or we could have stale references later.
+					while( i-- != 0 ) nodePath[ i ] = null;
+					return defRetValue;
+				}
 			}
 			else {
-				if ( ( p = p.left() ) == null ) return defRetValue;
+				if ( ( p = p.left() ) == null ) {
+					// We clean up the node path, or we could have stale references later.
+					while( i-- != 0 ) nodePath[ i ] = null;
+					return defRetValue;
+				}
 			}
 
 		}
@@ -554,6 +570,8 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			}
 		}
 
+		int maxDepth = i;
+
 		if ( p.black() ) {
 			for( ; i > 0; i-- ) {
 				if ( dirPath[ i - 1 ] && ! nodePath[ i - 1 ].succ() ||
@@ -585,7 +603,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 						nodePath[ i ] = nodePath[ i - 1 ];
 						dirPath[ i ] = false;
 						nodePath[ i - 1 ] = w;
-						i++;
+						if ( maxDepth == i++ ) maxDepth++;
 
 						w = nodePath[ i - 1 ].right;
 					}
@@ -649,7 +667,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 						nodePath[ i ] = nodePath[ i - 1 ];
 						dirPath[ i ] = true;
 						nodePath[ i - 1 ] = w;
-						i++;
+						if ( maxDepth == i++ ) maxDepth++;
 
 						w = nodePath[ i - 1 ].left;
 					}
@@ -701,7 +719,12 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 
 		modified = true;
 		count--;
-		if ( ASSERTS ) checkTree( tree, 0, -1 );
+		// We clean up the node path, or we could have stale references later.
+		while( maxDepth-- != 0 ) nodePath[ maxDepth ] = null;
+		if ( ASSERTS ) {
+			checkNodePath();
+			checkTree( tree, 0, -1 );
+		}
 		return p.value;
 	}
 
@@ -1884,6 +1907,10 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		if ( n + 2 == ( ( n + 2 )  & -( n + 2 ) ) ) top.right.black( false ); // Quick test for determining whether n + 2 is a power of 2.
 
 		return top;
+	}
+
+	private void checkNodePath() {
+		for( int i = nodePath.length; i-- != 0; ) assert nodePath[ i ] == null : i;
 	}
 
 	private int checkTree( Entry e, int d, int D ) {
