@@ -15,44 +15,6 @@
     distributed under the <A
     HREF="http://www.gnu.org/copyleft/lesser.html"><ACRONYM TITLE="GNU's not Unix">GNU</ACRONYM> Lesser General Public License</A>.
 
-    <blockquote>
-
-      <p><strong>Warning:</strong> As of 4.0, the introduction of the new
-	high-performance <code>addElements()</code> methods to type-specific
-	lists made previous implementations of type-specific lists incomplete.
-	However, the new methods are implemented by type-specific abstract
-	lists, so a recompilation should be sufficient.
-
-	<p>Moreover, the abstract generic version of <code>get()</code>,
-	<code>put()</code> and <code>remove()</code> for maps with non-object
-	keys or values now always return <code>null</code> to denote a missing
-	key. In a few cases they used to return an object-wrapped default
-	return value.
-
-      <P>As of 3.1, the introduction of several new
-	static methods made it clear that accumulating all such methods in a
-	single static container class would not have been feasible ({@link
-	it.unimi.dsi.fastutil.Collections} would have more than a thousand
-	methods). Thus, static methods are spread, whenever appropriate, in
-	type-specific classes such as {@link
-	it.unimi.dsi.fastutil.ints.IntSets}. The old
-	<code>it.unimi.dsi.fastutil.Iterators</code> has been fit into this
-	framework, too, and now all its methods are distributed in type-specific classes
-	(e.g., {@link it.unimi.dsi.fastutil.ints.IntIterators}).
-
-      <P>As a consequence, source code compatibility is broken for methods
-	contained in the old <code>it.unimi.dsi.fastutil.Iterators</code>
-	class.
-
-      <P>Moreover, after facing of a number of ambiguities in method
-	invocation, it has been decided to rename all removal methods in
-	type-specific versions of {@link java.util.Collection} to
-	<code>rem()</code> (this was previously true just of {@link
-	it.unimi.dsi.fastutil.ints.IntSet#rem(int)}).
-
-	
-    </blockquote>
-
     <h2>Package Specification</h2>
 
     
@@ -79,6 +41,49 @@
     HREF="http://www.eclipse.org/">Eclipse</A>, which can suggest you the
     method names, all you need to know is <A HREF="#names">the right name for
     the class you need</A>.
+    
+    
+   <h2><code>fastutil</code> 5</h2>
+	
+	<p>The release 5 of <code>fastutil</code> needs Java 5, and 
+	marks a revolution in the way the
+	classes are organised. Besides full support for generics, which can help
+	with object-based classes (but is rather irrelevant in type-specific classes),
+	<code>fastutil</code> is now strongly based on what is probably the less hyped
+	and most important feature of Java 5: <em>covariant return-type overriding</em>.
+	A method <code>x()</code> returning an object of type <code>T</code> can now
+	be overriden by a method returning an object of type <code>U</code>, where
+	<code>U</code> is a subclass of (or implements) <code>T</code>.
+	
+	<p>Covariant return-type overriding has always been supported by the JVM,
+	but was inaccessible at the syntax level. In Java 5 this irritant limitation
+	has been lifted, opening a new world of clarity and orthogonality in organising
+	collection classes. In particular, <em>interface strengthening</em> makes it
+	possible to use all features of <code>fastutil</code> classes without type
+	casting: for instance, {@link it.unimi.dsi.fastutil.ints.IntSet#iterator()}
+	is strengthened, w.r.t.  {@link java.util.Set#iterator()}, so that it
+	returns an {@link it.unimi.dsi.fastutil.ints.IntIterator} instead of a
+	simple {@link java.util.Iterator}. Albeit this was still possible before
+	by type casting, it made using the thousands of classes in <code>fastutil</code>
+	difficult and error-prone, as every type cast had to be checked against the documentation.
+	This is no longer necessary.
+	
+	<p>Another advantage of covariant return-type overriding is that implementations
+	can declare to return more specific (usually, more powerful) types than those
+	specified by their interface. For instance,
+	{@link it.unimi.dsi.fastutil.ints.IntAVLTreeSet#iterator()} returns actually
+	an {@link it.unimi.dsi.fastutil.ints.IntListIterator IntListIterator}, whereas
+	{@link it.unimi.dsi.fastutil.ints.IntSortedSet#iterator()} is specified as returning
+	just a {@link it.unimi.dsi.fastutil.ints.IntListIterator IntBidirectionalIterator}.
+	
+	<p>Unfortunately, the {@linkplain java.util Java&trade; Collections
+	Framework} has obvious legacy problems, so the {@linkplain java.util.Map#keySet() key set}
+	of a {@link java.util.SortedMap} does not return a {@link java.util.SortedSet}:
+	<code>fastutil</code> 5 makes a break with the past, giving the best possible
+	interface and implementation return types. This entails a number of source
+	incompatibilities, which we feel are worth the effort.  
+	
+	<h2>Overview</h2>
 
     <p>All data structures in <code>fastutil</code> implement their standard
     counterpart interface (e.g., {@link java.util.Map} for maps). Thus, they
@@ -86,19 +91,19 @@
     (of course, any attempt to use the wrong type for keys or values will
     produce a {@link java.lang.ClassCastException}). However, they also provide
     (whenever possible) many polymorphic versions of the most used methods that
-    lessen the tedious "type juggling" that is well known to Java
-    programmers. In doing so, they implement more stringent interfaces that
-    extend the standard ones (e.g., {@link
+    avoid boxing/unboxing (and that before Java 5 caused
+     the tedious "type juggling" that was well known to Java
+    programmers). In doing so, they implement more stringent interfaces that
+    extend and strengthen the standard ones (e.g., {@link
     it.unimi.dsi.fastutil.ints.Int2IntSortedMap} or {@link
     it.unimi.dsi.fastutil.ints.IntListIterator}).</p>
-      
+          
     <p>Of course, the main point of type-specific data structures is that the
     absence of wrappers around primitive types can increas speed and reduce
-    space occupancy by several times. The implementation of generics in Java
-    will not change this fact, since there will be no genericity for primitive
-    types: thanks to automatic boxing/deboxing of primitive types, type juggling will
-    be eliminated, but the data structures themselves will remain much larger and
-    slower than needed.
+    space occupancy by several times. The presence  of generics in Java
+    will not change this fact, since there is no genericity for primitive
+    types: if you are interested in performance, I suggest to turn on warnings
+    for automatic boxing/unboxing of primitive types, and use type-specific methods instead.
 
     <p>The implementation techniques used in <code>fastutil</code> are quite
     different than those of {@link java.util}: for instance, open-addressing
