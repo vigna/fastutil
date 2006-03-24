@@ -1,6 +1,6 @@
 %define section free
 
-Name:           fastutil-jdk1.5
+Name:           fastutil5
 Version:        5.0
 Release:        1jpp
 Epoch:          0
