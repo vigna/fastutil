@@ -1245,33 +1245,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		while( j-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
 	}
 
-	private void checkTable() {
-		int n = state.length;
-		while( n-- != 0 ) 
-			if ( state[ n ] == OCCUPIED && ! contains( key[ n ] ) ) 
-				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
-
-#ifdef Linked
-		KEY_BIDI_ITERATOR KEY_GENERIC i = iterator();
-		KEY_GENERIC_TYPE k;
-		n = size();
-		while( n-- != 0 ) 
-			if ( ! contains( k = i.NEXT_KEY() ) ) 
-				throw new AssertionError( "Linked hash table forward enumerates key " + k + ", but the key does not belong to the table" );
-
-		if ( i.hasNext() ) throw new AssertionError( "Forward iterator not exhausted" );
-
-		n = size();
-		if ( n > 0 ) {
-			i = iterator( LAST() );
-			while( n-- != 0 ) 
-				if ( ! contains( k = i.PREV_KEY() ) ) 
-					throw new AssertionError( "Linked hash table backward enumerates key " + k + ", but the key does not belong to the table" );
-			
-			if ( i.hasPrevious() ) throw new AssertionError( "Previous iterator not exhausted" );
-		}
-#endif
-	}
 
 	@SuppressWarnings("unchecked")
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
@@ -1334,6 +1307,38 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		if ( ASSERTS ) checkTable();
 	}
 
+
+#ifdef ASSERTS_CODE
+	private void checkTable() {
+		int n = state.length;
+		while( n-- != 0 ) 
+			if ( state[ n ] == OCCUPIED && ! contains( key[ n ] ) ) 
+				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
+
+#ifdef Linked
+		KEY_BIDI_ITERATOR KEY_GENERIC i = iterator();
+		KEY_GENERIC_TYPE k;
+		n = size();
+		while( n-- != 0 ) 
+			if ( ! contains( k = i.NEXT_KEY() ) ) 
+				throw new AssertionError( "Linked hash table forward enumerates key " + k + ", but the key does not belong to the table" );
+
+		if ( i.hasNext() ) throw new AssertionError( "Forward iterator not exhausted" );
+
+		n = size();
+		if ( n > 0 ) {
+			i = iterator( LAST() );
+			while( n-- != 0 ) 
+				if ( ! contains( k = i.PREV_KEY() ) ) 
+					throw new AssertionError( "Linked hash table backward enumerates key " + k + ", but the key does not belong to the table" );
+			
+			if ( i.hasPrevious() ) throw new AssertionError( "Previous iterator not exhausted" );
+		}
+#endif
+	}
+#else
+	private void checkTable() {}
+#endif
 
 #ifdef TEST
 

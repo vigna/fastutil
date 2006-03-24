@@ -61,7 +61,6 @@ source:
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \
 		fastutil-$(VERSION)/makefile \
-		fastutil-$(VERSION)/make-1.3-compatible.sh \
 		$(foreach f, $(SOURCES), fastutil-$(VERSION)/$(f)) \
 		fastutil-$(VERSION)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(VERSION)/$(SOURCEDIR)/io/package.html \
@@ -473,12 +472,7 @@ SOURCES = \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \
-	$(SOURCEDIR)/Iterators.java \
-	$(SOURCEDIR)/Collections.java \
-	$(SOURCEDIR)/Sets.java \
 	$(SOURCEDIR)/Maps.java \
-	$(SOURCEDIR)/SortedSets.java \
-	$(SOURCEDIR)/Lists.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/PriorityQueues.java \
 	$(SOURCEDIR)/IndirectPriorityQueues.java \
@@ -495,7 +489,7 @@ SOURCES = \
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< > $@
+	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< > $@
 
 
 clean: 

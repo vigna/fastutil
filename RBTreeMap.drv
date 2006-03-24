@@ -1909,22 +1909,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		return top;
 	}
 
-	private void checkNodePath() {
-		for( int i = nodePath.length; i-- != 0; ) assert nodePath[ i ] == null : i;
-	}
-
-	private int checkTree( Entry e, int d, int D ) {
-		if ( e == null ) return 0;
-		if ( e.black() ) d++;
-		if ( e.left() != null ) D = checkTree( e.left(), d, D );
-		if ( e.right() != null ) D = checkTree( e.right(), d, D );
-		if ( e.left() == null && e.right() == null ) {
-			if ( D == -1 ) D = d;
-			else if ( D != d ) throw new AssertionError( "Mismatch between number of black nodes (" + D + " and " + d + ")" );
-		}
-		return D;
-	}
-
 	private void readObject( java.io.ObjectInputStream s ) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		/* The storedComparator is now correctly set, but we must restore
@@ -1948,6 +1932,27 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		if ( ASSERTS ) checkTree( tree, 0, -1 );
 
 	}
+
+#ifdef ASSERTS_CODE
+	private void checkNodePath() {
+		for( int i = nodePath.length; i-- != 0; ) assert nodePath[ i ] == null : i;
+	}
+
+	private int checkTree( Entry e, int d, int D ) {
+		if ( e == null ) return 0;
+		if ( e.black() ) d++;
+		if ( e.left() != null ) D = checkTree( e.left(), d, D );
+		if ( e.right() != null ) D = checkTree( e.right(), d, D );
+		if ( e.left() == null && e.right() == null ) {
+			if ( D == -1 ) D = d;
+			else if ( D != d ) throw new AssertionError( "Mismatch between number of black nodes (" + D + " and " + d + ")" );
+		}
+		return D;
+	}
+#else
+	private void checkNodePath() {}
+	private int checkTree( Entry e, int d, int D ) {}
+#endif
 
 
 

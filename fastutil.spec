@@ -25,6 +25,7 @@ text files. The classes implement their standard counterpart interface
 provide additional features (such as bidirectional iterators) that are not
 available in the standard classes.
 
+From version 5, fastutil runs only on Java 5+.
 
 %package        javadoc
 Summary:        Javadoc for %{name}
