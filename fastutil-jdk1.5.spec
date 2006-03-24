@@ -1,14 +1,14 @@
 %define section free
 
-Name:           fastutil
+Name:           fastutil-jdk1.5
 Version:        5.0
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
+Group:          Development/Libraries/Java
 License:        LGPL
 Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
-Group:          Development/Libraries/Java
 Vendor:         JPackage Project
 Distribution:   JPackage
 BuildArch:      noarch
@@ -35,7 +35,7 @@ Group:          Development/Documentation
 Javadoc for %{name}.
 
 %prep
-%setup -q
+%setup -q -n fastutil-%{version}
 
 %build
 make sources
@@ -43,7 +43,7 @@ export CLASSPATH=
 ant \
   -Dj2se.apiurl=%{_javadocdir}/java \
   jar javadoc
-
+mv fastutil-%{version}.jar %{name}-%{version}.jar
 
 %install
 rm -rf $RPM_BUILD_ROOT
