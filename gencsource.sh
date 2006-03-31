@@ -263,6 +263,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#define VALUE_COLLECTIONS ${TYPE_CAP[$v]}Collections\n\n"\
 "#define VALUE_SETS ${TYPE_CAP[$v]}Sets\n\n"\
+"#define VALUE_ARRAYS ${TYPE_CAP2[$v]}Arrays\n\n"\
 \
 \
 "/* Implementations */\n"\

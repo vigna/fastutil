@@ -11,7 +11,7 @@ import junit.framework.TestCase;
 public class Int2IntArrayMapTest extends TestCase {
 	
 	public void testMap() {
-		Int2IntArrayMap m = new Int2IntArrayMap( new int[ 5 ], new int[ 5 ] );
+		Int2IntArrayMap m = new Int2IntArrayMap( new int[ 2 ], new int[ 2 ] );
 		assertEquals( 0, m.put( 1, 1 ) );
 		assertEquals( 1, m.size() );
 		assertTrue( m.containsKey( 1 ) );
@@ -23,16 +23,25 @@ public class Int2IntArrayMapTest extends TestCase {
 		assertEquals( 1, m.put( 1, 3 ) );
 		assertTrue( m.containsValue( 3 ) );
 		assertEquals( 0, m.remove( 3 ) );
-		assertEquals( new IntOpenHashSet( new int[] { 1, 2 } ), new IntOpenHashSet( m.keySet().iterator() ) );
-		assertEquals( new IntOpenHashSet( new int[] { 3, 2 } ), new IntOpenHashSet( m.values().iterator() ) );
+		assertEquals( 0, m.put(  3, 3  ) );
+		assertTrue( m.containsKey( 3 ) );
+		assertTrue( m.containsValue( 3 ) );
+		assertEquals( 3, m.size() );
+		assertEquals( 3, m.get( 1 ) );
+		assertEquals( 2, m.get( 2 ) );
+		assertEquals( 3, m.get( 3 ) );
+		assertEquals( new IntOpenHashSet( new int[] { 1, 2, 3 } ), new IntOpenHashSet( m.keySet().iterator() ) );
+		assertEquals( new IntOpenHashSet( new int[] { 3, 2, 3 } ), new IntOpenHashSet( m.values().iterator() ) );
 
 		for( Entry<Integer, Integer> e: m.entrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
 		
 		assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 3 ) ) );
 		assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 2 ) ) );
+		assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 3, 3 ) ) );
 		assertFalse( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
 		assertFalse( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 1 ) ) );
 		
+		assertEquals( 3, m.remove( 3 ) );
 		assertEquals( 2, m.size() );
 		assertEquals( 3, m.remove( 1 ) );
 		assertEquals( 1, m.size() );

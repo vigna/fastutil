@@ -7,7 +7,7 @@ import junit.framework.TestCase;
 public class ReferenceArraySetTest extends TestCase {
 	
 	public void testSet() {
-		ReferenceArraySet<Object> s = new ReferenceArraySet<Object>( new Object[ 5 ] );
+		ReferenceArraySet<Object> s = new ReferenceArraySet<Object>( new Object[ 2 ] );
 		Integer one = new Integer( 1 ), two = new Integer( 2 ), three = new Integer( 3 );
 		assertTrue( s.add( one ) );
 		assertEquals( 1, s.size() );
@@ -19,7 +19,13 @@ public class ReferenceArraySetTest extends TestCase {
 		assertEquals( 2, s.size() );
 		assertFalse( s.add( one ) );
 		assertFalse( s.remove( three ) );
-		assertEquals( new ReferenceOpenHashSet<Object>( new Object[] { one, two } ), new ReferenceOpenHashSet<Object>( s.iterator() ) );
+		assertTrue( s.add( three ) );
+		assertEquals( 3, s.size() );
+		assertTrue( s.contains( one ) );
+		assertTrue( s.contains( two ) );
+		assertTrue( s.contains( three ) );
+		assertEquals( new ReferenceOpenHashSet<Object>( new Object[] { one, two, three } ), new ReferenceOpenHashSet<Object>( s.iterator() ) );
+		assertTrue( s.remove( three ) );
 		assertEquals( 2, s.size() );
 		assertTrue( s.remove( one ) );
 		assertEquals( 1, s.size() );
