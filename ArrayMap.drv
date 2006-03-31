@@ -1,0 +1,194 @@
+/*		 
+ * fastutil: Fast & compact type-specific collections for Java
+ *
+ * Copyright (C) 2007 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+import java.util.Map;
+import java.util.NoSuchElementException;
+import it.unimi.dsi.fastutil.objects.AbstractObjectIterator;
+import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+
+import VALUE_PACKAGE.VALUE_COLLECTION;
+import VALUE_PACKAGE.VALUE_COLLECTIONS;
+import VALUE_PACKAGE.VALUE_ARRAY_SET;
+
+/** A simple, brute-force implementation of a map based on two parallel backing arrays. The main purpose of this
+ * implementation is that of wrapping cleanly the brute-force approach to the storage of a very 
+ * small number of pairs: just put them into two parallel arrays and scan linearly to find an item.
+ * 
+ * <p>This implementation does not allow the map to grow beyond the initial size of the provided backing arrays (an
+ * {@link ArrayIndexOutOfBoundsException} will be thrown).
+ */
+
+public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC {
+
+	private static final long serialVersionUID = 1L;
+	/** The keys (valid up to {@link #size}, excluded). */
+	private final KEY_GENERIC_TYPE[] key;
+	/** The values (parallel to {@link #key}). */
+	private final VALUE_GENERIC_TYPE[] value;
+	/** The number of valid entries in {@link #key} and {@link #value}. */
+	private int size;
+	
+	/** Creates a new empty array map with given key and value backing arrays.
+	 * 
+	 * @param key the key array.
+	 * @param value the value array (it <em>must</em> have the same length as <code>key</code>).
+	 */
+	public ARRAY_MAP( KEY_GENERIC_TYPE[] key, VALUE_GENERIC_TYPE[] value ) {
+		this.key = key;
+		this.value = value;
+		if( key.length != value.length ) throw new IllegalArgumentException( "Keys and values have different lengths (" + key.length + ", " + value.length + ")" );
+	}
+	
+	public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
+		return new AbstractObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>() {
+
+			@Override
+			public ObjectIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> iterator() {
+				return new AbstractObjectIterator<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>() {
+					int next = 0;
+					
+					public boolean hasNext() {
+						return next < size;
+					}
+
+					public java.util.Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> next() {
+						if ( ! hasNext() ) throw new NoSuchElementException();
+						return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( key[ next ], value[ next++ ] );
+					}
+					
+				};
+			}
+
+			public int size() {
+				return size;
+			}
+
+			public boolean contains( Object o ) {
+				if ( ! ( o instanceof Map.Entry ) ) return false;
+				Map.Entry<?,?> e = (Entry)o;
+				return ARRAY_MAP.this.containsKey( e.getKey() ) && VALUE_EQUALS( ARRAY_MAP.this.get( e.getKey() ), e.getValue() );
+			}
+			
+		};
+	}
+
+	private int findKey( final KEY_TYPE k ) {
+		final KEY_GENERIC_TYPE[] key = this.key;
+		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return i;
+		return -1;
+	}
+
+#if #keys(primitive) || #values(primitive)
+	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
+#else
+	public VALUE_GENERIC_TYPE get( final Object k ) {
+#endif
+		final KEY_GENERIC_TYPE[] key = this.key;
+		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return value[ i ];
+		return defRetValue;
+	}
+
+	public int size() {
+		return size;
+	}
+
+	@Override
+	public void clear() {
+#if #keys(reference) || #values(reference)
+		for( int i = size; i-- != 0; ) {
+#if #keys(reference)
+			key[ i ] = null;
+#endif
+#if #values(reference)
+			value[ i ] = null;
+#endif
+		}
+#endif
+		size = 0;
+	}
+
+	@Override
+	public boolean containsKey( final KEY_TYPE k ) {
+		return findKey( k ) != -1;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public boolean containsValue( VALUE_TYPE v ) {
+		for( int i = size; i-- != 0; ) if ( VALUE_EQUALS( value[ i ], v ) ) return true;
+		return false;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+	@Override
+	public VALUE_GENERIC_TYPE put( KEY_GENERIC_TYPE k, VALUE_GENERIC_TYPE v ) {
+		final int oldKey = findKey( k );
+		if ( oldKey != -1 ) {
+			final VALUE_GENERIC_TYPE oldValue = value[ oldKey ];
+			value[ oldKey ] = v;
+			return oldValue;
+		}
+		key[ size ] = k;
+		value[ size ] = v;
+		size++;
+		return defRetValue;
+	}
+
+	@Override
+
+#if #keys(primitive) || #values(primitive)
+	public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
+#else
+	public VALUE_GENERIC_TYPE remove( final Object k ) {
+#endif
+		final int oldPos = findKey( k );
+		if ( oldPos == -1 ) return defRetValue;
+		final VALUE_GENERIC_TYPE oldValue = value[ oldPos ];
+		System.arraycopy( key, oldPos + 1, key, oldPos, size - oldPos - 1 );
+		System.arraycopy( value, oldPos + 1, value, oldPos, size - oldPos - 1 );
+		size--;
+#if #keys(reference)
+		key[ size ] = null;
+#endif
+#if #values(reference)
+		value[ size ] = null;
+#endif
+		return oldValue;
+	}
+
+	@Override
+	public SET KEY_GENERIC keySet() {
+		return new ARRAY_SET KEY_GENERIC( key, size );
+	}
+
+	@Override
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		return VALUE_COLLECTIONS.unmodifiable( new VALUE_ARRAY_SET VALUE_GENERIC( value, size ) );
+	}
+}

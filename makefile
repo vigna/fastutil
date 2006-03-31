@@ -264,6 +264,11 @@ $(LINKED_OPEN_CUSTOM_HASH_SETS): LinkedOpenCustomHashSet.drv; ./gencsource.sh $<
 
 CSOURCES += $(LINKED_OPEN_CUSTOM_HASH_SETS)
 
+ARRAY_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArraySet.c)
+$(ARRAY_SETS): ArraySet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ARRAY_SETS)
+
 AVL_TREE_SETS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)AVLTreeSet.c)
 $(AVL_TREE_SETS): AVLTreeSet.drv; ./gencsource.sh $< $@ >$@
 
@@ -293,6 +298,11 @@ LINKED_OPEN_CUSTOM_HASH_MAPS := $(foreach v,$(TYPE), $(SOURCEDIR)/objects/Object
 $(LINKED_OPEN_CUSTOM_HASH_MAPS): LinkedOpenCustomHashMap.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LINKED_OPEN_CUSTOM_HASH_MAPS)
+
+ARRAY_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)ArrayMap.c))
+$(ARRAY_MAPS): ArrayMap.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ARRAY_MAPS)
 
 AVL_TREE_MAPS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)AVLTreeMap.c))
 $(AVL_TREE_MAPS): AVLTreeMap.drv; ./gencsource.sh $< $@ >$@

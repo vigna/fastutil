@@ -205,6 +205,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 \
 "#define VALUE_COLLECTION ${TYPE_CAP[$v]}Collection\n\n"\
+"#define VALUE_ARRAY_SET ${TYPE_CAP[$v]}ArraySet\n\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP2[$v]}Iterator\n\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n\n"\
 \
@@ -269,6 +270,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#define OPEN_HASH_SET ${TYPE_CAP[$k]}${Linked}Open${Custom}HashSet\n\n"\
 "#define OPEN_HASH_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${Linked}Open${Custom}HashMap\n\n"\
+"#define ARRAY_SET ${TYPE_CAP[$k]}ArraySet\n\n"\
+"#define ARRAY_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}ArrayMap\n\n"\
 "#define LINKED_OPEN_HASH_SET ${TYPE_CAP[$k]}LinkedOpenHashSet\n\n"\
 "#define AVL_TREE_SET ${TYPE_CAP[$k]}AVLTreeSet\n\n"\
 "#define RB_TREE_SET ${TYPE_CAP[$k]}RBTreeSet\n\n"\
@@ -389,9 +392,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\
-"#define VALUE_EQUAL(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
+"#define VALUE_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#else\n"\
-"#define VALUE_EQUAL(x,y) ( (x) == (y) )\n"\
+"#define VALUE_EQUALS(x,y) ( (x) == (y) )\n"\
 "#endif\n\n"\
 \
 \
