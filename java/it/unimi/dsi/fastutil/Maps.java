@@ -31,22 +31,10 @@ public class Maps {
 	private Maps() {}
 
 	/** A standard default return value to be used in maps contaning <code>null</code> values.
-	 *
-	 * <P>Maps with object values containing <code>null</code> values are usually
-	 * problematic because there is no way to tell whether <code>get()</code>,
-	 * <code>put()</code> and <code>remove()</code> did not find a key or the
-	 * key was found but the associated value is <code>null</code>. This object can be used
-	 * as a default return value to solve this problem:
-	 *
-	 * <pre>
-	 * m = new Object2ObjectAVLTreeMap();
-	 * m.defaultReturnValue(MISSING);
-	 * [...]
-	 * v = m.get(k);
-	 * if (MISSING == v) ... // not found
-	 * else ... // found
-	 * </pre>
+	 * @deprecated Since fastutil 5.0, the introduction of generics
+	 * makes this object pretty useless.
 	 */
 
+	@Deprecated
 	public static final Object MISSING = new Object();
 }

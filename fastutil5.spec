@@ -1,18 +1,19 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0
+Version:        5.0.1
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0.1-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Vendor:         JPackage Project
 Distribution:   JPackage
 BuildArch:      noarch
-BuildRequires:  ant, make, gcc, jpackage-utils >= 0:1.6, /bin/bash
+Requires:	java >= 1.5.0
+BuildRequires:  java-devel >= 1.5.0, ant, make, gcc, jpackage-utils >= 0:1.6, /bin/bash
 BuildRequires:	java-javadoc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -79,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Wed Apr 5 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.1-1jpp
+- Fixed bad bug in BinIO.
+
 * Fri Mar 24 2006 Sebastiano Vigna <vigna at acm.org> - 5.0-1jpp
 - First release for the 5.0 (Java 5-only) series.
 
