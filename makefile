@@ -1,4 +1,4 @@
-VERSION=5.0.1
+VERSION=5.0.2
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -449,7 +449,7 @@ $(SOURCEDIR)/io/BinIO.c: BinIO.drv $(BINIO_FRAGMENTS)
 CSOURCES += $(SOURCEDIR)/io/BinIO.c
 
 
-TEXTIO_FRAGMENTS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/io/$(k)TextIOFragment.h)
+TEXTIO_FRAGMENTS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/io/$(k)TextIOFragment.h)
 $(TEXTIO_FRAGMENTS): TextIOFragment.drv; ./gencsource.sh $< $@ >$@
 
 CFRAGMENTS += $(TEXTIO_FRAGMENTS)

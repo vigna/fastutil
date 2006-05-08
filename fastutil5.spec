@@ -1,13 +1,13 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0.1
+Version:        5.0.2
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0.1-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0.2-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Vendor:         JPackage Project
 Distribution:   JPackage
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Mon May 8 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.2-1jpp
+- Boolean I/O, and fixed bugs in abstract maps.
+
 * Wed Apr 5 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.1-1jpp
 - Fixed bad bug in BinIO.
 
