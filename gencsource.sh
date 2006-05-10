@@ -89,7 +89,7 @@ echo -e \
 \
 \
 $(if [[ "${CLASS[$k]}" != "" ]]; then\
-	echo "#assert keyclass(${CLASS[$k]})\\n";\
+	echo "#unassert keyclass\\n#assert keyclass(${CLASS[$k]})\\n#unassert keys\\n";\
 	if [[ "${CLASS[$k]}" != "Object" && "${CLASS[$k]}" != "Reference" ]]; then\
 		echo "#assert keys(primitive)\\n";\
 	else\
@@ -97,7 +97,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
-	echo "#assert valueclass(${CLASS[$v]})\\n";\
+	echo "#unassert valueclass\\n#assert valueclass(${CLASS[$v]})\\n#unassert values\\n";\
 	if [[ "${CLASS[$v]}" != "Object" && "${CLASS[$v]}" != "Reference" ]]; then\
 		echo "#assert values(primitive)\\n";\
 	else\

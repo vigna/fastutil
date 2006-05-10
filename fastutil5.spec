@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0.2
+Version:        5.0.3
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Thu May 11 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.3-1jpp
+- Fixed horrible bug.
+
 * Mon May 8 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.2-1jpp
 - Boolean I/O, and fixed bugs in abstract maps.
 
