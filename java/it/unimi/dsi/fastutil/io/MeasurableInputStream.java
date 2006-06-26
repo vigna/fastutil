@@ -10,8 +10,9 @@ public abstract class MeasurableInputStream extends InputStream {
 	
 	/** Returns the overall length of this input stream. In most cases, this will require the input
 	 *  stream to perform some extra action, possibly changing the state of the input stream itself (typically, reading
-	 *  all the bytes up to the end). Implementing classes should always document what state will the input stream be in
-	 *  after calling this method.
+	 *  all the bytes up to the end), which also implies that an unchecked exception could be thrown in this case. 
+	 *  Implementing classes should always document what state will the input stream be in
+	 *  after calling this method, and which kind of unchecked exception could be thrown.
 	 */ 
 	public abstract long length();
 
