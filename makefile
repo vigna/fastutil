@@ -1,4 +1,4 @@
-VERSION=5.0.3
+VERSION=5.0.4
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -483,6 +483,7 @@ SOURCES = \
 	$(SOURCEDIR)/AbstractStack.java \
 	$(SOURCEDIR)/io/FastBufferedInputStream.java \
 	$(SOURCEDIR)/io/FastBufferedOutputStream.java \
+	$(SOURCEDIR)/io/MeasurableInputStream.java \
 	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
 
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,

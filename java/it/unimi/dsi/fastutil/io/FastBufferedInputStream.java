@@ -56,6 +56,9 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 	/** The default size of the internal buffer in bytes (8Ki). */
 	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
 
+	/** The length of the underlying input stream, if it is {@linkplain MeasurableInputStream measurable}. */
+	final private long length;
+
 	/** The underlying input stream. */
 	protected InputStream is;
 
@@ -74,7 +77,6 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 	/** {@link #is} cast to a positionable stream, if possible. */
 	private RepositionableStream rs;
 
-
 	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
 	 *
 	 * @param is an input stream to wrap.
@@ -86,6 +88,7 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 		buffer = new byte[ bufSize ];
 
 		if ( is instanceof RepositionableStream ) rs = (RepositionableStream)is;
+		length = is instanceof MeasurableInputStream? ((MeasurableInputStream)is).length() : -1;
 			
 		if ( rs == null ) {
 				
@@ -180,6 +183,11 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 		if ( rs != null ) return rs.position() - avail;
 		else if ( fileChannel != null ) return fileChannel.position() - avail;
 		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
+	}
+
+	public long length() {
+		if ( length < 0 ) throw new UnsupportedOperationException();
+		return length;
 	}
 
 
