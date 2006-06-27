@@ -1,3 +1,5 @@
+package it.unimi.dsi.fastutil.io;
+
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
@@ -19,8 +21,6 @@
  *
  */
 
-package it.unimi.dsi.fastutil.io;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -39,7 +39,8 @@ import java.nio.channels.FileChannel;
  * that optimize disk reads on disk block boundaries.
  * 
  * <P>As an additional feature, this class implements the {@link
- * RepositionableStream} interface.  An instance of this class will try to cast
+ * RepositionableStream} interface and extends {@link MeasurableInputStream}.  
+ * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
  * reflection the {@link java.nio.channels.FileChannel} underlying the given
  * output stream, in this order.  If either reference can be successfully
@@ -48,16 +49,18 @@ import java.nio.channels.FileChannel;
  * be performed on buffer boundaries, that is, as if the stream was divided
  * in blocks of the size of the buffer.
  *
+ * <P>If, on the other hand, the underlying byte stream can be cast to a 
+ * {@link MeasurableInputStream}, then the additional methods therein
+ * specified will work as expected, and will not throw an
+ * {@link UnsupportedOperationException}.
+ *
  * @since 4.4
  */
 
-public class FastBufferedInputStream extends InputStream implements RepositionableStream {
+public class FastBufferedInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The default size of the internal buffer in bytes (8Ki). */
 	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
-
-	/** The length of the underlying input stream, if it is {@linkplain MeasurableInputStream measurable}. */
-	final private long length;
 
 	/** The underlying input stream. */
 	protected InputStream is;
@@ -77,6 +80,9 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 	/** {@link #is} cast to a positionable stream, if possible. */
 	private RepositionableStream rs;
 
+	/** {@link #is} cast to a measurable input stream, if possible. */
+	private MeasurableInputStream ms;
+
 	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
 	 *
 	 * @param is an input stream to wrap.
@@ -88,7 +94,7 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 		buffer = new byte[ bufSize ];
 
 		if ( is instanceof RepositionableStream ) rs = (RepositionableStream)is;
-		length = is instanceof MeasurableInputStream? ((MeasurableInputStream)is).length() : -1;
+		if ( is instanceof MeasurableInputStream ) ms = (MeasurableInputStream)is;
 			
 		if ( rs == null ) {
 				
@@ -182,12 +188,19 @@ public class FastBufferedInputStream extends InputStream implements Repositionab
 	public long position() throws IOException {
 		if ( rs != null ) return rs.position() - avail;
 		else if ( fileChannel != null ) return fileChannel.position() - avail;
+		else if ( ms != null ) return ms.position() - avail;
 		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
 	}
 
-	public long length() {
-		if ( length < 0 ) throw new UnsupportedOperationException();
-		return length;
+	/** Returns the length of the underlying input stream, if it is {@linkplain MeasurableInputStream measurable}.
+	 *
+	 * @return the length of the underlying input stream.
+	 * @throws UnsupportedOperationException if the underlying input stream is not {@linkplain MeasurableInputStream measurable}.
+	 */
+
+	public long length() throws IOException {
+		if ( ms == null ) throw new UnsupportedOperationException();
+		return ms.length();
 	}
 
 
