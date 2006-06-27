@@ -21,9 +21,14 @@ package it.unimi.dsi.fastutil.io;
  *
  */
 
+import it.unimi.dsi.fastutil.bytes.ByteArrays;
+import it.unimi.dsi.fastutil.io.MeasurableInputStream;
+import it.unimi.dsi.fastutil.io.RepositionableStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
+import java.util.EnumSet;
 
 /** Lightweight, unsynchronized, aligned input stream buffering class.
  *
@@ -32,8 +37,9 @@ import java.nio.channels.FileChannel;
  * adopted in {@link java.io.BufferedInputStream}.
  * 
  * <P>There is no support for marking. All methods are unsychronized. Moreover,
- * it is guaranteed that <em>all reads performed by this class will be
- * multiples of the given buffer size</em>.  If, for instance, you use the
+ * we try to guarantee that in case of sequential access
+ * <em>all reads performed by this class will be
+ * of the given buffer size</em>.  If, for instance, you use the
  * default buffer size, reads will be performed on the underlying input stream
  * in multiples of 16384 bytes. This is very important on operating systems
  * that optimize disk reads on disk block boundaries.
@@ -43,16 +49,21 @@ import java.nio.channels.FileChannel;
  * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
  * reflection the {@link java.nio.channels.FileChannel} underlying the given
- * output stream, in this order.  If either reference can be successfully
+ * output stream, in this order. If either reference can be successfully
  * fetched, you can use {@link #position(long)} to reposition the stream.
- * Note that even in this case, it is still guaranteed that all reads will
- * be performed on buffer boundaries, that is, as if the stream was divided
- * in blocks of the size of the buffer.
+ * Note that in this case we do not guarantee that all reads will
+ * be performed on buffer boundaries.
  *
  * <P>If, on the other hand, the underlying byte stream can be cast to a 
  * {@link MeasurableInputStream}, then the additional methods therein
  * specified will work as expected, and will not throw an
  * {@link UnsupportedOperationException}.
+ * 
+ * <p>This class has limited support for 
+ * {@linkplain #readLine(byte[], int, int, EnumSet) &ldquo;reading a line&rdquo;}
+ * (whatever that means) from the underlying input stream. You can choose the set of
+ * {@linkplain FastBufferedInputStream.LineTerminator line terminators} that
+ * delimit lines.
  *
  * @since 4.4
  */
@@ -62,6 +73,16 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** The default size of the internal buffer in bytes (8Ki). */
 	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
 
+	/** An enumeration of the supported line terminators. */
+	public static enum LineTerminator {
+		CR,
+		LF,
+		CR_LF
+	}
+
+	/** A set containing <em>all available</em> line terminators. */
+	public final static EnumSet<LineTerminator> ALL_TERMINATORS = EnumSet.of( LineTerminator.CR, LineTerminator.LF, LineTerminator.CR_LF );
+	
 	/** The underlying input stream. */
 	protected InputStream is;
 
@@ -117,15 +138,30 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		this( is, DEFAULT_BUFFER_SIZE );
 	}
 
-	public int read() throws IOException {
+	/** Checks whether no more bytes will be returned.
+	 * 
+	 * <p>This method will refill the internal buffer.
+	 * 
+	 * @return true if there are no characters in the internal buffer and
+	 * the underlying reader is exhausted.
+	 */
+	
+	protected boolean noMoreCharacters() throws IOException {
 		if ( avail == 0 ) {
 			avail = is.read( buffer );
 			if ( avail <= 0 ) {
 				avail = 0;
-				return -1;
+				return true;
 			}
 			pos = 0;
 		}
+		return false;
+	}
+	
+
+	
+	public int read() throws IOException {
+		if ( noMoreCharacters() ) return -1;
 		avail--;
 		return buffer[ pos++ ] & 0xFF;
 	}
@@ -164,6 +200,139 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		return result + head + pos;
 	}
 
+	/** Reads a line into the given byte array using {@linkplain #ALL_TERMINATORS all terminators}.
+	 *
+	 * @param array byte array where the next line will be stored.
+	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * @see #readLine(byte[], int, int, EnumSet)
+	 */
+
+	public int readLine( final byte[] array ) throws IOException {
+		return readLine( array, 0, array.length, ALL_TERMINATORS );
+	}
+
+	/** Reads a line into the given byte array.
+	 *
+	 * @param array byte array where the next line will be stored.
+	 * @param terminators a set containing the line termination sequences that we want
+	 * to consider as valid.
+	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * @see #readLine(byte[], int, int, EnumSet)
+	 */
+
+	public int readLine( final byte[] array, final EnumSet<LineTerminator> terminators ) throws IOException {
+		return readLine( array, 0, array.length, terminators );
+	}
+
+	/** Reads a line into the given byte-array fragment	using {@linkplain #ALL_TERMINATORS all terminators}.
+	 *
+	 * @param array byte array where the next line will be stored.
+	 * @param off the first byte to use in <code>array</code>.
+	 * @param len the maximum number of bytes to read.
+	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * @see #readLine(byte[], int, int, EnumSet)
+	 */
+	public int readLine( final byte[] array, final int off, final int len ) throws IOException {
+		return readLine( array, off, len, ALL_TERMINATORS );
+	}
+
+	/** Reads a line into the given byte-array fragment.
+	 *
+	 * <P>Reading lines (i.e., characters) out of a byte stream is not always sensible
+	 * (methods available to that purpose in old versions of Java have been mercilessly deprecated).
+	 * Nonetheless, in several situations, such as when decoding network protocols or headers
+	 * known to be ASCII, it is very useful to be able to read a line from a byte stream.
+	 * 
+	 * <p>This method will attempt to read the next line into <code>array</code> starting at <code>off</code>,
+	 * reading at most <code>len</code> bytes. The read, however, will be stopped by the end of file or
+	 * when meeting a {@linkplain LineTerminator <em>line terminator</em>}. Of course, for this operation
+	 * to be sensible the encoding of the text contained in the stream, if any, must not generate spurious
+	 * carriage returns or line feeds. Note also that specifying both {@link LineTerminator#CR} and
+	 * {@link LineTerminator#CR_LF} has the effect of making the second one immaterial.
+	 * 
+	 * <p>Terminators are <em>not</em> copied into <em>array</em> or included in the returned count. The
+	 * returned integer can be used to check whether the line is complete: if it is smaller than
+	 * <code>len</code>, then more bytes might be available, but note that this method (contrarily
+	 * to {@link #readLine(byte[], int, int)}) can legitimately return zero when <code>len</code>
+	 * is nonzero just because a terminator was found as the first character. Thus, the intended
+	 * usage of this method is to call it on a given array, check whether <code>len</code> bytes
+	 * have been read, and if so try again (possibly extending the array) until a number of read bytes
+	 * strictly smaller than <code>len</code> (possibly, -1) is returned.
+	 *
+	 * @param array byte array where the next line will be stored.
+	 * @param off the first byte to use in <code>array</code>.
+	 * @param len the maximum number of bytes to read.
+	 * @param terminators a set containing the line termination sequences that we want
+	 * to consider as valid.
+	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * Note that the returned number will be <code>len</code> if no line termination sequence 
+	 * specified in <code>terminators</code> has been met before scanning <code>len</code> byte,
+	 * and if also we did not meet the end of file. 
+	 */
+
+	public int readLine( final byte[] array, final int off, final int len, final EnumSet<LineTerminator> terminators ) throws IOException {
+		ByteArrays.ensureOffsetLength( array ,off, len );
+		if ( len == 0 ) return 0; // 0-length read always return 0
+		if ( noMoreCharacters() ) return -1;
+		int i, k = 0, remaining = len, read = 0; // The number of bytes still to be read
+		for(;;) {
+			for( i = 0; i < avail && i < remaining && ( k = buffer[ pos + i ] ) != '\n' && k != '\r' ; i++ );
+			System.arraycopy( buffer, pos, array, off + read, i );
+			pos += i; 
+			avail -= i;
+			read += i;
+			remaining -= i;
+			if ( remaining == 0 ) return read; // We did not stop because of a terminator
+			
+			if ( avail > 0 ) { // We met a terminator
+				if ( k == '\n' ) { // LF only.
+					pos++;
+					avail--;
+					if ( terminators.contains( LineTerminator.LF ) ) return read;
+					else {
+						array[ off + read++ ] = '\n';
+						remaining--;
+					}
+				}
+				else if ( k == '\r' ) { // c == '\r'
+					pos++;
+					avail--;
+					
+					if ( terminators.contains( LineTerminator.CR ) ) return read;
+
+					if ( terminators.contains( LineTerminator.CR_LF ) ) {
+						if ( avail > 0 ) {
+							if ( buffer[ pos ] == '\n' ) { // CR/LF with LF already in the buffer.
+								pos ++;
+								avail--;
+								return read;
+							}
+						}
+						else { // We must search for the LF.
+							if ( noMoreCharacters() ) {
+								// Note found a matching LF, will return CR in buffer
+								array[ off + read++ ] = '\r';
+								remaining--;
+								return read;
+							}
+							if ( buffer[ 0 ] == '\n' ) {
+								// Found matching LF, won't return terminators in the buffer
+								pos++;
+								avail--;
+								return read;
+							}
+						}
+					}
+					
+					array[ off + read++ ] = '\r';
+					remaining--;
+				}
+			}
+			else if ( noMoreCharacters() ) return i;
+		}
+	}
+
+
 	public void position( long newPosition ) throws IOException {
 
 		final long position = position();
@@ -174,15 +343,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			return;
 		}
 
-		final int residual = (int)( newPosition % buffer.length );
-
-		if ( rs != null ) rs.position( newPosition - residual );
-		else if ( fileChannel != null ) fileChannel.position( newPosition - residual );
+		if ( rs != null ) rs.position( newPosition  );
+		else if ( fileChannel != null ) fileChannel.position( newPosition );
 		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
 
 		avail = Math.max( 0, is.read( buffer ) );
-		pos = Math.min( residual, avail );
-		avail -= pos;
+		pos = 0;
 	}
 
 	public long position() throws IOException {
