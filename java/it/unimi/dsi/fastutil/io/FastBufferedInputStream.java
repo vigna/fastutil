@@ -30,7 +30,10 @@ import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.EnumSet;
 
-/** Lightweight, unsynchronized, aligned input stream buffering class.
+/** Lightweight, unsynchronized, aligned input stream buffering class with
+ *  {@linkplain MeasurableInputStream measurability}, 
+ *  {@linkplain RepositionableStream repositionability} 
+ *  and {@linkplain #readLine(byte[], int, int, EnumSet) line reading} support.
  *
  * <P>This class provides buffering for input streams, but it does so with 
  * purposes and an internal logic that are radically different from the ones
@@ -75,8 +78,11 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	/** An enumeration of the supported line terminators. */
 	public static enum LineTerminator {
+		/** A carriage return (CR, ASCII 13). */
 		CR,
+		/** A line feed (LF, ASCII 10). */
 		LF,
+		/** A carriage return followed by a line feed (CR/LF, ASCII 13/10). */
 		CR_LF
 	}
 
@@ -247,8 +253,9 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * reading at most <code>len</code> bytes. The read, however, will be stopped by the end of file or
 	 * when meeting a {@linkplain LineTerminator <em>line terminator</em>}. Of course, for this operation
 	 * to be sensible the encoding of the text contained in the stream, if any, must not generate spurious
-	 * carriage returns or line feeds. Note also that specifying both {@link LineTerminator#CR} and
-	 * {@link LineTerminator#CR_LF} has the effect of making the second one immaterial.
+	 * carriage returns or line feeds. Note that the termination detection uses a maximisation
+	 * criterion, so if you specify both {@link LineTerminator#CR} and
+	 * {@link LineTerminator#CR_LF} meeting a pair CR/LF will consider the whole pair a terminator.
 	 * 
 	 * <p>Terminators are <em>not</em> copied into <em>array</em> or included in the returned count. The
 	 * returned integer can be used to check whether the line is complete: if it is smaller than
@@ -272,7 +279,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	public int readLine( final byte[] array, final int off, final int len, final EnumSet<LineTerminator> terminators ) throws IOException {
 		ByteArrays.ensureOffsetLength( array ,off, len );
-		if ( len == 0 ) return 0; // 0-length read always return 0
+		if ( len == 0 ) return 0; // 0-length reads always return 0
 		if ( noMoreCharacters() ) return -1;
 		int i, k = 0, remaining = len, read = 0; // The number of bytes still to be read
 		for(;;) {
@@ -285,7 +292,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			if ( remaining == 0 ) return read; // We did not stop because of a terminator
 			
 			if ( avail > 0 ) { // We met a terminator
-				if ( k == '\n' ) { // LF only.
+				if ( k == '\n' ) { // LF first
 					pos++;
 					avail--;
 					if ( terminators.contains( LineTerminator.LF ) ) return read;
@@ -294,12 +301,10 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 						remaining--;
 					}
 				}
-				else if ( k == '\r' ) { // c == '\r'
+				else if ( k == '\r' ) { // CR first
 					pos++;
 					avail--;
 					
-					if ( terminators.contains( LineTerminator.CR ) ) return read;
-
 					if ( terminators.contains( LineTerminator.CR_LF ) ) {
 						if ( avail > 0 ) {
 							if ( buffer[ pos ] == '\n' ) { // CR/LF with LF already in the buffer.
@@ -310,9 +315,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 						}
 						else { // We must search for the LF.
 							if ( noMoreCharacters() ) {
-								// Note found a matching LF, will return CR in buffer
-								array[ off + read++ ] = '\r';
-								remaining--;
+								// Not found a matching LF because of end of file, will return CR in buffer if not a terminator
+
+								if ( ! terminators.contains( LineTerminator.CR ) ) {
+									array[ off + read++ ] = '\r';
+									remaining--;
+								}
 								return read;
 							}
 							if ( buffer[ 0 ] == '\n' ) {
@@ -324,6 +332,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 						}
 					}
 					
+					if ( terminators.contains( LineTerminator.CR ) ) return read;
 					array[ off + read++ ] = '\r';
 					remaining--;
 				}
