@@ -98,6 +98,9 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** The current position in the buffer. */
 	protected int pos;
 
+	/** The number of bytes ever read (reset upon a call to {@link #position(long)}. */
+	protected long readBytes;
+
 	/** The number of buffer bytes available starting from {@link #pos}. */
 	protected int avail;
 
@@ -169,6 +172,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	public int read() throws IOException {
 		if ( noMoreCharacters() ) return -1;
 		avail--;
+		readBytes++;
 		return buffer[ pos++ ] & 0xFF;
 	}
 
@@ -178,6 +182,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			System.arraycopy( buffer, pos, b, offset, length );
 			pos += length;
 			avail -= length;
+			readBytes += length;
 			return length;
 		}
 	
@@ -190,20 +195,27 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		final int residual = length % buffer.length;
 		int result;
 
-		if ( ( result = is.read( b, offset, length - residual ) ) < length - residual ) 
-			return result < 0 
+		if ( ( result = is.read( b, offset, length - residual ) ) < length - residual ) {
+			final int t = result < 0 
 				? ( head != 0 ? head : -1 ) 
 				: result + head;
+			if ( t > 0 ) readBytes += t;	
+			return t;
+		}
 
 		avail = is.read( buffer );
 		if ( avail < 0 ) {
 			avail = pos = 0;
-			return result + head > 0 ? result + head : -1;
+			final int t = result + head > 0 ? result + head : -1;
+			if ( t > 0 ) readBytes += t;
+			return t;
 		}
 		pos = Math.min( avail, residual );
 		System.arraycopy( buffer, 0, b, offset + length - residual, pos );
 		avail -= pos;
-		return result + head + pos;
+		final int t = result + head + pos;
+		readBytes += t;
+		return t;
 	}
 
 	/** Reads a line into the given byte array using {@linkplain #ALL_TERMINATORS all terminators}.
@@ -289,13 +301,19 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			avail -= i;
 			read += i;
 			remaining -= i;
-			if ( remaining == 0 ) return read; // We did not stop because of a terminator
+			if ( remaining == 0 ) {
+				readBytes += read;
+				return read; // We did not stop because of a terminator
+			}
 			
 			if ( avail > 0 ) { // We met a terminator
 				if ( k == '\n' ) { // LF first
 					pos++;
 					avail--;
-					if ( terminators.contains( LineTerminator.LF ) ) return read;
+					if ( terminators.contains( LineTerminator.LF ) ) {
+						readBytes += read + 1;
+						return read;
+					}
 					else {
 						array[ off + read++ ] = '\n';
 						remaining--;
@@ -310,6 +328,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 							if ( buffer[ pos ] == '\n' ) { // CR/LF with LF already in the buffer.
 								pos ++;
 								avail--;
+								readBytes += read + 2;
 								return read;
 							}
 						}
@@ -320,19 +339,27 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 								if ( ! terminators.contains( LineTerminator.CR ) ) {
 									array[ off + read++ ] = '\r';
 									remaining--;
+									readBytes += read;
 								}
+								else readBytes += read + 1;
+								
 								return read;
 							}
 							if ( buffer[ 0 ] == '\n' ) {
 								// Found matching LF, won't return terminators in the buffer
 								pos++;
 								avail--;
+								readBytes += read + 2;
 								return read;
 							}
 						}
 					}
 					
-					if ( terminators.contains( LineTerminator.CR ) ) return read;
+					if ( terminators.contains( LineTerminator.CR ) ) {
+						readBytes += read + 1;
+						return read;
+					}
+					
 					array[ off + read++ ] = '\r';
 					remaining--;
 				}
@@ -344,27 +371,26 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	public void position( long newPosition ) throws IOException {
 
-		final long position = position();
+		final long position = readBytes;
 
 		if ( newPosition <= position + avail && newPosition >= position - pos ) {
 			pos += newPosition - position;
 			avail -= newPosition - position;
+			readBytes = newPosition;
 			return;
 		}
 
 		if ( rs != null ) rs.position( newPosition  );
 		else if ( fileChannel != null ) fileChannel.position( newPosition );
 		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
+		readBytes = newPosition;
 
 		avail = Math.max( 0, is.read( buffer ) );
 		pos = 0;
 	}
 
 	public long position() throws IOException {
-		if ( rs != null ) return rs.position() - avail;
-		else if ( fileChannel != null ) return fileChannel.position() - avail;
-		else if ( ms != null ) return ms.position() - avail;
-		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
+		return readBytes;
 	}
 
 	/** Returns the length of the underlying input stream, if it is {@linkplain MeasurableInputStream measurable}.
@@ -384,6 +410,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			final int m = (int)n;
 			pos += m;
 			avail -= m;
+			readBytes += n;
 			return n;
 		}
 
@@ -395,13 +422,16 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		long result;
 		if ( ( result = is.skip( n - residual ) ) < n - residual ) {
 			avail = 0;
+			readBytes += result + head;
 			return result + head;
 		}
 
 		avail = Math.max( is.read( buffer ), 0 );
 		pos = Math.min( residual, avail );
 		avail -= pos;
-		return result + head + pos;
+		final long t = result + head + pos;
+		readBytes += t;
+		return t;
 	}
 
 
@@ -424,6 +454,6 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	public void reset() {
 		if ( is == null ) return;
-		avail = pos = 0;
+		readBytes = avail = pos = 0;
 	}
 }
