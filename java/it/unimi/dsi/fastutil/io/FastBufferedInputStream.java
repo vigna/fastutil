@@ -56,11 +56,14 @@ import java.util.EnumSet;
  * fetched, you can use {@link #position(long)} to reposition the stream.
  * Note that in this case we do not guarantee that all reads will
  * be performed on buffer boundaries.
+ * 
+ * <p>This class keeps also track of the number of bytes read so far, so
+ * to be able to implemented {@link MeasurableInputStream#position()}
+ * independently of underlying input stream.
  *
  * <P>If, on the other hand, the underlying byte stream can be cast to a 
- * {@link MeasurableInputStream}, then the additional methods therein
- * specified will work as expected, and will not throw an
- * {@link UnsupportedOperationException}.
+ * {@link MeasurableInputStream}, then also 
+ * {@link MeasurableInputStream#length()} will work as expected.
  * 
  * <p>This class has limited support for 
  * {@linkplain #readLine(byte[], int, int, EnumSet) &ldquo;reading a line&rdquo;}
@@ -98,7 +101,9 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** The current position in the buffer. */
 	protected int pos;
 
-	/** The number of bytes ever read (reset upon a call to {@link #position(long)}. */
+	/** The number of bytes ever read (reset upon a call to {@link #position(long)}).
+	 * In particular, this will always represent the index (in the underlying input stream)
+	 * of the first available byte in the buffer. */
 	protected long readBytes;
 
 	/** The number of buffer bytes available starting from {@link #pos}. */
@@ -364,7 +369,10 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 					remaining--;
 				}
 			}
-			else if ( noMoreCharacters() ) return i;
+			else if ( noMoreCharacters() ) {
+				readBytes += read;
+				return read;
+			}
 		}
 	}
 
