@@ -1,6 +1,9 @@
 package test.it.unimi.dsi.fastutil.io;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -126,6 +129,30 @@ public class FastBufferedInputStreamTest extends TestCase {
 		testSkip( 6 );
 		testSkip( 7 );
 		testSkip( 100 );
+	}
+	
+	public void testPosition() throws IOException {
+		File temp = File.createTempFile( this.getClass().getName(), ".tmp" );
+		temp.deleteOnExit();
+		FileOutputStream fos = new FileOutputStream( temp );
+		fos.write( new byte[] { 0, 1, 2, 3, 4 } );
+		fos.close();
+		
+		FastBufferedInputStream stream = new FastBufferedInputStream( new FileInputStream( temp ), 2 );
+		byte[] b = new byte[ 2 ];
+		stream.read( b );
+		stream.reset();
+		stream.position( 0 );
+		assertEquals( 0, stream.read() );
+		stream.close();
+		
+		stream = new FastBufferedInputStream( new FileInputStream( temp ) );
+		b = new byte[ 1 ];
+		stream.read( b );
+		stream.reset();
+		stream.position( 0 );
+		assertEquals( 0, stream.read() );
+		stream.close();
 	}
 }
 
