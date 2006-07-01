@@ -90,7 +90,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	}
 
 	/** A set containing <em>all available</em> line terminators. */
-	public final static EnumSet<LineTerminator> ALL_TERMINATORS = EnumSet.of( LineTerminator.CR, LineTerminator.LF, LineTerminator.CR_LF );
+	public final static EnumSet<LineTerminator> ALL_TERMINATORS = EnumSet.allOf( LineTerminator.class );
 	
 	/** The underlying input stream. */
 	protected InputStream is;
@@ -381,7 +381,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 		final long position = readBytes;
 
-		if ( newPosition < position + avail && newPosition >= position - pos ) {
+		/** Note that this check will succeed also in the case of
+		 * an empty buffer and position == newPosition. This behaviour is
+		 * intentional, as it delays buffering to when it is actually
+		 * necessary and avoids useless class the underlying stream. */
+		
+		if ( newPosition <= position + avail && newPosition >= position - pos ) {
 			pos += newPosition - position;
 			avail -= newPosition - position;
 			readBytes = newPosition;
@@ -456,12 +461,29 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	/** Resets the internal logic of this fast buffered input stream, clearing the buffer. 
 	 *
-	 *  <p>The underlying input stream is not modified, but its position cannot be easily
-	 *  predicted, due to buffering. This method is thus mainly useful for reading files
-	 *  that are being written by other process (in practice, it makes the current buffer invalid). */
+	 * <p>All buffering information is discarded, and the number of bytes read so far
+	 * (and thus, also the {@linkplain #position() current position})
+	 * is adjusted to reflect this fact. 
+	 *  
+	 * <p>This method is mainly useful for re-reading 
+	 * files that are have been overwritten externally. 
+	 */
 
-	public void reset() {
+	public void flush() {
 		if ( is == null ) return;
-		readBytes = avail = pos = 0;
+		readBytes += avail; 
+		avail = pos = 0;
+	}
+
+	/** Resets the internal logic of this fast buffered input stream.
+	 * 
+	 * @deprecated As of <samp>fastutil</samp> 5.0.4, replaced by {@link #flush()}. The old
+	 * semantics of this method does not contradict {@link InputStream}'s contract, as
+	 * the semantics of {@link #reset()} is undefined if {@link InputStream#markSupported()}
+	 * returns false. On the other hand, the name was really a poor choice.
+	 */
+	@Deprecated
+	public void reset() {
+		flush();
 	}
 }
