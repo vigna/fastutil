@@ -490,7 +490,7 @@ SOURCES = \
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< > $@
+	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@ 2>>gcc.err
 
 
 clean: 
