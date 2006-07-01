@@ -381,7 +381,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 		final long position = readBytes;
 
-		if ( newPosition <= position + avail && newPosition >= position - pos ) {
+		if ( newPosition < position + avail && newPosition >= position - pos ) {
 			pos += newPosition - position;
 			avail -= newPosition - position;
 			readBytes = newPosition;
