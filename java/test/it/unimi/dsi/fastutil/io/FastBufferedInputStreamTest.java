@@ -141,7 +141,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		FastBufferedInputStream stream = new FastBufferedInputStream( new FileInputStream( temp ), 2 );
 		byte[] b = new byte[ 2 ];
 		stream.read( b );
-		stream.reset();
+		stream.flush();
 		stream.position( 0 );
 		assertEquals( 0, stream.read() );
 		stream.close();
@@ -149,7 +149,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		stream = new FastBufferedInputStream( new FileInputStream( temp ) );
 		b = new byte[ 1 ];
 		stream.read( b );
-		stream.reset();
+		stream.flush();
 		stream.position( 0 );
 		assertEquals( 0, stream.read() );
 		stream.close();

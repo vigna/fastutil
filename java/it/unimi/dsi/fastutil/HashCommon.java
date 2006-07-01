@@ -1,3 +1,5 @@
+package it.unimi.dsi.fastutil;
+
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
@@ -18,8 +20,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-
-package it.unimi.dsi.fastutil;
 
 /** Common code for all hash-based classes.
  *

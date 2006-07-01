@@ -1,3 +1,5 @@
+package it.unimi.dsi.fastutil.io;
+
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
@@ -18,8 +20,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-
-package it.unimi.dsi.fastutil.io;
 
 
 /** A basic interface specifying positioning methods for a byte stream.
@@ -43,9 +43,3 @@ public interface RepositionableStream {
 	long position() throws java.io.IOException;
 
 }
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

@@ -1,3 +1,5 @@
+package it.unimi.dsi.fastutil.io;
+
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
@@ -18,9 +20,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-
-
-package it.unimi.dsi.fastutil.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
