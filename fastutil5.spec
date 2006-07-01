@@ -2,7 +2,7 @@
 
 Name:           fastutil5
 Version:        5.0.4
-Release:        4law
+Release:        7law
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
@@ -39,7 +39,7 @@ Javadoc for %{name}.
 %setup -q -n fastutil-%{version}
 
 %build
-make sources
+make -s sources
 export CLASSPATH=
 ant \
   -Dj2se.apiurl=%{_javadocdir}/java \
