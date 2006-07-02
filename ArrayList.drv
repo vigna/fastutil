@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
 
+#if #keys(primitive)
+
 /** A type-specific array-based list; provides some additional methods that use polymorphism to avoid (un)boxing. 
  *
  * <P>This class implements a lightweight, fast, open, optimized,
@@ -52,11 +54,50 @@ import java.util.NoSuchElementException;
 
 public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
 
+#else
+
+/** A type-specific array-based list; provides some additional methods that use polymorphism to avoid (un)boxing. 
+ *
+ * <P>This class implements a lightweight, fast, open, optimized,
+ * reuse-oriented version of array-based lists. Instances of this class
+ * represent a list with an array that is enlarged as needed when new entries
+ * are created (by dividing the current length by the golden ratio), but is
+ * <em>never</em> made smaller (even on a {@link #clear()}). A family of
+ * {@linkplain #trim() trimming methods} lets you control the size of the
+ * backing array; this is particularly useful if you reuse instances of this class.
+ * Range checks are equivalent to those of {@link java.util}'s classes, but
+ * they are delayed as much as possible. 
+ *
+ * <p>The backing array is exposed by the {@link #elements()} method. If an instance
+ * of this class was created {@linkplain #wrap(Object[],int) by wrapping}, 
+ * backing-array reallocations will be performed using reflection, so that
+ * {@link #elements()} can return an array of the same type of the original array; the comments
+ * about efficiency made in {@link it.unimi.dsi.fastutil.object.ObjectArrays} apply here.
+ *
+ * <p>This class implements the bulk methods <code>removeElements()</code>,
+ * <code>addElements()</code> and <code>getElements()</code> using
+ * high-performance system calls (e.g., {@link
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * expensive loops.
+ *
+ * @see java.util.ArrayList
+ */
+
+public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
+
+#endif
+
 	/** The initial default capacity of an array list. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
 
 	/** The inverse of the golden ratio times 2<sup>16</sup>. */
 	protected static final long ONEOVERPHI = 106039;
+
+#if ! #keys(primitive)
+	/** Whether the backing array was passed to <code>wrap()</code>. In
+	 * this case, we must reallocate with the same type of array. */
+	protected final boolean wrapped;
+#endif
 
 	/** The backing array. */
 	protected transient KEY_GENERIC_TYPE a[];
@@ -76,8 +117,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 
 	protected ARRAY_LIST( final KEY_GENERIC_TYPE a[], boolean dummy ) {
-		if ( false ) if ( dummy ); // To kill warnings
 		this.a = a;
+#if ! #keys(primitive)
+		this.wrapped = true;
+#endif
 	}
 
 	/** Creates a new array list with given capacity.
@@ -90,6 +133,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if ( capacity < 0 ) throw new IllegalArgumentException( "Initial capacity (" + capacity + ") is negative" );
 
 		a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ capacity ];
+#if ! #keys(primitive)
+		wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity.
@@ -175,7 +221,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		while( i.hasNext() ) this.add( i.NEXT_KEY() );
 	}
 
-
+#if #keys(primitive)
 	/** Returns the backing array of this list.
 	 *
 	 * @return the backing array.
@@ -184,6 +230,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public KEY_GENERIC_TYPE[] elements() {
 		return a;
 	}
+#else
+	/** Returns the backing array of this list.
+	 *
+	 * <P>If this array list was created by wrapping a given array, it is guaranteed
+	 * that the type of the returned array will be the same. Otherwise, the returned
+	 * array will be an array of objects.
+	 *
+	 * @return the backing array.
+	 */
+
+	public KEY_GENERIC_TYPE[] elements() {
+		return a;
+	}
+#endif
 
 	/** Wraps a given array into an array list of given size.
 	 *
@@ -214,14 +274,49 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 *
 	 * @param capacity the new minimum capacity for this array list.
 	 */
+	@SuppressWarnings("unchecked")
 	public void ensureCapacity( final int capacity ) {
+#if #keys(primitive)
 		a = ARRAYS.ensureCapacity( a, capacity, size );
+#else
+		if ( wrapped ) a = ARRAYS.ensureCapacity( a, capacity, size );
+		else {
+			if ( capacity > a.length ) {
+				final Object t[] = new Object[ capacity ];
+				System.arraycopy( a, 0, t, 0, size );
+				a = (KEY_GENERIC_TYPE[])t;
+			}
+		}
+#endif
+		if ( ASSERTS ) assert size <= a.length;
+	}
+
+	/** Grows this array, ensuring that it can contain the given number of entries without resizing,
+	 * and in case enlarging it at least by the golden ratio.
+	 *
+	 * @param capacity the new minimum capacity for this array list.
+	 */
+	@SuppressWarnings("unchecked")
+	private void grow( final int capacity ) {
+#if #keys(primitive)
+		a = ARRAYS.grow( a, capacity, size );
+#else
+		if ( wrapped ) a = ARRAYS.grow( a, capacity, size );
+		else {
+			if ( capacity > a.length ) {
+				final int newLength = (int)Math.min( Math.max( ( ARRAYS.ONEOVERPHI * a.length ) >>> 16, capacity ), Integer.MAX_VALUE );
+				final Object t[] = new Object[ newLength ];
+				System.arraycopy( a, 0, t, 0, size );
+				a = (KEY_GENERIC_TYPE[])t;
+			}			
+		}
+#endif
 		if ( ASSERTS ) assert size <= a.length;
 	}
 
 	public void add( final int index, final KEY_GENERIC_TYPE k ) {
 		ensureIndex( index );
-		a = ARRAYS.grow( a, size + 1, size );
+		grow( size + 1 );
 		if ( index != size ) System.arraycopy( a, index, a, index + 1, size - index );
 		a[ index ] = k;
 		size++;
@@ -229,7 +324,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 	public boolean add( final KEY_GENERIC_TYPE k ) {
-		a = ARRAYS.grow( a, size + 1, size );
+		grow( size + 1 );
 		a[ size++ ] = k;
 		if ( ASSERTS ) assert size <= a.length;
 		return true;
@@ -388,7 +483,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public void addElements( final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length ) {
 		ensureIndex( index );
 		ARRAYS.ensureOffsetLength( a, offset, length );
-		this.a = ARRAYS.grow( this.a, size + length, size );
+		grow( size + length );
 		System.arraycopy( this.a, index, this.a, index + length, size - index );
 		System.arraycopy( a, offset, this.a, index, length );
 		size += length;
@@ -408,7 +503,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		ensureIndex( index );
 		int n = c.size();
 		if ( n == 0 ) return false;
-		a = ARRAYS.grow( a, size + n, size );
+		grow( size + n );
 		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
 		final KEY_ITERATOR i = c.iterator();
 		size += n;
@@ -421,7 +516,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		ensureIndex( index );
 		final int n = l.size();
 		if ( n == 0 ) return false;
-		a = ARRAYS.grow( a, size + n, size );
+		grow( size + n );
 		if ( index != size ) System.arraycopy( a, index, a, index + n, size - index );
 		l.getElements( 0, a, index, n );
 		size += n;
