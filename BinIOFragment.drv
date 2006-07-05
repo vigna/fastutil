@@ -54,18 +54,18 @@ public static int LOAD_KEYS( final DataInput dataInput, final KEY_TYPE[] array )
 	return i;
 }
 
-/** Loads elements from a given filename, storing them in a given array fragment.
+/** Loads elements from a file given by a {@link File} object, storing them in a given array fragment.
  *
- * @param filename a file name.
+ * @param file a file.
  * @param array an array which will be filled with data from the specified file.
  * @param offset the index of the first element of <code>array</code> to be filled.
  * @param length the number of elements of <code>array</code> to be filled.
  * @return the number of elements actually read from the given file (it might be less than <code>length</code> if the file is too short).
  */
-public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+public static int LOAD_KEYS( final File file, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
 
-	final FileInputStream fis = new FileInputStream( filename.toString() );
+	final FileInputStream fis = new FileInputStream( file );
 	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	int i = 0;
@@ -79,14 +79,26 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
 	return i;
 }
 
-/** Loads elements from a given filename, storing them in a given array.
+/** Loads elements from a file given by a pathname, storing them in a given array fragment.
  *
- * @param filename a file name.
+ * @param filename a filename.
+ * @param array an array which will be filled with data from the specified file.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from the given file (it might be less than <code>length</code> if the file is too short).
+ */
+public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+	return LOAD_KEYS( new File( filename.toString() ), array, offset, length );
+}
+
+/** Loads elements from a file given by a {@link File} object, storing them in a given array.
+ *
+ * @param file a file.
  * @param array an array which will be filled with data from the specified file.
  * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
  */
-public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array ) throws IOException {
-	final FileInputStream fis = new FileInputStream( filename.toString() );
+public static int LOAD_KEYS( final File file, final KEY_TYPE[] array ) throws IOException {
+	final FileInputStream fis = new FileInputStream( file );
 	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	int i = 0;
@@ -101,17 +113,27 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
 	return i;
 }
 
-/** Loads elements from a given filename, storing them in a new array.
+/** Loads elements from a file given by a pathname, storing them in a given array.
+ *
+ * @param filename a filename.
+ * @param array an array which will be filled with data from the specified file.
+ * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
+ */
+public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array ) throws IOException {
+	return LOAD_KEYS( new File( filename.toString() ), array );
+}
+
+/** Loads elements from a file given by a {@link File} object, storing them in a new array.
  *
  * <P>Note that the length of the returned array will be computed 
  * dividing the specified file size by the number of bytes used to
  * represent each element.
  *
- * @param filename a file name.
+ * @param file a file.
  * @return an array filled with the content of the specified file.
  */
-public static KEY_TYPE[] LOAD_KEYS( final CharSequence filename ) throws IOException {
-	final FileInputStream fis = new FileInputStream( filename.toString() );
+public static KEY_TYPE[] LOAD_KEYS( final File file ) throws IOException {
+	final FileInputStream fis = new FileInputStream( file );
 	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 #if #keyclass(Boolean)
@@ -128,6 +150,19 @@ public static KEY_TYPE[] LOAD_KEYS( final CharSequence filename ) throws IOExcep
 
 	dis.close();
 	return array;
+}
+
+/** Loads elements from a file given by a filename, storing them in a new array.
+ *
+ * <P>Note that the length of the returned array will be computed 
+ * dividing the specified file size by the number of bytes used to
+ * represent each element.
+ *
+ * @param filename a filename.
+ * @return an array filled with the content of the specified file.
+ */
+public static KEY_TYPE[] LOAD_KEYS( final CharSequence filename ) throws IOException {
+	return LOAD_KEYS( new File( filename.toString() ) );
 }
 
 /** Stores an array fragment to a given data output.
@@ -152,50 +187,79 @@ public static void STORE_KEYS( final KEY_TYPE array[], final DataOutput dataOutp
 	for( int i = 0; i < length; i++ ) dataOutput.WRITE_KEY( array[ i ] );
 }
 
-/** Stores an array fragment to a given filename.
+/** Stores an array fragment to a file given by a {@link File} object.
  *
  * @param array an array whose elements will be written to <code>filename</code>.
  * @param offset the index of the first element of <code>array</code> to be written.
  * @param length the number of elements of <code>array</code> to be written.
- * @param filename a file name.
+ * @param file a file.
  */
-public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final CharSequence filename ) throws IOException {
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final File file ) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
 	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ offset + i ] );
 	dos.close();
 }
 
-/** Stores an array to a given filename.
+/** Stores an array fragment to a file given by a pathname.
  *
  * @param array an array whose elements will be written to <code>filename</code>.
- * @param filename a file name.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param filename a filename.
  */
-public static void STORE_KEYS( final KEY_TYPE array[], final CharSequence filename ) throws IOException {
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final CharSequence filename ) throws IOException {
+	STORE_KEYS( array, offset, length, new File( filename.toString() ) );
+}
+
+/** Stores an array to a file given by a {@link File} object.
+ *
+ * @param array an array whose elements will be written to <code>filename</code>.
+ * @param file a file.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final File file ) throws IOException {
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
 	final int length = array.length;
 	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ i ] );
 	dos.close();
 }
 
+/** Stores an array to a file given by a pathname.
+ *
+ * @param array an array whose elements will be written to <code>filename</code>.
+ * @param filename a filename.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final CharSequence filename ) throws IOException {
+	STORE_KEYS( array, new File( filename.toString() ) );
+}
+
 /** Stores the element returned by an iterator to a given data output.
  *
  * @param i an iterator whose output will be written to <code>dataOutput</code>.
- * @param dataOutput a file name.
+ * @param dataOutput a filename.
  */
 public static void STORE_KEYS( final KEY_ITERATOR i, final DataOutput dataOutput ) throws IOException {
 	while( i.hasNext() ) dataOutput.WRITE_KEY( i.NEXT_KEY() );
 }
 
-/** Stores the element returned by an iterator to a given filename.
+/** Stores the element returned by an iterator to a file given by a {@link File} object.
  *
  * @param i an iterator whose output will be written to <code>filename</code>.
- * @param filename a file name.
+ * @param file a file.
  */
-public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename ) throws IOException {
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
+public static void STORE_KEYS( final KEY_ITERATOR i, final File file ) throws IOException {
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
 	while( i.hasNext() ) dos.WRITE_KEY( i.NEXT_KEY() );
 	dos.close();
+}
+
+/** Stores the element returned by an iterator to a file given by a pathname.
+ *
+ * @param i an iterator whose output will be written to <code>filename</code>.
+ * @param filename a filename.
+ */
+public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename ) throws IOException {
+	STORE_KEYS( i, new File( filename.toString() ) );
 }
 
 /** A wrapper that exhibits the content of a data input stream as a type-specific iterator. */
@@ -243,11 +307,19 @@ public static KEY_ITERATOR AS_KEY_ITERATOR( final DataInput dataInput ) {
 	return new KEY_DATA_INPUT_WRAPPER( dataInput );
 }
 
-/** Wraps the given filename into an iterator.
+/** Wraps a file given by a {@link File} object into an iterator.
  *
- * @param filename a file name.
+ * @param file a file.
+ */
+public static KEY_ITERATOR AS_KEY_ITERATOR( final File file ) throws IOException {
+	return new KEY_DATA_INPUT_WRAPPER( new DataInputStream( new FastBufferedInputStream( new FileInputStream( file ) ) ) );
+}
+
+/** Wraps a file given by a pathname into an iterator.
+ *
+ * @param filename a filename.
  */
 public static KEY_ITERATOR AS_KEY_ITERATOR( final CharSequence filename ) throws IOException {
-	return new KEY_DATA_INPUT_WRAPPER( new DataInputStream( new FastBufferedInputStream( new FileInputStream( filename.toString() ) ) ) );
+	return AS_KEY_ITERATOR( new File( filename.toString() ) );
 }
 

@@ -62,7 +62,21 @@ import it.unimi.dsi.fastutil.doubles.*;
 public class BinIO {
 
 	private BinIO() {}
-	/** Stores an object in a given file.
+
+	/** Stores an object in a file given by a {@link File} object.
+	 *
+	 * @param o an object.
+	 * @param file a file.
+	 * @see #loadObject(File)
+	 */
+
+	public static void storeObject( final Object o, final File file ) throws IOException {
+		final ObjectOutputStream oos = new ObjectOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
+		oos.writeObject( o );
+		oos.close();
+	}
+
+	/** Stores an object in a file given by a pathname.
 	 *
 	 * @param o an object.
 	 * @param filename a filename.
@@ -70,22 +84,30 @@ public class BinIO {
 	 */
 
 	public static void storeObject( final Object o, final CharSequence filename ) throws IOException {
-		final ObjectOutputStream oos = new ObjectOutputStream( new FastBufferedOutputStream( new FileOutputStream( filename.toString() ) ) );
-		oos.writeObject( o );
-		oos.close();
+		storeObject( o, new File( filename.toString() ) );
 	}
 
-	/** Loads an object from a given file.
+	/** Loads an object from a file given by a {@link File} object.
+	 *
+	 * @param file a file.
+	 * @return the object stored under the given file.
+	 * @see #storeObject(Object, File)
+	 */
+	public static Object loadObject( final File file ) throws IOException, ClassNotFoundException {
+		final ObjectInputStream ois = new ObjectInputStream( new FastBufferedInputStream( new FileInputStream( file ) ) );
+		final Object result = ois.readObject();
+		ois.close();
+		return result;
+	}
+
+	/** Loads an object from a file given by a pathname.
 	 *
 	 * @param filename a filename.
 	 * @return the object stored under the given filename.
 	 * @see #storeObject(Object, CharSequence)
 	 */
 	public static Object loadObject( final CharSequence filename ) throws IOException, ClassNotFoundException {
-		final ObjectInputStream ois = new ObjectInputStream( new FastBufferedInputStream( new FileInputStream( filename.toString() ) ) );
-		final Object result = ois.readObject();
-		ois.close();
-		return result;
+		return loadObject( new File( filename.toString() ) );
 	}
 
 	/** Stores an object in a given output stream.
