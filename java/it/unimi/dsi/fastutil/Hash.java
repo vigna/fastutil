@@ -64,6 +64,10 @@ public interface Hash {
 	final public int DEFAULT_INITIAL_SIZE = 16;
 	/** The default load factor of a hash table. */
 	final public float DEFAULT_LOAD_FACTOR = .75f;
+	/** The load factor for a (usually small) table that is meant to be particularly fast. */
+	final public float FAST_LOAD_FACTOR = .5f;
+	/** The load factor for a (usually very small) table that is meant to be extremely fast. */
+	final public float VERY_FAST_LOAD_FACTOR = .25f;
 	/** The default growth factor of a hash table. */
 	final public int DEFAULT_GROWTH_FACTOR = 16;
 	/** The state of a free hash table entry. */

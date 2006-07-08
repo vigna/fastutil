@@ -2,7 +2,7 @@
 
 Name:           fastutil5
 Version:        5.0.4
-Release:        9law
+Release:        11law
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
