@@ -282,6 +282,18 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * usage of this method is to call it on a given array, check whether <code>len</code> bytes
 	 * have been read, and if so try again (possibly extending the array) until a number of read bytes
 	 * strictly smaller than <code>len</code> (possibly, -1) is returned.
+	 * 
+	 * <p>If you need to guarantee that a full line is read, use the following idiom:
+	 * <pre>
+	 * int start = off, len;
+	 * while( ( len = readLine( array, start, array.length - start, terminators ) ) == array.length - start ) {
+	 *     start += len;
+	 *     array = ByteArrays.grow( array, array.length + 1 );
+	 * };
+	 * </pre>
+	 *
+	 * <p>At the end of the loop, the line will be placed in <code>array</code> starting at
+	 * <code>off</code> (inclusive) and ending at <code>start + Math.max( len, 0 )</code> (exclusive).
 	 *
 	 * @param array byte array where the next line will be stored.
 	 * @param off the first byte to use in <code>array</code>.
@@ -376,6 +388,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		}
 	}
 
+	
 
 	public void position( long newPosition ) throws IOException {
 
