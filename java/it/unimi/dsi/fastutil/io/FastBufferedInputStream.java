@@ -466,7 +466,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * is adjusted to reflect this fact. 
 	 *  
 	 * <p>This method is mainly useful for re-reading 
-	 * files that are have been overwritten externally. 
+	 * files that have been overwritten externally. 
 	 */
 
 	public void flush() {
