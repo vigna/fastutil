@@ -68,7 +68,7 @@ source:
 	rm fastutil-$(VERSION)
 
 bin:
-	make clean sources
+	make -s clean sources
 	ant jar javadoc
 	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
