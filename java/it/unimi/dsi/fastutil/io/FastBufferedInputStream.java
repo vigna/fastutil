@@ -462,7 +462,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 
 	public int available() throws IOException {
-		return is.available() + avail;
+		return (int)Math.min( is.available() + (long)avail, Integer.MAX_VALUE );
 	}
 
 	public void close() throws IOException {
