@@ -151,33 +151,9 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 	public HEAP_INDIRECT_PRIORITY_QUEUE( final KEY_GENERIC_TYPE[] refArray, final int[] a ) {
 		this( refArray, a, a.length );
 	}
-
-
-	/** Ensures that the given index is a valid reference and belongs to the queue.
-	 *
-	 * @param index an index of the reference array.
-	 * @throws IndexOutOfBoundsException if the given index is negative or larger than the reference array length.
-	 * @throws IllegalArgumentException if the given index does not belong to the queue.
-	 */
-	protected void ensureHeapElement( final int index ) {
-		ensureElement( index );
-		if ( inv[ index ] < 0 ) throw new IllegalArgumentException( "Index " + index + " does not belong to the queue" );
-	}
 	
-	/** Ensures that the given index is a valid reference and does not belong to the queue.
-	 *
-	 * @param index an index in the reference array.
-	 * @throws IndexOutOfBoundsException if the given index is negative or larger than the reference array length.
-	 * @throws IllegalArgumentException if the given index belongs to the queue.
-	 */
-	protected void ensureNotHeapElement( final int index ) {
-		ensureElement( index );
-		if ( inv[ index ] >= 0 ) throw new IllegalArgumentException( "Index " + index + " belongs to the queue" );
-	}
-	
-
 	public void enqueue( final int x ) {
-		ensureNotHeapElement( x );
+		if ( inv[ x ] >= 0 ) throw new IllegalArgumentException( "Index " + x + " belongs to the queue" );
 
 		if ( size == heap.length ) heap = IntArrays.grow( heap, size + 1 );
 
@@ -203,8 +179,9 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 	}
 
 	public void changed( final int index ) {
-		ensureHeapElement( index );
-		final int newPos = INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, inv[ index ], c );
+		final int pos = inv[ index ];
+		if ( pos < 0 ) throw new IllegalArgumentException( "Index " + index + " does not belong to the queue" );
+		final int newPos = INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, pos, c );
 		INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, newPos, c );
 	}
 
@@ -217,9 +194,8 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 
 
 	public void remove( final int index ) {
-		ensureHeapElement( index );
-
 		final int result = inv[ index ];
+		if ( result < 0 ) throw new IllegalArgumentException( "Index " + index + " does not belong to the queue" );
 		inv[ index ] = -1;
 
 		if ( result < --size ) {
