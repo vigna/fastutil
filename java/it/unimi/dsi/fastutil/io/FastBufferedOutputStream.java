@@ -135,9 +135,3 @@ public class FastBufferedOutputStream extends OutputStream {
 	}
 
 }
-	
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:
