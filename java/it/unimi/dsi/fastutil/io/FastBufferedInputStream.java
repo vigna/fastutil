@@ -277,7 +277,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * <p>Terminators are <em>not</em> copied into <em>array</em> or included in the returned count. The
 	 * returned integer can be used to check whether the line is complete: if it is smaller than
 	 * <code>len</code>, then more bytes might be available, but note that this method (contrarily
-	 * to {@link #readLine(byte[], int, int)}) can legitimately return zero when <code>len</code>
+	 * to {@link #read(byte[], int, int)}) can legitimately return zero when <code>len</code>
 	 * is nonzero just because a terminator was found as the first character. Thus, the intended
 	 * usage of this method is to call it on a given array, check whether <code>len</code> bytes
 	 * have been read, and if so try again (possibly extending the array) until a number of read bytes

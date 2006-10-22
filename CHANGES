@@ -2,12 +2,20 @@
 
 - Fixed possible overflow in FastBufferedInputStream.available().
 
-- Indirect heaps have faster checks for elements belonging or
-  not to the queue. In particular, we just rely on array access
-  for detecting indices out of bounds. Profiling with the Lattice
-  package showed that in some circumstances checking explicitly
-  the indices were within bounds was taking more time that the
-  actual heap inner workings.
+- Indirect heaps have faster checks for elements belonging or not to the
+  queue. In particular, we just rely on array access for detecting indices
+  out of bounds. Profiling with LaMa4J showed that in some circumstances
+  checking explicitly the indices were within bounds was taking more time
+  that the actual heap inner workings.
+
+- Fixed obnoxious bug dating to the first fastutil implementation. The
+  macro KEY_EQUALS_HASH(x,h,y), which checks for equality between x and y
+  given that the hash of x is h, was evaluating hashCode() on y without
+  guarantee that y was non-null. As a result, adding a null to a mapped
+  followed by the insertion of an element with hash code 0 would have
+  thrown a NullPointerException. The bug went unobserved for years because
+  no one use nulls as keys, and was actually detected by a bug in BUbiNG's
+  code (which was in turn mistakenly inserting nulls in a set).
 
 5.0.3 -> 5.0.4
 

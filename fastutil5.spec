@@ -2,7 +2,7 @@
 
 Name:           fastutil5
 Version:        5.0.5
-Release:        0law
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Sun Oct 22 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.5-1jpp
+- Fixed old-standing bug with null keys; faster heaps.
+
 * Thu May 11 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.4-1jpp
 - New measurable streams, better array-list allocation.
 
