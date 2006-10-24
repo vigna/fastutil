@@ -37,17 +37,18 @@ import java.util.EnumSet;
  *
  * <P>This class provides buffering for input streams, but it does so with 
  * purposes and an internal logic that are radically different from the ones
- * adopted in {@link java.io.BufferedInputStream}.
+ * adopted in {@link java.io.BufferedInputStream}. The main features follow.
  * 
- * <P>There is no support for marking. All methods are unsychronized. Moreover,
+ * <ul>
+ * <li><P>There is no support for marking. All methods are unsychronized. Moreover,
  * we try to guarantee that in case of sequential access
  * <em>all reads performed by this class will be
  * of the given buffer size</em>.  If, for instance, you use the
  * default buffer size, reads will be performed on the underlying input stream
- * in multiples of 16384 bytes. This is very important on operating systems
+ * in multiples of {@link #DEFAULT_BUFFER_SIZE} bytes. This is very important on operating systems
  * that optimize disk reads on disk block boundaries.
  * 
- * <P>As an additional feature, this class implements the {@link
+ * <li><P>As an additional feature, this class implements the {@link
  * RepositionableStream} interface and extends {@link MeasurableInputStream}.  
  * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
@@ -57,20 +58,26 @@ import java.util.EnumSet;
  * Note that in this case we do not guarantee that all reads will
  * be performed on buffer boundaries.
  * 
- * <p>This class keeps also track of the number of bytes read so far, so
- * to be able to implemented {@link MeasurableInputStream#position()}
- * independently of underlying input stream.
+ * <li><p>Due to erratic and unpredictable behaviour of {@link InputStream#skip(long)},
+ * which does not correspond to its specification and Sun refuses to fix
+ * (see <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6222822">bug 6222822</a>;
+ * don't be fooled by the &ldquo;closed, fixed&rdquo; label),
+ * this class peeks at the underlying stream and if it is {@link System#in} it uses
+ * repeated reads instead of calling {@link InputStream#skip(long)} on the underlying stream.
  *
- * <P>If, on the other hand, the underlying byte stream can be cast to a 
+ * <li><p>This class keeps also track of the number of bytes read so far, so
+ * to be able to implemented {@link MeasurableInputStream#position()}
+ * independently of underlying input stream. If, on the other hand, the underlying byte stream can be cast to a 
  * {@link MeasurableInputStream}, then also 
  * {@link MeasurableInputStream#length()} will work as expected.
  * 
- * <p>This class has limited support for 
+ * <li><p>This class has limited support for 
  * {@linkplain #readLine(byte[], int, int, EnumSet) &ldquo;reading a line&rdquo;}
  * (whatever that means) from the underlying input stream. You can choose the set of
  * {@linkplain FastBufferedInputStream.LineTerminator line terminators} that
  * delimit lines.
  *
+ * </ul>
  * @since 4.4
  */
 
@@ -121,10 +128,11 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
 	 *
 	 * @param is an input stream to wrap.
-	 * @param bufSize the size in bytes of the internal buffer.
+	 * @param bufSize the size in bytes of the internal buffer (greater than zero).
 	 */
 
 	public FastBufferedInputStream( final InputStream is, final int bufSize ) {
+		if ( bufSize <= 0 ) throw new IllegalArgumentException( "Illegal buffer size: " + bufSize );
 		this.is = is;
 		buffer = new byte[ bufSize ];
 
@@ -431,6 +439,28 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	}
 
 
+	/** Skips the given amount of bytes by repeated reads.
+	 *
+	 * <strong>Warning</strong>: this method uses destructively the internal buffer.
+	 *
+	 * @param skip the number of bytes to skip.
+	 * @return the number of bytes actually skipped.
+	 * @see InputStream#skip(long)
+	 */
+
+	private long skipByReading( final long skip ) throws IOException {
+		long toSkip = skip;
+		int len;
+		while( toSkip > 0 ) {
+			len = is.read( buffer, 0, (int)Math.min( buffer.length, toSkip ) );
+			if ( len > 0 ) toSkip -= len;
+			else break;
+		}
+
+		return skip - toSkip;
+	}
+
+
 	public long skip( long n ) throws IOException {
 		if ( n <= avail ) {
 			final int m = (int)n;
@@ -446,7 +476,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 		final int residual = (int)( n % buffer.length );
 		long result;
-		if ( ( result = is.skip( n - residual ) ) < n - residual ) {
+		if ( ( result = is == System.in ? skipByReading( n - residual ) : is.skip( n - residual ) ) < n - residual ) {
 			avail = 0;
 			readBytes += result + head;
 			return result + head;
