@@ -500,8 +500,9 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			else toSkip -= result;
 		}
 
-		readBytes += n - toSkip;
-		return n - toSkip;
+		final long t = n - ( toSkip - result );
+		readBytes += t;
+		return t;
 	}
 
 
