@@ -46,7 +46,9 @@ import java.util.EnumSet;
  * of the given buffer size</em>.  If, for instance, you use the
  * default buffer size, reads will be performed on the underlying input stream
  * in multiples of {@link #DEFAULT_BUFFER_SIZE} bytes. This is very important on operating systems
- * that optimize disk reads on disk block boundaries.
+ * that optimize disk reads on disk block boundaries. {@linkplain #skip(long) Skipping}, {@linkplain #position(long) positioning}
+ * and {@linkplain InputStrea#read(byte[],int,int) reading less bytes than requested} from
+ * the underlying input stream will of course unalign the following accesses.
  * 
  * <li><P>As an additional feature, this class implements the {@link
  * RepositionableStream} interface and extends {@link MeasurableInputStream}.  
@@ -59,11 +61,13 @@ import java.util.EnumSet;
  * be performed on buffer boundaries.
  * 
  * <li><p>Due to erratic and unpredictable behaviour of {@link InputStream#skip(long)},
- * which does not correspond to its specification and Sun refuses to fix
+ * which does not correspond to its specification and which Sun refuses to fix
  * (see <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6222822">bug 6222822</a>;
  * don't be fooled by the &ldquo;closed, fixed&rdquo; label),
  * this class peeks at the underlying stream and if it is {@link System#in} it uses
- * repeated reads instead of calling {@link InputStream#skip(long)} on the underlying stream.
+ * repeated reads instead of calling {@link InputStream#skip(long)} on the underlying stream; moreover,
+ * alternate skips and reads are tried alternatively, so to guarantee that skipping
+ * less bytes than requested can be caused only by reaching the end of file.
  *
  * <li><p>This class keeps also track of the number of bytes read so far, so
  * to be able to implemented {@link MeasurableInputStream#position()}
@@ -443,13 +447,13 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 *
 	 * <strong>Warning</strong>: this method uses destructively the internal buffer.
 	 *
-	 * @param skip the number of bytes to skip.
+	 * @param n the number of bytes to skip.
 	 * @return the number of bytes actually skipped.
 	 * @see InputStream#skip(long)
 	 */
 
-	private long skipByReading( final long skip ) throws IOException {
-		long toSkip = skip;
+	private long skipByReading( final long n ) throws IOException {
+		long toSkip = n;
 		int len;
 		while( toSkip > 0 ) {
 			len = is.read( buffer, 0, (int)Math.min( buffer.length, toSkip ) );
@@ -457,11 +461,26 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			else break;
 		}
 
-		return skip - toSkip;
+		return n - toSkip;
 	}
 
 
-	public long skip( long n ) throws IOException {
+	/** Skips over and discards the given number of bytes of data from this fast buffered input stream. 
+	 *
+	 * <p>As explained in the {@linkplain FastBufferedInputStream class documentation}, the semantics
+	 * of {@link InputStream#skip(long)} is fatally flawed. This method provides additional semantics as follows:
+	 * it will skip the provided number of bytes, unless the end of file has been reached.
+	 *
+	 * <p>Additionally, if the underlying input stream is {@link System#in} this method will use
+	 * repeated reads instead of invoking {@link InputStream#skip(long)}.
+	 *
+	 * @param n the number of bytes to skip.
+	 * @return the number of bytes actually skipped; it can be smaller than <code>n</code>
+	 * only if the end of file has been reached.
+	 * @see InputStream#skip(long)
+	 */
+
+	public long skip( final long n ) throws IOException {
 		if ( n <= avail ) {
 			final int m = (int)n;
 			pos += m;
@@ -470,24 +489,19 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			return n;
 		}
 
-		final int head = avail;
-		n -= head;
+		long toSkip = n - avail, result;
 		avail = 0;
 
-		final int residual = (int)( n % buffer.length );
-		long result;
-		if ( ( result = is == System.in ? skipByReading( n - residual ) : is.skip( n - residual ) ) < n - residual ) {
-			avail = 0;
-			readBytes += result + head;
-			return result + head;
+		while ( ( result = is == System.in ? skipByReading( toSkip ) : is.skip( toSkip ) ) < toSkip ) {
+			if ( result == 0 ) {
+				if ( is.read() == -1 ) break;
+				toSkip--;
+			}
+			else toSkip -= result;
 		}
 
-		avail = Math.max( is.read( buffer ), 0 );
-		pos = Math.min( residual, avail );
-		avail -= pos;
-		final long t = result + head + pos;
-		readBytes += t;
-		return t;
+		readBytes += n - toSkip;
+		return n - toSkip;
 	}
 
 
