@@ -31,6 +31,7 @@ import java.nio.channels.FileChannel;
 import java.util.EnumSet;
 
 /** Lightweight, unsynchronized, aligned input stream buffering class with
+ *  {@linkplain #skip(long) true skipping},
  *  {@linkplain MeasurableInputStream measurability}, 
  *  {@linkplain RepositionableStream repositionability} 
  *  and {@linkplain #readLine(byte[], int, int, EnumSet) line reading} support.
@@ -47,7 +48,7 @@ import java.util.EnumSet;
  * default buffer size, reads will be performed on the underlying input stream
  * in multiples of {@link #DEFAULT_BUFFER_SIZE} bytes. This is very important on operating systems
  * that optimize disk reads on disk block boundaries. {@linkplain #skip(long) Skipping}, {@linkplain #position(long) positioning}
- * and {@linkplain InputStrea#read(byte[],int,int) reading less bytes than requested} from
+ * and {@linkplain InputStream#read(byte[],int,int) reading less bytes than requested} from
  * the underlying input stream will of course unalign the following accesses.
  * 
  * <li><P>As an additional feature, this class implements the {@link
@@ -66,7 +67,7 @@ import java.util.EnumSet;
  * don't be fooled by the &ldquo;closed, fixed&rdquo; label),
  * this class peeks at the underlying stream and if it is {@link System#in} it uses
  * repeated reads instead of calling {@link InputStream#skip(long)} on the underlying stream; moreover,
- * alternate skips and reads are tried alternatively, so to guarantee that skipping
+ * skips and reads are tried alternately, so to guarantee that skipping
  * less bytes than requested can be caused only by reaching the end of file.
  *
  * <li><p>This class keeps also track of the number of bytes read so far, so
@@ -489,10 +490,10 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			return n;
 		}
 
-		long toSkip = n - avail, result;
+		long toSkip = n - avail, result = 0;
 		avail = 0;
 
-		while ( ( result = is == System.in ? skipByReading( toSkip ) : is.skip( toSkip ) ) < toSkip ) {
+		while ( toSkip != 0 && ( result = is == System.in ? skipByReading( toSkip ) : is.skip( toSkip ) ) < toSkip ) {
 			if ( result == 0 ) {
 				if ( is.read() == -1 ) break;
 				toSkip--;
