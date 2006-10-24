@@ -49,7 +49,7 @@ import java.util.EnumSet;
  * in multiples of {@link #DEFAULT_BUFFER_SIZE} bytes. This is very important on operating systems
  * that optimize disk reads on disk block boundaries. {@linkplain #skip(long) Skipping}, {@linkplain #position(long) positioning}
  * and {@linkplain InputStream#read(byte[],int,int) reading less bytes than requested} from
- * the underlying input stream will of course unalign the following accesses.
+ * the underlying input stream will of course unalign the subsequent accesses.
  * 
  * <li><P>As an additional feature, this class implements the {@link
  * RepositionableStream} interface and extends {@link MeasurableInputStream}.  
