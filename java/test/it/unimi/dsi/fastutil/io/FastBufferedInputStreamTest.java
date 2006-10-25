@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Random;
 
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;
@@ -14,43 +15,74 @@ import junit.framework.TestCase;
 
 public class FastBufferedInputStreamTest extends TestCase {
 
+	/** A byte array input stream that will return its data in small chunks,
+	 * even it could actually return more data, and skips less bytes than it could.
+	 */
+	
+	private static class BastardByteArrayInputStream extends ByteArrayInputStream {
+		private final static long seed = System.currentTimeMillis();
+		private final static Random r = new Random( seed );
+		static {
+			System.err.println( "Seed: " + seed );
+		}
+
+		int limit;
+		
+		public BastardByteArrayInputStream( byte[] array ) {
+			super( array );
+		}
+
+		@Override
+		public int read( byte[] buffer, int offset, int length ) {
+			int k = r.nextInt( 2 ) + 1;
+			return super.read( buffer, offset, length < k ? length : k );
+		}
+		
+		public long skip( long n ) {
+			int k = r.nextInt( 2 );
+			return super.skip( n < k ? n : k );
+		}
+
+	}
+
+	
 	public void testReadline( int bufferSize ) throws IOException {
 		FastBufferedInputStream stream;
 		byte[] b;
 		
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
 		
 		b = new byte[ 4 ];
 		stream.readLine( b, 0, b.length, EnumSet.of( LineTerminator.CR ) );
-		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 'C', 0 } ) );
+		assertTrue( Arrays.toString( b ), Arrays.equals( b, new byte[] { 'A', 'B', 'C', 0 } ) );
 		assertEquals( 4, stream.position() );
 		assertEquals( -1, stream.readLine( b, 0, b.length, EnumSet.of( LineTerminator.CR ) ) );
 
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
 		assertEquals( 4, stream.readLine( b, 0, b.length, EnumSet.of( LineTerminator.LF ) ) );
 		assertEquals( 4, stream.position() );
 
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
 		assertEquals( 4, stream.readLine( b, 0, b.length, EnumSet.of( LineTerminator.LF ) ) );
 		assertEquals( 4, stream.position() );
 
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
 		assertEquals( 4, stream.readLine( b, 0, b.length, EnumSet.of( LineTerminator.CR_LF ) ) );
 		assertEquals( 4, stream.position() );
 
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
 		assertEquals( 4, stream.readLine( b, 0, b.length, EnumSet.of( LineTerminator.CR_LF ) ) );
 		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 'C', '\r' } ) );
 		assertEquals( 4, stream.position() );
 		
 		b = new byte[ 4 ];
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
 		stream.readLine( b, 0, 2, EnumSet.of( LineTerminator.CR ) );
 		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 0, 0 } ) );
 		assertEquals( 2, stream.position() );
 		
 		// Reads with only LF as terminator
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
 		assertEquals( 4, stream.readLine( b, 0, 4, EnumSet.of( LineTerminator.LF ) ) );
 		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 'C', '\r' } ) );
 		assertEquals( 4, stream.position() );
@@ -63,7 +95,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 
 		// Reads with both LF and CR/LF as terminators
 		b = new byte[ 4 ];
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
 		assertEquals( 3, stream.readLine( b, 0, 4, EnumSet.of( LineTerminator.CR, LineTerminator.CR_LF ) ) );
 		assertEquals( 5, stream.position() );
 		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 'C', 0 } ) );
@@ -73,7 +105,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 
 		// Reads with only CR as terminator
 		b = new byte[ 4 ];
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
 		assertEquals( 3, stream.readLine( b, 0, 4, EnumSet.of( LineTerminator.CR ) ) );
 		assertEquals( 4, stream.position() );
 		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 'C', 0 } ) );
@@ -82,7 +114,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', '\n', 'D' } ) );
 
 		// Reads with only CR/LF as terminator
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
 		b = new byte[ 4 ];
 		assertEquals( 3, stream.readLine( b, 0, 4, EnumSet.of( LineTerminator.CR_LF ) ) );
 		assertEquals( 5, stream.position() );
@@ -109,7 +141,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 	public void testSkip( int bufferSize ) throws IOException {
 		FastBufferedInputStream stream;
 		
-		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' } ), bufferSize );
 		assertEquals( 2, stream.skip( 2 ) );
 		assertEquals( 2, stream.position() );
 		assertEquals( 1, stream.skip( 1 ) );
