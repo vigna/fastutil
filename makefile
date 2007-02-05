@@ -1,4 +1,4 @@
-VERSION=5.0.5
+VERSION=5.0.6
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -53,7 +53,7 @@ explain:
 source:
 	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
-	tar zcvf fastutil-$(VERSION)-src.tar.gz --owner=root --group=root \
+	tar zcvf fastutil-$(VERSION)-src.tar.gz --owner=0 --group=0 \
 		fastutil-$(VERSION)/*.drv \
 		fastutil-$(VERSION)/build.xml \
 		fastutil-$(VERSION)/gencsource.sh \
@@ -72,7 +72,7 @@ bin:
 	ant jar javadoc
 	-rm -f fastutil-$(VERSION)
 	ln -s . fastutil-$(VERSION)
-	tar zcvf fastutil-$(VERSION)-bin.tar.gz --owner=root --group=root \
+	tar zcvf fastutil-$(VERSION)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(VERSION)/CHANGES \
 		fastutil-$(VERSION)/README \
 		fastutil-$(VERSION)/COPYING.LIB \

@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Mon Feb 5 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.6-1jpp
+- New front() method and better FastBufferedInputStream.
+
 * Sun Oct 22 2006 Sebastiano Vigna <vigna at acm.org> - 5.0.5-1jpp
 - Fixed old-standing bug with null keys; faster heaps.
 
