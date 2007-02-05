@@ -27,7 +27,7 @@ package it.unimi.dsi.fastutil;
  * {@link UnsupportedOperationException}.
  */
 
-public abstract class AbstractIndirectDoublePriorityQueue extends AbstractIndirectPriorityQueue implements IndirectDoublePriorityQueue {
+public abstract class AbstractIndirectDoublePriorityQueue<K> extends AbstractIndirectPriorityQueue<K> implements IndirectDoublePriorityQueue<K> {
 
 	public int secondaryLast() { throw new UnsupportedOperationException(); }
 

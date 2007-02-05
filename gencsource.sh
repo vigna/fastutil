@@ -379,10 +379,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_EQUALS_HASH(x,h,y) ( (y) != HashCommon.REMOVED && (h) == strategy.hashCode(y) && strategy.equals((x), (y)) )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
 "#define KEY_EQUALS_HASH(x,h,y) ( (y) == null ? (x) == null : (h) == (y).hashCode() && (y).equals(x) )\n"\
 "#endif\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_HASH(x,h,y) ( (x) == (y) )\n"\
 "#endif\n\n"\
 \
@@ -415,9 +417,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2INT(x) (System.identityHashCode(x))\n"\
 "#endif\n"\
 \
-"#define KEY_CMP(x,y) ( ((Comparable<? super KEY_GENERIC_CLASS>)(x)).compareTo(y) )\n"\
-"#define KEY_LESS(x,y) ( ((Comparable<? super KEY_GENERIC_CLASS>)(x)).compareTo(y) < 0 )\n"\
-"#define KEY_LESSEQ(x,y) ( ((Comparable<? super KEY_GENERIC_CLASS>)(x)).compareTo(y) <= 0 )\n"\
+"#define KEY_CMP(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) )\n"\
+"#define KEY_LESS(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) < 0 )\n"\
+"#define KEY_LESSEQ(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) <= 0 )\n"\
 \
 "#define KEY_NULL (null)\n"\
 \

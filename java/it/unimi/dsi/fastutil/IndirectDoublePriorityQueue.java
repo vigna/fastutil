@@ -35,6 +35,13 @@ import java.util.Comparator;
 
 public interface IndirectDoublePriorityQueue<K> extends IndirectPriorityQueue<K> {
 
+	/** Returns the secondary comparator of this queue.
+	 *
+	 * @return the secondary comparator of this queue.
+	 * @see #secondaryFirst()
+	 */
+	public Comparator<? super K> secondaryComparator();
+
 	/** Returns the first element of this queue with respect to the {@linkplain #secondaryComparator() secondary comparator}.
 	 *
 	 * @return the first element of this queue w.r.t. the {@linkplain #secondaryComparator() secondary comparator}.
@@ -47,10 +54,12 @@ public interface IndirectDoublePriorityQueue<K> extends IndirectPriorityQueue<K>
 	 */
 	public int secondaryLast();
 
-	/** Returns the secondary comparator of this queue.
-	 *
-	 * @return the secondary comparator of this queue.
-	 * @see #secondaryFirst()
-	 */
-	public Comparator<? super K> secondaryComparator();
+    /** Retrieves the secondary front of the queue in a given array (optional operation).
+    *
+    * @param a an array large enough to hold the secondary front (e.g., at least long as the reference array).
+    * @return the number of elements actually written (starting from the first position of <code>a</code>).
+    * @see IndirectPriorityQueue#front(int[])
+    */
+
+	public int secondaryFront( final int[] a );
 }

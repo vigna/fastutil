@@ -39,6 +39,7 @@ public class IndirectPriorityQueues {
 	 * {@link IndirectPriorityQueue}.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public static class EmptyIndirectPriorityQueue extends AbstractIndirectPriorityQueue {
 
 		protected EmptyIndirectPriorityQueue() {}
@@ -55,6 +56,7 @@ public class IndirectPriorityQueues {
 		public Comparator comparator() { return null; }
 		public void changed( final int i ) { throw new IllegalArgumentException( "Index " + i + " is not in the queue" ); }
 		public void remove( final int i ) { throw new IllegalArgumentException( "Index " + i + " is not in the queue" ); }
+		public int front( int[] a ) { return 0; }
 		
 	}
 
@@ -95,6 +97,7 @@ public class IndirectPriorityQueues {
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
 		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
 		public Comparator<? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
+		public int front( int[] a ) { return q.front( a ); }
 	}
 
 

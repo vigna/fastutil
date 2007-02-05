@@ -146,5 +146,16 @@ public interface IndirectPriorityQueue<K> {
 
 	public void remove( int index );
 
+    /** Retrieves the front of the queue in a given array (optional operation).
+     *
+     * <p>The <em>front</em> of an indirect queue is the set of indices whose associated elements in the reference array 
+     * are equal to the element associated to the {@linkplain #first() first index}. These indices can be always obtain by dequeueing, but 
+     * this method should retrieve efficiently such indices in the given array without modifying the state of the queue.
+     * 
+     * @param a an array large enough to hold the front (e.g., at least long as the reference array).
+     * @return the number of elements actually written (starting from the first position of <code>a</code>).
+     */
+
+	public int front( final int[] a );
 
 }

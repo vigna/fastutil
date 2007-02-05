@@ -39,6 +39,7 @@ public class IndirectDoublePriorityQueues {
 	 * {@link IndirectDoublePriorityQueue}.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public static class EmptyIndirectDoublePriorityQueue extends IndirectPriorityQueues.EmptyIndirectPriorityQueue {
 
 		protected EmptyIndirectDoublePriorityQueue() {}
@@ -89,6 +90,8 @@ public class IndirectDoublePriorityQueues {
 		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
 		public Comparator<? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
 		public Comparator<? super K> secondaryComparator() { synchronized( sync ) { return q.secondaryComparator(); } }
+		public int secondaryFront( int[] a ) { return q.secondaryFront( a ); }
+		public int front( int[] a ) { return q.front( a ); }
 	}
 
 
