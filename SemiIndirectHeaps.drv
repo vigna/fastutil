@@ -180,16 +180,24 @@ public class SEMI_INDIRECT_HEAPS {
 	 */
 	public static KEY_GENERIC int front( final KEY_GENERIC_TYPE[] refArray, final int[] heap, final int size, final int[] a ) {
 		final KEY_GENERIC_TYPE top = refArray[ heap[ 0 ] ];
-		KEY_GENERIC_TYPE curr; 
-		int j = 0;
-		for( int i = 0, b = 1; i < b; i++ ) {
-			curr = refArray[ heap[ i ] ];
-			if ( KEY_EQUALS_NOT_NULL( top, curr ) ) {
+		int j = 0, // The current position in a
+			l = 0, // The first position to visit in the next level (inclusive)
+			r = 1, // The last position to visit in the next level (exclusive)
+			f = 0; // The first position (in the heap array) of the next level
+		for( int i = 0; i < r; i++ ) {
+			if ( i == f ) { // New level
+				if ( l >= r ) break; // If we are crossing the two bounds, we're over
+				f = (f << 1) + 1; // Update the first position of the next level...
+				i = l; // ...and jump directly to position l
+				l = -1; // Invalidate l
+			}
+			if ( KEY_EQUALS_NOT_NULL( top, refArray[ heap[ i ] ] ) ) {
 				a[ j++ ] = heap[ i ];
-				b = Math.min( size, i * 2 + 3 );
+				if ( l == -1 ) l = i * 2 + 1; // If this is the first time in this level, set l
+				r = Math.min( size, i * 2 + 3 ); // Update r, but do not go beyond size
 			}
 		}
-		
+
 		return j;
 	}
 }
