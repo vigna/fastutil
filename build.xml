@@ -1,53 +1,60 @@
 <project name="fastutil" default="jar" basedir=".">
 
-  <property name="version"  value="5.0.6"/>
-  <property name="src"      value="java"/>
-  <property name="build"    value="build"/>
-  <property name="docs"     value="docs"/>
-  <property name="source"   value="5"/>
-  <property name="j2se.apiurl" value="http://java.sun.com/j2se/5.0/docs/api/"/>
+	<property file="build.properties"/>
 
-  <target name="init">
-    <mkdir dir="${build}"/>
-  </target>
+	<condition property="j2se.apiurl" value="${remote.j2se.apiurl}"><not><isset property="local"/></not></condition>
+	<condition property="junit.apiurl" value="${remote.junit.apiurl}"><not><isset property="local"/></not></condition>
 
-  <target name="compile" depends="init">
-    <javac srcdir="${src}" 
-	   debug="on"
-		deprecation="on"
-	   optimize="on"
-      destdir="${build}"
-	   source="${source}"
-		excludes="test/**"
-	   memoryInitialSize="512M"
-	   memoryMaximumSize="512M"
-	   fork="yes"
-	   />
-  </target>
+	<condition property="j2se.apiurl" value="${local.j2se.apiurl}"><isset property="local"/></condition>
+	<condition property="junit.apiurl" value="${local.junit.apiurl}"><isset property="local"/></condition>
 
-  <target name="compile-tests" depends="compile">
-    <javac srcdir="${src}" 
-	   debug="on"
-		deprecation="on"
-	   optimize="on"
-      destdir="${build}"
-	   source="${source}"
-		includes="test/**"
-	   memoryInitialSize="512M"
-	   memoryMaximumSize="512M"
-	   fork="yes"
-	   />
-  </target>
+	<property name="src" value="java"/>
+	<property name="build" value="build"/>
+	<property name="docs" value="docs"/>
+	<property name="source" value="5"/>
+	<property name="j2se.apiurl" value="http://java.sun.com/j2se/5.0/docs/api/"/>
 
-  <target name="jar" depends="compile">
-    <jar jarfile="fastutil-${version}.jar">
+	<target name="init">
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src}" 
+			debug="on"
+			deprecation="on"
+			optimize="on"
+			destdir="${build}"
+			source="${source}"
+			excludes="test/**"
+			memoryInitialSize="512M"
+			memoryMaximumSize="512M"
+			fork="yes"
+		/>
+	</target>
+
+	<target name="compile-tests" depends="compile">
+		<javac srcdir="${src}" 
+			debug="on"
+			deprecation="on"
+			optimize="on"
+			destdir="${build}"
+			source="${source}"
+			includes="test/**"
+			memoryInitialSize="512M"
+			memoryMaximumSize="512M"
+			fork="yes"
+		/>
+	</target>
+
+	<target name="jar" depends="compile">
+		<jar jarfile="fastutil-${version}.jar">
 			<fileset dir="${build}" excludes="test/**"/>
 	 </jar>
-  </target>
+	</target>
 
-  <target name="javadoc">
-    <mkdir dir="${docs}"/>
-    <javadoc destdir="${docs}" 
+	<target name="javadoc">
+		<mkdir dir="${docs}"/>
+		<javadoc destdir="${docs}" 
 			 packagenames = "it.unimi.dsi.fastutil,it.unimi.dsi.fastutil.*"
 			 overview="${src}/overview.html"
 			 sourcepath="${src}" 
@@ -58,13 +65,13 @@
 			 maxmemory="384M"
 			 >
 	<link href="${j2se.apiurl}"/>
-    </javadoc>
-  </target>
+		</javadoc>
+	</target>
 
-  <target name="clean">
-    <delete dir="${build}"/>
-    <delete>
-      <fileset dir="." includes="fastutil-*.jar"/>
-    </delete>
-  </target>
+	<target name="clean">
+		<delete dir="${build}"/>
+		<delete>
+			<fileset dir="." includes="fastutil-*.jar"/>
+		</delete>
+	</target>
 </project>

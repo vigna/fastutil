@@ -1,4 +1,4 @@
-VERSION=5.0.6
+include build.properties
 
 SOURCEDIR = java/it/unimi/dsi/fastutil
 DOCSDIR = docs
@@ -51,34 +51,35 @@ explain:
 	@echo -e "will compile assertions into the classes.\n\n"
 
 source:
-	-rm -f fastutil-$(VERSION)
-	ln -s . fastutil-$(VERSION)
-	tar zcvf fastutil-$(VERSION)-src.tar.gz --owner=0 --group=0 \
-		fastutil-$(VERSION)/*.drv \
-		fastutil-$(VERSION)/build.xml \
-		fastutil-$(VERSION)/gencsource.sh \
-		fastutil-$(VERSION)/CHANGES \
-		fastutil-$(VERSION)/README \
-		fastutil-$(VERSION)/COPYING.LIB \
-		fastutil-$(VERSION)/makefile \
-		$(foreach f, $(SOURCES), fastutil-$(VERSION)/$(f)) \
-		fastutil-$(VERSION)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
-		fastutil-$(VERSION)/$(SOURCEDIR)/io/package.html \
-		fastutil-$(VERSION)/java/overview.html
-	rm fastutil-$(VERSION)
+	-rm -f fastutil-$(version)
+	ln -s . fastutil-$(version)
+	tar zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
+		fastutil-$(version)/*.drv \
+		fastutil-$(version)/build.xml \
+		fastutil-$(version)/build.properties \
+		fastutil-$(version)/gencsource.sh \
+		fastutil-$(version)/CHANGES \
+		fastutil-$(version)/README \
+		fastutil-$(version)/COPYING.LIB \
+		fastutil-$(version)/makefile \
+		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
+		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
+		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
+		fastutil-$(version)/java/overview.html
+	rm fastutil-$(version)
 
 bin:
 	make -s clean sources
 	ant jar javadoc
-	-rm -f fastutil-$(VERSION)
-	ln -s . fastutil-$(VERSION)
-	tar zcvf fastutil-$(VERSION)-bin.tar.gz --owner=0 --group=0 \
-		fastutil-$(VERSION)/CHANGES \
-		fastutil-$(VERSION)/README \
-		fastutil-$(VERSION)/COPYING.LIB \
-		fastutil-$(VERSION)/docs \
-		fastutil-$(VERSION)/fastutil-$(VERSION).jar
-	rm fastutil-$(VERSION)
+	-rm -f fastutil-$(version)
+	ln -s . fastutil-$(version)
+	tar zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
+		fastutil-$(version)/CHANGES \
+		fastutil-$(version)/README \
+		fastutil-$(version)/COPYING.LIB \
+		fastutil-$(version)/docs \
+		fastutil-$(version)/fastutil-$(version).jar
+	rm fastutil-$(version)
 
 
 LinkedOpenHashSet.drv: OpenHashSet.drv
@@ -505,6 +506,3 @@ clean:
 sources: $(JSOURCES)
 
 csources: $(CSOURCES)
-
-tags:
-	etags build.xml makefile README gencsource.sh *.drv java/overview.html $(SOURCES)

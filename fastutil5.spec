@@ -1,13 +1,13 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0.6
-Release:        1jpp
+Version:        5.0.7
+Release:        0law
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
 License:        LGPL
-Source0:        http://fastutil.dsi.unimi.it/fastutil-5.0.6-src.tar.gz
+Source0:        http://fastutil.dsi.unimi.it/fastutil-%{version}-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 Vendor:         JPackage Project
 Distribution:   JPackage
