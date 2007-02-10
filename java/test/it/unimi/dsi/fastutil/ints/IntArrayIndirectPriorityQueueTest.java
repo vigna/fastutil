@@ -6,7 +6,7 @@ import junit.framework.TestCase;
 
 public class IntArrayIndirectPriorityQueueTest extends TestCase {
 
-	public void testTops() {
+	public void testFront() {
 		int refArray[] = { 4, 3, 2, 1, 0, 3, 2, 1, 0, 2, 1, 0, 1, 0, 0 };
 		int tops[] = new int[ refArray.length ];
 		final IntArrayIndirectPriorityQueue queue = new IntArrayIndirectPriorityQueue( refArray );
