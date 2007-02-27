@@ -32,7 +32,7 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC {
 
 	private static final long serialVersionUID = 1L;
 	/** The backing array (valid up to {@link #size}, excluded). */
-	private KEY_GENERIC_TYPE[] a;
+	private KEY_TYPE[] a;
 	/** The number of valid entries in {@link #a} and {@link #value}. */
 	private int size;
 	
@@ -40,26 +40,23 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC {
 	 * 
 	 * @param a the backing array.
 	 */
-	public ARRAY_SET( KEY_GENERIC_TYPE[] a ) {
+	public ARRAY_SET( KEY_TYPE[] a ) {
 		this.a = a;
 	}
 
-#if #keys(primitive)
 	/** Creates a new empty array set.
 	 */
 	public ARRAY_SET() {
 		this.a = ARRAYS.EMPTY_ARRAY;
 	}
-#else
-	/** Creates a new empty array set.
+
+	/** Creates a new array set of given initial capacity.
 	 * 
-	 * @param klass a class satisfying the generic parameter specification.
+	 * @param capacity the initial capacity.
 	 */
-	@SuppressWarnings("unchecked")
-	public ARRAY_SET( Class<K> klass ) {
-		this.a = (K[])java.lang.reflect.Array.newInstance( klass, 0 );
+	public ARRAY_SET( final int capacity ) {
+		this.a = new KEY_TYPE[ capacity ];
 	}
-#endif
 
 	/** Creates a new empty array set using the given backing array and the given number of element of the array.
 	 *
@@ -69,25 +66,26 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC {
 	 * @param a the backing array.
 	 * @param size the number of valid elements in <code>a</code>.
 	 */
-	public ARRAY_SET( final KEY_GENERIC_TYPE[] a, final int size ) {
+	public ARRAY_SET( final KEY_TYPE[] a, final int size ) {
 		this.a = a;
 		this.size = size;
 		if ( size > a.length ) throw new IllegalArgumentException( "The provided size (" + size + ") is larger than or equal to the array size (" + a.length + ")" );
 	}
 
-	private int findKey( final KEY_GENERIC_TYPE o ) {
+	private int findKey( final KEY_TYPE o ) {
 		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( a[ i ], o ) ) return i;
 		return -1;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public KEY_ITERATOR KEY_GENERIC iterator() {
-		return ITERATORS.wrap( a, 0, size );
+		return ITERATORS.wrap( KEY_GENERIC_ARRAY_CAST a, 0, size );
 	}
 
 	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
-		return findKey( KEY_GENERIC_CAST k ) != -1;
+		return findKey( k ) != -1;
 	}
 
 	public int size() {
@@ -97,9 +95,10 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC {
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
-		final int pos = findKey( KEY_GENERIC_CAST k );
+		final int pos = findKey( k );
 		if ( pos == -1 ) return false;
-		System.arraycopy( a, pos + 1, a, pos, size - pos - 1 );
+		final int tail = size - pos - 1;
+		for( int i = 0; i < tail; i++ ) a[ pos + i ] = a[ pos + i + 1 ];
 		size--;
 #if #keys(reference)
 		a[ size ] = null;
@@ -111,7 +110,11 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC {
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		final int pos = findKey( k );
 		if ( pos != -1 ) return false;
-		if ( size == a.length ) a = ARRAYS.grow( a, size + 1 );
+		if ( size == a.length ) {
+			final KEY_TYPE[] b = new KEY_TYPE[ size == 0 ? 2 : size * 2 ];
+			for( int i = size; i-- != 0; ) b[ i ] = a[ i ];
+			a = b;
+		}
 		a[ size++ ] = k;
 		return true;
 	}

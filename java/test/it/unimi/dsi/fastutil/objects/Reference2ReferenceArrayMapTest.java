@@ -12,7 +12,7 @@ public class Reference2ReferenceArrayMapTest extends TestCase {
 
 	public void testMap() {
 		for( int i = 0; i <= 2; i++ ) {
-			final Reference2ReferenceArrayMap<Object,Object> m = i == 0 ? new Reference2ReferenceArrayMap<Object,Object>( Object.class, Object.class ) : new Reference2ReferenceArrayMap<Object,Object>( new Object[ i ], new Object[ i ] );
+			final Reference2ReferenceArrayMap<Object,Object> m = i == 0 ? new Reference2ReferenceArrayMap<Object,Object>() : new Reference2ReferenceArrayMap<Object,Object>( i );
 			Integer one = new Integer( 1 ), two = new Integer( 2 ), three = new Integer( 3 );
 			assertEquals( null, m.put( one, one ) );
 			assertEquals( 1, m.size() );

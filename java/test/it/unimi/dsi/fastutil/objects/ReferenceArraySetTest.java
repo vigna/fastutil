@@ -8,7 +8,7 @@ public class ReferenceArraySetTest extends TestCase {
 
 	public void testSet() {
 		for( int i = 0; i <= 2; i++ ) {
-			final ReferenceArraySet<Object> s = i == 0 ? new ReferenceArraySet<Object>( Object.class ) : new ReferenceArraySet<Object>( new Object[ 2 ] );
+			final ReferenceArraySet<Object> s = i == 0 ? new ReferenceArraySet<Object>() : new ReferenceArraySet<Object>( 2 );
 			Integer one = new Integer( 1 ), two = new Integer( 2 ), three = new Integer( 3 );
 			assertTrue( s.add( one ) );
 			assertEquals( 1, s.size() );

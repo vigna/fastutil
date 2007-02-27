@@ -44,9 +44,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	private static final long serialVersionUID = 1L;
 	/** The keys (valid up to {@link #size}, excluded). */
-	private KEY_GENERIC_TYPE[] key;
+	private KEY_TYPE[] key;
 	/** The values (parallel to {@link #key}). */
-	private VALUE_GENERIC_TYPE[] value;
+	private VALUE_TYPE[] value;
 	/** The number of valid entries in {@link #key} and {@link #value}. */
 	private int size;
 	
@@ -55,53 +55,27 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	 * @param key the key array.
 	 * @param value the value array (it <em>must</em> have the same length as <code>key</code>).
 	 */
-	public ARRAY_MAP( KEY_GENERIC_TYPE[] key, VALUE_GENERIC_TYPE[] value ) {
+	public ARRAY_MAP( KEY_TYPE[] key, VALUE_TYPE[] value ) {
 		this.key = key;
 		this.value = value;
 		if( key.length != value.length ) throw new IllegalArgumentException( "Keys and values have different lengths (" + key.length + ", " + value.length + ")" );
 	}
 
-#if #keys(primitive) && #values(primitive)
 	/** Creates a new empty array map.
 	 */
 	public ARRAY_MAP() {
 		this.key = ARRAYS.EMPTY_ARRAY;
 		this.value = VALUE_ARRAYS.EMPTY_ARRAY;
 	}
-#elif #keys(primitive)
-	/** Creates a new empty array map.
-	 * 
-	 * @param valueClass a class satisfying the generic value parameter specification.
-	 */
-	@SuppressWarnings("unchecked")
-	public ARRAY_MAP( final Class<V> valueClass ) {
-		this.key = ARRAYS.EMPTY_ARRAY;
-		this.value = (V[])java.lang.reflect.Array.newInstance( valueClass, 0 );
+	
+	/** Creates a new empty array map of given capacity.
+	 *
+	 * @param capacity the initial capacity.
+	 */ 
+	public ARRAY_MAP( final int capacity ) {
+		this.key = new KEY_TYPE[ capacity ];
+		this.value = new VALUE_TYPE[ capacity ];
 	}
-#elif #values(primitive)
-	/** Creates a new empty array map.
-	 * 
-	 * @param keyClass a class satisfying the generic key parameter specification.
-	 */
-	@SuppressWarnings("unchecked")
-	public ARRAY_MAP( final Class<K> keyClass ) {
-		this.key = (K[])java.lang.reflect.Array.newInstance( keyClass, 0 );
-		this.value = VALUE_ARRAYS.EMPTY_ARRAY;
-	}
-
-#else
-	/** Creates a new empty array map.
-	 * 
-	 * @param keyClass a class satisfying the generic key parameter specification.
-	 * @param valueClass a class satisfying the generic value parameter specification.
-	 */
-	@SuppressWarnings("unchecked")
-	public ARRAY_MAP( final Class<K> keyClass, final Class<V> valueClass ) {
-		this.key = (K[])java.lang.reflect.Array.newInstance( keyClass, 0 );
-		this.value = (V[])java.lang.reflect.Array.newInstance( valueClass, 0 );
-	}
-
-#endif
 	
 	public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
 		return new AbstractObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>() {
@@ -115,9 +89,10 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 						return next < size;
 					}
 
+					@SuppressWarnings("unchecked")
 					public java.util.Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> next() {
 						if ( ! hasNext() ) throw new NoSuchElementException();
-						return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( key[ next ], value[ next++ ] );
+						return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( KEY_GENERIC_CAST key[ next ], VALUE_GENERIC_CAST value[ next++ ] );
 					}
 					
 				};
@@ -137,18 +112,19 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	}
 
 	private int findKey( final KEY_TYPE k ) {
-		final KEY_GENERIC_TYPE[] key = this.key;
+		final KEY_TYPE[] key = this.key;
 		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return i;
 		return -1;
 	}
 
+	@SuppressWarnings("unchecked")
 #if #keys(primitive) || #values(primitive)
 	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
 #else
 	public VALUE_GENERIC_TYPE get( final Object k ) {
 #endif
-		final KEY_GENERIC_TYPE[] key = this.key;
-		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return value[ i ];
+		final KEY_TYPE[] key = this.key;
+		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return VALUE_GENERIC_CAST value[ i ];
 		return defRetValue;
 	}
 
@@ -192,14 +168,20 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	public VALUE_GENERIC_TYPE put( KEY_GENERIC_TYPE k, VALUE_GENERIC_TYPE v ) {
 		final int oldKey = findKey( k );
 		if ( oldKey != -1 ) {
-			final VALUE_GENERIC_TYPE oldValue = value[ oldKey ];
+			final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[ oldKey ];
 			value[ oldKey ] = v;
 			return oldValue;
 		}
 		if ( size == key.length ) {
-			key = ARRAYS.grow( key, size + 1 );
-			value = VALUE_ARRAYS.grow( value, size + 1 );
-		} 
+			final KEY_TYPE[] newKey = new KEY_TYPE[ size == 0 ? 2 : size * 2 ];
+			final VALUE_TYPE[] newValue = new VALUE_TYPE[ size == 0 ? 2 : size * 2 ];
+			for( int i = size; i-- != 0; ) {
+				newKey[ i ] = key[ i ];
+				newValue[ i ] = value[ i ];
+			}
+			key = newKey;
+			value = newValue;
+		}
 		key[ size ] = k;
 		value[ size ] = v;
 		size++;
@@ -215,9 +197,12 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 #endif
 		final int oldPos = findKey( k );
 		if ( oldPos == -1 ) return defRetValue;
-		final VALUE_GENERIC_TYPE oldValue = value[ oldPos ];
-		System.arraycopy( key, oldPos + 1, key, oldPos, size - oldPos - 1 );
-		System.arraycopy( value, oldPos + 1, value, oldPos, size - oldPos - 1 );
+		final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[ oldPos ];
+		final int tail = size - oldPos - 1;
+		for( int i = 0; i < tail; i++ ) {
+			key[ oldPos + i ] = key[ oldPos + i + 1 ];
+			value[ oldPos + i ] = value[ oldPos + i + 1 ];
+		}
 		size--;
 #if #keys(reference)
 		key[ size ] = null;
