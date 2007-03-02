@@ -52,4 +52,17 @@ public class Int2IntArrayMapTest extends TestCase {
 			assertFalse( m.containsKey( 1 ) );
 		}
 	}
+	
+	public void testClone() {
+		Int2IntArrayMap m = new Int2IntArrayMap();
+		assertEquals( m, m.clone() );
+		m.put( 0, 1 );
+		assertEquals( m, m.clone() );
+		m.put( 0, 2 );
+		assertEquals( m, m.clone() );
+		m.put( 1, 2 );
+		assertEquals( m, m.clone() );
+		m.remove( 1 );
+		assertEquals( m, m.clone() );
+	}
 }

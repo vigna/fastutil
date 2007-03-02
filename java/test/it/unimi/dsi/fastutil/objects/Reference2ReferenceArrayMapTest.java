@@ -52,4 +52,19 @@ public class Reference2ReferenceArrayMapTest extends TestCase {
 			assertFalse( m.containsKey( one ) );
 		}
 	}
+	
+	public void testClone() {
+		Reference2ReferenceArrayMap<Integer, Integer> m = new Reference2ReferenceArrayMap<Integer, Integer>();
+		assertEquals( m, m.clone() );
+		m.put( new Integer( 0 ), new Integer( 1 ) );
+		assertEquals( m, m.clone() );
+		m.put( new Integer( 0 ), new Integer( 2 ) );
+		assertEquals( m, m.clone() );
+		Integer one;
+		m.put( one = new Integer( 1 ), new Integer( 2 ) );
+		assertEquals( m, m.clone() );
+		m.remove( one );
+		assertEquals( m, m.clone() );
+	}
+
 }

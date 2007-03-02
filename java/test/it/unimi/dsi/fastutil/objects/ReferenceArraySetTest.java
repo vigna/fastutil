@@ -36,4 +36,22 @@ public class ReferenceArraySetTest extends TestCase {
 			assertFalse( s.contains( one ) );
 		}
 	}
+
+
+	public void testClone() {
+		ReferenceArraySet<Integer> s = new ReferenceArraySet<Integer>();
+		assertEquals( s, s.clone() );
+		Integer zero;
+		s.add( zero = new Integer( 0 ) );
+		assertEquals( s, s.clone() );
+		s.add( new Integer( 0 ) );
+		assertEquals( s, s.clone() );
+		s.add( new Integer( 1 ) );
+		assertEquals( s, s.clone() );
+		s.add( new Integer( 2 ) );
+		assertEquals( s, s.clone() );
+		s.remove( zero );
+		assertEquals( s, s.clone() );
+	}
+
 }

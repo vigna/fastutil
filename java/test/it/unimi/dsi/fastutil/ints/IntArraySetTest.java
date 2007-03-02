@@ -33,4 +33,19 @@ public class IntArraySetTest extends TestCase {
 			assertFalse( s.contains( 1 ) );
 		}
 	}
+	
+	public void testClone() {
+		IntArraySet s = new IntArraySet();
+		assertEquals( s, s.clone() );
+		s.add( 0 );
+		assertEquals( s, s.clone() );
+		s.add( 0 );
+		assertEquals( s, s.clone() );
+		s.add( 1 );
+		assertEquals( s, s.clone() );
+		s.add( 2 );
+		assertEquals( s, s.clone() );
+		s.remove( 0 );
+		assertEquals( s, s.clone() );
+	}
 }
