@@ -1,17 +1,15 @@
 package test.it.unimi.dsi.fastutil.io;
 
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
-import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Random;
@@ -19,7 +17,8 @@ import java.util.Random;
 import junit.framework.TestCase;
 
 public class FastBufferedInputStreamTest extends TestCase {
-
+	private final static boolean DEBUG = false;
+	
 	/** A byte array input stream that will return its data in small chunks,
 	 * even it could actually return more data, and skips less bytes than it could.
 	 */
@@ -128,6 +127,16 @@ public class FastBufferedInputStreamTest extends TestCase {
 		assertEquals( 6, stream.position() );
 		assertTrue( Arrays.equals( b, new byte[] { 'D', 'B', 'C', 0 } ) );
 		assertEquals( -1, stream.readLine( b, 0, 4, EnumSet.of( LineTerminator.CR_LF ) ) );
+
+		// Reads with both CR and CR/LF as terminator
+		
+		// CR at end-of-file
+		stream = new FastBufferedInputStream( new BastardByteArrayInputStream( new byte[] { 'A', 'B', 'C', '\r' } ), bufferSize );
+		b = new byte[ 4 ];
+		assertEquals( 3, stream.readLine( b, 0, 4, EnumSet.of( LineTerminator.CR_LF, LineTerminator.CR ) ) );
+		assertEquals( 4, stream.position() );
+		assertTrue( Arrays.equals( b, new byte[] { 'A', 'B', 'C', 0 } ) );
+
 	}
 
 
@@ -169,7 +178,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 	}
 	
 	public void testPosition() throws IOException {
-		File temp = File.createTempFile( this.getClass().getName(), ".tmp" );
+		File temp = File.createTempFile( this.getClass().getSimpleName(), ".tmp" );
 		temp.deleteOnExit();
 		FileOutputStream fos = new FileOutputStream( temp );
 		fos.write( new byte[] { 0, 1, 2, 3, 4 } );
@@ -211,102 +220,126 @@ public class FastBufferedInputStreamTest extends TestCase {
 		stream.close();
 	}
 	
-	int MAXTALKLEN = 1024*1024;
-	int BLOCK_SIZE = 1024;
-	byte[] command = new byte[ 1024 ];
-	long fileLen = new File( "/tmp/NVCPENG.HL_" ).length(); 
-	byte[] answer = new byte[ 1024 ];
-	//		format makes it 1024 bytes long
-	{
-		System.arraycopy( "REQUEST FILE abc.txt".getBytes(), 0, command, 0, "REQUEST FILE abc.txt".getBytes().length );
-		System.arraycopy( "Sending file abc.txt OF SIZE >10000<BYTES".getBytes(), 0, answer, 0, "Sending file abc.txt OF SIZE >10000<BYTES".getBytes().length );
+	public void testRead() throws IOException {
+		// Reads with length larger than buffer size
+		
+		// No head, no stream
+		InputStream stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] {} ), 1 );
+		byte[] b = new byte[ 4 ];
+		
+		assertEquals( -1, stream.read( b, 0, 2 ) );
+		
+		// Some head, no stream
+		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B' } ), 2 );
+		b = new byte[ 4 ];
+		
+		assertEquals( 1, stream.read( b, 0, 1 ) );
+		assertEquals( 1, stream.read( b, 0, 3 ) );
+		
+		// Some head, some stream
+		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', 'D' } ), 2 );
+		b = new byte[ 4 ];
+		
+		assertEquals( 1, stream.read( b, 0, 1 ) );
+		assertEquals( 3, stream.read( b, 0, 3 ) );
+
+		// No head, some stream
+		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] { 'A', 'B', 'C', 'D' } ), 2 );
+		b = new byte[ 4 ];
+		
+		assertEquals( 3, stream.read( b, 0, 3 ) );
+		
+		// Reads with length smaller than or equal to buffer size
+		
+		// No head, no stream
+		stream = new FastBufferedInputStream( new ByteArrayInputStream( new byte[] {} ), 4 );
+		b = new byte[ 4 ];
+		
+		assertEquals( -1, stream.read( b, 0, 2 ) );
+
 	}
+	
 
-	public void testSocket() throws IOException {
+	public void testRandom( int bufferSize ) throws IOException {
+		File temp = File.createTempFile( this.getClass().getSimpleName(), "tmp" );
+		temp.deleteOnExit();
 		
-		ServerSocket serverSocket = new ServerSocket( 11111 );
-		int BLOCKSIZE = 131072;
+		// Create temp random file
+		FileOutputStream out = new FileOutputStream( temp );
+		Random random = new Random();
+		int length = 100000 + random.nextInt( 10000 );
+		for( int i = 0; i < length; i++ ) out.write( random.nextInt() );
+		out.close();
 
-		Thread clientThread = new Thread() {
-			public void run() {
-				try {
-					Socket client = new Socket( "localhost", 11111 );
-					BufferedInputStream in = new BufferedInputStream( client.getInputStream() );
-					FastBufferedOutputStream out = new FastBufferedOutputStream( client.getOutputStream() );
-					//	 	read 1024 bytes
-					int t = -1;
-					for( ;; ) {
-						t++;
-						out.write( command );
-						out.flush();
-						System.out.println( "Command sent (" + t + ")" );
-						
-						byte[] received = new byte[ 1024 ];
-						int len = in.read( received, 0, 1024 );
-						System.out.println("Received this:" + new String(received));
-						//	 OK received? or not
-						
-						assertTrue( Arrays.equals( answer, received ) );
+		FastBufferedInputStream bis = new FastBufferedInputStream( new FileInputStream( temp ) );
+		FileInputStream test = new FileInputStream( temp );
+		FileChannel fc = test.getChannel();
+		int a1, a2, off, len, pos;
+		byte b1[] = new byte[ 32768 ];
+		byte b2[] = new byte[ 32768 ];
 
-						byte[] block = new byte[BLOCK_SIZE];
-						long bytesRemaining = fileLen;
+		while( true ) {
 
-						// Accurate transport of bytes from socket to file
-						while (bytesRemaining > 0) {
-							System.out.println("waiting.");
-							if(bytesRemaining >= BLOCK_SIZE) {
-								len = in.read(block, 0, BLOCK_SIZE);
-							} else { // read precise amount left
-								// int required in read() method, casting is ok, value < 130000
-								len = in.read(block, 0, (int)bytesRemaining);
-							}
-							bytesRemaining -= len;
+			switch( random.nextInt( 6 ) ) {
 
-							System.out.println("currLen:" + len);
-							System.out.println("bytesRemaining:" + bytesRemaining);
-						}
-					}
-				}
-				catch( Exception e ) {
-					fail( e.toString() );
-				}
+			case 0:
+				if ( DEBUG ) System.err.println("read()");
+				a1 = bis.read();
+				a2 = test.read();
+				assertEquals( a1, a2 );
+				if ( a1 == -1 ) return;
+				break;
 
+			case 1:
+				off = random.nextInt( b1.length );
+				len = random.nextInt( b1.length - off + 1 );
+				a1 = bis.read( b1, off, len );
+				a2 = test.read( b2, off, len );
+				if ( DEBUG ) System.err.println("read(b, " + off + ", " + len + ")");
+
+				assertEquals( a1, a2 );
+
+				for( int i = off; i < off + len; i++ ) assertEquals( "Position " + i, b1[ i ], b2[ i ] );
+				break;
+
+			case 2:
+				if ( DEBUG ) System.err.println("available()");
+				assertEquals( bis.available(), test.available() );
+				break;
+
+			case 3:
+				if ( DEBUG ) System.err.println("position()" );
+				pos = (int)bis.position();
+				assertEquals( (int)fc.position(), pos );
+				break;
+
+			case 4:
+				pos = random.nextInt( length );
+				bis.position( pos );
+				if ( DEBUG ) System.err.println("position(" + pos + ")" );
+				(test = new FileInputStream( temp )).skip( pos );
+				fc = test.getChannel();
+				break;
+
+			case 5:
+				pos = random.nextInt( (int)(length - bis.position() + 1) );
+				a1 = (int)bis.skip( pos );
+				a2 = (int)test.skip( pos );
+				if ( DEBUG ) System.err.println("skip(" + pos + ")" );
+				assertEquals( a1, a2 );
+				break;
 			}
-		};
-
-		clientThread.start();
-
-		Socket server = serverSocket.accept();
-		FastBufferedOutputStream out = new FastBufferedOutputStream( server.getOutputStream() );
-		BufferedInputStream in = new BufferedInputStream( server.getInputStream() );
-		
-		for(;;) {
-			BufferedInputStream bis = new BufferedInputStream( new FileInputStream( "/tmp/NVCPENG.HL_" ) );
-
-			long bytesRemaining = fileLen;
-
-			byte[] received = new byte[ 1024 ];
-			System.out.println( "Waiting for command..." );
-			in.read( received );
-			System.out.println( "Command received" );
-			assertTrue( Arrays.equals( command, received ) );
-			
-			// build response and send e.g. SENDING FILE abc.text OF SIZE >10000<BYTES
-
-			out.write( answer );
-			out.flush();
-
-			byte[] block = new byte[BLOCK_SIZE];
-			int len;
-			while(bytesRemaining > 0) {
-				len = bis.read(block,0,BLOCK_SIZE);
-				out.write(block,0,len);
-				out.flush();
-				bytesRemaining -= len;
-			}
-			bis.close();
 		}
+
 	}
 
+
+	public void testRandom() throws IOException {
+		testRandom( 1 );
+		testRandom( 2 );
+		testRandom( 3 );
+		testRandom( 100 );
+		testRandom( 2048 );
+	}
 }
 

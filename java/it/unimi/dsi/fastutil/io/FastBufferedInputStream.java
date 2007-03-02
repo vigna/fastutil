@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil.io;
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2005, 2006 Sebastiano Vigna 
+ * Copyright (C) 2005-2007 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -41,15 +41,7 @@ import java.util.EnumSet;
  * adopted in {@link java.io.BufferedInputStream}. The main features follow.
  * 
  * <ul>
- * <li><P>There is no support for marking. All methods are unsychronized. Moreover,
- * we try to guarantee that in case of sequential access
- * <em>all reads performed by this class will be
- * of the given buffer size</em>.  If, for instance, you use the
- * default buffer size, reads will be performed on the underlying input stream
- * in multiples of {@link #DEFAULT_BUFFER_SIZE} bytes. This is very important on operating systems
- * that optimize disk reads on disk block boundaries. {@linkplain #skip(long) Skipping}, {@linkplain #position(long) positioning}
- * and {@linkplain InputStream#read(byte[],int,int) reading less bytes than requested} from
- * the underlying input stream will of course unalign the subsequent accesses.
+ * <li><P>There is no support for marking. All methods are unsychronized.
  * 
  * <li><P>As an additional feature, this class implements the {@link
  * RepositionableStream} interface and extends {@link MeasurableInputStream}.  
@@ -195,7 +187,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	}
 
 
-	public int read( final byte b[], int offset, int length ) throws IOException {
+	public int read( final byte b[], final int offset, final int length ) throws IOException {
 		if ( length <= avail ) {
 			System.arraycopy( buffer, pos, b, offset, length );
 			pos += length;
@@ -205,35 +197,28 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		}
 	
 		final int head = avail;
+		
 		System.arraycopy( buffer, pos, b, offset, head );
-		offset += head;
-		length -= head;
-		avail = 0;
-
-		final int residual = length % buffer.length;
-		int result;
-
-		if ( ( result = is.read( b, offset, length - residual ) ) < length - residual ) {
-			final int t = result < 0 
-				? ( head != 0 ? head : -1 ) 
-				: result + head;
-			if ( t > 0 ) readBytes += t;	
-			return t;
+		pos = avail = 0;
+		readBytes += head;
+		
+		if ( length > buffer.length ) {
+			// We read directly into the destination
+			final int result = is.read( b, offset + head, length - head );
+			if ( result > 0 ) readBytes += result;
+			return result < 0 ? ( head == 0 ? -1 : head ) : result + head;
 		}
-
-		avail = is.read( buffer );
-		if ( avail < 0 ) {
-			avail = pos = 0;
-			final int t = result + head > 0 ? result + head : -1;
-			if ( t > 0 ) readBytes += t;
-			return t;
-		}
-		pos = Math.min( avail, residual );
-		System.arraycopy( buffer, 0, b, offset + length - residual, pos );
-		avail -= pos;
-		final int t = result + head + pos;
-		readBytes += t;
-		return t;
+		
+		if ( noMoreCharacters() ) return head == 0 ? -1 : head;
+		
+		final int toRead = Math.min( length - head, avail );
+		readBytes += toRead;
+		System.arraycopy( buffer, 0, b, offset + head, toRead );
+		pos = toRead;
+		avail -= toRead;
+		
+		// Note that head >= 0, and necessarily toRead > 0
+		return toRead + head;
 	}
 
 	/** Reads a line into the given byte array using {@linkplain #ALL_TERMINATORS all terminators}.
@@ -424,8 +409,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
 		readBytes = newPosition;
 
-		avail = Math.max( 0, is.read( buffer ) );
-		pos = 0;
+		avail = pos = 0;
 	}
 
 	public long position() throws IOException {
