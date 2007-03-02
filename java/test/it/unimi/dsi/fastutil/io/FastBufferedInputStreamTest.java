@@ -1,16 +1,21 @@
 package test.it.unimi.dsi.fastutil.io;
 
+import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
+import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
+import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;
+
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Random;
 
-import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
-import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;
 import junit.framework.TestCase;
 
 public class FastBufferedInputStreamTest extends TestCase {
@@ -205,5 +210,103 @@ public class FastBufferedInputStreamTest extends TestCase {
 		assertEquals( 0, stream.read() );
 		stream.close();
 	}
+	
+	int MAXTALKLEN = 1024*1024;
+	int BLOCK_SIZE = 1024;
+	byte[] command = new byte[ 1024 ];
+	long fileLen = new File( "/tmp/NVCPENG.HL_" ).length(); 
+	byte[] answer = new byte[ 1024 ];
+	//		format makes it 1024 bytes long
+	{
+		System.arraycopy( "REQUEST FILE abc.txt".getBytes(), 0, command, 0, "REQUEST FILE abc.txt".getBytes().length );
+		System.arraycopy( "Sending file abc.txt OF SIZE >10000<BYTES".getBytes(), 0, answer, 0, "Sending file abc.txt OF SIZE >10000<BYTES".getBytes().length );
+	}
+
+	public void testSocket() throws IOException {
+		
+		ServerSocket serverSocket = new ServerSocket( 11111 );
+		int BLOCKSIZE = 131072;
+
+		Thread clientThread = new Thread() {
+			public void run() {
+				try {
+					Socket client = new Socket( "localhost", 11111 );
+					BufferedInputStream in = new BufferedInputStream( client.getInputStream() );
+					FastBufferedOutputStream out = new FastBufferedOutputStream( client.getOutputStream() );
+					//	 	read 1024 bytes
+					int t = -1;
+					for( ;; ) {
+						t++;
+						out.write( command );
+						out.flush();
+						System.out.println( "Command sent (" + t + ")" );
+						
+						byte[] received = new byte[ 1024 ];
+						int len = in.read( received, 0, 1024 );
+						System.out.println("Received this:" + new String(received));
+						//	 OK received? or not
+						
+						assertTrue( Arrays.equals( answer, received ) );
+
+						byte[] block = new byte[BLOCK_SIZE];
+						long bytesRemaining = fileLen;
+
+						// Accurate transport of bytes from socket to file
+						while (bytesRemaining > 0) {
+							System.out.println("waiting.");
+							if(bytesRemaining >= BLOCK_SIZE) {
+								len = in.read(block, 0, BLOCK_SIZE);
+							} else { // read precise amount left
+								// int required in read() method, casting is ok, value < 130000
+								len = in.read(block, 0, (int)bytesRemaining);
+							}
+							bytesRemaining -= len;
+
+							System.out.println("currLen:" + len);
+							System.out.println("bytesRemaining:" + bytesRemaining);
+						}
+					}
+				}
+				catch( Exception e ) {
+					fail( e.toString() );
+				}
+
+			}
+		};
+
+		clientThread.start();
+
+		Socket server = serverSocket.accept();
+		FastBufferedOutputStream out = new FastBufferedOutputStream( server.getOutputStream() );
+		BufferedInputStream in = new BufferedInputStream( server.getInputStream() );
+		
+		for(;;) {
+			BufferedInputStream bis = new BufferedInputStream( new FileInputStream( "/tmp/NVCPENG.HL_" ) );
+
+			long bytesRemaining = fileLen;
+
+			byte[] received = new byte[ 1024 ];
+			System.out.println( "Waiting for command..." );
+			in.read( received );
+			System.out.println( "Command received" );
+			assertTrue( Arrays.equals( command, received ) );
+			
+			// build response and send e.g. SENDING FILE abc.text OF SIZE >10000<BYTES
+
+			out.write( answer );
+			out.flush();
+
+			byte[] block = new byte[BLOCK_SIZE];
+			int len;
+			while(bytesRemaining > 0) {
+				len = bis.read(block,0,BLOCK_SIZE);
+				out.write(block,0,len);
+				out.flush();
+				bytesRemaining -= len;
+			}
+			bis.close();
+		}
+	}
+
 }
 

@@ -123,6 +123,7 @@ public class FastBufferedOutputStream extends OutputStream {
 		if ( pos != 0 ) os.write( buffer, 0, pos );
 		// Note that avail is unchanged, so we will realign at the next dump.
 		pos = 0;
+		avail = buffer.length;
 		os.flush();
 	}
 	
