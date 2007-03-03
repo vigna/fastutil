@@ -87,7 +87,7 @@ public class FastBufferedOutputStream extends OutputStream {
 
 
 	public void write( final byte b[], final int offset, final int length ) throws IOException {
-		if ( length > buffer.length ) {
+		if ( length >= buffer.length ) {
 			dumpBuffer( false );
 			os.write( b, offset, length );
 			return;

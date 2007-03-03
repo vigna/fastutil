@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.io.BinIO;
 import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -15,6 +16,12 @@ import junit.framework.TestCase;
 
 public class FastBufferedOutputStreamTest extends TestCase {
 
+	public void testWriteEqualToBufferSize() throws IOException {
+		final FastBufferedOutputStream fbos = new FastBufferedOutputStream( new ByteArrayOutputStream(), 4 );
+		fbos.write( 0 );
+		fbos.write( new byte[ 4 ] );
+		fbos.write( 0 );
+	}
 
 	public void testRandom( int bufSize ) throws FileNotFoundException, IOException {
 

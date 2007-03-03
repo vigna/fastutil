@@ -271,7 +271,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		for( int i = 0; i < length; i++ ) out.write( random.nextInt() );
 		out.close();
 
-		FastBufferedInputStream bis = new FastBufferedInputStream( new FileInputStream( temp ) );
+		FastBufferedInputStream bis = new FastBufferedInputStream( new FileInputStream( temp ), bufferSize );
 		FileInputStream test = new FileInputStream( temp );
 		FileChannel fc = test.getChannel();
 		int a1, a2, off, len, pos;
