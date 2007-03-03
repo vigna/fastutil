@@ -2,7 +2,7 @@
 
 Name:           fastutil5
 Version:        5.0.8
-Release:        1law
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Sat Mar 3 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.8-1jpp
+- New features for array-based sets and maps.
+
 * Sat Feb 24 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.7-1jpp
 - New collection of array-based sets and maps.
 
