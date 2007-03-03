@@ -32,7 +32,7 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 
 	private static final long serialVersionUID = 1L;
 	/** The backing array (valid up to {@link #size}, excluded). */
-	private KEY_TYPE[] a;
+	private transient KEY_TYPE[] a;
 	/** The number of valid entries in {@link #a} and {@link #value}. */
 	private int size;
 	
@@ -159,4 +159,18 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 		c.a = a.clone();
 		return c;
 	}
+	
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+		s.defaultWriteObject();
+		for( int i = 0; i < size; i++ ) s.WRITE_KEY( a[ i ] );
+	}
+
+
+	@SuppressWarnings("unchecked")
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		a = new KEY_TYPE[ size ];
+		for( int i = 0; i < size; i++ ) a[ i ] = s.READ_KEY();
+	}
+	
 }

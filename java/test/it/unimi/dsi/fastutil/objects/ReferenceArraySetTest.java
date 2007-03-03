@@ -1,5 +1,13 @@
 package test.it.unimi.dsi.fastutil.objects;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+import it.unimi.dsi.fastutil.io.BinIO;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import junit.framework.TestCase;
@@ -54,4 +62,22 @@ public class ReferenceArraySetTest extends TestCase {
 		assertEquals( s, s.clone() );
 	}
 
+	public void testSerialisation() throws IOException, ClassNotFoundException {
+		// We can't really test reference maps as equals() doesnt' work
+		ObjectArraySet<Integer> s = new ObjectArraySet<Integer>();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream( baos );
+		oos.writeObject( s );
+		oos.close();
+		assertEquals( s, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
+		
+		s.add( new Integer( 0 ) );
+		s.add( new Integer( 1 ) );
+
+		baos.reset();
+		oos = new ObjectOutputStream( baos );
+		oos.writeObject( s );
+		oos.close();
+		assertEquals( s, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
+	}
 }

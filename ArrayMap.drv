@@ -44,9 +44,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	private static final long serialVersionUID = 1L;
 	/** The keys (valid up to {@link #size}, excluded). */
-	private KEY_TYPE[] key;
+	private transient KEY_TYPE[] key;
 	/** The values (parallel to {@link #key}). */
-	private VALUE_TYPE[] value;
+	private transient VALUE_TYPE[] value;
 	/** The number of valid entries in {@link #key} and {@link #value}. */
 	private int size;
 	
@@ -266,5 +266,24 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		c.key = key.clone();
 		c.value = value.clone();
 		return c;
+	}
+	
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+		s.defaultWriteObject();
+		for( int i = 0; i < size; i++ ) {
+			s.WRITE_KEY( key[ i ] );
+			s.WRITE_VALUE( value[ i ] );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		key = new KEY_TYPE[ size ];
+		value = new VALUE_TYPE[ size ];
+		for( int i = 0; i < size; i++ ) {
+			key[ i ] = s.READ_KEY();
+			value[ i ] = s.READ_VALUE();
+		}
 	}
 }

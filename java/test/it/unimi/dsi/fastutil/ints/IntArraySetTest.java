@@ -2,6 +2,13 @@ package test.it.unimi.dsi.fastutil.ints;
 
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.io.BinIO;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 import junit.framework.TestCase;
 
 public class IntArraySetTest extends TestCase {
@@ -47,5 +54,23 @@ public class IntArraySetTest extends TestCase {
 		assertEquals( s, s.clone() );
 		s.remove( 0 );
 		assertEquals( s, s.clone() );
+	}
+
+	public void testSerialisation() throws IOException, ClassNotFoundException {
+		IntArraySet s = new IntArraySet();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream( baos );
+		oos.writeObject( s );
+		oos.close();
+		assertEquals( s, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
+		
+		s.add( 0 );
+		s.add( 1 );
+
+		baos.reset();
+		oos = new ObjectOutputStream( baos );
+		oos.writeObject( s );
+		oos.close();
+		assertEquals( s, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
 	}
 }
