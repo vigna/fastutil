@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil;
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2003, 2004, 2005, 2006 Sebastiano Vigna 
+ * Copyright (C) 2003-2007 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public

@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0.7
+Version:        5.0.8
 Release:        1law
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Sat Feb 24 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.7-1jpp
+- New collection of array-based sets and maps.
+
 * Mon Feb 5 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.6-1jpp
 - New front() method and better FastBufferedInputStream.
 
