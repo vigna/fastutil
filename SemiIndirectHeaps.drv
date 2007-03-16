@@ -27,8 +27,6 @@ import java.util.Comparator;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 
-import java.util.NoSuchElementException;
-
 /** A class providing static methods and objects that do useful things with semi-indirect heaps.
  *
  * <P>A semi-indirect heap is based on a <em>reference array</em>. Elements of
@@ -163,53 +161,43 @@ public class SEMI_INDIRECT_HEAPS {
 		while( i-- != 0 ) downHeap( refArray, heap, size, i, c );
 	}
 
-	/** Retrieves the front of a semi-indirect heap in a given array.
+	/** Retrieves the front of a heap in a given array.
 	 *
 	 * <p>The <em>front</em> of a semi-indirect heap is the set of indices whose associated elements in the reference array 
 	 * are equal to the element associated to the first index.
 	 *
 	 * <p>In several circumstances you need to know the front, and scanning linearly the entire heap is not
-	 * the best strategy. This method performs an inorder visit of the binary tree 
-	 * represented by the heap and leaves in a provided array the set of indices composing the front.
+	 * the best strategy. This method simulates (using a partial linear scan) a breadth-first visit that 
+	 * terminates when all visited nodes are larger than the element associated
+	 * to the top index, which implies that no elements of the front can be found later. 
+	 * In most cases this trick yields a significant improvement.
 	 * 
 	 * @param refArray the reference array.
 	 * @param heap an array containing indices into <code>refArray</code>.
 	 * @param size the number of elements in the heap.
 	 * @param a an array large enough to hold the front (e.g., at least long as <code>refArray</code>).
 	 * @return the number of elements actually written (starting from the first position of <code>a</code>).
-	 * @throws NoSuchElementException if the heap is empty (i.e., if <code>size</code> is zero).
 	 */
-
 	public static KEY_GENERIC int front( final KEY_GENERIC_TYPE[] refArray, final int[] heap, final int size, final int[] a ) {
-		if ( size == 0 ) throw new NoSuchElementException();
-		return front( refArray, (KEY_TYPE)heap[ 0 ], heap, size, 0, a, 0 );
-	}
-
-	/** Retrieves the front of a heap performing an inorder visit starting at a given node of the heap, and 
-	 * storing the result in a provided array starting at a given offset.
-	 *
-	 * @param refArray the reference array.
-	 * @param top the top of the heap (to avoid repeated accesses).
-	 * @param heap the heap.
-	 * @param size the number of elements in the heap.
-	 * @param pos the node of the heap (an index into <code>heap</code>) from which the visit should start.
-	 * @param a an array large enough to hold the front starting from <code>offset</code>.
-	 * @param offset the first element of <code>a</code> in which the front must be stored.
-	 * @return the number of elements actually written (starting from the position <code>offset</code> of <code>a</code>).
-	 */
-	private static KEY_GENERIC int front( final KEY_GENERIC_TYPE[] refArray, final KEY_GENERIC_TYPE top, final int[] heap, final int size, int pos, final int a[], final int offset ) {
-		if ( KEY_EQUALS_NOT_NULL( refArray[ heap[ pos ] ], top ) ) {
-			a[ offset ] = heap[ pos ];
-			int count = 1;
-			pos = pos * 2 + 1;
- 			if ( pos + 1 < size ) {
-				count += front( refArray, (KEY_TYPE)top, heap, size, pos, a, offset + count );
-				count += front( refArray, (KEY_TYPE)top, heap, size, pos + 1, a, offset + count );
+		final KEY_GENERIC_TYPE top = refArray[ heap[ 0 ] ];
+		int j = 0, // The current position in a
+			l = 0, // The first position to visit in the next level (inclusive)
+			r = 1, // The last position to visit in the next level (exclusive)
+			f = 0; // The first position (in the heap array) of the next level
+		for( int i = 0; i < r; i++ ) {
+			if ( i == f ) { // New level
+				if ( l >= r ) break; // If we are crossing the two bounds, we're over
+				f = (f << 1) + 1; // Update the first position of the next level...
+				i = l; // ...and jump directly to position l
+				l = -1; // Invalidate l
 			}
-			else if ( pos < size ) count += front( refArray, (KEY_TYPE)top, heap, size, pos, a, offset + count );
-			return count;
+			if ( KEY_EQUALS_NOT_NULL( top, refArray[ heap[ i ] ] ) ) {
+				a[ j++ ] = heap[ i ];
+				if ( l == -1 ) l = i * 2 + 1; // If this is the first time in this level, set l
+				r = Math.min( size, i * 2 + 3 ); // Update r, but do not go beyond size
+			}
 		}
-		return 0;
+
+		return j;
 	}
-	
 }
