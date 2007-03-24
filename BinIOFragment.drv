@@ -20,6 +20,100 @@
  */
 
 
+#if #keyclass(Byte)
+
+// HORRIBLE kluges to work around bug #6478546
+
+private final static int MAX_IO_LENGTH = 1024 * 1024;
+
+private static int read( final InputStream is, final byte a[], final int offset, final int length ) throws IOException { 
+	if ( length == 0 ) return 0;
+
+	int read = 0, result;
+	do {
+		result = is.read( a, offset + read, Math.min( length - read, MAX_IO_LENGTH ) );
+		if ( result < 0 ) return read;
+		read += result;
+	} while( read < length );
+
+	return read;
+}
+
+private static void write( final OutputStream outputStream, final byte a[], final int offset, final int length ) throws IOException { 
+	int written = 0;
+	while( written < length ) { 
+		outputStream.write( a, offset + written, Math.min( length - written, MAX_IO_LENGTH ) );
+		written += Math.min( length - written, MAX_IO_LENGTH );
+	}
+}
+
+private static void write( final DataOutput dataOutput, final byte a[], final int offset, final int length ) throws IOException { 
+	int written = 0;
+	while( written < length ) { 
+		dataOutput.write( a, offset + written, Math.min( length - written, MAX_IO_LENGTH ) );
+		written += Math.min( length - written, MAX_IO_LENGTH );
+	}
+}
+
+// Additional read/write methods to work around the DataInput/DataOutput schizophrenia.
+
+/** Loads bytes from a given input stream, storing them in a given array fragment.
+ *
+ * <p>Note that this method is going to be significantly faster than {@link #loadBytes(DataInput,byte[],int,int)}
+ * as it uses {@link InputStream}'s bulk-read methods.
+ *
+ * @param inputStream an input stream.
+ * @param array an array which will be filled with data from <code>inputStream</code>.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from <code>inputStream</code> (it might be less than <code>length</code> if <code>inputStream</code> ends).
+ */
+public static int LOAD_KEYS( final InputStream inputStream, final KEY_TYPE[] array, final int offset, final int length ) throws IOException {
+	return read( inputStream, array, offset, length );
+}
+
+/** Loads bytes from a given input stream, storing them in a given array.
+ *
+ * <p>Note that this method is going to be significantly faster than {@link #loadBytes(DataInput,byte[])}
+ * as it uses {@link InputStream}'s bulk-read methods.
+ *
+ * @param inputStream an input stream.
+ * @param array an array which will be filled with data from <code>inputStream</code>.
+ * @return the number of elements actually read from <code>inputStream</code> (it might be less than the array length if <code>inputStream</code> ends).
+ */
+public static int LOAD_KEYS( final InputStream inputStream, final KEY_TYPE[] array ) throws IOException {
+	return read( inputStream, array, 0, array.length );
+}
+
+/** Stores an array fragment to a given output stream.
+ *
+ * <p>Note that this method is going to be significantly faster than {@link #storeBytes(byte[],int,int,DataOutput)}
+ * as it uses {@link OutputStream}'s bulk-read methods.
+ *
+ * @param array an array whose elements will be written to <code>outputStream</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param outputStream an output stream.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final OutputStream outputStream ) throws IOException {
+	write( outputStream, array, offset, length );
+}
+
+/** Stores an array to a given output stream.
+ *
+ * <p>Note that this method is going to be significantly faster than {@link #storeBytes(byte[],DataOutput)}
+ * as it uses {@link OutputStream}'s bulk-read methods.
+ *
+ * @param array an array whose elements will be written to <code>outputStream</code>.
+ * @param outputStream an output stream.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[], final OutputStream outputStream ) throws IOException {
+	write( outputStream, array, 0, array.length );
+}
+
+#endif
+
+
 /** Loads elements from a given data input, storing them in a given array fragment.
  *
  * @param dataInput a data input.
@@ -66,6 +160,11 @@ public static int LOAD_KEYS( final File file, final KEY_TYPE[] array, final int 
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
 
 	final FileInputStream fis = new FileInputStream( file );
+#if #keyclass(Byte)
+	final int result = read( fis, array, offset, length );
+	fis.close();
+	return result;
+#else
 	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	int i = 0;
@@ -75,8 +174,8 @@ public static int LOAD_KEYS( final File file, final KEY_TYPE[] array, final int 
 	catch( EOFException itsOk ) {}
 
 	dis.close();
-
 	return i;
+#endif
 }
 
 /** Loads elements from a file given by a pathname, storing them in a given array fragment.
@@ -99,6 +198,11 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
  */
 public static int LOAD_KEYS( final File file, final KEY_TYPE[] array ) throws IOException {
 	final FileInputStream fis = new FileInputStream( file );
+#if #keyclass(Byte)
+	final int result = read( fis, array, 0, array.length );
+	fis.close();
+	return result;
+#else
 	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 	int i = 0;
@@ -111,6 +215,7 @@ public static int LOAD_KEYS( final File file, final KEY_TYPE[] array ) throws IO
 	dis.close();
 
 	return i;
+#endif
 }
 
 /** Loads elements from a file given by a pathname, storing them in a given array.
@@ -134,7 +239,6 @@ public static int LOAD_KEYS( final CharSequence filename, final KEY_TYPE[] array
  */
 public static KEY_TYPE[] LOAD_KEYS( final File file ) throws IOException {
 	final FileInputStream fis = new FileInputStream( file );
-	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 
 #if #keyclass(Boolean)
 	final long length = fis.getChannel().size();
@@ -146,9 +250,14 @@ public static KEY_TYPE[] LOAD_KEYS( final File file ) throws IOException {
 
 	final KEY_TYPE[] array = new KEY_TYPE[ (int)length ];
 
+#if #keyclass(Byte)
+	if ( read( fis, array, 0, (int)length ) < length ) throw new EOFException();
+	fis.close();
+#else
+	final DataInputStream dis = new DataInputStream( new FastBufferedInputStream( fis ) );
 	for( int i = 0; i < length; i++ ) array[ i ] = dis.READ_KEY();
-
 	dis.close();
+#endif
 	return array;
 }
 
@@ -174,7 +283,11 @@ public static KEY_TYPE[] LOAD_KEYS( final CharSequence filename ) throws IOExcep
  */
 public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final DataOutput dataOutput ) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+#if #keyclass(Byte)
+	write( dataOutput, array, offset, length );
+#else
 	for( int i = 0; i < length; i++ ) dataOutput.WRITE_KEY( array[ offset + i ] );
+#endif
 }
 
 /** Stores an array to a given data output.
@@ -183,8 +296,12 @@ public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final i
  * @param dataOutput a data output.
  */
 public static void STORE_KEYS( final KEY_TYPE array[], final DataOutput dataOutput ) throws IOException {
+#if #keyclass(Byte)
+	write( dataOutput, array, 0, array.length );
+#else
 	final int length = array.length;
 	for( int i = 0; i < length; i++ ) dataOutput.WRITE_KEY( array[ i ] );
+#endif
 }
 
 /** Stores an array fragment to a file given by a {@link File} object.
@@ -196,9 +313,15 @@ public static void STORE_KEYS( final KEY_TYPE array[], final DataOutput dataOutp
  */
 public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final int length, final File file ) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength( array, offset, length );
+#if #keyclass(Byte)
+	final OutputStream os = new FastBufferedOutputStream( new FileOutputStream( file ) );
+	write( os, array, offset, length );
+	os.close();
+#else
 	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
 	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ offset + i ] );
 	dos.close();
+#endif
 }
 
 /** Stores an array fragment to a file given by a pathname.
@@ -218,10 +341,16 @@ public static void STORE_KEYS( final KEY_TYPE array[], final int offset, final i
  * @param file a file.
  */
 public static void STORE_KEYS( final KEY_TYPE array[], final File file ) throws IOException {
-	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
+#if #keyclass(Byte)
+	final OutputStream os = new FastBufferedOutputStream( new FileOutputStream( file ) );
+	write( os, array, 0, array.length );
+	os.close();
+#else
 	final int length = array.length;
+	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
 	for( int i = 0; i < length; i++ ) dos.WRITE_KEY( array[ i ] );
 	dos.close();
+#endif
 }
 
 /** Stores an array to a file given by a pathname.

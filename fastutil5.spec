@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0.8
+Version:        5.0.9
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Sat Mar 3 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.9-1jpp
+- Workarounds for Java bug #6478546.
+
 * Sat Mar 3 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.8-1jpp
 - New features for array-based sets and maps.
 
