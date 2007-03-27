@@ -102,9 +102,9 @@ public class BinIOTest extends TestCase {
 		di = BinIO.asDoubleIterator( file );
 		int s = 1;
 		for( int i = 0; i < 100; i++ ) {
-			if ( s > 100 - i ) break;
 			assertEquals( Math.min( s, 100 - i ), di.skip( s ) );
 			i += s;
+			if ( i >= 100 ) break;
 			assertEquals( i, di.nextDouble(), 0. );
 			s *= 2;
 		}
