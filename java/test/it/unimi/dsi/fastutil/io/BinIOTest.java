@@ -1,5 +1,6 @@
 package test.it.unimi.dsi.fastutil.io;
 
+import it.unimi.dsi.fastutil.doubles.DoubleIterator;
 import it.unimi.dsi.fastutil.io.BinIO;
 
 import java.io.DataInput;
@@ -79,5 +80,51 @@ public class BinIOTest extends TestCase {
 	public void testBytes() throws IOException {
 		testBytes( SMALL );
 		testBytes( LARGE );
+	}
+	
+	public void testFileDataWrappers() throws IOException {
+		final File file = File.createTempFile( getClass().getSimpleName(), "dump" );
+		file.deleteOnExit();
+		final DataOutputStream dos = new DataOutputStream( new FileOutputStream( file ) );
+		for( int i = 0; i < 100; i++ ) dos.writeDouble( i );
+		dos.close();
+		
+		DoubleIterator di = BinIO.asDoubleIterator( file );
+		for( int i = 0; i < 100; i++ ) assertEquals( i, di.nextDouble(), 0. );
+		assertFalse( di.hasNext() );
+
+		di = BinIO.asDoubleIterator( file );
+		for( int i = 0; i < 100; i++ ) {
+			assertTrue( di.hasNext() );
+			assertEquals( i, di.nextDouble(), 0. );
+		}
+		
+		di = BinIO.asDoubleIterator( file );
+		int s = 1;
+		for( int i = 0; i < 100; i++ ) {
+			if ( s > 100 - i ) break;
+			assertEquals( Math.min( s, 100 - i ), di.skip( s ) );
+			i += s;
+			assertEquals( i, di.nextDouble(), 0. );
+			s *= 2;
+		}
+
+		di = BinIO.asDoubleIterator( file );
+		s = 1;
+		for( int i = 0; i < 100; i++ ) {
+			if ( s > 100 - i ) break;
+			assertTrue( di.hasNext() );
+			assertEquals( Math.min( s, 100 - i ), di.skip( s ) );
+			i += s;
+			if ( i >= 100 ) {
+				assertFalse( di.hasNext() );
+				break;
+			}
+			assertTrue( di.hasNext() );
+			assertTrue( di.hasNext() ); // To increase coverage
+			assertEquals( i, di.nextDouble(), 0. );
+			s *= 2;
+		}
+
 	}
 }
