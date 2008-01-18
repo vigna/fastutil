@@ -30,7 +30,7 @@ public class Maps {
 
 	private Maps() {}
 
-	/** A standard default return value to be used in maps contaning <code>null</code> values.
+	/** A standard default return value to be used in maps containing <code>null</code> values.
 	 * @deprecated Since fastutil 5.0, the introduction of generics
 	 * makes this object pretty useless.
 	 */

@@ -1,0 +1,247 @@
+/*		 
+ * fastutil: Fast & compact type-specific collections for Java
+ *
+ * Copyright (C) 2002-2007 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+/** A class providing static methods and objects that do useful things with type-specific functions.
+ *
+ * @see it.unimi.dsi.fastutil.Function
+ * @see java.util.Collections
+ */
+
+public class FUNCTIONS {
+
+	private FUNCTIONS() {}
+
+
+	/** An immutable class representing an empty type-specific function.
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific function.
+	 */
+
+	public static class EmptyFunction KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
+	
+		public static final long serialVersionUID = -7046029254386353129L;
+	
+		protected EmptyFunction() {}
+	
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { return VALUE_NULL; }
+
+		public boolean containsKey( final KEY_TYPE k ) { return false; }
+
+		public VALUE_GENERIC_TYPE defaultReturnValue()  { return VALUE_NULL; }
+		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
+	
+#if #keys(primitive)
+		public VALUE_GENERIC_CLASS get( final Object k ) { return null; }
+#endif
+
+		public int size() { return 0; }
+		public void clear() {}
+	
+		private Object readResolve() { return EMPTY_FUNCTION; }
+
+		public Object clone() { return EMPTY_FUNCTION; }
+	}
+
+
+
+	/** An empty type-specific function (immutable). It is serializable and cloneable. */
+	 
+	@SuppressWarnings("unchecked")
+	public static final EmptyFunction EMPTY_FUNCTION = new EmptyFunction();
+
+
+	/** An immutable class representing a type-specific singleton function.	 
+	 *
+	 * <P>This class may be useful to implement your own in case you subclass
+	 * a type-specific function.
+	 */
+
+	public static class Singleton KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
+	
+		public static final long serialVersionUID = -7046029254386353129L;
+	
+		protected final KEY_GENERIC_TYPE key;
+		protected final VALUE_GENERIC_TYPE value;
+
+		protected Singleton( final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value ) {
+			this.key = key;
+			this.value = value;
+		}
+	
+		public boolean containsKey( final KEY_TYPE k ) { return KEY_EQUALS( key, k ); }
+
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { if ( KEY_EQUALS( key, k ) ) return value; return defRetValue; }
+
+		public int size() { return 1; }
+	
+		public Object clone() { return this; }
+	}
+
+	/** Returns a type-specific immutable function containing only the specified pair. The returned function is serializable and cloneable.
+	 *
+	 * <P>Note that albeit the returned function is immutable, its default return value may be changed.
+	 *
+	 * @param key the only key of the returned function.
+	 * @param value the only value of the returned function.
+	 * @return a type-specific immutable function containing just the pair <code>&lt;key,value></code>.
+	 */
+
+	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC singleton( final KEY_GENERIC_TYPE key, VALUE_GENERIC_TYPE value ) {
+		return new Singleton KEY_VALUE_GENERIC( key, value );
+	}
+
+#if #keys(primitive) || #values(primitive)
+
+	/** Returns a type-specific immutable function containing only the specified pair. The returned function is serializable and cloneable.
+	 *
+	 * <P>Note that albeit the returned function is immutable, its default return value may be changed.
+	 *
+	 * @param key the only key of the returned function.
+	 * @param value the only value of the returned function.
+	 * @return a type-specific immutable function containing just the pair <code>&lt;key,value></code>.
+	 */
+
+	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC singleton( final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value ) {
+		return new Singleton KEY_VALUE_GENERIC( KEY_CLASS2TYPE( key ), VALUE_CLASS2TYPE( value ) );
+	}
+
+#endif
+
+
+	/** A synchronized wrapper class for functions. */
+
+	public static class SynchronizedFunction KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION KEY_VALUE_GENERIC implements java.io.Serializable {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		protected final FUNCTION KEY_VALUE_GENERIC function;
+		protected final Object sync;
+
+		protected SynchronizedFunction( final FUNCTION KEY_VALUE_GENERIC f, final Object sync ) {
+			if ( f == null ) throw new NullPointerException();
+			this.function = f;
+			this.sync = sync;
+		}
+
+		protected SynchronizedFunction( final FUNCTION KEY_VALUE_GENERIC f ) {
+			if ( f == null ) throw new NullPointerException();
+			this.function = f;
+			this.sync = this;
+		}
+
+		public int size() { synchronized( sync ) { return function.size(); } }
+		public boolean containsKey( final KEY_TYPE k ) { synchronized( sync ) { return function.containsKey( k ); } }
+
+		public VALUE_GENERIC_TYPE defaultReturnValue()  { synchronized( sync ) { return function.defaultReturnValue(); } }
+		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { synchronized( sync ) { function.defaultReturnValue( defRetValue ); } }
+
+		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { synchronized( sync ) { return function.put( k, v ); } }
+
+		public void clear() { synchronized( sync ) { function.clear(); } }
+		public String toString() { synchronized( sync ) { return function.toString(); } }
+
+#if #keys(primitive) || #values(primitive)
+		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) { synchronized( sync ) { return function.put( k, v ); } }
+		public VALUE_GENERIC_CLASS get( final Object k ) { synchronized( sync ) { return function.get( k ); } }
+		public VALUE_GENERIC_CLASS remove( final Object k ) { synchronized( sync ) { return function.remove( k ); } }
+#endif
+
+#if #keys(primitive)
+		public VALUE_GENERIC_TYPE remove( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return function.remove( k ); } }
+		public VALUE_GENERIC_TYPE get( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return function.get( k ); } }
+		public boolean containsKey( final Object ok ) { synchronized( sync ) { return function.containsKey( ok ); } }
+#endif
+
+#if #keys(reference)
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final Object k ) { synchronized( sync ) { return function.REMOVE_VALUE( k ); } }
+		public VALUE_GENERIC_TYPE GET_VALUE( final Object k ) { synchronized( sync ) { return function.GET_VALUE( k ); } }
+#endif
+
+	}
+
+	/** Returns a synchronized type-specific function backed by the given type-specific function.
+	 *
+	 * @param f the function to be wrapped in a synchronized function.
+	 * @return a synchronized view of the specified function.
+	 * @see java.util.Collections#synchronizedMap(java.util.Map)
+	 */
+	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC synchronize( final FUNCTION KEY_VALUE_GENERIC f ) { return new SynchronizedFunction KEY_VALUE_GENERIC( f ); }
+
+	/** Returns a synchronized type-specific function backed by the given type-specific function, using an assigned object to synchronize.
+	 *
+	 * @param f the function to be wrapped in a synchronized function.
+	 * @param sync an object that will be used to synchronize the access to the function.
+	 * @return a synchronized view of the specified function.
+	 * @see java.util.Collections#synchronizedMap(java.util.Map)
+	 */
+
+	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC synchronize( final FUNCTION KEY_VALUE_GENERIC f, final Object sync ) { return new SynchronizedFunction KEY_VALUE_GENERIC( f, sync ); }
+
+
+
+	/** An unmodifiable wrapper class for functions. */
+
+	public static class UnmodifiableFunction KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION KEY_VALUE_GENERIC implements java.io.Serializable {
+
+		public static final long serialVersionUID = -7046029254386353129L;
+
+		protected final FUNCTION KEY_VALUE_GENERIC function;
+
+		protected UnmodifiableFunction( final FUNCTION KEY_VALUE_GENERIC f ) {
+			if ( f == null ) throw new NullPointerException();
+			this.function = f;
+		}
+
+		public int size() { return function.size(); }
+		public boolean containsKey( final KEY_TYPE k ) { return function.containsKey( k ); }
+
+		public VALUE_GENERIC_TYPE defaultReturnValue()  { return defaultReturnValue(); }
+		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
+
+		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+
+		public void clear() { throw new UnsupportedOperationException(); }
+		public String toString() { return function.toString(); }
+
+#if #keys(primitive)
+		public VALUE_GENERIC_TYPE remove( final KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE get( final KEY_GENERIC_TYPE k ) { return function.get( k ); }
+		public boolean containsKey( final Object ok ) { return function.containsKey( ok ); }
+#endif
+
+#if #keys(reference) || #values(reference)
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
+		public VALUE_GENERIC_TYPE GET_VALUE( final Object k ) { return function.GET_VALUE( k ); }
+#endif
+
+	}
+
+	/** Returns an unmodifiable type-specific function backed by the given type-specific function.
+	 *
+	 * @param f the function to be wrapped in an unmodifiable function.
+	 * @return an unmodifiable view of the specified function.
+	 * @see java.util.Collections#unmodifiableMap(java.util.Map)
+	 */
+	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC unmodifiable( final FUNCTION KEY_VALUE_GENERIC f ) { return new UnmodifiableFunction KEY_VALUE_GENERIC( f ); }
+}

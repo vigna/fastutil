@@ -121,6 +121,11 @@ $(SORTED_SETS): SortedSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SORTED_SETS)
 
+FUNCTIONS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)Function.c))
+$(FUNCTIONS): Function.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(FUNCTIONS)
+
 MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)Map.c))
 $(MAPS): Map.drv; ./gencsource.sh $< $@ >$@
 
@@ -194,6 +199,11 @@ ABSTRACT_SORTED_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))
 $(ABSTRACT_SORTED_SETS): AbstractSortedSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_SORTED_SETS)
+
+ABSTRACT_FUNCTIONS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Function.c))
+$(ABSTRACT_FUNCTIONS): AbstractFunction.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_FUNCTIONS)
 
 ABSTRACT_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Map.c))
 $(ABSTRACT_MAPS): AbstractMap.drv; ./gencsource.sh $< $@ >$@
@@ -426,6 +436,12 @@ INDIRECT_HEAPS_STATIC := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAG
 $(INDIRECT_HEAPS_STATIC): IndirectHeaps.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(INDIRECT_HEAPS_STATIC)
+
+
+FUNCTIONS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)Functions.c))
+$(FUNCTIONS_STATIC): Functions.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(FUNCTIONS_STATIC)
 
 
 MAPS_STATIC := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)Maps.c))

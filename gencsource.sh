@@ -119,6 +119,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_GENERIC_CLASS K\n"\
 "#define KEY_GENERIC_TYPE K\n"\
 "#define KEY_GENERIC <K>\n"\
+"#define KEY_GENERIC_WILDCARD <?>\n"\
 "#define KEY_EXTENDS_GENERIC <? extends K>\n"\
 "#define KEY_SUPER_GENERIC <? super K>\n"\
 "#define KEY_GENERIC_CAST (K)\n"\
@@ -127,6 +128,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_GENERIC_CLASS KEY_CLASS\n"\
 "#define KEY_GENERIC_TYPE KEY_TYPE\n"\
 "#define KEY_GENERIC\n"\
+"#define KEY_GENERIC_WILDCARD\n"\
 "#define KEY_EXTENDS_GENERIC\n"\
 "#define KEY_SUPER_GENERIC\n"\
 "#define KEY_GENERIC_CAST\n"\
@@ -182,6 +184,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
 "#define SORTED_SET ${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define STD_SORTED_SET ${TYPE_STD[$k]}SortedSet\n\n"\
+"#define FUNCTION ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 "#define SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
@@ -216,7 +219,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define ABSTRACT_COLLECTION Abstract${TYPE_CAP[$k]}Collection\n\n"\
 "#define ABSTRACT_SET Abstract${TYPE_CAP[$k]}Set\n\n"\
 "#define ABSTRACT_SORTED_SET Abstract${TYPE_CAP[$k]}SortedSet\n"\
+"#define ABSTRACT_FUNCTION Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define ABSTRACT_MAP Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
+"#define ABSTRACT_FUNCTION Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define ABSTRACT_SORTED_MAP Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
 "#define SUBLIST ${TYPE_CAP[$k]}SubList\n\n"\
@@ -248,6 +253,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SORTED_SETS ${TYPE_CAP[$k]}SortedSets\n\n"\
 "#define LISTS ${TYPE_CAP[$k]}Lists\n\n"\
 "#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
+"#define FUNCTIONS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Functions\n"\
 "#define SORTED_MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMaps\n"\
 "#define PRIORITY_QUEUES ${TYPE_CAP2[$k]}PriorityQueues\n\n"\
 "#define HEAPS ${TYPE_CAP2[$k]}Heaps\n\n"\
@@ -296,6 +302,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SYNCHRONIZED_COLLECTION Synchronized${TYPE_CAP[$k]}Collection\n\n"\
 "#define SYNCHRONIZED_SET Synchronized${TYPE_CAP[$k]}Set\n\n"\
 "#define SYNCHRONIZED_SORTED_SET Synchronized${TYPE_CAP[$k]}SortedSet\n\n"\
+"#define SYNCHRONIZED_FUNCTION Synchronized${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n\n"\
 "#define SYNCHRONIZED_MAP Synchronized${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n\n"\
 "#define SYNCHRONIZED_LIST Synchronized${TYPE_CAP[$k]}List\n\n"\
 \
@@ -306,6 +313,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define UNMODIFIABLE_COLLECTION Unmodifiable${TYPE_CAP[$k]}Collection\n\n"\
 "#define UNMODIFIABLE_SET Unmodifiable${TYPE_CAP[$k]}Set\n\n"\
 "#define UNMODIFIABLE_SORTED_SET Unmodifiable${TYPE_CAP[$k]}SortedSet\n\n"\
+"#define UNMODIFIABLE_FUNCTION Unmodifiable${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n\n"\
 "#define UNMODIFIABLE_MAP Unmodifiable${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n\n"\
 "#define UNMODIFIABLE_LIST Unmodifiable${TYPE_CAP[$k]}List\n\n"\
 "#define UNMODIFIABLE_KEY_ITERATOR Unmodifiable${TYPE_CAP[$k]}Iterator\n\n"\
@@ -359,6 +367,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define WRITE_VALUE write${TYPE_CAP2[$v]}\n"\
 "#define VALUE_ITERATOR_METHOD ${TYPE_LC2[$v]}Iterator\n\n"\
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
+\
+\
+"/* Methods (keys/values) */\n"\
+\
+\
+"#define ENTRYSET ${TYPE_LC[$k]}2${TYPE_CAP[$v]}EntrySet\n"\
 \
 \
 "/* Methods that have special names depending on keys (but the special names depend on values) */\n"\

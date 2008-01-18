@@ -29,37 +29,17 @@ import java.util.Map;
 
 /** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
  *
- * <P>Type-specific versions of <code>get()</code>, <code>put()</code> and
- * <code>remove()</code> cannot rely on <code>null</code> to denote absence of
- * a key.  Rather, they return a {@linkplain #defaultReturnValue() default
- * return value}, which is set to 0 cast to the return type (<code>false</code>
- * for booleans) at creation, but can be changed using the
- * <code>defaultReturnValue()</code> method. 
- *
- * <P>Additionally, this interface strengthens {@link #entrySet()},
+ * <P>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link #entrySet()},
  * {@link #keySet()} and {@link #values()}.
- *
- * <P>For uniformity reasons, even maps returning objects implement the default
- * return value (of course, in this case the default return value is
- * initialized to <code>null</code>).
  *
  * <P>A submap or subset may or may not have an
  * independent default return value (which however must be initialized to the
  * default return value of the originator).
  *
- * <P><strong>Warning:</strong> to fall in line as much as possible with the
- * {@linkplain java.util.Map standard map interface}, it is strongly suggested
- * that standard versions of <code>get()</code>, <code>put()</code> and
- * <code>remove()</code> for maps with primitive-type values <em>return
- * <code>null</code> to denote missing keys</em> rather than wrap the default
- * return value in an object (of course, for maps with object keys and values
- * this is not possible, as there is no type-specific version).
- *
  * @see Map
  */
 
-public interface MAP KEY_VALUE_GENERIC extends Map<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS> {
-
+public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS> {
 
 	/** Returns a set view of the mappings contained in this map.
 	 *  <P>Note that this specification strengthens the one given in {@link Map#entrySet()}.
@@ -69,6 +49,20 @@ public interface MAP KEY_VALUE_GENERIC extends Map<KEY_GENERIC_CLASS,VALUE_GENER
 	 */
 
 	ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet();
+
+	/** Returns a type-specific set view of the mappings contained in this map.
+	 *
+	 * <p>This method is necessary because there is no inheritance along
+	 * type parameters: it is thus impossible to strengthen {@link #entrySet()}
+	 * so that it returns an {@link it.unimi.dsi.fastutil.objects.ObjectSet}
+	 * of objects of type {@link Entry} (the latter makes it possible to
+	 * access keys and values with type-specific methods).
+	 *
+	 * @return a type-specific set view of the mappings contained in this map.
+	 * @see #entrySet()
+	 */
+
+	ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET();
 
 	/** Returns a set view of the keys contained in this map.
 	 *  <P>Note that this specification strengthens the one given in {@link Map#keySet()}.
@@ -89,50 +83,6 @@ public interface MAP KEY_VALUE_GENERIC extends Map<KEY_GENERIC_CLASS,VALUE_GENER
 	VALUE_COLLECTION VALUE_GENERIC values();
 
 
-#if #keys(primitive) || #values(primitive)
-
-	/** Adds a pair to the map.
-	 *
-	 * @param key the key.
-	 * @param value the value.
-	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
-	 * @see Map#put(Object,Object)
-	 */
-
-	VALUE_GENERIC_TYPE put( KEY_GENERIC_TYPE key, VALUE_GENERIC_TYPE value );
-
-	/** Returns the value to which the given key is mapped.
-	 *
-	 * @param key the key.
-	 * @return the corresponding value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
-	 * @see Map#get(Object)
-	 */
-
-	VALUE_GENERIC_TYPE GET_VALUE( KEY_TYPE key );
-
-	/** Removes the mapping with the given key.
-	 * @param key
-	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
-	 * @see Map#remove(Object)
-	 */
-
-	VALUE_GENERIC_TYPE REMOVE_VALUE( KEY_TYPE key );
-
-#endif
-
-
-
-#if #keys(primitive)
-
-	/**
-	 * @see Map#containsKey(Object)
-	 */
-
-	boolean containsKey( KEY_TYPE key );
-
-#endif	 
-
-
 #if #values(primitive)
 
 	/**
@@ -143,28 +93,6 @@ public interface MAP KEY_VALUE_GENERIC extends Map<KEY_GENERIC_CLASS,VALUE_GENER
 
 #endif
 
-	/*** Sets the default return value. 
-	 *
-	 * This value must be returned by type-specific versions of
-	 * <code>get()</code>, <code>put()</code> and <code>remove()</code> to
-	 * denote that the map does not contain the specified key. It must be
-	 * 0/<code>false</code>/<code>null</code> by default.
-	 *
-	 * @param rv the new default return value.
-	 * @see #defaultReturnValue()
-	 */
-
-	void defaultReturnValue( VALUE_GENERIC_TYPE rv );
-
-	 
-	/** Gets the default return value.
-	 *
-	 * @return the current default return value.
-	 */
-
-	VALUE_GENERIC_TYPE defaultReturnValue();
-
-	 
 	/** A type-specific {@link java.util.Map.Entry}; provides some additional methods
 	 *  that use polymorphism to avoid (un)boxing.
 	 *

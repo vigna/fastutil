@@ -1,6 +1,5 @@
 package test.it.unimi.dsi.fastutil.objects;
 
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.io.BinIO;
 import it.unimi.dsi.fastutil.objects.AbstractReference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
