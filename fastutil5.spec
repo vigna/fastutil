@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.0.9
+Version:        5.1.0
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
