@@ -26,7 +26,6 @@ import java.util.NoSuchElementException;
 import it.unimi.dsi.fastutil.objects.AbstractObjectIterator;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_COLLECTIONS;
@@ -100,39 +99,61 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		if ( size > key.length ) throw new IllegalArgumentException( "The provided size (" + size + ") is larger than or equal to the backing-arrays size (" + key.length + ")" );
 	}
 
-	public ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
-		return new AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC>() {
+	private final class EntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC {
 
-			@Override
-			public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
-				return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
-					int next = 0;
-					
-					public boolean hasNext() {
-						return next < size;
-					}
+		@Override
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
+			return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
+				int next = 0;
+				
+				public boolean hasNext() {
+					return next < size;
+				}
 
-					@SuppressWarnings("unchecked")
-					public Entry next() {
-						if ( ! hasNext() ) throw new NoSuchElementException();
-						return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( KEY_GENERIC_CAST key[ next ], VALUE_GENERIC_CAST value[ next++ ] );
-					}
-					
-				};
-			}
+				@SuppressWarnings("unchecked")
+				public Entry next() {
+					if ( ! hasNext() ) throw new NoSuchElementException();
+					return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( KEY_GENERIC_CAST key[ next ], VALUE_GENERIC_CAST value[ next++ ] );
+				}
+				
+			};
+		}
 
-			public int size() {
-				return size;
-			}
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
+			return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
+				int next = 0;
+				final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
+				
+				public boolean hasNext() {
+					return next < size;
+				}
 
-			@SuppressWarnings("unchecked")
-			public boolean contains( Object o ) {
-				if ( ! ( o instanceof Map.Entry ) ) return false;
-				Map.Entry e = (Map.Entry)o;
-				return ARRAY_MAP.this.containsKey( e.getKey() ) && VALUE_EQUALS( ARRAY_MAP.this.get( e.getKey() ), e.getValue() );
-			}
-			
-		};
+				@SuppressWarnings("unchecked")
+				public Entry next() {
+					if ( ! hasNext() ) throw new NoSuchElementException();
+					entry.key = KEY_GENERIC_CAST key[ next ];
+					entry.value = VALUE_GENERIC_CAST value[ next++ ];
+					return entry;
+				}
+				
+			};
+		}
+
+		public int size() {
+			return size;
+		}
+
+		@SuppressWarnings("unchecked")
+		public boolean contains( Object o ) {
+			if ( ! ( o instanceof Map.Entry ) ) return false;
+			Map.Entry e = (Map.Entry)o;
+			return ARRAY_MAP.this.containsKey( e.getKey() ) && VALUE_EQUALS( ARRAY_MAP.this.get( e.getKey() ), e.getValue() );
+		}
+		
+	}
+
+	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() {
+		return new EntrySet();
 	}
 
 	private int findKey( final KEY_TYPE k ) {
