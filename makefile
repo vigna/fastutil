@@ -492,6 +492,7 @@ CSOURCES += $(SOURCEDIR)/io/TextIO.c
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 
 SOURCES = \
+	$(SOURCEDIR)/Function.java \
 	$(SOURCEDIR)/Hash.java \
 	$(SOURCEDIR)/HashCommon.java \
 	$(SOURCEDIR)/BidirectionalIterator.java \
