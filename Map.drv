@@ -24,13 +24,14 @@ package PACKAGE;
 import VALUE_PACKAGE.VALUE_COLLECTION;
 
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.util.Map;
 
 /** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
  *
  * <P>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link #entrySet()},
- * {@link #keySet()} and {@link #values()}.
+ * {@link #keySet()} and {@link #values()}. Maps returning entry sets of type {@link FastEntrySet} support also fast iteration.
  *
  * <P>A submap or subset may or may not have an
  * independent default return value (which however must be initialized to the
@@ -40,6 +41,23 @@ import java.util.Map;
  */
 
 public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS> {
+
+	/** An entry set providing fast iteration. 
+	 *
+	 * <p>In some cases (e.g., hash-based classes) iteration over an entry set requires the creation
+	 * of a large number of {@link Entry} objects. Some <code>fastutil</code>
+	 * maps might return {@linkplain #entrySet() entry set} objects of type {@link FastEntrySet FastEntrySet}: in this case, {@link #fastIterator() fastIterator()}
+	 * will return an iterator that is guaranteed not to create a large number of objects, <em>possibly
+	 * by returning always the same entry</em> (of course, mutated).
+	 */
+
+	public interface FastEntrySet KEY_VALUE_GENERIC extends ObjectSet<MAP.Entry KEY_VALUE_GENERIC> {
+		/** Returns a fast iterator over this entry set; the iterator might return always the same entry object, suitably mutated.
+		 *
+		 * @return a fast iterator over this entry set; the iterator might return always the same {@link Entry} object, suitably mutated.
+		 */
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator();
+	}
 
 	/** Returns a set view of the mappings contained in this map.
 	 *  <P>Note that this specification strengthens the one given in {@link Map#entrySet()}.

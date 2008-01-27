@@ -72,7 +72,6 @@ import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
 #else
 
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 #if #keys(primitive) && ! #valueclass(Object)
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -202,13 +201,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #ifdef Linked
 	/** Cached set of entries. */
-	protected transient volatile ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> entries;
+	protected transient volatile FastSortedEntrySet KEY_VALUE_GENERIC entries;
 
 	/** Cached set of keys. */
 	protected transient volatile SORTED_SET KEY_GENERIC keys;
 #else
 	/** Cached set of entries. */
-	protected transient volatile ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entries;
+	protected transient volatile FastEntrySet KEY_VALUE_GENERIC entries;
 
 	/** Cached set of keys. */
 	protected transient volatile SET KEY_GENERIC keys;
@@ -983,6 +982,33 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		public void add( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
 	}
 
+	private class FastEntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
+	
+		public FastEntryIterator() {}
+
+		public FastEntryIterator( KEY_GENERIC_TYPE from ) {
+			super( from );
+		}
+
+		public BasicEntry KEY_VALUE_GENERIC next() {
+			final int e = nextEntry();
+			entry.key = key[ e ];
+			entry.value = value[ e ];
+			return entry;
+		}
+
+		public BasicEntry KEY_VALUE_GENERIC previous() {
+			final int e = previousEntry();
+			entry.key = key[ e ];
+			entry.value = value[ e ];
+			return entry;
+		}
+
+		public void set( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+		public void add( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+	}
+
 #else	 
 
 	/** An iterator over a hash map. */
@@ -1042,6 +1068,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	private class EntryIterator extends MapIterator implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
 		public MAP.Entry KEY_VALUE_GENERIC next() {
 			return new MapEntry( nextEntry() );
+		}
+	}
+
+	private class FastEntryIterator extends MapIterator implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
+		public BasicEntry KEY_VALUE_GENERIC next() {
+			final int e = nextEntry();
+			entry.key = key[ e ];
+			entry.value = value[ e ];
+			return entry;
 		}
 	}
 
@@ -1142,72 +1178,91 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 
 #ifdef Linked
-	public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
-		if ( entries == null ) entries = new AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC>() {
+	private final class MapEntrySet extends AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> implements FastSortedEntrySet KEY_VALUE_GENERIC {
 
-				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
-					return new EntryIterator();
-				}
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
+			return new EntryIterator();
+		}
 
-			public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return null; }
-			public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> subSet( MAP.Entry KEY_VALUE_GENERIC fromElement, MAP.Entry KEY_VALUE_GENERIC toElement) { throw new UnsupportedOperationException(); }
-			public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> headSet( MAP.Entry KEY_VALUE_GENERIC toElement ) { throw new UnsupportedOperationException(); }
-			public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> tailSet( MAP.Entry KEY_VALUE_GENERIC fromElement ) { throw new UnsupportedOperationException(); }
+		public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return null; }
+		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> subSet( MAP.Entry KEY_VALUE_GENERIC fromElement, MAP.Entry KEY_VALUE_GENERIC toElement) { throw new UnsupportedOperationException(); }
+		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> headSet( MAP.Entry KEY_VALUE_GENERIC toElement ) { throw new UnsupportedOperationException(); }
+		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> tailSet( MAP.Entry KEY_VALUE_GENERIC fromElement ) { throw new UnsupportedOperationException(); }
 
-			public MAP.Entry KEY_VALUE_GENERIC first() { 
-				if ( count == 0 ) throw new NoSuchElementException();
-				return new MapEntry( OPEN_HASH_MAP.this.first ); 
-			}
+		public MAP.Entry KEY_VALUE_GENERIC first() { 
+			if ( count == 0 ) throw new NoSuchElementException();
+			return new MapEntry( OPEN_HASH_MAP.this.first ); 
+		}
 
-			public MAP.Entry KEY_VALUE_GENERIC last() { 
-				if ( count == 0 ) throw new NoSuchElementException();
-				return new MapEntry( OPEN_HASH_MAP.this.last ); 
-			}
+		public MAP.Entry KEY_VALUE_GENERIC last() { 
+			if ( count == 0 ) throw new NoSuchElementException();
+			return new MapEntry( OPEN_HASH_MAP.this.last ); 
+		}
 		
 #else
-	public ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
-		if ( entries == null ) entries = new AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC>() {
+	private final class MapEntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC {
 
-				public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
-					return new EntryIterator();
-				}
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
+			return new EntryIterator();
+		}
+
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
+			return new FastEntryIterator();
+		}
 #endif					 
 					 
-				@SuppressWarnings("unchecked")
-				public boolean contains( final Object o ) {
-					if (!(o instanceof Map.Entry)) return false;
-					final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
-					final int i = findKey( KEY_CLASS2TYPE( e.getKey() ) );
-					return i >= 0 && VALUE_EQUALS( value[ i ], VALUE_CLASS2TYPE( e.getValue() ) );
-				}
-					 
-				@SuppressWarnings("unchecked")
-				public boolean remove( final Object o ) {
-					if (!(o instanceof Map.Entry)) return false;
-					final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
-					final int i = findKey( KEY_CLASS2TYPE( e.getKey() ) );
-					if ( i >= 0 ) OPEN_HASH_MAP.this.remove( e.getKey() );
-					return i >= 0;
-				}
-					 
-				public int size() {
-					return count;
-				}
-					 
-				public void clear() {
-					OPEN_HASH_MAP.this.clear();
-				}
+		@SuppressWarnings("unchecked")
+		public boolean contains( final Object o ) {
+			if (!(o instanceof Map.Entry)) return false;
+			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+			final int i = findKey( KEY_CLASS2TYPE( e.getKey() ) );
+			return i >= 0 && VALUE_EQUALS( value[ i ], VALUE_CLASS2TYPE( e.getValue() ) );
+		}
+			 
+		@SuppressWarnings("unchecked")
+		public boolean remove( final Object o ) {
+			if (!(o instanceof Map.Entry)) return false;
+			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+			final int i = findKey( KEY_CLASS2TYPE( e.getKey() ) );
+			if ( i >= 0 ) OPEN_HASH_MAP.this.remove( e.getKey() );
+			return i >= 0;
+		}
+			 
+		public int size() {
+			return count;
+		}
+			 
+		public void clear() {
+			OPEN_HASH_MAP.this.clear();
+		}
 
 #ifdef Linked
-				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
-					return new EntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
-				}
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
+			return new EntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
+		}
+
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
+			return new FastEntryIterator();
+		}
+				
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
+			return new FastEntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
+		}
 				
 #endif
-			};
-	 
+	}
+
+
+#ifdef Linked
+	public FastSortedEntrySet KEY_VALUE_GENERIC ENTRYSET() {
+		if ( entries == null ) entries = new MapEntrySet();
+#else
+	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() {
+		if ( entries == null ) entries = new MapEntrySet();
+#endif
 		return entries;
 	}
+
 
 	/** An iterator on keys.
 	 *
