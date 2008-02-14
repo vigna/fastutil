@@ -2,7 +2,7 @@
 
 Name:           fastutil5
 Version:        5.1.0
-Release:        2jpp
+Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Thu Feb 14 2008 Sebastiano Vigna <vigna at acm.org> - 5.1.0-1jpp
+- New fast iterators and function interfaces.
+
 * Sat Mar 3 2007 Sebastiano Vigna <vigna at acm.org> - 5.0.9-1jpp
 - Workarounds for Java bug #6478546.
 
