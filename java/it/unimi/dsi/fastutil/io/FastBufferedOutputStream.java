@@ -26,7 +26,7 @@ import java.io.OutputStream;
 
 /** Lightweight, unsynchronized output stream buffering class.
  *
- * <P>This class provides buffering for output streams, but all methods are unsychronized.
+ * <P>This class provides buffering for output streams, but all methods are unsynchronised.
  * 
  * @since 4.4
  */
