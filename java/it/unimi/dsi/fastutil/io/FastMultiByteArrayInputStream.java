@@ -34,8 +34,7 @@ import java.io.InputStream;
  *
  * @author Sebastiano Vigna
  * @author Paolo Boldi
- * @since 0.8.2
- */
+s */
 
 public class FastMultiByteArrayInputStream extends java.io.InputStream implements RepositionableStream {
 
@@ -169,9 +168,3 @@ public class FastMultiByteArrayInputStream extends java.io.InputStream implement
 		position = Math.min( newPosition, length );
 	}
 }
-
-
-// Local Variables:
-// mode: jde
-// tab-width: 4
-// End:

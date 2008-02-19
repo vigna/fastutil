@@ -1,7 +1,7 @@
 package it.unimi.dsi.fastutil.io;
 
 /*		 
- * DSI utilities
+ * fastutil: Fast & compact type-specific collections for Java
  *
  * Copyright (C) 2003-2008 Sebastiano Vigna 
  *
@@ -29,7 +29,6 @@ package it.unimi.dsi.fastutil.io;
  * but it will never be fixed because it's too late.
  *
  * @author Sebastiano Vigna
- * @since 0.6
  */
 
 public class FastByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
