@@ -509,6 +509,9 @@ SOURCES = \
 	$(SOURCEDIR)/AbstractIndirectPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java \
 	$(SOURCEDIR)/AbstractStack.java \
+	$(SOURCEDIR)/io/FastByteArrayInputStream.java \
+	$(SOURCEDIR)/io/FastByteArrayOutputStream.java \
+	$(SOURCEDIR)/io/FastMultiByteArrayInputStream.java \
 	$(SOURCEDIR)/io/FastBufferedInputStream.java \
 	$(SOURCEDIR)/io/FastBufferedOutputStream.java \
 	$(SOURCEDIR)/io/MeasurableInputStream.java \
