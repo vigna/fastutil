@@ -423,8 +423,9 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 */
 
 	public long length() throws IOException {
-		if ( ms == null ) throw new UnsupportedOperationException();
-		return ms.length();
+		if ( ms != null ) return ms.length();
+		if ( fileChannel != null ) return fileChannel.size();
+		throw new UnsupportedOperationException();
 	}
 
 
