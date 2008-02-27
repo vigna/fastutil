@@ -44,14 +44,17 @@ import java.util.EnumSet;
  * <li><P>There is no support for marking. All methods are unsychronized.
  * 
  * <li><P>As an additional feature, this class implements the {@link
- * RepositionableStream} interface and extends {@link MeasurableInputStream}.  
+ * RepositionableStream} and {@link MeasurableInputStream} interfaces.  
  * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
  * reflection the {@link java.nio.channels.FileChannel} underlying the given
  * output stream, in this order. If either reference can be successfully
  * fetched, you can use {@link #position(long)} to reposition the stream.
- * Note that in this case we do not guarantee that all reads will
- * be performed on buffer boundaries.
+ * Much in the same way, an instance of this class will try to cast the
+ * the underlying byte stream to a {@link MeasurableInputStream}, and if this
+ * operation is successful, or if a {@link java.nio.channels.FileChannel} can
+ * be detected, then {@link #position()} and {@link #length()} will work as expected.
+ * 
  * 
  * <li><p>Due to erratic and unpredictable behaviour of {@link InputStream#skip(long)},
  * which does not correspond to its specification and which Sun refuses to fix
@@ -64,9 +67,7 @@ import java.util.EnumSet;
  *
  * <li><p>This class keeps also track of the number of bytes read so far, so
  * to be able to implemented {@link MeasurableInputStream#position()}
- * independently of underlying input stream. If, on the other hand, the underlying byte stream can be cast to a 
- * {@link MeasurableInputStream}, then also 
- * {@link MeasurableInputStream#length()} will work as expected.
+ * independently of underlying input stream.
  * 
  * <li><p>This class has limited support for 
  * {@linkplain #readLine(byte[], int, int, EnumSet) &ldquo;reading a line&rdquo;}
