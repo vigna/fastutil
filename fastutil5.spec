@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.1.1
+Version:        5.1.2
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -12,9 +12,9 @@ URL:            http://fastutil.dsi.unimi.it/
 Vendor:         JPackage Project
 Distribution:   JPackage
 BuildArch:      noarch
-Requires:	java >= 1.5.0
+Requires:       java >= 1.5.0
 BuildRequires:  java-devel >= 1.5.0, ant, make, gcc, jpackage-utils >= 0:1.6, /bin/bash
-BuildRequires:	java-javadoc
+BuildRequires:  java-javadoc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
@@ -80,6 +80,10 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Wed Feb 27 2008 Sebastiano Vigna <vigna at acm.org> - 5.1.2-1jpp
+- Now FastBufferedInputStream support length() on FileChannel-based
+  streams.
+
 * Tue Feb 19 2008 Sebastiano Vigna <vigna at acm.org> - 5.1.1-1jpp
 - Now includes former MG4J byte-array I/O classes.
 
