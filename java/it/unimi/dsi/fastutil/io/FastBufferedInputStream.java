@@ -285,7 +285,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * <p>If you need to guarantee that a full line is read, use the following idiom:
 	 * <pre>
 	 * int start = off, len;
-	 * while( ( len = readLine( array, start, array.length - start, terminators ) ) == array.length - start ) {
+	 * while( ( len = fbis.readLine( array, start, array.length - start, terminators ) ) == array.length - start ) {
 	 *     start += len;
 	 *     array = ByteArrays.grow( array, array.length + 1 );
 	 * };
