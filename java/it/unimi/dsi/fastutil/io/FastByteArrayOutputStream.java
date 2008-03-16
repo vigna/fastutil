@@ -39,7 +39,7 @@ import java.io.OutputStream;
  * @author Sebastiano Vigna
  */
 
-public class FastByteArrayOutputStream extends OutputStream {
+public class FastByteArrayOutputStream extends OutputStream implements RepositionableStream {
 
 	/** The array backing the output stream. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
@@ -50,6 +50,8 @@ public class FastByteArrayOutputStream extends OutputStream {
 	/** The number of valid bytes in {@link #array}. */
 	public int length;
 
+	/** The current writing position. */
+	private int position;
 
 	/** Creates a new array output stream with an initial capacity of {@link #DEFAULT_INITIAL_CAPACITY} bytes. */
 	public FastByteArrayOutputStream() {
@@ -75,6 +77,7 @@ public class FastByteArrayOutputStream extends OutputStream {
 	/** Marks this array output stream as empty. */
 	public void reset() {
 		length = 0;
+		position = 0;
 	}
 
 	/** Ensures that the length of the backing array is equal to {@link #length}. */
@@ -83,15 +86,26 @@ public class FastByteArrayOutputStream extends OutputStream {
 	}
 
 	public void write( final int b ) {
-		if ( length == array.length ) array = ByteArrays.grow( array, length + 1 );
-		array[ length ++ ] = (byte)b;
+		if ( position == length ) {
+			length++;
+			if ( position == array.length ) array = ByteArrays.grow( array, length );
+		}
+		array[ position++ ] = (byte)b;
 	}
 
-	// TODO: test this
 	public void write( final byte[] b, final int off, final int len ) throws IOException {
 		ByteArrays.ensureOffsetLength( b, off, len );
-		if ( length + len > array.length ) array = ByteArrays.grow( array, length + len, length );
-		System.arraycopy( b, off, array, length, len );
-		length += len;
+		if ( position + len > array.length ) array = ByteArrays.grow( array, position + len, position );
+		System.arraycopy( b, off, array, position, len );
+		if ( position + len > length ) length = position + len;
+	}
+
+	public void position( long newPosition ) {
+		if ( position > Integer.MAX_VALUE ) throw new IllegalArgumentException( "Position too large: " + newPosition );
+		position = (int)newPosition;
+	}
+
+	public long position() {
+		return position;
 	}
 }
