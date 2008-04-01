@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil5
-Version:        5.1.2
+Version:        5.1.3
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -80,6 +80,9 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 # -----------------------------------------------------------------------------
 
 %changelog
+* Wed Apr 2 2008 Sebastiano Vigna <vigna at acm.org> - 5.1.3-1jpp
+- Upgrade to 5.1.3.
+
 * Wed Feb 27 2008 Sebastiano Vigna <vigna at acm.org> - 5.1.2-1jpp
 - Now FastBufferedInputStream support length() on FileChannel-based
   streams.
