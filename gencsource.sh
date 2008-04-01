@@ -198,6 +198,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n\n"\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n\n"\
+"#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_STD[$k]}Iterator\n\n"\

@@ -106,6 +106,11 @@ CSOURCES :=
 # Interfaces
 #
 
+ITERABLES := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Iterable.c)
+$(ITERABLES): Iterable.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ITERABLES)
+
 COLLECTIONS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Collection.c)
 $(COLLECTIONS): Collection.drv; ./gencsource.sh $< $@ >$@
 
