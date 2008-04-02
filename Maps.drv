@@ -149,6 +149,23 @@ public class MAPS {
 
 		@SuppressWarnings("unchecked")
 		public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() { return (ObjectSet)ENTRYSET(); }
+
+		public int hashCode() {
+			int h = 0, n = size();
+			final ObjectIterator<? extends Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
+
+			while( n-- != 0 ) h += i.next().hashCode();
+			return h;
+		}
+
+		public boolean equals(Object o) {
+			if ( o == this ) return true;
+			if ( ! ( o instanceof Map ) ) return false;
+
+			Map<?,?> m = (Map<?,?>)o; 
+			if ( m.size() != size() ) return false; 
+			return entrySet().containsAll( m.entrySet() ); 
+		}	
 	}
 
 	/** Returns a type-specific immutable map containing only the specified pair. The returned map is serializable and cloneable.
@@ -244,6 +261,9 @@ public class MAPS {
 
 		public boolean isEmpty() { synchronized( sync ) { return map.isEmpty(); } }
 		public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() { synchronized( sync ) { return map.entrySet(); } }
+
+		public int hashCode() { synchronized( sync ) { return map.hashCode(); } }
+		public boolean equals( final Object o ) { synchronized( sync ) { return map.equals( o  ); } }
 	}
 
 	/** Returns a synchronized type-specific map backed by the given type-specific map.
