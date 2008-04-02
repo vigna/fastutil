@@ -76,10 +76,20 @@ public class MAPS {
 
 		public Object clone() { return EMPTY_MAP; }
 
-		public boolean isEmpty() { return size() != 0; }
+		public boolean isEmpty() { return true; }
 
 		@SuppressWarnings("unchecked")
 		public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() { return (ObjectSet)ENTRYSET(); }
+
+		public int hashCode() { return 0; }
+
+		public boolean equals( final Object o ) {
+			if ( ! ( o instanceof Map ) ) return false;
+
+			return ((Map<?,?>)o).isEmpty();
+		}	
+		
+		public String toString() { return "{}"; }
 	}
 
 
@@ -150,22 +160,18 @@ public class MAPS {
 		@SuppressWarnings("unchecked")
 		public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() { return (ObjectSet)ENTRYSET(); }
 
-		public int hashCode() {
-			int h = 0, n = size();
-			final ObjectIterator<? extends Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
+		public int hashCode() { return KEY2INT( key ) ^ VALUE2INT( value ); }
 
-			while( n-- != 0 ) h += i.next().hashCode();
-			return h;
-		}
-
-		public boolean equals(Object o) {
+		public boolean equals( final Object o ) {
 			if ( o == this ) return true;
 			if ( ! ( o instanceof Map ) ) return false;
 
 			Map<?,?> m = (Map<?,?>)o; 
-			if ( m.size() != size() ) return false; 
-			return entrySet().containsAll( m.entrySet() ); 
+			if ( m.size() != 1 ) return false; 
+			return entrySet().iterator().next().equals( m.entrySet().iterator().next() ); 
 		}	
+		
+		public String toString() { return "{" + key + "=>" + value + "}"; }
 	}
 
 	/** Returns a type-specific immutable map containing only the specified pair. The returned map is serializable and cloneable.
