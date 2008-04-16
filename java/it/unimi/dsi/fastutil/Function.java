@@ -37,9 +37,9 @@ package it.unimi.dsi.fastutil;
  * <p>Note that there is an {@link it.unimi.dsi.fastutil.objects.Object2ObjectFunction} that
  * can also set its default return value.
  * 
- * <p><strong>Warning</strong>: Equality of functions is <em>by reference</em>. Since there
- * is no way to enumerate the keys, there is no way to establish whether two functions represent the same
- * mathematical entity.
+ * <p><strong>Warning</strong>: Equality of functions is <em>not specified</em>
+ * by contract, and it will usually be <em>by reference</em>, as there is no way to enumerate the keys
+ * and establish whether two functions represent the same mathematical entity.
  *
  * @see java.util.Map
  */

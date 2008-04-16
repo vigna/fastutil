@@ -44,6 +44,10 @@ public class FastByteArrayOutputStreamTest extends TestCase {
 		assertEquals( 3, fbaos.array[ 2 ] );
 		for( int i = 0; i < 14; i++ ) assertEquals( i + 10, fbaos.array[ 3 + i ] );
 
+		fbaos.write( a );
+		assertEquals( 31, fbaos.length );
+		for( int i = 0; i < 14; i++ ) assertEquals( i + 10, fbaos.array[ 17 + i ] );
+
 		fbaos = new FastByteArrayOutputStream();
 		fbaos.write( 1 );
 		fbaos.write( 2 );

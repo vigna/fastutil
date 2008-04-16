@@ -97,7 +97,7 @@ public class FastByteArrayOutputStream extends OutputStream implements Repositio
 		ByteArrays.ensureOffsetLength( b, off, len );
 		if ( position + len > array.length ) array = ByteArrays.grow( array, position + len, position );
 		System.arraycopy( b, off, array, position, len );
-		if ( position + len > length ) length = position + len;
+		if ( position + len > length ) length = position += len;
 	}
 
 	public void position( long newPosition ) {
