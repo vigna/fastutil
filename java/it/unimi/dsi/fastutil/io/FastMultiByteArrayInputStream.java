@@ -59,6 +59,15 @@ public class FastMultiByteArrayInputStream extends java.io.InputStream implement
 	/** The current mark, or -1 if no mark exists. */
 	private long mark;
 
+	/** Creates a new multi-array input stream loading it from a measurable input stream.
+	 *
+	 * @param is the input stream that will fill the array.
+	 */
+	
+	public FastMultiByteArrayInputStream( final MeasurableInputStream is ) throws IOException {
+		this( is, is.length() );
+	}
+
 	/** Creates a new multi-array input stream loading it from an input stream.
 	 *
 	 * @param is the input stream that will fill the array.
