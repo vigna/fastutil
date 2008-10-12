@@ -21,6 +21,7 @@
 
 package PACKAGE;
 
+import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -30,7 +31,7 @@ import java.util.Iterator;
  * {@link #contains(Object)} methods that just call the type-specific counterpart. 
  */
 
-public abstract class ABSTRACT_COLLECTION KEY_GENERIC implements COLLECTION KEY_GENERIC {
+public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection<KEY_GENERIC_CLASS> implements COLLECTION KEY_GENERIC {
 
 	protected ABSTRACT_COLLECTION() {}
 
@@ -48,10 +49,6 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC implements COLLECTION KEY_
 		if ( a == null || a.length < size() ) a = new KEY_TYPE[ size() ];
 		ITERATORS.unwrap( iterator(), a );
 		return a;
-	}
-
-	public boolean rem( KEY_TYPE k ) {
-		throw new UnsupportedOperationException();
 	}
 
 	/** Adds all elements of the given type-specific collection to this collection.
@@ -153,24 +150,10 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC implements COLLECTION KEY_
 		return retVal;
 	}
 
-
-
 	public boolean add( KEY_GENERIC_TYPE k ) {
 		throw new UnsupportedOperationException();
 	}
 	 
-	public boolean remove( Object ok ) {
-#if #keys(primitive)
-		return rem( KEY_OBJ2TYPE( ok ) );
-#else
-		throw new UnsupportedOperationException();
-#endif
-	}
-
-	public void clear() {
-		throw new UnsupportedOperationException();
-	}
-
 	/** Delegates to the new covariantly stronger generic method. */
 	
 	@Deprecated
@@ -181,6 +164,11 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC implements COLLECTION KEY_
 	public abstract KEY_ITERATOR KEY_GENERIC iterator();
 
 #if #keys(primitive)
+
+	/** Delegates to the type-specific <code>rem()</code> method. */
+	public boolean remove( Object ok ) {
+		return rem( KEY_OBJ2TYPE( ok ) );
+	}
 
 	/** Delegates to the corresponding type-specific method. */
 	public boolean add( final KEY_CLASS o ) {
@@ -196,6 +184,23 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC implements COLLECTION KEY_
 	public boolean contains( final Object o ) {
 		return contains( KEY_OBJ2TYPE(o) );
 	}
+
+	public boolean contains( final KEY_TYPE k ) {
+		final KEY_ITERATOR iterator = iterator();
+		while ( iterator.hasNext() ) if ( k == iterator.NEXT_KEY() ) return true;
+        return false;
+    }
+
+	public boolean rem( final KEY_TYPE k ) {
+		final KEY_ITERATOR iterator = iterator();
+		while ( iterator.hasNext() ) 
+			if ( k == iterator.NEXT_KEY() ) {
+				iterator.remove();
+				return true;
+			}
+        return false;
+    }
+
 #endif
 
 	/** Checks whether this collection contains all elements from the given collection.
