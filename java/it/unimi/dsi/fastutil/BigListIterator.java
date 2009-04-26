@@ -42,6 +42,7 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * 
 	 * @return the index of the element that would be returned by a subsequent call to next, or list
 	 * size if list iterator is at end of list.
+	 * @see ListIterator#nextIndex()
 	 */
 
 	long nextBigIndex();
@@ -52,6 +53,7 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * @return the index of the element that would be returned by a subsequent call to next, or list
 	 * size if list iterator is at end of list.
 	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
+	 * @see ListIterator#nextIndex()
 	 * @deprecated Use {@link #nextBigIndex()} to avoid throwing an {@link IllegalStateException}.
 	 */
 	@Override
@@ -63,6 +65,7 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * 
 	 * @return the index of the element that would be returned by a subsequent call to previous, or
 	 * -1 if list iterator is at beginning of list.
+	 * @see ListIterator#previousIndex()
 	 */
 
 	long previousBigIndex();
@@ -73,6 +76,7 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * @return the index of the element that would be returned by a subsequent call to previous, or
 	 * -1 if list iterator is at beginning of list.
 	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
+	 * @see ListIterator#previousIndex()
 	 * @deprecated Use {@link #previousBigIndex()} to avoid throwing an {@link IllegalStateException}.
 	 */
 	@Override

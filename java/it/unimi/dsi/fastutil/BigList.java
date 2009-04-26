@@ -90,7 +90,8 @@ public interface BigList<K> extends List<K> {
 	 * 
 	 * @param index index at which to insert the first element from the specified collection.
 	 * @param c collection containing elements to be added to this list.
-	 * @return <code>true</code> if this list changed as a result of the call 
+	 * @return <code>true</code> if this list changed as a result of the call
+	 * @see List#addAll(int, Collection) 
 	 */	
 	public boolean addAll(int index, Collection<? extends K> c);
 
