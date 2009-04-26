@@ -56,7 +56,6 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * @see ListIterator#nextIndex()
 	 * @deprecated Use {@link #nextBigIndex()} to avoid throwing an {@link IllegalStateException}.
 	 */
-	@Override
 	@Deprecated
 	int nextIndex();
 
@@ -79,7 +78,6 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * @see ListIterator#previousIndex()
 	 * @deprecated Use {@link #previousBigIndex()} to avoid throwing an {@link IllegalStateException}.
 	 */
-	@Override
 	@Deprecated
 	int previousIndex();
 }

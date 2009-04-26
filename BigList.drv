@@ -1,7 +1,7 @@
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2002-2008 Sebastiano Vigna 
+ * Copyright (C) 2009 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -22,10 +22,11 @@
 package PACKAGE;
 
 import java.util.List;
+import it.unimi.dsi.fastutil.BigList;
 
 #if ! #keyclass(Reference)
 
-/** A type-specific {@link List}; provides some additional methods that use polymorphism to avoid (un)boxing. 
+/** A type-specific {@link BigList}; provides some additional methods that use polymorphism to avoid (un)boxing. 
  *
  * <P>Note that this type-specific interface extends {@link Comparable}: it is expected that implementing
  * classes perform a lexicographical comparison using the standard operator "less then" for primitive types,
@@ -41,14 +42,13 @@ import java.util.List;
  * @see List
  */
 
-public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, Comparable<List<? extends KEY_GENERIC_CLASS>>, COLLECTION KEY_GENERIC {
+public interface BIG_LIST KEY_GENERIC extends LIST KEY_GENERIC, BigList<KEY_GENERIC_CLASS>, Comparable<List<? extends KEY_GENERIC_CLASS>> {
 #else
 
-/** A type-specific {@link List}; provides some additional methods that use polymorphism to avoid (un)boxing. 
+/** A type-specific {@link BigList}; provides some additional methods that use polymorphism to avoid (un)boxing. 
  *
  * <P>Additionally, this interface strengthens {@link #iterator()}, {@link #listIterator()},
- * {@link #listIterator(int)} and {@link #subList(int,int)}. The former had been already
- * strengthened upstream, but unfortunately {@link List} re-specifies it.
+ * {@link #listIterator(int)} and {@link #subList(int,int)}.
  *
  * <P>Besides polymorphic methods, this interfaces specifies methods to copy into an array or remove contiguous
  * sublists. Although the abstract implementation of this interface provides simple, one-by-one implementations
@@ -57,7 +57,7 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, Comparable<Li
  * @see List
  */
 
-public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KEY_GENERIC {
+public interface BIG_LIST KEY_GENERIC extends LIST KEY_GENERIC, BigList<KEY_GENERIC_CLASS> {
 #endif
 
 	/** Returns a type-specific iterator on the elements of this list (in proper sequence).
@@ -73,37 +73,20 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	/** Returns a type-specific list iterator on the list.
 	 *
 	 * @see #listIterator()
-	 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #listIterator()}.
 	 */
-	@Deprecated
-	KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD();
+	KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator();
 
 	/** Returns a type-specific list iterator on the list starting at a given index.
 	 *
-	 * @see #listIterator(int)
-	 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #listIterator(int)}.
+	 * @see BigList#listIterator(long)
 	 */
-	@Deprecated
-	KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD( int index );
-
-	/** Returns a type-specific list iterator on the list.
-	 *
-	 * @see List#listIterator()
-	 */
-	KEY_LIST_ITERATOR KEY_GENERIC listIterator();
+	KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator( long index );
 
 	/** Returns a type-specific list iterator on the list starting at a given index.
 	 *
 	 * @see List#listIterator(int)
 	 */
-	KEY_LIST_ITERATOR KEY_GENERIC listIterator( int index );
-
-	/** Returns a type-specific view of the portion of this list from the index <code>from</code>, inclusive, to the index <code>to</code>, exclusive.
-	 * @see List#subList(int,int)
-	 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #subList(int,int)}.
-	 */
-	@Deprecated
-	LIST KEY_GENERIC SUBLIST_METHOD( int from, int to );
+	KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator( int index );
 
 	/** Returns a type-specific view of the portion of this list from the index <code>from</code>, inclusive, to the index <code>to</code>, exclusive.
 	 *
@@ -111,20 +94,7 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 *
 	 * @see List#subList(int,int)
 	 */
-	LIST KEY_GENERIC subList(int from, int to);
-
-
-	/** Sets the size of this list.
-	 *
-	 * <P>If the specified size is smaller than the current size, the last elements are
-	 * discarded. Otherwise, they are filled with 0/<code>null</code>/<code>false</code>.
-	 *
-	 * @param size the new size.
-	 * @deprected This method shouldn't exist in the first place.
-	 */
-
-	@Deprecated
-	void size( int size );
+	BIG_LIST KEY_GENERIC subList(long from, long to);
 
 	/** Copies (hopefully quickly) elements of this type-specific list into the given array.
 	 *
@@ -133,21 +103,21 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @param offset the offset into the destination array where to store the first element copied.
 	 * @param length the number of elements to be copied.
 	 */
-	void getElements( int from, KEY_TYPE a[], int offset, int length );
+	void getElements( long from, KEY_TYPE a[], int offset, int length );
 
 	/** Removes (hopefully quickly) elements of this type-specific list.
 	 *
 	 * @param from the start index (inclusive).
 	 * @param to the end index (exclusive).
 	 */
-	void removeElements( int from, int to );
+	void removeElements( long from, long to );
 
 	/** Add (hopefully quickly) elements to this type-specific list.
 	 *
 	 * @param index the index at which to add elements.
 	 * @param a the array containing the elements.
 	 */
-	void addElements( int index, KEY_GENERIC_TYPE a[] );
+	void addElements( long index, KEY_GENERIC_TYPE a[] );
 
 	/** Add (hopefully quickly) elements to this type-specific list.
 	 *
@@ -156,54 +126,49 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @param offset the offset of the first element to add.
 	 * @param length the number of elements to add.
 	 */
-	void addElements( int index, KEY_GENERIC_TYPE a[], int offset, int length );
+	void addElements( long index, KEY_GENERIC_TYPE a[], int offset, int length );
 
 #if #keys(primitive)
 
 	/**
 	 * @see List#add(int,Object)
 	 */
-	void add( int index, KEY_TYPE key );
+	void add( long index, KEY_TYPE key );
+
+	/**
+	 * @see List#addAll(long,Collection)
+	 */
+	boolean addAll( long index, COLLECTION c );
 
 	/**
 	 * @see List#add(int,Object)
 	 */
-	boolean addAll( int index, COLLECTION c );
+	boolean addAll( long index, LIST c );
 
 	/**
-	 * @see List#add(int,Object)
+	 * @see BigList#get(long)
 	 */
-	boolean addAll( int index, LIST c );
+	KEY_TYPE GET_KEY( long index );
 
 	/**
-	 * @see List#add(int,Object)
+	 * @see BigList#bigIndexOf(Object)
 	 */
-	boolean addAll( LIST c );
+	long bigIndexOf( KEY_TYPE k );
 
 	/**
-	 * @see List#get(int)
+	 * @see List#lastBigIndexOf(Object)
 	 */
-	KEY_TYPE GET_KEY( int index );
+	long lastBigIndexOf( KEY_TYPE k );
 
 	/**
-	 * @see List#indexOf(Object)
+	 * @see BigList#remove(long)
 	 */
-	int indexOf( KEY_TYPE k );
+	KEY_TYPE REMOVE_KEY( long index );
 
 	/**
-	 * @see List#lastIndexOf(Object)
+	 * @see BigList#set(long,Object)
 	 */
-	int lastIndexOf( KEY_TYPE k );
-
-	/**
-	 * @see List#remove(int)
-	 */
-	KEY_TYPE REMOVE_KEY( int index );
-
-	/**
-	 * @see List#set(int,Object)
-	 */
-	KEY_TYPE set( int index, KEY_TYPE k );
+	KEY_TYPE set( long index, KEY_TYPE k );
 
 #endif
 

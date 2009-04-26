@@ -193,6 +193,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define STD_SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n\n"\
 "#endif\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
+"#define BIG_LIST ${TYPE_CAP[$k]}BigList\n\n"\
 "#define STACK ${TYPE_STD[$k]}Stack\n\n"\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n\n"\
 "#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n\n"\
@@ -201,6 +202,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n\n"\
+"#define KEY_BIG_LIST_ITERATOR ${TYPE_CAP2[$k]}BigListIterator\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_STD[$k]}Iterator\n\n"\
 "#define KEY_COMPARATOR ${TYPE_STD[$k]}Comparator\n\n"\
 \
@@ -225,12 +227,14 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define ABSTRACT_FUNCTION Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define ABSTRACT_SORTED_MAP Abstract${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n\n"\
+"#define ABSTRACT_BIG_LIST Abstract${TYPE_CAP[$k]}BigList\n\n"\
 "#define SUBLIST ${TYPE_CAP[$k]}SubList\n\n"\
 "#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_STD[$k]}PriorityQueue\n\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_STD[$k]}Stack\n\n"\
 "#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define KEY_ABSTRACT_BIDI_ITERATOR Abstract${TYPE_CAP2[$k]}BidirectionalIterator\n\n"\
 "#define KEY_ABSTRACT_LIST_ITERATOR Abstract${TYPE_CAP2[$k]}ListIterator\n\n"\
+"#define KEY_ABSTRACT_BIG_LIST_ITERATOR Abstract${TYPE_CAP2[$k]}BigListIterator\n\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_ABSTRACT_COMPARATOR Comparator\n\n"\
 "#else\n"\

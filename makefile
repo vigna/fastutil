@@ -146,6 +146,11 @@ $(LISTS): List.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LISTS)
 
+BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList.c)
+$(BIG_LISTS): BigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LISTS)
+
 STACKS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Stack.c)
 $(STACKS): Stack.drv; ./gencsource.sh $< $@ >$@
 
@@ -186,6 +191,11 @@ $(LIST_ITERATORS): ListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LIST_ITERATORS)
 
+BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigListIterator.c)
+$(BIG_LIST_ITERATORS): BigListIterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LIST_ITERATORS)
+
 #
 # Abstract implementations
 #
@@ -225,6 +235,11 @@ $(ABSTRACT_LISTS): AbstractList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LISTS)
 
+ABSTRACT_BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigList.c)
+$(ABSTRACT_BIG_LISTS): AbstractBigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_BIG_LISTS)
+
 ABSTRACT_STACKS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)Stack.c)
 $(ABSTRACT_STACKS): AbstractStack.drv; ./gencsource.sh $< $@ >$@
 
@@ -254,6 +269,11 @@ ABSTRACT_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k
 $(ABSTRACT_LIST_ITERATORS): AbstractListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LIST_ITERATORS)
+
+ABSTRACT_BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigListIterator.c)
+$(ABSTRACT_BIG_LIST_ITERATORS): AbstractBigListIterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 
 #
 # Concrete implementations
@@ -502,6 +522,8 @@ SOURCES = \
 	$(SOURCEDIR)/HashCommon.java \
 	$(SOURCEDIR)/BidirectionalIterator.java \
 	$(SOURCEDIR)/Stack.java \
+	$(SOURCEDIR)/BigList.java \
+	$(SOURCEDIR)/BigListIterator.java \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \

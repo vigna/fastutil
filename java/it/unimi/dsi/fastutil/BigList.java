@@ -81,7 +81,6 @@ public interface BigList<K> extends List<K> {
 	 * more than {@link Integer#MAX_VALUE} elements.
 	 * @deprecated Use {@link #bigSize()} to avoid throwing an {@link IllegalStateException}. 
 	 */
-	@Override
 	@Deprecated
 	public int size();
 
@@ -93,7 +92,7 @@ public interface BigList<K> extends List<K> {
 	 * @return <code>true</code> if this list changed as a result of the call
 	 * @see List#addAll(int, Collection) 
 	 */	
-	public boolean addAll(int index, Collection<? extends K> c);
+	public boolean addAll( long index, Collection<? extends K> c );
 
 	/** Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
 	 * 
@@ -111,7 +110,6 @@ public interface BigList<K> extends List<K> {
 	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
 	 * @deprecated Use {@link #bigIndexOf(Object)} to avoid throwing an {@link IllegalStateException}.
 	 */
-	@Override
 	@Deprecated
 	public int indexOf( Object o );
 	
@@ -131,7 +129,6 @@ public interface BigList<K> extends List<K> {
 	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
 	 * @deprecated Use {@link #lastBigIndexOf(Object)} to avoid throwing an {@link IllegalStateException}.
 	 */
-	@Override
 	@Deprecated
 	public int lastIndexOf( Object o );
 	
@@ -159,7 +156,6 @@ public interface BigList<K> extends List<K> {
 	 * this list.
 	 * @see List#listIterator(int)
 	 */
-	@Override
 	public BigListIterator<K> listIterator( int index );
 
 	/** Returns a big sublist view of this big list.
