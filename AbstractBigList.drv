@@ -102,6 +102,10 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		return addAll( bigSize(), c );
 	}
 
+	public KEY_BIG_LIST_ITERATOR KEY_GENERIC iterator() {
+		return listIterator();
+	}
+
 	public KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator() {
 		return listIterator( 0L );
 	}
@@ -145,6 +149,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		return bigIndexOf( k ) >= 0;
 	}
 
+	@Deprecated
 	public int indexOf( final KEY_TYPE k ) {
 		final long indexOf = bigIndexOf( k );
 		if ( indexOf > Integer.MAX_VALUE ) throw new IllegalStateException();
@@ -164,6 +169,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		return -1;
 	}
 
+	@Deprecated
 	public int lastIndexOf( final KEY_TYPE k ) {
 		final long lastIndexOf = lastBigIndexOf( k );
 		if ( lastIndexOf > Integer.MAX_VALUE ) throw new IllegalStateException();
@@ -183,11 +189,15 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		return -1;
 	}
 
-	public void size( final int size ) {
-		int i = size();
+	public void size( final long size ) {
+		long i = bigSize();
 		if ( size > i ) while( i++ < size ) add( KEY_NULL );
 		else while( i-- != size ) remove( i );
-	}		
+	}
+	
+	public void size( final int size ) {
+		size( (long)size );
+	}
 
 	@Override
 	public BIG_LIST KEY_GENERIC subList( final int from, final int to ) {
@@ -281,8 +291,8 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		if ( o == this ) return true;
 		if ( ! ( o instanceof List ) ) return false;
 		final List<?> l = (List<?>)o;
-		int s = size();
-		if ( s != l.size() ) return false;
+		long s = bigSize();
+		if ( s != ( l instanceof BigList ? ((BigList)l).bigSize() : l.size() ) return false;
 
 		final ListIterator<?> i1 = listIterator(), i2 = l.listIterator();
 
@@ -340,7 +350,8 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 	 */
 	public int hashCode() {
 		KEY_ITERATOR KEY_GENERIC i = iterator();
-		int h = 1, s = size();
+		int h = 1;
+		long s = bigSize();
 		while ( s-- != 0 ) {
 			KEY_GENERIC_TYPE k = i.NEXT_KEY(); 
 			h = 31 * h + KEY2INT( k );
@@ -363,7 +374,8 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		return GET_KEY( bigSize() - 1 );
 	}
 
-	public KEY_GENERIC_TYPE PEEK( long i ) {
+	@Override
+	public KEY_GENERIC_TYPE PEEK( int i ) {
 		return GET_KEY( bigSize() - 1 - i );
 	}
 
@@ -464,6 +476,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 	}
 
 #else
+
 	public KEY_GENERIC_CLASS get( int index ) {
 		return get( (long)index );
 	}
@@ -562,7 +575,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		}
 
 		public void clear() {
-			removeElements( 0, size() );
+			removeElements( 0, bigSize() );
 			if ( ASSERTS ) assertRange();
 		}
 

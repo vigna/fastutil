@@ -28,7 +28,9 @@ import java.util.List;
  *
  * <P>Instances of this class implement the same semantics as that of {@link List}: however,
  * additional methods provide access to long indices, and returned iterators are actually
- * of type {@link BigListIterator}.
+ * of type {@link BigListIterator}. Some standard methods such as 
+ * {@link List#size()} are deprecated
+ * in favour of corresponding big methods (e.g., {@link #bigSize()}).
  */
 
 public interface BigList<K> extends List<K> {

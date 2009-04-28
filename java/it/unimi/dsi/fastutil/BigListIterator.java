@@ -27,9 +27,10 @@ import java.util.ListIterator;
 /** A list iterator over a {@link BigList}.
  *
  * <P>This kind of iterator is essentially a {@link ListIterator} that
- * provides additional methods {@link #previousBigIndex()} and
+ * provides replacement methods {@link #previousBigIndex()} and
  * {@link #nextBigIndex()} so that {@linkplain BigList big lists} can 
- * return a proper iterator.
+ * return a proper iterator. The standard methods {@link ListIterator#previousIndex()}
+ * and {@link ListIterator#nextIndex()} are deprecated.
  *
  * @see Iterator
  * @see ListIterator
@@ -44,7 +45,6 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * size if list iterator is at end of list.
 	 * @see ListIterator#nextIndex()
 	 */
-
 	long nextBigIndex();
 
 	/** Returns the index of the element that would be returned by a subsequent call to next.
