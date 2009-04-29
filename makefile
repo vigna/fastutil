@@ -151,6 +151,16 @@ $(BIG_LISTS): BigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LISTS)
 
+LIST2S := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)List2.c)
+$(LIST2S): List2.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(LIST2S)
+
+BIG_LIST2S := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList2.c)
+$(BIG_LIST2S): BigList2.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LIST2S)
+
 STACKS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Stack.c)
 $(STACKS): Stack.drv; ./gencsource.sh $< $@ >$@
 
@@ -439,6 +449,12 @@ $(ARRAYS_STATIC): Arrays.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ARRAYS_STATIC)
 
 
+BIG_ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigArrays.c)
+$(BIG_ARRAYS_STATIC): BigArrays.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_ARRAYS_STATIC)
+
+
 PRIORITY_QUEUES_STATIC := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)PriorityQueues.c)
 $(PRIORITY_QUEUES_STATIC): PriorityQueues.drv; ./gencsource.sh $< $@ >$@
 
@@ -524,6 +540,7 @@ SOURCES = \
 	$(SOURCEDIR)/Stack.java \
 	$(SOURCEDIR)/BigList.java \
 	$(SOURCEDIR)/BigListIterator.java \
+	$(SOURCEDIR)/BigArrays.java \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \

@@ -31,6 +31,8 @@ import java.util.ListIterator;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
+import it.unimi.dsi.fastutil.BigList;
+
 /**  An abstract class providing basic methods for lists implementing a type-specific list interface.
  *
  * <P>As an additional bonus, this class implements on top of the list operations a type-specific stack.
@@ -270,7 +272,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		KEY_BIG_LIST_ITERATOR KEY_GENERIC i = listIterator( from );
 		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
 		if ( offset + length > a.length ) throw new ArrayIndexOutOfBoundsException( "End index (" + ( offset + length ) + ") is greater than array length (" + a.length + ")" );
-		if ( from + length > size() ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than list size (" + size() + ")" );
+		if ( from + length > bigSize() ) throw new IndexOutOfBoundsException( "End index (" + ( from + length ) + ") is greater than list size (" + bigSize() + ")" );
 		while( length-- != 0 ) a[ offset++ ] = i.NEXT_KEY();
 	}
 
@@ -287,12 +289,13 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 	}
 #endif
 
+	@SuppressWarnings("unchecked")
 	public boolean equals( final Object o ) {
 		if ( o == this ) return true;
 		if ( ! ( o instanceof List ) ) return false;
 		final List<?> l = (List<?>)o;
 		long s = bigSize();
-		if ( s != ( l instanceof BigList ? ((BigList)l).bigSize() : l.size() ) return false;
+		if ( s != ( l instanceof BigList ? ((BigList)l).bigSize() : l.size() ) ) return false;
 
 		final ListIterator<?> i1 = listIterator(), i2 = l.listIterator();
 
@@ -426,11 +429,13 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 	}
 
 	/** Delegates to the corresponding type-specific method. */
+	@Deprecated
 	public int indexOf( final Object ok ) {
 		return indexOf( KEY_OBJ2TYPE( ok ) );
 	}
 
 	/** Delegates to the corresponding type-specific method. */
+	@Deprecated
 	public int lastIndexOf( final Object ok ) {
 		return lastIndexOf( KEY_OBJ2TYPE( ok ) );
 	}
@@ -585,7 +590,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GE
 		
 		public void getElements( final long from, final KEY_TYPE[] a, final int offset, final int length ) {
 			ensureIndex( from );
-			if ( from + length > bigSize() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + size() + ")" );
+			if ( from + length > bigSize() )  throw new IndexOutOfBoundsException( "End index (" + from + length + ") is greater than list size (" + bigSize() + ")" );
 			l.getElements( this.from + from, a, offset, length );
 		}
 

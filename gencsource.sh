@@ -194,6 +194,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#endif\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
 "#define BIG_LIST ${TYPE_CAP[$k]}BigList\n\n"\
+"#define LIST2 ${TYPE_CAP[$k]}List2\n\n"\
+"#define BIG_LIST2 ${TYPE_CAP[$k]}BigList2\n\n"\
 "#define STACK ${TYPE_STD[$k]}Stack\n\n"\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n\n"\
 "#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n\n"\
@@ -265,6 +267,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SEMI_INDIRECT_HEAPS ${TYPE_CAP2[$k]}SemiIndirectHeaps\n\n"\
 "#define INDIRECT_HEAPS ${TYPE_CAP2[$k]}IndirectHeaps\n\n"\
 "#define ARRAYS ${TYPE_CAP2[$k]}Arrays\n\n"\
+"#define BIG_ARRAYS ${TYPE_CAP2[$k]}BigArrays\n\n"\
 "#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n\n"\
 \
