@@ -22,9 +22,9 @@ package it.unimi.dsi.fastutil;
  */
 
 
-/** A class providing static methods and objects that do useful things with arrays.
+/** A class providing static methods and objects that do useful things with big arrays.
  *
- * @see BigArrays
+ * @see it.unimi.dsi.fastutil.Arrays
  */
 
 public class BigArrays {
@@ -47,32 +47,32 @@ public class BigArrays {
 	 *
 	 * <P>This method may be used whenever an array range check is needed.
 	 *
-	 * @param arrayLength an array length.
+	 * @param bigArrayLength a big-array length.
 	 * @param from a start index (inclusive).
 	 * @param to an end index (inclusive).
 	 * @throws IllegalArgumentException if <code>from</code> is greater than <code>to</code>.
-	 * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than <code>arrayLength</code> or negative.
+	 * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than <code>bigArrayLength</code> or negative.
 	 */
-	public static void ensureFromTo( final long arrayLength, final long from, final long to ) {
+	public static void ensureFromTo( final long bigArrayLength, final long from, final long to ) {
 		if ( from < 0 ) throw new ArrayIndexOutOfBoundsException( "Start index (" + from + ") is negative" );
 		if ( from > to ) throw new IllegalArgumentException( "Start index (" + from + ") is greater than end index (" + to + ")" );
-		if ( to > arrayLength ) throw new ArrayIndexOutOfBoundsException( "End index (" + to + ") is greater than array length (" + arrayLength + ")" );
+		if ( to > bigArrayLength ) throw new ArrayIndexOutOfBoundsException( "End index (" + to + ") is greater than big-array length (" + bigArrayLength + ")" );
 	}
 
 	/** Ensures that a range given by an offset and a length fits an array of given length.
 	 *
 	 * <P>This method may be used whenever an array range check is needed.
 	 *
-	 * @param arrayLength an array length.
+	 * @param bigArrayLength a big-array length.
 	 * @param offset a start index for the fragment
 	 * @param length a length (the number of elements in the fragment).
 	 * @throws IllegalArgumentException if <code>length</code> is negative.
-	 * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than <code>arrayLength</code>.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than <code>bigArrayLength</code>.
 	 */
-	public static void ensureOffsetLength( final long arrayLength, final long offset, final long length ) {
+	public static void ensureOffsetLength( final long bigArrayLength, final long offset, final long length ) {
 		if ( offset < 0 ) throw new ArrayIndexOutOfBoundsException( "Offset (" + offset + ") is negative" );
 		if ( length < 0 ) throw new IllegalArgumentException( "Length (" + length + ") is negative" );
-		if ( offset + length > arrayLength ) throw new ArrayIndexOutOfBoundsException( "Last index (" + ( offset + length ) + ") is greater than array length (" + arrayLength + ")" );
+		if ( offset + length > bigArrayLength ) throw new ArrayIndexOutOfBoundsException( "Last index (" + ( offset + length ) + ") is greater than big-array length (" + bigArrayLength + ")" );
 	}
 
 }
