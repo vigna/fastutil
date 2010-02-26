@@ -1,0 +1,152 @@
+/*		 
+ * fastutil: Fast & compact type-specific collections for Java
+ *
+ * Copyright (C) 2010 Sebastiano Vigna 
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2.1 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+package PACKAGE;
+
+#if #keyclass(Object)
+import java.util.Comparator;
+
+import it.unimi.dsi.fastutil.AbstractPriorityQueue;
+#endif
+
+import java.util.NoSuchElementException;
+
+/** A type-specific array-based FIFO queue.
+ *
+ * <P>Instances of this class represent a FIFO using a backing
+ * array in a circular way. The array is
+ * enlarged as needed, but it is never shrunk. Use the {@link #trim()} method
+ * to reduce its size, if necessary.
+ *
+ */
+
+public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GENERIC {
+
+	/** The standard initial capacity of a queue. */
+	public final static int INITIAL_CAPACITY = 16;
+
+	/** The backing array. */
+	@SuppressWarnings("unchecked")
+	protected KEY_GENERIC_TYPE array[] = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+
+	/** The current (cached) length of {@link #array}. */
+	protected int length;
+	
+	/** The start position in {@link #array}. */
+	protected int start;
+	
+	/** The end position in {@link #array}. Might be actually smaller than {@link #start} because {@link #array} is used cyclically. */
+	protected int end;
+	
+	/** Creates a new empty queue with given capacity.
+	 *
+	 * @param capacity the initial capacity of this queue.
+	 */
+	@SuppressWarnings("unchecked")
+	public ARRAY_FIFO_QUEUE( final int capacity ) {
+		if ( capacity > 0 ) this.array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ capacity ];
+	}
+
+
+	/** Creates a new empty queue with standard {@linkplain #INITIAL_CAPACITY initial capacity}.
+	 */
+	public ARRAY_FIFO_QUEUE() {
+		this( INITIAL_CAPACITY );
+	}
+
+	/** Returns <code>null</code> (FIFO queues have no comparator). 
+	 * @return <code>null</code>.
+	 */ 
+	@Override
+	public KEY_COMPARATOR comparator() {
+		return null;
+	}
+
+	@Override
+	public KEY_GENERIC_TYPE DEQUEUE() {
+		if ( start == end ) throw new NoSuchElementException();
+		final KEY_GENERIC_TYPE t = array[ start ];
+		if ( ++start == length ) start = 0;
+		return t;
+	}
+
+	@Override
+	public void enqueue( KEY_GENERIC_TYPE x ) {
+		array[ end++ ] = x;
+		if ( end == length ) end = 0;
+		if ( end == start ) {
+			final KEY_GENERIC_TYPE[] newArray = ARRAYS.grow( array, length + 1, 0 );
+			System.arraycopy( array, start, newArray, 0, length - start );
+			System.arraycopy( array, 0, newArray, length - start, end );
+			start = 0;
+			end = length;
+			length = ( array = newArray ).length;
+		}
+	}
+
+	/** Returns the first element of the queue. 
+	 * @return the first element of the queue.	
+	 */
+	public KEY_GENERIC_TYPE FIRST() {
+		if ( start == end ) throw new NoSuchElementException();
+		return array[ start ];
+	}
+
+
+	/** Returns the last element of the queue. 
+	 * @return the last element of the queue.	
+	 */
+	public KEY_GENERIC_TYPE LAST() {
+		if ( start == end ) throw new NoSuchElementException();
+		return array[ end ];
+	}
+
+	@Override
+	public void clear() {
+		start = end = 0;
+	}
+
+	/** Trims the queue to the smallest possible size. */		
+	@SuppressWarnings("unchecked")
+	public void trim() {
+		final int size = size();
+		final KEY_GENERIC_TYPE[] newArray = 
+#if #keys(primitive)
+											new KEY_GENERIC_TYPE[ size + 1 ];
+#else
+											(KEY_GENERIC_TYPE[])new Object[ size + 1 ];
+#endif
+		if ( start <= end ) System.arraycopy( array, start, newArray, 0, end - start );
+		else {
+			System.arraycopy( array, start, newArray, 0, length - start );
+			System.arraycopy( array, 0, newArray, length - start, end );
+		}
+		start = 0;
+		length = ( end = size ) + 1;
+		array = newArray;
+	}
+		
+	@Override
+	public int size() {
+		final int apparentLength = end - start;
+		return apparentLength >= 0 ? apparentLength : length + apparentLength;
+	}
+}
