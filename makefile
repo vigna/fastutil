@@ -146,21 +146,6 @@ $(LISTS): List.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LISTS)
 
-BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList.c)
-$(BIG_LISTS): BigList.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(BIG_LISTS)
-
-LIST2S := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)List2.c)
-$(LIST2S): List2.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(LIST2S)
-
-BIG_LIST2S := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList2.c)
-$(BIG_LIST2S): BigList2.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(BIG_LIST2S)
-
 STACKS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Stack.c)
 $(STACKS): Stack.drv; ./gencsource.sh $< $@ >$@
 
@@ -201,11 +186,6 @@ $(LIST_ITERATORS): ListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LIST_ITERATORS)
 
-BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigListIterator.c)
-$(BIG_LIST_ITERATORS): BigListIterator.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(BIG_LIST_ITERATORS)
-
 #
 # Abstract implementations
 #
@@ -245,11 +225,6 @@ $(ABSTRACT_LISTS): AbstractList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LISTS)
 
-ABSTRACT_BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigList.c)
-$(ABSTRACT_BIG_LISTS): AbstractBigList.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(ABSTRACT_BIG_LISTS)
-
 ABSTRACT_STACKS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)Stack.c)
 $(ABSTRACT_STACKS): AbstractStack.drv; ./gencsource.sh $< $@ >$@
 
@@ -279,11 +254,6 @@ ABSTRACT_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k
 $(ABSTRACT_LIST_ITERATORS): AbstractListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LIST_ITERATORS)
-
-ABSTRACT_BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigListIterator.c)
-$(ABSTRACT_BIG_LIST_ITERATORS): AbstractBigListIterator.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 
 #
 # Concrete implementations
@@ -378,6 +348,11 @@ ARRAY_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAG
 $(ARRAY_PRIORITY_QUEUES): ArrayPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAY_PRIORITY_QUEUES)
+
+ARRAY_FIFO_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayFIFOQueue.c)
+$(ARRAY_FIFO_QUEUES): ArrayFIFOQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ARRAY_FIFO_QUEUES)
 
 HEAP_SEMI_INDIRECT_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapSemiIndirectPriorityQueue.c)
 $(HEAP_SEMI_INDIRECT_PRIORITY_QUEUES): HeapSemiIndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
