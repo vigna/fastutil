@@ -27,13 +27,11 @@ import java.util.List;
 /** A list with big (i.e., long) indices.
  *
  * <P>Instances of this class implement the same semantics as that of {@link List}: however,
- * additional methods provide access to long indices, and returned iterators are actually
- * of type {@link BigListIterator}. Some standard methods such as 
- * {@link List#size()} are deprecated
- * in favour of corresponding big methods (e.g., {@link #bigSize()}).
+ * setters methods use long indices, getters return long values, and returned iterators are actually
+ * of type {@link BigListIterator}.
  */
 
-public interface BigList<K> extends List<K> {
+public interface BigList<K> extends Collection<K> {
 
 	/** Returns the element at the specified position.
 	 * 
@@ -75,18 +73,19 @@ public interface BigList<K> extends List<K> {
 	 */
 	public long bigSize();
 	
-	/** Returns the number of elements in this big list.
-	 * 
-	 * @return the number of elements in this big list.
-	 * @see List#size()
-	 * @throws IllegalStateException if called when this big list contains
-	 * more than {@link Integer#MAX_VALUE} elements.
-	 * @deprecated Use {@link #bigSize()} to avoid throwing an {@link IllegalStateException}. 
-	 */
 	@Deprecated
 	public int size();
-
 	
+	/** Sets the size of this list.
+	 *
+	 * <P>If the specified size is smaller than the current size, the last elements are
+	 * discarded. Otherwise, they are filled with 0/<code>null</code>/<code>false</code>.
+	 *
+	 * @param size the new size.
+	 */
+
+	void size( long size );
+
 	/** Inserts all of the elements in the specified collection into this list at the specified position (optional operation).
 	 * 
 	 * @param index index at which to insert the first element from the specified collection.
@@ -102,18 +101,7 @@ public interface BigList<K> extends List<K> {
 	 * @return the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
 	 * @see List#indexOf(Object)
 	 */
-	public long bigIndexOf( Object o );
-	
-	/** Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
-	 * 
-	 * @param o the object to search for.
-	 * @return the index of the first occurrence of the specified element in this list, or -1 if this list does not contain the element.
-	 * @see List#indexOf(Object)
-	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
-	 * @deprecated Use {@link #bigIndexOf(Object)} to avoid throwing an {@link IllegalStateException}.
-	 */
-	@Deprecated
-	public int indexOf( Object o );
+	public long indexOf( Object o );
 	
 	/** Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element. 
 	 * 
@@ -121,18 +109,7 @@ public interface BigList<K> extends List<K> {
 	 * @return the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
  	 * @see List#lastIndexOf(Object)
 	 */
-	public long lastBigIndexOf( Object o );
-	
-	/** Returns the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element. 
-	 * 
-	 * @param o the object to search for.
-	 * @see List#lastIndexOf(Object)
-	 * @return the index of the last occurrence of the specified element in this list, or -1 if this list does not contain the element.
-	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
-	 * @deprecated Use {@link #lastBigIndexOf(Object)} to avoid throwing an {@link IllegalStateException}.
-	 */
-	@Deprecated
-	public int lastIndexOf( Object o );
+	public long lastIndexOf( Object o );
 	
 	/** Returns a list iterator over the elements in this list.
 	 * 
@@ -150,15 +127,6 @@ public interface BigList<K> extends List<K> {
 	 * @see List#listIterator(int)
 	 */
 	public BigListIterator<K> listIterator( long index );
-
-	/** Returns a list iterator of the elements in this list, starting at the specified position in this list.
-	 * 
-	 * @param index index of first element to be returned from the list iterator.
-	 * @return a list iterator of the elements in this list, starting at the specified position in
-	 * this list.
-	 * @see List#listIterator(int)
-	 */
-	public BigListIterator<K> listIterator( int index );
 
 	/** Returns a big sublist view of this big list.
 	 * 

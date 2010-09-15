@@ -41,7 +41,6 @@ public class PriorityQueues {
 	 * {@link PriorityQueue}.
 	 */
 
-	@SuppressWarnings("unchecked")
 	public static class EmptyPriorityQueue extends AbstractPriorityQueue {
 
 		protected EmptyPriorityQueue() {}
@@ -54,7 +53,7 @@ public class PriorityQueues {
 		public Object first() { throw new NoSuchElementException(); }
 		public Object last() { throw new NoSuchElementException(); }
 		public void changed() { throw new NoSuchElementException(); }
-		public Comparator comparator() { return null; }
+		public Comparator<?> comparator() { return null; }
 		
 	}
 

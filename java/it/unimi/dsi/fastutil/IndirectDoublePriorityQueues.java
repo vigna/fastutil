@@ -39,14 +39,13 @@ public class IndirectDoublePriorityQueues {
 	 * {@link IndirectDoublePriorityQueue}.
 	 */
 
-	@SuppressWarnings("unchecked")
 	public static class EmptyIndirectDoublePriorityQueue extends IndirectPriorityQueues.EmptyIndirectPriorityQueue {
 
 		protected EmptyIndirectDoublePriorityQueue() {}
 
 		public int secondaryFirst() { throw new NoSuchElementException(); }
 		public int secondaryLast() { throw new NoSuchElementException(); }
-		public Comparator secondaryComparator() { return null; }
+		public Comparator<?> secondaryComparator() { return null; }
 		
 	}
 

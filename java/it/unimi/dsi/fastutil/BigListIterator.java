@@ -26,18 +26,13 @@ import java.util.ListIterator;
 
 /** A list iterator over a {@link BigList}.
  *
- * <P>This kind of iterator is essentially a {@link ListIterator} that
- * provides replacement methods {@link #previousBigIndex()} and
- * {@link #nextBigIndex()} so that {@linkplain BigList big lists} can 
- * return a proper iterator. The standard methods {@link ListIterator#previousIndex()}
- * and {@link ListIterator#nextIndex()} are deprecated.
+ * <P>This kind of iterator is essentially a {@link ListIterator} with long indices.
  *
  * @see Iterator
  * @see ListIterator
  */
 
-public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterator<K> {
-
+public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	/** Returns the index of the element that would be returned by a subsequent call to next.
 	 * (Returns list size if the list iterator is at the end of the list.)
 	 * 
@@ -45,19 +40,7 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * size if list iterator is at end of list.
 	 * @see ListIterator#nextIndex()
 	 */
-	long nextBigIndex();
-
-	/** Returns the index of the element that would be returned by a subsequent call to next.
-	 * (Returns list size if the list iterator is at the end of the list.)
-	 * 
-	 * @return the index of the element that would be returned by a subsequent call to next, or list
-	 * size if list iterator is at end of list.
-	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
-	 * @see ListIterator#nextIndex()
-	 * @deprecated Use {@link #nextBigIndex()} to avoid throwing an {@link IllegalStateException}.
-	 */
-	@Deprecated
-	int nextIndex();
+	long nextIndex();
 
 	/** Returns the index of the element that would be returned by a subsequent call to previous.
 	 * (Returns -1 if the list iterator is at the beginning of the list.)
@@ -67,17 +50,5 @@ public interface BigListIterator<K> extends ListIterator<K>, BidirectionalIterat
 	 * @see ListIterator#previousIndex()
 	 */
 
-	long previousBigIndex();
-
-	/** Returns the index of the element that would be returned by a subsequent call to previous.
-	 * (Returns -1 if the list iterator is at the beginning of the list.)
-	 * 
-	 * @return the index of the element that would be returned by a subsequent call to previous, or
-	 * -1 if list iterator is at beginning of list.
-	 * @throws IllegalStateException if the result is larger than {@link Integer#MAX_VALUE}.
-	 * @see ListIterator#previousIndex()
-	 * @deprecated Use {@link #previousBigIndex()} to avoid throwing an {@link IllegalStateException}.
-	 */
-	@Deprecated
-	int previousIndex();
+	long previousIndex();
 }
