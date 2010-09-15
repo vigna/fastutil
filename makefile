@@ -186,6 +186,16 @@ $(LIST_ITERATORS): ListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LIST_ITERATORS)
 
+BIG_LISTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList.c)
+$(BIG_LISTS): BigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LISTS)
+
+BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigListIterator.c)
+$(BIG_LIST_ITERATORS): BigListIterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LIST_ITERATORS)
+
 #
 # Abstract implementations
 #
