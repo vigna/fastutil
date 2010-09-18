@@ -1,7 +1,9 @@
+package it.unimi.dsi.fastutil;
+
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2009 Sebastiano Vigna 
+ * Copyright (C) 2002-2008 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -19,22 +21,10 @@
  *
  */
 
-package PACKAGE;
-
-import it.unimi.dsi.fastutil.BigListIterator;
-
-/** A type-specific {@link BigListIterator}.
+/** An interface for collections supporting {@link Size64#size64()}.
  *
- * <p>This interface adds a skipping method that take longs.
- *
- * @see BigListIterator
+ * <P>Note that implementations are not required to support more than {@link Integer#MAX_VALUE} elements.
  */
 
-public interface KEY_BIG_LIST_ITERATOR KEY_GENERIC extends KEY_BIDI_ITERATOR KEY_GENERIC, BigListIterator<KEY_GENERIC_CLASS> {
-#if #keys(primitive)
-	void set( KEY_TYPE k );
-	void add( KEY_TYPE k );
-#endif
-	void set( KEY_GENERIC_CLASS k );
-	void add( KEY_GENERIC_CLASS k );
+public interface BigCollection<K> extends java.util.Collection<K>, Size64 {
 }

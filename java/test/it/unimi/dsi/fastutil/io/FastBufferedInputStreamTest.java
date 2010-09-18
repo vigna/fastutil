@@ -30,8 +30,6 @@ public class FastBufferedInputStreamTest extends TestCase {
 			System.err.println( "Seed: " + seed );
 		}
 
-		int limit;
-		
 		public BastardByteArrayInputStream( byte[] array ) {
 			super( array );
 		}

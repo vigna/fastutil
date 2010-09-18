@@ -43,9 +43,9 @@ public class BigArrays {
 	
 	private BigArrays() {}
 
-	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array of given length.
+	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits a big array of given length.
 	 *
-	 * <P>This method may be used whenever an array range check is needed.
+	 * <P>This method may be used whenever a big array range check is needed.
 	 *
 	 * @param bigArrayLength a big-array length.
 	 * @param from a start index (inclusive).
@@ -59,9 +59,9 @@ public class BigArrays {
 		if ( to > bigArrayLength ) throw new ArrayIndexOutOfBoundsException( "End index (" + to + ") is greater than big-array length (" + bigArrayLength + ")" );
 	}
 
-	/** Ensures that a range given by an offset and a length fits an array of given length.
+	/** Ensures that a range given by an offset and a length fits a big array of given length.
 	 *
-	 * <P>This method may be used whenever an array range check is needed.
+	 * <P>This method may be used whenever a big array range check is needed.
 	 *
 	 * @param bigArrayLength a big-array length.
 	 * @param offset a start index for the fragment

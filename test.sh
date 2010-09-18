@@ -65,7 +65,7 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
-    LIST=(ArrayList)
+    LIST=(ArrayList BigArrayBigList)
 
     for ((f=0; f<${#LIST[*]}; f++)); do
 	l=${#TYPE[*]}
@@ -87,7 +87,7 @@ for ((t=1; t<10000; t*=10)); do
 	done
     done
 
-    STATIC=(Sets Lists)
+    STATIC=(Sets Lists BigLists)
 
     for ((f=0; f<${#STATIC[*]}; f++)); do
 	l=${#TYPE[*]}

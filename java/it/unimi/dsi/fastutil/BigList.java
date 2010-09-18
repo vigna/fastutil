@@ -31,7 +31,7 @@ import java.util.List;
  * of type {@link BigListIterator}.
  */
 
-public interface BigList<K> extends Collection<K> {
+public interface BigList<K> extends BigCollection<K>, Collection<K> {
 
 	/** Returns the element at the specified position.
 	 * 
@@ -65,13 +65,6 @@ public interface BigList<K> extends Collection<K> {
 	 * @see List#add(int,Object)
 	 */
 	public void add( long index, K element );
-	
-	/** Returns the number of elements in this big list.
-	 * 
-	 * @return the number of elements in this big list.
-	 * @see List#size()
-	 */
-	public long bigSize();
 	
 	@Deprecated
 	public int size();

@@ -39,6 +39,7 @@ public class IndirectPriorityQueues {
 	 * {@link IndirectPriorityQueue}.
 	 */
 
+	@SuppressWarnings("rawtypes")
 	public static class EmptyIndirectPriorityQueue extends AbstractIndirectPriorityQueue {
 
 		protected EmptyIndirectPriorityQueue() {}

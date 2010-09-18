@@ -139,13 +139,12 @@ public class BIG_ARRAYS {
 		}
 	}
 	
-		 	 	 	 		
-#if #keyclass(Object)
+#if #keyclass(Object)	
 	/** Creates a new big array using a the given one as prototype. 
 	 *
 	 * <P>This method returns a new big array of the given length whose element
 	 * are of the same class as of those of <code>prototype</code>. In case
-	 * of an empty big array, it tries to return {@link #EMPTY_ARRAY}, if possible.
+	 * of an empty big array, it tries to return {@link #EMPTY_BIG_ARRAY}, if possible.
 	 *
 	 * @param prototype a big array that will be used to type the new one.
 	 * @param length the length of the new big array.
@@ -153,23 +152,24 @@ public class BIG_ARRAYS {
 	 */
 
 	@SuppressWarnings("unchecked")
-	private static <K> K[][] newBigArray( final K[][] prototype, final long length ) {
+	public static <K> K[][] newBigArray( final K[][] prototype, final long length ) {
 		final Class<?> componentType = prototype.getClass().getComponentType();
-		if ( length == 0 && componentType == Object[].class ) return (K[][])EMPTY_BIG_ARRAY;
+		if ( length == 0 && componentType == Object[].class ) return KEY_GENERIC_BIG_ARRAY_CAST EMPTY_BIG_ARRAY;
 		final int baseLength = (int)((length + SEGMENT_MASK) >> SEGMENT_SHIFT);
 		Object[][] base = (Object[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
 		for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
 		base[ baseLength - 1 ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
 		return (K[][])base;
 	}
-#else
-	/** Creates a new type-specific big array.
+#endif
+
+	/** Creates a new big array.
 	 *
 	 * @param length the length of the new big array.
 	 * @return a new big array of given length.
 	 */
 
-	private static KEY_TYPE[][] newBigArray( final long length ) {
+	public static KEY_TYPE[][] newBigArray( final long length ) {
 		if ( length == 0 ) return EMPTY_BIG_ARRAY;
 		final int baseLength = (int)((length + SEGMENT_MASK) >> SEGMENT_SHIFT);
 		KEY_TYPE[][] base = new KEY_TYPE[ baseLength ][];
@@ -177,8 +177,6 @@ public class BIG_ARRAYS {
 		base[ baseLength - 1 ] = new KEY_TYPE[ (int)(length & SEGMENT_MASK) ];
 		return base;
 	}
-
-#endif
 
 	/** Ensures that a big array can contain the given number of entries.
 	 *
@@ -438,14 +436,13 @@ public class BIG_ARRAYS {
 	 */
 
 	public static KEY_GENERIC boolean equals( final KEY_GENERIC_TYPE[][] a1, final KEY_GENERIC_TYPE a2[][] ) {
+		if ( length( a1 ) != length( a2 ) ) return false;
 		int i = a1.length, j;
-		if ( i != a2.length ) return false;
 		KEY_GENERIC_TYPE[] t, u;
 		while( i-- != 0 ) {
 			t = a1[ i ];
 			u = a2[ i ];
 			j = t.length;
-			if ( j != a2[ i ].length ) return false;
 			while( j-- != 0 ) if (! KEY_EQUALS( t[ j ], u[ j ] ) ) return false;
 		}
 		return true;

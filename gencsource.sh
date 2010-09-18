@@ -124,6 +124,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_SUPER_GENERIC <? super K>\n"\
 "#define KEY_GENERIC_CAST (K)\n"\
 "#define KEY_GENERIC_ARRAY_CAST (K[])\n"\
+"#define KEY_GENERIC_BIG_ARRAY_CAST (K[][])\n"\
 "#else\n"\
 "#define KEY_GENERIC_CLASS KEY_CLASS\n"\
 "#define KEY_GENERIC_TYPE KEY_TYPE\n"\
@@ -133,6 +134,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_SUPER_GENERIC\n"\
 "#define KEY_GENERIC_CAST\n"\
 "#define KEY_GENERIC_ARRAY_CAST\n"\
+"#define KEY_GENERIC_BIG_ARRAY_CAST\n"\
 "#endif\n"\
 \
 "#if #valueclass(Object) || #valueclass(Reference)\n"\
@@ -194,8 +196,6 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#endif\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
 "#define BIG_LIST ${TYPE_CAP[$k]}BigList\n\n"\
-"#define LIST2 ${TYPE_CAP[$k]}List2\n\n"\
-"#define BIG_LIST2 ${TYPE_CAP[$k]}BigList2\n\n"\
 "#define STACK ${TYPE_STD[$k]}Stack\n\n"\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n\n"\
 "#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n\n"\
@@ -259,6 +259,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SETS ${TYPE_CAP[$k]}Sets\n\n"\
 "#define SORTED_SETS ${TYPE_CAP[$k]}SortedSets\n\n"\
 "#define LISTS ${TYPE_CAP[$k]}Lists\n\n"\
+"#define BIG_LISTS ${TYPE_CAP[$k]}BigLists\n\n"\
 "#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
 "#define FUNCTIONS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Functions\n"\
 "#define SORTED_MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMaps\n"\
@@ -269,6 +270,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define ARRAYS ${TYPE_CAP2[$k]}Arrays\n\n"\
 "#define BIG_ARRAYS ${TYPE_CAP2[$k]}BigArrays\n\n"\
 "#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n\n"\
+"#define BIG_LIST_ITERATORS ${TYPE_CAP2[$k]}BigListIterators\n\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n\n"\
 \
 \
@@ -293,6 +295,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define AVL_TREE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AVLTreeMap\n\n"\
 "#define RB_TREE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}RBTreeMap\n\n"\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n\n"\
+"#define BIG_ARRAY_BIG_LIST ${TYPE_CAP[$k]}BigArrayBigList\n\n"\
 "#define ARRAY_FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n\n"\
 "#define HEAP_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapPriorityQueue\n\n"\
 "#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapSemiIndirectPriorityQueue\n\n"\

@@ -41,6 +41,7 @@ public class PriorityQueues {
 	 * {@link PriorityQueue}.
 	 */
 
+	@SuppressWarnings("rawtypes")
 	public static class EmptyPriorityQueue extends AbstractPriorityQueue {
 
 		protected EmptyPriorityQueue() {}

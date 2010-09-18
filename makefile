@@ -186,7 +186,7 @@ $(LIST_ITERATORS): ListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LIST_ITERATORS)
 
-BIG_LISTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList.c)
+BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigList.c)
 $(BIG_LISTS): BigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LISTS)
@@ -235,6 +235,11 @@ $(ABSTRACT_LISTS): AbstractList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LISTS)
 
+ABSTRACT_BIG_LISTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigList.c)
+$(ABSTRACT_BIG_LISTS): AbstractBigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_BIG_LISTS)
+
 ABSTRACT_STACKS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)Stack.c)
 $(ABSTRACT_STACKS): AbstractStack.drv; ./gencsource.sh $< $@ >$@
 
@@ -264,6 +269,11 @@ ABSTRACT_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k
 $(ABSTRACT_LIST_ITERATORS): AbstractListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LIST_ITERATORS)
+
+ABSTRACT_BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigListIterator.c)
+$(ABSTRACT_BIG_LIST_ITERATORS): AbstractBigListIterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 
 #
 # Concrete implementations
@@ -344,6 +354,11 @@ $(ARRAY_LISTS): ArrayList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAY_LISTS)
 
+BIG_ARRAY_BIG_LISTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigArrayBigList.c)
+$(BIG_ARRAY_BIG_LISTS): BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_ARRAY_BIG_LISTS)
+
 FRONT_CODED_LISTS := $(foreach k, Byte Short Int Long Char, $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
 $(FRONT_CODED_LISTS): ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
@@ -404,6 +419,12 @@ $(ITERATORS_STATIC): Iterators.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ITERATORS_STATIC)
 
 
+BIG_LIST_ITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigListIterators.c)
+$(BIG_LIST_ITERATORS_STATIC): BigListIterators.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LIST_ITERATORS_STATIC)
+
+
 COLLECTIONS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Collections.c)
 $(COLLECTIONS_STATIC): Collections.drv; ./gencsource.sh $< $@ >$@
 
@@ -426,6 +447,12 @@ LISTS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Lists.c)
 $(LISTS_STATIC): Lists.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LISTS_STATIC)
+
+
+BIG_LISTS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigLists.c)
+$(BIG_LISTS_STATIC): BigLists.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_LISTS_STATIC)
 
 
 ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Arrays.c)

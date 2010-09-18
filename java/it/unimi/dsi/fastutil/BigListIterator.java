@@ -51,4 +51,16 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	 */
 
 	long previousIndex();
+
+	/** Skips the given number of elements.
+	 *
+	 * <P>The effect of this call is exactly the same as that of
+	 * calling {@link #next()} for <code>n</code> times (possibly stopping
+	 * if {@link #hasNext()} becomes false).
+	 *
+	 * @param n the number of elements to skip.
+	 * @return the number of elements actually skipped.
+	 */
+
+	long skip( long n );
 }
