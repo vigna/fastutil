@@ -235,7 +235,7 @@ $(ABSTRACT_LISTS): AbstractList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_LISTS)
 
-ABSTRACT_BIG_LISTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigList.c)
+ABSTRACT_BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/Abstract$(k)BigList.c)
 $(ABSTRACT_BIG_LISTS): AbstractBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_BIG_LISTS)
@@ -354,7 +354,7 @@ $(ARRAY_LISTS): ArrayList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAY_LISTS)
 
-BIG_ARRAY_BIG_LISTS := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigArrayBigList.c)
+BIG_ARRAY_BIG_LISTS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigArrayBigList.c)
 $(BIG_ARRAY_BIG_LISTS): BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAY_BIG_LISTS)
@@ -449,7 +449,7 @@ $(LISTS_STATIC): Lists.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(LISTS_STATIC)
 
 
-BIG_LISTS_STATIC := $(foreach k,$(TYPE_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigLists.c)
+BIG_LISTS_STATIC := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)BigLists.c)
 $(BIG_LISTS_STATIC): BigLists.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LISTS_STATIC)

@@ -114,6 +114,7 @@ public class BIG_ARRAYS {
 				System.arraycopy( srcBigArray[ segment ], start, destBigArray[ segment ], start, l );
 				length -= l;
 				start = 0;
+				segment++;
 				l = (int)Math.min( length, SEGMENT_SIZE );
 			}
 		}
@@ -157,8 +158,13 @@ public class BIG_ARRAYS {
 		if ( length == 0 && componentType == Object[].class ) return KEY_GENERIC_BIG_ARRAY_CAST EMPTY_BIG_ARRAY;
 		final int baseLength = (int)((length + SEGMENT_MASK) >> SEGMENT_SHIFT);
 		Object[][] base = (Object[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
-		for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
-		base[ baseLength - 1 ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
+		final int residual = (int)(length & SEGMENT_MASK);
+		if ( residual != 0 ) {
+			for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
+			base[ baseLength - 1 ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
+		}
+		else for( int i = 0; i < baseLength; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
+
 		return (K[][])base;
 	}
 #endif
@@ -173,8 +179,13 @@ public class BIG_ARRAYS {
 		if ( length == 0 ) return EMPTY_BIG_ARRAY;
 		final int baseLength = (int)((length + SEGMENT_MASK) >> SEGMENT_SHIFT);
 		KEY_TYPE[][] base = new KEY_TYPE[ baseLength ][];
-		for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = new KEY_TYPE[ SEGMENT_SIZE ];
-		base[ baseLength - 1 ] = new KEY_TYPE[ (int)(length & SEGMENT_MASK) ];
+		final int residual = (int)(length & SEGMENT_MASK);
+		if ( residual != 0 ) {
+			for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = new KEY_TYPE[ SEGMENT_SIZE ];
+			base[ baseLength - 1 ] = new KEY_TYPE[ (int)(length & SEGMENT_MASK) ];
+		}
+		else for( int i = 0; i < baseLength; i++ ) base[ i ] = new KEY_TYPE[ SEGMENT_SIZE ];
+		
 		return base;
 	}
 
@@ -404,24 +415,17 @@ public class BIG_ARRAYS {
 		final long length = length( bigArray );
 		BigArrays.ensureFromTo( length, from, to );
 		int fromSegment = segment( from );
-		int toSegment = segment( to + SEGMENT_MASK );
+		int toSegment = segment( to );
 		int fromOffset = offset( from );
 		int toOffset = offset( to );
-		KEY_GENERIC_TYPE[] t;
 		if ( fromSegment == toSegment ) {
-			t = bigArray[ fromSegment ];
-			while( toOffset-- != fromOffset ) t[ toOffset ] = value;
+			ARRAYS.fill( bigArray[ fromSegment ], fromOffset, toOffset, value );
 			return;
 		}
 
-		t = bigArray[ --toSegment ];
-		while( toOffset-- != 0 ) t[ toOffset ] = value;
-		while( --toSegment > fromSegment ) {
-			t = bigArray[ toSegment ];
-			for( int i = SEGMENT_SIZE; i-- != 0; ) t[ i ] = value;
-		}
-		t = bigArray[ fromSegment ];
-		for( ; fromOffset < SEGMENT_SIZE; fromOffset++ ) t[ fromOffset ] = value;
+		ARRAYS.fill( bigArray[ toSegment ], 0, toOffset, value );
+		while( --toSegment > fromSegment ) ARRAYS.fill( bigArray[ toSegment ], value );
+		ARRAYS.fill( bigArray[ fromSegment ], fromOffset, SEGMENT_SIZE, value );
 	}
 
 

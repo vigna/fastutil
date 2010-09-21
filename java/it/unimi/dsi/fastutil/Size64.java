@@ -39,4 +39,12 @@ public interface Size64 {
 	 * @return  the size of this data structure.
 	 */
 	long size64();
+
+	/** Returns the size of this data structure.
+	 *
+	 * @return the size of this data structure.
+	 * @deprecated Use {@link #size64()} instead.
+	 */
+	@Deprecated
+	int size();
 }

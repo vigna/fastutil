@@ -28,7 +28,7 @@ package it.unimi.dsi.fastutil;
  */
 
 public class BigArrays {
-	public final static int SEGMENT_SHIFT = 30;
+	public final static int SEGMENT_SHIFT = 4;
 	public final static int SEGMENT_SIZE =  1 << SEGMENT_SHIFT;
 	public final static int SEGMENT_MASK = SEGMENT_SIZE - 1;
 	

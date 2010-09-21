@@ -31,7 +31,7 @@ import java.util.List;
  * of type {@link BigListIterator}.
  */
 
-public interface BigList<K> extends BigCollection<K>, Collection<K> {
+public interface BigList<K> extends Collection<K>, Size64 {
 
 	/** Returns the element at the specified position.
 	 * 
