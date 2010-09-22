@@ -21,7 +21,6 @@
 
 package PACKAGE;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
@@ -71,7 +70,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
  * they are delayed as much as possible. 
  *
  * <p>The backing array is exposed by the {@link #elements()} method. If an instance
- * of this class was created {@linkplain #wrap(Object[],int) by wrapping}, 
+ * of this class was created {@linkplain #wrap(Object[][],long) by wrapping}, 
  * backing-array reallocations will be performed using reflection, so that
  * {@link #elements()} can return an array of the same type of the original array; the comments
  * about efficiency made in {@link it.unimi.dsi.fastutil.objects.ObjectArrays} apply here.
@@ -412,7 +411,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	/** Trims this array list so that the capacity is equal to the size. 
 	 *
-	 * @see java.util.ArrayList#trimTosize()
+	 * @see java.util.ArrayList#trimToSize()
 	 */
 	public void trim() {
 		trim( 0 );
@@ -519,7 +518,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	@SuppressWarnings("unchecked")
 	public Object clone() {
-		BIG_ARRAY_BIG_LIST c = new BIG_ARRAY_BIG_LIST( size );
+		BIG_ARRAY_BIG_LIST KEY_GENERIC c = new BIG_ARRAY_BIG_LIST KEY_GENERIC( size );
 		BIG_ARRAYS.copy( a, 0, c.a, 0, size );
 		c.size = size;
 		return c;
@@ -531,17 +530,27 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	}
 #endif
 
-    /** Compares this type-specific array list to another one.
+    /** Compares this type-specific big-array list to another one.
 	 *
 	 * <P>This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
-	 * @param l a type-specific array list.
-     * @return true if the argument contains the same elements of this type-specific array list.
+	 * @param l a type-specific big-array list.
+     * @return true if the argument contains the same elements of this type-specific big-array list.
 	 */
 	public boolean equals( final BIG_ARRAY_BIG_LIST KEY_GENERIC l ) {
 		if ( l == this ) return true;
-		return BIG_ARRAYS.equals( a, l.a );
+		long s = size64();
+		if ( s != l.size64() ) return false;
+		final KEY_GENERIC_TYPE[][] a1 = a;
+		final KEY_GENERIC_TYPE[][] a2 = l.a;
+
+#if #keyclass(Object)
+		while( s-- !=  0 ) if ( ! valEquals( BIG_ARRAYS.get( a1, s ), BIG_ARRAYS.get( a2, s ) ) ) return false;
+#else
+		while( s-- !=  0 ) if ( BIG_ARRAYS.get( a1, s ) != BIG_ARRAYS.get( a2, s ) ) return false;
+#endif
+		return true;
 	}
 
 
@@ -561,7 +570,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
      * @throws ClassCastException if the argument is not a list.
      */
 	@SuppressWarnings("unchecked")
-	public int compareTo( final BIG_ARRAY_BIG_LIST KEY_GENERIC l ) {
+	public int compareTo( final BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC l ) {
 		final long s1 = size64(), s2 = l.size64();
 		final KEY_GENERIC_TYPE a1[][] = a, a2[][] = l.a;
 		KEY_GENERIC_TYPE e1, e2;
