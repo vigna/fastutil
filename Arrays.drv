@@ -1,4 +1,4 @@
-/*		 
+/*
  * fastutil: Fast & compact type-specific collections for Java
  *
  * Copyright (C) 2002-2008 Sebastiano Vigna 
@@ -44,6 +44,9 @@ import it.unimi.dsi.fastutil.Hash;
 public class ARRAYS {
 
 #else
+
+import java.util.Comparator;
+
 /** A class providing static methods and objects that do useful things with type-specific arrays.
  *
  * In particular, the <code>ensureCapacity()</code>, <code>grow()</code>,
@@ -363,12 +366,88 @@ public class ARRAYS {
 		Arrays.ensureOffsetLength( a.length, offset, length );
 	}
 
+	private static final int SMALL = 7;
+	private static final int MEDIUM = 40;
+
+	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[], final int a, final int b ) {
+		final KEY_GENERIC_TYPE t = x[ a ];
+		x[ a ] = x[ b ];
+		x[ b ] = t;
+	}
+
+	private static KEY_GENERIC void vecSwap( final KEY_GENERIC_TYPE[] x, int a, int b, final int n ) {
+		for( int i = 0; i < n; i++, a++, b++ ) swap( x, a, b );
+	}
+ 
+	private static KEY_GENERIC int med3( final KEY_GENERIC_TYPE x[], final int a, final int b, final int c, KEY_COMPARATOR KEY_GENERIC comp ) {
+		int ab = comp.compare( x[ a ], x[ b ] );
+		int ac = comp.compare( x[ a ], x[ c ] );
+		int bc = comp.compare( x[ b ], x[ c ] );
+		return ( ab < 0 ?
+			( bc < 0 ? b : ac < 0 ? c : a ) :
+			( bc > 0 ? b : ac > 0 ? c : a ) );
+	}
+
+	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[] x, final int from, final int to, final KEY_COMPARATOR KEY_GENERIC comp ) {
+		final int len = to - from;
+		// Insertion sort on smallest arrays
+		if ( len < SMALL ) {
+			for ( int i = from; i < to; i++ )
+			for ( int j = i; j > from && comp.compare( x[ j - 1 ], x[ j ] ) > 0; j-- ) swap( x, j, j - 1 );
+			return;
+		}
+
+		// Choose a partition element, v
+		int m = from + len / 2;	 // Small arrays, middle element
+		if ( len > SMALL ) {
+			int l = from;
+			int n = to - 1;
+			if ( len > MEDIUM ) {		// Big arrays, pseudomedian of 9
+				int s = len / 8;
+				l = med3( x, l, l + s, l + 2 * s, comp );
+				m = med3( x, m - s, m, m + s, comp );
+				n = med3( x, n - 2 * s, n - s, n, comp );
+			}
+			m = med3( x, l, m, n, comp ); // Mid-size, med of 3
+		}
+		
+		final KEY_GENERIC_TYPE v = x[ m ];
+
+		// Establish Invariant: v* (<v)* (>v)* v*
+		int a = from, b = a, c = to - 1, d = c;
+		while(true) {
+			int comparison;
+			while ( b <= c && ( comparison = comp.compare( x[ b ], v ) ) <= 0 ) {
+				if ( comparison == 0 ) swap( x, a++, b );
+				b++;
+			}
+			while (c >= b && ( comparison = comp.compare( x[ c ], v ) ) >=0 ) {
+				if ( comparison == 0 ) swap( x, c, d-- );
+				c--;
+			}
+			if ( b > c ) break;
+			swap( x, b++, c-- );
+		}
+
+		// Swap partition elements back to middle
+		int s, n = to;
+		s = Math.min( a - from, b - a );
+		vecSwap( x, from, b - s, s );
+		s = Math.min( d - c, n - d - 1 );
+		vecSwap( x, b, n - s, s );
+
+		// Recursively sort non-partition-elements
+		if ( ( s = b - a ) > 1 ) quickSort( x, from, from + s, comp );
+		if ( ( s = d - c ) > 1 ) quickSort( x, n - s, n, comp );
+
+	}
+
 
 	/** A type-specific content-based hash strategy for arrays. */
 
 	private static final class ArrayHashStrategy KEY_GENERIC implements Hash.Strategy<KEY_GENERIC_TYPE[]>, java.io.Serializable {
-    	public static final long serialVersionUID = -7046029254386353129L;
-    
+		public static final long serialVersionUID = -7046029254386353129L;
+
 		public int hashCode( final KEY_GENERIC_TYPE[] o ) {
 			return java.util.Arrays.hashCode( o );
 		}

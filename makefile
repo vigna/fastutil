@@ -166,7 +166,7 @@ $(INDIRECT_DOUBLE_PRIORITY_QUEUES): IndirectDoublePriorityQueue.drv; ./gencsourc
 
 CSOURCES += $(INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
-COMPARATORS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Comparator.c)
+COMPARATORS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Comparator.c)
 $(COMPARATORS): Comparator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COMPARATORS)
