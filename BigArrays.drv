@@ -593,6 +593,71 @@ public class BIG_ARRAYS {
 
 	}
 
+	@SuppressWarnings("unchecked")
+	private static KEY_GENERIC long med3( final KEY_GENERIC_TYPE x[][], final long a, final long b, final long c ) {
+		int ab = KEY_CMP( BIG_ARRAYS.get( x, a ), BIG_ARRAYS.get( x, b ) );
+		int ac = KEY_CMP( BIG_ARRAYS.get( x, a ), BIG_ARRAYS.get( x, c ) );
+		int bc = KEY_CMP( BIG_ARRAYS.get( x, b ), BIG_ARRAYS.get( x, c ) );
+		return ( ab < 0 ?
+			( bc < 0 ? b : ac < 0 ? c : a ) :
+			( bc > 0 ? b : ac > 0 ? c : a ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x, final long from, final long to ) {
+		final long len = to - from;
+		// Insertion sort on smallest arrays
+		if ( len < SMALL ) {
+			for ( long i = from; i < to; i++ )
+			for ( long j = i; j > from && KEY_CMP( BIG_ARRAYS.get( x, j - 1 ), BIG_ARRAYS.get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
+			return;
+		}
+
+		// Choose a partition element, v
+		long m = from + len / 2;	 // Small arrays, middle element
+		if ( len > SMALL ) {
+			long l = from;
+			long n = to - 1;
+			if ( len > MEDIUM ) {		// Big arrays, pseudomedian of 9
+				long s = len / 8;
+				l = med3( x, l, l + s, l + 2 * s );
+				m = med3( x, m - s, m, m + s );
+				n = med3( x, n - 2 * s, n - s, n );
+			}
+			m = med3( x, l, m, n ); // Mid-size, med of 3
+		}
+		
+		final KEY_GENERIC_TYPE v = BIG_ARRAYS.get( x, m );
+
+		// Establish Invariant: v* (<v)* (>v)* v*
+		long a = from, b = a, c = to - 1, d = c;
+		while(true) {
+			int comparison;
+			while ( b <= c && ( comparison = KEY_CMP( BIG_ARRAYS.get( x, b ), v ) ) <= 0 ) {
+				if ( comparison == 0 ) swap( x, a++, b );
+				b++;
+			}
+			while (c >= b && ( comparison = KEY_CMP( BIG_ARRAYS.get( x, c ), v ) ) >=0 ) {
+				if ( comparison == 0 ) swap( x, c, d-- );
+				c--;
+			}
+			if ( b > c ) break;
+			swap( x, b++, c-- );
+		}
+
+		// Swap partition elements back to middle
+		long s, n = to;
+		s = Math.min( a - from, b - a );
+		vecSwap( x, from, b - s, s );
+		s = Math.min( d - c, n - d- 1 );
+		vecSwap( x, b, n - s, s );
+
+		// Recursively sort non-partition-elements
+		if ( ( s = b - a ) > 1 ) quickSort( x, from, from + s );
+		if ( ( s = d - c ) > 1 ) quickSort( x, n - s, n );
+
+	}
+
 
 #if #keyclass(Integer)
 #ifdef TEST
