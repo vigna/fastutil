@@ -106,26 +106,14 @@ public class BIG_ARRAYS {
 	 * @param destPos the starting position in the destination data.
 	 */
 	public static KEY_GENERIC void copy( final KEY_GENERIC_TYPE[][] srcBigArray, final long srcPos, final KEY_GENERIC_TYPE[][] destBigArray, final long destPos, long length ) {
-		if ( srcPos == destPos ) {
-			int segment = segment( srcPos );
-			int start = offset( srcPos );
-			int l = (int)Math.min( length, SEGMENT_SIZE - start );
-			while( length > 0 ) {
-				System.arraycopy( srcBigArray[ segment ], start, destBigArray[ segment ], start, l );
-				length -= l;
-				start = 0;
-				segment++;
-				l = (int)Math.min( length, SEGMENT_SIZE );
-			}
-		}
-		else {
+		if ( destPos <= srcPos ) {
 			int srcSegment = segment( srcPos );
 			int destSegment = segment( destPos );
 			int srcOffset = offset( srcPos );
 			int destOffset = offset( destPos );
 			int l;
 			while( length > 0 ) {
-				l = Math.min( srcBigArray[ srcSegment ].length - srcOffset, destBigArray[ destSegment ].length - destOffset );
+				l = (int)Math.min( length, Math.min( srcBigArray[ srcSegment ].length - srcOffset, destBigArray[ destSegment ].length - destOffset ) );
 				System.arraycopy( srcBigArray[ srcSegment ], srcOffset, destBigArray[ destSegment ], destOffset, l );
 				if ( ( srcOffset += l ) == SEGMENT_SIZE ) {
 					srcOffset = 0;
@@ -135,6 +123,28 @@ public class BIG_ARRAYS {
 					destOffset = 0;
 					destSegment++;
 				}
+				length -= l;
+			}
+		}
+		else {
+			int srcSegment = segment( srcPos + length );
+			int destSegment = segment( destPos + length  );
+			int srcOffset = offset( srcPos + length  );
+			int destOffset = offset( destPos + length  );
+			int l;
+			while( length > 0 ) {
+				if ( srcOffset == 0 ) {
+					srcOffset = SEGMENT_SIZE;
+					srcSegment--;
+				}
+				if ( destOffset == 0 ) {
+					destOffset = SEGMENT_SIZE;
+					destSegment--;
+				}
+				l = (int)Math.min( length, Math.min( srcOffset, destOffset ) );
+				System.arraycopy( srcBigArray[ srcSegment ], srcOffset - l, destBigArray[ destSegment ], destOffset - l, l );
+				srcOffset -= l;
+				destOffset -= l;
 				length -= l;
 			}
 		}
@@ -508,5 +518,61 @@ public class BIG_ARRAYS {
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public final static Hash.Strategy HASH_STRATEGY = new BigArrayHashStrategy();
 
+
+#if #keyclass(Integer)
+#ifdef TEST
+
+	private static long seed = System.currentTimeMillis(); 
+	private static java.util.Random r = new java.util.Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif #keys(primitive)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else 
+		return new java.io.Serializable() {};
+#endif
+	}
+
+	private static Object[] k, v, nk;
+	private static KEY_TYPE kt[];
+	private static KEY_TYPE nkt[];
+	private static BIG_ARRAY_BIG_LIST topList;
+
+	protected static void speedTest( int n, boolean b ) {}
+	
+	protected static void test( int n ) {
+		KEY_TYPE[][] a = BIG_ARRAYS.newBigArray( n );
+		for( int i = 0; i < n; i++ ) BIG_ARRAYS.set( a, i, i );
+		BIG_ARRAYS.copy( a, 0, a, 1, n - 2 );
+		assert a[ 0 ][ 0 ] == 0;
+		for( int i = 0; i < n - 2; i++ ) assert BIG_ARRAYS.get( a, i + 1 ) == i;
+
+		for( int i = 0; i < n; i++ ) BIG_ARRAYS.set( a, i, i );
+		BIG_ARRAYS.copy( a, 1, a, 0, n - 1 );
+		for( int i = 0; i < n - 1; i++ ) assert BIG_ARRAYS.get( a, i ) == i + 1;
+		System.out.println("Test OK");
+		return;
+	}
+
+
+	public static void main( String args[] ) {
+		int n  = Integer.parseInt(args[1]);
+		if ( args.length > 2 ) r = new java.util.Random( seed = Long.parseLong( args[ 2 ] ) );
+
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n);
+		} catch( Throwable e ) {
+			e.printStackTrace( System.err );
+			System.err.println( "seed: " + seed );
+		}
+	}
+
+#endif
+#endif
 
 }
