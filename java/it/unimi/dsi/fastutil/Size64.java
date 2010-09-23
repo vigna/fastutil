@@ -23,13 +23,10 @@ package it.unimi.dsi.fastutil;
 
 /** An interface for data structures whose size can exceed {@link Integer#MAX_VALUE}.
  *
- * <P>The only method specified by this interfaces is {@link #size64()}. Interfaces such as
- * {@link BigCollection} work around the type problem of {@link java.util.Collection#size()}
+ * <P>The only method specified by this interfaces is {@link #size64()}. Implementations
+ * can work around the type problem of {@link java.util.Collection#size()}
  * (e.g., not being able to return more than {@link Integer#MAX_VALUE}) by implementing this
- * interfaces.
- *
- * <P>A good workaround to the excessive proliferation of "big" structures (e.g., {@link BigCollection})
- * is that of implementing this interface whenever possible: callers interested in large structures
+ * interface. Callers interested in large structures
  * can use a reflective call to <code>instanceof</code> to check for the presence of {@link #size64()}.
  */
 
