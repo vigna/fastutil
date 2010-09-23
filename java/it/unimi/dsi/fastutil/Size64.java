@@ -40,9 +40,10 @@ public interface Size64 {
 	 */
 	long size64();
 
-	/** Returns the size of this data structure.
-	 *
-	 * @return the size of this data structure.
+	/** Returns the size of this data structure, minimised with {@link Integer#MAX_VALUE}.
+	 * 
+	 * @return the size of this data structure, minimised with {@link Integer#MAX_VALUE}.
+	 * @see java.util.Collection#size()
 	 * @deprecated Use {@link #size64()} instead.
 	 */
 	@Deprecated
