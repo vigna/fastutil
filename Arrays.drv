@@ -515,6 +515,158 @@ public class ARRAYS {
 
 	}
 
+	@SuppressWarnings("unchecked")
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[], final int from, final int to ) {
+		int len = to - from;
+		
+		// Insertion sort on smallest arrays
+		if ( len < SMALL ) {
+		    for ( int i = from; i < to; i++ ) 
+		    	for ( int j = i; j > from && KEY_LESS( dest[ j ], dest[ j - 1 ] ); j-- ) 
+		    		swap( dest, j, j - 1 );
+		    return;
+		}
+	
+		// Recursively sort halves of dest into src
+		final int mid = ( from + to ) >>> 1;
+		mergeSort( dest, src, from, mid );
+		mergeSort( dest, src, mid, to );
+	
+		// If list is already sorted, just copy from src to dest.  This is an
+		// optimization that results in faster sorts for nearly ordered lists.
+		if ( KEY_LESSEQ( src[ mid - 1 ], src[ mid ] ) ) {
+			System.arraycopy( src, from, dest, from, len );
+			return;
+		}
+	
+		// Merge sorted halves (now in src) into dest
+		for( int i = from, p = from, q = mid; i < to; i++ ) {
+			if ( q >= to || p < mid && KEY_LESSEQ( src[ p ], src[ q ] ) ) dest[ i ] = src[ p++ ];
+			else dest[ i ] = src[ q++ ];
+		}
+	}
+
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final int from, final int to ) {
+		mergeSort( src.clone(), src, from, to );
+	}
+
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[] ) {
+		mergeSort( src.clone(), src, 0, src.length );
+	}
+
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[] ) {
+		mergeSort( src, dest, 0, src.length );
+	}
+
+	@SuppressWarnings("unchecked")
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp ) {
+		int len = to - from;
+		
+		// Insertion sort on smallest arrays
+		if ( len < SMALL ) {
+		    for ( int i = from; i < to; i++ ) 
+		    	for ( int j = i; j > from && comp.compare( dest[ j ], dest[ j - 1 ] ) < 0; j-- ) 
+		    		swap( dest, j, j - 1 );
+		    return;
+		}
+	
+		// Recursively sort halves of dest into src
+		final int mid = ( from + to ) >>> 1;
+		mergeSort( dest, src, from, mid );
+		mergeSort( dest, src, mid, to );
+	
+		// If list is already sorted, just copy from src to dest.  This is an
+		// optimization that results in faster sorts for nearly ordered lists.
+		if ( comp.compare( src[ mid - 1 ], src[ mid ] ) <= 0 ) {
+			System.arraycopy( src, from, dest, from, len );
+			return;
+		}
+	
+		// Merge sorted halves (now in src) into dest
+		for( int i = from, p = from, q = mid; i < to; i++ ) {
+			if ( q >= to || p < mid && comp.compare( src[ p ], src[ q ] ) <= 0 ) dest[ i ] = src[ p++ ];
+			else dest[ i ] = src[ q++ ];
+		}
+	}
+
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp ) {
+		mergeSort( src.clone(), src, from, to, comp );
+	}
+
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], KEY_COMPARATOR KEY_GENERIC comp ) {
+		mergeSort( src.clone(), src, 0, src.length, comp );
+	}
+
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[], KEY_COMPARATOR KEY_GENERIC comp ) {
+		mergeSort( src, dest, 0, src.length, comp );
+	}
+
+#if ! #keyclass(Boolean)
+
+	/**
+	 * Searches the list for the specified value using
+	 * the binary search algorithm.  The list must <strong>must</strong> be
+	 * sorted (as by the sort method) prior to making this call.  If
+	 * it is not sorted, the results are undefined: in particular, the call
+	 * may enter an infinite loop.  If the list contains multiple elements
+	 * equal to the specified key, there is no guarantee which of the multiple elements
+	 * will be found.
+	 *
+	 * @param a the list to be searched.
+	 * @param key the value to be searched for.
+	 * @param from the leftmost search position, inclusive.
+	 * @param to the rightmost search position, inclusive.
+	 * @return index of the search key, if it is contained in the list;
+	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             point</i> is defined as the the point at which the value would
+	 *             be inserted into the list: the index of the first
+	 *             element greater than the key, or <tt>list.length</tt>, if all
+	 *             elements in the list are less than the specified key.  Note
+	 *             that this guarantees that the return value will be &gt;= 0 if
+	 *             and only if the key is found.
+	 * @see java.util.Arrays
+	 */
+	@SuppressWarnings({"unchecked","rawtypes"})
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[] a, int from, int to, final KEY_GENERIC_TYPE key ) {
+		KEY_GENERIC_TYPE midVal;
+		while (from <= to) {
+			final int mid = (from + to) >>> 1;
+			midVal = a[ mid ];
+#if #keys(primitive)
+			if (midVal < key) from = mid + 1;
+			else if (midVal > key) to = mid - 1;
+			else return mid;
+#else
+			final int cmp = ((Comparable)midVal).compareTo( key );
+			if ( cmp < 0 ) from = mid + 1;
+			else if (cmp > 0) to = mid - 1;
+			else return mid;
+#endif
+        }
+		return -( from + 1 );
+	}
+
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[] a, final KEY_GENERIC_TYPE key ) {
+		return binarySearch( a, 0, a.length, key );
+	}
+
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[] a, int from, int to, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
+		KEY_GENERIC_TYPE midVal;
+		while (from <= to) {
+			final int mid = (from + to) >>> 1;
+			midVal = a[ mid ];
+			final int cmp = c.compare( midVal, key );
+			if ( cmp < 0 ) from = mid + 1;
+			else if (cmp > 0) to = mid - 1;
+			else return mid; // key found
+		}
+		return -( from + 1 );
+	}
+
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[] a, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
+		return binarySearch( a, 0, a.length, key, c );
+	}
+#endif
 
 	/** A type-specific content-based hash strategy for arrays. */
 

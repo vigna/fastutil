@@ -81,16 +81,56 @@ public class BIG_ARRAYS {
 	 * 
 	 * @param bigArray a big array.
 	 * @param index a position in the big array.
-	 * @return the element previously held at the specified position.
 	 */
-	public static KEY_GENERIC KEY_GENERIC_TYPE set( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE value ) {
-		final int segment = segment( index );
-		final int offset = offset( index );
-		final KEY_GENERIC_TYPE old = bigArray[ segment ][ offset ];
-		bigArray[ segment ][ offset ] = value;
-		return old;
+	public static KEY_GENERIC void set( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE value ) {
+		bigArray[ segment( index ) ][ offset( index ) ] = value;
 	}
 	
+	/** Swaps the element of the given big array of specified indices.
+	 * 
+	 * @param bigArray a big array.
+	 * @param first a position in the big array.
+	 * @param second a position in the big array.
+	 */
+	public static KEY_GENERIC void swap( final KEY_GENERIC_TYPE[][] bigArray, final long first, final long second ) {
+		final KEY_GENERIC_TYPE t = bigArray[ segment( first ) ][ offset( first ) ];
+		bigArray[ segment( first ) ][ offset( first ) ] = bigArray[ segment( second ) ][ offset( second ) ];
+		bigArray[ segment( second ) ][ offset( second ) ] = t;
+	}
+	
+#if #keys(primitive) && ! #keyclass(Boolean)
+	/** Adds the specified increment the element of the given big array of specified index.
+	 * 
+	 * @param bigArray a big array.
+	 * @param index a position in the big array.
+	 * @param incr the increment
+	 */
+	public static void add( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE incr ) {
+		bigArray[ segment( index ) ][ offset( index ) ] += incr;
+	}
+
+	/** Increments the element of the given big array of specified index.
+	 * 
+	 * @param bigArray a big array.
+	 * @param index a position in the big array.
+	 */
+	public static void incr( final KEY_GENERIC_TYPE[][] bigArray, final long index ) {
+		bigArray[ segment( index ) ][ offset( index ) ]++;
+	}
+
+	/** Decrements the element of the given big array of specified index.
+	 * 
+	 * @param bigArray a big array.
+	 * @param index a position in the big array.
+	 */
+	public static void decr( final KEY_GENERIC_TYPE[][] bigArray, final long index ) {
+		bigArray[ segment( index ) ][ offset( index ) ]--;
+	}
+
+
+#endif
+
+
 	/** Returns the length of the given big array.
 	 * 
 	 * @param bigArray a big array.
@@ -520,20 +560,14 @@ public class BIG_ARRAYS {
 	private static final int SMALL = 7;
 	private static final int MEDIUM = 40;
 
-	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[][], final long a, final long b ) {
-		final KEY_GENERIC_TYPE t = BIG_ARRAYS.get( x, a );
-		BIG_ARRAYS.set( x, a, BIG_ARRAYS.get( x, b ) );
-		BIG_ARRAYS.set( x, b,  t );
-	}
-
 	private static KEY_GENERIC void vecSwap( final KEY_GENERIC_TYPE[][] x, long a, long b, final long n ) {
 		for( int i = 0; i < n; i++, a++, b++ ) swap( x, a, b );
 	}
  
 	private static KEY_GENERIC long med3( final KEY_GENERIC_TYPE x[][], final long a, final long b, final long c, KEY_COMPARATOR KEY_GENERIC comp ) {
-		int ab = comp.compare( BIG_ARRAYS.get( x, a ), BIG_ARRAYS.get( x, b ) );
-		int ac = comp.compare( BIG_ARRAYS.get( x, a ), BIG_ARRAYS.get( x, c ) );
-		int bc = comp.compare( BIG_ARRAYS.get( x, b ), BIG_ARRAYS.get( x, c ) );
+		int ab = comp.compare( get( x, a ), get( x, b ) );
+		int ac = comp.compare( get( x, a ), get( x, c ) );
+		int bc = comp.compare( get( x, b ), get( x, c ) );
 		return ( ab < 0 ?
 			( bc < 0 ? b : ac < 0 ? c : a ) :
 			( bc > 0 ? b : ac > 0 ? c : a ) );
@@ -544,7 +578,7 @@ public class BIG_ARRAYS {
 		// Insertion sort on smallest arrays
 		if ( len < SMALL ) {
 			for ( long i = from; i < to; i++ )
-			for ( long j = i; j > from && comp.compare( BIG_ARRAYS.get( x, j - 1 ), BIG_ARRAYS.get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
+			for ( long j = i; j > from && comp.compare( get( x, j - 1 ), get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
 			return;
 		}
 
@@ -562,17 +596,17 @@ public class BIG_ARRAYS {
 			m = med3( x, l, m, n, comp ); // Mid-size, med of 3
 		}
 		
-		final KEY_GENERIC_TYPE v = BIG_ARRAYS.get( x, m );
+		final KEY_GENERIC_TYPE v = get( x, m );
 
 		// Establish Invariant: v* (<v)* (>v)* v*
 		long a = from, b = a, c = to - 1, d = c;
 		while(true) {
 			int comparison;
-			while ( b <= c && ( comparison = comp.compare( BIG_ARRAYS.get( x, b ), v ) ) <= 0 ) {
+			while ( b <= c && ( comparison = comp.compare( get( x, b ), v ) ) <= 0 ) {
 				if ( comparison == 0 ) swap( x, a++, b );
 				b++;
 			}
-			while (c >= b && ( comparison = comp.compare( BIG_ARRAYS.get( x, c ), v ) ) >=0 ) {
+			while (c >= b && ( comparison = comp.compare( get( x, c ), v ) ) >=0 ) {
 				if ( comparison == 0 ) swap( x, c, d-- );
 				c--;
 			}
@@ -595,9 +629,9 @@ public class BIG_ARRAYS {
 
 	@SuppressWarnings("unchecked")
 	private static KEY_GENERIC long med3( final KEY_GENERIC_TYPE x[][], final long a, final long b, final long c ) {
-		int ab = KEY_CMP( BIG_ARRAYS.get( x, a ), BIG_ARRAYS.get( x, b ) );
-		int ac = KEY_CMP( BIG_ARRAYS.get( x, a ), BIG_ARRAYS.get( x, c ) );
-		int bc = KEY_CMP( BIG_ARRAYS.get( x, b ), BIG_ARRAYS.get( x, c ) );
+		int ab = KEY_CMP( get( x, a ), get( x, b ) );
+		int ac = KEY_CMP( get( x, a ), get( x, c ) );
+		int bc = KEY_CMP( get( x, b ), get( x, c ) );
 		return ( ab < 0 ?
 			( bc < 0 ? b : ac < 0 ? c : a ) :
 			( bc > 0 ? b : ac > 0 ? c : a ) );
@@ -609,7 +643,7 @@ public class BIG_ARRAYS {
 		// Insertion sort on smallest arrays
 		if ( len < SMALL ) {
 			for ( long i = from; i < to; i++ )
-			for ( long j = i; j > from && KEY_CMP( BIG_ARRAYS.get( x, j - 1 ), BIG_ARRAYS.get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
+			for ( long j = i; j > from && KEY_CMP( get( x, j - 1 ), get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
 			return;
 		}
 
@@ -627,17 +661,17 @@ public class BIG_ARRAYS {
 			m = med3( x, l, m, n ); // Mid-size, med of 3
 		}
 		
-		final KEY_GENERIC_TYPE v = BIG_ARRAYS.get( x, m );
+		final KEY_GENERIC_TYPE v = get( x, m );
 
 		// Establish Invariant: v* (<v)* (>v)* v*
 		long a = from, b = a, c = to - 1, d = c;
 		while(true) {
 			int comparison;
-			while ( b <= c && ( comparison = KEY_CMP( BIG_ARRAYS.get( x, b ), v ) ) <= 0 ) {
+			while ( b <= c && ( comparison = KEY_CMP( get( x, b ), v ) ) <= 0 ) {
 				if ( comparison == 0 ) swap( x, a++, b );
 				b++;
 			}
-			while (c >= b && ( comparison = KEY_CMP( BIG_ARRAYS.get( x, c ), v ) ) >=0 ) {
+			while (c >= b && ( comparison = KEY_CMP( get( x, c ), v ) ) >=0 ) {
 				if ( comparison == 0 ) swap( x, c, d-- );
 				c--;
 			}
@@ -657,6 +691,74 @@ public class BIG_ARRAYS {
 		if ( ( s = d - c ) > 1 ) quickSort( x, n - s, n );
 
 	}
+
+#if ! #keyclass(Boolean)
+
+	/**
+	 * Searches the list for the specified value using
+	 * the binary search algorithm.  The list must <strong>must</strong> be
+	 * sorted (as by the sort method) prior to making this call.  If
+	 * it is not sorted, the results are undefined: in particular, the call
+	 * may enter an infinite loop.  If the list contains multiple elements
+	 * equal to the specified key, there is no guarantee which of the multiple elements
+	 * will be found.
+	 *
+	 * @param a the list to be searched.
+	 * @param key the value to be searched for.
+	 * @param from the leftmost search position, inclusive.
+	 * @param to the rightmost search position, inclusive.
+	 * @return index of the search key, if it is contained in the list;
+	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             point</i> is defined as the the point at which the value would
+	 *             be inserted into the list: the index of the first
+	 *             element greater than the key, or <tt>list.length</tt>, if all
+	 *             elements in the list are less than the specified key.  Note
+	 *             that this guarantees that the return value will be &gt;= 0 if
+	 *             and only if the key is found.
+	 * @see java.util.Arrays
+	 */
+	@SuppressWarnings({"unchecked","rawtypes"})
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, int from, int to, final KEY_GENERIC_TYPE key ) {
+		KEY_GENERIC_TYPE midVal;
+		while (from <= to) {
+			final int mid = (from + to) >>> 1;
+			midVal = get( a, mid );
+#if #keys(primitive)
+			if (midVal < key) from = mid + 1;
+			else if (midVal > key) to = mid - 1;
+			else return mid;
+#else
+			final int cmp = ((Comparable)midVal).compareTo( key );
+			if ( cmp < 0 ) from = mid + 1;
+			else if (cmp > 0) to = mid - 1;
+			else return mid;
+#endif
+        }
+		return -( from + 1 );
+	}
+
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, final KEY_TYPE key ) {
+		return binarySearch( a, 0, a.length, key );
+	}
+
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, int from, int to, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
+		KEY_GENERIC_TYPE midVal;
+		while (from <= to) {
+			final int mid = (from + to) >>> 1;
+			midVal = get( a, mid );
+			final int cmp = c.compare( midVal, key );
+			if ( cmp < 0 ) from = mid + 1;
+			else if (cmp > 0) to = mid - 1;
+			else return mid; // key found
+		}
+		return -( from + 1 );
+	}
+
+	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
+		return binarySearch( a, 0, a.length, key, c );
+	}
+
+#endif
 
 
 #if #keyclass(Integer)
@@ -686,14 +788,14 @@ public class BIG_ARRAYS {
 	
 	protected static void test( int n ) {
 		KEY_TYPE[][] a = BIG_ARRAYS.newBigArray( n );
-		for( int i = 0; i < n; i++ ) BIG_ARRAYS.set( a, i, i );
+		for( int i = 0; i < n; i++ ) set( a, i, i );
 		BIG_ARRAYS.copy( a, 0, a, 1, n - 2 );
 		assert a[ 0 ][ 0 ] == 0;
-		for( int i = 0; i < n - 2; i++ ) assert BIG_ARRAYS.get( a, i + 1 ) == i;
+		for( int i = 0; i < n - 2; i++ ) assert get( a, i + 1 ) == i;
 
-		for( int i = 0; i < n; i++ ) BIG_ARRAYS.set( a, i, i );
+		for( int i = 0; i < n; i++ ) set( a, i, i );
 		BIG_ARRAYS.copy( a, 1, a, 0, n - 1 );
-		for( int i = 0; i < n - 1; i++ ) assert BIG_ARRAYS.get( a, i ) == i + 1;
+		for( int i = 0; i < n - 1; i++ ) assert get( a, i ) == i + 1;
 		System.out.println("Test OK");
 		return;
 	}
