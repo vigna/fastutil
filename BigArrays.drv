@@ -109,6 +109,16 @@ public class BIG_ARRAYS {
 		bigArray[ segment( index ) ][ offset( index ) ] += incr;
 	}
 
+	/** Multiplies by the specified factor the element of the given big array of specified index.
+	 * 
+	 * @param bigArray a big array.
+	 * @param index a position in the big array.
+	 * @param factor the factor
+	 */
+	public static void mul( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE factor ) {
+		bigArray[ segment( index ) ][ offset( index ) ] *= factor;
+	}
+
 	/** Increments the element of the given big array of specified index.
 	 * 
 	 * @param bigArray a big array.
@@ -205,20 +215,34 @@ public class BIG_ARRAYS {
 	 * @return a new big array of given type and length.
 	 */
 
-	@SuppressWarnings("unchecked")
 	public static <K> K[][] newBigArray( final K[][] prototype, final long length ) {
-		final Class<?> componentType = prototype.getClass().getComponentType();
+		return newBigArray( prototype.getClass().getComponentType(), length );
+	}
+
+	/** Creates a new big array using a the given one as component type. 
+	 *
+	 * <P>This method returns a new big array 
+	 * are of class <code>prototype</code>. In case
+	 * of an empty big array, it tries to return {@link #EMPTY_BIG_ARRAY}, if possible.
+	 *
+	 * @param prototype a big array that will be used to type the new one.
+	 * @param length the length of the new big array.
+	 * @return a new big array of given type and length.
+	 */
+
+	@SuppressWarnings("unchecked")
+	private static <K> K[][] newBigArray( Class<?> componentType, final long length ) {
 		if ( length == 0 && componentType == Object[].class ) return KEY_GENERIC_BIG_ARRAY_CAST EMPTY_BIG_ARRAY;
 		final int baseLength = (int)((length + SEGMENT_MASK) >> SEGMENT_SHIFT);
-		Object[][] base = (Object[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
+		K[][] base = (K[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
 		final int residual = (int)(length & SEGMENT_MASK);
 		if ( residual != 0 ) {
-			for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
-			base[ baseLength - 1 ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
+			for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (K[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
+			base[ baseLength - 1 ] = (K[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
 		}
-		else for( int i = 0; i < baseLength; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
+		else for( int i = 0; i < baseLength; i++ ) base[ i ] = (K[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
 
-		return (K[][])base;
+		return base;
 	}
 #endif
 
@@ -242,6 +266,45 @@ public class BIG_ARRAYS {
 		return base;
 	}
 
+#if #keyclass(Object)
+	/** Turns a standard array into a big array.
+	 *
+	 * <P>Note that the returned big array might contain as a segment the original array.
+	 *
+	 * @param array an array.
+	 * @return a new big array with the same length and content of <code>array</code>.
+	 */
+
+	@SuppressWarnings("unchecked")
+	public static <K> K[][] wrap( final K[] array ) {
+		if ( array.length == 0 && array.getClass() == Object[].class ) return KEY_GENERIC_BIG_ARRAY_CAST EMPTY_BIG_ARRAY;
+		if ( array.length <= SEGMENT_SIZE ) {
+			final K[][] bigArray = (K[][])java.lang.reflect.Array.newInstance( array.getClass(), 1 );
+			bigArray[ 0 ] = array;
+			return bigArray;
+		}
+		final K[][] bigArray = newBigArray( array.getClass(), ( (long)array.length + SEGMENT_MASK ) >>> SEGMENT_SHIFT );
+		for( int i = 0; i < bigArray.length; i++ ) System.arraycopy( array, i << SEGMENT_SHIFT, bigArray[ i ], 0, bigArray[ i ].length );
+		return bigArray;
+	}
+
+#else
+	/** Turns a standard array into a big array.
+	 *
+	 * <P>Note that the returned big array might contain as a segment the original array.
+	 *
+	 * @param array an array.
+	 * @return a new big array with the same length and content of <code>array</code>.
+	 */
+
+	public static KEY_TYPE[][] wrap( final KEY_TYPE[] array ) {
+		if ( array.length == 0 ) return EMPTY_BIG_ARRAY;
+		if ( array.length <= SEGMENT_SIZE ) return new KEY_TYPE[][] { array };
+		final KEY_TYPE[][] bigArray = newBigArray( ( (long)array.length + SEGMENT_MASK ) >>> SEGMENT_SHIFT );
+		for( int i = 0; i < bigArray.length; i++ ) System.arraycopy( array, i << SEGMENT_SHIFT, bigArray[ i ], 0, bigArray[ i ].length );
+		return bigArray;
+	}
+#endif
 	/** Ensures that a big array can contain the given number of entries.
 	 *
 	 * <P>If you cannot foresee whether this big array will need again to be
@@ -798,6 +861,7 @@ public class BIG_ARRAYS {
 		for( int i = 0; i < n - 1; i++ ) assert get( a, i ) == i + 1;
 		System.out.println("Test OK");
 		return;
+
 	}
 
 
