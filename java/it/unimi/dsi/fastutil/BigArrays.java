@@ -37,7 +37,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  */
 
 public class BigArrays {
-	public final static int SEGMENT_SHIFT = 27;
+	public final static int SEGMENT_SHIFT = 6;
 	/** The current measure for a segment is the largest size that makes
 	 * the physical memory allocation for a single segment strictly smaller
 	 * than 2<sup>31</sup> bytes. */

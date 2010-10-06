@@ -283,7 +283,7 @@ public class BIG_ARRAYS {
 			bigArray[ 0 ] = array;
 			return bigArray;
 		}
-		final K[][] bigArray = newBigArray( array.getClass(), ( (long)array.length + SEGMENT_MASK ) >>> SEGMENT_SHIFT );
+		final K[][] bigArray = newBigArray( array.getClass(), array.length );
 		for( int i = 0; i < bigArray.length; i++ ) System.arraycopy( array, i << SEGMENT_SHIFT, bigArray[ i ], 0, bigArray[ i ].length );
 		return bigArray;
 	}
@@ -300,7 +300,7 @@ public class BIG_ARRAYS {
 	public static KEY_TYPE[][] wrap( final KEY_TYPE[] array ) {
 		if ( array.length == 0 ) return EMPTY_BIG_ARRAY;
 		if ( array.length <= SEGMENT_SIZE ) return new KEY_TYPE[][] { array };
-		final KEY_TYPE[][] bigArray = newBigArray( ( (long)array.length + SEGMENT_MASK ) >>> SEGMENT_SHIFT );
+		final KEY_TYPE[][] bigArray = newBigArray( array.length );
 		for( int i = 0; i < bigArray.length; i++ ) System.arraycopy( array, i << SEGMENT_SHIFT, bigArray[ i ], 0, bigArray[ i ].length );
 		return bigArray;
 	}
@@ -564,7 +564,25 @@ public class BIG_ARRAYS {
 		return true;
 	}
 
+	/* Returns a string representation of the contents of the specified array. 
+	 *
+	 * The string representation consists of a list of the array's elements, enclosed in square brackets ("[]"). Adjacent elements are separated by the characters ", " (a comma followed by a space). Returns "null" if <code>a</code> is null.
+	 * @param a  the array whose string representation to return.
+	 * @return the string represetation of <code>a</code>.
+	 */
 
+	public static String toString( final KEY_GENERIC_TYPE[][] a ) {
+		if ( a == null ) return "null";
+		final long last = length( a ) - 1;
+		if ( last == - 1 ) return "[]";
+		final StringBuilder b = new StringBuilder();
+		b.append('[');
+		for ( long i = 0; ; i++ ) {
+			b.append( String.valueOf( get( a, i ) ) );
+			if ( i == last ) return b.append(']').toString();
+			b.append(", ");
+        }
+	}
 
 
 	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits a big array.
@@ -859,6 +877,13 @@ public class BIG_ARRAYS {
 		for( int i = 0; i < n; i++ ) set( a, i, i );
 		BIG_ARRAYS.copy( a, 1, a, 0, n - 1 );
 		for( int i = 0; i < n - 1; i++ ) assert get( a, i ) == i + 1;
+
+		for( int i = 0; i < n; i++ ) set( a, i, i );
+		KEY_TYPE[] b = new KEY_TYPE[ n ];
+		for( int i = 0; i < n; i++ ) b[ i ] = i;
+		
+		assert equals( wrap( b ), a );
+
 		System.out.println("Test OK");
 		return;
 
