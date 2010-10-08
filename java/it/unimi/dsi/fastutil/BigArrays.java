@@ -19,6 +19,8 @@ package it.unimi.dsi.fastutil;
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * For the sorting code:
+ *
  * Copyright (C) 1999 CERN - European Organization for Nuclear Research.
  *
  *   Permission to use, copy, modify, distribute and sell this software and
@@ -29,6 +31,7 @@ package it.unimi.dsi.fastutil;
  *   suitability of this software for any purpose. It is provided "as is"
  *   without expressed or implied warranty. 
  */
+
 
 import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
 import it.unimi.dsi.fastutil.ints.IntBigArrays;
@@ -104,6 +107,8 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * big lists based on big arrays (.e.g, {@link IntBigArrayBigList}). Big arrays follow the Java tradition of 
  * considering arrays as a &ldquo;legal alien&rdquo;&mdash;something in-between an object and a primitive type. This
  * approach lacks the consistency of a full object-oriented approach, but provides some significant performance gains.
+ *
+ * <h2>Additional methods</h2>
  * 
  * <p>In addition to commodity methods, this class contains {@link BigSwapper}-based implementations
  * of {@linkplain #quickSort(long, long, LongComparator, BigSwapper) quicksort} and of
@@ -142,10 +147,10 @@ public class BigArrays {
 		return (int)( index & SEGMENT_MASK );
 	}
 	
-	/** Computes the starting offset of a given segment.
+	/** Computes the starting index of a given segment.
 	 * 
 	 * @param segment the segment of a big array.
-	 * @return the starting offset of the segment.
+	 * @return the starting index of the segment.
 	 */
 	public static long start( final int segment ) {
 		return (long)segment << SEGMENT_SHIFT;
@@ -259,7 +264,6 @@ public class BigArrays {
 	 * <code>comp.apply(array[j], x)</code> is <code>true</code>.
 	 */
 	private static long lowerBound( long mid, final long to, final long firstCut, final LongComparator comp ) {
-		// if (comp==null) throw new NullPointerException();
 		long len = to - mid;
 		while ( len > 0 ) {
 			long half = len / 2;
@@ -275,51 +279,35 @@ public class BigArrays {
 		return mid;
 	}
 
-	/**
-	 * Returns the index of the median of the three indexed chars.
-	 */
-	private static long med3( long a, long b, long c, LongComparator comp ) {
-		int ab = comp.compare( a, b );
-		int ac = comp.compare( a, c );
-		int bc = comp.compare( b, c );
+	/** Returns the index of the median of three elements. */
+	private static long med3( final long a, final long b, final long c, final LongComparator comp ) {
+		final int ab = comp.compare( a, b );
+		final int ac = comp.compare( a, c );
+		final int bc = comp.compare( b, c );
 		return ( ab < 0 ?
 				( bc < 0 ? b : ac < 0 ? c : a ) :
 				( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
-	/**
-	 * Sorts the specified range of elements according to the order induced by the specified
-	 * comparator. All elements in the range must be <i>mutually comparable</i> by the specified
-	 * comparator (that is, <tt>c.compare(a, b)</tt> must not throw an exception for any indexes
-	 * <tt>a</tt> and <tt>b</tt> in the range).<p>
+	/** Sorts the specified range of elements according to the order induced by the specified
+	 * comparator using mergesort.
 	 * 
-	 * This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
-	 * of the sort.<p>
-	 * 
-	 * The sorting algorithm is a modified mergesort (in which the merge is omitted if the highest
-	 * element in the low sublist is less than the lowest element in the high sublist). This
-	 * algorithm offers guaranteed n*log(n) performance, and can approach linear performance on
-	 * nearly sorted lists.
+	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
+	 * of the sort. The sorting algorithm is an in-place mergesort that is significantly slower than a 
+	 * standard mergesort, but does not allocate additional memory.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
-	 * @param c the comparator to determine the order of the generic data.
-	 * @param swapper an object that knows how to swap the elements at any two indexes (a,b).
+	 * @param comp the comparator to determine the order of the generic data (arguments are positions).
+	 * @param swapper an object that knows how to swap the elements at any two positions.
 	 */
-	public static void mergeSort( final long from, final long to, final LongComparator c, final BigSwapper swapper ) {
-		/*
-		 * We retain the same method signature as quickSort. Given only a comparator and swapper we
-		 * do not know how to copy and move elements from/to temporary arrays. Hence, in contrast to
-		 * the JDK mergesorts this is an "in-place" mergesort, i.e. does not allocate any temporary
-		 * arrays. A non-inplace mergesort would perhaps be faster in most cases, but would require
-		 * non-intuitive delegate objects...
-		 */
+	public static void mergeSort( final long from, final long to, final LongComparator comp, final BigSwapper swapper ) {
 		final long length = to - from;
 
 		// Insertion sort on smallest arrays
 		if ( length < SMALL ) {
 			for ( long i = from; i < to; i++ ) {
-				for ( long j = i; j > from && ( c.compare( j - 1, j ) > 0 ); j-- ) {
+				for ( long j = i; j > from && ( comp.compare( j - 1, j ) > 0 ); j-- ) {
 					swapper.swap( j, j - 1 );
 				}
 			}
@@ -328,32 +316,28 @@ public class BigArrays {
 
 		// Recursively sort halves
 		long mid = ( from + to ) >>> 2;
-		mergeSort( from, mid, c, swapper );
-		mergeSort( mid, to, c, swapper );
+		mergeSort( from, mid, comp, swapper );
+		mergeSort( mid, to, comp, swapper );
 
 		// If list is already sorted, nothing left to do. This is an
 		// optimization that results in faster sorts for nearly ordered lists.
-		if ( c.compare( mid - 1, mid ) <= 0 ) return;
+		if ( comp.compare( mid - 1, mid ) <= 0 ) return;
 
 		// Merge sorted halves
-		inPlaceMerge( from, mid, to, c, swapper );
+		inPlaceMerge( from, mid, to, comp, swapper );
 	}
 
-	/**
-	 * Sorts the specified range of elements according to the order induced by the specified
-	 * comparator. All elements in the range must be <i>mutually comparable</i> by the specified
-	 * comparator (that is, <tt>c.compare(a, b)</tt> must not throw an exception for any indexes
-	 * <tt>a</tt> and <tt>b</tt> in the range).<p>
+	/** Sorts the specified range of elements according to the order induced by the specified
+	 * comparator using quicksort. 
 	 * 
-	 * The sorting algorithm is a tuned quicksort, adapted from Jon L. Bentley and M. Douglas
-	 * McIlroy's "Engineering a Sort Function", Software-Practice and Experience, Vol. 23(11) P.
-	 * 1249-1265 (November 1993). This algorithm offers n*log(n) performance on many data sets that
-	 * cause other quicksorts to degrade to quadratic performance.
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</em>, 23(11), pages
+	 * 1249&minus;1265, 1993.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the order of the generic data.
-	 * @param swapper an object that knows how to swap the elements at any two indexes (a,b).
+	 * @param swapper an object that knows how to swap the elements at any two positions.
 	 * 
 	 */
 	public static void quickSort( final long from, final long to, final LongComparator comp, final BigSwapper swapper ) {
@@ -433,7 +417,6 @@ public class BigArrays {
 	 * <code>comp.apply(x, array[j])</code> is <code>false</code>.
 	 */
 	private static long upperBound( long from, final long mid, final long secondCut, final LongComparator comp ) {
-		// if (comp==null) throw new NullPointerException();
 		long len = mid - from;
 		while ( len > 0 ) {
 			long half = len / 2;
