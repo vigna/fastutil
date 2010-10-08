@@ -158,24 +158,17 @@ public class Arrays {
 				( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
-	/**
-	 * Sorts the specified range of elements according to the order induced by the specified
-	 * comparator. All elements in the range must be <i>mutually comparable</i> by the specified
-	 * comparator (that is, <tt>c.compare(a, b)</tt> must not throw an exception for any indexes
-	 * <tt>a</tt> and <tt>b</tt> in the range).<p>
+	/** Sorts the specified range of elements according to the order induced by the specified
+	 * comparator using mergesort.
 	 * 
-	 * This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
-	 * of the sort.<p>
-	 * 
-	 * The sorting algorithm is a modified mergesort (in which the merge is omitted if the highest
-	 * element in the low sublist is less than the lowest element in the high sublist). This
-	 * algorithm offers guaranteed n*log(n) performance, and can approach linear performance on
-	 * nearly sorted lists.
+	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
+	 * of the sort. The sorting algorithm is an in-place mergesort that is significantly slower than a 
+	 * standard mergesort, but does not allocate additional memory.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
-	 * @param c the comparator to determine the order of the generic data.
-	 * @param swapper an object that knows how to swap the elements at any two indexes (a,b).
+	 * @param c the comparator to determine the order of the generic data (arguments are positions).
+	 * @param swapper an object that knows how to swap the elements at any two positions.
 	 */
 	public static void mergeSort( final int from, final int to, final IntComparator c, final Swapper swapper ) {
 		/*
@@ -210,21 +203,17 @@ public class Arrays {
 		inPlaceMerge( from, mid, to, c, swapper );
 	}
 
-	/**
-	 * Sorts the specified range of elements according to the order induced by the specified
-	 * comparator. All elements in the range must be <i>mutually comparable</i> by the specified
-	 * comparator (that is, <tt>c.compare(a, b)</tt> must not throw an exception for any indexes
-	 * <tt>a</tt> and <tt>b</tt> in the range).<p>
+	/** Sorts the specified range of elements according to the order induced by the specified
+	 * comparator using quicksort. 
 	 * 
-	 * The sorting algorithm is a tuned quicksort, adapted from Jon L. Bentley and M. Douglas
-	 * McIlroy's "Engineering a Sort Function", Software-Practice and Experience, Vol. 23(11) P.
-	 * 1249-1265 (November 1993). This algorithm offers n*log(n) performance on many data sets that
-	 * cause other quicksorts to degrade to quadratic performance.
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the order of the generic data.
-	 * @param swapper an object that knows how to swap the elements at any two indexes (a,b).
+	 * @param swapper an object that knows how to swap the elements at any two positions.
 	 * 
 	 */
 	public static void quickSort( final int from, final int to, final IntComparator comp, final Swapper swapper ) {

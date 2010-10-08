@@ -17,6 +17,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * For the sorting and binary search code:
  *
  * Copyright (C) 1999 CERN - European Organization for Nuclear Research.
  *
@@ -42,8 +43,15 @@ import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SIZE;
 
 #if #keys(primitive)
 
-/** A class providing static methods and objects that do useful things with <em>big arrays</em>&mdash;arrays
- * longer than 2<sup>31</sup>&minus;1 represented by multiple arrays.
+/** A class providing static methods and objects that do useful things with {@linkplain BigArrays big arrays}.
+ *
+ * <p>In particular, the <code>ensureCapacity()</code>, <code>grow()</code>,
+ * <code>trim()</code> and <code>setLength()</code> methods allow to handle
+ * big arrays much like array lists.
+ *
+ * <P>Note that {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO}
+ * contain several methods make it possible to load and save big arrays of primitive types as sequences
+ * of elements in {@link java.io.DataInput} format (i.e., not as objects) or as sequences of lines of text.
  *
  * @see BigArrays
  */
@@ -54,8 +62,15 @@ public class BIG_ARRAYS {
 
 import java.util.Comparator;
 
-/** A class providing static methods and objects that do useful things with <em>big arrays</em>&mdash;arrays
- * longer than 2<sup>31</sup>&minus;1 represented by multiple arrays.
+/** A class providing static methods and objects that do useful things with {@linkplain BigArrays big arrays}.
+ *
+ * <p>In particular, the <code>ensureCapacity()</code>, <code>grow()</code>,
+ * <code>trim()</code> and <code>setLength()</code> methods allow to handle
+ * arrays much like array lists. 
+ *
+ * <P>Note that {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO}
+ * contain several methods make it possible to load and save big arrays of primitive types as sequences
+ * of elements in {@link java.io.DataInput} format (i.e., not as objects) or as sequences of lines of text.
  *
  * <P><strong>Warning:</strong> creating arrays 
  * using {@linkplain java.lang.reflect.Array#newInstance(Class,int) reflection}, as it
@@ -80,72 +95,72 @@ public class BIG_ARRAYS {
 
 	/** Returns the element of the given big array of specified index.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param index a position in the big array.
 	 * @return the element of the big array at the specified position.
 	 */
-	public static KEY_GENERIC KEY_GENERIC_TYPE get( final KEY_GENERIC_TYPE[][] bigArray, final long index ) {
-		return bigArray[ segment( index ) ][ displacement( index ) ];
+	public static KEY_GENERIC KEY_GENERIC_TYPE get( final KEY_GENERIC_TYPE[][] array, final long index ) {
+		return array[ segment( index ) ][ displacement( index ) ];
 	}
 	
 	/** Sets the element of the given big array of specified index.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param index a position in the big array.
 	 */
-	public static KEY_GENERIC void set( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE value ) {
-		bigArray[ segment( index ) ][ displacement( index ) ] = value;
+	public static KEY_GENERIC void set( final KEY_GENERIC_TYPE[][] array, final long index, KEY_GENERIC_TYPE value ) {
+		array[ segment( index ) ][ displacement( index ) ] = value;
 	}
 	
 	/** Swaps the element of the given big array of specified indices.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param first a position in the big array.
 	 * @param second a position in the big array.
 	 */
-	public static KEY_GENERIC void swap( final KEY_GENERIC_TYPE[][] bigArray, final long first, final long second ) {
-		final KEY_GENERIC_TYPE t = bigArray[ segment( first ) ][ displacement( first ) ];
-		bigArray[ segment( first ) ][ displacement( first ) ] = bigArray[ segment( second ) ][ displacement( second ) ];
-		bigArray[ segment( second ) ][ displacement( second ) ] = t;
+	public static KEY_GENERIC void swap( final KEY_GENERIC_TYPE[][] array, final long first, final long second ) {
+		final KEY_GENERIC_TYPE t = array[ segment( first ) ][ displacement( first ) ];
+		array[ segment( first ) ][ displacement( first ) ] = array[ segment( second ) ][ displacement( second ) ];
+		array[ segment( second ) ][ displacement( second ) ] = t;
 	}
 	
 #if #keys(primitive) && ! #keyclass(Boolean)
 	/** Adds the specified increment the element of the given big array of specified index.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param index a position in the big array.
 	 * @param incr the increment
 	 */
-	public static void add( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE incr ) {
-		bigArray[ segment( index ) ][ displacement( index ) ] += incr;
+	public static void add( final KEY_GENERIC_TYPE[][] array, final long index, KEY_GENERIC_TYPE incr ) {
+		array[ segment( index ) ][ displacement( index ) ] += incr;
 	}
 
 	/** Multiplies by the specified factor the element of the given big array of specified index.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param index a position in the big array.
 	 * @param factor the factor
 	 */
-	public static void mul( final KEY_GENERIC_TYPE[][] bigArray, final long index, KEY_GENERIC_TYPE factor ) {
-		bigArray[ segment( index ) ][ displacement( index ) ] *= factor;
+	public static void mul( final KEY_GENERIC_TYPE[][] array, final long index, KEY_GENERIC_TYPE factor ) {
+		array[ segment( index ) ][ displacement( index ) ] *= factor;
 	}
 
 	/** Increments the element of the given big array of specified index.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param index a position in the big array.
 	 */
-	public static void incr( final KEY_GENERIC_TYPE[][] bigArray, final long index ) {
-		bigArray[ segment( index ) ][ displacement( index ) ]++;
+	public static void incr( final KEY_GENERIC_TYPE[][] array, final long index ) {
+		array[ segment( index ) ][ displacement( index ) ]++;
 	}
 
 	/** Decrements the element of the given big array of specified index.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param index a position in the big array.
 	 */
-	public static void decr( final KEY_GENERIC_TYPE[][] bigArray, final long index ) {
-		bigArray[ segment( index ) ][ displacement( index ) ]--;
+	public static void decr( final KEY_GENERIC_TYPE[][] array, final long index ) {
+		array[ segment( index ) ][ displacement( index ) ]--;
 	}
 
 
@@ -154,22 +169,23 @@ public class BIG_ARRAYS {
 
 	/** Returns the length of the given big array.
 	 * 
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @return the length of the given big array.
 	 */
-	public static KEY_GENERIC long length( final KEY_GENERIC_TYPE[][] bigArray ) {
-		final int length = bigArray.length;
-		return length == 0 ? 0 : start( length - 1 ) + bigArray[ length - 1 ].length;
+	public static KEY_GENERIC long length( final KEY_GENERIC_TYPE[][] array ) {
+		final int length = array.length;
+		return length == 0 ? 0 : start( length - 1 ) + array[ length - 1 ].length;
 	}
 	
-	/** Copies a big array from the specified source big array, beginning at the specified position, to the specified position of the destination big array. 
+	/** Copies a big array from the specified source big array, beginning at the specified position, to the specified position of the destination big array.
+	 * Handles correctly overlapping regions of the same big array. 
 	 * 
-	 * @param srcBigArray the source big array.
+	 * @param srcArray the source big array.
 	 * @param srcPos the starting position in the source big array.
-	 * @param destBigArray the destination big array.
+	 * @param destArray the destination big array.
 	 * @param destPos the starting position in the destination data.
 	 */
-	public static KEY_GENERIC void copy( final KEY_GENERIC_TYPE[][] srcBigArray, final long srcPos, final KEY_GENERIC_TYPE[][] destBigArray, final long destPos, long length ) {
+	public static KEY_GENERIC void copy( final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length ) {
 		if ( destPos <= srcPos ) {
 			int srcSegment = segment( srcPos );
 			int destSegment = segment( destPos );
@@ -177,8 +193,8 @@ public class BIG_ARRAYS {
 			int destDispl = displacement( destPos );
 			int l;
 			while( length > 0 ) {
-				l = (int)Math.min( length, Math.min( srcBigArray[ srcSegment ].length - srcDispl, destBigArray[ destSegment ].length - destDispl ) );
-				System.arraycopy( srcBigArray[ srcSegment ], srcDispl, destBigArray[ destSegment ], destDispl, l );
+				l = (int)Math.min( length, Math.min( srcArray[ srcSegment ].length - srcDispl, destArray[ destSegment ].length - destDispl ) );
+				System.arraycopy( srcArray[ srcSegment ], srcDispl, destArray[ destSegment ], destDispl, l );
 				if ( ( srcDispl += l ) == SEGMENT_SIZE ) {
 					srcDispl = 0;
 					srcSegment++;
@@ -206,7 +222,7 @@ public class BIG_ARRAYS {
 					destSegment--;
 				}
 				l = (int)Math.min( length, Math.min( srcDispl, destDispl ) );
-				System.arraycopy( srcBigArray[ srcSegment ], srcDispl - l, destBigArray[ destSegment ], destDispl - l, l );
+				System.arraycopy( srcArray[ srcSegment ], srcDispl - l, destArray[ destSegment ], destDispl - l, l );
 				srcDispl -= l;
 				destDispl -= l;
 				length -= l;
@@ -215,7 +231,7 @@ public class BIG_ARRAYS {
 	}
 	
 #if #keyclass(Object)	
-	/** Creates a new big array using a the given one as prototype. 
+	/** Creates a new big array using the given one as prototype. 
 	 *
 	 * <P>This method returns a new big array of the given length whose element
 	 * are of the same class as of those of <code>prototype</code>. In case
@@ -232,11 +248,11 @@ public class BIG_ARRAYS {
 
 	/** Creates a new big array using a the given one as component type. 
 	 *
-	 * <P>This method returns a new big array 
-	 * are of class <code>prototype</code>. In case
+	 * <P>This method returns a new big array whose segments 
+	 * are of class <code>componentType</code>. In case
 	 * of an empty big array, it tries to return {@link #EMPTY_BIG_ARRAY}, if possible.
 	 *
-	 * @param prototype a big array that will be used to type the new one.
+	 * @param componentType a class representing the type of segments of the array to be created.
 	 * @param length the length of the new big array.
 	 * @return a new big array of given type and length.
 	 */
@@ -321,48 +337,48 @@ public class BIG_ARRAYS {
 	 * <P>If you cannot foresee whether this big array will need again to be
 	 * enlarged, you should probably use <code>grow()</code> instead.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param length the new minimum length for this big array.
 	 * @return <code>array</code>, if it contains <code>length</code> entries or more; otherwise,
-	 * a big array with <code>length</code> entries whose first <code>array.length</code>
+	 * a big array with <code>length</code> entries whose first <code>length(array)</code>
 	 * entries are the same as those of <code>array</code>.
 	 */
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity( final KEY_GENERIC_TYPE[][] bigArray, final long length ) {
-		final long oldLength = length( bigArray );
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity( final KEY_GENERIC_TYPE[][] array, final long length ) {
+		final long oldLength = length( array );
 		if ( length > oldLength ) {
 			final KEY_GENERIC_TYPE t[][] =
 #if #keyclass(Object)
-				newBigArray( bigArray, length );
+				newBigArray( array, length );
 #else
 				newBigArray( length );
 #endif
-			copy( bigArray, 0, t, 0, oldLength );
+			copy( array, 0, t, 0, oldLength );
 			return t;
 		}
-		return bigArray;
+		return array;
 	}
 
 	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param length the new minimum length for this big array.
 	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
 	 * @return <code>array</code>, if it can contain <code>length</code> entries or more; otherwise,
 	 * a big array with <code>length</code> entries whose first <code>preserve</code>
 	 * entries are the same as those of <code>array</code>.
 	 */
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity( final KEY_GENERIC_TYPE[][] bigArray, final long length, final long preserve ) {
-		if ( length > length( bigArray ) ) {
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity( final KEY_GENERIC_TYPE[][] array, final long length, final long preserve ) {
+		if ( length > length( array ) ) {
 			final KEY_GENERIC_TYPE t[][] =
 #if #keyclass(Object)
-				newBigArray( bigArray, length );
+				newBigArray( array, length );
 #else
 				newBigArray( length );
 #endif
-			copy( bigArray, 0, t, 0, preserve );
+			copy( array, 0, t, 0, preserve );
 			return t;
 		}
-		return bigArray;
+		return array;
 	}
 
 	/** Grows the given big array to the maximum between the given length and
@@ -373,28 +389,28 @@ public class BIG_ARRAYS {
 	 * length by 1.618. If you want complete control on the big array growth, you
 	 * should probably use <code>ensureCapacity()</code> instead.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param length the new minimum length for this big array.
 	 * @return <code>array</code>, if it can contain <code>length</code>
 	 * entries; otherwise, a big array with
-	 * max(<code>length</code>,<code>array.length</code>/&phi;) entries whose first
-	 * <code>array.length</code> entries are the same as those of <code>array</code>.
+	 * max(<code>length</code>,<code>length(array)</code>/&phi;) entries whose first
+	 * <code>length(array)</code> entries are the same as those of <code>array</code>.
 	 * */
 
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow( final KEY_GENERIC_TYPE[][] bigArray, final long length ) {
-		final long oldLength = length( bigArray );
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow( final KEY_GENERIC_TYPE[][] array, final long length ) {
+		final long oldLength = length( array );
 		if ( length > oldLength ) {
 			final long newLength = Math.max( ( ONEOVERPHI * oldLength ) >>> 16, length );
 			final KEY_GENERIC_TYPE t[][] =
 #if #keyclass(Object)
-				newBigArray( bigArray, newLength );
+				newBigArray( array, newLength );
 #else
 				newBigArray( newLength );
 #endif
-			copy( bigArray, 0, t, 0, oldLength );
+			copy( array, 0, t, 0, oldLength );
 			return t;
 		}
-		return bigArray;
+		return array;
 	}
 
 	/** Grows the given big array to the maximum between the given length and
@@ -405,37 +421,37 @@ public class BIG_ARRAYS {
 	 * length by 1.618. If you want complete control on the big array growth, you
 	 * should probably use <code>ensureCapacity()</code> instead.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param length the new minimum length for this big array.
 	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
 	 * @return <code>array</code>, if it can contain <code>length</code>
 	 * entries; otherwise, a big array with
-	 * max(<code>length</code>,<code>array.length</code>/&phi;) entries whose first
+	 * max(<code>length</code>,<code>length(array)</code>/&phi;) entries whose first
 	 * <code>preserve</code> entries are the same as those of <code>array</code>.
 	 * */
 
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow( final KEY_GENERIC_TYPE[][] bigArray, final long length, final long preserve ) {
-		final long oldLength = length( bigArray );
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow( final KEY_GENERIC_TYPE[][] array, final long length, final long preserve ) {
+		final long oldLength = length( array );
 		if ( length > oldLength ) {
 			final long newLength = Math.max( ( ONEOVERPHI * oldLength ) >>> 16, length );
 
 			final KEY_GENERIC_TYPE t[][] =
 #if #keyclass(Object)
-				newBigArray( bigArray, newLength );
+				newBigArray( array, newLength );
 #else
 				newBigArray( newLength );
 #endif
-			copy( bigArray, 0, t, 0, preserve );
+			copy( array, 0, t, 0, preserve );
 
 			return t;
 		}
-		return bigArray;
+		return array;
 
 	}
 
 	/** Trims the given big array to the given length.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param length the new maximum length for the big array.
 	 * @return <code>array</code>, if it contains <code>length</code>
 	 * entries or less; otherwise, a big array with
@@ -444,68 +460,68 @@ public class BIG_ARRAYS {
 	 * 
 	 */
 
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim( final KEY_GENERIC_TYPE[][] bigArray, final long length ) {
-		if ( length >= length( bigArray ) ) return bigArray;
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim( final KEY_GENERIC_TYPE[][] array, final long length ) {
+		if ( length >= length( array ) ) return array;
 		final KEY_GENERIC_TYPE t[][] =
 #if #keyclass(Object)
-			newBigArray( bigArray, length );
+			newBigArray( array, length );
 #else
 			newBigArray( length );
 #endif
-		copy( bigArray, 0, t, 0, length );
+		copy( array, 0, t, 0, length );
 		return t;
 	}
 
 	/** Sets the length of the given big array.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param length the new length for the big array.
 	 * @return <code>array</code>, if it contains exactly <code>length</code>
 	 * entries; otherwise, if it contains <em>more</em> than
 	 * <code>length</code> entries, a big array with <code>length</code> entries
 	 * whose entries are the same as the first <code>length</code> entries of
 	 * <code>array</code>; otherwise, a big array with <code>length</code> entries
-	 * whose first <code>array.length</code> entries are the same as those of
+	 * whose first <code>length(array)</code> entries are the same as those of
 	 * <code>array</code>.
 	 * 
 	 */
 
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] setLength( final KEY_GENERIC_TYPE[][] bigArray, final long length ) {
-		final long oldLength = length( bigArray );
-		if ( length == oldLength ) return bigArray;
-		if ( length < oldLength ) return trim( bigArray, length );
-		return ensureCapacity( bigArray, length );
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] setLength( final KEY_GENERIC_TYPE[][] array, final long length ) {
+		final long oldLength = length( array );
+		if ( length == oldLength ) return array;
+		if ( length < oldLength ) return trim( array, length );
+		return ensureCapacity( array, length );
 	}
 
 	/** Returns a copy of a portion of a big array.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param offset the first element to copy.
 	 * @param length the number of elements to copy.
 	 * @return a new big array containing <code>length</code> elements of <code>array</code> starting at <code>offset</code>.
 	 */
 
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy( final KEY_GENERIC_TYPE[][] bigArray, final long offset, final long length ) {
-		ensureOffsetLength( bigArray, offset, length );
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy( final KEY_GENERIC_TYPE[][] array, final long offset, final long length ) {
+		ensureOffsetLength( array, offset, length );
 		final KEY_GENERIC_TYPE[][] a = 
 #if #keyclass(Object)
-			newBigArray( bigArray, length );
+			newBigArray( array, length );
 #else
 			newBigArray( length );
 #endif
-		copy( bigArray, offset, a, 0, length );
+		copy( array, offset, a, 0, length );
 		return a;
 	}
 
 	/** Returns a copy of a big array.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @return a copy of <code>array</code>.
 	 */
 
-	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy( final KEY_GENERIC_TYPE[][] bigArray ) {
-		final KEY_GENERIC_TYPE[][] base = bigArray.clone();
-		for( int i = base.length; i-- != 0; ) base[ i ] = bigArray[ i ].clone();
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy( final KEY_GENERIC_TYPE[][] array ) {
+		final KEY_GENERIC_TYPE[][] base = array.clone();
+		for( int i = base.length; i-- != 0; ) base[ i ] = array[ i ].clone();
 		return base;
 	}
 
@@ -514,12 +530,12 @@ public class BIG_ARRAYS {
 	 * <P>This method uses a backward loop. It is significantly faster than the corresponding
 	 * method in {@link java.util.Arrays}.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param value the new value for all elements of the big array.
 	 */
 
-	public static KEY_GENERIC void fill( final KEY_GENERIC_TYPE[][] bigArray, final KEY_GENERIC_TYPE value ) {
-		for( int i = bigArray.length; i-- != 0; ) ARRAYS.fill( bigArray[ i ], value );
+	public static KEY_GENERIC void fill( final KEY_GENERIC_TYPE[][] array, final KEY_GENERIC_TYPE value ) {
+		for( int i = array.length; i-- != 0; ) ARRAYS.fill( array[ i ], value );
 	}
 
 	/** Fills a portion of the given big array with the given value.
@@ -528,27 +544,27 @@ public class BIG_ARRAYS {
 	 * backward loop. In this case, it is significantly faster than the
 	 * corresponding method in {@link java.util.Arrays}.
 	 *
-	 * @param bigArray a big array.
+	 * @param array a big array.
 	 * @param from the starting index of the portion to fill.
 	 * @param to the end index of the portion to fill.
 	 * @param value the new value for all elements of the specified portion of the big array.
 	 */
 
-	public static KEY_GENERIC void fill( final KEY_GENERIC_TYPE[][] bigArray, final long from, long to, final KEY_GENERIC_TYPE value ) {
-		final long length = length( bigArray );
+	public static KEY_GENERIC void fill( final KEY_GENERIC_TYPE[][] array, final long from, long to, final KEY_GENERIC_TYPE value ) {
+		final long length = length( array );
 		BigArrays.ensureFromTo( length, from, to );
 		int fromSegment = segment( from );
 		int toSegment = segment( to );
 		int fromDispl = displacement( from );
 		int toDispl = displacement( to );
 		if ( fromSegment == toSegment ) {
-			ARRAYS.fill( bigArray[ fromSegment ], fromDispl, toDispl, value );
+			ARRAYS.fill( array[ fromSegment ], fromDispl, toDispl, value );
 			return;
 		}
 
-		ARRAYS.fill( bigArray[ toSegment ], 0, toDispl, value );
-		while( --toSegment > fromSegment ) ARRAYS.fill( bigArray[ toSegment ], value );
-		ARRAYS.fill( bigArray[ fromSegment ], fromDispl, SEGMENT_SIZE, value );
+		ARRAYS.fill( array[ toSegment ], 0, toDispl, value );
+		while( --toSegment > fromSegment ) ARRAYS.fill( array[ toSegment ], value );
+		ARRAYS.fill( array[ fromSegment ], fromDispl, SEGMENT_SIZE, value );
 	}
 
 
@@ -575,11 +591,11 @@ public class BIG_ARRAYS {
 		return true;
 	}
 
-	/* Returns a string representation of the contents of the specified array. 
+	/* Returns a string representation of the contents of the specified big array. 
 	 *
-	 * The string representation consists of a list of the array's elements, enclosed in square brackets ("[]"). Adjacent elements are separated by the characters ", " (a comma followed by a space). Returns "null" if <code>a</code> is null.
-	 * @param a  the array whose string representation to return.
-	 * @return the string represetation of <code>a</code>.
+	 * The string representation consists of a list of the big array's elements, enclosed in square brackets ("[]"). Adjacent elements are separated by the characters ", " (a comma followed by a space). Returns "null" if <code>a</code> is null.
+	 * @param a the big array whose string representation to return.
+	 * @return the string representation of <code>a</code>.
 	 */
 
 	public static KEY_GENERIC String toString( final KEY_GENERIC_TYPE[][] a ) {
@@ -665,6 +681,19 @@ public class BIG_ARRAYS {
 			( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
+
+	/** Sorts the specified range of elements according to the order induced by the specified
+	 * comparator using quicksort. 
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * @param x the big array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 * @param comp the comparator to determine the sorting order.
+	 */
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x, final long from, final long to, final KEY_COMPARATOR KEY_GENERIC comp ) {
 		final long len = to - from;
 		// Insertion sort on smallest arrays
@@ -729,6 +758,33 @@ public class BIG_ARRAYS {
 			( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
+
+	/** Sorts the specified big array according to the order induced by the specified
+	 * comparator using quicksort. 
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * @param x the big array to be sorted.
+	 * @param comp the comparator to determine the sorting order.
+	 * 
+	 */
+	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x, final KEY_COMPARATOR KEY_GENERIC comp ) {
+		quickSort( x, 0, BIG_ARRAYS.length( x ), comp );
+	}
+	
+	/** Sorts the specified range of elements according to the natural ascending order using quicksort.
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * @param x the big array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 */
+
 	@SuppressWarnings("unchecked")
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x, final long from, final long to ) {
 		final long len = to - from;
@@ -784,36 +840,48 @@ public class BIG_ARRAYS {
 
 	}
 
+
+	/** Sorts the specified big array according to the natural ascending order using quicksort.
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * @param x the big array to be sorted.
+	 */
+
+	@SuppressWarnings("unchecked")
+	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x ) {
+		quickSort( x, 0, BIG_ARRAYS.length( x ) );
+	}
+
 #if ! #keyclass(Boolean)
 
 	/**
-	 * Searches the list for the specified value using
-	 * the binary search algorithm.  The list must <strong>must</strong> be
-	 * sorted (as by the sort method) prior to making this call.  If
-	 * it is not sorted, the results are undefined: in particular, the call
-	 * may enter an infinite loop.  If the list contains multiple elements
-	 * equal to the specified key, there is no guarantee which of the multiple elements
-	 * will be found.
+	 * Searches a range of the specified big array for the specified value using 
+	 * the binary search algorithm. The range must be sorted prior to making this call. 
+	 * If it is not sorted, the results are undefined. If the range contains multiple elements with 
+	 * the specified value, there is no guarantee which one will be found.
 	 *
-	 * @param a the list to be searched.
+	 * @param a the big array to be searched.
+	 * @param from  the index of the first element (inclusive) to be searched.
+	 * @param to  the index of the last element (exclusive) to be searched.
 	 * @param key the value to be searched for.
-	 * @param from the leftmost search position, inclusive.
-	 * @param to the rightmost search position, inclusive.
-	 * @return index of the search key, if it is contained in the list;
+	 * @return index of the search key, if it is contained in the big array;
 	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
 	 *             point</i> is defined as the the point at which the value would
-	 *             be inserted into the list: the index of the first
-	 *             element greater than the key, or <tt>list.length</tt>, if all
-	 *             elements in the list are less than the specified key.  Note
+	 *             be inserted into the big array: the index of the first
+	 *             element greater than the key, or the length of the big array, if all
+	 *             elements in the big array are less than the specified key.  Note
 	 *             that this guarantees that the return value will be &gt;= 0 if
 	 *             and only if the key is found.
 	 * @see java.util.Arrays
 	 */
 	@SuppressWarnings({"unchecked","rawtypes"})
-	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, int from, int to, final KEY_GENERIC_TYPE key ) {
+	public static KEY_GENERIC long binarySearch( final KEY_GENERIC_TYPE[][] a, long from, long to, final KEY_GENERIC_TYPE key ) {
 		KEY_GENERIC_TYPE midVal;
 		while (from <= to) {
-			final int mid = (from + to) >>> 1;
+			final long mid = (from + to) >>> 1;
 			midVal = get( a, mid );
 #if #keys(primitive)
 			if (midVal < key) from = mid + 1;
@@ -829,14 +897,53 @@ public class BIG_ARRAYS {
 		return -( from + 1 );
 	}
 
-	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, final KEY_TYPE key ) {
-		return binarySearch( a, 0, a.length, key );
+	/**
+	 * Searches a big array for the specified value using 
+	 * the binary search algorithm. The range must be sorted prior to making this call. 
+	 * If it is not sorted, the results are undefined. If the range contains multiple elements with 
+	 * the specified value, there is no guarantee which one will be found.
+	 *
+	 * @param a the big array to be searched.
+	 * @param key the value to be searched for.
+	 * @return index of the search key, if it is contained in the big array;
+	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             point</i> is defined as the the point at which the value would
+	 *             be inserted into the big array: the index of the first
+	 *             element greater than the key, or the length of the big array, if all
+	 *             elements in the big array are less than the specified key.  Note
+	 *             that this guarantees that the return value will be &gt;= 0 if
+	 *             and only if the key is found.
+	 * @see java.util.Arrays
+	 */
+	public static KEY_GENERIC long binarySearch( final KEY_GENERIC_TYPE[][] a, final KEY_TYPE key ) {
+		return binarySearch( a, 0, BIG_ARRAYS.length( a ), key );
 	}
 
-	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, int from, int to, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
+	/**
+	 * Searches a range of the specified big array for the specified value using 
+	 * the binary search algorithm and a specified comparator. The range must be sorted following the comparator prior to making this call. 
+	 * If it is not sorted, the results are undefined. If the range contains multiple elements with 
+	 * the specified value, there is no guarantee which one will be found.
+	 *
+	 * @param a the big array to be searched.
+	 * @param from  the index of the first element (inclusive) to be searched.
+	 * @param to  the index of the last element (exclusive) to be searched.
+	 * @param key the value to be searched for.
+	 * @param c a comparator.
+	 * @return index of the search key, if it is contained in the big array;
+	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             point</i> is defined as the the point at which the value would
+	 *             be inserted into the big array: the index of the first
+	 *             element greater than the key, or the length of the big array, if all
+	 *             elements in the big array are less than the specified key.  Note
+	 *             that this guarantees that the return value will be &gt;= 0 if
+	 *             and only if the key is found.
+	 * @see java.util.Arrays
+	 */
+	public static KEY_GENERIC long binarySearch( final KEY_GENERIC_TYPE[][] a, long from, long to, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
 		KEY_GENERIC_TYPE midVal;
 		while (from <= to) {
-			final int mid = (from + to) >>> 1;
+			final long mid = (from + to) >>> 1;
 			midVal = get( a, mid );
 			final int cmp = c.compare( midVal, key );
 			if ( cmp < 0 ) from = mid + 1;
@@ -846,8 +953,27 @@ public class BIG_ARRAYS {
 		return -( from + 1 );
 	}
 
-	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[][] a, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
-		return binarySearch( a, 0, a.length, key, c );
+	/**
+	 * Searches a big array for the specified value using 
+	 * the binary search algorithm and a specified comparator. The range must be sorted following the comparator prior to making this call. 
+	 * If it is not sorted, the results are undefined. If the range contains multiple elements with 
+	 * the specified value, there is no guarantee which one will be found.
+	 *
+	 * @param a the big array to be searched.
+	 * @param key the value to be searched for.
+	 * @param c a comparator.
+	 * @return index of the search key, if it is contained in the big array;
+	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             point</i> is defined as the the point at which the value would
+	 *             be inserted into the big array: the index of the first
+	 *             element greater than the key, or the length of the big array, if all
+	 *             elements in the big array are less than the specified key.  Note
+	 *             that this guarantees that the return value will be &gt;= 0 if
+	 *             and only if the key is found.
+	 * @see java.util.Arrays
+	 */
+	public static KEY_GENERIC long binarySearch( final KEY_GENERIC_TYPE[][] a, final KEY_GENERIC_TYPE key, final KEY_COMPARATOR KEY_GENERIC c ) {
+		return binarySearch( a, 0, BIG_ARRAYS.length( a ), key, c );
 	}
 
 #endif

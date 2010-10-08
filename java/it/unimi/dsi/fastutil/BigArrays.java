@@ -331,7 +331,7 @@ public class BigArrays {
 	 * comparator using quicksort. 
 	 * 
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
-	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</em>, 23(11), pages
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
