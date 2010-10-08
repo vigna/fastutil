@@ -1,11 +1,9 @@
 package it.unimi.dsi.fastutil;
 
-import it.unimi.dsi.fastutil.longs.LongComparator;
-
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2002-2008 Sebastiano Vigna 
+ * Copyright (C) 2010 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -21,37 +19,147 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * Copyright (C) 1999 CERN - European Organization for Nuclear Research.
+ *
+ *   Permission to use, copy, modify, distribute and sell this software and
+ *   its documentation for any purpose is hereby granted without fee,
+ *   provided that the above copyright notice appear in all copies and that
+ *   both that copyright notice and this permission notice appear in
+ *   supporting documentation. CERN makes no representations about the
+ *   suitability of this software for any purpose. It is provided "as is"
+ *   without expressed or implied warranty. 
+ */
 
- *	Copyright  1999 CERN - European Organization for Nuclear Research.
-	Permission to use, copy, modify, distribute and sell this software and its documentation for any purpose 
-	is hereby granted without fee, provided that the above copyright notice appear in all copies and 
-	that both that copyright notice and this permission notice appear in supporting documentation. 
-	CERN makes no representations about the suitability of this software for any purpose. 
-	It is provided "as is" without expressed or implied warranty.
-	*/
-
+import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
+import it.unimi.dsi.fastutil.ints.IntBigArrays;
+import it.unimi.dsi.fastutil.longs.LongComparator;
 
 /** A class providing static methods and objects that do useful things with big arrays.
+ * 
+ * <h2>Introducing big arrays</h2>
+ * 
+ * <p>A <em>big array</em> is an array-of-arrays representation of an array. The length of a big array
+ * is bounded by {@link Long#MAX_VALUE} rather than {@link Integer#MAX_VALUE}. The type of a big array
+ * is that of an array-of-arrays, so a big array of integers is of type <code>int[][]</code>.
+ * 
+ * <p>If <code>a</code> is a big array, <code>a[0]</code>, <code>a[1]</code>, &hellip; are called
+ * the <em>segments</em> of the big array. All segments, except possibly for the last one, are of length
+ * {@link #SEGMENT_SIZE}. Given an index <code>i</code> into a big array, there is an associated
+ * <em>{@linkplain #segment(long) segment}</em> and an associated <em>{@linkplain #displacement(long) displacement}</em>
+ * into that segment. Access to single members happens by means of accessors defined in the type-specific
+ * versions (see, e.g., {@link IntBigArrays#get(int[][], long)} and {@link IntBigArrays#set(int[][], long, int)}), 
+ * but you can also use the methods {@link #segment(long)}/{@link #displacement(long)} to access entries manually.
+ * 
+ * <h2>Scanning big arrays</h2>
+ * 
+ * <p>You can scan a big array using the following idiomatic form:
+ * <pre>
+ *   for( int i = 0; i &lt; a.length; i++ ) {
+ *      final int[] t = a[ i ];
+ *      final int l = t.length;
+ *      for( int d = 0; d &lt; l; d++ ) { do something with t[ d ] }
+ *   }
+ * </pre>
+ * or using the (simpler and usually faster) reversed version:
+ * <pre>
+ *   for( int i = a.length; i-- != 0; ) {
+ *      final int[] t = a[ i ];  
+ *      for( int d = s.length; d-- != 0; ) { do something with t[ d ] }
+ *   }
+ * </pre>
+ * <p>Inside the inner loop, the original index in <code>a</code> can be retrieved using {@link #index(int, int) index(segment, displacement)}.
+ * Note that caching is essential in making these loops essentially as fast as those scanning standard arrays (as iterations
+ * of the outer loop happen very rarely). Using loops of this kind is extremely faster than using a standard
+ * loop and accessors.
+ * 
+ * <p>In some situations, you might want to iterate over a part of a big array having an offset and a length. In this case, the
+ * idiomatic loops are as follows:
+ * <pre>
+ *   for( int i = segment( offset ); i &lt; segment( offset + length ); i++ ) {
+ *      final int[] t = a[ i ];
+ *      final int l = Math.min( t.length, offset + length - start( i ) );
+ *      for( int d = Math.max( 0, offset - start( i ) ); d &lt; l; d++ ) { do something with t[ d ] }
+ *   }
+ * </pre>
+ * or, in a reversed form,
+ * <pre>
+ *   for( int i = segment( offset + length ); i-- != segment( offset ); ) {
+ *      final int[] t = a[ i ];
+ *      final int s = Math.max( 0, offset - start( i ) );
+ *      for( int d = Math.min( t.length, offset + length - start( i ) ); d-- != s ; ) { do something with t[ d ] }
+ *   }
+ * </pre>
+ * 
+ * <h2>Literal big arrays</h2>
+ * 
+ * <p>A literal big array can be easily created by using the suitable type-specific <code>wrap()</code> method
+ * (e.g., {@link IntBigArrays#wrap(int[])}) around a literal standard array. Alternatively, for very small
+ * arrays you can just declare a literal array-of-array (e.g., <code>new int[][] { { 1, 2 } }</code>). Be warned,
+ * however, that this can lead to creating illegal big arrays if for some reason (e.g., stress testing) {@link #SEGMENT_SIZE}
+ * is set to a value smaller than the inner array length. 
+ * 
+ * <h2>Big alternatives</h2>
+ * 
+ * <p>If you find the kind of &ldquo;bare hands&rdquo; approach to big arrays not enough object-oriented, please use
+ * big lists based on big arrays (.e.g, {@link IntBigArrayBigList}). Big arrays follow the Java tradition of 
+ * considering arrays as a &ldquo;legal alien&rdquo;&mdash;something in-between an object and a primitive type. This
+ * approach lacks the consistency of a full object-oriented approach, but provides some significant performance gains.
+ * 
+ * <p>In addition to commodity methods, this class contains {@link BigSwapper}-based implementations
+ * of {@linkplain #quickSort(long, long, LongComparator, BigSwapper) quicksort} and of
+ * a stable, in-place {@linkplain #mergeSort(long, long, LongComparator, BigSwapper) mergesort}.
  *
  * @see it.unimi.dsi.fastutil.Arrays
  */
 
 public class BigArrays {
+	/** The shift used to compute the segment associated with an index (equivalently, the logarithm of the segment size). */
 	public final static int SEGMENT_SHIFT = 6;
-	/** The current measure for a segment is the largest size that makes
+	/** The current size of a segment (2<sup>27</sup>) is the largest size that makes
 	 * the physical memory allocation for a single segment strictly smaller
 	 * than 2<sup>31</sup> bytes. */
 	public final static int SEGMENT_SIZE = 1 << SEGMENT_SHIFT;
+	/** The mask used to compute the displacement associated to an index. */
 	public final static int SEGMENT_MASK = SEGMENT_SIZE - 1;
 	
 	protected BigArrays() {}
 	
+	/** Computes the segment associated with a given index.
+	 * 
+	 * @param index an index into a big array.
+	 * @return the associated segment.
+	 */
 	public static int segment( final long index ) {
-		return (int)( index >> SEGMENT_SHIFT );
+		return (int)( index >>> SEGMENT_SHIFT );
 	}
 	
-	public static int offset( final long index ) {
+	/** Computes the displacement associated with a given index.
+	 * 
+	 * @param index an index into a big array.
+	 * @return the associated displacement (in the associated {@linkplain #segment(long) segment}).
+	 */
+	public static int displacement( final long index ) {
 		return (int)( index & SEGMENT_MASK );
+	}
+	
+	/** Computes the starting offset of a given segment.
+	 * 
+	 * @param segment the segment of a big array.
+	 * @return the starting offset of the segment.
+	 */
+	public static long start( final int segment ) {
+		return (long)segment << SEGMENT_SHIFT;
+	}
+	
+	/** Computes the index associated with given segment and displacement.
+	 * 
+	 * @param segment the segment of a big array.
+	 * @param displacement the displacement into the segment.
+	 * @return the associated index: that is, {@link #segment(long) segment(index(segment, displacement)) == segment} and
+	 * {@link #displacement(long) displacement(index(segment, displacement)) == displacement}.
+	 */
+	public static long index( final int segment, final int displacement ) {
+		return start( segment ) + displacement;
 	}
 	
 	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits a big array of given length.

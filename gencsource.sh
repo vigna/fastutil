@@ -367,6 +367,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
 "#define PARSE_KEY parse${TYPE_STD[$k]}\n"\
 "#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
+"#define LOAD_KEYS_BIG load${TYPE_STD[$k]}sBig\n"\
 "#define STORE_KEYS store${TYPE_STD[$k]}s\n"\
 \
 \

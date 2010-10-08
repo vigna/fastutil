@@ -6,18 +6,16 @@
 
   <body>
 
-    <P>Extends the the <a href="http://java.sun.com/j2se/1.5/docs/guide/collections/">Java&trade; Collections Framework</a> by providing
-    type-specific maps, sets, lists and priority queues with a small memory
-    footprint and fast access and insertion; it also includes a fast I/O API
-      for binary and text files.
-      It is <A
+    <P>Extends the the <a href="http://java.sun.com/j2se/1.5/docs/guide/collections/">Java&trade; Collections Framework</a>
+    by providing type-specific maps, sets, lists and priority queues with a small memory
+    footprint and fast access and insertion; provides also big arrays and lists and
+    a fast I/O API for binary and text files. It is <A
     HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
     distributed under the <A
     HREF="http://www.gnu.org/copyleft/lesser.html"><ACRONYM TITLE="GNU's not Unix">GNU</ACRONYM> Lesser General Public License</A>.
 
     <h2>Package Specification</h2>
 
-    
     <p>The classes of this package specialize the most useful {@link
       java.util.HashSet}, {@link java.util.HashMap}, {@link
       java.util.LinkedHashSet}, {@link java.util.LinkedHashMap}, {@link
@@ -34,6 +32,15 @@
       {@linkplain it.unimi.dsi.fastutil.ints.IntIterators#wrap(int[])
       iterators obtained by wrapping an array} and so on.</p>
 
+	<p>
+
+	<p>With <code>fastutil</code> 6, a new set of classes makes it possible
+	to handle very large data sets: in particular, data sets whose size exceed
+	2<sup>31</sup>. In particular, {@linkplain it.unimi.dsi.fastutil.BigArrays big arrays}
+	are arrays-of-arrays handled by a wealth of static methods that act on them
+	as if they were monodimensional arrays, and {@linkplain it.unimi.dsi.fastutil.BigList big lists}
+	provide 64-bit list access.
+	
     <p>To understand what's going on at a glance, the best thing is to look at
     the <A HREF="#example">examples</A> provided. If you already used the
     Collections Framework, everything should look
@@ -41,58 +48,11 @@
     HREF="http://www.eclipse.org/">Eclipse</A>, which can suggest you the
     method names, all you need to know is <A HREF="#names">the right name for
     the class you need</A>.
-    
-    
-   <h2><code>fastutil</code> 5</h2>
-	
-	<p>The release 5 of <code>fastutil</code> needs Java 5, and 
-	marks a revolution in the way the
-	classes are organized. Besides full support for generics, which can help
-	with object-based classes (but is rather irrelevant in type-specific classes),
-	<code>fastutil</code> is now strongly based on what is probably the less hyped
-	and most important feature of Java 5: <em>covariant return-type overriding</em>.
-	A method <code>x()</code> returning an object of type <code>T</code> can now
-	be overriden by a method returning an object of type <code>U</code>, where
-	<code>U</code> is a subclass of (or implements) <code>T</code>.
-	
-	<p>Covariant return-type overriding has always been supported by the JVM,
-	but was inaccessible at the syntax level. In Java 5 this irritant limitation
-	has been lifted, opening a new world of clarity and orthogonality in organizing
-	collection classes. In particular, <em>interface strengthening</em> makes it
-	possible to use all features of <code>fastutil</code> classes without type
-	casting: for instance, {@link it.unimi.dsi.fastutil.ints.IntSet#iterator()}
-	is strengthened, w.r.t.  {@link java.util.Set#iterator()}, so that it
-	returns an {@link it.unimi.dsi.fastutil.ints.IntIterator} instead of a
-	simple {@link java.util.Iterator}. Although type casting was previously used to simulate this
-	feature, it made using the hundreds of classes in <code>fastutil</code>
-	difficult and error prone, as every type cast had to be checked against the documentation.
-	
-	<p>Another advantage of covariant return-type overriding is that implementations
-	can declare to return more specific (usually, more powerful) types than those
-	specified by their interface. For instance,
-	{@link it.unimi.dsi.fastutil.ints.IntAVLTreeSet#iterator()} returns actually
-	an {@link it.unimi.dsi.fastutil.ints.IntListIterator IntListIterator}, whereas
-	{@link it.unimi.dsi.fastutil.ints.IntSortedSet#iterator()} is specified as returning
-	just a {@link it.unimi.dsi.fastutil.ints.IntListIterator IntBidirectionalIterator}.
-	
-	<p>Unfortunately, the <a href="http://java.sun.com/j2se/1.5/docs/guide/collections/">Java&trade; Collections Framework</a>
-	has obvious legacy problems, so the {@linkplain java.util.Map#keySet() key set}
-	of a {@link java.util.SortedMap} is not a {@link java.util.SortedSet}:
-	<code>fastutil</code> 5 makes a break with the past, giving the best possible
-	interface and implementation return types. This entails a number of source
-	incompatibilities, which we feel are worth the effort.
-	
-	<p>A separate discussion is necessary for the {@link java.util.Map#entrySet()} method.
-	<code>fastutil</code> extends the standard {@link java.util.Map.Entry} class to obvious type-specific
-	classes (e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntMap.Entry}). However, since
-	inheritance along parameters is not supported, <code>fastutil</code>
-	provides specialized methods (e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntMap#int2IntEntrySet()})
-	that return an entry set made of type-specific entries.
-	
+    	
 	<h2>Overview</h2>
 
     <p>All data structures in <code>fastutil</code> implement their standard
-    counterpart interface (e.g., {@link java.util.Map} for maps). Thus, they
+    counterpart interface whenever possible (e.g., {@link java.util.Map} for maps). Thus, they
     can be just plugged into existing code, using the standard access methods
     (of course, any attempt to use the wrong type for keys or values will
     produce a {@link java.lang.ClassCastException}). However, they also provide
@@ -103,6 +63,11 @@
     extend and strengthen the standard ones (e.g., {@link
     it.unimi.dsi.fastutil.ints.Int2IntSortedMap} or {@link
     it.unimi.dsi.fastutil.ints.IntListIterator}).</p>
+    
+    <p><strong>Warning</strong>: automatic boxing and unboxing can lead you
+    to choose the wrong method when using <code>fastutil</code>. We suggest
+    that your programming environment is set so to mark boxin/unboxing as
+    a warning, or even better, as an error.
           
     <p>Of course, the main point of type-specific data structures is that the
     absence of wrappers around primitive types can increas speed and reduce
@@ -184,7 +149,7 @@
 	  <code>Object</code> is not used (see, e.g., {@link it.unimi.dsi.fastutil.PriorityQueue}).
 	  
     <p>Since there are eight primitive types in Java, and we support
-    reference-based containers, we get 1792 (!) classes (some nonsensical
+    reference-based containers, we get 1799 (!) classes (some nonsensical
     classes, such as <code>Boolean2BooleanAVLTreeMap</code>, are not
     generated). Many classes are generated just to mimic the hierarchy of
     {@link java.util} so to redistribute common code in a similar way. There
@@ -221,12 +186,12 @@
 	<tr><td>Function<td>AbstractFunction<td>
 	<tr><td>Map<td>AbstractMap<td>OpenHashMap, OpenCustomHashMap, ArrayMap
 	<tr><td>SortedMap<td>AbstractSortedMap<td>RBTreeMap, AVLTreeMap, LinkedOpenHashMap
-	<tr><td>List<td>AbstractList<td>ArrayList, ArrayFrontCodedList
+	<tr><td>List, BigList<td>AbstractList, AbstractBigList<td>ArrayList, BigArrayBigList, ArrayFrontCodedList
 	<tr><td>PriorityQueue&dagger;<td>AbstractPriorityQueue&dagger;<td>HeapPriorityQueue, ArrayPriorityQueue, ArrayFIFOQueue
 	<tr><td>IndirectPriorityQueue&dagger;<td>AbstractIndirectPriorityQueue&dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
 	<tr><td>IndirectDoublePriorityQueue&dagger;<td>AbstractIndirectDoublePriorityQueue&dagger;<td>HeapSesquiIndirectDoublePriorityQueue, HeapIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
 	<tr><td>Stack&dagger;<td>AbstractStack&dagger;<td>ArrayList
-	<tr><td>Iterator<td>AbstractIterator
+	<tr><td>Iterator, BigListIterator<td>AbstractIterator, AbstractBigListIterator
 	<tr><td>Comparator<td>AbstractComparator
 	<tr><td>BidirectionalIterator&dagger;<td>AbstractBidirectionalIterator
 	<tr><td>ListIterator<td>AbstractListIterator
@@ -253,7 +218,9 @@
 	<tr><td>Maps&dagger;
 	<tr><td>SortedMaps
 	<tr><td>Lists
+	<tr><td>BigLists
 	<tr><td>Arrays&dagger;
+	<tr><td>BigArrays&dagger;
 	<tr><td>Heaps
 	<tr><td>SemiIndirectHeaps
 	<tr><td>IndirectHeaps
@@ -261,6 +228,7 @@
 	<tr><td>IndirectPriorityQueues&dagger;
 	<tr><td>IndirectDoublePriorityQueues&dagger;
 	<tr><td>Iterators
+	<tr><td>BigListIterators
 	<tr><td>Comparators
 	<tr><td>Hash&Dagger;
 	<tr><td>HashCommon&Dagger;

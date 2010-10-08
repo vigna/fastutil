@@ -192,6 +192,160 @@ public static void STORE_KEYS( final KEY_ITERATOR i, final CharSequence filename
 }
 
 
+/** Loads elements from a given fast buffered reader, storing them in a given big-array fragment.
+ *
+ * @param reader a buffered reader.
+ * @param array a big array which will be filled with data from <code>reader</code>.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from <code>reader</code> (it might be less than <code>length</code> if <code>reader</code> ends).
+ */
+public static long LOAD_KEYS( final BufferedReader reader, final KEY_TYPE[][] array, final long offset, final long length ) throws IOException {
+	PACKAGE.BIG_ARRAYS.ensureOffsetLength( array, offset, length );
+	long c = 0;
+	String s;
+	try {
+		for( int i = segment( offset ); i < segment( offset + length ); i++ ) {
+			final KEY_TYPE[] t = array[ i ];
+			final int l = (int)Math.min( t.length, offset + length - start( i ) );
+			for( int d = (int)Math.max( 0, offset - start( i ) ); d < l; d++ ) {
+				if ( ( s = reader.readLine() ) != null ) t[ d ] = KEY_CLASS.PARSE_KEY( s );
+				else return c;
+				c++;
+			}
+		}
+	}
+	catch( EOFException itsOk ) {}
+	return c;
+}
+
+/** Loads elements from a given buffered reader, storing them in a given array.
+ *
+ * @param reader a buffered reader.
+ * @param array a big array which will be filled with data from <code>reader</code>.
+ * @return the number of elements actually read from <code>reader</code> (it might be less than the array length if <code>reader</code> ends).
+ */
+public static long LOAD_KEYS( final BufferedReader reader, final KEY_TYPE[][] array ) throws IOException {
+	return LOAD_KEYS( reader, array, 0, PACKAGE.BIG_ARRAYS.length( array ) );
+}
+
+/** Loads elements from a file given by a {@link File} object, storing them in a given big-array fragment.
+ *
+ * @param file a file.
+ * @param array a big array which will be filled with data from the specified file.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from the given file (it might be less than <code>length</code> if the file is too short).
+ */
+public static long LOAD_KEYS( final File file, final KEY_TYPE[][] array, final long offset, final long length ) throws IOException {
+	final BufferedReader reader = new BufferedReader( new FileReader( file ) );
+	final long result = LOAD_KEYS( reader, array, offset, length );
+	reader.close();
+
+	return result;
+}
+
+/** Loads elements from a file given by a filename, storing them in a given big-array fragment.
+ *
+ * @param filename a filename.
+ * @param array a big array which will be filled with data from the specified file.
+ * @param offset the index of the first element of <code>array</code> to be filled.
+ * @param length the number of elements of <code>array</code> to be filled.
+ * @return the number of elements actually read from the given file (it might be less than <code>length</code> if the file is too short).
+ */
+public static long LOAD_KEYS( final CharSequence filename, final KEY_TYPE[][] array, final long offset, final long length ) throws IOException {
+	return LOAD_KEYS( new File( filename.toString() ), array, offset, length );
+}
+
+/** Loads elements from a file given by a {@link File} object, storing them in a given array.
+ *
+ * @param file a file.
+ * @param array a big array which will be filled with data from the specified file.
+ * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
+ */
+public static long LOAD_KEYS( final File file, final KEY_TYPE[][] array ) throws IOException {
+	return LOAD_KEYS( file, array, 0, PACKAGE.BIG_ARRAYS.length( array ) );
+}
+
+/** Loads elements from a file given by a filename, storing them in a given array.
+ *
+ * @param filename a filename.
+ * @param array a big array which will be filled with data from the specified file.
+ * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
+ */
+public static long LOAD_KEYS( final CharSequence filename, final KEY_TYPE[][] array ) throws IOException {
+	return LOAD_KEYS( filename, array, 0, PACKAGE.BIG_ARRAYS.length( array ) );
+}
+
+/** Stores a big-array fragment to a given print stream.
+ *
+ * @param array a big array whose elements will be written to <code>stream</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param stream a print stream.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[][], final long offset, final long length, final PrintStream stream ) {
+	PACKAGE.BIG_ARRAYS.ensureOffsetLength( array, offset, length );
+
+	for( int i = segment( offset ); i < segment( offset + length ); i++ ) {
+		final KEY_TYPE[] t = array[ i ];
+		final int l = (int)Math.min( t.length, offset + length - start( i ) );
+		for( int d = (int)Math.max( 0, offset - start( i ) ); d < l; d++ ) stream.println( t[ d ] );
+	}
+}
+
+/** Stores a big array to a given print stream.
+ *
+ * @param array a big array whose elements will be written to <code>stream</code>.
+ * @param stream a print stream.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[][], final PrintStream stream ) {
+	STORE_KEYS( array, 0, PACKAGE.BIG_ARRAYS.length( array ), stream );
+}
+
+/** Stores a big-array fragment to a file given by a {@link File} object.
+ *
+ * @param array a big array whose elements will be written to <code>filename</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param file a file.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[][], final long offset, final long length, final File file ) throws IOException {
+	final PrintStream stream = new PrintStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
+	STORE_KEYS( array, offset, length, stream );
+	stream.close();
+}
+
+/** Stores a big-array fragment to a file given by a pathname.
+ *
+ * @param array a big array whose elements will be written to <code>filename</code>.
+ * @param offset the index of the first element of <code>array</code> to be written.
+ * @param length the number of elements of <code>array</code> to be written.
+ * @param filename a filename.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[][], final long offset, final long length, final CharSequence filename ) throws IOException {
+	STORE_KEYS( array, offset, length, new File( filename.toString() ) );
+}
+
+/** Stores a big array to a file given by a {@link File} object.
+ *
+ * @param array a big array whose elements will be written to <code>filename</code>.
+ * @param file a file.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[][], final File file ) throws IOException {
+	STORE_KEYS( array, 0, PACKAGE.BIG_ARRAYS.length( array ), file );
+}
+
+/** Stores a big array to a file given by a pathname.
+ *
+ * @param array a big array whose elements will be written to <code>filename</code>.
+ * @param filename a filename.
+ */
+public static void STORE_KEYS( final KEY_TYPE array[][], final CharSequence filename ) throws IOException {
+	STORE_KEYS( array, 0, PACKAGE.BIG_ARRAYS.length( array ), filename );
+}
+
+
 /** A wrapper that exhibits the content of a reader as a type-specific iterator. */
 
 final private static class KEY_READER_WRAPPER extends KEY_ABSTRACT_ITERATOR {
