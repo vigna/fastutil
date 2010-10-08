@@ -1,7 +1,7 @@
 %define section free
 
-Name:           fastutil5
-Version:        5.1.5
+Name:           fastutil
+Version:        6.0.0
 Release:        1jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -25,8 +25,6 @@ text files. The classes implement their standard counterpart interface
 (e.g., Map for maps) and can be plugged into existing code. Moreover, they
 provide additional features (such as bidirectional iterators) that are not
 available in the standard classes.
-
-From version 5, fastutil runs only on Java 5+.
 
 %package        javadoc
 Summary:        Javadoc for %{name}

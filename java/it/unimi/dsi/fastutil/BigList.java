@@ -24,7 +24,7 @@ package it.unimi.dsi.fastutil;
 import java.util.Collection;
 import java.util.List;
 
-/** A list with big (i.e., long) indices.
+/** A list with big (i.e., 64-bit) indices.
  *
  * <P>Instances of this class implement the same semantics as that of {@link List}: however,
  * setters methods use long indices, getters return long values, and returned iterators are actually

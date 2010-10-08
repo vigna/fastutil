@@ -8,15 +8,26 @@
 
     <P>Extends the the <a href="http://java.sun.com/j2se/1.5/docs/guide/collections/">Java&trade; Collections Framework</a>
     by providing type-specific maps, sets, lists and priority queues with a small memory
-    footprint and fast access and insertion; provides also big arrays and lists and
-    a fast I/O API for binary and text files. It is <A
+    footprint and fast access and insertion; provides also big (64-bit) arrays and lists and
+    fast, practical I/O classes for binary and text files. It is <A
     HREF="http://www.gnu.org/philosophy/free-sw.html">free software</A>
     distributed under the <A
     HREF="http://www.gnu.org/copyleft/lesser.html"><ACRONYM TITLE="GNU's not Unix">GNU</ACRONYM> Lesser General Public License</A>.
 
     <h2>Package Specification</h2>
 
-    <p>The classes of this package specialize the most useful {@link
+	<p><code>fastutil</code> is formed by three cores:
+	<ul>
+	<li>type-specific classes that extend naturally
+	the <a href="http://java.sun.com/j2se/1.5/docs/guide/collections/">Java&trade; Collections Framework</a>;
+	<li>classes that support very large collections;
+	<li>classes for fast and practical access to binary and text files.
+	</ul>
+	<p>The three cores are briefly introduced in the next sections, and then discussed at length in the rest of this overview.
+
+	<h3>Type-specific classes</h3>
+	
+    <p><code>fastutil</code> specializes the most useful {@link
       java.util.HashSet}, {@link java.util.HashMap}, {@link
       java.util.LinkedHashSet}, {@link java.util.LinkedHashMap}, {@link
       java.util.TreeSet}, {@link java.util.TreeMap}, {@link
@@ -32,16 +43,7 @@
       {@linkplain it.unimi.dsi.fastutil.ints.IntIterators#wrap(int[])
       iterators obtained by wrapping an array} and so on.</p>
 
-	<p>
-
-	<p>With <code>fastutil</code> 6, a new set of classes makes it possible
-	to handle very large data sets: in particular, data sets whose size exceed
-	2<sup>31</sup>. In particular, {@linkplain it.unimi.dsi.fastutil.BigArrays big arrays}
-	are arrays-of-arrays handled by a wealth of static methods that act on them
-	as if they were monodimensional arrays, and {@linkplain it.unimi.dsi.fastutil.BigList big lists}
-	provide 64-bit list access.
-	
-    <p>To understand what's going on at a glance, the best thing is to look at
+	<p>To understand what's going on at a glance, the best thing is to look at
     the <A HREF="#example">examples</A> provided. If you already used the
     Collections Framework, everything should look
     rather natural. If, in particular, you use an IDE such as <A
@@ -49,7 +51,28 @@
     method names, all you need to know is <A HREF="#names">the right name for
     the class you need</A>.
     	
-	<h2>Overview</h2>
+	<h3>Support for very large collections</h3>
+	
+	<p>With <code>fastutil</code> 6, a new set of classes makes it possible
+	to handle very large collections: in particular, collections whose size exceed
+	2<sup>31</sup>. {@linkplain it.unimi.dsi.fastutil.BigArrays Big arrays}
+	are arrays-of-arrays handled by a wealth of static methods that act on them
+	as if they were monodimensional arrays with 64-bit indices, and 
+	{@linkplain it.unimi.dsi.fastutil.BigList big lists} provide 64-bit list access.
+	The usual methods from {@link java.util.Arrays} and similar classes have
+	been extended to big arrays: have a look at the Javadoc documentation of
+	{@link it.unimi.dsi.fastutil.BigArrays} and {@link it.unimi.dsi.fastutil.ints.IntBigArrays}
+	to get an idea of the generic and type-specific methods available.
+	
+	<h3>Fast and practical I/O</h3>
+	
+	<code>fastutil</code> provides replacements for some standard classes of {@link java.io}
+	that are plagued by a number of problems (see, e.g., {@link it.unimi.dsi.fastutil.io.FastBufferedInputStream}).
+	The {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO} static
+	containers contain dozens of methods that make it possible to load and save quickly
+	(big) arrays to disks, to adapt binary and text file to iterators, and so on.
+	
+    <h2>More on type-specific classes</h2>
 
     <p>All data structures in <code>fastutil</code> implement their standard
     counterpart interface whenever possible (e.g., {@link java.util.Map} for maps). Thus, they
@@ -57,25 +80,22 @@
     (of course, any attempt to use the wrong type for keys or values will
     produce a {@link java.lang.ClassCastException}). However, they also provide
     (whenever possible) many polymorphic versions of the most used methods that
-    avoid boxing/unboxing (and that before Java 5 caused
-     the tedious &ldquo;type juggling&rdquo; that was well known to Java
-    programmers). In doing so, they implement more stringent interfaces that
+    avoid boxing/unboxing. In doing so, they implement more stringent interfaces that
     extend and strengthen the standard ones (e.g., {@link
     it.unimi.dsi.fastutil.ints.Int2IntSortedMap} or {@link
     it.unimi.dsi.fastutil.ints.IntListIterator}).</p>
     
     <p><strong>Warning</strong>: automatic boxing and unboxing can lead you
-    to choose the wrong method when using <code>fastutil</code>. We suggest
-    that your programming environment is set so to mark boxin/unboxing as
+    to choose the wrong method when using <code>fastutil</code>. It is also extremely inefficient. 
+    We suggest that your programming environment is set so to mark boxin/unboxing as
     a warning, or even better, as an error.
           
     <p>Of course, the main point of type-specific data structures is that the
-    absence of wrappers around primitive types can increas speed and reduce
+    absence of wrappers around primitive types can increase speed and reduce
     space occupancy by several times. The presence  of generics in Java
     does not change this fact, since there is no genericity for primitive
-    types: if you are interested in performance, I suggest to turn on warnings
-    for automatic boxing/unboxing of primitive types, and use type-specific methods instead.
-
+    types.
+    
     <p>The implementation techniques used in <code>fastutil</code> are quite
     different than those of {@link java.util}: for instance, open-addressing
     hash tables, threaded AVL trees, threaded red-black trees and exclusive-or
@@ -186,12 +206,12 @@
 	<tr><td>Function<td>AbstractFunction<td>
 	<tr><td>Map<td>AbstractMap<td>OpenHashMap, OpenCustomHashMap, ArrayMap
 	<tr><td>SortedMap<td>AbstractSortedMap<td>RBTreeMap, AVLTreeMap, LinkedOpenHashMap
-	<tr><td>List, BigList<td>AbstractList, AbstractBigList<td>ArrayList, BigArrayBigList, ArrayFrontCodedList
+	<tr><td>List, BigList&dagger;<td>AbstractList, AbstractBigList<td>ArrayList, BigArrayBigList, ArrayFrontCodedList
 	<tr><td>PriorityQueue&dagger;<td>AbstractPriorityQueue&dagger;<td>HeapPriorityQueue, ArrayPriorityQueue, ArrayFIFOQueue
 	<tr><td>IndirectPriorityQueue&dagger;<td>AbstractIndirectPriorityQueue&dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
 	<tr><td>IndirectDoublePriorityQueue&dagger;<td>AbstractIndirectDoublePriorityQueue&dagger;<td>HeapSesquiIndirectDoublePriorityQueue, HeapIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
 	<tr><td>Stack&dagger;<td>AbstractStack&dagger;<td>ArrayList
-	<tr><td>Iterator, BigListIterator<td>AbstractIterator, AbstractBigListIterator
+	<tr><td>Iterator, BigListIterator&dagger;<td>AbstractIterator, AbstractBigListIterator
 	<tr><td>Comparator<td>AbstractComparator
 	<tr><td>BidirectionalIterator&dagger;<td>AbstractBidirectionalIterator
 	<tr><td>ListIterator<td>AbstractListIterator
@@ -243,12 +263,7 @@
     structures} (including {@linkplain
     it.unimi.dsi.fastutil.objects.ObjectArrays#EMPTY_ARRAY arrays}) and
     {@linkplain it.unimi.dsi.fastutil.ints.Int2IntMaps#singleton(int,int) singletons}.
-    
-    <strong>Note</strong>: before <code>fastutil</code> 5, all empty set and
-    iterator structures had a single implementation. The introduction of generics
-    has made necessary an {@linkplain it.unimi.dsi.fastutil.ints.IntSets#EMPTY_SET empty set of integers},
-	  an {@linkplain it.unimi.dsi.fastutil.bytes.ByteSets#EMPTY_SET empty set of bytes}, etc.
-
+ 
     <h3>Warnings</h3>
 
     <p><strong>All classes are not synchronized</strong>. If multiple threads access one
@@ -473,16 +488,8 @@
     implementation of methods that manipulate arrays as type-specific
     {@linkplain it.unimi.dsi.fastutil.ints.IntHeaps heaps}, {@linkplain
     it.unimi.dsi.fastutil.ints.IntSemiIndirectHeaps semi-indirect heaps} and
-    {@linkplain it.unimi.dsi.fastutil.ints.IntIndirectHeaps indirect heaps}.
-
-	<P>Finally, <code>fastutil</code> includes an {@linkplain
-	it.unimi.dsi.fastutil.io I/O package} that provides, for instance, {@linkplain
-	it.unimi.dsi.fastutil.io.FastBufferedInputStream fast, unsynchronized
-	buffered input streams}, {@linkplain
-	it.unimi.dsi.fastutil.io.FastBufferedOutputStream fast, unsynchronized
-	buffered output streams}, and a wealth of static methods to store and
-	retrieve data in {@linkplain it.unimi.dsi.fastutil.io.TextIO textual} and
-	{@linkplain it.unimi.dsi.fastutil.io.BinIO binary} form.
+    {@linkplain it.unimi.dsi.fastutil.ints.IntIndirectHeaps indirect heaps}. There are
+    also quicksort and mergesort implementations that use arbitrary type-specific comparators.
 
     <h3>Iterators and Comparators</h3>
 
@@ -574,9 +581,46 @@
       providing wrappers for non-type-specific method calls, so that you have to
       write just the (usually simpler) type-specific version. 
 
+	<h2>More on the support for very large collections</h2>
+	
+	<p>With the continuous increase in core memory available, Java arrays are starting to show
+	their size limitation (indices cannot be larger than 2<sup>31</sup>). <code>fastutil</code>
+	proposes to store <em>big arrays</em> using arrays-of-arrays supported to certain
+	size restrictions and a number of supporting static methods. Please read the documentation
+	of {@link it.unimi.dsi.fastutil.BigArrays} so understand how big arrays work.
+	
+	<p>Correspondingly, <code>fastutil</code> proposes a new interface, called
+	{@link it.unimi.dsi.fastutil.Size64}, that should be implemented by very large
+	collections. {@link it.unimi.dsi.fastutil.Size64} contains a method
+	{@link it.unimi.dsi.fastutil.Size64#size64()} which can return the collection
+	size as a long integer.
+	
+	<p><code>fastutil</code> provides {@linkplain it.unimi.dsi.fastutil.BigList big lists},
+	which are lists with 64-bit indices; of course, they extend {@link it.unimi.dsi.fastutil.Size64}.
+	An implementation based on big arrays is provided (see, e.g., {@link it.unimi.dsi.fastutil.ints.IntBigArrayBigList}),
+	as well as static containers (see, e.g., {@link it.unimi.dsi.fastutil.ints.IntBigLists}).
+	Whereas it is unlikely that such collection will be in main memory as big arrays, there
+	are number of situations, such as exposing large files through a list interface or
+	storing a large amount of data using <a href="http://sux4j.dsi.unimi.it/">succinct data structures</a>,
+	in which a big list interface is natural.
+	
+	<p>Unfortunately, {@linkplain java.util.List lists} and {@linkplain it.unimi.dsi.fastutil.BigList big lists},
+	as well as {@linkplain java.util.ListIterator list iterators} and {@linkplain it.unimi.dsi.fastutil.BigListIterator big-list iterators},
+	cannot be made compatible: we thus provide adapters (see, e.g., {@linkplain it.unimi.dsi.fastutil.ints.IntBigLists#asBigList(it.unimi.dsi.fastutil.ints.IntList)}).
 
+	<h2>More on fast and practical I/O</h2>
+	
+	<P><code>fastutil</code> includes an {@linkplain
+	it.unimi.dsi.fastutil.io I/O package} that provides, for instance, {@linkplain
+	it.unimi.dsi.fastutil.io.FastBufferedInputStream fast, unsynchronized
+	buffered input streams}, {@linkplain
+	it.unimi.dsi.fastutil.io.FastBufferedOutputStream fast, unsynchronized
+	buffered output streams}, and a wealth of static methods to store and
+	retrieve data in {@linkplain it.unimi.dsi.fastutil.io.TextIO textual} and
+	{@linkplain it.unimi.dsi.fastutil.io.BinIO binary} form. The latter, in particular,
+	contain methods which load and store big arrays.
       
-    <h3>Performance</h3>
+    <h2>Performance</h2>
     
     <p>The main reason behind <code>fastutil</code> is performance, both in
     time and in space. The relevant methods of type-specific hash maps and sets
@@ -733,7 +777,7 @@
       particular, we need 48 booleans for AVL trees and 64 pointers plus 64
       booleans for red-black trees.
 
-    <h3><A NAME="example"></A>An Example</h3>
+    <h2><A NAME="example"></A>An Example</h2>
 
     <P>Suppose you want to store a sorted map from longs to integers. The first
       step is to define a variable of the right interface, and assign it a new
