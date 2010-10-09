@@ -1,4 +1,4 @@
-package test.it.unimi.dsi.fastutil.ints;
+package it.unimi.dsi.fastutil.ints;
 
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -14,7 +14,7 @@ import junit.framework.TestCase;
 public class IntArraySetTest extends TestCase {
 	
 	public void testSet() {
-		for( int i = 0; i <= 2; i++ ) {
+		for( int i = 1; i <= 1; i++ ) {
 			final IntArraySet s = i == 0 ? new IntArraySet() : new IntArraySet( new int[ i ] );
 			assertTrue( s.add( 1 ) );
 			assertEquals( 1, s.size() );

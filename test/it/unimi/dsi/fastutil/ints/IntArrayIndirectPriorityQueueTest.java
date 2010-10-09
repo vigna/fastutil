@@ -1,4 +1,4 @@
-package test.it.unimi.dsi.fastutil.ints;
+package it.unimi.dsi.fastutil.ints;
 
 import it.unimi.dsi.fastutil.ints.IntArrayIndirectPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;

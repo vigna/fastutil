@@ -1,4 +1,4 @@
-package test.it.unimi.dsi.fastutil.io;
+package it.unimi.dsi.fastutil.io;
 
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
 import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;

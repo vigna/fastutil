@@ -1,4 +1,4 @@
-package test.it.unimi.dsi.fastutil.objects;
+package it.unimi.dsi.fastutil.objects;
 
 import it.unimi.dsi.fastutil.io.BinIO;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
