@@ -17,26 +17,26 @@ public class IntArraySetTest extends TestCase {
 		for( int i = 1; i <= 1; i++ ) {
 			final IntArraySet s = i == 0 ? new IntArraySet() : new IntArraySet( new int[ i ] );
 			assertTrue( s.add( 1 ) );
-			assertEquals( 1, s.size() );
+			assertEquals( 1 + i, s.size() );
 			assertTrue( s.contains( 1 ) );
 			assertTrue( s.add(  2  ) );
 			assertTrue( s.contains( 2 ) );
-			assertEquals( 2, s.size() );
+			assertEquals( 2 + i, s.size() );
 			assertFalse( s.add( 1 ) );
 			assertFalse( s.remove( 3 ) );
 			assertTrue( s.add( 3 ) );
-			assertEquals( 3, s.size() );
+			assertEquals( 3 + i, s.size() );
 			assertTrue( s.contains( 1 ) );
 			assertTrue( s.contains( 2 ) );
 			assertTrue( s.contains( 2 ) );
-			assertEquals( new IntOpenHashSet( new int[] { 1, 2, 3 } ), new IntOpenHashSet( s.iterator() ) );
+			assertEquals( new IntOpenHashSet( i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 } ), new IntOpenHashSet( s.iterator() ) );
 			assertTrue( s.remove( 3 ) );
-			assertEquals( 2, s.size() );
+			assertEquals( 2 + i, s.size() );
 			assertTrue( s.remove( 1 ) );
-			assertEquals( 1, s.size() );
+			assertEquals( 1 + i, s.size() );
 			assertFalse( s.contains( 1 ) );
 			assertTrue( s.remove( 2 ) );
-			assertEquals( 0, s.size() );
+			assertEquals( 0 + i, s.size() );
 			assertFalse( s.contains( 1 ) );
 		}
 	}
