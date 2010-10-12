@@ -558,6 +558,9 @@ SOURCES = \
 	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \
 	$(SOURCEDIR)/Maps.java \
 	$(SOURCEDIR)/Arrays.java \
+	$(SOURCEDIR)/Swapper.java \
+	$(SOURCEDIR)/BigSwapper.java \
+	$(SOURCEDIR)/Size64.java \
 	$(SOURCEDIR)/PriorityQueues.java \
 	$(SOURCEDIR)/IndirectPriorityQueues.java \
 	$(SOURCEDIR)/IndirectDoublePriorityQueues.java \
