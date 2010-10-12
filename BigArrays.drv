@@ -242,8 +242,9 @@ public class BIG_ARRAYS {
 	 * @return a new big array of given type and length.
 	 */
 
+	@SuppressWarnings("unchecked")
 	public static <K> K[][] newBigArray( final K[][] prototype, final long length ) {
-		return newBigArray( prototype.getClass().getComponentType(), length );
+		return (K[][])newBigArray( prototype.getClass().getComponentType(), length );
 	}
 
 	/** Creates a new big array using a the given one as component type. 
@@ -258,16 +259,16 @@ public class BIG_ARRAYS {
 	 */
 
 	@SuppressWarnings("unchecked")
-	private static <K> K[][] newBigArray( Class<?> componentType, final long length ) {
-		if ( length == 0 && componentType == Object[].class ) return KEY_GENERIC_BIG_ARRAY_CAST EMPTY_BIG_ARRAY;
+	private static Object[][] newBigArray( Class<?> componentType, final long length ) {
+		if ( length == 0 && componentType == Object[].class ) return EMPTY_BIG_ARRAY;
 		final int baseLength = (int)((length + SEGMENT_MASK) >> SEGMENT_SHIFT);
-		K[][] base = (K[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
+		Object[][] base = (Object[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
 		final int residual = (int)(length & SEGMENT_MASK);
 		if ( residual != 0 ) {
-			for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (K[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
-			base[ baseLength - 1 ] = (K[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
+			for( int i = 0; i < baseLength - 1; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
+			base[ baseLength - 1 ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), (int)(length & SEGMENT_MASK) );
 		}
-		else for( int i = 0; i < baseLength; i++ ) base[ i ] = (K[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
+		else for( int i = 0; i < baseLength; i++ ) base[ i ] = (Object[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
 
 		return base;
 	}
@@ -310,7 +311,7 @@ public class BIG_ARRAYS {
 			bigArray[ 0 ] = array;
 			return bigArray;
 		}
-		final K[][] bigArray = newBigArray( array.getClass(), array.length );
+		final K[][] bigArray = (K[][])newBigArray( array.getClass(), array.length );
 		for( int i = 0; i < bigArray.length; i++ ) System.arraycopy( array, (int)start( i ), bigArray[ i ], 0, bigArray[ i ].length );
 		return bigArray;
 	}
