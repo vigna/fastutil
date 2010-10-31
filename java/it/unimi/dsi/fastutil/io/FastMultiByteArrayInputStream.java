@@ -148,7 +148,7 @@ public class FastMultiByteArrayInputStream extends java.io.InputStream implement
 
 	public int read() {
 		if ( length == position ) return -1;
-		return array[ (int)( position >> SLICE_BITS ) ][ (int)( position++ & SLICE_MASK ) ] & 0xFF;
+		return array[ (int)( position >>> SLICE_BITS ) ][ (int)( position++ & SLICE_MASK ) ] & 0xFF;
 	}
 
 	public int read( final byte[] b, int offset, final int length ) {
@@ -156,8 +156,8 @@ public class FastMultiByteArrayInputStream extends java.io.InputStream implement
 		int res, n = (int)Math.min( length, this.length - this.position ), m = n;
 
 		do {
-			res = Math.min( n, array[ (int)( position >> SLICE_BITS ) ].length - (int)( position & SLICE_MASK ) );
-			System.arraycopy( array[ (int)( position >> SLICE_BITS ) ], (int)( position & SLICE_MASK ),
+			res = Math.min( n, array[ (int)( position >>> SLICE_BITS ) ].length - (int)( position & SLICE_MASK ) );
+			System.arraycopy( array[ (int)( position >>> SLICE_BITS ) ], (int)( position & SLICE_MASK ),
 				b, offset, res );
 				
 			n -= res;
