@@ -315,7 +315,7 @@ public class BigArrays {
 		}
 
 		// Recursively sort halves
-		long mid = ( from + to ) >>> 2;
+		long mid = ( from + to ) >>> 1;
 		mergeSort( from, mid, comp, swapper );
 		mergeSort( mid, to, comp, swapper );
 

@@ -573,49 +573,49 @@ public class ARRAYS {
 		quickSort( x, 0, x.length );	
 	}
 	
-	/** Sorts the specified range of elements according to the natural ascending order using mergesort and writes them to a destination array.
+	/** Sorts the specified range of elements according to the natural ascending order using mergesort, using a given support array.
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
 	 * of the sort. Moreover, no support arrays will be allocated. 
 	 
-	 * @param src the array to be sorted.
-	 * @param dest another array where the sorted elements will be written.
+	 * @param a the array to be sorted.
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
+	 * @param supp a support array, at least as large as <code>a</code>.
 	 */
 
 	@SuppressWarnings("unchecked")
-	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[], final int from, final int to ) {
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], final int from, final int to, final KEY_GENERIC_TYPE supp[] ) {
 		int len = to - from;
 		
 		// Insertion sort on smallest arrays
 		if ( len < SMALL ) {
 		    for ( int i = from; i < to; i++ ) 
-		    	for ( int j = i; j > from && KEY_LESS( dest[ j ], dest[ j - 1 ] ); j-- ) 
-		    		swap( dest, j, j - 1 );
+		    	for ( int j = i; j > from && KEY_LESS( a[ j ], a[ j - 1 ] ); j-- ) 
+		    		swap( a, j, j - 1 );
 		    return;
 		}
 	
-		// Recursively sort halves of dest into src
+		// Recursively sort halves of a into supp
 		final int mid = ( from + to ) >>> 1;
-		mergeSort( dest, src, from, mid );
-		mergeSort( dest, src, mid, to );
+		mergeSort( a, from, mid, supp );
+		mergeSort( a, mid, to, supp );
 	
-		// If list is already sorted, just copy from src to dest.  This is an
+		// If list is already sorted, just copy from supp to a.  This is an
 		// optimization that results in faster sorts for nearly ordered lists.
-		if ( KEY_LESSEQ( src[ mid - 1 ], src[ mid ] ) ) {
-			System.arraycopy( src, from, dest, from, len );
+		if ( KEY_LESSEQ( supp[ mid - 1 ], supp[ mid ] ) ) {
+			System.arraycopy( supp, from, a, from, len );
 			return;
 		}
 	
-		// Merge sorted halves (now in src) into dest
+		// Merge sorted halves (now in supp) into a
 		for( int i = from, p = from, q = mid; i < to; i++ ) {
-			if ( q >= to || p < mid && KEY_LESSEQ( src[ p ], src[ q ] ) ) dest[ i ] = src[ p++ ];
-			else dest[ i ] = src[ q++ ];
+			if ( q >= to || p < mid && KEY_LESSEQ( supp[ p ], supp[ q ] ) ) a[ i ] = supp[ p++ ];
+			else a[ i ] = supp[ q++ ];
 		}
 	}
 
-	/**	Sorts the specified range of elements according to the natural ascending order using mergesort.
+	/** Sorts the specified range of elements according to the natural ascending order using mergesort.
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
 	 * of the sort. An array as large as <code>a</code> will be allocated by this method.
@@ -625,7 +625,11 @@ public class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], final int from, final int to ) {
-		mergeSort( a, a.clone(), from, to );
+#if #keys(primitive)
+		mergeSort( a, from, to, new KEY_TYPE[ a.length ] );
+#else
+		mergeSort( a, from, to, a.clone() );
+#endif
 	}
 
 	/**	Sorts an array according to the natural ascending order using mergesort.
@@ -636,77 +640,69 @@ public class ARRAYS {
 	 * @param a the array to be sorted.
 	 */
 	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[] ) {
-		mergeSort( a, a.clone(), 0, a.length );
+		mergeSort( a, 0, a.length );
 	}
 
 	/** Sorts the specified range of elements according to the order induced by the specified
-	 * comparator using mergesort and writes them to a destination array.
+	 * comparator using mergesort, using a given support array.
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
 	 * of the sort. Moreover, no support arrays will be allocated.
 	 
-	 * @param src the array to be sorted.
-	 * @param dest another array where the sorted elements will be written.
+	 * @param a the array to be sorted.
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the sorting order.
+	 * @param supp a support array, at least as large as <code>a</code>.
 	 */
 	@SuppressWarnings("unchecked")
-	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp ) {
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp, final KEY_GENERIC_TYPE supp[] ) {
 		int len = to - from;
 		
 		// Insertion sort on smallest arrays
 		if ( len < SMALL ) {
 		    for ( int i = from; i < to; i++ ) 
-		    	for ( int j = i; j > from && comp.compare( dest[ j ], dest[ j - 1 ] ) < 0; j-- ) 
-		    		swap( dest, j, j - 1 );
+		    	for ( int j = i; j > from && comp.compare( a[ j ], a[ j - 1 ] ) < 0; j-- ) 
+		    		swap( a, j, j - 1 );
 		    return;
 		}
 	
-		// Recursively sort halves of dest into src
+		// Recursively sort halves of a into supp
 		final int mid = ( from + to ) >>> 1;
-		mergeSort( dest, src, from, mid );
-		mergeSort( dest, src, mid, to );
+		mergeSort( a, from, mid, supp );
+		mergeSort( a, mid, to, supp );
 	
-		// If list is already sorted, just copy from src to dest.  This is an
+		// If list is already sorted, just copy from supp to a.  This is an
 		// optimization that results in faster sorts for nearly ordered lists.
-		if ( comp.compare( src[ mid - 1 ], src[ mid ] ) <= 0 ) {
-			System.arraycopy( src, from, dest, from, len );
+		if ( comp.compare( supp[ mid - 1 ], supp[ mid ] ) <= 0 ) {
+			System.arraycopy( supp, from, a, from, len );
 			return;
 		}
 	
-		// Merge sorted halves (now in src) into dest
+		// Merge sorted halves (now in supp) into a
 		for( int i = from, p = from, q = mid; i < to; i++ ) {
-			if ( q >= to || p < mid && comp.compare( src[ p ], src[ q ] ) <= 0 ) dest[ i ] = src[ p++ ];
-			else dest[ i ] = src[ q++ ];
+			if ( q >= to || p < mid && comp.compare( supp[ p ], supp[ q ] ) <= 0 ) a[ i ] = supp[ p++ ];
+			else a[ i ] = supp[ q++ ];
 		}
-	}
-
-	/** Sorts an array according to the natural ascending order and writes the result to a destination array.
-	 * 
-	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
-	 * of the sort. Moreover, no support arrays will be allocated.
-	 
-	 * @param src the array to be sorted.
-	 * @param dest another array where the sorted elements will be written.
-	 */
-	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[] ) {
-		mergeSort( src, dest, 0, src.length );
 	}
 
 	/** Sorts the specified range of elements according to the order induced by the specified
 	 * comparator using mergesort.
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
-	 * of the sort. Moreover, no support arrays will be allocated.
-	 
-	 * @param src the array to be sorted.
+	 * of the sort. An array as large as <code>a</code> will be allocated by this method.
+	 *
+	 * @param a the array to be sorted.
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the sorting order.
 	 */
-	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp ) {
-		mergeSort( src, src.clone(), from, to, comp );
+	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp ) {
+#if #keys(primitive)
+		mergeSort( a, from, to, comp, new KEY_TYPE[ a.length ] );
+#else
+		mergeSort( a, from, to, comp, a.clone() );
+#endif
 	}
 
 	/** Sorts an array according to the order induced by the specified
@@ -719,21 +715,7 @@ public class ARRAYS {
 	 * @param comp the comparator to determine the sorting order.
 	 */
 	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], KEY_COMPARATOR KEY_GENERIC comp ) {
-		mergeSort( a, a.clone(), 0, a.length, comp );
-	}
-
-	/** Sorts an array according to the order induced by the specified
-	 * comparator using mergesort and writes the result to a destination array.
-	 * 
-	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
-	 * of the sort. Moreover, no support arrays will be allocated.
-	 
-	 * @param src the array to be sorted.
-	 * @param dest another array where the sorted elements will be written.
-	 * @param comp the comparator to determine the sorting order.
-	 */
-	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE src[], final KEY_GENERIC_TYPE dest[], KEY_COMPARATOR KEY_GENERIC comp ) {
-		mergeSort( src, dest, 0, src.length, comp );
+		mergeSort( a, 0, a.length, comp );
 	}
 
 #if ! #keyclass(Boolean)
