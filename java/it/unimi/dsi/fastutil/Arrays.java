@@ -86,7 +86,7 @@ public class Arrays {
 		int firstCut;
 		int secondCut;
 		if ( mid - from > to - mid ) {
-			firstCut = from + ( mid - from ) >>> 2;
+			firstCut = from + ( mid - from ) >>> 1;
 			secondCut = lowerBound( mid, to, firstCut, comp );
 		}
 		else {
@@ -191,7 +191,7 @@ public class Arrays {
 		}
 
 		// Recursively sort halves
-		int mid = ( from + to ) >>> 2;
+		int mid = ( from + to ) >>> 1;
 		mergeSort( from, mid, c, swapper );
 		mergeSort( mid, to, c, swapper );
 

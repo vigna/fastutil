@@ -220,7 +220,7 @@ public class BigArrays {
 		long firstCut;
 		long secondCut;
 		if ( mid - from > to - mid ) {
-			firstCut = from + ( mid - from ) >>> 2;
+			firstCut = from + ( mid - from ) / 2;
 			secondCut = lowerBound( mid, to, firstCut, comp );
 		}
 		else {
