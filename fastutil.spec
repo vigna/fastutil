@@ -2,7 +2,7 @@
 
 Name:           fastutil
 Version:        6.0.0
-Release:        1jpp
+Release:        4jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
@@ -13,6 +13,9 @@ Vendor:         JPackage Project
 Distribution:   JPackage
 BuildArch:      noarch
 Requires:       java >= 1.5.0
+Provides:	fastutil
+Provides:	fastutil5
+Obsoletes:	fastutil5
 BuildRequires:  java-devel >= 1.5.0, ant, make, gcc, jpackage-utils >= 0:1.6, /bin/bash
 BuildRequires:  java-javadoc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -42,7 +45,6 @@ export CLASSPATH=
 ant \
   -Dj2se.apiurl=%{_javadocdir}/java \
   jar javadoc
-mv fastutil-%{version}.jar %{name}-%{version}.jar
 
 %install
 rm -rf $RPM_BUILD_ROOT
