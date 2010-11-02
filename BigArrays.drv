@@ -39,7 +39,6 @@ import it.unimi.dsi.fastutil.Hash;
 import static it.unimi.dsi.fastutil.BigArrays.start;
 import static it.unimi.dsi.fastutil.BigArrays.segment;
 import static it.unimi.dsi.fastutil.BigArrays.displacement;
-import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SHIFT;
 import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_MASK;
 import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SIZE;
 
@@ -312,7 +311,7 @@ public class BIG_ARRAYS {
 	@SuppressWarnings("unchecked")
 	private static Object[][] newBigArray( Class<?> componentType, final long length ) {
 		if ( length == 0 && componentType == Object[].class ) return EMPTY_BIG_ARRAY;
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final int baseLength = (int)((length + SEGMENT_MASK) / SEGMENT_SIZE);
 		Object[][] base = (Object[][])java.lang.reflect.Array.newInstance( componentType, baseLength );
 		final int residual = (int)(length & SEGMENT_MASK);
 		if ( residual != 0 ) {
@@ -333,7 +332,7 @@ public class BIG_ARRAYS {
 
 	public static KEY_TYPE[][] newBigArray( final long length ) {
 		if ( length == 0 ) return EMPTY_BIG_ARRAY;
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final int baseLength = (int)((length + SEGMENT_MASK) / SEGMENT_SIZE);
 		KEY_TYPE[][] base = new KEY_TYPE[ baseLength ][];
 		final int residual = (int)(length & SEGMENT_MASK);
 		if ( residual != 0 ) {
@@ -424,7 +423,7 @@ public class BIG_ARRAYS {
 		final long oldLength = length( array );
 		if ( length > oldLength ) {
 			final int valid = array.length - ( array.length == 0 || array.length > 0 && array[ array.length - 1 ].length == SEGMENT_SIZE ? 0 : 1 );
-			final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+			final int baseLength = (int)((length + SEGMENT_MASK) / SEGMENT_SIZE);
 			final KEY_GENERIC_TYPE[][] base = Arrays.copyOf( array, baseLength );
 			final Class<?> componentType = array.getClass().getComponentType();
 			final int residual = (int)(length & SEGMENT_MASK);
@@ -434,7 +433,7 @@ public class BIG_ARRAYS {
 			}
 			else for( int i = valid; i < baseLength; i++ ) base[ i ] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance( componentType.getComponentType(), SEGMENT_SIZE );
 
-			if ( preserve - ( valid << SEGMENT_SHIFT ) > 0 ) copy( array, valid << SEGMENT_SHIFT, base, valid << SEGMENT_SHIFT, preserve - ( valid << SEGMENT_SHIFT ) );
+			if ( preserve - ( valid * SEGMENT_SIZE ) > 0 ) copy( array, valid * SEGMENT_SIZE, base, valid * SEGMENT_SIZE, preserve - ( valid * SEGMENT_SIZE ) );
 			return base;
 		}
 		return array;
@@ -458,7 +457,7 @@ public class BIG_ARRAYS {
 		final long oldLength = length( array );
 		if ( length > oldLength ) {
 			final int valid = array.length - ( array.length == 0 || array.length > 0 && array[ array.length - 1 ].length == SEGMENT_SIZE ? 0 : 1 );
-			final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+			final int baseLength = (int)((length + SEGMENT_MASK) / SEGMENT_SIZE);
 			final KEY_TYPE[][] base = Arrays.copyOf( array, baseLength );
 			final int residual = (int)(length & SEGMENT_MASK);
 			if ( residual != 0 ) {
@@ -467,7 +466,7 @@ public class BIG_ARRAYS {
 			}
 			else for( int i = valid; i < baseLength; i++ ) base[ i ] = new KEY_TYPE[ SEGMENT_SIZE ];
 
-			if ( preserve - ( valid << SEGMENT_SHIFT ) > 0 ) copy( array, valid << SEGMENT_SHIFT, base, valid << SEGMENT_SHIFT, preserve - ( valid << SEGMENT_SHIFT ) );
+			if ( preserve - ( valid * SEGMENT_SIZE ) > 0 ) copy( array, valid * SEGMENT_SIZE, base, valid * SEGMENT_SIZE, preserve - ( valid * SEGMENT_SIZE ) );
 			return base;
 		}
 		return array;
@@ -543,7 +542,7 @@ public class BIG_ARRAYS {
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim( final KEY_GENERIC_TYPE[][] array, final long length ) {
 		final long oldLength = length( array );
 		if ( length >= oldLength ) return array;
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final int baseLength = (int)((length + SEGMENT_MASK) / SEGMENT_SIZE);
 		final KEY_GENERIC_TYPE[][] base = Arrays.copyOf( array, baseLength );
 		final int residual = (int)(length & SEGMENT_MASK);
 		if ( residual != 0 ) base[ baseLength - 1 ] = ARRAYS.trim( base[ baseLength - 1 ], residual );
@@ -569,7 +568,7 @@ public class BIG_ARRAYS {
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim( final KEY_GENERIC_TYPE[][] array, final long length ) {
 		final long oldLength = length( array );
 		if ( length >= oldLength ) return array;
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final int baseLength = (int)((length + SEGMENT_MASK) / SEGMENT_SIZE);
 		final KEY_TYPE[][] base = Arrays.copyOf( array, baseLength );
 		final int residual = (int)(length & SEGMENT_MASK);
 		if ( residual != 0 ) base[ baseLength - 1 ] = ARRAYS.trim( base[ baseLength - 1 ], residual );
