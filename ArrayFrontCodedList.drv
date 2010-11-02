@@ -134,7 +134,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 				array = BIG_ARRAYS.grow( array, curSize + count( length ) + length, curSize );
 				curSize += writeInt( array, length, curSize );
-				BIG_ARRAYS.copy( a[ b ], 0, array, curSize, length );
+				BIG_ARRAYS.copyToBig( a[ b ], 0, array, curSize, length );
 				curSize += length;
 			}
 			else {
@@ -146,7 +146,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				array = BIG_ARRAYS.grow( array, curSize + count( length ) + count( common ) + length, curSize );
 				curSize += writeInt( array, length, curSize );
 				curSize += writeInt( array, common, curSize );
-				BIG_ARRAYS.copy( a[ b ], common, array, curSize, length );
+				BIG_ARRAYS.copyToBig( a[ b ], common, array, curSize, length );
 				curSize += length;
 			}
 
@@ -333,7 +333,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 		if ( delta == 0 ) {
 			pos = p[ index / ratio ] + count( arrayLength );
-			BIG_ARRAYS.copy( array, pos, a, offset, Math.min( length, arrayLength ) );
+			BIG_ARRAYS.copyFromBig( array, pos, a, offset, Math.min( length, arrayLength ) );
 			return arrayLength;
 		}
 		
@@ -349,12 +349,12 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 			actualCommon = Math.min( common, length );
 			if ( actualCommon <= currLen ) currLen = actualCommon;
 			else {
-				BIG_ARRAYS.copy( array, prevArrayPos, a, currLen + offset, actualCommon - currLen );
+				BIG_ARRAYS.copyFromBig( array, prevArrayPos, a, currLen + offset, actualCommon - currLen );
 				currLen = actualCommon;
 			}
 		}
 
-		if ( currLen < length ) BIG_ARRAYS.copy( array, pos + count( arrayLength ) + count( common ), a, currLen + offset, Math.min( arrayLength, length - currLen ) );
+		if ( currLen < length ) BIG_ARRAYS.copyFromBig( array, pos + count( arrayLength ) + count( common ), a, currLen + offset, Math.min( arrayLength, length - currLen ) );
 
 		return arrayLength + common;
 	}
@@ -454,7 +454,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 						pos = p[ i / ratio ];
 						length = readInt( array, pos );
 						s = ARRAYS.ensureCapacity( s, length, 0 );
-						BIG_ARRAYS.copy( array, pos + count( length ), s, 0, length );
+						BIG_ARRAYS.copyFromBig( array, pos + count( length ), s, 0, length );
 						pos += length + count( length );
 						inSync = true;
 					}
@@ -463,7 +463,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 							length = readInt( array, pos );
 							common = readInt( array, pos + count( length ) );
 							s = ARRAYS.ensureCapacity( s, length + common, common );
-							BIG_ARRAYS.copy( array, pos + count( length ) + count ( common ), s, common, length );
+							BIG_ARRAYS.copyFromBig( array, pos + count( length ) + count ( common ), s, common, length );
 							pos += count( length ) + count( common ) + length;
 							length += common;
 						}
