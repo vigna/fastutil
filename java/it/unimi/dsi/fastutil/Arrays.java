@@ -86,7 +86,7 @@ public class Arrays {
 		int firstCut;
 		int secondCut;
 		if ( mid - from > to - mid ) {
-			firstCut = from + ( mid - from ) >>> 1;
+			firstCut = from + ( mid - from ) / 2;
 			secondCut = lowerBound( mid, to, firstCut, comp );
 		}
 		else {
