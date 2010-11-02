@@ -78,7 +78,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * <p>In some situations, you might want to iterate over a part of a big array having an offset and a length. In this case, the
  * idiomatic loops are as follows:
  * <pre>
- *   for( int i = segment( offset ); i &lt; segment( offset + length ); i++ ) {
+ *   for( int i = segment( offset ); i &lt; segment( offset + length + SEGMENT_MASK ); i++ ) {
  *      final int[] t = a[ i ];
  *      final int l = Math.min( t.length, offset + length - start( i ) );
  *      for( int d = Math.max( 0, offset - start( i ) ); d &lt; l; d++ ) { do something with t[ d ] }
@@ -86,7 +86,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * </pre>
  * or, in a reversed form,
  * <pre>
- *   for( int i = segment( offset + length ); i-- != segment( offset ); ) {
+ *   for( int i = segment( offset + length + SEGMENT_MASK ); i-- != segment( offset ); ) {
  *      final int[] t = a[ i ];
  *      final int s = Math.max( 0, offset - start( i ) );
  *      for( int d = Math.min( t.length, offset + length - start( i ) ); d-- != s ; ) { do something with t[ d ] }
@@ -119,7 +119,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
 
 public class BigArrays {
 	/** The shift used to compute the segment associated with an index (equivalently, the logarithm of the segment size). */
-	public final static int SEGMENT_SHIFT = 27;
+	public final static int SEGMENT_SHIFT = 6;
 	/** The current size of a segment (2<sup>27</sup>) is the largest size that makes
 	 * the physical memory allocation for a single segment strictly smaller
 	 * than 2<sup>31</sup> bytes. */

@@ -493,7 +493,7 @@ public static long LOAD_KEYS( final DataInput dataInput, final KEY_TYPE[][] arra
 	PACKAGE.BIG_ARRAYS.ensureOffsetLength( array, offset, length );
 	long c = 0;
 	try {
-		for( int i = segment( offset ); i < segment( offset + length ); i++ ) {
+		for( int i = segment( offset ); i < segment( offset + length + SEGMENT_MASK ); i++ ) {
 			final KEY_TYPE[] t = array[ i ];
 			final int l = (int)Math.min( t.length, offset + length - start( i ) );
 			for( int d = (int)Math.max( 0, offset - start( i ) ); d < l; d++ ) {
@@ -549,7 +549,7 @@ public static long LOAD_KEYS( final File file, final KEY_TYPE[][] array, final l
 
 	long c = 0;
 	try {
-		for( int i = segment( offset ); i < segment( offset + length ); i++ ) {
+		for( int i = segment( offset ); i < segment( offset + length + SEGMENT_MASK ); i++ ) {
 			final KEY_TYPE[] t = array[ i ];
 			final int l = (int)Math.min( t.length, offset + length - start( i ) );
 			for( int d = (int)Math.max( 0, offset - start( i ) ); d < l; d++ ) {
@@ -585,7 +585,7 @@ public static long LOAD_KEYS( final CharSequence filename, final KEY_TYPE[][] ar
 public static long LOAD_KEYS( final File file, final KEY_TYPE[][] array ) throws IOException {
 	final FileInputStream fis = new FileInputStream( file );
 #if #keyclass(Byte)
-	final long result = read( fis, array, 0, array.length );
+	final long result = read( fis, array, 0, BIG_ARRAYS.length( array ) );
 	fis.close();
 	return result;
 #else
@@ -682,7 +682,7 @@ public static void STORE_KEYS( final KEY_TYPE array[][], final long offset, fina
 #if #keyclass(Byte)
 	write( dataOutput, array, offset, length );
 #else
-	for( int i = segment( offset ); i < segment( offset + length ); i++ ) {
+	for( int i = segment( offset ); i < segment( offset + length + SEGMENT_MASK ); i++ ) {
 		final KEY_TYPE[] t = array[ i ];
 		final int l = (int)Math.min( t.length, offset + length - start( i ) );
 		for( int d = (int)Math.max( 0, offset - start( i ) ); d < l; d++ ) dataOutput.WRITE_KEY( t[ d ] );
@@ -722,7 +722,7 @@ public static void STORE_KEYS( final KEY_TYPE array[][], final long offset, fina
 	os.close();
 #else
 	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
-	for( int i = segment( offset ); i < segment( offset + length ); i++ ) {
+	for( int i = segment( offset ); i < segment( offset + length + SEGMENT_MASK ); i++ ) {
 		final KEY_TYPE[] t = array[ i ];
 		final int l = (int)Math.min( t.length, offset + length - start( i ) );
 		for( int d = (int)Math.max( 0, offset - start( i ) ); d < l; d++ ) dos.WRITE_KEY( t[ d ] );
@@ -751,7 +751,7 @@ public static void STORE_KEYS( final KEY_TYPE array[][], final long offset, fina
 public static void STORE_KEYS( final KEY_TYPE array[][], final File file ) throws IOException {
 #if #keyclass(Byte)
 	final OutputStream os = new FastBufferedOutputStream( new FileOutputStream( file ) );
-	write( os, array, 0, array.length );
+	write( os, array, 0, BIG_ARRAYS.length( array ) );
 	os.close();
 #else
 	final DataOutputStream dos = new DataOutputStream( new FastBufferedOutputStream( new FileOutputStream( file ) ) );
