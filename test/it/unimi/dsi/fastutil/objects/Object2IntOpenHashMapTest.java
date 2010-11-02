@@ -2,6 +2,7 @@ package it.unimi.dsi.fastutil.objects;
 
 import it.unimi.dsi.fastutil.Hash;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.junit.Test;
@@ -25,7 +26,7 @@ public class Object2IntOpenHashMapTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	protected static void test( int n, float f ) {
+	protected static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		Object2IntOpenHashMap m = new Object2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE, f );
 		Map t = new java.util.HashMap();
 		/* First of all, we fill t with random data. */
@@ -75,16 +76,10 @@ public class Object2IntOpenHashMapTest {
 		 */
 		for ( int i = 0; i < n; i++ ) {
 			Object T = genKey();
-			if ( m.containsKey( ( T ) ) != t.containsKey( ( T ) ) ) {
-				System.out.println( "Error: divergence in keys between t and m (polymorphic method)" );
-				System.exit( 1 );
-			}
-			if ( ( m.getInt( T ) != ( 0 ) ) != ( ( t.get( ( T ) ) == null ? ( 0 ) : ( ( ( (Integer)( t.get( ( T ) ) ) ).intValue() ) ) ) != ( 0 ) ) ||
+			assertFalse( "Error: divergence in keys between t and m (polymorphic method)", m.containsKey( ( T ) ) != t.containsKey( ( T ) ) );
+			assertFalse( "Error: divergence between t and m (polymorphic method)", ( m.getInt( T ) != ( 0 ) ) != ( ( t.get( ( T ) ) == null ? ( 0 ) : ( ( ( (Integer)( t.get( ( T ) ) ) ).intValue() ) ) ) != ( 0 ) ) ||
 					t.get( ( T ) ) != null &&
-					!( Integer.valueOf( m.getInt( T ) ) ).equals( t.get( ( T ) ) ) ) {
-				System.out.println( "Error: divergence between t and m (polymorphic method)" );
-				System.exit( 1 );
-			}
+					!( Integer.valueOf( m.getInt( T ) ) ).equals( t.get( ( T ) ) ) );
 		}
 		/*
 		 * Again, we check that inquiries about random data give the same answer in m and t, but for
@@ -140,22 +135,16 @@ public class Object2IntOpenHashMapTest {
 		}
 		int h = m.hashCode();
 		/* Now we save and read m. */
-		try {
-			java.io.File ff = new java.io.File( "it.unimi.dsi.fastutil.test" );
-			java.io.OutputStream os = new java.io.FileOutputStream( ff );
-			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream( os );
-			oos.writeObject( m );
-			oos.close();
-			java.io.InputStream is = new java.io.FileInputStream( ff );
-			java.io.ObjectInputStream ois = new java.io.ObjectInputStream( is );
-			m = (Object2IntOpenHashMap)ois.readObject();
-			ois.close();
-			ff.delete();
-		}
-		catch ( Exception e ) {
-			e.printStackTrace();
-			System.exit( 1 );
-		}
+		java.io.File ff = new java.io.File( "it.unimi.dsi.fastutil.test" );
+		java.io.OutputStream os = new java.io.FileOutputStream( ff );
+		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream( os );
+		oos.writeObject( m );
+		oos.close();
+		java.io.InputStream is = new java.io.FileInputStream( ff );
+		java.io.ObjectInputStream ois = new java.io.ObjectInputStream( is );
+		m = (Object2IntOpenHashMap)ois.readObject();
+		ois.close();
+		ff.delete();
 		if ( m.hashCode() != h ) System.out.println( "Error: hashCode() changed after save/read" );
 		/* Now we check that m actually holds that data. */
 		for ( java.util.Iterator i = t.keySet().iterator(); i.hasNext(); ) {
@@ -180,27 +169,27 @@ public class Object2IntOpenHashMapTest {
 	}
 
 	@Test
-	public void test1() {
+	public void test1() throws IOException, ClassNotFoundException {
 		test( 1, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1, Hash.FAST_LOAD_FACTOR );
 		test( 1, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
 	@Test
-	public void test10() {
+	public void test10() throws IOException, ClassNotFoundException {
 		test( 10, Hash.DEFAULT_LOAD_FACTOR );
 		test( 10, Hash.FAST_LOAD_FACTOR );
 		test( 10, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
 	@Test
-	public void test100() {
+	public void test100() throws IOException, ClassNotFoundException {
 		test( 100, Hash.DEFAULT_LOAD_FACTOR );
 		test( 100, Hash.FAST_LOAD_FACTOR );
 		test( 100, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
-	public void test1000() {
+	public void test1000() throws IOException, ClassNotFoundException {
 		test( 1000, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1000, Hash.FAST_LOAD_FACTOR );
 		test( 1000, Hash.VERY_FAST_LOAD_FACTOR );

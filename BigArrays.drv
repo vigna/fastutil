@@ -186,6 +186,7 @@ public class BIG_ARRAYS {
 	 * @param srcPos the starting position in the source big array.
 	 * @param destArray the destination big array.
 	 * @param destPos the starting position in the destination data.
+	 * @param length the number of elements to be copied.
 	 */
 	public static KEY_GENERIC void copy( final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length ) {
 		if ( destPos <= srcPos ) {
@@ -229,6 +230,54 @@ public class BIG_ARRAYS {
 				destDispl -= l;
 				length -= l;
 			}
+		}
+	}
+
+	/** Copies a big array from the specified source big array, beginning at the specified position, to the specified position of the destination array.
+	 * 
+	 * @param srcArray the source big array.
+	 * @param srcPos the starting position in the source big array.
+	 * @param destArray the destination array.
+	 * @param destPos the starting position in the destination data.
+	 * @param length the number of elements to be copied.
+	 */
+	public static KEY_GENERIC void copy( final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[] destArray, int destPos, int length ) {
+		int srcSegment = segment( srcPos );
+		int srcDispl = displacement( srcPos );
+		int l;
+		while( length > 0 ) {
+			l = (int)Math.min( srcArray[ srcSegment ].length - srcDispl, length );
+			System.arraycopy( srcArray[ srcSegment ], srcDispl, destArray, destPos, l );
+			if ( ( srcDispl += l ) == SEGMENT_SIZE ) {
+				srcDispl = 0;
+				srcSegment++;
+			}
+			destPos += l;
+			length -= l;
+		}			
+	}
+	
+	/** Copies an array from the specified source array, beginning at the specified position, to the specified position of the destination big array.
+	 * 
+	 * @param srcArray the source array.
+	 * @param srcPos the starting position in the source array.
+	 * @param destArray the destination big array.
+	 * @param destPos the starting position in the destination data.
+	 * @param length the number of elements to be copied.
+	 */
+	public static KEY_GENERIC void copy( final KEY_GENERIC_TYPE[] srcArray, int srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length ) {
+		int destSegment = segment( destPos );
+		int destDispl = displacement( destPos );
+		int l;
+		while( length > 0 ) {
+			l = (int)Math.min( destArray[ destSegment ].length - destDispl, length );
+			System.arraycopy( srcArray, srcPos, destArray[ destSegment ], destDispl, l );
+			if ( ( destDispl += l ) == SEGMENT_SIZE ) {
+				destDispl = 0;
+				destSegment++;
+			}
+			srcPos += l;
+			length -= l;
 		}
 	}
 	
@@ -374,7 +423,7 @@ public class BIG_ARRAYS {
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity( final KEY_GENERIC_TYPE[][] array, final long length, final long preserve ) {
 		final long oldLength = length( array );
 		if ( length > oldLength ) {
-			final int valid = array.length - ( array.length > 0 && array[ array.length - 1 ].length == SEGMENT_SIZE ? 0 : 1 );
+			final int valid = array.length - ( array.length == 0 || array.length > 0 && array[ array.length - 1 ].length == SEGMENT_SIZE ? 0 : 1 );
 			final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
 			final KEY_GENERIC_TYPE[][] base = Arrays.copyOf( array, baseLength );
 			final Class<?> componentType = array.getClass().getComponentType();
@@ -408,7 +457,7 @@ public class BIG_ARRAYS {
 	public static KEY_TYPE[][] ensureCapacity( final KEY_TYPE[][] array, final long length, final long preserve ) {
 		final long oldLength = length( array );
 		if ( length > oldLength ) {
-			final int valid = array.length - ( array.length > 0 && array[ array.length - 1 ].length == SEGMENT_SIZE ? 0 : 1 );
+			final int valid = array.length - ( array.length == 0 || array.length > 0 && array[ array.length - 1 ].length == SEGMENT_SIZE ? 0 : 1 );
 			final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
 			final KEY_TYPE[][] base = Arrays.copyOf( array, baseLength );
 			final int residual = (int)(length & SEGMENT_MASK);
