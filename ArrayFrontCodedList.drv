@@ -187,15 +187,21 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 #elif #keyclass(Long)
 		return (int)LongBigArrays.get( a, pos );
 #elif #keyclass(Character)
-		return CharBigArrays.get( a, pos ) < 0x8000 ? CharBigArrays.get( a, pos ) : ( CharBigArrays.get( a, pos ) & 0x7FFF ) << 16 | CharBigArrays.get( a, pos + 1 );
+		final char c0 = CharBigArrays.get( a, pos );
+		return c0  < 0x8000 ? c0 : ( c0 & 0x7FFF ) << 16 | CharBigArrays.get( a, pos + 1 );
 #elif #keyclass(Short)
-		return ShortBigArrays.get( a, pos ) >= 0 ? ShortBigArrays.get( a, pos ) : ( -ShortBigArrays.get( a, pos ) - 1 ) << 16  | ( ShortBigArrays.get( a, pos + 1 ) & 0xFFFF );
+		final short s0 = ShortBigArrays.get( a, pos );
+		return s0 >= 0 ? s0 : s0 << 16 | ( ShortBigArrays.get( a, pos + 1 ) & 0xFFFF );
 #else
-		if ( ByteBigArrays.get( a, pos ) >= 0 ) return ByteBigArrays.get( a, pos );
-		if ( ByteBigArrays.get( a, pos + 1 ) >= 0 ) return ( - ByteBigArrays.get( a, pos ) - 1 ) << 7 | ByteBigArrays.get( a, pos + 1 );
-		if ( ByteBigArrays.get( a, pos + 2 ) >= 0 ) return ( - ByteBigArrays.get( a, pos ) - 1 ) << 14 | ( - ByteBigArrays.get( a, pos + 1 ) - 1 ) << 7 | ByteBigArrays.get( a, pos + 2 );
-		if ( ByteBigArrays.get( a, pos + 3 ) >= 0 ) return ( - ByteBigArrays.get( a, pos ) - 1 ) << 21 | ( - ByteBigArrays.get( a, pos + 1 ) - 1 ) << 14 | ( - ByteBigArrays.get( a, pos + 2 ) - 1 ) << 7 | ByteBigArrays.get( a, pos + 3 );
-		return ( - ByteBigArrays.get( a, pos ) - 1 ) << 28 | ( - ByteBigArrays.get( a, pos + 1 ) - 1 ) << 21 | ( - ByteBigArrays.get( a, pos + 2 ) - 1 ) << 14 | ( - ByteBigArrays.get( a, pos + 3 ) - 1 ) << 7 | ByteBigArrays.get( a, pos + 4 );
+		final byte b0 = ByteBigArrays.get( a, pos );
+		if ( b0  >= 0 ) return b0;
+		final byte b1 = ByteBigArrays.get( a, pos + 1 );
+		if ( b1 >= 0 ) return ( - b0 - 1 ) << 7 | b1;
+		final byte b2 = ByteBigArrays.get( a, pos + 2 );
+		if ( b2 >= 0 ) return ( - b0 - 1 ) << 14 | ( - b1 - 1 ) << 7 | b2;
+		final byte b3 = ByteBigArrays.get( a, pos + 3 );
+		if ( b3 >= 0 ) return ( - b0 - 1 ) << 21 | ( - b1 - 1 ) << 14 | ( - b2 - 1 ) << 7 | b3;
+		return ( - b0 - 1 ) << 28 | ( - b1 - 1 ) << 21 | ( - b2 - 1 ) << 14 | ( - b3 - 1 ) << 7 | ByteBigArrays.get( a, pos + 4 );
 #endif
 	}
 
@@ -514,19 +520,18 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	protected long[] rebuildPointerArray() {
 		final long[] p = new long[ ( n + ratio - 1 ) / ratio ];
 		final KEY_TYPE a[][] = array;
-		int i = 0, length, common;
+		int length, common, count;
 		long pos = 0;
 
-		for( i = 0; i < n; i++ ) {
+		for( int i = 0, j = 0, skip = ratio - 1; i < n; i++ ) {
 			length = readInt( a, pos );
-			if ( i % ratio == 0 ) {
-				p[ i / ratio ] = pos;
-				pos += count( length ) + length;
+			count = count( length );
+			if ( ++skip == ratio ) {
+				skip = 0;
+				p[ j++ ] = pos;
+				pos += count + length;
 			}
-			else {
-				common = readInt( a, pos + count( length ) );
-				pos += count( length ) + count ( common ) + length;
-			}
+			else pos += count + count( readInt( a, pos + count ) ) + length;
 		}
 
 		return p;
