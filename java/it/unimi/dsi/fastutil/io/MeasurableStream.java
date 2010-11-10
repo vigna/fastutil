@@ -30,7 +30,7 @@ import java.io.IOException;
  *
  * <P>This class has two methods, both specified as optional. This apparently bizarre
  * behaviour is necessary because of wrapper classes which use reflection 
- * to support those methods (see, e.g., {@link FastBufferedInputStream} and {@link FastBufferedOutputStream}).
+ * to support those methods (see, e.g., {@link MeasurableInputStream}, {@link FastBufferedInputStream} and {@link FastBufferedOutputStream}).
  * 
  * @since 6.0.0
  */
