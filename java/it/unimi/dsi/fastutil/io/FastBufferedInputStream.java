@@ -22,7 +22,6 @@ package it.unimi.dsi.fastutil.io;
  */
 
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
-import it.unimi.dsi.fastutil.io.MeasurableInputStream;
 import it.unimi.dsi.fastutil.io.RepositionableStream;
 
 import java.io.IOException;
@@ -32,7 +31,7 @@ import java.util.EnumSet;
 
 /** Lightweight, unsynchronized, aligned input stream buffering class with
  *  {@linkplain #skip(long) true skipping},
- *  {@linkplain MeasurableInputStream measurability}, 
+ *  {@linkplain MeasurableStream measurability}, 
  *  {@linkplain RepositionableStream repositionability} 
  *  and {@linkplain #readLine(byte[], int, int, EnumSet) line reading} support.
  *
@@ -44,14 +43,14 @@ import java.util.EnumSet;
  * <li><P>There is no support for marking. All methods are unsychronized.
  * 
  * <li><P>As an additional feature, this class implements the {@link
- * RepositionableStream} and {@link MeasurableInputStream} interfaces.  
+ * RepositionableStream} and {@link MeasurableStream} interfaces.  
  * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
  * reflection the {@link java.nio.channels.FileChannel} underlying the given
  * output stream, in this order. If either reference can be successfully
  * fetched, you can use {@link #position(long)} to reposition the stream.
  * Much in the same way, an instance of this class will try to cast the
- * the underlying byte stream to a {@link MeasurableInputStream}, and if this
+ * the underlying byte stream to a {@link MeasurableStream}, and if this
  * operation is successful, or if a {@link java.nio.channels.FileChannel} can
  * be detected, then {@link #position()} and {@link #length()} will work as expected.
  * 
@@ -66,7 +65,7 @@ import java.util.EnumSet;
  * less bytes than requested can be caused only by reaching the end of file.
  *
  * <li><p>This class keeps also track of the number of bytes read so far, so
- * to be able to implemented {@link MeasurableInputStream#position()}
+ * to be able to implemented {@link MeasurableStream#position()}
  * independently of underlying input stream.
  * 
  * <li><p>This class has limited support for 
@@ -76,10 +75,14 @@ import java.util.EnumSet;
  * delimit lines.
  *
  * </ul>
+ * 
+ * <p><strong>Warning:</strong> Since <code>fastutil</code> 6.0.0, this class detects
+ * a implementations of {@link MeasurableStream} instead of subclasses <code>MeasurableInputStream</code> (which is deprecated).
+ * 
  * @since 4.4
  */
 
-public class FastBufferedInputStream extends MeasurableInputStream implements RepositionableStream {
+public class FastBufferedInputStream extends InputStream implements MeasurableStream, RepositionableStream {
 
 	/** The default size of the internal buffer in bytes (8Ki). */
 	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
@@ -118,10 +121,10 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	private FileChannel fileChannel;
 
 	/** {@link #is} cast to a positionable stream, if possible. */
-	private RepositionableStream rs;
+	private RepositionableStream repositionableStream;
 
-	/** {@link #is} cast to a measurable input stream, if possible. */
-	private MeasurableInputStream ms;
+	/** {@link #is} cast to a measurable stream, if possible. */
+	private MeasurableStream measurableStream;
 
 	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
 	 *
@@ -134,10 +137,10 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		this.is = is;
 		buffer = new byte[ bufSize ];
 
-		if ( is instanceof RepositionableStream ) rs = (RepositionableStream)is;
-		if ( is instanceof MeasurableInputStream ) ms = (MeasurableInputStream)is;
+		if ( is instanceof RepositionableStream ) repositionableStream = (RepositionableStream)is;
+		if ( is instanceof MeasurableStream ) measurableStream = (MeasurableStream)is;
 			
-		if ( rs == null ) {
+		if ( repositionableStream == null ) {
 				
 			try {
 				fileChannel = (FileChannel)( is.getClass().getMethod( "getChannel", new Class[] {} ) ).invoke( is, new Object[] {} );
@@ -405,7 +408,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			return;
 		}
 
-		if ( rs != null ) rs.position( newPosition  );
+		if ( repositionableStream != null ) repositionableStream.position( newPosition  );
 		else if ( fileChannel != null ) fileChannel.position( newPosition );
 		else throw new UnsupportedOperationException( "position() can only be called if the underlying byte stream implements the RepositionableStream interface or if the getChannel() method of the underlying byte stream exists and returns a FileChannel" );
 		readBytes = newPosition;
@@ -417,14 +420,15 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		return readBytes;
 	}
 
-	/** Returns the length of the underlying input stream, if it is {@linkplain MeasurableInputStream measurable}.
+	/** Returns the length of the underlying input stream, if it is {@linkplain MeasurableStream measurable}.
 	 *
 	 * @return the length of the underlying input stream.
-	 * @throws UnsupportedOperationException if the underlying input stream is not {@linkplain MeasurableInputStream measurable}.
+	 * @throws UnsupportedOperationException if the underlying input stream is not {@linkplain MeasurableStream measurable} and
+	 * cannot provide a {@link FileChannel}.
 	 */
 
 	public long length() throws IOException {
-		if ( ms != null ) return ms.length();
+		if ( measurableStream != null ) return measurableStream.length();
 		if ( fileChannel != null ) return fileChannel.size();
 		throw new UnsupportedOperationException();
 	}

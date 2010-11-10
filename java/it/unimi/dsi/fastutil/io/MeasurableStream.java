@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil.io;
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2006-2010 Sebastiano Vigna 
+ * Copyright (C) 2010 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -23,38 +23,34 @@ package it.unimi.dsi.fastutil.io;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 
-/** An {@link java.io.InputStream} that provides eager access to its length,
- * and keeps track of the current position (e.g., the number of bytes read so far). 
+/** An stream that provides eager access to its length,
+ * and keeps track of the current position (e.g., the number of bytes read so far, or the current
+ * position of the file pointer). 
  *
- * <P>This class adds two methods, both specified as optional. This apparently bizarre
+ * <P>This class has two methods, both specified as optional. This apparently bizarre
  * behaviour is necessary because of wrapper classes which use reflection 
- * to support those methods (see, e.g., {@link FastBufferedInputStream}).
- *
- * @since 5.0.4
+ * to support those methods (see, e.g., {@link FastBufferedInputStream} and {@link FastBufferedOutputStream}).
  * 
- * @deprecated Replaced by {@link MeasurableStream} as of <code>fastutil</code> 6.0.0 (and
- * retrofitted so to implement it).
+ * @since 6.0.0
  */
 
-@Deprecated
-public abstract class MeasurableInputStream extends InputStream implements MeasurableStream {
+public interface MeasurableStream  {
 	
-	/** Returns the overall length of this input stream (optional operation). In most cases, this will require the input
+	/** Returns the overall length of this stream (optional operation). In most cases, this will require the
 	 *  stream to perform some extra action, possibly changing the state of the input stream itself (typically, reading
-	 *  all the bytes up to the end).
+	 *  all the bytes up to the end, or flushing on output stream).
 	 *  Implementing classes should always document what state will the input stream be in
 	 *  after calling this method, and which kind of exception could be thrown.
 	 */ 
-	public abstract long length() throws IOException;
+	public long length() throws IOException;
 
-	/** Returns the current position in this input stream (optional operation).
+	/** Returns the current position in this stream (optional operation).
 	 * 
-	 * <p>Usually, the position is just the number of bytes read
+	 * <p>Usually, the position is just the number of bytes read or written
 	 * since the stream was opened, but in the case of a
 	 * {@link it.unimi.dsi.fastutil.io.RepositionableStream} it
 	 * represent the current position.
 	 */ 
-	public abstract long position() throws IOException;
+	public long position() throws IOException;
 }

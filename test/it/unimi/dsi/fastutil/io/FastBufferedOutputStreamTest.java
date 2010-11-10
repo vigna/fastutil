@@ -1,20 +1,19 @@
 package it.unimi.dsi.fastutil.io;
 
-import it.unimi.dsi.fastutil.io.BinIO;
-import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
-
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Random;
 
 import junit.framework.TestCase;
 
 public class FastBufferedOutputStreamTest extends TestCase {
+
+	private static final boolean DEBUG = false;
 
 	public void testWriteEqualToBufferSize() throws IOException {
 		final FastBufferedOutputStream fbos = new FastBufferedOutputStream( new ByteArrayOutputStream(), 4 );
@@ -28,12 +27,14 @@ public class FastBufferedOutputStreamTest extends TestCase {
 		File file = File.createTempFile( getClass().getSimpleName(), "test" );
 		file.deleteOnExit();
 		FastBufferedOutputStream fbos = new FastBufferedOutputStream( new FileOutputStream( file + "1" ), bufSize );
-		BufferedOutputStream bos = new BufferedOutputStream( new FileOutputStream( file + "2" ) );
+		FileOutputStream bos = new FileOutputStream( file + "2" );
+		FileChannel fc = bos.getChannel();
 		Random r = new Random();
-
+		long pos, len;
+		
 		int j = r.nextInt( 10000 );
 		while( j-- != 0 ) {
-			switch( r.nextInt( 3 ) ) {
+			switch( r.nextInt( 6 ) ) {
 
 			case 0:
 				int x = (byte)r.nextInt();
@@ -52,6 +53,20 @@ public class FastBufferedOutputStreamTest extends TestCase {
 
 			case 2:
 				fbos.flush();
+				break;
+				
+			case 3:
+				if ( DEBUG ) System.err.println("position()" );
+				pos = (int)fbos.position();
+				assertEquals( (int)fc.position(), pos );
+				break;
+
+			case 4:
+				assertEquals( fc.size(), len = fbos.length() );
+				pos = len != 0 ? r.nextInt( (int)len ) : 0;
+				fbos.position( pos );
+				fc.position( pos );
+				if ( DEBUG ) System.err.println("position(" + pos + ")" );
 				break;
 			}
 		}
