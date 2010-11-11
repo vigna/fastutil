@@ -1,6 +1,5 @@
 package it.unimi.dsi.fastutil.io;
 
-import java.io.InputStream;
 
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
@@ -33,7 +32,7 @@ import java.io.InputStream;
  * @author Sebastiano Vigna
  */
 
-public class FastByteArrayInputStream extends InputStream implements MeasurableStream, RepositionableStream {
+public class FastByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The array backing the input stream. */
 	public byte[] array;

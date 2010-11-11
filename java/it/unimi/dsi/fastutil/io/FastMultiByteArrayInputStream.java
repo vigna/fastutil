@@ -36,7 +36,7 @@ import java.io.InputStream;
  * @author Paolo Boldi
 s */
 
-public class FastMultiByteArrayInputStream extends java.io.InputStream implements RepositionableStream {
+public class FastMultiByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The number of bits of an array slice index. */
 	public final static int SLICE_BITS = 30;
@@ -175,5 +175,10 @@ public class FastMultiByteArrayInputStream extends java.io.InputStream implement
 
 	public void position( final long newPosition ) {
 		position = Math.min( newPosition, length );
+	}
+
+	@Override
+	public long length() throws IOException {
+		return length;
 	}
 }
