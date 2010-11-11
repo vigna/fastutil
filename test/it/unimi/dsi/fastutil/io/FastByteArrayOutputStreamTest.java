@@ -2,11 +2,14 @@ package it.unimi.dsi.fastutil.io;
 
 import java.io.IOException;
 
+import org.junit.Test;
+
 import it.unimi.dsi.fastutil.io.FastByteArrayOutputStream;
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-public class FastByteArrayOutputStreamTest extends TestCase {
+public class FastByteArrayOutputStreamTest {
 
+	@Test
 	public void testWrite() {
 		FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
 		fbaos.write( 1 );
@@ -29,6 +32,7 @@ public class FastByteArrayOutputStreamTest extends TestCase {
 		for( int i = 0; i < 14; i++ ) assertEquals( i + 10, fbaos.array[ 3 + i ] );
 	}
 
+	@Test
 	public void testWriteArray() throws IOException {
 		FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
 		fbaos.write( 1 );

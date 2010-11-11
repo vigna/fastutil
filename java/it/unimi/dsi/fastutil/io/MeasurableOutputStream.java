@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil.io;
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2006-2010 Sebastiano Vigna 
+ * Copyright (C) 2010 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -22,12 +22,12 @@ package it.unimi.dsi.fastutil.io;
  */
 
 
-import java.io.InputStream;
+import java.io.OutputStream;
 
-/** An {@link InputStream} that implements also the {@link MeasurableStream} interface.
+/** An {@link OutputStream} that implements also the {@link MeasurableStream} interface.
  *
- * @since 5.0.4
+ * @since 6.0.0
  */
 
-public abstract class MeasurableInputStream extends InputStream implements MeasurableStream {
+public abstract class MeasurableOutputStream extends OutputStream implements MeasurableStream {
 }

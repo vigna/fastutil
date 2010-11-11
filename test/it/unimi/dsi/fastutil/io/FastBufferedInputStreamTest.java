@@ -14,9 +14,11 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Random;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class FastBufferedInputStreamTest extends TestCase {
+import static org.junit.Assert.*;
+
+public class FastBufferedInputStreamTest {
 	private final static boolean DEBUG = false;
 	
 	/** A byte array input stream that will return its data in small chunks,
@@ -47,7 +49,6 @@ public class FastBufferedInputStreamTest extends TestCase {
 
 	}
 
-	
 	public void testReadline( int bufferSize ) throws IOException {
 		FastBufferedInputStream stream;
 		byte[] b;
@@ -137,7 +138,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 
 	}
 
-
+	@Test
 	public void testReadLine() throws IOException {
 		testReadline( 1 );
 		testReadline( 2 );
@@ -149,7 +150,6 @@ public class FastBufferedInputStreamTest extends TestCase {
 		testReadline( 100 );
 	}
 
-	
 	public void testSkip( int bufferSize ) throws IOException {
 		FastBufferedInputStream stream;
 		
@@ -164,6 +164,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		assertEquals( 6, stream.position() );
 	}
 
+	@Test
 	public void testSkip() throws IOException {
 		testSkip( 1 );
 		testSkip( 2 );
@@ -175,6 +176,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		testSkip( 100 );
 	}
 	
+	@Test
 	public void testPosition() throws IOException {
 		File temp = File.createTempFile( this.getClass().getSimpleName(), ".tmp" );
 		temp.deleteOnExit();
@@ -218,6 +220,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 		stream.close();
 	}
 	
+	@Test
 	public void testRead() throws IOException {
 		// Reads with length larger than buffer size
 		
@@ -257,7 +260,6 @@ public class FastBufferedInputStreamTest extends TestCase {
 
 	}
 	
-
 	public void testRandom( int bufferSize ) throws IOException {
 		File temp = File.createTempFile( this.getClass().getSimpleName(), "tmp" );
 		temp.deleteOnExit();
@@ -331,7 +333,7 @@ public class FastBufferedInputStreamTest extends TestCase {
 
 	}
 
-
+	@Test
 	public void testRandom() throws IOException {
 		testRandom( 1 );
 		testRandom( 2 );

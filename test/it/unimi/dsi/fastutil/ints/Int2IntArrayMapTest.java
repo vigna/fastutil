@@ -11,10 +11,13 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Map.Entry;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class Int2IntArrayMapTest extends TestCase {
-	
+import static org.junit.Assert.*;
+
+public class Int2IntArrayMapTest  {
+
+	@Test
 	public void testMap() {
 		for( int i = 0; i <= 1; i++ ) {
 			Int2IntArrayMap m = i == 0 ? new Int2IntArrayMap() : new Int2IntArrayMap( new int[ i ], new int[ i ] );
@@ -41,7 +44,7 @@ public class Int2IntArrayMapTest extends TestCase {
 
 			for( Entry<Integer, Integer> e: m.entrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
 
-			assertEquals( i != 0, m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
+			assertTrue( i != 0 == m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
 			assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 3 ) ) );
 			assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 2 ) ) );
 			assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 3, 3 ) ) );
@@ -59,6 +62,7 @@ public class Int2IntArrayMapTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testClone() {
 		Int2IntArrayMap m = new Int2IntArrayMap();
 		assertEquals( m, m.clone() );
@@ -72,6 +76,7 @@ public class Int2IntArrayMapTest extends TestCase {
 		assertEquals( m, m.clone() );
 	}
 
+	@Test
 	public void testSerialisation() throws IOException, ClassNotFoundException {
 		Int2IntArrayMap m = new Int2IntArrayMap();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();

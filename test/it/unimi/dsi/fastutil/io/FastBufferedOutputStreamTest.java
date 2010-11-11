@@ -9,12 +9,15 @@ import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Random;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class FastBufferedOutputStreamTest extends TestCase {
+import static org.junit.Assert.*;
+
+public class FastBufferedOutputStreamTest {
 
 	private static final boolean DEBUG = false;
 
+	@Test
 	public void testWriteEqualToBufferSize() throws IOException {
 		final FastBufferedOutputStream fbos = new FastBufferedOutputStream( new ByteArrayOutputStream(), 4 );
 		fbos.write( 0 );
@@ -76,6 +79,7 @@ public class FastBufferedOutputStreamTest extends TestCase {
 		assertTrue( Arrays.equals( BinIO.loadBytes( file + "1" ), BinIO.loadBytes( file + "2" ) ) );
 	}
 	
+	@Test
 	public void testRandom() throws FileNotFoundException, IOException {
 		testRandom( 1 );
 		testRandom( 2 );

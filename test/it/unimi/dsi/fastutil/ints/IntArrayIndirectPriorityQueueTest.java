@@ -1,11 +1,14 @@
 package it.unimi.dsi.fastutil.ints;
 
+import org.junit.Test;
+
 import it.unimi.dsi.fastutil.ints.IntArrayIndirectPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-public class IntArrayIndirectPriorityQueueTest extends TestCase {
+public class IntArrayIndirectPriorityQueueTest {
 
+	@Test
 	public void testFront() {
 		int refArray[] = { 4, 3, 2, 1, 0, 3, 2, 1, 0, 2, 1, 0, 1, 0, 0 };
 		int tops[] = new int[ refArray.length ];

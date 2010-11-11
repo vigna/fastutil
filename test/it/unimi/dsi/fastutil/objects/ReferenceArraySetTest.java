@@ -10,10 +10,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class ReferenceArraySetTest extends TestCase {
+import static org.junit.Assert.*;
 
+public class ReferenceArraySetTest {
+
+	@Test
 	public void testSet() {
 		for( int i = 0; i <= 2; i++ ) {
 			final ReferenceArraySet<Object> s = i == 0 ? new ReferenceArraySet<Object>() : new ReferenceArraySet<Object>( 2 );
@@ -45,7 +48,7 @@ public class ReferenceArraySetTest extends TestCase {
 		}
 	}
 
-
+	@Test
 	public void testClone() {
 		ReferenceArraySet<Integer> s = new ReferenceArraySet<Integer>();
 		assertEquals( s, s.clone() );
@@ -62,6 +65,7 @@ public class ReferenceArraySetTest extends TestCase {
 		assertEquals( s, s.clone() );
 	}
 
+	@Test
 	public void testSerialisation() throws IOException, ClassNotFoundException {
 		// We can't really test reference maps as equals() doesnt' work
 		ObjectArraySet<Integer> s = new ObjectArraySet<Integer>();

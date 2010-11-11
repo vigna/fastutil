@@ -1,10 +1,14 @@
 package it.unimi.dsi.fastutil.ints;
 
+import org.junit.Test;
+
 import it.unimi.dsi.fastutil.ints.IntSemiIndirectHeaps;
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
-public class IntSemiIndirectHeapsTest extends TestCase {
 
+public class IntSemiIndirectHeapsTest {
+	
+	@Test
 	public void testFront() {
 		final int numBits = 20;
 		int[] refArray = new int[ 100 ], heap = new int[ 100 ], front = new int[ 100 ];

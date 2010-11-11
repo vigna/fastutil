@@ -24,7 +24,6 @@ package it.unimi.dsi.fastutil.io;
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 /** Simple, fast byte-array output stream that exposes the backing array.
  *
@@ -39,7 +38,7 @@ import java.io.OutputStream;
  * @author Sebastiano Vigna
  */
 
-public class FastByteArrayOutputStream extends OutputStream implements RepositionableStream {
+public class FastByteArrayOutputStream extends MeasurableOutputStream implements RepositionableStream {
 
 	/** The array backing the output stream. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
@@ -107,5 +106,10 @@ public class FastByteArrayOutputStream extends OutputStream implements Repositio
 
 	public long position() {
 		return position;
+	}
+
+	@Override
+	public long length() throws IOException {
+		return length;
 	}
 }

@@ -51,7 +51,7 @@ import java.nio.channels.FileChannel;
  * @since 4.4
  */
 
-public class FastBufferedOutputStream extends OutputStream implements RepositionableStream {
+public class FastBufferedOutputStream extends MeasurableOutputStream implements RepositionableStream {
 	private static final boolean ASSERTS = false;
 	
 	/** The default size of the internal buffer in bytes (8Ki). */

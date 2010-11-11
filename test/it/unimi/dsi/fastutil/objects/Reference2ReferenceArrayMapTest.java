@@ -12,10 +12,13 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Map.Entry;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class Reference2ReferenceArrayMapTest extends TestCase {
+import static org.junit.Assert.*;
 
+public class Reference2ReferenceArrayMapTest {
+
+	@Test
 	public void testMap() {
 		for( int i = 0; i <= 2; i++ ) {
 			final Reference2ReferenceArrayMap<Object,Object> m = i == 0 ? new Reference2ReferenceArrayMap<Object,Object>() : new Reference2ReferenceArrayMap<Object,Object>( i );
@@ -59,6 +62,7 @@ public class Reference2ReferenceArrayMapTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testClone() {
 		Reference2ReferenceArrayMap<Integer, Integer> m = new Reference2ReferenceArrayMap<Integer, Integer>();
 		assertEquals( m, m.clone() );
@@ -73,7 +77,7 @@ public class Reference2ReferenceArrayMapTest extends TestCase {
 		assertEquals( m, m.clone() );
 	}
 
-
+	@Test
 	public void testSerialisation() throws IOException, ClassNotFoundException {
 		// We can't really test reference maps as equals() doesnt' work
 		Object2ObjectArrayMap<Integer, Integer> m = new Object2ObjectArrayMap<Integer, Integer>();
