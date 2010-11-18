@@ -1,6 +1,6 @@
 include build.properties
 
-SOURCEDIR = java/it/unimi/dsi/fastutil
+SOURCEDIR = src/it/unimi/dsi/fastutil
 DOCSDIR = docs
 
 APIURL=http://java.sun.com/j2se/5.0/docs/api # External URLs in the docs will point here
@@ -65,7 +65,7 @@ source:
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
 		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
-		fastutil-$(version)/java/overview.html
+		fastutil-$(version)/src/overview.html
 	rm fastutil-$(version)
 
 bin:
