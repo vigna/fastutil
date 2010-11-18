@@ -115,7 +115,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
 
 public class BigArrays {
 	/** The shift used to compute the segment associated with an index (equivalently, the logarithm of the segment size). */
-	public final static int SEGMENT_SHIFT = 1;
+	public final static int SEGMENT_SHIFT = 27;
 	/** The current size of a segment (2<sup>27</sup>) is the largest size that makes
 	 * the physical memory allocation for a single segment strictly smaller
 	 * than 2<sup>31</sup> bytes. */
@@ -248,7 +248,7 @@ public class BigArrays {
 	}
 
 	/**
-	 * Performs a binary search on an already-sorted range: finds the first position where an
+	 * Performs a binary search on an already sorted range: finds the first position where an
 	 * element can be inserted without violating the ordering. Sorting is by a user-supplied
 	 * comparison function.
 	 * 
@@ -285,7 +285,7 @@ public class BigArrays {
 				( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
-	/** Sorts the specified range of elements according to the order induced by the specified
+	/** Sorts the specified range of elements using the specified big swapper and according to the order induced by the specified
 	 * comparator using mergesort.
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
@@ -323,7 +323,7 @@ public class BigArrays {
 		inPlaceMerge( from, mid, to, comp, swapper );
 	}
 
-	/** Sorts the specified range of elements according to the order induced by the specified
+	/** Sorts the specified range of elements using the specified big swapper and according to the order induced by the specified
 	 * comparator using quicksort. 
 	 * 
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas

@@ -20,6 +20,10 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
 
 /** A class providing static methods and objects that do useful things with arrays.
  *
+ * <p>In addition to commodity methods, this class contains {@link Swapper}-based implementations
+ * of {@linkplain #quickSort(int, int, IntComparator, Swapper) quicksort} and of
+ * a stable, in-place {@linkplain #mergeSort(int, int, IntComparator, Swapper) mergesort}.
+ *
  * @see Arrays
  */
 
@@ -151,7 +155,7 @@ public class Arrays {
 				( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
-	/** Sorts the specified range of elements according to the order induced by the specified
+	/** Sorts the specified range of elements using the specified swapper and according to the order induced by the specified
 	 * comparator using mergesort.
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
@@ -196,7 +200,7 @@ public class Arrays {
 		inPlaceMerge( from, mid, to, c, swapper );
 	}
 
-	/** Sorts the specified range of elements according to the order induced by the specified
+	/** Sorts the specified range of elements using the specified swapper and according to the order induced by the specified
 	 * comparator using quicksort. 
 	 * 
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
@@ -278,7 +282,7 @@ public class Arrays {
 	}
 
 	/**
-	 * Performs a binary search on an already-sorted range: finds the last position where an element
+	 * Performs a binary search on an already sorted range: finds the last position where an element
 	 * can be inserted without violating the ordering. Sorting is by a user-supplied comparison
 	 * function.
 	 * 
