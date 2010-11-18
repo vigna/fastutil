@@ -574,6 +574,7 @@ SOURCES = \
 	$(SOURCEDIR)/io/FastBufferedInputStream.java \
 	$(SOURCEDIR)/io/FastBufferedOutputStream.java \
 	$(SOURCEDIR)/io/MeasurableInputStream.java \
+	$(SOURCEDIR)/io/MeasurableOutputStream.java \
 	$(SOURCEDIR)/io/MeasurableStream.java \
 	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
 
