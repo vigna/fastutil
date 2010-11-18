@@ -146,7 +146,7 @@ public class Object2IntOpenHashMapTest {
 		m = (Object2IntOpenHashMap)ois.readObject();
 		ois.close();
 		ff.delete();
-		if ( m.hashCode() != h ) System.out.println( "Error: hashCode() changed after save/read" );
+		assertTrue( "Error: hashCode() changed after save/read", m.hashCode() == h );
 		/* Now we check that m actually holds that data. */
 		for ( java.util.Iterator i = t.keySet().iterator(); i.hasNext(); ) {
 			Object o = i.next();

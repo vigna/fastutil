@@ -46,7 +46,7 @@ public class ShortArrayFrontCodedListTest {
 		/* Now we check that m actually holds that data. */
 		assertTrue( "Error: m does not equal t at creation", contentEquals( m, t ) );
 		/* Now we check cloning. */
-		assertTrue( "Error: m does not equal m.clone()", contentEquals( m, (java.util.List)m.clone() ) );
+		assertTrue( "Error: m does not equal m.clone()", contentEquals( m, m.clone() ) );
 		/* Now we play with iterators. */
 		{
 			ObjectListIterator i;
