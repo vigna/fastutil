@@ -60,7 +60,7 @@ source:
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README \
-		fastutil-$(version)/COPYING.LIB \
+		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/makefile \
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
 		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \

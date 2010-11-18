@@ -2,7 +2,7 @@
 
 Name:           fastutil
 Version:        6.0.0
-Release:        8jpp
+Release:        10jpp
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
