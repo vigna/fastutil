@@ -22,7 +22,9 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
  *
  * <p>In addition to commodity methods, this class contains {@link Swapper}-based implementations
  * of {@linkplain #quickSort(int, int, IntComparator, Swapper) quicksort} and of
- * a stable, in-place {@linkplain #mergeSort(int, int, IntComparator, Swapper) mergesort}.
+ * a stable, in-place {@linkplain #mergeSort(int, int, IntComparator, Swapper) mergesort}. These
+ * generic sorting methods can be used to sort any kind of list, but they find their natural
+ * usage, for instance, in sorting arrays in parallel.
  *
  * @see Arrays
  */

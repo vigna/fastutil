@@ -108,7 +108,9 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * 
  * <p>In addition to commodity methods, this class contains {@link BigSwapper}-based implementations
  * of {@linkplain #quickSort(long, long, LongComparator, BigSwapper) quicksort} and of
- * a stable, in-place {@linkplain #mergeSort(long, long, LongComparator, BigSwapper) mergesort}.
+ * a stable, in-place {@linkplain #mergeSort(long, long, LongComparator, BigSwapper) mergesort}. These
+ * generic sorting methods can be used to sort any kind of list, but they find their natural
+ * usage, for instance, in sorting big arrays in parallel.
  *
  * @see it.unimi.dsi.fastutil.Arrays
  */
