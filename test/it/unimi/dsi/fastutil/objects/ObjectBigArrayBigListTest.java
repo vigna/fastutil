@@ -475,8 +475,16 @@ public class ObjectBigArrayBigListTest {
 			nk[ i ] = nkt[ i ] = genKey();
 		}
 		/* We add pairs to t. */
-		for ( int i = 0; i < n; i++ )
-			t.add( k[ i ] );
+		for ( int i = 0; i < n; i++ ) t.add( k[ i ] );
+		/* We add to m the same data */
+		m.addAll( t );
+		testLists( m, t, n, 0 );
+
+		// This tests all reflection-based methods.
+		m = ObjectBigArrayBigList.wrap( ObjectBigArrays.EMPTY_BIG_ARRAY );
+		t = ObjectBigLists.asBigList( new ObjectArrayList() );
+		/* We add pairs to t. */
+		for ( int i = 0; i < n; i++ ) t.add( k[ i ] );
 		/* We add to m the same data */
 		m.addAll( t );
 		testLists( m, t, n, 0 );
