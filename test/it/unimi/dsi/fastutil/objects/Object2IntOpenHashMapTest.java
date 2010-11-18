@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.Hash;
 import java.io.IOException;
 import java.util.Map;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -189,6 +190,8 @@ public class Object2IntOpenHashMapTest {
 		test( 100, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
+	@Ignore("Too long")
+	@Test
 	public void test1000() throws IOException, ClassNotFoundException {
 		test( 1000, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1000, Hash.FAST_LOAD_FACTOR );

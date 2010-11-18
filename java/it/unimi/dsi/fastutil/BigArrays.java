@@ -119,7 +119,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
 
 public class BigArrays {
 	/** The shift used to compute the segment associated with an index (equivalently, the logarithm of the segment size). */
-	public final static int SEGMENT_SHIFT = 27;
+	public final static int SEGMENT_SHIFT = 6;
 	/** The current size of a segment (2<sup>27</sup>) is the largest size that makes
 	 * the physical memory allocation for a single segment strictly smaller
 	 * than 2<sup>31</sup> bytes. */
