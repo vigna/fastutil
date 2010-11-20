@@ -16,7 +16,7 @@ Requires:       java >= 1.5.0
 Provides:	fastutil
 Provides:	fastutil5
 Obsoletes:	fastutil5
-BuildRequires:  ant, make, gcc, /bin/bash, junit >= 4
+BuildRequires:  ant, make, gcc, /bin/bash
 BuildRequires:  java-javadoc
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
