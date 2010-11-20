@@ -76,7 +76,7 @@ bin:
 	tar zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README \
-		fastutil-$(version)/COPYING.LIB \
+		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/docs \
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)
