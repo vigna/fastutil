@@ -180,41 +180,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	protected Strategy<K> strategy;
 #endif
 
-
-	/** Returns the most significant bit of an integer.
-	 * 
-	 * @param x an integer.
-	 * @return the most significant bit of <code>x</code>, of <code>x</code> is nonzero; &minus;1, otherwise.
-	 * @see #mostSignificantBit(long)
-	 */
-	public static int mostSignificantBit( int x ) {
-		if ( x == 0 ) return -1;
-		
-		int msb = 0;
-		
-		if ( ( x & 0xFFFF0000 ) != 0 ) {
-			x >>>= ( 1 << 4 );
-			msb += ( 1 << 4 );
-		}
-
-		long z = x;
-		
-		// We have now reduced the problem to finding the msb in a 16-bit word.
-		
-		z |= z << 16;
-		z |= z << 32;
-		
-		final long y = z & 0xFF00F0F0CCCCAAAAL;
-		
-		long t = 0x8000800080008000L & ( y | (( y | 0x8000800080008000L ) - ( z ^ y )));
-		
-		t |= t << 15;
-		t |= t << 30;
-		t |= t << 60;
-		
-		return (int)( msb + ( t >>> 60 ) );
-	}
-
 #ifdef Custom
 	/** Creates a new hash set.
 	 *
@@ -701,7 +666,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 * and empties the resulting free entry.
 	 *
 	 * @param pos a starting position.
-	 * @param h a hash code.
 	 */
 	protected final void shiftKeys( int pos ) {
 		// Shift entries with the same hash.
