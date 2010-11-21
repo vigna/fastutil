@@ -29,6 +29,10 @@ TYPE_NOBOOL=$(TYPE_NOBOOL_NOREF) Reference
 # The capitalized types used to build class and method names; now references appear as Reference.
 TYPE=$(TYPE_NOREF) Reference
 
+#  The capitalized types used to build class and method names; only types for which big structures are built are listed.
+TYPE_BIG=Int Long Float Double
+
+
 # These variables are used as an associative array (using computed names).
 PACKAGE_Boolean = booleans
 PACKAGE_Byte = bytes
@@ -288,6 +292,11 @@ OPEN_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenHash
 $(OPEN_HASH_SETS): drv/OpenHashSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(OPEN_HASH_SETS)
+
+OPEN_HASH_BIG_SETS := $(foreach k,$(TYPE_BIG), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenHashBigSet.c)
+$(OPEN_HASH_BIG_SETS): drv/OpenHashBigSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(OPEN_HASH_BIG_SETS)
 
 LINKED_OPEN_HASH_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)LinkedOpenHashSet.c)
 $(LINKED_OPEN_HASH_SETS): drv/LinkedOpenHashSet.drv; ./gencsource.sh $< $@ >$@
