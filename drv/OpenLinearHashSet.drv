@@ -19,7 +19,7 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.bytes.ByteArrays;
+import it.unimi.dsi.fastutil.booleans.BooleanArrays;
 
 import static it.unimi.dsi.fastutil.HashCommon.avalanche;
 
@@ -143,7 +143,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	protected transient KEY_GENERIC_TYPE key[];
 	 
 	/** The array of occupancy states. */
-	protected transient byte state[];
+	protected transient boolean state[];
 
 	/** The acceptable load factor. */
 	protected final float f;
@@ -211,7 +211,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		this.f = f;
 		this.maxFill = (int)( this.n * f );
 		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ this.n ];
-		state = new byte[ this.n ];
+		state = new boolean[ this.n ];
 #ifdef Linked
 		link = new int[ this.n ];
 #endif
@@ -590,7 +590,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 	protected final int findInsertionPoint( final KEY_GENERIC_TYPE k ) {
 		final KEY_GENERIC_TYPE key[] = this.key;
-		final byte state[] = this.state;
+		final boolean state[] = this.state;
 		final int mask = this.mask;
 		final int h = avalanche( KEY2INT(k) );
 
@@ -598,20 +598,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int pos = h & mask;
 
 		// There's always a FREE entry.
-		while( state[ pos ] == OCCUPIED && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-
-		if ( state[ pos ] == FREE ) return pos;
-		if ( state[ pos ] == OCCUPIED ) return -pos - 1; // Necessarily, KEY_EQUALS_HASH( k, h, key[ pos ] ).
-
-		/* Tables without deletions will never use code beyond this point. */
-
-		final int i = pos; // Remember first available bucket for later.
-		  
-		/* See the comments in the documentation of the interface Hash. */
-		if ( ASSERTS ) assert state[ pos ] == REMOVED;
-		while( state[ pos ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-		  
-		return state[ pos ] == OCCUPIED ? -pos - 1 : i; // In the first case, necessarily, KEY_EQUALS_HASH( k, h, key[ pos ] ).
+		while( state[ pos ] && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		return state[ pos ] ? -pos - 1 : pos;
 	}
 
 
@@ -623,7 +611,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 	protected final int findKey( final KEY_GENERIC_TYPE k ) {
 		final KEY_GENERIC_TYPE key[] = this.key;
-		final byte state[] = this.state;
+		final boolean state[] = this.state;
 		final int mask = this.mask;
 		final int h = avalanche( KEY2INT(k) );
 
@@ -631,17 +619,16 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int pos = h & mask;
 
 		/* See the comments in the documentation of the interface Hash. */
-		while( state[ pos ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask; // There's always a FREE entry.
-		
-		return state[ pos ] == OCCUPIED ? pos : -1;  // In the first case, necessarily, KEY_EQUALS_HASH( k, h, key[ pos ] ).
+		while( state[ pos ] && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask; // There's always a FREE entry.
+		return state[ pos ] ? pos : -1;  // In the first case, necessarily, KEY_EQUALS_HASH( k, h, key[ pos ] ).
 	}
 
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		final int i = findInsertionPoint( k );
 		if ( i < 0 ) return false;
 
-		if ( state[ i ] == FREE ) free--;
-		state[ i ] = OCCUPIED;
+		if ( ! state[ i ] ) free--;
+		state[ i ] = true;
 		key[ i ] = k;
 
 #ifdef Linked
@@ -681,18 +668,18 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		for(;;) {
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
-			while( state[ pos ] != FREE ) {
+			while( state[ pos ] ) {
 				slot = avalanche( KEY2INT( key[ pos ] ) ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
 
-			if ( state[ pos ] == FREE ) break;
+			if ( ! state[ pos ] ) break;
 
 			key[ last ] = key[ pos ];			
 		}
 
-		state[ last ] = FREE;
+		state[ last ] = false;
 #if #keys(reference)
 		key[ last ] = null;
 #endif
@@ -710,7 +697,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 	protected final boolean removeKey( final KEY_GENERIC_TYPE k ) {
 		final KEY_GENERIC_TYPE key[] = this.key;
-		final byte state[] = this.state;
+		final boolean state[] = this.state;
 		final int mask = this.mask;
 		final int h = avalanche( KEY2INT(k) );
 
@@ -718,8 +705,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int pos = h & mask;
 
 		/* See the comments in the documentation of the interface Hash. */
-		while( state[ pos ] != FREE && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask; // There's always a FREE entry.
-		if ( state[ pos ] == FREE ) return false;
+		while( state[ pos ] && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask; // There's always a FREE entry.
+		if ( ! state[ pos ] ) return false;
 
 		shiftKeys( pos );
 
@@ -758,7 +745,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		free = n;
 		size = 0;
 
-		ByteArrays.fill( state, FREE );
+		BooleanArrays.fill( state, false );
 
 #if #keys(reference)
 		ObjectArrays.fill( key, null );
@@ -974,8 +961,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int c = size;
 
 		{ 
-			final byte state[] = OPEN_LINEAR_HASH_SET.this.state;
-			if ( c != 0 ) while( state[ --pos ] != OCCUPIED );
+			final boolean state[] = OPEN_LINEAR_HASH_SET.this.state;
+			if ( c != 0 ) while( ! state[ --pos ] );
 		}
 
 		public boolean hasNext() {
@@ -989,8 +976,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 			
 			//System.err.println( "Count: " + c );
 			if ( --c != 0 ) {
-				final byte state[] = OPEN_LINEAR_HASH_SET.this.state;
-				while( state[ pos = ( pos - 1 ) & mask ] != OCCUPIED );
+				final boolean state[] = OPEN_LINEAR_HASH_SET.this.state;
+				while( ! state[ pos = ( pos - 1 ) & mask ] );
 			}
 			
 			return retVal;
@@ -1110,14 +1097,14 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int i = first, j = size, prev = -1, newPrev = -1, t, k2i, pos;
 #else
 		int i = 0, j = size, k2i, pos;
-		final byte state[] = this.state;
+		final boolean state[] = this.state;
 #endif
 
 		KEY_GENERIC_TYPE k;
 
 		final int newMask = newN - 1;
 		final KEY_GENERIC_TYPE key[] = this.key, newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN ];
-		final byte newState[] = new byte[ newN ];
+		final boolean newState[] = new boolean[ newN ];
 #ifdef Linked
 		final int link[] = this.link, newLink[] = new int[ newN ];
 		first = -1;
@@ -1126,7 +1113,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		while( j-- != 0 ) {
 
 #ifndef Linked
-			while( state[ i ] != OCCUPIED ) i++;
+			while( ! state[ i ] ) i++;
 #endif
 
 			k = key[ i ];
@@ -1134,9 +1121,9 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 			pos = k2i & newMask;
 
-			while ( newState[ pos ] != FREE ) pos = ( pos + 1 ) & newMask;
+			while ( newState[ pos ] ) pos = ( pos + 1 ) & newMask;
 				
-			newState[ pos ] = OCCUPIED;
+			newState[ pos ] = true;
 			newKey[ pos ] = k;
 
 #ifdef Linked
@@ -1223,7 +1210,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	public int hashCode() {
 		int h = 0, i = 0, j = size;
 		while( j-- != 0 ) {
-			while( state[ i ] != OCCUPIED ) i++;
+			while( ! state[ i ] ) i++;
 #if #keys(reference)
 			if ( this != key[ i ] )
 #endif
@@ -1251,7 +1238,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		mask = n - 1;
 		
 		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
-		final byte state[] = this.state = new byte[ n ];
+		final boolean state[] = this.state = new boolean[ n ];
 #ifdef Linked
 		final int link[] = this.link = new int[ n ];
 		int prev = -1;
@@ -1269,9 +1256,9 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 			pos = k2i & mask;
 
-			while ( state[ pos ] != FREE ) pos = ( pos + 1 ) & mask;
+			while ( state[ pos ] ) pos = ( pos + 1 ) & mask;
 
-			state[ pos ] = OCCUPIED;
+			state[ pos ] = true;
 			key[ pos ] = k;
 
 #ifdef Linked
@@ -1298,13 +1285,13 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 #ifdef ASSERTS_CODE
 	private void checkTable() {
-		final byte[] state = this.state;
+		final boolean[] state = this.state;
 		assert ( n & -n ) == n : "Table length is not a power of two: " + n;
 		assert n == key.length;
 		assert n == state.length;
 		int n = state.length;
 		while( n-- != 0 ) 
-			if ( state[ n ] == OCCUPIED && ! contains( key[ n ] ) ) 
+			if ( state[ n ] && ! contains( key[ n ] ) ) 
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
 
 #if #keys(primitive)
@@ -1314,7 +1301,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #endif
 		
 		for( int i = size(); i-- != 0; )
-			if ( state[ i ] == OCCUPIED && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
+			if ( state[ i ] && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
 
 #ifdef Linked
 		KEY_BIDI_ITERATOR KEY_GENERIC i = iterator();
@@ -1595,7 +1582,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int maxProbes = 0;	
 		final double f = (double)m.size / m.n;
 		for( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.state[ i ] == OCCUPIED ) c++;
+			if ( m.state[ i ] ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
