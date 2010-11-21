@@ -30,7 +30,7 @@ TYPE_NOBOOL=$(TYPE_NOBOOL_NOREF) Reference
 TYPE=$(TYPE_NOREF) Reference
 
 #  The capitalized types used to build class and method names; only types for which big structures are built are listed.
-TYPE_BIG=Int Long Float Double
+TYPE_BIG=Int Long Float Double Object Reference
 
 
 # These variables are used as an associative array (using computed names).
