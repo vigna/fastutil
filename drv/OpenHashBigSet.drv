@@ -1,0 +1,1269 @@
+/*		 
+ * Copyright (C) 2002-2010 Sebastiano Vigna 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. 
+ */
+
+
+package PACKAGE;
+
+import it.unimi.dsi.fastutil.BigArrays;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
+
+import static it.unimi.dsi.fastutil.HashCommon.avalanche;
+
+import java.util.Arrays;
+import java.util.Collection;
+#if #keys(primitive)
+import java.util.Iterator;
+#endif
+import java.util.NoSuchElementException;
+
+
+/**  A type-specific hash set with with a fast, small-footprint implementation.
+ *
+ * <P>Instances of this class use a hash table to represent a set. The table is
+ * enlarged as needed when new entries are created, but it is <em>never</em> made
+ * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * methods} lets you control the size of the table; this is particularly useful
+ * if you reuse instances of this class.
+ *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
+ * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements java.io.Serializable, Cloneable, Hash {
+
+    public static final long serialVersionUID = 0L;
+	private static final boolean ASSERTS = ASSERTS_VALUE;
+
+	/** The array of keys. */
+	protected transient KEY_GENERIC_TYPE[][] key;
+	 
+	/** The array of occupancy states. */
+	protected transient boolean[][] state;
+
+	/** The acceptable load factor. */
+	protected final float f;
+	 
+	/** The current table size. */
+	protected long n;
+
+	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
+	protected transient long maxFill;
+
+	/** Number of free entries in the table (may be less than the table size - {@link #size} because of deleted entries). */
+	protected transient long free;
+
+	/** The mask for wrapping the segment counter. */
+	protected transient long mask;
+
+	/** The mask for wrapping the segment counter. */
+	protected transient int segmentMask;
+
+	/** The mask for wrapping the base counter. */
+	protected transient int baseMask;
+
+	/** Number of entries in the set. */
+	protected long size;
+
+	/** Creates a new hash set.
+	 *
+	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+	 *
+	 * @param n the expected number of elements in the hash set. 
+	 * @param f the load factor.
+	 */
+	@SuppressWarnings("unchecked")
+	public OPEN_LINEAR_HASH_SET( final int n, final float f ) {
+		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
+		if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
+
+		this.n = free = HashCommon.nextPowerOfTwo( n );
+		this.f = f;
+		this.maxFill = (long)( this.n * f );
+		key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( this.n );
+		state = BooleanBigArrays.newBigArray( this.n );
+		segmentMask = key[ 0 ].length - 1;
+		baseMask = key.length - 1;		
+		mask = n - 1;
+	}
+	 
+	 
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 *
+	 * @param n the expected number of elements in the hash set. 
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final int n ) {
+		this( n, DEFAULT_LOAD_FACTOR );
+	}
+
+	/** Creates a new hash set with {@link Hash#DEFAULT_INITIAL_SIZE} elements
+	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET() {
+		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR );
+	} 
+
+	/** Creates a new hash set copying a given collection.
+	 *
+	 * @param c a {@link Collection} to be copied into the new hash set. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final Collection<? extends KEY_GENERIC_CLASS> c, final float f ) {
+		this( c.size(), f );
+		addAll( c );
+	}
+
+	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying a given collection.
+	 *
+	 * @param c a {@link Collection} to be copied into the new hash set. 
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final Collection<? extends KEY_GENERIC_CLASS> c ) {
+		this( c, DEFAULT_LOAD_FACTOR );
+	}
+
+	/** Creates a new hash set copying a given type-specific collection.
+	 *
+	 * @param c a type-specific collection to be copied into the new hash set. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final COLLECTION KEY_EXTENDS_GENERIC c, final float f ) {
+		this( c.size(), f );
+		addAll( c );
+	}
+
+	/** Creates a new hash set  with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying a given type-specific collection.
+	 *
+	 * @param c a type-specific collection to be copied into the new hash set. 
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final COLLECTION KEY_EXTENDS_GENERIC c ) {
+		this( c, DEFAULT_LOAD_FACTOR );
+	}
+
+	/** Creates a new hash set using elements provided by a type-specific iterator.
+	 *
+	 * @param i a type-specific iterator whose elements will fill the set.
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final KEY_ITERATOR KEY_GENERIC i, final float f ) {
+		this( DEFAULT_INITIAL_SIZE, f );
+		while( i.hasNext() ) add( i.NEXT_KEY() );
+	}
+
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by a type-specific iterator.
+	 *
+	 * @param i a type-specific iterator whose elements will fill the set.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final KEY_ITERATOR KEY_GENERIC i ) {
+		this( i, DEFAULT_LOAD_FACTOR );
+	}
+
+
+#if #keys(primitive)
+
+	/** Creates a new hash set using elements provided by an iterator.
+	 *
+	 * @param i an iterator whose elements will fill the set.
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final Iterator<?> i, final float f ) {
+		this( ITERATORS.AS_KEY_ITERATOR( i ), f );
+	}
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by an iterator.
+	 *
+	 * @param i an iterator whose elements will fill the set.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final Iterator<?> i ) {
+		this( ITERATORS.AS_KEY_ITERATOR( i ) );
+	}
+
+#endif
+
+
+	/** Creates a new hash set and fills it with the elements of a given array.
+	 *
+	 * @param a an array whose elements will be used to fill the set.
+	 * @param offset the first element to use.
+	 * @param length the number of elements to use.
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length, final float f ) {
+		this( length < 0 ? 0 : length, f );
+		ARRAYS.ensureOffsetLength( a, offset, length );
+		for( int i = 0; i < length; i++ ) add( a[ offset + i ] );
+	}
+
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor and fills it with the elements of a given array.
+	 *
+	 * @param a an array whose elements will be used to fill the set.
+	 * @param offset the first element to use.
+	 * @param length the number of elements to use.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final KEY_GENERIC_TYPE[] a, final int offset, final int length ) {
+		this( a, offset, length, DEFAULT_LOAD_FACTOR );
+	}
+
+	/** Creates a new hash set copying the elements of an array.
+	 *
+	 * @param a an array to be copied into the new hash set. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final KEY_GENERIC_TYPE[] a, final float f ) {
+		this( a, 0, a.length, f );
+	}
+
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor 
+	 * copying the elements of an array.
+	 *
+	 * @param a an array to be copied into the new hash set. 
+	 */
+	 
+	public OPEN_LINEAR_HASH_SET( final KEY_GENERIC_TYPE[] a ) {
+		this( a, DEFAULT_LOAD_FACTOR );
+	}
+
+	/*
+	 * The following methods implements some basic building blocks used by
+	 * all accessors. They are (and should be maintained) identical to those used in HashMap.drv.
+	 */
+
+	/** Searches for a key, keeping track of a possible insertion point.
+	 *
+	 * @param k the key.
+	 * @return the index of the correct insertion point, if the key is not found; otherwise,
+	 * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
+	 */
+
+	protected final long findInsertionPoint( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[][] = this.key;
+		final boolean state[][] = this.state;
+		final int baseMask = this.baseMask;
+		final int segmentMask = this.segmentMask;
+		final long h = avalanche( (long)KEY2INT(k) );
+
+		// The starting point.
+		int displ = (int)( h & segmentMask );
+		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
+		
+		// There's always a FREE entry.
+		while( state[ base ][ displ ] && ! KEY_EQUALS_HASH( k, h, key[ base ][ displ ] ) ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		return state[ base ][ displ ] ? - ( base * (long)BigArrays.SEGMENT_SIZE + displ ) - 1 : base * (long)BigArrays.SEGMENT_SIZE + displ;
+	}
+
+
+	/** Searches for a key.
+	 *
+	 * @param k the key.
+	 * @return the index of the entry containing the key, or -1 if the key wasn't found.
+	 */
+
+	protected final long findKey( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE[][] key = this.key;
+		final boolean[][] state = this.state;
+		final int baseMask = this.baseMask;
+		final int segmentMask = this.segmentMask;
+		final long h = avalanche( (long)KEY2INT(k) );
+
+		// The starting point.
+		int displ = (int)( h & segmentMask );
+		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
+
+		// There's always a FREE entry.
+		while( state[ base ][ displ ] && ! KEY_EQUALS_HASH( k, h, key[ base ][ displ ] ) ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		return state[ base ][ displ ] ? ( base * (long)BigArrays.SEGMENT_SIZE + displ ) : -1;
+	}
+
+	public boolean add( final KEY_GENERIC_TYPE k ) {
+		final long i = findInsertionPoint( k );
+		if ( i < 0 ) return false;
+
+		// ALERT: eliminate
+		if ( ! BooleanBigArrays.get( state, i ) ) free--;
+		BooleanBigArrays.set( state, i, true );
+		BIG_ARRAYS.set( key, i, k );
+
+		if ( ++size >= maxFill ) rehash( 2 * n );
+		if ( ASSERTS ) checkTable();
+		return true;
+	}
+
+	/** Shifts left entries with the specified hash code, starting at the specified position,
+	 * and empties the resulting free entry.
+	 *
+	 * @param pos a starting position.
+	 */
+	protected final void shiftKeys( long pos ) {
+		// Shift entries with the same hash.
+		long last, slot;
+
+		/*int t = pos;
+
+		System.err.println( "shiftKeys pos: " + t );
+		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( (long)KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + state[ ( t + i ) & mask ] + ") ");
+		System.err.println();
+		*/
+
+		for(;;) {
+			pos = ( ( last = pos ) + 1 ) & mask;
+			
+			while( BooleanBigArrays.get( state, pos ) ) {
+				slot = avalanche( (long)KEY2INT( BIG_ARRAYS.get( key, pos ) ) ) & mask;
+				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
+				pos = ( pos + 1 ) & mask;
+			}
+
+			if ( ! BooleanBigArrays.get( state, pos ) ) break;
+
+			BIG_ARRAYS.set( key, last, BIG_ARRAYS.get( key, pos ) );
+		}
+
+		BooleanBigArrays.set( state, last, false );
+#if #keys(reference)
+		BIG_ARRAYS.set( key, last, null );
+#endif
+		/*
+		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( (long)KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + state[ ( t + i ) & mask ] + ") ");
+		System.err.println();
+		*/
+	}
+
+	/** Removes the given key.
+	 *
+	 * @param k a key.
+	 * @return true if the key was found, false otherwise.
+	 */
+
+	protected final boolean removeKey( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE[][] key = this.key;
+		final boolean[][] state = this.state;
+		final int baseMask = this.baseMask;
+		final int segmentMask = this.segmentMask;
+		final long h = avalanche( (long)KEY2INT(k) );
+
+		// The starting point.
+		int displ = (int)( h & segmentMask );
+		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
+
+		/* See the comments in the documentation of the interface Hash. */
+		// There's always a FREE entry.
+		while( state[ base ][ displ ] && ! KEY_EQUALS_HASH( k, h, key[ base ][ displ ] ) ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		if ( ! state[ base ][ displ ] ) return false;
+
+		shiftKeys( base * (long)BigArrays.SEGMENT_SIZE + displ );
+
+		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	public boolean remove( final KEY_TYPE k ) {
+		if ( ! removeKey( KEY_GENERIC_CAST k ) ) return false;
+		size--;
+
+		if ( ASSERTS ) checkTable();
+		return true;
+	}
+	 
+	@SuppressWarnings("unchecked")
+	public boolean contains( final KEY_TYPE k ) {
+		return findKey( KEY_GENERIC_CAST k ) >= 0;
+	}
+
+
+	/* Removes all elements from this set.
+	 *
+	 * <P>To increase object reuse, this method does not change the table size.
+	 * If you want to reduce the table size, you must use {@link #trim()}.
+	 *
+	 */
+
+	public void clear() {
+		if ( free == n ) return;
+
+		free = n;
+		size = 0;
+
+		BooleanBigArrays.fill( state, false );
+
+#if #keys(reference)
+		ObjectBigArrays.fill( key, null );
+#endif
+
+	}
+
+
+
+	/** An iterator over a hash set. */
+
+	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
+		/** The index of the next entry to be returned. */
+		long pos = OPEN_LINEAR_HASH_SET.this.n;
+		/** The index of the last entry that has been returned. It is -1 if either
+			we did not return an entry yet, or the last returned entry has been removed. */
+		long last = -1;
+		/** A downward counter measuring how many entries must still be returned. */
+		long c = size;
+
+		{ 
+			final boolean state[][] = OPEN_LINEAR_HASH_SET.this.state;
+			if ( c != 0 ) while( ! BooleanBigArrays.get( state, --pos ) );
+		}
+
+		public boolean hasNext() {
+			return c != 0;
+		}
+
+		public KEY_GENERIC_TYPE NEXT_KEY() {
+			if ( ! hasNext() ) throw new NoSuchElementException();
+
+			final KEY_GENERIC_TYPE retVal = BIG_ARRAYS.get( key, last = pos );
+			
+			//System.err.println( "Count: " + c );
+			if ( --c != 0 ) {
+				final boolean state[][] = OPEN_LINEAR_HASH_SET.this.state;
+				while( ! BooleanBigArrays.get( state, pos = ( pos - 1 ) & mask ) );
+			}
+			
+			return retVal;
+		}
+
+		@SuppressWarnings("unchecked")
+		public void remove() {
+			if ( last == -1 ) throw new IllegalStateException();
+			shiftKeys( last );
+			size--;
+			last = -1; // You can no longer remove this entry.
+			
+			if ( ASSERTS ) checkTable();
+		}
+	}
+
+	public KEY_ITERATOR KEY_GENERIC iterator() {
+		return new SetIterator();
+	}
+
+
+
+	/** Rehashes this set without changing the table size.
+	 *
+	 * <P>This method should be called when the set underwent numerous
+	 * deletions and insertions.  In this case, free entries become rare, and
+	 * unsuccessful searches require probing <em>all</em> entries.  For
+	 * reasonable load factors this method is linear in the number of entries.
+	 * You will need as much additional free memory as that occupied by the
+	 * table.
+	 *
+	 * <P>If you need to reduce the table siza to fit exactly
+	 * this set, you must use {@link #trim()}.
+	 *
+	 * @return true if there was enough memory to rehash the set, false otherwise.
+	 * @see #trim()
+	 */
+
+	public boolean rehash() {
+		try {
+			rehash( n );
+		}
+		catch( OutOfMemoryError cantDoIt ) { return false; }
+		return true;
+	}
+
+
+	/** Rehashes this set, making the table as small as possible.
+	 * 
+	 * <P>This method rehashes the table to the smallest size satisfying the
+	 * load factor. It can be used when the set will not be changed anymore, so
+	 * to optimize access speed (by collecting deleted entries) and size.
+	 *
+	 * <P>If the table size is already the minimum possible, this method
+	 * does nothing. If you want to guarantee rehashing, use {@link #rehash()}.
+	 *
+	 * @return true if there was enough memory to trim the set.
+	 * @see #trim(int)
+	 * @see #rehash()
+	 */
+
+	public boolean trim() {
+		final long l = HashCommon.nextPowerOfTwo( (int)( size / f ) );
+		if ( l >= n ) return true;
+		try {
+			rehash( l );
+		}
+		catch(OutOfMemoryError cantDoIt) { return false; }
+		return true;
+	}
+
+	/** Rehashes this set if the table is too large.
+	 * 
+	 * <P>Let <var>N</var> be the smallest table size that can hold
+	 * <code>max(n,{@link #size()})</code> entries, still satisfying the load factor. If the current
+	 * table size is smaller than or equal to <var>N</var>, this method does
+	 * nothing. Otherwise, it rehashes this set in a table of size
+	 * <var>N</var>.
+	 *
+	 * <P>This method is useful when reusing sets.  {@linkplain #clear() Clearing a
+	 * set} leaves the table size untouched. If you are reusing a set
+	 * many times, you can call this method with a typical
+	 * size to avoid keeping around a very large table just
+	 * because of a few large transient sets.
+	 *
+	 * @param n the threshold for the trimming.
+	 * @return true if there was enough memory to trim the set.
+	 * @see #trim()
+	 * @see #rehash()
+	 */
+
+	public boolean trim( final long n ) {
+		final long l = HashCommon.nextPowerOfTwo( (long)( n / f ) );
+		if ( this.n <= l ) return true;
+		try {
+			rehash( l );
+		}
+		catch( OutOfMemoryError cantDoIt ) { return false; }
+		return true;
+	}
+
+	/** Resizes the set.
+	 *
+	 * <P>This method implements the basic rehashing strategy, and may be
+	 * overriden by subclasses implementing different rehashing strategies (e.g.,
+	 * disk-based rehashing). However, you should not override this method
+	 * unless you understand the internal workings of this class.
+	 *
+	 * @param newN the new size
+	 */
+
+	@SuppressWarnings("unchecked")
+	protected void rehash( final long newN ) {
+		long j = size, h;
+		int base = 0, displ = 0;
+		final boolean state[][] = this.state;
+
+		KEY_GENERIC_TYPE k;
+
+		final KEY_GENERIC_TYPE key[][] = this.key, newKey[][] = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( newN );
+		final boolean newState[][] = BooleanBigArrays.newBigArray( newN );
+		final long newMask = newN - 1;
+		final int newSegmentMask = newKey[ 0 ].length - 1, newBaseMask = key.length - 1;		
+
+		while( j-- != 0 ) {
+
+			k = key[ base ][ displ ];
+			h = avalanche( (long)KEY2INT( k ) );
+
+			// The starting point.
+			int d = (int)( h & newSegmentMask );
+			int b = (int)( ( h & newMask ) >>> BigArrays.SEGMENT_SHIFT );
+
+			while( newState[ b ][ d ] ) b = ( b + ( ( d = ( d + 1 ) & newSegmentMask ) == 0 ? 1 : 0 ) ) & newBaseMask;
+
+			newState[ b ][ d ] = true;
+			newKey[ b ][ d ] = k;
+
+			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		}
+
+		n = newN;
+		mask = newMask;
+		free = newN - size;
+		maxFill = (long)( newN * f );
+		this.key = newKey;
+		this.state = newState;
+		this.mask = newMask;
+		this.segmentMask = newSegmentMask;
+		this.baseMask = newBaseMask;
+	}
+
+	public int size() {
+		return (int)Math.min( Integer.MAX_VALUE, size );
+	}
+
+	public boolean isEmpty() {
+		return size == 0;
+	}
+
+
+
+	/** Returns a deep copy of this set. 
+	 *
+	 * <P>This method performs a deep copy of this hash set; the data stored in the
+	 * set, however, is not cloned. Note that this makes a difference only for object keys.
+	 *
+	 *  @return a deep copy of this set.
+	 */
+
+	@SuppressWarnings("unchecked")
+	public OPEN_LINEAR_HASH_SET KEY_GENERIC clone() {
+		OPEN_LINEAR_HASH_SET KEY_GENERIC c;
+		try {
+			c = (OPEN_LINEAR_HASH_SET KEY_GENERIC)super.clone();
+		}
+		catch(CloneNotSupportedException cantHappen) {
+			throw new InternalError();
+		}
+		c.key = key.clone();
+		c.state = state.clone();
+		return c;
+	}
+
+	/** Returns a hash code for this set.
+	 *
+	 * This method overrides the generic method provided by the superclass. 
+	 * Since <code>equals()</code> is not overriden, it is important
+	 * that the value returned by this method is the same value as
+	 * the one returned by the overriden method.
+	 *
+	 * @return a hash code for this set.
+	 */
+
+
+	public int hashCode() {
+		int h = 0;
+		long i = 0, j = size;
+		while( j-- != 0 ) {
+			while( ! BooleanBigArrays.get( state, i ) ) i++;
+#if #keys(reference)
+			if ( this != BIG_ARRAYS.get( key, i ) )
+#endif
+				h += KEY2INT( BIG_ARRAYS.get( key, i ) );
+			i++;
+		}
+		return h;
+	}
+
+
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+		final KEY_ITERATOR KEY_GENERIC i = iterator();
+		long j = size;
+		s.defaultWriteObject();
+		while( j-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
+	}
+
+
+	@SuppressWarnings("unchecked")
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+
+		maxFill = (long)( n * f );
+		free = n - size;
+		mask = n - 1;
+		
+		final KEY_GENERIC_TYPE[][] key = this.key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( n );
+		final boolean state[][] = this.state = BooleanBigArrays.newBigArray( n );
+	
+		segmentMask = key[ 0 ].length - 1;
+		baseMask = key.length - 1;		
+		mask = n - 1;
+
+		long i, h;
+		KEY_GENERIC_TYPE k;
+		int base, displ;
+
+		i = size;
+		while( i-- != 0 ) {
+
+			k = KEY_GENERIC_CAST s.READ_KEY();
+			h = avalanche( (long)KEY2INT( k ) );
+
+			base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
+			displ = (int)( h & segmentMask );
+			
+			while( state[ base ][ displ ] ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+
+			state[ base ][ displ ] = true;
+			key[ base ][ displ ] = k;
+
+		}
+
+		if ( ASSERTS ) checkTable();
+	}
+
+
+#ifdef ASSERTS_CODE
+	private void checkTable() {
+		final boolean[] state = this.state;
+		assert ( n & -n ) == n : "Table length is not a power of two: " + n;
+		assert n == key.length;
+		assert n == state.length;
+		int n = state.length;
+		while( n-- != 0 ) 
+			if ( state[ 0 ][ n ] && ! contains( key[ 0 ][ n ] ) ) 
+				throw new AssertionError( "Hash table has key " + key[ 0 ][ n ] + " marked as occupied, but the key does not belong to the table" );
+
+#if #keys(primitive)
+		java.util.HashSet<KEY_GENERIC_CLASS> s = new java.util.HashSet<KEY_GENERIC_CLASS> ();
+#else
+		java.util.HashSet<Object> s = new java.util.HashSet<Object>();
+#endif
+		
+		for( int i = size(); i-- != 0; )
+			if ( state[ 0 ][ i ] && ! s.add( key[ 0 ][ i ] ) ) throw new AssertionError( "Key " + key[ 0 ][ i ] + " appears twice" );
+
+	}
+#else
+	private void checkTable() {}
+#endif
+
+#ifdef TEST
+
+	private static long seed = System.currentTimeMillis(); 
+	private static java.util.Random r = new java.util.Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif #keys(primitive)
+		return r.NEXT_KEY(); 
+#elif #keyclass(Object)
+		return Integer.toBinaryString( r.nextInt() );
+#else
+		return new java.io.Serializable() {};
+#endif
+	}
+
+
+	private static final class ArrayComparator implements java.util.Comparator {
+		public int compare( Object a, Object b ) {
+			byte[] aa = (byte[])a;
+			byte[] bb = (byte[])b;
+			int length = Math.min( aa.length, bb.length );
+			for( int i = 0; i < length; i++ ) {
+				if ( aa[ i ] < bb[ i ] ) return -1;
+				if ( aa[ i ] > bb[ i ] ) return 1;
+			}
+			return aa.length == bb.length ? 0 : ( aa.length < bb.length ? -1 : 1 );
+		}
+	}
+
+	private static final class MockSet extends java.util.TreeSet {
+		private java.util.List list = new java.util.ArrayList();
+
+		public MockSet( java.util.Comparator c ) { super( c ); }
+
+		public boolean add( Object k ) {
+			if ( ! contains( k ) ) list.add( k );
+			return super.add( k );
+		}
+
+		public boolean addAll( Collection c ) {
+			java.util.Iterator i = c.iterator();
+			boolean result = false;
+			while( i.hasNext() ) result |= add( i.next() );
+			return result;
+		}
+
+		public boolean removeAll( Collection c ) {
+			java.util.Iterator i = c.iterator();
+			boolean result = false;
+			while( i.hasNext() ) result |= remove( i.next() );
+			return result;
+		}
+
+		public boolean remove( Object k ) {
+			if ( contains( k ) ) {
+				int i = list.size();
+				while( i-- != 0 ) if ( comparator().compare( list.get( i ), k ) == 0 ) {
+					list.remove( i );
+					break;
+				}
+			}
+			return super.remove( k );
+		}
+
+		private void justRemove( Object k ) { super.remove( k ); }
+
+		public java.util.Iterator iterator() {
+			return new java.util.Iterator() {
+					final java.util.Iterator iterator = list.iterator();
+					Object curr;
+					public Object next() { return curr = iterator.next(); }
+					public boolean hasNext() { return iterator.hasNext(); }
+					public void remove() { 
+						justRemove( curr );
+						iterator.remove(); 
+					}
+				};
+		}
+	}
+
+	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
+
+	private static String format( double d ) {
+		StringBuffer s = new StringBuffer();
+		return format.format( d, s, fp ).toString();
+	}
+
+	private static void speedTest( int n, float f, boolean comp ) {
+		int i, j;
+		OPEN_LINEAR_HASH_SET m;
+		java.util.HashSet t;
+
+		KEY_TYPE k[] = new KEY_TYPE[n];
+		KEY_TYPE nk[] = new KEY_TYPE[n];
+		long ms;
+
+		for( i = 0; i < n; i++ ) {
+			k[i] = genKey();
+			nk[i] = genKey();
+		}
+		  
+		double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
+
+		if ( comp ) { for( j = 0; j < 20; j++ ) {
+
+			t = new java.util.HashSet( 16 );
+
+			/* We add pairs to t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.add( KEY2OBJ( k[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totAdd += d; 				
+			System.out.print("Add: " + format( d ) +" K/s " );
+
+			/* We check for pairs in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.contains( KEY2OBJ( k[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totYes += d; 				
+			System.out.print("Yes: " + format( d ) +" K/s " );
+
+			/* We check for pairs not in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.contains( KEY2OBJ( nk[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totNo += d; 				
+			System.out.print("No: " + format( d ) +" K/s " );
+
+			/* We iterate on t. */
+			ms = System.currentTimeMillis();
+			for( java.util.Iterator it = t.iterator(); it.hasNext(); it.next() );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totIter += d; 				
+			System.out.print("Iter: " + format( d ) +" K/s " );
+				
+			/* We delete pairs not in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemNo += d; 				
+			System.out.print("RemNo: " + format( d ) +" K/s " );
+				
+			/* We delete pairs in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemYes += d; 				
+			System.out.print("RemYes: " + format( d ) +" K/s " );
+				
+			System.out.println();
+		}
+
+		System.out.println();
+		System.out.println( "java.util Add: " + format( totAdd/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + "K/s" );
+
+		System.out.println();
+
+		totAdd = totYes = totNo = totIter = totRemYes = totRemNo = 0;
+		}
+
+		for( j = 0; j < 20; j++ ) {
+
+			m = new OPEN_LINEAR_HASH_SET( 16, f );
+
+			/* We add pairs to m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.add( k[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totAdd += d; 				
+			System.out.print("Add: " + format( d ) +" K/s " );
+
+			/* We check for pairs in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.contains( k[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totYes += d; 				
+			System.out.print("Yes: " + format( d ) +" K/s " );
+
+			/* We check for pairs not in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.contains( nk[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totNo += d; 				
+			System.out.print("No: " + format( d ) +" K/s " );
+
+			/* We iterate on m. */
+			ms = System.currentTimeMillis();
+			for( KEY_ITERATOR it = (KEY_ITERATOR)m.iterator(); it.hasNext(); it.NEXT_KEY() );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totIter += d; 	 
+			System.out.print("Iter: " + format( d ) +" K/s " );
+
+			/* We delete pairs not in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.remove( nk[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemNo += d; 	
+			System.out.print("RemNo: " + format( d ) +" K/s " );
+
+			/* We delete pairs in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.remove( k[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemYes += d; 				
+			System.out.print("RemYes: " + format( d ) +" K/s " );	 
+
+			System.out.println();
+		}
+
+
+		System.out.println();
+		System.out.println( "fastutil  Add: " + format( totAdd/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
+
+		System.out.println();
+	}
+
+
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
+
+
+	private static void printProbes( OPEN_LINEAR_HASH_SET m ) {
+		long totProbes = 0;
+		double totSquareProbes = 0;
+		int maxProbes = 0;	
+		final double f = (double)m.size / m.n;
+		for( int i = 0, c = 0; i < m.n; i++ ) {
+			if ( BooleanBigArrays.get( m.state, i ) ) c++;
+			else {
+				if ( c != 0 ) {
+					final long p = ( c + 1 ) * ( c + 2 ) / 2;
+					totProbes += p;
+					totSquareProbes += (double)p * p;
+				}
+				maxProbes = Math.max( c, maxProbes );
+				c = 0;
+				totProbes++;
+				totSquareProbes++;
+			}
+		}
+
+		final double expected = (double)totProbes / m.n;
+		System.err.println( "Expected probes: " + ( 
+			3 * Math.sqrt( 3 ) * ( f / ( ( 1 - f ) * ( 1 - f ) ) ) + 4 / ( 9 * f ) - 1
+		) + "; actual: " + expected + "; stddev: " + Math.sqrt( totSquareProbes / m.n - expected * expected )  + "; max probes: " + maxProbes );
+	}
+	private static void test( int n, float f ) {
+		int c;
+		OPEN_LINEAR_HASH_SET m = new OPEN_LINEAR_HASH_SET(Hash.DEFAULT_INITIAL_SIZE, f);
+		java.util.Set t = new java.util.HashSet();
+
+		/* First of all, we fill t with random data. */
+
+		for(int i=0; i<f * n;  i++ ) t.add(KEY2OBJ(genKey()));
+		  
+		/* Now we add to m the same data */
+		  
+		m.addAll(t); 
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion");
+		printProbes( m );
+
+		/* Now we check that m actually holds that data. */
+		  
+		for(java.util.Iterator i=t.iterator(); i.hasNext();  ) {
+			Object e = i.next();
+			if (!m.contains(e)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+
+		c = 0;		  
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
+			Object e = i.next();
+			c++;
+			if (!t.contains(e)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+		if ( c != t.size() ) {
+			System.out.println("Error (" + seed + "): m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)");
+			System.exit( 1 );
+		}
+		/* Now we check that inquiries about random data give the same answer in m and t. For
+		   m we use the polymorphic method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (m.contains(T) != t.contains(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Again, we check that inquiries about random data give the same answer in m and t, but
+		   for m we use the standard method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (m.contains(KEY2OBJ(T)) != t.contains(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
+				System.exit( 1 );
+			}
+		}
+
+
+		/* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in add() between t and m");
+				System.exit( 1 );
+			}
+			T = genKey();
+			if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in remove() between t and m");
+				System.exit( 1 );
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
+
+		/* Now we check that m actually holds that data. */
+		  
+		for(java.util.Iterator i=t.iterator(); i.hasNext();  ) {
+			Object e = i.next();
+			if (!m.contains(e)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
+			Object e = i.next();
+			if (!t.contains(e)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+		printProbes( m );
+
+		/* Now we make m into an array, make it again a set and check it is OK. */
+		KEY_TYPE a[] = m.TO_KEY_ARRAY();
+		  
+		if (!new OPEN_LINEAR_HASH_SET(a).equals(m))
+			System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
+
+		/* Now we check cloning. */
+
+		ensure( m.equals( ((OPEN_LINEAR_HASH_SET)m).clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+		ensure( ((OPEN_LINEAR_HASH_SET)m).clone().equals( m ), "Error (" + seed + "): m.clone() does not equal m" );
+
+		int h = m.hashCode();
+
+		/* Now we save and read m. */
+
+		try {
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+			oos.writeObject(m);
+			oos.close();
+				
+			java.io.InputStream is = new java.io.FileInputStream(ff);
+			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+			m = (OPEN_LINEAR_HASH_SET)ois.readObject();
+			ois.close();
+			ff.delete();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+
+#if !#keyclass(Reference)
+		if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read");
+
+		printProbes( m );
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.iterator(); i.hasNext();  ) {
+			Object e = i.next();
+			if (!t.contains(e)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after save/read");
+				System.exit( 1 );
+			}
+		}
+#else
+		m.clear();
+		m.addAll( t );
+#endif
+
+		/* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in add() between t and m after save/read");
+				System.exit( 1 );
+			}
+			T = genKey();
+			if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in remove() between t and m after save/read");
+				System.exit( 1 );
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after post-save/read removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after post-save/read removal");
+
+
+		/* Now we take out of m everything, and check that it is empty. */
+
+		for(java.util.Iterator i=m.iterator(); i.hasNext(); ) { i.next(); i.remove();} 
+
+		if (!m.isEmpty())  {
+			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
+			System.exit( 1 );
+		}
+
+#if #keyclass(Integer) || #keyclass(Long)
+		m = new OPEN_LINEAR_HASH_SET(n, f);
+		t.clear();
+		int x;
+
+		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
+
+		int p = m.state.length;
+
+		for(int i=0; i<p; i++) {
+			for (int j=0; j<20; j++) {
+				m.add(i+(r.nextInt() % 10)*p);
+				m.remove(i+(r.nextInt() % 10)*p);
+			}
+
+			for (int j=-10; j<10; j++) m.remove(i+j*p);
+		}
+		  
+		t.addAll(m);
+
+		/* Now all table entries are REMOVED. */
+ 
+		int k = 0;
+		for(int i=0; i<(p*f)/10; i++) {
+			for (int j=0; j<10; j++) {
+				k++;
+				x = i+(r.nextInt() % 10)*p;
+				if (m.add(x) != t.add(KEY2OBJ(x)))
+					System.out.println("Error (" + seed + "): m and t differ on a key during torture-test insertion.");
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion");
+
+		for(int i=0; i<(p*f)/10; i++) {
+			for (int j=0; j<10; j++) {
+				x = i+(r.nextInt() % 10)*p;
+				if (m.remove(x) != t.remove(KEY2OBJ(x)))
+					System.out.println("Error (" + seed + "): m and t differ on a key during torture-test removal.");
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
+
+		if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
+		if (!((OPEN_LINEAR_HASH_SET)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
+
+		m.rehash();
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after rehash()");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after rehash()");
+
+		m.trim();
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after trim()");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
+#endif
+
+		System.out.println("Test OK");
+		return;
+	}
+
+
+	public static void main( String args[] ) {
+		float f = Hash.DEFAULT_LOAD_FACTOR;
+		int n  = Integer.parseInt(args[1]);
+		if (args.length>2) f = Float.parseFloat(args[2]);
+		if ( args.length > 3 ) r = new java.util.Random( seed = Long.parseLong( args[ 3 ] ) );
+		  
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n, f);
+		} catch( Throwable e ) {
+			e.printStackTrace( System.err );
+			System.err.println( "seed: " + seed );
+		}
+	}
+
+#endif
+
+}
