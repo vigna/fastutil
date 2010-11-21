@@ -279,6 +279,11 @@ CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 # Concrete implementations
 #
 
+OPEN_LINEAR_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenLinearHashSet.c)
+$(OPEN_LINEAR_HASH_SETS): OpenLinearHashSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(OPEN_LINEAR_HASH_SETS)
+
 OPEN_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenHashSet.c)
 $(OPEN_HASH_SETS): OpenHashSet.drv; ./gencsource.sh $< $@ >$@
 
