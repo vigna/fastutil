@@ -23,9 +23,6 @@ import it.unimi.dsi.fastutil.Size64;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
-import static it.unimi.dsi.fastutil.HashCommon.avalanche;
-
-import java.util.Arrays;
 import java.util.Collection;
 #if #keys(primitive)
 import java.util.Iterator;
@@ -39,7 +36,7 @@ import java.util.NoSuchElementException;
  * you can have more than 2<sup>31</sup> elements). The table is
  * backed by a {@linkplain it.unimi.dsi.fastutil.BigArrays big array} and is
  * enlarged as needed when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A {@linkplain #trim() trimming
+ * smaller (even on a {@link #clear()}). A {@linkplain #trim(long) trimming
  * method} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
@@ -278,14 +275,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		final int baseMask = this.baseMask;
 		final int segmentMask = this.segmentMask;
 
-		final long h = avalanche( (long)KEY2INT(k) );
+		final long h = KEY2LONGHASH( k );
 
 		// The starting point.
 		int displ = (int)( h & segmentMask );
 		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 
 		// There's always an unused entry.
-		while( used[ base ][ displ ] && ! KEY_EQUALS_HASH( k, h, key[ base ][ displ ] ) ) 
+		while( used[ base ][ displ ] && ! KEY_EQUALS_LONG_HASH( k, h, key[ base ][ displ ] ) ) 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
 
 		if ( used[ base ][ displ ] ) return false;
@@ -315,7 +312,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
 			while( BooleanBigArrays.get( used, pos ) ) {
-				slot = avalanche( (long)KEY2INT( BIG_ARRAYS.get( key, pos ) ) ) & mask;
+				slot = KEY2LONGHASH( BIG_ARRAYS.get( key, pos ) ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
@@ -341,14 +338,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		final boolean[][] used = this.used;
 		final int baseMask = this.baseMask;
 		final int segmentMask = this.segmentMask;
-		final long h = avalanche( (long)KEY2INT(k) );
+		final long h = KEY2LONGHASH( k );
 
 		// The starting point.
 		int displ = (int)( h & segmentMask );
 		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 
 		// There's always an unused entry.
-		while( used[ base ][ displ ] && ! KEY_EQUALS_HASH( k, h, key[ base ][ displ ] ) ) 
+		while( used[ base ][ displ ] && ! KEY_EQUALS_LONG_HASH( k, h, key[ base ][ displ ] ) ) 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
 
 		if ( ! used[ base ][ displ ] ) return false;
@@ -367,14 +364,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		final int baseMask = this.baseMask;
 		final int segmentMask = this.segmentMask;
 
-		final long h = avalanche( (long)KEY2INT(k) );
+		final long h = KEY2LONGHASH( k );
 
 		// The starting point.
 		int displ = (int)( h & segmentMask );
 		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 
 		// There's always an unused entry.
-		while( used[ base ][ displ ] && ! KEY_EQUALS_HASH( k, h, key[ base ][ displ ] ) ) 
+		while( used[ base ][ displ ] && ! KEY_EQUALS_LONG_HASH( k, h, key[ base ][ displ ] ) ) 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
 
 		return used[ base ][ displ ];
@@ -482,7 +479,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	/** Rehashes this set if the table is too large.
 	 * 
 	 * <P>Let <var>N</var> be the smallest table size that can hold
-	 * <code>max(n,{@link #size()})</code> entries, still satisfying the load factor. If the current
+	 * <code>max(n,{@link #size64()})</code> entries, still satisfying the load factor. If the current
 	 * table size is smaller than or equal to <var>N</var>, this method does
 	 * nothing. Otherwise, it rehashes this set in a table of size
 	 * <var>N</var>.
@@ -537,7 +534,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			while( ! used[ base ][ displ ] ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 
 			k = key[ base ][ displ ];
-			h = avalanche( (long)KEY2INT( k ) );
+			h = KEY2LONGHASH( k );
 
 			// The starting point.
 			int d = (int)( h & newSegmentMask );
@@ -616,7 +613,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #if #keys(reference)
 			if ( this != key[ base ][ displ ] )
 #endif
-				h += KEY2INT( key[ base ][ displ ] );
+				h += KEY2JAVAHASH( key[ base ][ displ ] );
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 		}
 		return h;
@@ -649,7 +646,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		for( long i = size; i-- != 0; ) {
 
 			k = KEY_GENERIC_CAST s.READ_KEY();
-			h = avalanche( (long)KEY2INT( k ) );
+			h = KEY2LONGHASH( k );
 
 			base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 			displ = (int)( h & segmentMask );

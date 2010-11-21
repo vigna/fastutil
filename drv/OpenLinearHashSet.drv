@@ -21,9 +21,6 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.booleans.BooleanArrays;
 
-import static it.unimi.dsi.fastutil.HashCommon.avalanche;
-
-import java.util.Arrays;
 import java.util.Collection;
 #if #keys(primitive)
 import java.util.Iterator;
@@ -42,14 +39,6 @@ import java.util.Comparator;
  * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
- *
- * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
- * positive number. If the growth factor is <var>p</var>, then the table is
- * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
- * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
- * each enlargement, but one can easily set more or less aggressive policies by
- * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
- * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
  *
  * <P>Iterators created by this map will enumerate elements in the same order in which they
  * have been added to the set (note that addition of elements already present 
@@ -92,15 +81,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GE
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
- * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
- * positive number. If the growth factor is <var>p</var>, then the table is
- * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
- * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
- * each enlargement, but one can easily set more or less aggressive policies by
- * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
- * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
- *
- *
  * @see Hash
  * @see HashCommon
  */
@@ -116,15 +96,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
  * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
- *
- * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
- * positive number. If the growth factor is <var>p</var>, then the table is
- * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
- * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
- * each enlargement, but one can easily set more or less aggressive policies by
- * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
- * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
- *
  *
  * @see Hash
  * @see HashCommon
@@ -589,7 +560,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		final KEY_GENERIC_TYPE key[] = this.key;
 		final boolean state[] = this.state;
 		final int mask = this.mask;
-		final int h = avalanche( KEY2INT(k) );
+		final int h = KEY2INTHASH( k );
 
 		// The starting point.
 		int pos = h & mask;
@@ -610,7 +581,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		final KEY_GENERIC_TYPE key[] = this.key;
 		final boolean state[] = this.state;
 		final int mask = this.mask;
-		final int h = avalanche( KEY2INT(k) );
+		final int h = KEY2INTHASH( k );
 
 		// The starting point.
 		int pos = h & mask;
@@ -664,7 +635,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
 			while( state[ pos ] ) {
-				slot = avalanche( KEY2INT( key[ pos ] ) ) & mask;
+				slot = KEY2INTHASH( key[ pos ] ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
@@ -694,7 +665,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		final KEY_GENERIC_TYPE key[] = this.key;
 		final boolean state[] = this.state;
 		final int mask = this.mask;
-		final int h = avalanche( KEY2INT(k) );
+		final int h = KEY2INTHASH( k );
 
 		// The starting point.
 		int pos = h & mask;
@@ -1111,7 +1082,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #endif
 
 			k = key[ i ];
-			k2i = avalanche( KEY2INT( k ) );
+			k2i = KEY2INTHASH( k );
 
 			pos = k2i & newMask;
 
@@ -1207,7 +1178,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #if #keys(reference)
 			if ( this != key[ i ] )
 #endif
-				h += KEY2INT( key[ i ] );
+				h += KEY2JAVAHASH( key[ i ] );
 			i++;
 		}
 		return h;
@@ -1244,7 +1215,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		while( i-- != 0 ) {
 
 			k = KEY_GENERIC_CAST s.READ_KEY();
-			k2i = avalanche( KEY2INT( k ) );
+			k2i = KEY2INTHASH( k );
 
 			pos = k2i & mask;
 

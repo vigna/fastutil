@@ -82,18 +82,12 @@ public class HashCommon {
 		return (int)( l ^ ( l >>> 32 ) );
 	}
 
-	/** Returns a hash code obtained by avalanching the 32 high bits of the argument, and XORing them with the 32 low bits.
+	/** Returns the hash code that would be returned by {@link Long#hashCode()}.
 	 * 
-	 * <p><strong>Warning:</strong> this method up to <code>fastutil</code> 6.0.0
-	 * used to return the same code as {@link Long#hashCode() new Long(f).hashCode()}.
-	 * However, that hash code has worst statistical properties: I have personally once used a hash table of longs to keep track of pairs
-	 * of integers (in high/low bits), and that hash code (i.e., <code>(int)( l ^ ( l >>> 32 ) )</code>) would have given hash 0
-	 * to all pairs &lt;<var>x</var>, <var>x</var>>.
-	 *
-	 * @return <code>(int)( l ^ avalanche( (int)( l >>> 32 ) ) </code>.
+	 * @return the same code as {@link Long#hashCode() new Long(f).hashCode()}.
 	 */
 	final public static int long2int( final long l ) {
-		return (int)( l ^ avalanche( (int)( l >>> 32 ) ) );
+		return (int)( l ^ ( l >>> 32 ) );
 	}
 	
 	/** Return the least power of two greater than or equal to the specified value.

@@ -74,23 +74,23 @@ public class ObjectOpenHashBigSetTest {
 		/* Now we check that m actually holds that data. */
 		for ( java.util.Iterator i = t.iterator(); i.hasNext(); ) {
 			Object e = i.next();
-			assertTrue( "Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", !m.contains( e ) );
+			assertTrue( "Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", m.contains( e ) );
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
 		c = 0;
 		for ( java.util.Iterator i = m.iterator(); i.hasNext(); ) {
 			Object e = i.next();
 			c++;
-			assertTrue( "Error: m and t differ on a key (" + e + ") after insertion (iterating on m)", !t.contains( e ) );
+			assertTrue( "Error: m and t differ on a key (" + e + ") after insertion (iterating on m)", t.contains( e ) );
 		}
-		assertTrue( "Error: m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)", c != t.size() );
+		assertEquals( "Error: m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)", c, t.size() );
 		/*
 		 * Now we check that inquiries about random data give the same answer in m and t. For m we
 		 * use the polymorphic method.
 		 */
 		for ( int i = 0; i < n; i++ ) {
 			Object T = genKey();
-			assertTrue( "Error: divergence in keys between t and m (polymorphic method)", m.contains( T ) != t.contains( ( T ) ) );
+			assertTrue( "Error: divergence in keys between t and m (polymorphic method)", m.contains( T ) == t.contains( ( T ) ) );
 		}
 		/*
 		 * Again, we check that inquiries about random data give the same answer in m and t, but for
@@ -98,14 +98,14 @@ public class ObjectOpenHashBigSetTest {
 		 */
 		for ( int i = 0; i < n; i++ ) {
 			Object T = genKey();
-			assertTrue( "Error: divergence between t and m (standard method)", m.contains( ( T ) ) != t.contains( ( T ) ) );
+			assertTrue( "Error: divergence between t and m (standard method)", m.contains( ( T ) ) == t.contains( ( T ) ) );
 		}
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
 		for ( int i = 0; i < 20 * n; i++ ) {
 			Object T = genKey();
-			assertTrue( "Error: divergence in add() between t and m", m.add( ( T ) ) != t.add( ( T ) ) );
+			assertTrue( "Error: divergence in add() between t and m", m.add( ( T ) ) == t.add( ( T ) ) );
 			T = genKey();
-			assertTrue( "Error: divergence in remove() between t and m", m.remove( ( T ) ) != t.remove( ( T ) ) );
+			assertTrue( "Error: divergence in remove() between t and m", m.remove( ( T ) ) == t.remove( ( T ) ) );
 		}
 		assertTrue( "Error: !m.equals(t) after removal", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after removal", t.equals( m ) );
@@ -118,12 +118,12 @@ public class ObjectOpenHashBigSetTest {
 		 */
 		for ( java.util.Iterator i = t.iterator(); i.hasNext(); ) {
 			Object e = i.next();
-			assertTrue( "Error: m and t differ on a key (" + e + ") after removal (iterating on t)", !m.contains( e ) );
+			assertTrue( "Error: m and t differ on a key (" + e + ") after removal (iterating on t)", m.contains( e ) );
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
 		for ( java.util.Iterator i = m.iterator(); i.hasNext(); ) {
 			Object e = i.next();
-			assertTrue( "Error: m and t differ on a key (" + e + ") after removal (iterating on m)", !t.contains( e ) );
+			assertTrue( "Error: m and t differ on a key (" + e + ") after removal (iterating on m)", t.contains( e ) );
 		}
 		/* Now we make m into an array, make it again a set and check it is OK. */
 		Object a[] = m.toArray();
@@ -155,14 +155,14 @@ public class ObjectOpenHashBigSetTest {
 		/* Now we check that m actually holds that data, but iterating on m. */
 		for ( java.util.Iterator i = m.iterator(); i.hasNext(); ) {
 			Object e = i.next();
-			assertTrue( "Error: m and t differ on a key (" + e + ") after save/read", !t.contains( e ) );
+			assertTrue( "Error: m and t differ on a key (" + e + ") after save/read", t.contains( e ) );
 		}
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
 		for ( int i = 0; i < 20 * n; i++ ) {
 			Object T = genKey();
-			assertTrue( "Error: divergence in add() between t and m after save/read", m.add( ( T ) ) != t.add( ( T ) ) );
+			assertTrue( "Error: divergence in add() between t and m after save/read", m.add( ( T ) ) == t.add( ( T ) ) );
 			T = genKey();
-			assertTrue( "Error: divergence in remove() between t and m after save/read", m.remove( ( T ) ) != t.remove( ( T ) ) );
+			assertTrue( "Error: divergence in remove() between t and m after save/read", m.remove( ( T ) ) == t.remove( ( T ) ) );
 		}
 		assertTrue( "Error: !m.equals(t) after post-save/read removal", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after post-save/read removal", t.equals( m ) ); 		
@@ -173,7 +173,7 @@ public class ObjectOpenHashBigSetTest {
 			i.next();
 			i.remove();
 		}
-		assertTrue( "Error: m is not empty (as it should be)", !m.isEmpty() );
+		assertTrue( "Error: m is not empty (as it should be)", m.isEmpty() );
 		return;
 	}
 
