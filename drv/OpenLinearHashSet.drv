@@ -154,10 +154,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
 	protected transient int maxFill;
 
-	/** Number of free entries in the table (may be less than the table size - {@link #size} because of deleted entries). */
-	protected transient int free;
-
-	/** {@link #free} minus 1. */
+	/** {@link #n} minus 1. */
 	protected transient int mask;
 
 	/** Number of entries in the set. */
@@ -206,7 +203,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
 		if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
-		this.n = free = HashCommon.nextPowerOfTwo( n );
+		this.n = HashCommon.nextPowerOfTwo( n );
 		mask = this.n - 1;
 		this.f = f;
 		this.maxFill = (int)( this.n * f );
@@ -627,7 +624,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		final int i = findInsertionPoint( k );
 		if ( i < 0 ) return false;
 
-		if ( ! state[ i ] ) free--;
 		state[ i ] = true;
 		key[ i ] = k;
 
@@ -644,7 +640,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #endif
 
 		if ( ++size >= maxFill ) rehash( 2 * n );
-		if ( free == 0 ) rehash( n );
 		if ( ASSERTS ) checkTable();
 		return true;
 	}
@@ -740,9 +735,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 */
 
 	public void clear() {
-		if ( free == n ) return;
+		if ( size == 0 ) return;
 
-		free = n;
 		size = 0;
 
 		BooleanArrays.fill( state, false );
@@ -1042,7 +1036,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 */
 
 	public boolean trim() {
-		final int l = HashCommon.nextPowerOfTwo( (int)( size / f ) );
+		final int l = HashCommon.nextPowerOfTwo( (int)Math.ceil( size / f ) );
 		if ( l >= n ) return true;
 		try {
 			rehash( l );
@@ -1072,7 +1066,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 */
 
 	public boolean trim( final int n ) {
-		final int l = HashCommon.nextPowerOfTwo( (int)( n / f ) );
+		final int l = HashCommon.nextPowerOfTwo( (int)Math.ceil( n / f ) );
 		if ( this.n <= l ) return true;
 		try {
 			rehash( l );
@@ -1147,7 +1141,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 		n = newN;
 		mask = newMask;
-		free = newN - size;
 		maxFill = (int)( newN * f );
 		this.key = newKey;
 		this.state = newState;
@@ -1234,7 +1227,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		s.defaultReadObject();
 
 		maxFill = (int)( n * f );
-		free = n - size;
 		mask = n - 1;
 		
 		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];

@@ -53,7 +53,16 @@ public class HashCommon {
 		return x;
 	}
 
-	
+	public final static long avalanche( long x ) {
+		x ^= x >>> 33;
+		x *= 0xff51afd7ed558ccdL;
+		x ^= x >>> 33;
+		x *= 0xc4ceb9fe1a85ec53L;
+		x ^= x >>> 33;
+
+		return x;
+	}
+
 	/** Returns the hash code that would be returned by {@link Float#hashCode()}.
 	 *
 	 * @return the same code as {@link Float#hashCode() new Float(f).hashCode()}.
