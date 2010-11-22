@@ -409,19 +409,13 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
 "#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
-"#define KEY_EQUALS_HASH(x,h,y) ( (h) == KEY2INTHASH(y) && strategy.equals((x), (y)) )\n"\
-"#define KEY_EQUALS_LONG_HASH(x,h,y) ( (h) == KEY2LONGHASH(y) && strategy.equals((x), (y)) )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
-"#define KEY_EQUALS_HASH(x,h,y) ( (y) == null ? (x) == null : (h) == KEY2INTHASH(y) && (y).equals(x) )\n"\
-"#define KEY_EQUALS_LONG_HASH(x,h,y) ( (y) == null ? (x) == null : (h) == KEY2LONGHASH(y) && (y).equals(x) )\n"\
 "#endif\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
-"#define KEY_EQUALS_HASH(x,h,y) ( (x) == (y) )\n"\
-"#define KEY_EQUALS_LONG_HASH(x,h,y) ( (x) == (y) )\n"\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\
@@ -446,17 +440,17 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
 "#define KEY2JAVAHASH(x) ( strategy.hashCode(x) )\n"\
-"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.avalanche( strategy.hashCode(x) ) )\n"\
-"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.avalanche( (long)strategy.hashCode(x) ) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( strategy.hashCode(x) ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)strategy.hashCode(x) ) )\n"\
 "#else\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
-"#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.avalanche( (x).hashCode() ) )\n"\
-"#define KEY2LONGHASH(x) ( (x) == null ? 0x810879608e4259ccL : it.unimi.dsi.fastutil.HashCommon.avalanche( (long)(x).hashCode() ) )\n"\
+"#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x).hashCode() ) )\n"\
+"#define KEY2LONGHASH(x) ( (x) == null ? 0x810879608e4259ccL : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)(x).hashCode() ) )\n"\
 "#endif\n"\
 "#else\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : System.identityHashCode(x) )\n"\
-"#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.avalanche( System.identityHashCode(x) ) )\n"\
-"#define KEY2LONGHASH(x) ( (x) == null ? 0x810879608e4259ccL : it.unimi.dsi.fastutil.HashCommon.avalanche( (long)System.identityHashCode(x) ) )\n"\
+"#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.murmurHash3( System.identityHashCode(x) ) )\n"\
+"#define KEY2LONGHASH(x) ( (x) == null ? 0x810879608e4259ccL : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)System.identityHashCode(x) ) )\n"\
 "#endif\n"\
 \
 "#define KEY_CMP(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) )\n"\
@@ -491,18 +485,18 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#if #keyclass(Float)\n"\
 "#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
-"#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.avalanche( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
-"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.avalanche( (long)it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
+"#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
+"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
 "#elif #keyclass(Double)\n"\
 "#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
-"#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.avalanche(Double.doubleToRawLongBits(x))\n"\
-"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.avalanche(Double.doubleToRawLongBits(x))\n"\
+"#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.murmurHash3(Double.doubleToRawLongBits(x))\n"\
+"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3(Double.doubleToRawLongBits(x))\n"\
 "#elif #keyclass(Long)\n"\
 "#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
-"#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.avalanche(x)\n"\
-"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.avalanche(x)\n"\
+"#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.murmurHash3(x)\n"\
+"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3(x)\n"\
 "#elif #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#define KEY2JAVAHASH(x) ((x) ? 1231 : 1237)\n"\
@@ -515,8 +509,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#endif\n"\
 "#define KEY2JAVAHASH(x) (x)\n"\
-"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.avalanche( (x) ) )\n"\
-"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.avalanche( (long)(x) ) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x) ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)(x) ) )\n"\
 "#endif\n"\
 \
 "#endif\n"\

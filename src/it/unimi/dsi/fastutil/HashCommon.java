@@ -35,16 +35,16 @@ public class HashCommon {
 
 	private HashCommon() {};
 
-	/** Avalanches the bits of an integer.
+	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
 	 * 
 	 * <p>This function implements the finalisation step of Austin Appleby's <a href="http://sites.google.com/site/murmurhash/">MurmurHash3</a>.
 	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias. It is used, among other things, to scramble quickly (but deeply) the hash
 	 * values returned by {@link Object#hashCode()}.
 	 * 
 	 * @param x an integer.
-	 * @return a hash value with good avalanche properties.
+	 * @return a hash value with good avalanching properties.
 	 */	
-	public final static int avalanche( int x ) {
+	public final static int murmurHash3( int x ) {
 		x ^= x >>> 16;
 		x *= 0x85ebca6b;
 		x ^= x >>> 13;
@@ -53,7 +53,16 @@ public class HashCommon {
 		return x;
 	}
 
-	public final static long avalanche( long x ) {
+	/** Avalanches the bits of a long integer by applying the finalisation step of MurmurHash3.
+	 * 
+	 * <p>This function implements the finalisation step of Austin Appleby's <a href="http://sites.google.com/site/murmurhash/">MurmurHash3</a>.
+	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias. It is used, among other things, to scramble quickly (but deeply) the hash
+	 * values returned by {@link Object#hashCode()}.
+	 * 
+	 * @param x a long integer.
+	 * @return a hash value with good avalanching properties.
+	 */	
+	public final static long murmurHash3( long x ) {
 		x ^= x >>> 33;
 		x *= 0xff51afd7ed558ccdL;
 		x ^= x >>> 33;
@@ -127,5 +136,49 @@ public class HashCommon {
 		x |= x >> 32;
 		x++;
 		return x;
+	}
+
+
+	/** Returns the maximum number of entries that can be filled before rehashing. 
+	 *
+	 * @param n the size of the backing array.
+	 * @param f the load factor.
+	 * @return the maximum number of entries before rehashing. 
+	 */
+	public static int maxFill( final int n, final float f ) {
+		return (int)Math.ceil( n * f );
+	}
+
+	/** Returns the maximum number of entries that can be filled before rehashing. 
+	 * 
+	 * @param n the size of the backing array.
+	 * @param f the load factor.
+	 * @return the maximum number of entries before rehashing. 
+	 */
+	public static long maxFill( final long n, final float f ) {
+		return (long)Math.ceil( n * f );
+	}
+
+	/** Returns the least power of two smaller than or equal to 2<sup>30</sup> and larger than or equal to <code>Math.ceil( expected / f )</code>. 
+	 * 
+	 * @param expected the expected number of elements in a hash table.
+	 * @param f the load factor.
+	 * @return the minimum possible size for a backing array.
+	 * @throws IllegalArgumentException if the necessary size is larger than 2<sup>30</sup>.
+	 */
+	public static int arraySize( final int expected, final float f ) {
+		final long s = nextPowerOfTwo( (long)Math.ceil( expected / f ) );
+		if ( s > (1 << 30) ) throw new IllegalArgumentException( "Too large (" + expected + " expected elements with load factor " + f + ")" );
+		return (int)s;
+	}
+
+	/** Returns the least power of two larger than or equal to <code>Math.ceil( expected / f )</code>. 
+	 * 
+	 * @param expected the expected number of elements in a hash table.
+	 * @param f the load factor.
+	 * @return the minimum possible size for a backing big array.
+	 */
+	public static long bigArraySize( final long expected, final float f ) {
+		return nextPowerOfTwo( (long)Math.ceil( expected / f ) );
 	}
 }

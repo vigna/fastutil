@@ -22,6 +22,8 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.Size64;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
+import static it.unimi.dsi.fastutil.HashCommon.bigArraySize;
+import static it.unimi.dsi.fastutil.HashCommon.maxFill;
 
 import java.util.Collection;
 #if #keys(primitive)
@@ -36,7 +38,7 @@ import java.util.NoSuchElementException;
  * you can have more than 2<sup>31</sup> elements). The table is
  * backed by a {@linkplain it.unimi.dsi.fastutil.BigArrays big array} and is
  * enlarged as needed when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A {@linkplain #trim(long) trimming
+ * smaller (even on a {@link #clear()}). A family of {@linkplain #trim(long) trimming
  * method} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
@@ -89,16 +91,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		baseMask = key.length - 1;		
 	}
 
-	/** Returns the maximum number of entries that can be filled before rehashing. */
-	private long maxFill() {
-		return (long)Math.ceil( n * f );
-	}
-
-	/** Returns the least power of two larger than or equal to <code>Math.ceil( expected / f )</code>. */
-	private long bigArraySize( long expected ) {
-		return HashCommon.nextPowerOfTwo( (long)Math.ceil( expected / f ) );
-	}
-
 	/** Creates a new hash big set.
 	 *
 	 * <p>The actual table size will be the least power of two greater than <code>expected</code>/<code>f</code>.
@@ -112,9 +104,9 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		if ( n < 0 ) throw new IllegalArgumentException( "The expected number of elements must be nonnegative" );
 
 		this.f = f;
-
-		n = bigArraySize( expected );
-		maxFill = maxFill();
+		
+		n = bigArraySize( expected, f );
+		maxFill = maxFill( n, f );
 		key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( n );
 		used = BooleanBigArrays.newBigArray( n );
 		initMasks();
@@ -282,7 +274,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 
 		// There's always an unused entry.
-		while( used[ base ][ displ ] && ! KEY_EQUALS_LONG_HASH( k, h, key[ base ][ displ ] ) ) 
+		while( used[ base ][ displ ] && ! KEY_EQUALS( k, key[ base ][ displ ] ) ) 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
 
 		if ( used[ base ][ displ ] ) return false;
@@ -345,7 +337,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 
 		// There's always an unused entry.
-		while( used[ base ][ displ ] && ! KEY_EQUALS_LONG_HASH( k, h, key[ base ][ displ ] ) ) 
+		while( used[ base ][ displ ] && ! KEY_EQUALS( k, key[ base ][ displ ] ) ) 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
 
 		if ( ! used[ base ][ displ ] ) return false;
@@ -371,7 +363,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
 
 		// There's always an unused entry.
-		while( used[ base ][ displ ] && ! KEY_EQUALS_LONG_HASH( k, h, key[ base ][ displ ] ) ) 
+		while( used[ base ][ displ ] && ! KEY_EQUALS( k, key[ base ][ displ ] ) ) 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
 
 		return used[ base ][ displ ];
@@ -476,6 +468,30 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		return true;
 	}
 
+	/** Rehashes this set, making the table as small as possible.
+	 * 
+	 * <P>This method rehashes the table to the smallest size satisfying the
+	 * load factor. It can be used when the set will not be changed anymore, so
+	 * to optimize access speed and size.
+	 *
+	 * <P>If the table size is already the minimum possible, this method
+	 * does nothing. If you want to guarantee rehashing, use {@link #rehash()}.
+	 *
+	 * @return true if there was enough memory to trim the set.
+	 * @see #trim(int)
+	 * @see #rehash()
+	 */
+
+	public boolean trim() {
+		final long l = bigArraySize( size, f );
+		if ( l >= n ) return true;
+		try {
+			rehash( l );
+		}
+		catch(OutOfMemoryError cantDoIt) { return false; }
+		return true;
+	}
+
 	/** Rehashes this set if the table is too large.
 	 * 
 	 * <P>Let <var>N</var> be the smallest table size that can hold
@@ -492,11 +508,12 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 *
 	 * @param n the threshold for the trimming.
 	 * @return true if there was enough memory to trim the set.
+	 * @see #trim()
 	 * @see #rehash()
 	 */
 
 	public boolean trim( final long n ) {
-		final long l = bigArraySize( n );
+		final long l = bigArraySize( n, f );
 		if ( this.n <= l ) return true;
 		try {
 			rehash( l );
@@ -552,7 +569,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		this.key = newKey;
 		this.used = newUsed;
 		initMasks();
-		maxFill = maxFill();
+		maxFill = maxFill( n, f );
 	}
 
 	@Deprecated
@@ -631,8 +648,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
-		n = bigArraySize( size );
-		maxFill = maxFill();
+		n = bigArraySize( size, f );
+		maxFill = maxFill( n, f );
 		
 		final KEY_GENERIC_TYPE[][] key = this.key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( n );
 		final boolean used[][] = this.used = BooleanBigArrays.newBigArray( n );

@@ -20,6 +20,8 @@ package PACKAGE;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.booleans.BooleanArrays;
+import static it.unimi.dsi.fastutil.HashCommon.arraySize;
+import static it.unimi.dsi.fastutil.HashCommon.maxFill;
 
 import java.util.Collection;
 #if #keys(primitive)
@@ -58,9 +60,9 @@ import java.util.Comparator;
  * point must be linearly searched for, unless it is {@link #last()}, in which
  * case the iterator is created in constant time.
  *
- * <P>Note that deletions in a linked table require scanning the list until the
- * element to be removed is found. The only exceptions are the first element, the last element,
- * and deletions performed using an iterator.
+ * <P>Note that deletions in a linked table are very expensive, as they usually
+ * require scanning the list until the element to be removed and the elements
+ * shifted because of the removal are found.
  *
  * @see Hash
  * @see HashCommon
@@ -113,19 +115,19 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	/** The array of keys. */
 	protected transient KEY_GENERIC_TYPE key[];
 	 
-	/** The array of occupancy states. */
-	protected transient boolean state[];
+	/** The array telling whether a position is used. */
+	protected transient boolean used[];
 
 	/** The acceptable load factor. */
 	protected final float f;
 	 
 	/** The current table size. */
-	protected int n;
+	protected transient int n;
 
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
 	protected transient int maxFill;
 
-	/** {@link #n} minus 1. */
+	/** The mask for wrapping a position counter. */
 	protected transient int mask;
 
 	/** Number of entries in the set. */
@@ -151,7 +153,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #ifdef Custom
 	/** Creates a new hash set.
 	 *
-	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+	 * <p>The actual table size will be the least power of two greater than <code>expected</code>/<code>f</code>.
 	 *
 	 * @param n the expected number of elements in the hash set. 
 	 * @param f the load factor.
@@ -163,25 +165,26 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #else
 	/** Creates a new hash set.
 	 *
-	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+	 * <p>The actual table size will be the least power of two greater than <code>expected</code>/<code>f</code>.
 	 *
-	 * @param n the expected number of elements in the hash set. 
+	 * @param expected the expected number of elements in the hash set. 
 	 * @param f the load factor.
 	 */
 	@SuppressWarnings("unchecked")
-	public OPEN_LINEAR_HASH_SET( final int n, final float f ) {
+	public OPEN_LINEAR_HASH_SET( final int expected, final float f ) {
 #endif
 		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
 		if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
 
-		this.n = HashCommon.nextPowerOfTwo( n );
-		mask = this.n - 1;
 		this.f = f;
-		this.maxFill = (int)( this.n * f );
-		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ this.n ];
-		state = new boolean[ this.n ];
+
+		n = arraySize( expected, f );
+		mask = n - 1;
+		maxFill = maxFill( n, f );
+		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
+		used = new boolean[ n ];
 #ifdef Linked
-		link = new int[ this.n ];
+		link = new int[ n ];
 #endif
 	}
 	 
@@ -189,29 +192,29 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 #ifdef Custom
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 *
-	 * @param n the expected number of elements in the hash set. 
+	 * @param expected the expected number of elements in the hash set. 
 	 * @param strategy the strategy.
 	 */
 	 
-	public OPEN_LINEAR_HASH_SET( final int n, final Strategy<K> strategy ) {
-		this( n, DEFAULT_LOAD_FACTOR, strategy );
+	public OPEN_LINEAR_HASH_SET( final int expected, final Strategy<K> strategy ) {
+		this( expected, DEFAULT_LOAD_FACTOR, strategy );
 	}
 
 #else
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 *
-	 * @param n the expected number of elements in the hash set. 
+	 * @param expected the expected number of elements in the hash set. 
 	 */
 	 
-	public OPEN_LINEAR_HASH_SET( final int n ) {
-		this( n, DEFAULT_LOAD_FACTOR );
+	public OPEN_LINEAR_HASH_SET( final int expected ) {
+		this( expected, DEFAULT_LOAD_FACTOR );
 	}
 
 #endif
 
 
 #ifdef Custom
-	/** Creates a new hash set with {@link Hash#DEFAULT_INITIAL_SIZE} elements
+	/** Creates a new hash set with initial expected {@link Hash#DEFAULT_INITIAL_SIZE} elements
 	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 * @param strategy the strategy.
 	 */
@@ -220,7 +223,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR, strategy );
 	}
 #else
-	/** Creates a new hash set with {@link Hash#DEFAULT_INITIAL_SIZE} elements
+	/** Creates a new hash set with initial expected {@link Hash#DEFAULT_INITIAL_SIZE} elements
 	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
 	 */
 	 
@@ -549,64 +552,31 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 * all accessors. They are (and should be maintained) identical to those used in HashMap.drv.
 	 */
 
-	/** Searches for a key, keeping track of a possible insertion point.
-	 *
-	 * @param k the key.
-	 * @return the index of the correct insertion point, if the key is not found; otherwise,
-	 * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
-	 */
-
-	protected final int findInsertionPoint( final KEY_GENERIC_TYPE k ) {
-		final KEY_GENERIC_TYPE key[] = this.key;
-		final boolean state[] = this.state;
-		final int mask = this.mask;
-		final int h = KEY2INTHASH( k );
-
-		// The starting point.
-		int pos = h & mask;
-
-		// There's always a FREE entry.
-		while( state[ pos ] && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-		return state[ pos ] ? -pos - 1 : pos;
-	}
-
-
-	/** Searches for a key.
-	 *
-	 * @param k the key.
-	 * @return the index of the entry containing the key, or -1 if the key wasn't found.
-	 */
-
-	protected final int findKey( final KEY_GENERIC_TYPE k ) {
-		final KEY_GENERIC_TYPE key[] = this.key;
-		final boolean state[] = this.state;
-		final int mask = this.mask;
-		final int h = KEY2INTHASH( k );
-
-		// The starting point.
-		int pos = h & mask;
-
-		/* See the comments in the documentation of the interface Hash. */
-		while( state[ pos ] && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask; // There's always a FREE entry.
-		return state[ pos ] ? pos : -1;  // In the first case, necessarily, KEY_EQUALS_HASH( k, h, key[ pos ] ).
-	}
-
 	public boolean add( final KEY_GENERIC_TYPE k ) {
-		final int i = findInsertionPoint( k );
-		if ( i < 0 ) return false;
 
-		state[ i ] = true;
-		key[ i ] = k;
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
+
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		if ( used[ pos ] ) return false;
+
+		used[ pos ] = true;
+		key[ pos ] = k;
 
 #ifdef Linked
 		if ( size == 0 ) {
-			first = last = i;
-			link[ i ] = 0;
+			first = last = pos;
+			link[ pos ] = 0;
 		}
 		else {
-			link[ last ] ^= i ^ -1;
-			link[ i ] = last ^ -1;
-			last = i;
+			link[ last ] ^= pos ^ -1;
+			link[ pos ] = last ^ -1;
+			last = pos;
 		}
 #endif
 
@@ -627,74 +597,73 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		/*int t = pos;
 
 		System.err.println( "shiftKeys pos: " + t );
-		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + state[ ( t + i ) & mask ] + ") ");
+		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + used[ ( t + i ) & mask ] + ") ");
 		System.err.println();
 		*/
 
 		for(;;) {
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
-			while( state[ pos ] ) {
+			while( used[ pos ] ) {
 				slot = KEY2INTHASH( key[ pos ] ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
 
-			if ( ! state[ pos ] ) break;
+			if ( ! used[ pos ] ) break;
 
 			key[ last ] = key[ pos ];			
+
+#ifdef Linked
+			fixPointers( pos, last );
+#endif
 		}
 
-		state[ last ] = false;
+		used[ last ] = false;
 #if #keys(reference)
 		key[ last ] = null;
 #endif
 		/*
-		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + state[ ( t + i ) & mask ] + ") ");
+		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + used[ ( t + i ) & mask ] + ") ");
 		System.err.println();
 		*/
 	}
 
-	/** Removes the given key.
-	 *
-	 * @param k a key.
-	 * @return true if the key was found, false otherwise.
-	 */
-
-	protected final boolean removeKey( final KEY_GENERIC_TYPE k ) {
-		final KEY_GENERIC_TYPE key[] = this.key;
-		final boolean state[] = this.state;
-		final int mask = this.mask;
-		final int h = KEY2INTHASH( k );
-
-		// The starting point.
-		int pos = h & mask;
-
-		/* See the comments in the documentation of the interface Hash. */
-		while( state[ pos ] && ! KEY_EQUALS_HASH( k, h, key[ pos ] ) ) pos = ( pos + 1 ) & mask; // There's always a FREE entry.
-		if ( ! state[ pos ] ) return false;
-
-		shiftKeys( pos );
-
-		return true;
-	}
-
 	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
-		if ( ! removeKey( KEY_GENERIC_CAST k ) ) return false;
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
+
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		if ( ! used[ pos ] ) return false;
 		size--;
 
 #ifdef Linked
-		fixPointers( i );
+		fixPointers( pos );
 #endif
 
+		shiftKeys( pos );
 		if ( ASSERTS ) checkTable();
 		return true;
 	}
 	 
 	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
-		return findKey( KEY_GENERIC_CAST k ) >= 0;
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
+
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		return used[ pos ];
 	}
 
 
@@ -707,18 +676,36 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 	public void clear() {
 		if ( size == 0 ) return;
-
 		size = 0;
-
-		BooleanArrays.fill( state, false );
+		BooleanArrays.fill( used, false );
 
 #if #keys(reference)
 		ObjectArrays.fill( key, null );
 #endif
-
 #ifdef Linked
 		first = last = -1;
 #endif
+	}
+
+
+	/** A no-op for backward compatibility.
+	 * 
+	 * @param growthFactor unused.
+	 * @deprecated Since <code>fastutil</code> 6.1.0, hash tables are doubled when they are too full.
+	 */
+	@Deprecated
+	public void growthFactor( int growthFactor ) {}
+
+
+	/** Gets the growth factor (2).
+	 *
+	 * @return the growth factor of this set, which is fixed (2).
+	 * @see #growthFactor(int)
+	 * @deprecated Since <code>fastutil</code> 6.1.0, hash tables are doubled when they are too full.
+	 */
+	@Deprecated
+	public int growthFactor() {
+		return 16;
 	}
 
 
@@ -732,7 +719,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 *
 	 * @param i the index of an entry. 
 	 */
-	private void fixPointers( int i ) {
+	protected void fixPointers( final int i ) {
 		if ( size == 0 ) {
 			first = last = -1;
 			return;
@@ -757,6 +744,46 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		}
 		link[ j ] ^= link[ i ] ^ i ^ j;
 		link[ link[ i ] ^ j ] ^= i ^ j;
+	}
+
+	/** Modifies the {@link #link} vector for a shift from s to d.
+	 *
+	 * <P>If the given entry is the first or the last one, this method will complete
+	 * in constant time; otherwise, it will have to search for the given entry.
+	 *
+	 * @param s the source position.
+	 * @param d the destination position.
+	 */
+	protected void fixPointers( int s, int d ) {
+
+		if ( size == 1 ) {
+			first = last = d;
+			link[ d ] = 0;
+			return;
+		}
+
+		if ( first == s ) {
+			first = d;
+			link[ link[ s ] ^ -1 ] ^= s ^ d;
+			link[ d ] = link[ s ];
+			return;
+		}
+
+		if ( last == s ) {
+			last = d;
+			link[ link[ s ] ^ -1 ] ^= s ^ d;
+			link[ d ] = link[ s ];
+			return;
+		}
+
+		int j = first, prev = -1, next;
+		while( ( next = link[ j ] ^ prev ) != s ) {
+			prev = j;
+			j = next;
+		}
+		link[ j ] ^= s ^ d;
+		link[ link[ s ] ^ j ] ^= s ^ d;
+		link[ d ] = link[ s ];
 	}
 
 
@@ -833,7 +860,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 			prev = curr;
 
 			index++;
-
+			if ( ASSERTS ) assert used[ curr ] : "Position " + curr + " is not used";
 			return key[ curr ];
 		}
 
@@ -862,8 +889,6 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		public void remove() {
 			if ( curr == -1 ) throw new IllegalStateException();
 
-			shiftKeys( curr );
-
 			if ( curr == prev ) {
 				/* If the last operation was a next(), we are removing an entry that preceeds
 				   the current index, and thus we must decrement it. */
@@ -879,6 +904,29 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 			else link[ prev ] ^= curr ^ next;
 			if ( next == -1 ) last = prev;
 			else link[ next ] ^= curr ^ prev;
+
+			int last, slot, pos = curr;
+
+			// We have to horribly duplicated the shiftKeys() code because we need to update next/prev.			
+			for(;;) {
+				pos = ( ( last = pos ) + 1 ) & mask;
+				while( used[ pos ] ) {
+					slot = KEY2INTHASH( key[ pos ] ) & mask;
+					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
+					pos = ( pos + 1 ) & mask;
+				}
+	
+				if ( ! used[ pos ] ) break;
+				key[ last ] = key[ pos ];			
+				if ( next == pos ) next = last;
+				if ( prev == pos ) prev = last;
+				fixPointers( pos, last );
+			}
+
+			used[ last ] = false;
+#if #keys(reference)
+			key[ last ] = null;
+#endif
 			curr = -1;
 		}
 	}
@@ -926,8 +974,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int c = size;
 
 		{ 
-			final boolean state[] = OPEN_LINEAR_HASH_SET.this.state;
-			if ( c != 0 ) while( ! state[ --pos ] );
+			final boolean used[] = OPEN_LINEAR_HASH_SET.this.used;
+			if ( c != 0 ) while( ! used[ --pos ] );
 		}
 
 		public boolean hasNext() {
@@ -941,8 +989,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 			
 			//System.err.println( "Count: " + c );
 			if ( --c != 0 ) {
-				final boolean state[] = OPEN_LINEAR_HASH_SET.this.state;
-				while( ! state[ pos = ( pos - 1 ) & mask ] );
+				final boolean used[] = OPEN_LINEAR_HASH_SET.this.used;
+				while( ! used[ pos = ( pos - 1 ) & mask ] );
 			}
 			
 			return retVal;
@@ -996,7 +1044,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 * 
 	 * <P>This method rehashes the table to the smallest size satisfying the
 	 * load factor. It can be used when the set will not be changed anymore, so
-	 * to optimize access speed (by collecting deleted entries) and size.
+	 * to optimize access speed and size.
 	 *
 	 * <P>If the table size is already the minimum possible, this method
 	 * does nothing. If you want to guarantee rehashing, use {@link #rehash()}.
@@ -1007,7 +1055,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	 */
 
 	public boolean trim() {
-		final int l = HashCommon.nextPowerOfTwo( (int)Math.ceil( size / f ) );
+		final int l = arraySize( size, f );
 		if ( l >= n ) return true;
 		try {
 			rehash( l );
@@ -1059,32 +1107,32 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	@SuppressWarnings("unchecked")
 	protected void rehash( final int newN ) {
 #ifdef Linked
-		int i = first, j = size, prev = -1, newPrev = -1, t, k2i, pos;
+		int i = first, prev = -1, newPrev = -1, t, pos;
 #else
-		int i = 0, j = size, k2i, pos;
-		final boolean state[] = this.state;
+		int i = 0, pos;
+		final boolean used[] = this.used;
 #endif
 
 		KEY_GENERIC_TYPE k;
+		final KEY_GENERIC_TYPE key[] = this.key;
 
 		final int newMask = newN - 1;
-		final KEY_GENERIC_TYPE key[] = this.key, newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN ];
+		final KEY_GENERIC_TYPE newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN ];
 		final boolean newState[] = new boolean[ newN ];
 #ifdef Linked
-		final int link[] = this.link, newLink[] = new int[ newN ];
+		final int link[] = this.link;
+		final int newLink[] = new int[ newN ];
 		first = -1;
 #endif
 
-		while( j-- != 0 ) {
+		for( int j = size; j-- != 0; ) {
 
 #ifndef Linked
-			while( ! state[ i ] ) i++;
+			while( ! used[ i ] ) i++;
 #endif
 
 			k = key[ i ];
-			k2i = KEY2INTHASH( k );
-
-			pos = k2i & newMask;
+			pos = KEY2INTHASH( k ) & newMask;
 
 			while ( newState[ pos ] ) pos = ( pos + 1 ) & newMask;
 				
@@ -1112,9 +1160,9 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 		n = newN;
 		mask = newMask;
-		maxFill = (int)( newN * f );
+		maxFill = maxFill( n, f );
 		this.key = newKey;
-		this.state = newState;
+		this.used = newState;
 #ifdef Linked
 		this.link = newLink;
 		this.last = newPrev;
@@ -1150,7 +1198,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 			throw new InternalError();
 		}
 		c.key = key.clone();
-		c.state = state.clone();
+		c.used = used.clone();
 #ifdef Linked
 		c.link = link.clone();
 #endif
@@ -1174,7 +1222,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	public int hashCode() {
 		int h = 0, i = 0, j = size;
 		while( j-- != 0 ) {
-			while( ! state[ i ] ) i++;
+			while( ! used[ i ] ) i++;
 #if #keys(reference)
 			if ( this != key[ i ] )
 #endif
@@ -1187,9 +1235,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		final KEY_ITERATOR KEY_GENERIC i = iterator();
-		int j = size;
 		s.defaultWriteObject();
-		while( j-- != 0 ) s.WRITE_KEY( i.NEXT_KEY() );
+		for( int j = size; j-- != 0; ) s.WRITE_KEY( i.NEXT_KEY() );
 	}
 
 
@@ -1197,31 +1244,28 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
-		maxFill = (int)( n * f );
+		n = arraySize( size, f );
+		maxFill = maxFill( n, f );
 		mask = n - 1;
 		
 		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
-		final boolean state[] = this.state = new boolean[ n ];
+		final boolean used[] = this.used = new boolean[ n ];
 #ifdef Linked
 		final int link[] = this.link = new int[ n ];
 		int prev = -1;
 		first = last = -1;
 #endif
 
-		int i, k2i, pos;
 		KEY_GENERIC_TYPE k;
 
-		i = size;
-		while( i-- != 0 ) {
+		for( int i = size, pos = 0; i-- != 0; ) {
 
 			k = KEY_GENERIC_CAST s.READ_KEY();
-			k2i = KEY2INTHASH( k );
+			pos = KEY2INTHASH( k ) & mask;
 
-			pos = k2i & mask;
+			while ( used[ pos ] ) pos = ( pos + 1 ) & mask;
 
-			while ( state[ pos ] ) pos = ( pos + 1 ) & mask;
-
-			state[ pos ] = true;
+			used[ pos ] = true;
 			key[ pos ] = k;
 
 #ifdef Linked
@@ -1248,13 +1292,13 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 #ifdef ASSERTS_CODE
 	private void checkTable() {
-		final boolean[] state = this.state;
+		final boolean[] used = this.used;
 		assert ( n & -n ) == n : "Table length is not a power of two: " + n;
 		assert n == key.length;
-		assert n == state.length;
-		int n = state.length;
+		assert n == used.length;
+		int n = used.length;
 		while( n-- != 0 ) 
-			if ( state[ n ] && ! contains( key[ n ] ) ) 
+			if ( used[ n ] && ! contains( key[ n ] ) ) 
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
 
 #if #keys(primitive)
@@ -1263,8 +1307,8 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		java.util.HashSet<Object> s = new java.util.HashSet<Object>();
 #endif
 		
-		for( int i = size(); i-- != 0; )
-			if ( state[ i ] && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
+		for( int i = used.length; i-- != 0; )
+			if ( used[ i ] && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice at position " + i );
 
 #ifdef Linked
 		KEY_BIDI_ITERATOR KEY_GENERIC i = iterator();
@@ -1545,7 +1589,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 		int maxProbes = 0;	
 		final double f = (double)m.size / m.n;
 		for( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.state[ i ] ) c++;
+			if ( m.used[ i ] ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
@@ -1884,7 +1928,7 @@ public class OPEN_LINEAR_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC i
 
 		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-		int p = m.state.length;
+		int p = m.used.length;
 
 		for(int i=0; i<p; i++) {
 			for (int j=0; j<20; j++) {

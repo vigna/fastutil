@@ -288,6 +288,11 @@ $(OPEN_LINEAR_HASH_SETS): drv/OpenLinearHashSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(OPEN_LINEAR_HASH_SETS)
 
+LINKED_OPEN_LINEAR_HASH_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)LinkedOpenLinearHashSet.c)
+$(LINKED_OPEN_LINEAR_HASH_SETS): drv/LinkedOpenLinearHashSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(LINKED_OPEN_LINEAR_HASH_SETS)
+
 OPEN_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenHashSet.c)
 $(OPEN_HASH_SETS): drv/OpenHashSet.drv; ./gencsource.sh $< $@ >$@
 
