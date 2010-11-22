@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -e
 
 TYPE=(boolean byte short int long char float double Object Object)
 PACKAGE=(booleans bytes shorts ints longs chars floats doubles objects objects)
