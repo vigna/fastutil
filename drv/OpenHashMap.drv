@@ -1,0 +1,2606 @@
+/*		 
+ * Copyright (C) 2002-2010 Sebastiano Vigna 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. 
+ */
+
+
+package PACKAGE;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.NoSuchElementException;
+#ifdef Custom
+//import it.unimi.dsi.fastutil.Maps;
+#endif
+
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.bytes.ByteArrays;
+
+import VALUE_PACKAGE.VALUE_COLLECTION;
+import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
+
+#if #values(primitive) || #keys(primitive) && #valueclass(Object)
+import VALUE_PACKAGE.VALUE_ITERATOR;
+#endif
+
+#if #keys(reference) || #values(reference)
+import it.unimi.dsi.fastutil.objects.ObjectArrays;
+#endif
+
+
+#ifdef Linked
+
+import java.util.Comparator;
+
+#if #key(reference)
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+#endif
+
+#if #values(primitive)
+import VALUE_PACKAGE.VALUE_LIST_ITERATOR;
+#endif
+
+#if #keys(primitive) && #valueclass(Reference)
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+#endif
+
+import it.unimi.dsi.fastutil.objects.AbstractObjectSortedSet;
+import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
+
+#else
+
+import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
+
+#if #keys(primitive) && ! #valueclass(Object)
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+#endif
+
+#endif
+
+
+
+#ifdef Linked
+/**  A type-specific linked hash map with with a fast, small-footprint implementation.
+ *
+ * <P>Instances of this class use a hash table to represent a map. The table is
+ * enlarged as needed when new entries are created, but it is <em>never</em> made
+ * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * methods} lets you control the size of the table; this is particularly useful
+ * if you reuse instances of this class.
+ *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
+ * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
+ * <P>Iterators created by this map will enumerate pairs in the same order in which they
+ * have been added to the set (note that addition of pairs whose key is already present 
+ * in the set will not change the iteration order). Note that this order has nothing in common with the natural
+ * order of the keys.
+ *
+ * <P>This class implements the interface of a sorted map, so to allow easy
+ * access of the iteration order: for instance, you can get the first key
+ * in iteration order with {@link #firstKey()} without having to create an
+ * iterator; however, this class partially violates the {@link java.util.SortedMap}
+ * contract because all submap methods throw an exception and {@link
+ * #comparator()} returns always <code>null</code>.
+ *
+ * <P>The iterators provided by the views of this class using are type-specific
+ * {@linkplain java.util.ListIterator list iterators}. However, creation of an
+ * iterator using a starting point is going to be very expensive, as the chosen
+ * starting point must be linearly searched for, unless it is {@link #lastKey()},
+ * in which case the iterator is created in constant time.
+ *
+ * <P>Note that deletions in a linked table require scanning the list until the
+ * element to be removed is found. The only exceptions are the first element, the last element,
+ * and deletions performed using an iterator.
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable, Hash {
+
+#else
+
+#ifdef Custom
+
+/** A type-specific hash map with a fast, small-footprint implementation whose {@linkplain it.unimi.dsi.fastutil.Hash.Strategy hashing strategy}
+ * is specified at creation time.
+ *
+ * <P>Instances of this class use a hash table to represent a map. The table is
+ * enlarged as needed when new entries are created, but it is <em>never</em> made
+ * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * methods} lets you control the size of the table; this is particularly useful
+ * if you reuse instances of this class.
+ *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
+ * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable, Hash {
+
+#else
+
+/** A type-specific hash map with a fast, small-footprint implementation.
+ *
+ * <P>Instances of this class use a hash table to represent a map. The table is
+ * enlarged as needed when new entries are created, but it is <em>never</em> made
+ * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * methods} lets you control the size of the table; this is particularly useful
+ * if you reuse instances of this class.
+ *
+ * <P>The enlargement speed is controlled by the <em>growth factor</em>, a
+ * positive number. If the growth factor is <var>p</var>, then the table is
+ * enlarged each time roughly by a factor 2<sup>p/16</sup>. By default, <var>p</var> is
+ * {@link Hash#DEFAULT_GROWTH_FACTOR}, which means that the table is doubled at
+ * each enlargement, but one can easily set more or less aggressive policies by
+ * calling {@link #growthFactor(int)} (note that the growth factor is <em>not</em> serialized:
+ * deserialized tables gets the {@linkplain Hash#DEFAULT_GROWTH_FACTOR default growth factor}).
+ *
+ * @see Hash
+ * @see HashCommon
+ */
+
+public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable, Hash {
+
+#endif
+
+#endif
+	/** The array of keys. */
+	protected transient KEY_GENERIC_TYPE key[];
+
+	/** The array of values. */
+	protected transient VALUE_GENERIC_TYPE value[];
+	 
+	/** The array of occupancy states. */
+	protected transient byte state[];
+
+	/** The acceptable load factor. */
+	protected final float f;
+	 
+	/** Index into the prime list, giving the current table size. */
+	protected transient int p;
+
+	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
+	protected transient int maxFill;
+
+	/** Number of free entries in the table (may be less than the table size - {@link #count} because of deleted entries). */
+	protected transient int free;
+
+	/** Number of entries in the map. */
+	protected int count;
+
+#ifdef Linked
+	/** Cached set of entries. */
+	protected transient volatile FastSortedEntrySet KEY_VALUE_GENERIC entries;
+
+	/** Cached set of keys. */
+	protected transient volatile SORTED_SET KEY_GENERIC keys;
+#else
+	/** Cached set of entries. */
+	protected transient volatile FastEntrySet KEY_VALUE_GENERIC entries;
+
+	/** Cached set of keys. */
+	protected transient volatile SET KEY_GENERIC keys;
+#endif
+
+	/** Cached collection of values. */
+	protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
+
+	/** The growth factor of the table. The next table size will be <code>{@link Hash#PRIMES}[{@link #p}+growthFactor</code>. */
+	protected transient int growthFactor = Hash.DEFAULT_GROWTH_FACTOR;
+
+#ifdef Linked
+	/** The index of the first entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
+	protected transient int first = -1;
+	/** The index of the last entry in iteration order. It is valid iff {@link #count} is nonzero; otherwise, it contains -1. */
+	protected transient int last = -1;
+	/** For each entry, the next and the previous entry in iteration order
+	exclusive-or'd together. It is valid only on {@link Hash#OCCUPIED}
+	entries. The first and the last entry contain the actual successor and
+	predecessor, respectively, exclusived-or'd with -1. */
+	protected transient int link[];
+#endif
+
+#ifdef Custom
+	/** The hash strategy of this custom map. */
+	protected Strategy KEY_GENERIC strategy;
+#endif
+
+	public static final long serialVersionUID = -7046029254386353129L;
+
+	private static final boolean ASSERTS = ASSERTS_VALUE;
+
+#ifdef Custom
+	/** Creates a new hash map.
+	 *
+	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+	 *
+	 * @param n the expected number of elements in the hash map.
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 * @see Hash#PRIMES
+	 */
+	 
+	@SuppressWarnings("unchecked")
+	public OPEN_HASH_MAP( final int n, final float f, final Strategy KEY_GENERIC strategy ) {
+		this.strategy = strategy;
+#else
+	/** Creates a new hash map.
+	 *
+	 * The actual table size is the least available prime greater than <code>n</code>/<code>f</code>.
+	 *
+	 * @param n the expected number of elements in the hash map.
+	 * @param f the load factor.
+	 * @see Hash#PRIMES
+	 */
+	 
+	@SuppressWarnings("unchecked")
+	public OPEN_HASH_MAP( final int n, final float f ) {
+#endif
+		if ( f <= 0 || f > 1 ) throw new IllegalArgumentException( "Load factor must be greater than 0 and smaller than or equal to 1" );
+		if ( n < 0 ) throw new IllegalArgumentException( "Hash table size must be nonnegative" );
+
+		int l = Arrays.binarySearch( PRIMES, (int)( n / f ) + 1 );
+		if ( l < 0 ) l = -l - 1;
+
+		free = PRIMES[ p = l ];
+		this.f = f;
+		this.maxFill = (int)( free * f );
+		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ free ];
+		value = VALUE_GENERIC_ARRAY_CAST new VALUE_TYPE[ free ];
+		state = new byte[ free ];
+#ifdef Linked
+		link = new int[ free ];
+#endif
+	}
+	 
+	 
+#ifdef Custom
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 *
+	 * @param n the expected number of elements in the hash map.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_MAP( final int n, final Strategy KEY_GENERIC strategy ) {
+	this( n, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 *
+	 * @param n the expected number of elements in the hash map.
+	 */
+	 
+	public OPEN_HASH_MAP( final int n ) {
+		this( n, DEFAULT_LOAD_FACTOR );
+	}
+#endif
+
+
+#ifdef Custom
+	/** Creates a new hash map with {@link Hash#DEFAULT_INITIAL_SIZE} entries
+	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_MAP( final Strategy KEY_GENERIC strategy ) {
+		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
+	/** Creates a new hash map with {@link Hash#DEFAULT_INITIAL_SIZE} entries
+	 * and {@link Hash#DEFAULT_LOAD_FACTOR} as load factor.
+	 */
+	 
+	public OPEN_HASH_MAP() {
+		this( DEFAULT_INITIAL_SIZE, DEFAULT_LOAD_FACTOR );
+	}
+#endif
+
+
+#ifdef Custom
+	/** Creates a new hash map copying a given one.
+	 *
+	 * @param m a {@link Map} to be copied into the new hash map. 
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_MAP( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m, final float f, final Strategy KEY_GENERIC strategy ) {
+		this( m.size(), f, strategy );
+		putAll( m );
+	}
+#else
+	/** Creates a new hash map copying a given one.
+	 *
+	 * @param m a {@link Map} to be copied into the new hash map. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_HASH_MAP( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m, final float f ) {
+		this( m.size(), f );
+		putAll( m );
+	}
+#endif
+
+#ifdef Custom
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given one.
+	 *
+	 * @param m a {@link Map} to be copied into the new hash map. 
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_MAP( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m, final Strategy KEY_GENERIC strategy ) {
+		this( m, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given one.
+	 *
+	 * @param m a {@link Map} to be copied into the new hash map. 
+	 */
+	 
+	public OPEN_HASH_MAP( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) {
+		this( m, DEFAULT_LOAD_FACTOR );
+	}
+#endif
+
+#ifdef Custom
+	/** Creates a new hash map copying a given type-specific one.
+	 *
+	 * @param m a type-specific map to be copied into the new hash map. 
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_MAP( final MAP KEY_VALUE_GENERIC m, final float f, final Strategy KEY_GENERIC strategy ) {
+		this( m.size(), f, strategy );
+		putAll( m );
+	}
+
+#else
+	/** Creates a new hash map copying a given type-specific one.
+	 *
+	 * @param m a type-specific map to be copied into the new hash map. 
+	 * @param f the load factor.
+	 */
+	 
+	public OPEN_HASH_MAP( final MAP KEY_VALUE_GENERIC m, final float f ) {
+		this( m.size(), f );
+		putAll( m );
+	}
+#endif
+
+#ifdef Custom
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given type-specific one.
+	 *
+	 * @param m a type-specific map to be copied into the new hash map. 
+	 * @param strategy the strategy.
+	 */
+	 
+	public OPEN_HASH_MAP( final MAP KEY_VALUE_GENERIC m, final Strategy KEY_GENERIC strategy ) {
+		this( m, DEFAULT_LOAD_FACTOR, strategy );
+	}
+
+#else
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor copying a given type-specific one.
+	 *
+	 * @param m a type-specific map to be copied into the new hash map. 
+	 */
+	 
+	public OPEN_HASH_MAP( final MAP KEY_VALUE_GENERIC m ) {
+		this( m, DEFAULT_LOAD_FACTOR );
+	}
+#endif
+
+
+#ifdef Custom
+	/** Creates a new hash map using the elements of two parallel arrays.
+	 *
+	 * @param k the array of keys of the new hash map.
+	 * @param v the array of corresponding values in the new hash map.
+	 * @param f the load factor.
+	 * @param strategy the strategy.
+	 * @throws IllegalArgumentException if <code>k</code> and <code>v</code> have different lengths.
+	 */
+	 
+	public OPEN_HASH_MAP( final KEY_GENERIC_TYPE[] k, final VALUE_GENERIC_TYPE v[], final float f, final Strategy KEY_GENERIC strategy ) {
+		this( k.length, f, strategy );
+		if ( k.length != v.length ) throw new IllegalArgumentException( "The key array and the value array have different lengths (" + k.length + " and " + v.length + ")" );
+		for( int i = 0; i < k.length; i++ ) this.put( k[ i ], v[ i ] );
+	}
+#else
+	/** Creates a new hash map using the elements of two parallel arrays.
+	 *
+	 * @param k the array of keys of the new hash map.
+	 * @param v the array of corresponding values in the new hash map.
+	 * @param f the load factor.
+	 * @throws IllegalArgumentException if <code>k</code> and <code>v</code> have different lengths.
+	 */
+	 
+	public OPEN_HASH_MAP( final KEY_GENERIC_TYPE[] k, final VALUE_GENERIC_TYPE v[], final float f ) {
+		this( k.length, f );
+		if ( k.length != v.length ) throw new IllegalArgumentException( "The key array and the value array have different lengths (" + k.length + " and " + v.length + ")" );
+		for( int i = 0; i < k.length; i++ ) this.put( k[ i ], v[ i ] );
+	}
+#endif
+
+#ifdef Custom
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using the elements of two parallel arrays.
+	 *
+	 * @param k the array of keys of the new hash map.
+	 * @param v the array of corresponding values in the new hash map.
+	 * @param strategy the strategy.
+	 * @throws IllegalArgumentException if <code>k</code> and <code>v</code> have different lengths.
+	 */
+	 
+	public OPEN_HASH_MAP( final KEY_GENERIC_TYPE[] k, final VALUE_GENERIC_TYPE v[], final Strategy KEY_GENERIC strategy ) {
+		this( k, v, DEFAULT_LOAD_FACTOR, strategy );
+	}
+#else
+	/** Creates a new hash map with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using the elements of two parallel arrays.
+	 *
+	 * @param k the array of keys of the new hash map.
+	 * @param v the array of corresponding values in the new hash map.
+	 * @throws IllegalArgumentException if <code>k</code> and <code>v</code> have different lengths.
+	 */
+	 
+	public OPEN_HASH_MAP( final KEY_GENERIC_TYPE[] k, final VALUE_GENERIC_TYPE v[] ) {
+		this( k, v, DEFAULT_LOAD_FACTOR );
+	}
+#endif
+
+
+
+#ifdef Custom
+	/** Returns the hashing strategy.
+	 *
+	 * @return the hashing strategy of this custom hash set.
+	 */
+
+	public Strategy KEY_GENERIC strategy() {
+		return strategy;
+	}
+#endif
+
+	/** Sets the growth factor. Subsequent enlargements will increase the table
+	 * size roughly by a multiplicative factor of 2<sup>p/16</sup>.
+	 * 
+	 * @param growthFactor the new growth factor; it must be positive.
+	 */
+
+	public void growthFactor( int growthFactor ) {
+		if ( growthFactor <= 0 ) throw new IllegalArgumentException( "Illegal growth factor " + growthFactor );
+		this.growthFactor = growthFactor;
+	}
+
+	/** Gets the growth factor.
+	 *
+	 * @return the growth factor of this set.
+	 * @see #growthFactor(int)
+	 */
+
+	public int growthFactor() {
+		return growthFactor;
+	}
+
+
+	/*
+	 * The following methods implements some basic building blocks used by
+	 * all accessors.  They are (and should be maintained) identical to those used in HashSet.drv.
+	 */
+
+	/** Searches for a key, keeping track of a possible insertion point.
+	 *
+	 * @param k the key.
+	 * @return the index of the correct insertion point, if the key is not found; otherwise,
+	 * <var>-i</var>-1, where <var>i</var> is the index of the entry containing the key.
+	 */
+
+	protected final int findInsertionPoint( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final byte state[] = this.state;
+		final int n = key.length;
+
+		// First of all, we make the key into a positive integer.
+#if #keyclass(Object)
+		final int h, k2i = ( h = KEY2INTHASH( k ) ) & 0x7FFFFFFF; 
+#else
+		final int k2i = KEY2INTHASH(k) & 0x7FFFFFFF; 
+#endif
+		// The primary hash, a.k.a. starting point.
+		int h1 = k2i % n;
+
+		if ( state[ h1 ] == OCCUPIED && ! KEY_EQUALS( k, key[ h1 ] ) ) {
+			// The secondary hash.
+			final int h2 = ( k2i % ( n - 2 ) ) + 1;
+			do {
+				h1 += h2;
+				if ( h1 >= n || h1 < 0 ) h1 -= n;
+			} while( state[ h1 ] == OCCUPIED && ! KEY_EQUALS( k, key[ h1 ] ) ); // There's always a FREE entry.
+		}
+
+		if (state[ h1 ] == FREE) return h1;
+		if (state[ h1 ] == OCCUPIED) return -h1-1; // Necessarily, KEY_EQUALS( k, key[ h1 ] ).
+
+		/* Tables without deletions will never use code beyond this point. */
+
+		final int i = h1; // Remember first available bucket for later.
+		  
+		/** See the comments in the documentation of the interface Hash. */
+		if ( ASSERTS ) assert state[ h1 ] == REMOVED;
+		if ( ! KEY_EQUALS( k, key[ h1 ] ) ) {
+			// The secondary hash.
+			final int h2 = ( k2i % ( n - 2 ) ) + 1;
+			do {
+				h1 += h2;
+				if ( h1 >= n || h1 < 0 ) h1 -= n;
+			}  while( state[ h1 ] != FREE && ! KEY_EQUALS( k, key[ h1 ] ) );
+		}
+		  
+		return state[ h1 ] == OCCUPIED ? -h1-1 : i; // In the first case, necessarily, KEY_EQUALS( k, key[ h1 ] ).
+	}
+
+
+	/** Searches for a key.
+	 *
+	 * @param k the key.
+	 * @return the index of the entry containing the key, or -1 if the key wasn't found.
+	 */
+
+	protected final int findKey( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final byte state[] = this.state;
+		final int n = key.length;
+
+		// First of all, we make the key into a positive integer.
+#if #keyclass(Object)
+		final int h, k2i = ( h = KEY2INTHASH( k ) ) & 0x7FFFFFFF; 
+#else
+		final int k2i = KEY2INTHASH(k) & 0x7FFFFFFF; 
+#endif
+		// The primary hash, a.k.a. starting point.
+		int h1 = k2i % n;
+		  
+		/** See the comments in the documentation of the interface Hash. */
+		if ( state[ h1 ] != FREE && ! KEY_EQUALS( k, key[ h1 ] ) ) {
+			// The secondary hash.
+			final int h2 = ( k2i % ( n - 2 ) ) + 1;
+			do {
+				h1 += h2;
+				if ( h1 >= n || h1 < 0 ) h1 -= n;
+			} while( state[ h1 ] != FREE && ! KEY_EQUALS( k, key[ h1 ] ) ); // There's always a FREE entry.
+		}
+
+		return state[ h1 ] == OCCUPIED ? h1 : -1;  // In the first case, necessarily, KEY_EQUALS( k, key[ h1 ] ).
+	}
+
+
+
+	public VALUE_GENERIC_TYPE put(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
+		final int i = findInsertionPoint( k );
+		  
+		if (i < 0) {
+			final VALUE_GENERIC_TYPE oldValue = value[-i-1];
+			value[-i-1] = v;
+			return oldValue;
+		}
+
+		if ( state[i] == FREE ) free--;
+		state[i] = OCCUPIED;
+		key[i] = k;
+		value[i] = v;
+
+#ifdef Linked
+		if ( count == 0 ) {
+			first = last = i;
+			link[ i ] = 0;
+		}
+		else {
+			link[ last ] ^= i ^ -1;
+			link[ i ] = last ^ -1;
+			last = i;
+		}
+#endif
+
+
+		if ( ++count >= maxFill ) {
+			int newP = Math.min( p + growthFactor, PRIMES.length - 1 );
+			// Just to be sure that size changes when p is very small.
+			while( PRIMES[ newP ] == PRIMES[ p ] ) newP++;
+			rehash( newP ); // Table too filled, let's rehash
+		}
+		if ( free == 0 ) rehash( p );
+		if ( ASSERTS ) checkTable();
+		return defRetValue;
+	}
+
+
+
+#if #values(primitive) || #keys(primitive)
+
+	public VALUE_GENERIC_CLASS put(final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov) {
+		final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE(ov);
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(ok);
+
+		final int i = findInsertionPoint( k );
+		  
+		if (i < 0) {
+			final VALUE_GENERIC_TYPE oldValue = value[-i-1];
+			value[-i-1] = v;
+			return VALUE2OBJ(oldValue);
+		}
+
+		if ( state[i] == FREE ) free--;
+		state[i] = OCCUPIED;
+		key[i] = k;
+		value[i] = v;
+
+#ifdef Linked
+		if ( count == 0 ) {
+			first = last = i;
+			link[ i ] = 0;
+		}
+		else {
+			link[ last ] ^= i ^ -1;
+			link[ i ] = last ^ -1;
+			last = i;
+		}
+#endif
+
+		if ( ++count >= maxFill ) rehash( Math.min(p+16, PRIMES.length-1) ); // Table too filled, let's rehash
+		if ( free == 0 ) rehash( p );
+		if ( ASSERTS ) checkTable();
+		return OBJECT_DEFAULT_RETURN_VALUE;
+	}
+	 
+
+#endif
+
+
+
+
+	public boolean containsValue( final VALUE_TYPE v ) {
+		final VALUE_GENERIC_TYPE value[] = this.value;
+		final byte state[] = this.state;
+
+		int i = 0, j = count;
+
+		while(j-- != 0) {
+			while(state[ i ] != OCCUPIED ) i++;
+			if ( VALUE_EQUALS(value[ i ], v ) ) return true;
+			i++;
+		}
+		return false;
+	}
+
+	/* Removes all elements from this map.
+	 *
+	 * <P>To increase object reuse, this method does not change the table size.
+	 * If you want to reduce the table size, you must use {@link #trim()}.
+	 *
+	 */
+	public void clear() {
+		if ( free == state.length ) return;
+
+		free = state.length;
+		count = 0;
+
+		ByteArrays.fill( state, FREE );
+
+		// We null all object entries so that the garbage collector can do its work.
+#if #keys(reference)
+		ObjectArrays.fill( key, null );
+#endif
+#if #values(reference)
+		ObjectArrays.fill( value, null );
+#endif
+
+#ifdef Linked
+		first = last = -1;
+#endif
+	}
+
+	/** The entry class for a hash map does not record key and value, but
+	 * rather the position in the hash table of the corresponding entry. This
+	 * is necessary so that calls to {@link java.util.Map.Entry#setValue(Object)} are reflected in
+	 * the map */
+
+	private final class MapEntry implements MAP.Entry KEY_VALUE_GENERIC, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> {
+		private int index;
+		
+		MapEntry( final int index ) {
+			this.index = index;
+		}
+		
+		public KEY_GENERIC_CLASS getKey() {
+			return KEY2OBJ( key[ index ] );
+		}
+		  
+#if #keys(primitive)
+		public KEY_TYPE ENTRY_GET_KEY() {
+	   		return key[ index ];
+		}
+#endif
+
+		public VALUE_GENERIC_CLASS getValue() {
+			return VALUE2OBJ( value[ index ] );
+		}
+		  
+#if #values(primitive)
+		public VALUE_GENERIC_TYPE ENTRY_GET_VALUE() {
+			return value[ index ];
+		}
+#endif
+
+		public VALUE_GENERIC_TYPE setValue( final VALUE_GENERIC_TYPE v ) {
+			final VALUE_GENERIC_TYPE oldValue = value[ index ];
+			value[ index ] = v;
+			return oldValue;
+		}
+		  
+#if #values(primitive)
+		  
+		public VALUE_GENERIC_CLASS setValue( final VALUE_GENERIC_CLASS v ) {
+			return VALUE2OBJ( setValue( VALUE_CLASS2TYPE( v ) ) );
+		}
+
+#endif
+
+		@SuppressWarnings("unchecked")
+		public boolean equals( final Object o ) {
+			if (!(o instanceof Map.Entry)) return false;
+			Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+   				
+			return KEY_EQUALS( key[ index ], KEY_CLASS2TYPE( e.getKey() ) ) && VALUE_EQUALS( value[ index ], VALUE_CLASS2TYPE( e.getValue() ) );
+		}
+		  
+		public int hashCode() {
+			return KEY2JAVAHASH( key[ index ] ) ^ VALUE2JAVAHASH( value[ index ] );
+		}
+		 
+			  
+		public String toString() {
+			return key[ index ] + "->" + value[ index ];
+		}
+	}
+
+
+#ifdef Linked
+
+	/** Modifies the {@link #link} vector so that the given entry is removed.
+	 *
+	 * <P>If the given entry is the first or the last one, this method will complete
+	 * in constant time; otherwise, it will have to search for the given entry.
+	 *
+	 * @param i the index of an entry. 
+	 */
+	private void fixPointers( int i ) {
+		if ( count == 0 ) {
+			first = last = -1;
+			return;
+		}
+
+		if ( first == i ) {
+			first = link[ i ] ^ -1;
+			link[ first ] ^= i ^ -1;
+			return;
+		}
+
+		if ( last == i ) {
+			last = link[ i ] ^ -1;
+			link[ last ] ^= i ^ -1;
+			return;
+		}
+
+		int j = first, prev = -1, next;
+		while( ( next = link[ j ] ^ prev ) != i ) {
+			prev = j;
+			j = next;
+		}
+		link[ j ] ^= link[ i ] ^ i ^ j;
+		link[ link[ i ] ^ j ] ^= i ^ j;
+	}
+
+
+	/** Returns the first key of this map in iteration order.
+	 *
+	 * @return the first key in iteration order.
+	 */
+	public KEY_GENERIC_TYPE FIRST_KEY() {
+		if ( count == 0 ) throw new NoSuchElementException();
+		return key[ first ];
+	}
+
+
+	/** Returns the last key of this map in iteration order.
+	 *
+	 * @return the last key in iteration order.
+	 */
+	public KEY_GENERIC_TYPE LAST_KEY() {
+		if ( count == 0 ) throw new NoSuchElementException();
+		return key[ last ];
+	}
+
+	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return null; }
+
+	public SORTED_MAP KEY_VALUE_GENERIC tailMap( KEY_GENERIC_TYPE from ) { throw new UnsupportedOperationException(); }
+	public SORTED_MAP KEY_VALUE_GENERIC headMap( KEY_GENERIC_TYPE to ) { throw new UnsupportedOperationException(); }
+	public SORTED_MAP KEY_VALUE_GENERIC subMap( KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to ) { throw new UnsupportedOperationException(); }
+
+
+
+	/** A list iterator over a linked map.
+	 *
+	 * <P>This class provides a list iterator over a linked hash map. The empty constructor runs in 
+	 * constant time. The one-argoument constructor needs to search for the given key, but it is 
+	 * optimized for the case of {@link java.util.SortedMap#lastKey()}, in which case runs in constant time, too.
+	 */
+
+	private class MapIterator {
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists). */
+		int prev = -1;
+		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists). */
+		int next = -1;
+		/** The last entry that was returned (or -1 if we did not iterate or used {@link java.util.Iterator#remove()}). */
+		int curr = -1;
+		/** The current index (in the sense of a {@link java.util.ListIterator}). Note that this value is not meaningful when this iterator has been created using the nonempty constructor.*/
+		int index = 0;
+
+		MapIterator() {
+			next = first;
+		}
+
+		MapIterator( final KEY_GENERIC_TYPE from ) {
+			if ( KEY_EQUALS( key[ last ], from ) ) {
+				prev = last;
+				index = count;
+			}
+			else {
+				if ( ! OPEN_HASH_MAP.this.containsKey( from ) ) throw new IllegalArgumentException( "The key " + from + " does not belong to this set." );
+				next = first;
+				int e;
+				do e = nextEntry(); while( ! KEY_EQUALS( key[ e ], from ) );
+				curr = -1;
+			}
+		}
+					 
+		public boolean hasNext() { return next != -1; }
+		public boolean hasPrevious() { return prev != -1; }
+
+		public int nextIndex() {
+			return index;
+		}
+
+		public int previousIndex() {
+			return index - 1;
+		}
+					 
+		public int nextEntry() {
+			if ( ! hasNext() ) return size();
+
+			curr = next;
+			next = link[ curr ] ^ prev;
+			prev = curr;
+
+			index++;
+
+			return curr;
+		}
+
+		public int previousEntry() {
+			if ( ! hasPrevious() ) return -1;
+
+			curr = prev;
+			prev = link[ curr ] ^ next;
+			next = curr;
+
+			index--;
+
+			return curr;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public void remove() {
+			if ( curr == -1 ) throw new IllegalStateException();
+			state[ curr ] = REMOVED;
+
+#if #keys(reference)
+			key[ curr ] = KEY_GENERIC_CAST HashCommon.REMOVED;
+#endif
+
+#if #values(reference)
+			value[ curr ] = null;
+#endif
+
+			if ( curr == prev ) {
+				/* If the last operation was a next(), we are removing an entry that preceeds
+				   the current index, and thus we must decrement it. */
+				index--;
+				prev = link[ curr ] ^ next;
+			}
+			else next = link[ curr ] ^ prev; // curr == next
+
+			count--;
+			/* Now we manually fix the pointers. Because of our knowledge of next
+			   and prev, this is going to be faster than calling fixPointers(). */
+			if ( prev == -1 ) first = next;
+			else link[ prev ] ^= curr ^ next;
+			if ( next == -1 ) last = prev;
+			else link[ next ] ^= curr ^ prev;
+			curr = -1;
+		}
+
+		public int skip( final int n ) { 
+			int i = n;
+			while( i-- != 0 && hasNext() ) nextEntry(); 
+			return n - i - 1;
+		}
+
+		public int back( final int n ) { 
+			int i = n;
+			while( i-- != 0 && hasPrevious() ) previousEntry(); 
+			return n - i - 1;
+		}
+	}
+
+	private class EntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		public EntryIterator() {}
+
+		public EntryIterator( KEY_GENERIC_TYPE from ) {
+			super( from );
+		}
+
+		public MapEntry next() {
+			return new MapEntry( nextEntry() );
+		}
+
+		public MapEntry previous() {
+			return new MapEntry( previousEntry() );
+		}
+
+		public void set( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+		public void add( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+	}
+
+	private class FastEntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
+	
+		public FastEntryIterator() {}
+
+		public FastEntryIterator( KEY_GENERIC_TYPE from ) {
+			super( from );
+		}
+
+		public BasicEntry KEY_VALUE_GENERIC next() {
+			final int e = nextEntry();
+			entry.key = key[ e ];
+			entry.value = value[ e ];
+			return entry;
+		}
+
+		public BasicEntry KEY_VALUE_GENERIC previous() {
+			final int e = previousEntry();
+			entry.key = key[ e ];
+			entry.value = value[ e ];
+			return entry;
+		}
+
+		public void set( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+		public void add( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+	}
+
+#else	 
+
+	/** An iterator over a hash map. */
+
+	private class MapIterator {
+		/** The index of the next entry to be returned. */
+		int pos = 0;
+		/** The index of the last entry that has been returned. */
+		int last = -1;
+		/** A downward counter measuring how many entries have been returned. */
+		int c = count;
+		
+		{ 
+			final byte state[] = OPEN_HASH_MAP.this.state;
+			final int n = state.length;
+			
+			if ( c != 0 ) while( pos < n && state[ pos ] != OCCUPIED ) pos++;
+		}
+		
+		public boolean hasNext() {
+			return c != 0 && pos < OPEN_HASH_MAP.this.state.length;
+		}
+		
+		public int nextEntry() {
+			final byte state[] = OPEN_HASH_MAP.this.state;
+			final int n = state.length;
+			
+			if ( ! hasNext() ) throw new NoSuchElementException();
+			last = pos;
+			if ( --c != 0 ) do pos++; while( pos < n && state[ pos ] != OCCUPIED );
+			
+			return last;
+		}
+
+		@SuppressWarnings("unchecked")
+		public void remove() {
+			if (last == -1) throw new IllegalStateException();
+			state[last] = REMOVED;
+#if #keyclass(Object) && !#keyclass(Reference)
+			key[last] = KEY_GENERIC_CAST HashCommon.REMOVED;
+#endif
+#if #values(reference)
+			value[last] = null;
+#endif
+			
+			count--;
+		}
+
+		public int skip( final int n ) { 
+			int i = n;
+			while( i-- != 0 && hasNext() ) nextEntry(); 
+			return n - i - 1;
+		}
+	}
+
+
+	private class EntryIterator extends MapIterator implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		public MAP.Entry KEY_VALUE_GENERIC next() {
+			return new MapEntry( nextEntry() );
+		}
+	}
+
+	private class FastEntryIterator extends MapIterator implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
+		public BasicEntry KEY_VALUE_GENERIC next() {
+			final int e = nextEntry();
+			entry.key = key[ e ];
+			entry.value = value[ e ];
+			return entry;
+		}
+	}
+
+#endif
+
+
+	@SuppressWarnings("unchecked")
+	public boolean containsKey( KEY_TYPE k ) {
+		return findKey( KEY_GENERIC_CAST k ) >= 0;
+	}
+	 
+	public int size() {
+		return count;
+	}
+
+	public boolean isEmpty() {
+		return count == 0;
+	}
+
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_TYPE GET_VALUE(final KEY_TYPE k) {
+		final int i = findKey( KEY_GENERIC_CAST k);
+
+		return i < 0 ? defRetValue : value[i];
+	}
+
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_TYPE REMOVE_VALUE(final KEY_TYPE k) {
+		final int i = findKey( KEY_GENERIC_CAST k );
+		if (i < 0) return defRetValue;
+		
+		state[i] = REMOVED;
+		count--;
+
+#if #keys(reference)
+		key[i] = KEY_GENERIC_CAST HashCommon.REMOVED;
+#endif
+#if #values(reference)
+		final VALUE_GENERIC_TYPE v = value[i];
+		value[i] = null;
+#endif
+
+#ifdef Linked
+		fixPointers( i );
+#endif
+#if #values(reference)
+		return v;
+#else
+		return value[i];
+#endif
+	}
+
+
+#if #keys(primitive)
+
+	public VALUE_GENERIC_CLASS get(final KEY_CLASS ok) {
+		final int i = findKey(KEY_CLASS2TYPE(ok));
+
+		return i < 0 ? OBJECT_DEFAULT_RETURN_VALUE : (VALUE_GENERIC_CLASS)VALUE2OBJ(value[i]);
+	}
+#endif
+
+#if #keys(primitive) || #values(primitive)
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_CLASS remove( final Object ok ) {
+		final int i = findKey( KEY_GENERIC_CAST KEY_OBJ2TYPE( ok ) );
+		if (i < 0) return OBJECT_DEFAULT_RETURN_VALUE;
+
+		state[i] = REMOVED;
+		count--;
+
+#if #keys(reference)
+		key[i] = KEY_GENERIC_CAST HashCommon.REMOVED;
+#endif
+
+#if #values(reference)
+		final VALUE_GENERIC_CLASS v = value[i];
+		value[i] = null;
+#endif
+
+#ifdef Linked
+		fixPointers( i );
+#endif
+
+		if ( ASSERTS ) checkTable();
+
+#if #values(reference)
+		return v;
+#else
+		return VALUE2OBJ( value[i] );
+#endif
+	}
+
+
+#endif
+
+
+
+
+#ifdef Linked
+	private final class MapEntrySet extends AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> implements FastSortedEntrySet KEY_VALUE_GENERIC {
+
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
+			return new EntryIterator();
+		}
+
+		public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return null; }
+		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> subSet( MAP.Entry KEY_VALUE_GENERIC fromElement, MAP.Entry KEY_VALUE_GENERIC toElement) { throw new UnsupportedOperationException(); }
+		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> headSet( MAP.Entry KEY_VALUE_GENERIC toElement ) { throw new UnsupportedOperationException(); }
+		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> tailSet( MAP.Entry KEY_VALUE_GENERIC fromElement ) { throw new UnsupportedOperationException(); }
+
+		public MAP.Entry KEY_VALUE_GENERIC first() { 
+			if ( count == 0 ) throw new NoSuchElementException();
+			return new MapEntry( OPEN_HASH_MAP.this.first ); 
+		}
+
+		public MAP.Entry KEY_VALUE_GENERIC last() { 
+			if ( count == 0 ) throw new NoSuchElementException();
+			return new MapEntry( OPEN_HASH_MAP.this.last ); 
+		}
+		
+#else
+	private final class MapEntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC {
+
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
+			return new EntryIterator();
+		}
+
+		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
+			return new FastEntryIterator();
+		}
+#endif					 
+					 
+		@SuppressWarnings("unchecked")
+		public boolean contains( final Object o ) {
+			if (!(o instanceof Map.Entry)) return false;
+			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+			final int i = findKey( KEY_CLASS2TYPE( e.getKey() ) );
+			return i >= 0 && VALUE_EQUALS( value[ i ], VALUE_CLASS2TYPE( e.getValue() ) );
+		}
+			 
+		@SuppressWarnings("unchecked")
+		public boolean remove( final Object o ) {
+			if (!(o instanceof Map.Entry)) return false;
+			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+			final int i = findKey( KEY_CLASS2TYPE( e.getKey() ) );
+			if ( i >= 0 ) OPEN_HASH_MAP.this.remove( e.getKey() );
+			return i >= 0;
+		}
+			 
+		public int size() {
+			return count;
+		}
+			 
+		public void clear() {
+			OPEN_HASH_MAP.this.clear();
+		}
+
+#ifdef Linked
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
+			return new EntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
+		}
+
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
+			return new FastEntryIterator();
+		}
+				
+		public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
+			return new FastEntryIterator( KEY_CLASS2TYPE( from.getKey() ) );
+		}
+				
+#endif
+	}
+
+
+#ifdef Linked
+	public FastSortedEntrySet KEY_VALUE_GENERIC ENTRYSET() {
+		if ( entries == null ) entries = new MapEntrySet();
+#else
+	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() {
+		if ( entries == null ) entries = new MapEntrySet();
+#endif
+		return entries;
+	}
+
+
+	/** An iterator on keys.
+	 *
+	 * <P>We simply override the {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods
+	 * (and possibly their type-specific counterparts) so that they return keys
+	 * instead of entries.
+	 */
+
+#ifdef Linked
+	private final class KeyIterator extends MapIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+		public KeyIterator( final KEY_GENERIC_TYPE k ) { super( k ); }
+		public KEY_GENERIC_TYPE PREV_KEY() { return key[ previousEntry() ]; }
+		public void set( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+		public void add( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+#if ! #keys(reference)
+		public KEY_GENERIC_CLASS previous() { return KEY2OBJ( key[ previousEntry() ] ); }
+		public void set( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
+		public void add( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
+#endif
+
+#else
+	private final class KeyIterator extends MapIterator implements KEY_ITERATOR KEY_GENERIC {
+#endif
+
+		public KeyIterator() { super(); }
+		public KEY_GENERIC_TYPE NEXT_KEY() { return key[ nextEntry() ]; }
+#if ! #keys(reference)
+		public KEY_GENERIC_CLASS next() { return KEY2OBJ( key[ nextEntry() ] ); }
+#endif
+	}
+
+
+
+#ifdef Linked
+	private final class KeySet extends ABSTRACT_SORTED_SET KEY_GENERIC {
+
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) {
+			return new KeyIterator( from );
+		}
+
+		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() {
+			return new KeyIterator();
+		}
+#else
+	private final class KeySet extends ABSTRACT_SET KEY_GENERIC {
+
+		public KEY_ITERATOR KEY_GENERIC iterator() {
+			return new KeyIterator();
+		}
+#endif
+
+		public int size() {
+			return count;
+		}
+
+		public boolean contains( KEY_TYPE k ) {
+			return containsKey( k );
+		}
+					 
+		public boolean remove( KEY_TYPE k ) {
+			int oldCount = count;
+			OPEN_HASH_MAP.this.remove( k );
+			return count != oldCount;
+		}
+					 
+		public void clear() {
+			OPEN_HASH_MAP.this.clear();
+		}
+
+
+#ifdef Linked
+		public KEY_GENERIC_TYPE FIRST() {
+			if ( count == 0 ) throw new NoSuchElementException();
+			return key[ first ];
+		}
+
+		public KEY_GENERIC_TYPE LAST() {
+			if ( count == 0 ) throw new NoSuchElementException();
+			return key[ last ];
+		}
+
+		public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return null; }
+
+		final public SORTED_SET KEY_GENERIC tailSet( KEY_GENERIC_TYPE from ) { throw new UnsupportedOperationException(); }
+		final public SORTED_SET KEY_GENERIC headSet( KEY_GENERIC_TYPE to ) { throw new UnsupportedOperationException(); }
+		final public SORTED_SET KEY_GENERIC subSet( KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to ) { throw new UnsupportedOperationException(); }
+#endif
+	}
+
+
+#ifdef Linked
+	public SORTED_SET KEY_GENERIC keySet() {
+#else
+	public SET KEY_GENERIC keySet() {
+#endif
+		if ( keys == null ) keys = new KeySet();
+		return keys;
+	}
+
+
+	/** An iterator on values.
+	 *
+	 * <P>We simply override the {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods
+	 * (and possibly their type-specific counterparts) so that they return values
+	 * instead of entries.
+	 */
+
+#ifdef Linked
+	private final class ValueIterator extends MapIterator implements VALUE_LIST_ITERATOR VALUE_GENERIC {
+		public VALUE_GENERIC_TYPE PREV_VALUE() { return value[ previousEntry() ]; }
+
+#if ! #values(reference)
+		public VALUE_GENERIC_CLASS previous() { return VALUE2OBJ( value[ previousEntry() ] ); }
+		public void set( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+		public void add( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+#endif									
+		public void set( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+		public void add( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+#else
+	private final class ValueIterator extends MapIterator implements VALUE_ITERATOR VALUE_GENERIC {
+#endif
+
+		public ValueIterator() { super(); }
+		public VALUE_GENERIC_TYPE NEXT_VALUE() { return value[ nextEntry() ]; }
+#if ! #values(reference)
+		public VALUE_GENERIC_CLASS next() { return VALUE2OBJ( value[ nextEntry() ] ); }
+#endif
+	}
+
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
+
+				public VALUE_ITERATOR VALUE_GENERIC iterator() {
+					return new ValueIterator();
+				}
+
+				public int size() {
+					return count;
+				}
+
+				public boolean contains( VALUE_TYPE v ) {
+					return containsValue( v );
+				}
+
+				public void clear() {
+					OPEN_HASH_MAP.this.clear();
+				}
+			};
+
+		return values;
+	}
+
+
+	/** Rehashes this map without changing the table size.
+	 * <P>This method should be called when the map underwent numerous deletions and insertions.
+	 * In this case, free entries become rare, and unsuccessful searches
+	 * require probing <em>all</em> entries. For reasonable load factors this method is linear in the number of entries.
+	 * You will need as much additional free memory as
+	 * that occupied by the table.
+	 *
+	 * <P>If you need to reduce the table siza to fit exactly
+	 * this map, you must use {@link #trim()}.
+	 *
+	 * @return <code>true</code> if there was enough memory to rehash the map, <code>false</code> otherwise.
+	 * @see #trim()
+	 */
+
+	public boolean rehash() {
+		try {
+			rehash(p);
+		}
+		catch(OutOfMemoryError cantDoIt) { return false; }
+		return true;
+	}
+
+
+	/** Rehashes the map, making the table as small as possible.
+	 * 
+	 * <P>This method rehashes to the smallest size satisfying
+	 * the load factor. It can be used when the map will not be
+	 * changed anymore, so to optimize access speed (by collecting
+	 * deleted entries) and size.
+	 *
+	 * <P>If the table size is already the minimum possible, this method
+	 * does nothing. If you want to guarantee rehashing, use {@link #rehash()}.
+	 *
+	 * @return true if there was enough memory to trim the map.
+	 * @see #trim(int)
+	 * @see #rehash()
+	 */
+
+	public boolean trim() {
+		int l = Arrays.binarySearch( PRIMES, (int)( count / f ) + 1 );
+		if ( l < 0 ) l = -l - 1;
+		if ( l >= p ) return true;
+		try {
+			rehash( l );
+		}
+		catch(OutOfMemoryError cantDoIt) { return false; }
+		return true;
+	}
+
+
+	/** Rehashes this map if the table is too large.
+	 * 
+	 * <P>Let <var>N</var> be the smallest table size that can hold
+	 * <code>max(n,{@link #size()})</code> entries, still satisfying the load factor. If the current
+	 * table size is smaller than or equal to <var>N</var>, this method does
+	 * nothing. Otherwise, it rehashes this map in a table of size
+	 * <var>N</var>.
+	 *
+	 * <P>This method is useful when reusing maps.  {@linkplain #clear() Clearing a
+	 * map} leaves the table size untouched. If you are reusing a map
+	 * many times, you can call this method with a typical
+	 * size to avoid keeping around a very large table just
+	 * because of a few large transient maps.
+	 *
+	 * @param n the threshold for the trimming.
+	 * @return true if there was enough memory to trim the map.
+	 * @see #trim()
+	 * @see #rehash()
+	 */
+
+	public boolean trim( final int n ) {
+		int l = Arrays.binarySearch( PRIMES, (int)( Math.min( Integer.MAX_VALUE - 1, Math.max( n, count ) / f ) ) + 1 );
+		if ( l < 0 ) l = -l - 1;
+		if ( p <= l ) return true;
+		try {
+			rehash( l );
+		}
+		catch( OutOfMemoryError cantDoIt ) { return false; }
+		return true;
+	}
+
+	/** Resizes the map.
+	 *
+	 * <P>This method implements the basic rehashing strategy, and may be
+	 * overriden by subclasses implementing different rehashing strategies (e.g.,
+	 * disk-based rehashing). However, you should not override this method
+	 * unless you understand the internal workings of this class.
+	 *
+	 * @param newP the new size as an index in {@link Hash#PRIMES}.
+	 */
+
+	@SuppressWarnings("unchecked")
+	protected void rehash( final int newP ) {
+#ifdef Linked
+		int i = first, j = count, prev = -1, newPrev = -1, t, k2i, h1, h2;
+#else
+		int i = 0, j = count, k2i, h1, h2;
+		final byte state[] = this.state;
+#endif
+
+		KEY_GENERIC_TYPE k;
+		VALUE_GENERIC_TYPE v;
+
+		final int newN = PRIMES[newP];
+		final KEY_GENERIC_TYPE key[] = this.key, newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[newN];
+		final VALUE_GENERIC_TYPE value[] = this.value, newValue[] = VALUE_GENERIC_ARRAY_CAST new VALUE_TYPE[newN];
+		final byte newState[] = new byte[newN];
+#ifdef Linked
+		final int link[] = this.link, newLink[] = new int[ newN ];
+		first = -1;
+#endif
+		while(j-- != 0) {
+
+#ifndef Linked
+			while(state[i] != OCCUPIED ) i++;
+#endif
+
+			k = key[i];
+			v = value[i];
+			k2i = KEY2INTHASH(k) & 0x7FFFFFFF;
+
+			h1 = k2i % newN;
+			h2 = (k2i % (newN - 2)) + 1;
+
+			if ( newState[h1] != FREE ) {
+				h2 = (k2i % (newN - 2)) + 1;
+				do {
+					h1 += h2;
+					if ( h1 >= newN || h1 < 0 ) h1 -= newN;
+				} while( newState[h1] != FREE );
+			}
+
+			newState[h1] = OCCUPIED;
+			newKey[h1] = k;
+			newValue[h1] = v;
+
+#ifdef Linked
+			t = i;
+			i = link[ i ] ^ prev;
+			prev = t;
+
+			if ( first != -1 ) {
+				newLink[ newPrev ] ^= h1;
+				newLink[ h1 ] = newPrev;
+				newPrev = h1;
+			}
+			else {
+				newPrev = first = h1;
+				newLink[ h1 ] = -1;
+			}
+#else
+			i++;
+#endif
+		}
+
+		p = newP;
+		free = newN - count;
+		maxFill = (int)( newN * f );
+		this.key = newKey;
+		this.value = newValue;
+		this.state = newState;
+#ifdef Linked
+		this.link = newLink;
+		this.last = newPrev;
+		if ( newPrev != -1 ) newLink[ newPrev ] ^= -1; 
+#endif
+	}
+	 
+
+	/** Returns a deep copy of this map. 
+	 *
+	 * <P>This method performs a deep copy of this hash map; the data stored in the
+	 * map, however, is not cloned. Note that this makes a difference only for object keys.
+	 *
+	 *  @return a deep copy of this map.
+	 */
+
+	@SuppressWarnings("unchecked")
+	public OPEN_HASH_MAP KEY_VALUE_GENERIC clone() {
+		OPEN_HASH_MAP KEY_VALUE_GENERIC c;
+		try {
+			c = (OPEN_HASH_MAP KEY_VALUE_GENERIC)super.clone();
+		}
+		catch(CloneNotSupportedException cantHappen) {
+			throw new InternalError();
+		}
+
+		c.keys = null;
+		c.values = null;
+		c.entries = null;
+
+		c.key = key.clone();
+		c.value = value.clone();
+		c.state = state.clone();
+#ifdef Linked
+		c.link = link.clone();
+#endif
+#ifdef Custom
+		c.strategy = strategy;
+#endif
+		return c;
+	}
+
+
+	/** Returns a hash code for this map.
+	 *
+	 * This method overrides the generic method provided by the superclass. 
+	 * Since <code>equals()</code> is not overriden, it is important
+	 * that the value returned by this method is the same value as
+	 * the one returned by the overriden method.
+	 *
+	 * @return a hash code for this map.
+	 */
+
+	public int hashCode() {
+		int h = 0, t, i = 0, j = count;
+		while( j-- != 0 ) {
+			while( state[ i ] != OCCUPIED ) i++;
+			t = 0;
+#if #keys(reference)
+			if ( this != key[ i ] )
+#endif
+				t = KEY2JAVAHASH( key[ i ] );
+#if #values(reference)
+			if ( this != value[ i ] )
+#endif
+				t ^=  VALUE2JAVAHASH( value[ i ] );
+			h += t;
+			i++;
+		}
+		return h;
+	}
+
+
+
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final VALUE_GENERIC_TYPE value[] = this.value;
+		final MapIterator i = new MapIterator();
+		int e, j = count;
+
+		s.defaultWriteObject();
+
+		while( j-- != 0 ) {
+			e = i.nextEntry();
+			s.WRITE_KEY( key[ e ] );
+			s.WRITE_VALUE( value[ e ] );
+		}
+	}
+
+
+
+	@SuppressWarnings("unchecked")
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		// We restore the default growth factor.
+		growthFactor = Hash.DEFAULT_GROWTH_FACTOR;
+		// Note that we DO NOT USE the stored p. See CHANGES.
+		p = Arrays.binarySearch( PRIMES, (int)( count / f ) + 1 );
+		if ( p < 0 ) p = -p - 1;
+
+		final int n = PRIMES[ p ];
+		maxFill = (int)( n * f );
+		free = n - count;;
+		
+		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
+		final VALUE_GENERIC_TYPE value[] = this.value = VALUE_GENERIC_ARRAY_CAST new VALUE_TYPE[ n ];
+		final byte state[] = this.state = new byte[ n ];
+#ifdef Linked
+		final int link[] = this.link = new int[ n ];
+		int prev = -1;
+		first = last = -1;
+#endif
+
+		int i, k2i, h1, h2;
+		KEY_GENERIC_TYPE k;
+		VALUE_GENERIC_TYPE v;
+
+		i = count;
+		while( i-- != 0 ) {
+
+			k = KEY_GENERIC_CAST s.READ_KEY();
+			v = VALUE_GENERIC_CAST s.READ_VALUE();
+			k2i = KEY2INTHASH( k ) & 0x7FFFFFFF;
+
+			h1 = k2i % n;
+
+			if ( state[ h1 ] != FREE ) {
+				h2 = ( k2i % ( n - 2 ) ) + 1;
+				do {
+					h1 += h2;
+					if ( h1 >= n || h1 < 0 ) h1 -= n;
+				} while( state[ h1 ] != FREE );
+			}
+
+			state[ h1 ] = OCCUPIED;
+			key[ h1 ] = k;
+			value[ h1 ] = v;
+
+#ifdef Linked
+			if ( first != -1 ) {
+				link[ prev ] ^= h1;
+				link[ h1 ] = prev;
+				prev = h1;
+			}
+			else {
+				prev = first = h1;
+				link[ h1 ] = -1;
+			}
+#endif
+		}
+
+#ifdef Linked
+		last = prev;
+		if ( prev != -1 ) link[ prev ] ^= -1; 
+#endif
+
+		if ( ASSERTS ) checkTable();
+	}
+
+
+#ifdef ASSERTS_CODE
+	private void checkTable() {
+		int n = state.length;
+		while( n-- != 0 ) 
+			if ( state[ n ] == OCCUPIED && ! containsKey( key[ n ] ) ) 
+				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
+
+#ifdef Linked
+		KEY_BIDI_ITERATOR KEY_GENERIC i = keySet().iterator();
+		KEY_TYPE k;
+		n = size();
+		while( n-- != 0 ) 
+			if ( ! containsKey( k = i.NEXT_KEY() ) ) 
+				throw new AssertionError( "Linked hash table forward enumerates key " + k + ", but the key does not belong to the table" );
+
+		if ( i.hasNext() ) throw new AssertionError( "Forward iterator not exhausted" );
+
+		n = size();
+		if ( n > 0 ) {
+			i = keySet().iterator( LAST_KEY() );
+			while( n-- != 0 ) 
+				if ( ! containsKey( k = i.PREV_KEY() ) ) 
+					throw new AssertionError( "Linked hash table backward enumerates key " + k + ", but the key does not belong to the table" );
+			
+			if ( i.hasPrevious() ) throw new AssertionError( "Previous iterator not exhausted" );
+		}
+#endif
+	}
+#else
+	private void checkTable() {}
+#endif
+
+
+
+#ifdef TEST
+
+	private static long seed = System.currentTimeMillis(); 
+	private static java.util.Random r = new java.util.Random( seed );
+
+	private static KEY_TYPE genKey() {
+#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+		return (KEY_TYPE)(r.nextInt());
+#elif #keys(primitive)
+		return r.NEXT_KEY(); 
+#elif !#keyclass(Reference)
+#ifdef Custom
+		int i = r.nextInt( 3 );
+		byte a[] = new byte[ i ];
+		while( i-- != 0 ) a[ i ] = (byte)r.nextInt();
+		return a;
+#else
+		return Integer.toBinaryString( r.nextInt() );
+#endif
+#else
+		return new java.io.Serializable() {};
+#endif
+	}
+
+	private static VALUE_TYPE genValue() {
+#if #valueclass(Byte) || #valueclass(Short) || #valueclass(Character)
+		return (VALUE_TYPE)(r.nextInt());
+#elif #values(primitive)
+		return r.NEXT_VALUE();
+#elif !#valueclass(Reference)
+		return Integer.toBinaryString( r.nextInt() );
+#else
+		return new java.io.Serializable() {};
+#endif
+	}
+
+	private static final class ArrayComparator implements java.util.Comparator {
+		public int compare( Object a, Object b ) {
+			byte[] aa = (byte[])a;
+			byte[] bb = (byte[])b;
+			int length = Math.min( aa.length, bb.length );
+			for( int i = 0; i < length; i++ ) {
+				if ( aa[ i ] < bb[ i ] ) return -1;
+				if ( aa[ i ] > bb[ i ] ) return 1;
+			}
+			return aa.length == bb.length ? 0 : ( aa.length < bb.length ? -1 : 1 );
+		}
+	}
+
+	private static final class MockMap extends java.util.TreeMap {
+		private java.util.List list = new java.util.ArrayList();
+
+		public MockMap( java.util.Comparator c ) { super( c ); }
+
+		public Object put( Object k, Object v ) {
+			if ( ! containsKey( k ) ) list.add( k );
+			return super.put( k, v );
+		}
+
+		public void putAll( Map m ) {
+			java.util.Iterator i = m.entrySet().iterator();
+			while( i.hasNext() ) {
+				Map.Entry e = (Map.Entry)i.next();
+				put( e.getKey(), e.getValue() );
+			}
+		}
+
+		public Object remove( Object k ) {
+			if ( containsKey( k ) ) {
+				int i = list.size();
+				while( i-- != 0 ) if ( comparator().compare( list.get( i ), k ) == 0 ) {
+					list.remove( i );
+					break;
+				}
+			}
+			return super.remove( k );
+		}
+
+		private void justRemove( Object k ) { super.remove( k ); }
+		private java.util.Set justEntrySet() { return super.entrySet(); }
+		private java.util.Set justKeySet() { return super.keySet(); }
+
+		public java.util.Set keySet() {
+			return new java.util.AbstractSet() {
+					final java.util.Set keySet = justKeySet();
+					
+					public boolean contains( Object k ) { return keySet.contains( k ); }
+					public int size() { return keySet.size(); }
+					public java.util.Iterator iterator() {
+						return new java.util.Iterator() {
+								final java.util.Iterator iterator = list.iterator();
+								Object curr;
+								public Object next() { return curr = iterator.next(); }
+								public boolean hasNext() { return iterator.hasNext(); }
+								public void remove() { 
+									justRemove( curr );
+									iterator.remove(); 
+								}
+							};
+
+					}
+				};
+
+		}
+
+		public java.util.Set entrySet() {
+			return new java.util.AbstractSet() {
+					final java.util.Set entrySet = justEntrySet();
+					
+					public boolean contains( Object k ) { return entrySet.contains( k ); }
+					public int size() { return entrySet.size(); }
+					public java.util.Iterator iterator() {
+						return new java.util.Iterator() {
+								final java.util.Iterator iterator = list.iterator();
+								Object curr;
+								public Object next() { 
+									curr = iterator.next();
+#if #valueclass(Reference)
+#if #keyclass(Reference)
+									return new ABSTRACT_MAP.BasicEntry( (Object)curr, (Object)get(curr) ) {
+#else
+									return new ABSTRACT_MAP.BasicEntry( (KEY_CLASS)curr, (Object)get(curr) ) {
+#endif
+#else
+#if #keyclass(Reference)
+									return new ABSTRACT_MAP.BasicEntry( (Object)curr, (VALUE_CLASS)get(curr) ) {
+#else
+									return new ABSTRACT_MAP.BasicEntry( (KEY_CLASS)curr, (VALUE_CLASS)get(curr) ) {
+#endif
+#endif
+											public VALUE_TYPE setValue( VALUE_TYPE v ) {
+												return VALUE_OBJ2TYPE(put( getKey(), VALUE2OBJ(v) ));
+											}
+										}; 
+								}
+								public boolean hasNext() { return iterator.hasNext(); }
+								public void remove() { 
+									justRemove( ((Map.Entry)curr).getKey() );
+									iterator.remove(); 
+								}
+							};
+
+					}
+				};
+
+		}
+
+	}
+
+	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
+	private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
+
+	private static String format( double d ) {
+		StringBuffer s = new StringBuffer();
+		return format.format( d, s, fp ).toString();
+	}
+
+
+	private static void speedTest( int n, float f, boolean comp ) {
+#ifndef Custom
+		int i, j;
+		OPEN_HASH_MAP m;
+#ifdef Linked
+		java.util.LinkedHashMap t;
+#else
+		java.util.HashMap t;
+#endif
+		KEY_TYPE k[] = new KEY_TYPE[n];
+		KEY_TYPE nk[] = new KEY_TYPE[n];
+		VALUE_TYPE v[] = new VALUE_TYPE[n];
+		long ms;
+
+		for( i = 0; i < n; i++ ) {
+			k[i] = genKey();
+			nk[i] = genKey();
+			v[i] = genValue();
+		}
+
+		double totPut = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
+
+		if ( comp ) { for( j = 0; j < 20; j++ ) {
+
+#ifdef Linked
+			t = new java.util.LinkedHashMap( 16 );
+#else
+			t = new java.util.HashMap( 16 );
+#endif
+
+			/* We put pairs to t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totPut += d; 				
+			System.out.print("Put: " + format( d ) +" K/s " );
+
+			/* We check for pairs in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totYes += d; 				
+			System.out.print("Yes: " + format( d ) +" K/s " );
+
+			/* We check for pairs not in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( nk[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totNo += d; 				
+			System.out.print("No: " + format( d ) +" K/s " );
+
+			/* We iterate on t. */
+			ms = System.currentTimeMillis();
+			for( java.util.Iterator it = t.entrySet().iterator(); it.hasNext(); it.next() );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totIter += d; 				
+			System.out.print("Iter: " + format( d ) +" K/s " );
+				
+			/* We delete pairs not in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( nk[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemNo += d; 				
+			System.out.print("RemNo: " + format( d ) +" K/s " );
+				
+			/* We delete pairs in t. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) t.remove( KEY2OBJ( k[i] ) );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemYes += d; 				
+			System.out.print("RemYes: " + format( d ) +" K/s " );
+				
+			System.out.println();
+		}
+
+		System.out.println();
+		System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + "K/s" );
+
+		System.out.println();
+
+		totPut = totYes = totNo = totIter = totRemYes = totRemNo = 0;
+
+		}
+
+		for( j = 0; j < 20; j++ ) {
+
+			m = new OPEN_HASH_MAP( 16, f );
+
+			/* We put pairs to m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.put( k[i], v[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totPut += d; 				
+			System.out.print("Put: " + format( d ) +" K/s " );
+
+			/* We check for pairs in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totYes += d; 				
+			System.out.print("Yes: " + format( d ) +" K/s " );
+
+			/* We check for pairs not in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.containsKey( nk[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totNo += d; 				
+			System.out.print("No: " + format( d ) +" K/s " );
+
+			/* We iterate on m. */
+			ms = System.currentTimeMillis();
+			for( java.util.Iterator it = m.entrySet().iterator(); it.hasNext(); it.next() );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totIter += d; 	 
+			System.out.print("Iter: " + format( d ) +" K/s " );
+
+			/* We delete pairs not in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.remove( nk[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemNo += d; 	
+			System.out.print("RemNo: " + format( d ) +" K/s " );
+
+			/* We delete pairs in m. */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n;  i++ ) m.remove( k[i] );
+			d = 1.0 * n / (System.currentTimeMillis() - ms );
+			if ( j > 2 ) totRemYes += d; 				
+			System.out.print("RemYes: " + format( d ) +" K/s " );	 
+
+			System.out.println();
+		}
+
+
+		System.out.println();
+		System.out.println( "fastutil  Put: " + format( totPut/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s Iter: " + format( totIter/(j-3) ) + " K/s RemNo: " + format( totRemNo/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s" );
+
+		System.out.println();
+#endif
+	}
+
+	private static boolean valEquals(Object o1, Object o2) {
+		return o1 == null ? o2 == null : o1.equals(o2);
+	}
+
+	private static void fatal( String msg ) {
+		System.out.println( msg );
+		System.exit( 1 );
+	}
+
+	private static void ensure( boolean cond, String msg ) {
+		if ( cond ) return;
+		fatal( msg );
+	}
+
+	protected static void test( int n, float f ) {
+#ifdef Custom
+		OPEN_HASH_MAP m = new OPEN_HASH_MAP(Hash.DEFAULT_INITIAL_SIZE, f, it.unimi.dsi.fastutil.bytes.ByteArrays.HASH_STRATEGY);
+#else
+		OPEN_HASH_MAP m = new OPEN_HASH_MAP(Hash.DEFAULT_INITIAL_SIZE, f);
+#endif
+
+#ifdef Linked
+#ifdef Custom
+		Map t = new MockMap( new ArrayComparator() );
+#else
+		Map t = new java.util.LinkedHashMap();
+#endif
+#else
+#ifdef Custom
+		Map t = new java.util.TreeMap(new ArrayComparator());
+#else
+		Map t = new java.util.HashMap();
+#endif
+#endif
+
+		/* First of all, we fill t with random data. */
+
+		for(int i=0; i<n;  i++ ) t.put( KEY2OBJ(genKey()), VALUE2OBJ(genValue()) );
+		  
+		/* Now we add to m the same data */
+		  
+		m.putAll(t);
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion");
+
+		/* Now we check that m actually holds that data. */
+		  
+		for(java.util.Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+			if (!valEquals(e.getValue(), m.get(e.getKey()))) 
+				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t)");
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+			if (!valEquals(e.getValue(), t.get(e.getKey()))) 
+				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m)");
+		}
+
+		/* Now we check that m actually holds the same keys. */
+		  
+		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!m.containsKey(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)");
+				System.exit( 1 );
+			}
+			if (!m.keySet().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually holds the same keys, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!t.containsKey(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key after insertion (iterating on m)");
+				System.exit( 1 );
+			}
+			if (!t.keySet().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+
+		/* Now we check that m actually hold the same values. */
+		  
+		for(java.util.Iterator i=t.values().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!m.containsValue(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on t)");
+				System.exit( 1 );
+			}
+			if (!m.values().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually hold the same values, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.values().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!t.containsValue(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on m)");
+				System.exit( 1 );
+			}
+			if (!t.values().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that inquiries about random data give the same answer in m and t. For
+		   m we use the polymorphic method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
+				System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
+				System.exit( 1 );
+			}
+
+#if ( #keys(reference) ) && ! ( #values(reference) )
+			if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE_OBJ2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+				t.get(KEY2OBJ(T)) != null && 
+				! VALUE2OBJ(m.GET_VALUE(T)).equals(t.get(KEY2OBJ(T)))) 
+#else
+				if ((m.get(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE_OBJ2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) || 
+					t.get(KEY2OBJ(T)) != null && 
+					! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T)))) 
+#endif
+					{
+						System.out.println("Error (" + seed + "): divergence between t and m (polymorphic method)");
+						System.exit( 1 );
+					}
+		}
+
+		/* Again, we check that inquiries about random data give the same answer in m and t, but
+		   for m we use the standard method. */
+
+		for(int i=0; i<n;  i++ ) {
+			KEY_TYPE T = genKey();
+			if (!valEquals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
+				System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			VALUE_TYPE U = genValue();
+			if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
+				System.out.println("Error (" + seed + "): divergence in put() between t and m");
+				System.exit( 1 );
+			}
+			T = genKey();
+			if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
+				System.out.println("Error (" + seed + "): divergence in remove() between t and m");
+				System.exit( 1 );
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
+
+
+		/* Now we check that m actually holds the same data. */
+		  
+		for(java.util.Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
+			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+			if (!valEquals(e.getValue(), m.get(e.getKey()))) {
+				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually holds that data, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
+			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+			if (!valEquals(e.getValue(), t.get(e.getKey()))) {
+				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually holds the same keys. */
+		  
+		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!m.containsKey(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
+				System.exit( 1 );
+			}
+			if (!m.keySet().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually holds the same keys, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.keySet().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!t.containsKey(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key after removal (iterating on m)");
+				System.exit( 1 );
+			}
+			if (!t.keySet().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+
+		/* Now we check that m actually hold the same values. */
+		  
+		for(java.util.Iterator i=t.values().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!m.containsValue(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on t)");
+				System.exit( 1 );
+			}
+			if (!m.values().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
+				System.exit( 1 );
+			}
+		}
+
+		/* Now we check that m actually hold the same values, but iterating on m. */
+		  
+		for(java.util.Iterator i=m.values().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!t.containsValue(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on m)");
+				System.exit( 1 );
+			}
+			if (!t.values().contains(o)) {
+				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
+				System.exit( 1 );
+			}
+		}
+
+
+		int h = m.hashCode();
+
+
+		/* Now we save and read m. */
+
+		try {
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+			oos.writeObject(m);
+			oos.close();
+				
+			java.io.InputStream is = new java.io.FileInputStream(ff);
+			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+				
+			m = (OPEN_HASH_MAP)ois.readObject();
+			ois.close();
+			ff.delete();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			System.exit( 1 );
+		}
+
+
+#if !#keyclass(Reference) && !#valueclass(Reference)
+		if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read");
+
+		/* Now we check that m actually holds that data. */
+		  
+		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();  ) {
+			Object o = i.next();
+			if (!valEquals(m.get(o),t.get(o))) {
+				System.out.println("Error (" + seed + "): m and t differ on an entry after save/read");
+				System.exit( 1 );
+			}
+		}
+#else
+		m.clear();
+		m.putAll( t );
+#endif
+
+		/* Now we put and remove random data in m and t, checking that the result is the same. */
+
+		for(int i=0; i<20*n;  i++ ) {
+			KEY_TYPE T = genKey();
+			VALUE_TYPE U = genValue();
+			if (!valEquals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
+				System.out.println("Error (" + seed + "): divergence in put() between t and m after save/read");
+				System.exit( 1 );
+			}
+			T = genKey();
+			if (!valEquals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
+				System.out.println("Error (" + seed + "): divergence in remove() between t and m after save/read");
+				System.exit( 1 );
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after post-save/read removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after post-save/read removal");
+
+
+
+#ifdef Linked
+
+
+		/* Now we play with iterators. */
+
+		{
+			java.util.ListIterator i, j;
+			Object J;
+			Map.Entry E, F;
+			i = (java.util.ListIterator)m.entrySet().iterator(); 
+			j = new java.util.LinkedList( t.entrySet() ).listIterator(); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( (E=(java.util.Map.Entry)i.next()).getKey(),  J = (F=(Map.Entry)j.next()).getKey() ), "Error (" + seed + "): divergence in next()" );
+#else
+					ensure( (E=(java.util.Map.Entry)i.next()).getKey().equals( J = (F=(Map.Entry)j.next()).getKey() ), "Error (" + seed + "): divergence in next()" );
+#endif
+
+					if ( r.nextFloat() < 0.3 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+					else if ( r.nextFloat() < 0.3 ) {
+						Object U = VALUE2OBJ(genValue());
+						E.setValue( U );
+                        t.put( F.getKey(), U );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( (E=(java.util.Map.Entry)i.previous()).getKey(), J = (F=(Map.Entry)j.previous()).getKey() ), "Error (" + seed + "): divergence in previous()" );
+#else
+					ensure( (E=(java.util.Map.Entry)i.previous()).getKey().equals( J = (F=(Map.Entry)j.previous()).getKey() ), "Error (" + seed + "): divergence in previous()" );
+#endif
+
+					if ( r.nextFloat() < 0.3 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+					else if ( r.nextFloat() < 0.3 ) {
+						Object U = VALUE2OBJ(genValue());
+						E.setValue( U );
+                        t.put( F.getKey(), U );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()" );
+
+			}
+
+		}
+		  
+		if ( t.size() > 0 ) {
+			java.util.ListIterator i, j;
+			Object J;
+			j = new java.util.LinkedList( t.keySet() ).listIterator();
+			int e = r.nextInt( t.size() );
+			Object from;
+			do from = j.next(); while( e-- != 0 );
+
+			i = (java.util.ListIterator)((SORTED_SET)m.keySet()).iterator( KEY_OBJ2TYPE( from ) ); 
+
+			for( int k = 0; k < 2*n; k++ ) {
+				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
+				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" );
+
+				if ( r.nextFloat() < .8 && i.hasNext() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( i.next(), J = j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+#else
+					ensure( i.next().equals( J = j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+#endif
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
+#ifdef Custom
+					ensure( m.strategy().equals( i.previous(), J = j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+#else
+					ensure( i.previous().equals( J = j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+#endif
+
+					if ( r.nextFloat() < 0.5 ) {
+						i.remove();
+						j.remove();
+						t.remove( J );
+					}
+				}
+
+				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex() (iterator with starting point " + from + ")" );
+				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex() (iterator with starting point " + from + ")" );
+
+			}
+
+		}
+		  
+
+
+		/* Now we check that m actually holds that data. */
+		  
+		ensure( m.equals(t), "Error (" + seed + "): ! m.equals( t ) after iteration" );
+		ensure( t.equals(m), "Error (" + seed + "): ! t.equals( m ) after iteration" );
+
+#endif
+
+
+		/* Now we take out of m everything, and check that it is empty. */
+
+		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext(); ) m.remove(i.next()); 
+
+		if (!m.isEmpty())  {
+			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
+			System.exit( 1 );
+		}
+
+#if (#keyclass(Integer) || #keyclass(Long)) && (#valueclass(Integer) || #valueclass(Long))
+		m = new OPEN_HASH_MAP(n, f);
+		t.clear();
+		int x;
+
+		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
+
+		int p = m.state.length;
+
+		for(int i=0; i<p; i++) {
+			for (int j=0; j<20; j++) {
+				m.put(i+(r.nextInt() % 10)*p, 1);
+				m.remove(i+(r.nextInt() % 10)*p);
+			}
+
+			for (int j=-10; j<10; j++) m.remove(i+j*p);
+		}
+		  
+		t.putAll(m);
+
+		/* Now all table entries are REMOVED. */
+
+		for(int i=0; i<(p*f)/10; i++) {
+			for (int j=0; j<10; j++) {
+				if (!valEquals(m.put(KEY2OBJ(x = i+(r.nextInt() % 10)*p), VALUE2OBJ(1)), t.put(KEY2OBJ(x), VALUE2OBJ(1))))
+					System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test insertion.");
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion");
+
+		for(int i=0; i<p/10; i++) {
+			for (int j=0; j<10; j++) {
+				if (!valEquals(m.remove(KEY2OBJ(x = i+(r.nextInt() % 10)*p)), t.remove(KEY2OBJ(x))))
+					System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test removal.");
+			}
+		}
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
+
+		if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
+		if (!((OPEN_HASH_MAP)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
+
+		m.rehash();
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after rehash()");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after rehash()");
+
+		m.trim();
+
+		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after trim()");
+		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
+#endif
+
+		System.out.println("Test OK");
+		return;
+	}
+
+
+	public static void main( String args[] ) {
+		float f = Hash.DEFAULT_LOAD_FACTOR;
+		int n  = Integer.parseInt(args[1]);
+		if (args.length>2) f = Float.parseFloat(args[2]);
+		if ( args.length > 3 ) r = new java.util.Random( seed = Long.parseLong( args[ 3 ] ) );
+		  
+		try {
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, f, "speedComp".equals(args[0]) );
+			else if ( "test".equals( args[0] ) ) test(n, f);
+		} catch( Throwable e ) {
+			e.printStackTrace( System.err );
+			System.err.println( "seed: " + seed );
+		}
+			
+	}
+
+#endif
+
+}
