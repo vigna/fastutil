@@ -287,8 +287,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#define OPEN_HASH_SET ${TYPE_CAP[$k]}${Linked}Open${Custom}HashSet\n\n"\
 "#define OPEN_HASH_BIG_SET ${TYPE_CAP[$k]}${Linked}Open${Custom}HashBigSet\n\n"\
-"#define OPEN_LINEAR_HASH_SET ${TYPE_CAP[$k]}${Linked}Open${Custom}LinearHashSet\n\n"\
+"#define OPEN_DOUBLE_HASH_SET ${TYPE_CAP[$k]}${Linked}Open${Custom}DoubleHashSet\n\n"\
 "#define OPEN_HASH_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${Linked}Open${Custom}HashMap\n\n"\
+"#define OPEN_DOUBLE_HASH_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}${Linked}Open${Custom}DoubleHashMap\n\n"\
 "#define ARRAY_SET ${TYPE_CAP[$k]}ArraySet\n\n"\
 "#define ARRAY_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}ArrayMap\n\n"\
 "#define LINKED_OPEN_HASH_SET ${TYPE_CAP[$k]}LinkedOpenHashSet\n\n"\

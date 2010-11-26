@@ -13,6 +13,12 @@
     free software
     distributed under the <A HREF="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</A>.
 
+	<p><strong>Warning:</strong> <code>fastutil 6.1.0</code> has been significantly reorganised.
+	A number of not-so-useful classes (double- and sequi-indirect priority queues) are no longer
+	distributed (but you can still generate them from source code). The old implementation of
+	hash tables (both sets and maps) has been replaced by a linear-probing implementation that is
+	about twice faster and has true deletions, but does not let you set a growth factor.
+
     <h2>Package Specification</h2>
 
 	<p><code>fastutil</code> is formed by three cores:
@@ -70,7 +76,7 @@
 	The {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO} static
 	containers contain dozens of methods that make it possible to load and save quickly
 	(big) arrays to disks, to adapt binary and text file to iterators, and so on.
-	
+
     <h2>More on type-specific classes</h2>
 
     <p>All data structures in <code>fastutil</code> implement their standard
@@ -208,7 +214,6 @@
 	<tr><td>List, BigList&dagger;<td>AbstractList, AbstractBigList<td>ArrayList, BigArrayBigList, ArrayFrontCodedList
 	<tr><td>PriorityQueue&dagger;<td>AbstractPriorityQueue&dagger;<td>HeapPriorityQueue, ArrayPriorityQueue, ArrayFIFOQueue
 	<tr><td>IndirectPriorityQueue&dagger;<td>AbstractIndirectPriorityQueue&dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
-	<tr><td>IndirectDoublePriorityQueue&dagger;<td>AbstractIndirectDoublePriorityQueue&dagger;<td>HeapSesquiIndirectDoublePriorityQueue, HeapIndirectDoublePriorityQueue, ArrayIndirectDoublePriorityQueue
 	<tr><td>Stack&dagger;<td>AbstractStack&dagger;<td>ArrayList
 	<tr><td>Iterator, BigListIterator&dagger;<td>AbstractIterator, AbstractBigListIterator
 	<tr><td>Comparator<td>AbstractComparator
@@ -247,7 +252,6 @@
 	<tr><td>IndirectHeaps
 	<tr><td>PriorityQueues&dagger;
 	<tr><td>IndirectPriorityQueues&dagger;
-	<tr><td>IndirectDoublePriorityQueues&dagger;
 	<tr><td>Iterators
 	<tr><td>BigListIterators
 	<tr><td>Comparators
@@ -331,6 +335,11 @@
 	it.unimi.dsi.fastutil.BidirectionalIterator bidirectional
 	iterators}. This means that you can move back and forth among
 	entries, keys or values.
+
+	<li>Some classes for maps (check the specification) return a <em>fast entry set</em>
+	(see, e.g., {@link it.unimi.idsi.fastutil.ints.Int2IntOpenHashMap#int2IntEntrySet()});
+	fast entry sets can, in turn, provide a <em>{@linkplain it.unimi.dsi.fastutil.ints.Int2IntMap.FastEntrySet#fastIterator()}</em>
+	that is guaranteed not to create a large number of objects, <em>possibly by returning always the same entry</em> (of course, mutated).
 
       <LI>The type-specific sorted set interfaces, moreover, feature an optional
 	method <code>iterator(from)</code> which creates a type-specific {@link
@@ -459,8 +468,7 @@
       it.unimi.dsi.fastutil.chars.CharSets}, {@link
       it.unimi.dsi.fastutil.floats.Float2ByteSortedMaps}, {@link
       it.unimi.dsi.fastutil.longs.LongArrays}, {@link
-      it.unimi.dsi.fastutil.floats.FloatHeaps} and  {@link
-      it.unimi.dsi.fastutil.doubles.DoublePriorityQueues}.  Presently, you can easily
+      it.unimi.dsi.fastutil.floats.FloatHeaps}.  Presently, you can easily
       obtain {@linkplain it.unimi.dsi.fastutil.objects.ObjectSets#EMPTY_SET empty collections},
       {@linkplain it.unimi.dsi.fastutil.longs.Long2IntMaps#EMPTY_MAP empty
       type-specific collections}, {@linkplain
@@ -546,9 +554,8 @@
     it.unimi.dsi.fastutil.IndirectPriorityQueue#changed(int) notify the change}
       of any element of the reference array, or even to {@linkplain
     it.unimi.dsi.fastutil.IndirectPriorityQueue#remove(int) remove an arbitrary
-      element}. Finally, {@linkplain it.unimi.dsi.fastutil.IndirectDoublePriorityQueue double indirect queues} maintain at the same time <em>two</em> orders
-      (very commonly, opposite orders).
-
+      element}.
+      
     <P>Queues have two implementations: a trivial array-based
     implementation, and a heap-based implementation. In particular, heap-based
     indirect queues may be {@linkplain
@@ -557,11 +564,7 @@
     it.unimi.dsi.fastutil.objects.ObjectHeapSemiIndirectPriorityQueue
     semi-indirect}: in the latter case, there is no need for an explicit
     indirection array (which saves one integer per queue entry), but not all
-    operations will be avalable. Correspondingly, double priority queues have a
-    <em>{@linkplain it.unimi.dsi.fastutil.ints.IntHeapSesquiIndirectDoublePriorityQueue sesqui}</em>
-    (i.e., one-and-a-half) indirect implementation and a
-      {@linkplain it.unimi.dsi.fastutil.ints.IntHeapIndirectDoublePriorityQueue fully
-      indirect implementation}.
+    operations will be avalable.
 
 
     <h3>Custom Hashing</h3>
@@ -667,39 +670,32 @@
       accordingly.
       
 
-    <h3>Deletions in Hash Tables</h3>
+    <h3>Faster Hash Tables</h3>
 
-    <p>Since deletions in hash tables are handled simply by tagging, they are
-      very fast <i>per se</i>, but they tend to slow down subsequent accesses
-      (with respect to a table with no deleted entries). In highly dynamical
-      situations, where entries are continuously created and deleted,
-      unsuccessful searches may take linear time (as <em>all</em> entries must be
-      probed).
-
-    <p>A partial solution to this problem (which has no known complete
-      solution if you use open addressing with double
-      hashing&mdash;cfr. Knuth's section on hashing in the third volume of
-      <i>The Art of Computer Programming</i>) is to call the
-      <code>rehash()</code> method, which will try to rebuild the table
-      remapping all keys. There are also <code>trim()</code> methods that
-      will reduce the table size if possible.
-
-    <p>In other words, if your application requires inextricably interleaved
-      insertions, deletions and queries open-addressing hash-table
-      implementations (and in particular <code>fastutil</code> classes) are not
-      the right choice.
-
-    <p>Note, however, that <code>fastutil</code> implements a special
-      optimization, usually not found elsewhere, that speeds up probes for
-      recently deleted entries. More details can be found in the documentation of
-      the {@link it.unimi.dsi.fastutil.Hash} interface.
-
-    <P>The case of linked tables is even more problematic: the deletion of
-      an item requires a linear probe of the links until the item is found,
-      and thus it has potentially linear cost (however, this is not true if
-      the deletion is performed by means of an iterator, or if you delete
-      the last element).
-
+    <p><code>fastutil</code> 6.1.0 changes significantly the implementation
+    of hash-based classes. Instead of <em>double hashing</em>, we use
+    <em>linear probing</em>. This has some consequences:
+    <ul>
+    <li>the classes are now about two times faster;
+    <li>deletions are effective&mdash;there is no &ldquo;marking&rdquo; of
+    deleted entries (the claim that this was impossible with open 
+    addressing was, of course, wrong);
+    <li>deletions in linked table are significantly slower, as they require
+    even more work on pointers;
+    <li>given a size and a load factor, the backing array of a table will
+    be in general larger (in the worst case about two times larger);
+    <li>it is no longer possible to set the <em>growth factor</em> of the table, which
+    is fixed at 2 (the old methods to control the growth factor {@linkplain
+      it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap#growthFactor(int) are now no-ops}&mdash;they
+      are kept just for backward compatibility);
+    <li>there are efficient implementations of {@linkplain it.unimi.dsi.fastutil.ints.IntOpenHashBigSet big sets}.
+    </ul>
+    
+    <P>In the case of linked tables we have even slower deletions than before because
+    deleting an entry requires not only updating its pointers, but also 
+    to move around another few entries and updating their pointers (updating
+    pointers needs potentially linear time).
+    
     <h3>Memory Usage</h3>
 
     <P>The absence of wrappers makes data structures in <code>fastutil</code>
@@ -718,47 +714,28 @@
       <code>fastutil</code> iterators <em>faster</em> than {@link
       java.util}'s.
 
-    <p>The memory footprint for a table with <var>n</var> keys is exactly the
-      memory required for the related types times <var>n</var>, plus a
-      overhead of <var>n</var> bytes to store the state of each entry. The
+    <p>The memory footprint for a table of length &#x2113; is exactly the
+      memory required for the related types times &#x2113;, plus a
+      overhead of &#x2113; booleans to store the state of each entry. The
       absence of wrappers around primitive types can reduce space occupancy by
       several times (this applies even more to serialized data, e.g., when you
       save such a data structure in a file).  These figures can greatly vary with
       your virtual machine, JVM versions, CPU etc.
 
     <p>More precisely, when you ask for a map that will hold <var>n</var>
-      elements with load factor 0&nbsp;&lt;&nbsp;<var>f</var>&nbsp;&le;&nbsp;1, <var>p</var> entries are
-      allocated, where <var>p</var> is first prime in {@link
-      it.unimi.dsi.fastutil.Hash#PRIMES} larger than
-      <var>n</var>&nbsp;/&nbsp;<var>f</var>. Primes in {@link
-      it.unimi.dsi.fastutil.Hash#PRIMES} are roughly multiplicatively spaced by
-      2<sup>1/16</sup>, so you lose on average about 2% with respect to
-      <var>n</var>&nbsp;/&nbsp;<var>f</var>. 
-
-    <P>When the table is filled up beyond the load factor, it is rehashed to a
-      larger size. The growth is controlled by the <em>growth factor</em>, which
-      can be set at any time. By default, the table size is doubled (for more
-      information, see {@link it.unimi.dsi.fastutil.ints.IntOpenHashSet}), but
-      you can trade speed for memory occupancy by {@linkplain
-      it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap#growthFactor(int) setting a slower growth rate}.
+      elements with load factor 0&nbsp;&lt;&nbsp;<var>f</var>&nbsp;&le;&nbsp;1, 
+      2<sup>&lceil;log <var>n</var>&nbsp;/&nbsp;<var>f</var>&rceil;</sup>
+      entries are allocated. When the table is filled up beyond the load factor, it is rehashed 
+      doubling its size. 
 
     <p>In the case of linked hash tables, there is an additional vector of
-      <var>p</var> integers that is used to store link information. Each
+      2<sup>&lceil;log <var>n</var>&nbsp;/&nbsp;<var>f</var>&rceil;</sup> integers that is used to store link information. Each
       element records the next and previous element indexes exclusive-or'd
       together. As a result, linked tables provide bidirectional iterators
       without having to store two pointers per entry (however, iterators
       starting from a given element require a linear probe to be
       initialized, unless the element is the last one).
       
-    <p>Since hash codes are not cached, equality on objects is checked
-      first by checking equality of their {@link java.lang.Object#hashCode()
-      hashCode()}, and then using {@link java.lang.Object#equals(Object)
-      equals()}. This turns out to increase slightly the performance, as
-      many classes (including {@link java.lang.String}) cache their hash
-      codes; in any case, the speed cannot reach that of {@link java.util}'s
-      hash classes, which cache hash codes.
-
-
     <h4>Balanced Trees</h4>
 
     <p>The balanced trees implementation is also very parsimonious.

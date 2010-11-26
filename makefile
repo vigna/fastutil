@@ -86,25 +86,6 @@ bin:
 	rm fastutil-$(version)
 
 
-drv/LinkedOpenHashSet.drv: drv/OpenHashSet.drv
-	ln -sf OpenHashSet.drv $@
-
-drv/LinkedOpenHashMap.drv: drv/OpenHashMap.drv
-	ln -sf OpenHashMap.drv $@
-
-drv/OpenCustomHashSet.drv: drv/OpenHashSet.drv
-	ln -sf OpenHashSet.drv $@
-
-drv/OpenCustomHashMap.drv: drv/OpenHashMap.drv
-	ln -sf OpenHashMap.drv $@
-
-drv/LinkedOpenCustomHashSet.drv: drv/OpenHashSet.drv
-	ln -sf OpenHashSet.drv $@
-
-drv/LinkedOpenCustomHashMap.drv: drv/OpenHashMap.drv
-	ln -sf OpenHashMap.drv $@
-
-CSOURCES := 
 
 #
 # Interfaces
@@ -164,11 +145,6 @@ INDIRECT_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PAC
 $(INDIRECT_PRIORITY_QUEUES): drv/IndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(INDIRECT_PRIORITY_QUEUES)
-
-INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)IndirectDoublePriorityQueue.c)
-$(INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/IndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 COMPARATORS := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Comparator.c)
 $(COMPARATORS): drv/Comparator.drv; ./gencsource.sh $< $@ >$@
@@ -282,16 +258,6 @@ CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 #
 # Concrete implementations
 #
-
-OPEN_LINEAR_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenLinearHashSet.c)
-$(OPEN_LINEAR_HASH_SETS): drv/OpenLinearHashSet.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(OPEN_LINEAR_HASH_SETS)
-
-LINKED_OPEN_LINEAR_HASH_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)LinkedOpenLinearHashSet.c)
-$(LINKED_OPEN_LINEAR_HASH_SETS): drv/LinkedOpenLinearHashSet.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(LINKED_OPEN_LINEAR_HASH_SETS)
 
 OPEN_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenHashSet.c)
 $(OPEN_HASH_SETS): drv/OpenHashSet.drv; ./gencsource.sh $< $@ >$@
@@ -413,20 +379,6 @@ $(ARRAY_INDIRECT_PRIORITY_QUEUES): drv/ArrayIndirectPriorityQueue.drv; ./gencsou
 
 CSOURCES += $(ARRAY_INDIRECT_PRIORITY_QUEUES)
 
-HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapSesquiIndirectDoublePriorityQueue.c)
-$(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/HeapSesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
-
-HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapIndirectDoublePriorityQueue.c)
-$(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/HeapIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES)
-
-ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayIndirectDoublePriorityQueue.c)
-$(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/ArrayIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-CSOURCES += $(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 #
 # Static containers
@@ -558,10 +510,74 @@ $(SOURCEDIR)/io/TextIO.c: drv/TextIO.drv $(TEXTIO_FRAGMENTS)
 
 CSOURCES += $(SOURCEDIR)/io/TextIO.c
 
+#
+# Old sources, generated only with the old target
+#
 
+OPEN_DOUBLE_HASH_SETS := $(foreach k,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenDoubleHashSet.c)
+$(OPEN_DOUBLE_HASH_SETS): drv/OpenDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(OPEN_DOUBLE_HASH_SETS)
+
+LINKED_OPEN_DOUBLE_HASH_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)LinkedOpenDoubleHashSet.c)
+$(LINKED_OPEN_DOUBLE_HASH_SETS): drv/LinkedOpenDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(LINKED_OPEN_DOUBLE_HASH_SETS)
+
+OPEN_DOUBLE_CUSTOM_HASH_SETS := $(SOURCEDIR)/objects/ObjectOpenCustomDoubleHashSet.c
+$(OPEN_DOUBLE_CUSTOM_HASH_SETS): drv/OpenCustomDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(OPEN_DOUBLE_CUSTOM_HASH_SETS)
+
+LINKED_OPEN_DOUBLE_CUSTOM_HASH_SETS := $(SOURCEDIR)/objects/ObjectLinkedOpenCustomDoubleHashSet.c
+$(LINKED_OPEN_DOUBLE_CUSTOM_HASH_SETS): drv/LinkedOpenCustomDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(LINKED_OPEN_CUSTOM_DOUBLE_HASH_SETS)
+
+OPEN_DOUBLE_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)OpenDoubleHashMap.c))
+$(OPEN_DOUBLE_HASH_MAPS): drv/OpenDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(OPEN_DOUBLE_HASH_MAPS)
+
+LINKED_OPEN_DOUBLE_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)2$(v)LinkedOpenDoubleHashMap.c))
+$(LINKED_OPEN_DOUBLE_HASH_MAPS): drv/LinkedOpenDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(LINKED_OPEN_DOUBLE_HASH_MAPS)
+
+OPEN_CUSTOM_DOUBLE_HASH_MAPS := $(foreach v,$(TYPE), $(SOURCEDIR)/objects/Object2$(v)OpenCustomDoubleHashMap.c)
+$(OPEN_CUSTOM_DOUBLE_HASH_MAPS): drv/OpenCustomDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(OPEN_CUSTOM_DOUBLE_HASH_MAPS)
+
+LINKED_OPEN_CUSTOM_DOUBLE_HASH_MAPS := $(foreach v,$(TYPE), $(SOURCEDIR)/objects/Object2$(v)LinkedOpenCustomDoubleHashMap.c)
+$(LINKED_OPEN_CUSTOM_DOUBLE_HASH_MAPS): drv/LinkedOpenCustomDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(LINKED_OPEN_CUSTOM_DOUBLE_HASH_MAPS)
+
+INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)IndirectDoublePriorityQueue.c)
+$(INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/IndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(INDIRECT_DOUBLE_PRIORITY_QUEUES)
+
+HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapSesquiIndirectDoublePriorityQueue.c)
+$(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/HeapSesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
+
+HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)HeapIndirectDoublePriorityQueue.c)
+$(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/HeapIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES)
+
+ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)ArrayIndirectDoublePriorityQueue.c)
+$(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/ArrayIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
+
+OLDCSOURCES += $(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES)
 
 
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
+OLDJSOURCES = $(OLDCSOURCES:.c=.java) 
+
 
 SOURCES = \
 	$(SOURCEDIR)/Function.java \
@@ -600,7 +616,7 @@ SOURCES = \
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
-$(JSOURCES): %.java: %.c
+$(JSOURCES) $(OLDJSOURCES): %.java: %.c
 	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
 
 
@@ -615,4 +631,8 @@ clean:
 
 sources: $(JSOURCES)
 
+oldsources: $(OLDJSOURCES)
+
 csources: $(CSOURCES)
+
+oldcsources: $(OLDCSOURCES)

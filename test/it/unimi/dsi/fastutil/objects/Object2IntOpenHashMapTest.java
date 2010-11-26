@@ -60,7 +60,7 @@ public class Object2IntOpenHashMapTest {
 			assertTrue( "Error: m and t differ on a key (in keySet()) after insertion (iterating on m)", t.keySet().contains( o ) );
 		}
 		/* Now we check that m actually hold the same values. */
-		for ( java.util.Iterator i = t.values().iterator(); i.hasNext(); ) {
+ 		for ( java.util.Iterator i = t.values().iterator(); i.hasNext(); ) {
 			Object o = i.next();
 			assertTrue( "Error: m and t differ on a value after insertion (iterating on t)", m.containsValue( o ) );
 			assertTrue( "Error: m and t differ on a value (in values()) after insertion (iterating on t)", m.values().contains( o ) );
