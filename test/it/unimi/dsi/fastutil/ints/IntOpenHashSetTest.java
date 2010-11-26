@@ -4,13 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
-public class IntOpenHashBigSetTest {
+public class IntOpenHashSetTest {
 
 	private static java.util.Random r = new java.util.Random( 0 );
 
@@ -19,30 +18,30 @@ public class IntOpenHashBigSetTest {
 	}
 
 	@SuppressWarnings("boxing")
-	private static void checkTable( IntOpenHashBigSet s ) {
-		final boolean[][] used = s.used;
-		final int[][] key = s.key;
+	private static void checkTable( IntOpenHashSet s ) {
+		final boolean[] used = s.used;
+		final int[]key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == IntBigArrays.length( s.key );
-		assert s.n == BooleanBigArrays.length( used );
-		long n = s.n;
+		assert s.n == s.key.length;
+		assert s.n == used.length;
+		int n = s.n;
 		while ( n-- != 0 )
-			if ( BooleanBigArrays.get( used, n ) && !s.contains( IntBigArrays.get( key, n ) ) ) throw new AssertionError( "Hash table has key " + IntBigArrays.get( key, n )
+			if ( used[ n ] && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
 					+ " marked as occupied, but the key does not belong to the table" );
 
 		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
-		for ( long i = s.size64(); i-- != 0; )
-			if ( BooleanBigArrays.get( used, i ) && !t.add( IntBigArrays.get( key, i ) ) ) throw new AssertionError( "Key " + IntBigArrays.get( key, i ) + " appears twice" );
+		for ( int i = s.size(); i-- != 0; )
+			if ( used[ i ] && !t.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
 
 	}
 
-	private static void printProbes( IntOpenHashBigSet m ) {
+	private static void printProbes( IntOpenHashSet m ) {
 		long totProbes = 0;
 		double totSquareProbes = 0;
-		long maxProbes = 0;
+		int maxProbes = 0;
 		final double f = (double)m.size / m.n;
-		for ( long i = 0, c = 0; i < m.n; i++ ) {
-			if ( BooleanBigArrays.get( m.used, i ) ) c++;
+		for ( int i = 0, c = 0; i < m.n; i++ ) {
+			if ( m.used[ i ] ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
@@ -65,7 +64,7 @@ public class IntOpenHashBigSetTest {
 	@SuppressWarnings({ "unchecked", "boxing" })
 	private static void test( int n, float f ) {
 		int c;
-		IntOpenHashBigSet m = new IntOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE, f );
+		IntOpenHashSet m = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE, f );
 		java.util.Set t = new java.util.HashSet();
 
 		/* First of all, we fill t with random data. */
@@ -149,7 +148,7 @@ public class IntOpenHashBigSetTest {
 		/* Now we make m into an array, make it again a set and check it is OK. */
 		int a[] = m.toIntArray();
 
-		assertTrue( "Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashBigSet( a ).equals( m ) );
+		assertTrue( "Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet( a ).equals( m ) );
 
 		/* Now we check cloning. */
 
@@ -171,7 +170,7 @@ public class IntOpenHashBigSetTest {
 			java.io.InputStream is = new java.io.FileInputStream( ff );
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream( is );
 
-			m = (IntOpenHashBigSet)ois.readObject();
+			m = (IntOpenHashSet)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
@@ -216,7 +215,7 @@ public class IntOpenHashBigSetTest {
 		assertFalse( "Error: m is not empty (as it should be)", !m.isEmpty() );
 
 
-		m = new IntOpenHashBigSet( n, f );
+		m = new IntOpenHashSet( n, f );
 		t.clear();
 
 		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
@@ -241,10 +240,6 @@ public class IntOpenHashBigSetTest {
 		assertTrue( "Error: !t.equals(m) after torture-test removal", t.equals( m ) );
 		assertTrue( "Error: !m.equals(m.clone()) after torture-test removal", m.equals( m.clone() ) );
 		assertTrue( "Error: !m.clone().equals(m) after torture-test removal", m.clone().equals( m ) );
-		m.rehash();
-
-		assertTrue( "Error: !m.equals(t) after rehash()", m.equals( t ) );
-		assertTrue( "Error: !t.equals(m) after rehash()", t.equals( m ) );
 
 		return;
 	}

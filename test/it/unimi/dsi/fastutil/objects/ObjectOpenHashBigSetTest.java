@@ -35,9 +35,9 @@ public class ObjectOpenHashBigSetTest {
 	private static void printProbes( ObjectOpenHashBigSet m ) {
 		long totProbes = 0;
 		double totSquareProbes = 0;
-		int maxProbes = 0;
+		long maxProbes = 0;
 		final double f = (double)m.size / m.n;
-		for ( int i = 0, c = 0; i < m.n; i++ ) {
+		for ( long i = 0, c = 0; i < m.n; i++ ) {
 			if ( BooleanBigArrays.get( m.used, i ) ) c++;
 			else {
 				if ( c != 0 ) {
