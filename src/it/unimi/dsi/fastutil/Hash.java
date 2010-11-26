@@ -19,6 +19,13 @@ package it.unimi.dsi.fastutil;
 
 /** Basic data for all hash-based classes.
  *
+ * <h2>Historical note</h2>
+ * 
+ * <p><strong>Warning:</strong> the following comments are here for historical reasons,
+ * and apply just to the <em>double hash</em> classes that can be optionally generated.
+ * The standard <code>fastutil</code> distribution since 6.1.0 uses linear-probing hash
+ * tables, and tables are always sized as powers of two. 
+ *
  * <p>The classes in <code>fastutil</code> are built around open-addressing hashing
  * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
  * Programming</em>, we use for the table size a prime <var>p</var> such that
@@ -64,6 +71,42 @@ public interface Hash {
 	final public float FAST_LOAD_FACTOR = .5f;
 	/** The load factor for a (usually very small) table that is meant to be extremely fast. */
 	final public float VERY_FAST_LOAD_FACTOR = .25f;
+
+	/** A generic hash strategy.
+	 *
+	 * <P>Custom hash structures (e.g., {@link
+	 * it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet}) allow to hash objects
+	 * using arbitrary functions, a typical example being that of {@linkplain
+	 * it.unimi.dsi.fastutil.ints.IntArrays#HASH_STRATEGY arrays}. Of course,
+	 * one has to compare objects for equality consistently with the chosen
+	 * function. A <em>hash strategy</em>, thus, specifies an {@linkplain
+	 * #equals(Object,Object) equality method} and a {@linkplain
+	 * #hashCode(Object) hash function}, with the obvious property that
+	 * equal objects must have the same hash code.
+	 *
+	 * <P>If your custom collection must be able to contain <code>null</code>,
+	 * then your strategy must be able to handle <code>null</code>, too.
+	 */
+
+	public interface Strategy<K> {
+
+		/** Returns the hash code of the specified object with respect to this hash strategy.
+		 *
+		 * @param o an object (or <code>null</code>).
+		 * @return the hash code of the given object with respect to this hash strategy.
+		 */
+
+		public int hashCode( K o );
+
+		/** Returns true if the given objects are equal with respect to this hash strategy.
+		 *
+		 * @param a an object (or <code>null</code>).
+		 * @param b another object (or <code>null</code>).
+		 * @return true if the two specified objects are equal with respect to this hash strategy.
+		 */
+		public boolean equals( K a, K b );
+	}
+
 	/** The default growth factor of a hash table. */
 	final public int DEFAULT_GROWTH_FACTOR = 16;
 	/** The state of a free hash table entry. */
@@ -126,41 +169,5 @@ public interface Hash {
 								  1073741719, 1121280091, 1170923713, 1222764841, 1276901371, 1333434301,
 								  1392470281, 1454120779, 1518500173, 1585729993, 1655935399, 1729249999,
 								  1805811253, 1885761133, 1969251079, 2056437379, 2147482951 };
-
-
-	/** A generic hash strategy.
-	 *
-	 * <P>Custom hash structures (e.g., {@link
-	 * it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet}) allow to hash objects
-	 * using arbitrary functions, a typical example being that of {@linkplain
-	 * it.unimi.dsi.fastutil.ints.IntArrays#HASH_STRATEGY arrays}. Of course,
-	 * one has to compare objects for equality consistently with the chosen
-	 * function. A <em>hash strategy</em>, thus, specifies an {@linkplain
-	 * #equals(Object,Object) equality method} and a {@linkplain
-	 * #hashCode(Object) hash function}, with the obvious property that
-	 * equal objects must have the same hash code.
-	 *
-	 * <P>If your custom collection must be able to contain <code>null</code>,
-	 * then your strategy must be able to handle <code>null</code>, too.
-	 */
-
-	public interface Strategy<K> {
-
-		/** Returns the hash code of the specified object with respect to this hash strategy.
-		 *
-		 * @param o an object (or <code>null</code>).
-		 * @return the hash code of the given object with respect to this hash strategy.
-		 */
-
-		public int hashCode( K o );
-
-		/** Returns true if the given objects are equal with respect to this hash strategy.
-		 *
-		 * @param a an object (or <code>null</code>).
-		 * @param b another object (or <code>null</code>).
-		 * @return true if the two specified objects are equal with respect to this hash strategy.
-		 */
-		public boolean equals( K a, K b );
-	}
 
 }
