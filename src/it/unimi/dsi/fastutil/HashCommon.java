@@ -96,7 +96,7 @@ public class HashCommon {
 	 * 
 	 * <p>Note that this function will return 1 when the argument is 0.
 	 * 
-	 * @param x an integer smaller than 2<sup>30</sup>.
+	 * @param x an integer smaller than or equal to 2<sup>30</sup>.
 	 * @return the least power of two greater than or equal to the specified value.
 	 */
 	public static int nextPowerOfTwo( int x ) {
@@ -115,7 +115,7 @@ public class HashCommon {
 	 * 
 	 * <p>Note that this function will return 1 when the argument is 0.
 	 * 
-	 * @param x a long integer smaller than 2<sup>62</sup>.
+	 * @param x a long integer smaller than or equal to 2<sup>62</sup>.
 	 * @return the least power of two greater than or equal to the specified value.
 	 */
 	public static long nextPowerOfTwo( long x ) {
