@@ -17,23 +17,16 @@ package it.unimi.dsi.fastutil;
  */
 
 
-/** Common code for all hash-based classes.
- *
- * All hashing in <code>fastutil</code> is performed starting from a 32-bit integer
- * associated to a key or value. For all integer types smaller than <code>long</code>, we
- * just cast. In all other cases, we do some conversion using static code in this
- * class. Note that we follow the conventions established by the various classes
- * associated to primitive types ({@link Boolean}, {@link Double}, etc.).
- */
+/** Common code for all hash-based classes. */
 
 public class HashCommon {
+
+	protected HashCommon() {};
 
 	/** This reference is used to fill keys and values of removed entries (if
 		they are objects). <code>null</code> cannot be used as it would confuse the
 		search algorithm in the presence of an actual <code>null</code> key. */ 
 	public static final Object REMOVED = new Object();
-
-	private HashCommon() {};
 
 	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
 	 * 
@@ -103,7 +96,7 @@ public class HashCommon {
 	 * 
 	 * <p>Note that this function will return 1 when the argument is 0.
 	 * 
-	 * @param x an integer.
+	 * @param x an integer smaller than 2<sup>30</sup>.
 	 * @return the least power of two greater than or equal to the specified value.
 	 */
 	public static int nextPowerOfTwo( int x ) {
@@ -122,7 +115,7 @@ public class HashCommon {
 	 * 
 	 * <p>Note that this function will return 1 when the argument is 0.
 	 * 
-	 * @param x a long integer.
+	 * @param x a long integer smaller than 2<sup>62</sup>.
 	 * @return the least power of two greater than or equal to the specified value.
 	 */
 	public static long nextPowerOfTwo( long x ) {
