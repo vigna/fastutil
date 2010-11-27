@@ -2,6 +2,9 @@ package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
@@ -58,7 +61,7 @@ public class ObjectOpenHashBigSetTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static void test( int n, float f ) {
+	private static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		int c;
 		ObjectOpenHashBigSet m = new ObjectOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE, f );
 		java.util.Set t = new java.util.HashSet();
@@ -133,22 +136,16 @@ public class ObjectOpenHashBigSetTest {
 		assertTrue( "Error: m.clone() does not equal m", m.clone().equals( m ) );
 		int h = m.hashCode();
 		/* Now we save and read m. */
-		try {
-			java.io.File ff = new java.io.File( "it.unimi.dsi.fastutil.test" );
-			java.io.OutputStream os = new java.io.FileOutputStream( ff );
-			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream( os );
-			oos.writeObject( m );
-			oos.close();
-			java.io.InputStream is = new java.io.FileInputStream( ff );
-			java.io.ObjectInputStream ois = new java.io.ObjectInputStream( is );
-			m = (ObjectOpenHashBigSet)ois.readObject();
-			ois.close();
-			ff.delete();
-		}
-		catch ( Exception e ) {
-			e.printStackTrace();
-			System.exit( 1 );
-		}
+		java.io.File ff = new java.io.File( "it.unimi.dsi.fastutil.test" );
+		java.io.OutputStream os = new java.io.FileOutputStream( ff );
+		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream( os );
+		oos.writeObject( m );
+		oos.close();
+		java.io.InputStream is = new java.io.FileInputStream( ff );
+		java.io.ObjectInputStream ois = new java.io.ObjectInputStream( is );
+		m = (ObjectOpenHashBigSet)ois.readObject();
+		ois.close();
+		ff.delete();
 		assertEquals( "Error: hashCode() changed after save/read", h, m.hashCode() );
 		checkTable( m );
 		printProbes( m );
@@ -178,21 +175,21 @@ public class ObjectOpenHashBigSetTest {
 	}
 
 	@Test
-	public void test1() {
+	public void test1() throws IOException, ClassNotFoundException {
 		test( 1, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1, Hash.FAST_LOAD_FACTOR );
 		test( 1, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
 	@Test
-	public void test10() {
+	public void test10() throws IOException, ClassNotFoundException {
 		test( 10, Hash.DEFAULT_LOAD_FACTOR );
 		test( 10, Hash.FAST_LOAD_FACTOR );
 		test( 10, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
 	@Test
-	public void test100() {
+	public void test100() throws IOException, ClassNotFoundException {
 		test( 100, Hash.DEFAULT_LOAD_FACTOR );
 		test( 100, Hash.FAST_LOAD_FACTOR );
 		test( 100, Hash.VERY_FAST_LOAD_FACTOR );
@@ -200,7 +197,7 @@ public class ObjectOpenHashBigSetTest {
 
 	@Ignore("Too long")
 	@Test
-	public void test1000() {
+	public void test1000() throws IOException, ClassNotFoundException {
 		test( 1000, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1000, Hash.FAST_LOAD_FACTOR );
 		test( 1000, Hash.VERY_FAST_LOAD_FACTOR );
