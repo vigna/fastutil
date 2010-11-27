@@ -1,7 +1,7 @@
 %define section free
 
 Name:           fastutil
-Version:        6.0.0
+Version:        6.1.0
 Release:        1
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
@@ -9,8 +9,6 @@ Group:          Development/Libraries/Java
 License:        Apache License 2.0
 Source0:        http://fastutil.dsi.unimi.it/fastutil-%{version}-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
-Vendor:         JPackage Project
-Distribution:   JPackage
 BuildArch:      noarch
 Requires:       java >= 1.5.0
 Provides:	fastutil
@@ -23,8 +21,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 %description
 fastutil extends the Java Collections Framework by providing type-specific
 maps, sets, lists and priority queues with a small memory footprint and
-fast access and insertion; provides also big (64-bit) arrays and lists and
-fast, practical I/O classes for binary and text files.
+fast access and insertion; provides also big (64-bit) arrays, sets and
+lists, and fast, practical I/O classes for binary and text files.
 
 %package        javadoc
 Summary:        Javadoc for %{name}
@@ -73,10 +71,3 @@ ln -s %{name}-%{version} %{_javadocdir}/%{name}
 %defattr(0644,root,root,0755)
 %{_javadocdir}/%{name}-%{version}
 %ghost %doc %{_javadocdir}/%{name}
-
-# -----------------------------------------------------------------------------
-
-%changelog
-* Thu Nov 18 2010 Sebastiano Vigna <vigna at acm.org> - 6.0.0-1
-- Upgrade to 6.0.0
-
