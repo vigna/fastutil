@@ -177,33 +177,10 @@ public class Int2IntOpenHashMapTest {
 		assertTrue( "Error: m is not empty (as it should be)", m.isEmpty() );
 		m = new Int2IntOpenHashMap( n, f );
 		t.clear();
-		int x;
-		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
-		int p = m.used.length;
-		for ( int i = 0; i < p; i++ ) {
-			for ( int j = 0; j < 20; j++ ) {
-				m.put( i + ( r.nextInt() % 10 ) * p, 1 );
-				m.remove( i + ( r.nextInt() % 10 ) * p );
-			}
-			for ( int j = -10; j < 10; j++ )
-				m.remove( i + j * p );
-		}
+		for( int i = n; i-- != 0; ) m.put( i, 1 );
 		t.putAll( m );
-		/* Now all table entries are REMOVED. */
-		for ( int i = 0; i < ( p * f ) / 10; i++ ) {
-			for ( int j = 0; j < 10; j++ ) {
-				assertTrue( "Error: m and t differ on an entry during torture-test insertion.",
-						valEquals( m.put( ( Integer.valueOf( x = i + ( r.nextInt() % 10 ) * p ) ), ( Integer.valueOf( 1 ) ) ), t.put( ( Integer.valueOf( x ) ), ( Integer.valueOf( 1 ) ) ) ) );
-			}
-		}
-		assertTrue( "Error: !m.equals(t) after torture-test insertion", m.equals( t ) );
-		assertTrue( "Error: !t.equals(m) after torture-test insertion", t.equals( m ) );
-		for ( int i = 0; i < p / 10; i++ ) {
-			for ( int j = 0; j < 10; j++ ) {
-				assertTrue( "Error: m and t differ on an entry during torture-test removal.",
-						valEquals( m.remove( ( Integer.valueOf( x = i + ( r.nextInt() % 10 ) * p ) ) ), t.remove( ( Integer.valueOf( x ) ) ) ) );
-			}
-		}
+		for( int i = n; i-- != 0; ) assertEquals( "Error: m and t differ on a key during torture-test insertion.", m.put( i, 2 ), t.put( Integer.valueOf( i ), 2 ) );	
+		
 		assertTrue( "Error: !m.equals(t) after torture-test removal", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after torture-test removal", t.equals( m ) );
 		assertTrue( "Error: !m.equals(m.clone()) after torture-test removal", m.equals( m.clone() ) );

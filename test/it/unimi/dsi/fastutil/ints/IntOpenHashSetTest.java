@@ -221,8 +221,6 @@ public class IntOpenHashSetTest {
 		printProbes( m );
 		checkTable( m );
 
-		/* Now all table entries are REMOVED. */
-
 		for( int i = n; i-- != 0; )
 			assertEquals( "Error: m and t differ on a key during torture-test insertion.", m.add( i ), t.add( ( Integer.valueOf( i ) ) ) );
 
