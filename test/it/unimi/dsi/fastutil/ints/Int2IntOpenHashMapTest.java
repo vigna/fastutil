@@ -165,7 +165,8 @@ public class Int2IntOpenHashMapTest {
 			assertTrue( "Error: divergence in put() between t and m after save/read",
 					valEquals( m.put( ( Integer.valueOf( T ) ), ( Integer.valueOf( U ) ) ), t.put( ( Integer.valueOf( T ) ), ( Integer.valueOf( U ) ) ) ) );
 			T = genKey();
-			assertTrue( "Error: divergence in remove() between t and m after save/read", valEquals( m.remove( ( Integer.valueOf( T ) ) ), t.remove( ( Integer.valueOf( T ) ) ) ) );
+			Integer result;
+			assertTrue( "Error: divergence in remove() between t and m after save/read", valEquals( m.remove( T ), ( result = (Integer)t.remove( ( Integer.valueOf( T ) ) ) ) != null ? result.intValue() : 0 ) );
 		}
 		assertTrue( "Error: !m.equals(t) after post-save/read removal", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after post-save/read removal", t.equals( m ) );
