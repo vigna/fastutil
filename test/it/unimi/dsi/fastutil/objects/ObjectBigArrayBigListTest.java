@@ -31,7 +31,6 @@ public class ObjectBigArrayBigListTest {
 		/* Now we check that both sets agree on random keys. For m we use the polymorphic method. */
 		for ( int i = 0; i < n; i++ ) {
 			int p = r.nextInt() % ( n * 2 );
-			@SuppressWarnings("boxing")
 			Object T = genKey();
 			mThrowsOutOfBounds = tThrowsOutOfBounds = null;
 			try {
@@ -464,7 +463,6 @@ public class ObjectBigArrayBigListTest {
 	@SuppressWarnings({ "boxing", "unchecked" })
 	protected static void test( int n ) {
 		ObjectBigArrayBigList m = new ObjectBigArrayBigList();
-		@SuppressWarnings("unchecked")
 		ObjectBigList t = ObjectBigLists.asBigList( new ObjectArrayList() );
 		k = new Object[ n ];
 		nk = new Object[ n ];

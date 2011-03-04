@@ -237,10 +237,10 @@ public class IntOpenHashBigSetTest {
 		assertTrue( "Error: !t.equals(m) after torture-test removal", t.equals( m ) );
 		assertTrue( "Error: !m.equals(m.clone()) after torture-test removal", m.equals( m.clone() ) );
 		assertTrue( "Error: !m.clone().equals(m) after torture-test removal", m.clone().equals( m ) );
-		m.rehash();
+		m.trim();
 
-		assertTrue( "Error: !m.equals(t) after rehash()", m.equals( t ) );
-		assertTrue( "Error: !t.equals(m) after rehash()", t.equals( m ) );
+		assertTrue( "Error: !m.equals(t) after trim()", m.equals( t ) );
+		assertTrue( "Error: !t.equals(m) after trim()", t.equals( m ) );
 
 		return;
 	}

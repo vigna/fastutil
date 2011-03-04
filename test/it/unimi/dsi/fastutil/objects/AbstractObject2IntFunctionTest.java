@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-@SuppressWarnings("rawtypes")
 public class AbstractObject2IntFunctionTest {
 	@Test
 	public void testRemove() {

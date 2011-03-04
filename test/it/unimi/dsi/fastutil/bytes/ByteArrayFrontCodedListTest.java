@@ -28,7 +28,6 @@ public class ByteArrayFrontCodedListTest {
 
 	private static byte[][] a;
 
-	@SuppressWarnings("rawtypes")
 	private static void test( int n ) throws IOException, ClassNotFoundException {
 		l = new int[ n ];
 		a = new byte[ n ][];

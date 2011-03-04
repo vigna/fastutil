@@ -16,21 +16,20 @@ public class ObjectOpenHashSetTest {
 		return Integer.toBinaryString( r.nextInt() );
 	}
 
-	@SuppressWarnings("boxing")
 	private static void checkTable( ObjectOpenHashSet<Integer> s ) {
-		final boolean[] used = s.used;
+		final byte[] used = s.used;
 		final Object[] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == s.key.length;
+		assert s.n == ((Object[])s.key).length;
 		assert s.n == used.length;
 		int n = s.n;
 		while ( n-- != 0 )
-			if ( used[ n ] && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
+			if ( used[ n ] != 0 && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
 					+ " marked as occupied, but the key does not belong to the table" );
 
 		java.util.HashSet<String> t = new java.util.HashSet<String>();
 		for ( int i = s.size(); i-- != 0; )
-			if ( used[ i ] && !t.add( (String)key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
+			if ( used[ i ] != 0 && !t.add( (String)key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
 
 	}
 
@@ -40,7 +39,7 @@ public class ObjectOpenHashSetTest {
 		int maxProbes = 0;
 		final double f = (double)m.size / m.n;
 		for ( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.used[ i ] ) c++;
+			if ( m.used[ i ] != 0 ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;

@@ -22,19 +22,19 @@ public class IntOpenHashSetTest {
 
 	@SuppressWarnings("boxing")
 	private static void checkTable( IntOpenHashSet s ) {
-		final boolean[] used = s.used;
+		final byte[] used = s.used;
 		final int[]key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
 		assert s.n == s.key.length;
 		assert s.n == used.length;
 		int n = s.n;
 		while ( n-- != 0 )
-			if ( used[ n ] && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
+			if ( used[ n ] != 0 && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
 					+ " marked as occupied, but the key does not belong to the table" );
 
 		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
 		for ( int i = s.size(); i-- != 0; )
-			if ( used[ i ] && !t.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
+			if ( used[ i ] != 0 && !t.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
 
 	}
 
@@ -44,7 +44,7 @@ public class IntOpenHashSetTest {
 		int maxProbes = 0;
 		final double f = (double)m.size / m.n;
 		for ( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.used[ i ] ) c++;
+			if ( m.used[ i ] != 0 ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
