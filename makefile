@@ -1,5 +1,6 @@
 include build.properties
 
+TAR=tar
 SOURCEDIR = src/it/unimi/dsi/fastutil
 DOCSDIR = docs
 
@@ -57,7 +58,7 @@ explain:
 source:
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
-	tar zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
+	$(TAR) zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/drv/*.drv \
 		fastutil-$(version)/build.xml \
 		fastutil-$(version)/build.properties \
@@ -77,7 +78,7 @@ bin:
 	ant jar javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
-	tar zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
+	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README \
 		fastutil-$(version)/LICENSE-2.0 \
