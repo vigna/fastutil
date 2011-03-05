@@ -554,6 +554,57 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #endif
 
 
+#if #valueclass(Byte) || #valueclass(Char) || #valueclass(Integer) || #valueclass(Long) || #valueclass(Float) || #valueclass(Double)
+
+	/** Adds an increment to value currently associated with a key.
+	 *
+	 * <P>Note that this method respects the {@linkplain #defaultReturnValue() default return value} semantics: when
+	 * called with a key that does not currently appears in the map, the key
+	 * will be associated with the default return value plus
+	 * the given increment.
+	 *
+	 * @param k the key.
+	 * @param incr the increment.
+	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	 */
+
+	public VALUE_GENERIC_TYPE add(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE incr) {
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if ( KEY_EQUALS( k, key[ pos ] ) )  {
+				final VALUE_GENERIC_TYPE oldValue = value[ pos ];
+				value[ pos ] += incr;
+				return oldValue;
+			}
+			pos = ( pos + 1 ) & mask;
+		}
+		  
+		used[ pos ] = true;
+		key[ pos ] = k;
+		value[ pos ] = (VALUE_TYPE)(defRetValue + incr);
+		
+#ifdef Linked
+		if ( size == 0 ) {
+			first = last = pos;
+			link[ pos ] = 0;
+		}
+		else {
+			link[ last ] ^= pos ^ -1;
+			link[ pos ] = last ^ -1;
+			last = pos;
+		}
+#endif
+
+		if ( ++size >= maxFill ) rehash( arraySize( size + 1, f ) );
+		if ( ASSERTS ) checkTable();
+		return defRetValue;
+	}
+
+#endif
+
 	/** Shifts left entries with the specified hash code, starting at the specified position,
 	 * and empties the resulting free entry.
 	 *

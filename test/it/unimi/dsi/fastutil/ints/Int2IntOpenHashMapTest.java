@@ -220,4 +220,21 @@ public class Int2IntOpenHashMapTest {
 		test( 1000, Hash.FAST_LOAD_FACTOR );
 		test( 1000, Hash.VERY_FAST_LOAD_FACTOR );
 	}
+	
+	@Test
+	public void testAdd() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		assertEquals( 0, m.add( 0, 2 ) );
+		assertEquals( 2, m.get( 0 ) );
+		assertEquals( 2, m.add( 0, 3 ) );
+		assertEquals( 5, m.get( 0 ) );
+		m.defaultReturnValue( -1 );
+		assertEquals( -1, m.add( 1, 1 ) );
+		assertEquals( 0, m.get( 1 ) );
+		assertEquals( 0, m.add( 1, 1 ) );
+		assertEquals( 1, m.get( 1 ) );
+		assertEquals( 1, m.add( 1, -2 ) );
+		assertEquals( -1, m.get( 1 ) );
+		
+	}
 }
