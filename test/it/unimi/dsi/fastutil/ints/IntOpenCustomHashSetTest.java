@@ -5,23 +5,46 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashSet;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
-public class IntOpenHashSetTest {
+public class IntOpenCustomHashSetTest {
+
+	private static final class Strategy implements IntHash.Strategy, Serializable {
+		private Integer key[];
+		
+		public Strategy( Integer[] key ) {
+			this.key = key;
+		}
+
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public int hashCode( int e ) {
+			return key[ e ].hashCode();
+		}
+
+		@Override
+		public boolean equals( int a, int b ) {
+			return key[ a ].equals( key[ b ] );
+		}
+	}
 
 	private static java.util.Random r = new java.util.Random( 0 );
 
 	private static int genKey() {
-		return r.nextInt();
+		return r.nextInt( 10 );
 	}
-
+	
 	@SuppressWarnings("boxing")
-	private static void checkTable( IntOpenHashSet s ) {
+	private static void checkTable( IntOpenCustomHashSet s ) {
 		final boolean[] used = s.used;
 		final int[]key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
@@ -38,7 +61,7 @@ public class IntOpenHashSetTest {
 
 	}
 
-	private static void printProbes( IntOpenHashSet m ) {
+	private static void printProbes( IntOpenCustomHashSet m ) {
 		long totProbes = 0;
 		double totSquareProbes = 0;
 		int maxProbes = 0;
@@ -64,17 +87,19 @@ public class IntOpenHashSetTest {
 				) + "; actual: " + expected + "; stddev: " + Math.sqrt( totSquareProbes / m.n - expected * expected ) + "; max probes: " + maxProbes );
 	}
 
-	@SuppressWarnings({ "unchecked", "boxing" })
+	@SuppressWarnings({ "boxing" })
 	private static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		int c;
-		IntOpenHashSet m = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE, f );
-		java.util.Set t = new java.util.HashSet();
-
+		final Integer key[] = new Integer[ (int)Math.ceil( n * f ) ];
+		HashSet<Integer> t = new HashSet<Integer>();
 		/* First of all, we fill t with random data. */
 
-		for ( int i = 0; i < Math.ceil( f * n ); i++ )
-			t.add( ( Integer.valueOf( genKey() ) ) );
+		for ( int i = 0; i < key.length; i++ ) t.add( ( key[ i ] = new Integer( genKey() ) ) );
 
+		final Strategy strategy = new Strategy( key );
+		IntOpenCustomHashSet m = new IntOpenCustomHashSet( Hash.DEFAULT_INITIAL_SIZE, f, strategy );
+
+		
 		/* Now we add to m the same data */
 
 		m.addAll( t );
@@ -172,7 +197,7 @@ public class IntOpenHashSetTest {
 		java.io.InputStream is = new java.io.FileInputStream( ff );
 		java.io.ObjectInputStream ois = new java.io.ObjectInputStream( is );
 
-		m = (IntOpenHashSet)ois.readObject();
+		m = (IntOpenCustomHashSet)ois.readObject();
 		ois.close();
 		ff.delete();
 
@@ -211,7 +236,7 @@ public class IntOpenHashSetTest {
 		assertFalse( "Error: m is not empty (as it should be)", !m.isEmpty() );
 
 
-		m = new IntOpenHashSet( n, f );
+		m = new IntOpenCustomHashSet( n, f, strategy );
 		t.clear();
 
 		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
