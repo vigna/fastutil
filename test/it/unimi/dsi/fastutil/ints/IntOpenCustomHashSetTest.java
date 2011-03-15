@@ -3,40 +3,37 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashSet;
 
-import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
+
+/** Not a particularly good test, but it will check that we use everywhere the same hashing strategy. */
+
 public class IntOpenCustomHashSetTest {
 
 	private static final class Strategy implements IntHash.Strategy, Serializable {
-		private Integer key[];
-		
-		public Strategy( Integer[] key ) {
-			this.key = key;
-		}
-
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		public int hashCode( int e ) {
-			return key[ e ].hashCode();
+			return Integer.reverse( e );
 		}
 
 		@Override
 		public boolean equals( int a, int b ) {
-			return key[ a ].equals( key[ b ] );
+			return a == b;
 		}
 	}
 
+	private final static Strategy strategy = new Strategy();
+	
 	private static java.util.Random r = new java.util.Random( 0 );
 
 	private static int genKey() {
@@ -96,7 +93,6 @@ public class IntOpenCustomHashSetTest {
 
 		for ( int i = 0; i < key.length; i++ ) t.add( ( key[ i ] = new Integer( genKey() ) ) );
 
-		final Strategy strategy = new Strategy( key );
 		IntOpenCustomHashSet m = new IntOpenCustomHashSet( Hash.DEFAULT_INITIAL_SIZE, f, strategy );
 
 		
