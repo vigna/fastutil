@@ -184,6 +184,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n\n"\
+"#define HASH ${TYPE_CAP[$k]}Hash\n\n"\
 "#define SORTED_SET ${TYPE_CAP[$k]}SortedSet\n\n"\
 "#define STD_SORTED_SET ${TYPE_STD[$k]}SortedSet\n\n"\
 "#define FUNCTION ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
@@ -191,8 +192,10 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
 "#define STD_SORTED_MAP SortedMap\n\n"\
+"#define STRATEGY Strategy\n\n"\
 "#else\n"\
 "#define STD_SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n\n"\
+"#define STRATEGY PACKAGE.${TYPE_CAP[$k]}Hash.Strategy\n\n"\
 "#endif\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n\n"\
 "#define BIG_LIST ${TYPE_CAP[$k]}BigList\n\n"\
@@ -407,16 +410,17 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "/* Equality */\n"\
 \
 \
-"#if #keyclass(Object)\n"\
+\
 "#ifdef Custom\n"\
 "#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
 "#else\n"\
+"#if #keyclass(Object)\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
-"#endif\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
+"#endif\n"\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\
@@ -483,6 +487,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
 "#endif\n"\
 \
+"#ifdef Custom\n"\
+"#define KEY2JAVAHASH(x) ( strategy.hashCode(x) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( strategy.hashCode(x) ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)strategy.hashCode(x) ) )\n"\
+"#else\n"\
+\
 "#if #keyclass(Float)\n"\
 "#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
@@ -512,6 +522,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2JAVAHASH(x) (x)\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)(x) ) )\n"\
+"#endif\n"\
 "#endif\n"\
 \
 "#endif\n"\

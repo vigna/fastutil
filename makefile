@@ -107,6 +107,11 @@ $(SETS): drv/Set.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SETS)
 
+HASHES := $(foreach k,$(TYPE_NOOBJ), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)Hash.c)
+$(HASHES): drv/Hash.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(HASHES)
+
 SORTED_SETS := $(foreach k,$(TYPE_NOBOOL), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)SortedSet.c)
 $(SORTED_SETS): drv/SortedSet.drv; ./gencsource.sh $< $@ >$@
 
@@ -275,12 +280,12 @@ $(LINKED_OPEN_HASH_SETS): drv/LinkedOpenHashSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LINKED_OPEN_HASH_SETS)
 
-OPEN_CUSTOM_HASH_SETS := $(SOURCEDIR)/objects/ObjectOpenCustomHashSet.c
+OPEN_CUSTOM_HASH_SETS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)OpenCustomHashSet.c)
 $(OPEN_CUSTOM_HASH_SETS): drv/OpenCustomHashSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(OPEN_CUSTOM_HASH_SETS)
 
-LINKED_OPEN_CUSTOM_HASH_SETS := $(SOURCEDIR)/objects/ObjectLinkedOpenCustomHashSet.c
+LINKED_OPEN_CUSTOM_HASH_SETS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(SOURCEDIR)/$(PACKAGE_$(k))/$(k)LinkedOpenCustomHashSet.c)
 $(LINKED_OPEN_CUSTOM_HASH_SETS): drv/LinkedOpenCustomHashSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LINKED_OPEN_CUSTOM_HASH_SETS)

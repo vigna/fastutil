@@ -106,9 +106,7 @@ public class HashCommon {
 		x |= x >> 2;
 		x |= x >> 4;
 		x |= x >> 8;
-		x |= x >> 16;
-		x++;
-		return x;
+		return ( x | x >> 16 ) + 1;
 	}
 
 	/** Return the least power of two greater than or equal to the specified value.
@@ -126,9 +124,7 @@ public class HashCommon {
 		x |= x >> 4;
 		x |= x >> 8;
 		x |= x >> 16;
-		x |= x >> 32;
-		x++;
-		return x;
+		return ( x | x >> 32 ) + 1;
 	}
 
 
