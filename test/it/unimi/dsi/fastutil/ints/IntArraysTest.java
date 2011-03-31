@@ -1,6 +1,7 @@
 package it.unimi.dsi.fastutil.ints;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -58,5 +59,30 @@ public class IntArraysTest {
 			}
 		});
 		assertArrayEquals( sorted, d );
+	}
+	
+	@Test
+	public void testShuffle() {
+		int[] a = new int[ 100 ];
+		for( int i = a.length; i-- != 0; ) a[ i ] = i;
+		IntArrays.shuffle( a, new Random() );
+		boolean[] b = new boolean[ a.length ];
+		for( int i = a.length; i-- != 0; ) {
+			assertFalse( b[ a[ i ] ] );
+			b[ a[ i ] ] = true;
+		}
+	}
+
+	@Test
+	public void testShuffleFragment() {
+		int[] a = new int[ 100 ];
+		for( int i = a.length; i-- != 0; ) a[ i ] = -1;
+		for( int i = 10; i < 30; i++ ) a[ i ] = i - 10;
+		IntArrays.shuffle( a, 10, 30, new Random() );
+		boolean[] b = new boolean[ 20 ];
+		for( int i = 20; i-- != 0; ) {
+			assertFalse( b[ a[ i + 10 ] ] );
+			b[ a[ i + 10 ] ] = true;
+		}
 	}
 }

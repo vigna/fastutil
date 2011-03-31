@@ -5,6 +5,7 @@ import static it.unimi.dsi.fastutil.ints.IntBigArrays.set;
 import static it.unimi.dsi.fastutil.ints.IntBigArrays.get;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -107,4 +108,32 @@ public class IntBigArraysTest {
 		b[ 0 ][ 0 ] = 0;
 		assertFalse( IntBigArrays.equals( b, c ) );
 	}
+
+	@Test
+	public void testShuffle() {
+		int[] a = new int[ 100 ];
+		for( int i = a.length; i-- != 0; ) a[ i ] = i;
+		int[][] b = IntBigArrays.wrap( a );
+		IntBigArrays.shuffle( b, new Random() );
+		boolean[] c = new boolean[ a.length ];
+		for( long i = IntBigArrays.length( b ); i-- != 0; ) {
+			assertFalse( c[ IntBigArrays.get( b, i ) ] );
+			c[ IntBigArrays.get( b, i ) ] = true;
+		}
+	}
+
+	@Test
+	public void testShuffleFragment() {
+		int[] a = new int[ 100 ];
+		for( int i = a.length; i-- != 0; ) a[ i ] = -1;
+		for( int i = 10; i < 30; i++ ) a[ i ] = i - 10;
+		int[][] b = IntBigArrays.wrap( a );
+		IntBigArrays.shuffle( b, 10, 30, new Random() );
+		boolean[] c = new boolean[ 20 ];
+		for( int i = 20; i-- != 0; ) {
+			assertFalse( c[ IntBigArrays.get( b, i + 10 ) ] );
+			c[ IntBigArrays.get( b, i + 10 ) ] = true;
+		}
+	}
+
 }
