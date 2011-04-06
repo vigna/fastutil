@@ -485,6 +485,15 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( (x) < (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
+\
+"#if #keyclass(Float)\n"\
+"#define KEY2LEXINT(x) fixFloat(x)\n"\
+"#elif #keyclass(Double)\n"\
+"#define KEY2LEXINT(x) fixDouble(x)\n"\
+"#else\n"\
+"#define KEY2LEXINT(x) (x)\n"\
+"#endif\n"\
+\
 "#endif\n"\
 \
 "#ifdef Custom\n"\
