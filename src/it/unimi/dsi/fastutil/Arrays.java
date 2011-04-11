@@ -70,20 +70,20 @@ public class Arrays {
 
 	/**
 	 * Transforms two consecutive sorted ranges into a single sorted range. The initial ranges are
-	 * <code>[first, middle)</code> and <code>[middle, last)</code>, and the resulting range is
-	 * <code>[first, last)</code>. Elements in the first input range will precede equal elements in
+	 * <code>[first..middle)</code> and <code>[middle..last)</code>, and the resulting range is
+	 * <code>[first..last)</code>. Elements in the first input range will precede equal elements in
 	 * the second.
 	 */
 	private static void inPlaceMerge( final int from, int mid, final int to, final IntComparator comp, final Swapper swapper ) {
 		if ( from >= mid || mid >= to ) return;
 		if ( to - from == 2 ) {
-			if ( comp.compare( mid, from ) < 0 ) {
-				swapper.swap( from, mid );
-			}
+			if ( comp.compare( mid, from ) < 0 ) swapper.swap( from, mid );
 			return;
 		}
+
 		int firstCut;
 		int secondCut;
+
 		if ( mid - from > to - mid ) {
 			firstCut = from + ( mid - from ) / 2;
 			secondCut = lowerBound( mid, to, firstCut, comp );
@@ -121,28 +121,58 @@ public class Arrays {
 	 * element can be inserted without violating the ordering. Sorting is by a user-supplied
 	 * comparison function.
 	 * 
-	 * @param mid Beginning of the range.
-	 * @param to One past the end of the range.
-	 * @param firstCut Element to be searched for.
-	 * @param comp Comparison function.
-	 * @return The largest index i such that, for every j in the range <code>[first, i)</code>,
-	 * <code>comp.apply(array[j], x)</code> is <code>true</code>.
+	 * @param from the index of the first element (inclusive) to be included in the binary search.
+	 * @param to the index of the last element (exclusive) to be included in the binary search.
+	 * @param pos the position of the element to be searched for.
+	 * @param comp the comparison function.
+	 * @return the largest index i such that, for every j in the range <code>[first..i)</code>,
+	 * <code>comp.compare(j, pos)</code> is <code>true</code>.
 	 */
-	private static int lowerBound( int mid, final int to, final int firstCut, final IntComparator comp ) {
+	private static int lowerBound( int from, final int to, final int pos, final IntComparator comp ) {
 		// if (comp==null) throw new NullPointerException();
-		int len = to - mid;
+		int len = to - from;
 		while ( len > 0 ) {
 			int half = len / 2;
-			int middle = mid + half;
-			if ( comp.compare( middle, firstCut ) < 0 ) {
-				mid = middle + 1;
+			int middle = from + half;
+			if ( comp.compare( middle, pos ) < 0 ) {
+				from = middle + 1;
 				len -= half + 1;
 			}
 			else {
 				len = half;
 			}
 		}
-		return mid;
+		return from;
+	}
+
+
+	/**
+	 * Performs a binary search on an already sorted range: finds the last position where an element
+	 * can be inserted without violating the ordering. Sorting is by a user-supplied comparison
+	 * function.
+	 * 
+	 * @param from the index of the first element (inclusive) to be included in the binary search.
+	 * @param to the index of the last element (exclusive) to be included in the binary search.
+	 * @param pos the position of the element to be searched for.
+	 * @param comp the comparison function.
+	 * @return The largest index i such that, for every j in the range <code>[first..i)</code>,
+	 * <code>comp.compare(pos, j)</code> is <code>false</code>.
+	 */
+	private static int upperBound( int from, final int mid, final int pos, final IntComparator comp ) {
+		// if (comp==null) throw new NullPointerException();
+		int len = mid - from;
+		while ( len > 0 ) {
+			int half = len / 2;
+			int middle = from + half;
+			if ( comp.compare( pos, middle ) < 0 ) {
+				len = half;
+			}
+			else {
+				from = middle + 1;
+				len -= half + 1;
+			}
+		}
+		return from;
 	}
 
 	/**
@@ -162,7 +192,8 @@ public class Arrays {
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
 	 * of the sort. The sorting algorithm is an in-place mergesort that is significantly slower than a 
-	 * standard mergesort, but does not allocate additional memory.
+	 * standard mergesort, as its running time is <i>O</i>(<var>n</var>&nbsp;(log&nbsp;<var>n</var>)<sup>2</sup>), but it does not allocate additional memory; as a result, it can be
+	 * used as a generic sorting algorithm.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
@@ -283,34 +314,6 @@ public class Arrays {
 		if ( ( s = d - c ) > 1 ) quickSort( n - s, n, comp, swapper );
 	}
 
-	/**
-	 * Performs a binary search on an already sorted range: finds the last position where an element
-	 * can be inserted without violating the ordering. Sorting is by a user-supplied comparison
-	 * function.
-	 * 
-	 * @param from Beginning of the range.
-	 * @param mid One past the end of the range.
-	 * @param secondCut Element to be searched for.
-	 * @param comp Comparison function.
-	 * @return The largest index i such that, for every j in the range <code>[first, i)</code>,
-	 * <code>comp.apply(x, array[j])</code> is <code>false</code>.
-	 */
-	private static int upperBound( int from, final int mid, final int secondCut, final IntComparator comp ) {
-		// if (comp==null) throw new NullPointerException();
-		int len = mid - from;
-		while ( len > 0 ) {
-			int half = len / 2;
-			int middle = from + half;
-			if ( comp.compare( secondCut, middle ) < 0 ) {
-				len = half;
-			}
-			else {
-				from = middle + 1;
-				len -= half + 1;
-			}
-		}
-		return from;
-	}
 
 	/**
 	 * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].

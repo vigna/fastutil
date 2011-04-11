@@ -397,6 +397,63 @@ public class ARRAYS {
 			( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
+
+	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[] a, final int from, final int to, final KEY_COMPARATOR KEY_GENERIC comp ) {
+		for( int i = from; i < to - 1; i++ ) {
+			int m = i;
+			for( int j = i + 1; j < to; j++ ) if ( comp.compare( a[ j ], a[ m ] ) < 0 ) m = j;
+			if ( m != i ) {
+				final KEY_GENERIC_TYPE u = a[ i ];
+				a[ i ] = a[ m ];
+				a[ m ] = u;
+			}
+		}
+	}
+
+
+	private static KEY_GENERIC void insertionSort( final KEY_GENERIC_TYPE[] a, final int from, final int to, final KEY_COMPARATOR KEY_GENERIC comp  ) {
+		for ( int i = from; ++i < to; ) { 
+			KEY_GENERIC_TYPE t = a[ i ];
+			int j = i;
+			for ( KEY_GENERIC_TYPE u = a[ j - 1 ]; comp.compare( t, u ) < 0; u = a[ --j - 1 ] ) {
+				a[ j ] = u;
+				if ( from == j - 1 ) {
+					--j;
+					break;
+				}
+			}
+			a[ j ] = t;
+		}
+	}
+
+	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[] a, final int from, final int to ) {
+		for( int i = from; i < to - 1; i++ ) {
+			int m = i;
+			for( int j = i + 1; j < to; j++ ) if ( KEY_LESS( a[ j ], a[ m ] ) ) m = j;
+			if ( m != i ) {
+				final KEY_GENERIC_TYPE u = a[ i ];
+				a[ i ] = a[ m ];
+				a[ m ] = u;
+			}
+		}
+	}
+	
+	private static KEY_GENERIC void insertionSort( final KEY_GENERIC_TYPE[] a, final int from, final int to ) {
+		for ( int i = from; ++i < to; ) { 
+			KEY_GENERIC_TYPE t = a[ i ];
+			int j = i;
+			for ( KEY_GENERIC_TYPE u = a[ j - 1 ]; KEY_LESS( t, u ); u = a[ --j - 1 ] ) {
+				a[ j ] = u;
+				if ( from == j - 1 ) {
+					--j;
+					break;
+				}
+			}
+			a[ j ] = t;
+		}
+	}
+
+
 	/** Sorts the specified range of elements according to the order induced by the specified
 	 * comparator using quicksort. 
 	 * 
@@ -412,10 +469,10 @@ public class ARRAYS {
 	 */
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[] x, final int from, final int to, final KEY_COMPARATOR KEY_GENERIC comp ) {
 		final int len = to - from;
-		// Insertion sort on smallest arrays
+		
+		// Selection sort on smallest arrays
 		if ( len < SMALL ) {
-			for ( int i = from; i < to; i++ )
-			for ( int j = i; j > from && comp.compare( x[ j - 1 ], x[ j ] ) > 0; j-- ) swap( x, j, j - 1 );
+			selectionSort( x, from, to, comp );
 			return;
 		}
 
@@ -506,10 +563,10 @@ public class ARRAYS {
 	@SuppressWarnings("unchecked")
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[] x, final int from, final int to ) {
 		final int len = to - from;
-		// Insertion sort on smallest arrays
+
+		// Selection sort on smallest arrays
 		if ( len < SMALL ) {
-			for ( int i = from; i < to; i++ )
-			for ( int j = i; j > from && KEY_LESS( x[ j ], x[ j - 1 ] ); j-- ) swap( x, j, j - 1 );
+			selectionSort( x, from, to );
 			return;
 		}
 
@@ -588,10 +645,8 @@ public class ARRAYS {
 		
 		// Insertion sort on smallest arrays
 		if ( len < SMALL ) {
-		    for ( int i = from; i < to; i++ ) 
-		    	for ( int j = i; j > from && KEY_LESS( a[ j ], a[ j - 1 ] ); j-- ) 
-		    		swap( a, j, j - 1 );
-		    return;
+			insertionSort( a, from, to );
+			return;
 		}
 	
 		// Recursively sort halves of a into supp
@@ -655,11 +710,9 @@ public class ARRAYS {
 		
 		// Insertion sort on smallest arrays
 		if ( len < SMALL ) {
-		    for ( int i = from; i < to; i++ ) 
-		    	for ( int j = i; j > from && comp.compare( a[ j - 1 ], a[ j ] ) > 0; j-- ) 
-		    		swap( a, j, j - 1 );
-		    return;
-		}
+			insertionSort( a, from, to, comp );
+			return;
+    	}
 	
 		// Recursively sort halves of a into supp
 		final int mid = ( from + to ) >>> 1;
@@ -721,7 +774,7 @@ public class ARRAYS {
 	 * @param to  the index of the last element (exclusive) to be searched.
 	 * @param key the value to be searched for.
 	 * @return index of the search key, if it is contained in the array;
-	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
 	 *             point</i> is defined as the the point at which the value would
 	 *             be inserted into the array: the index of the first
 	 *             element greater than the key, or the length of the array, if all
@@ -759,7 +812,7 @@ public class ARRAYS {
 	 * @param a the array to be searched.
 	 * @param key the value to be searched for.
 	 * @return index of the search key, if it is contained in the array;
-	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
 	 *             point</i> is defined as the the point at which the value would
 	 *             be inserted into the array: the index of the first
 	 *             element greater than the key, or the length of the array, if all
@@ -784,7 +837,7 @@ public class ARRAYS {
 	 * @param key the value to be searched for.
 	 * @param c a comparator.
 	 * @return index of the search key, if it is contained in the array;
-	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
 	 *             point</i> is defined as the the point at which the value would
 	 *             be inserted into the array: the index of the first
 	 *             element greater than the key, or the length of the array, if all
@@ -816,7 +869,7 @@ public class ARRAYS {
 	 * @param key the value to be searched for.
 	 * @param c a comparator.
 	 * @return index of the search key, if it is contained in the array;
-	 *             otherwise, <tt>(-(<i>insertion point</i>) - 1)</tt>.  The <i>insertion
+	 *             otherwise, <samp>(-(<i>insertion point</i>) - 1)</samp>.  The <i>insertion
 	 *             point</i> is defined as the the point at which the value would
 	 *             be inserted into the array: the index of the first
 	 *             element greater than the key, or the length of the array, if all
@@ -851,21 +904,10 @@ public class ARRAYS {
 	}
 #endif
 
-	private static void selectionSort( final KEY_TYPE[] a, final int from, final int to ) {
-		for( int i = from; i < to - 1; i++ ) {
-			int m = i;
-			for( int j = i + 1; j < to; j++ ) if ( a[ j ] < a[ m ] ) m = j;
-			if ( m != i ) {
-				final KEY_TYPE u = a[ i ];
-				a[ i ] = a[ m ];
-				a[ m ] = u;
-			}
-		}
-	}
-	
 
 	/** Sorts the specified array using radix sort.
 	 * @param a the array to be sorted.
+	 * @param stable forces the algorithm to be stable, which requires allocating a support array of the same size as the input.
 	 */
 	public static void radixSort( final KEY_TYPE[] a ) {
 		radixSort( a, 0, a.length );
@@ -873,7 +915,7 @@ public class ARRAYS {
 	
 	/** Sorts the specified range of elements in ascending order using radix sort.
 	 * 
-	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. Mcllroy, Keith Bostic and M. Douglas
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
 	 * McIlroy, &ldquo;Engineering radix sort&rdquo;
 	 * <!--, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.-->

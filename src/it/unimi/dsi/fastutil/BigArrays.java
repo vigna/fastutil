@@ -292,7 +292,8 @@ public class BigArrays {
 	 * 
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
 	 * of the sort. The sorting algorithm is an in-place mergesort that is significantly slower than a 
-	 * standard mergesort, but does not allocate additional memory.
+	 * standard mergesort, as its running time is <i>O</i>(<var>n</var>&nbsp;(log&nbsp;<var>n</var>)<sup>2</sup>), but it does not allocate additional memory; as a result, it can be
+	 * used as a generic sorting algorithm.
 	 * 
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.

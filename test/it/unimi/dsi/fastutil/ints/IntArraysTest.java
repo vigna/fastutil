@@ -4,7 +4,6 @@ import it.unimi.dsi.Util;
 import java.util.Random;
 
 import java.util.Arrays;
-import java.util.Random;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
