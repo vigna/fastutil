@@ -32,6 +32,7 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.ints.IntArrays;
 import java.util.Random;
 
 #if #keys(primitive)
@@ -376,7 +377,7 @@ public class ARRAYS {
 	}
 
 	private static final int SMALL = 7;
-	private static final int MEDIUM = 40;
+	private static final int MEDIUM = 50;
 
 	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[], final int a, final int b ) {
 		final KEY_GENERIC_TYPE t = x[ a ];
@@ -954,7 +955,7 @@ public class ARRAYS {
 			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
 #endif
 			
-			if ( length < 50 ) {
+			if ( length < MEDIUM ) {
 				selectionSort( a, first, first + length );
 				continue;
 			}
@@ -997,6 +998,98 @@ public class ARRAYS {
 			}
 		}
 	}
+
+
+
+	private static KEY_GENERIC void insertionSortIndirect( final int[] perm, final KEY_TYPE[] a, final int from, final int to ) {
+		for ( int i = from; ++i < to; ) { 
+			KEY_GENERIC_TYPE t = a[ perm[ i ] ];
+			int j = i;
+			for ( KEY_GENERIC_TYPE u = a[ perm[ j - 1 ] ]; t < u; u = a[ perm[ --j - 1 ] ] ) {
+				a[ perm[ j ] ] = u;
+				if ( from == j - 1 ) {
+					--j;
+					break;
+				}
+			}
+			a[ perm[ j ] ] = t;
+		}
+	}
+
+	public static void radixSortIndirectStable( final int[] perm, final KEY_TYPE[] a ) {
+		radixSortIndirectStable( perm, a, 0, perm.length );
+	}
+
+	/** Sorts the specified range of elements in ascending order using radix sort.
+	 * 
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993).
+	 *
+	 * <p>This implementation is significantly faster than quicksort 
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort integers in ascending order. There are also versions sorting
+	 * (lexicographically) in parallel two or more parallel arrays.
+	 * 
+	 * @param a the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 */
+	public static void radixSortIndirectStable( final int[] perm, final KEY_TYPE[] a, final int from, final int to ) {
+		final int maxLevel = DIGITS_PER_ELEMENT - 1;
+		final int[] support = new int[ to - from ];
+
+		final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( DIGITS_PER_ELEMENT - 1 ) + 1;
+		final int[] offsetStack = new int[ stackSize ];
+		int offsetPos = 0;
+		final int[] lengthStack = new int[ stackSize ];
+		int lengthPos = 0;
+		final int[] levelStack = new int[ stackSize ];
+		int levelPos = 0;
+		
+		offsetStack[ offsetPos++ ] = from;
+		lengthStack[ lengthPos++ ] = to - from;
+		levelStack[ levelPos++ ] = 0;
+
+		final int[] count = new int[ 1 << DIGIT_BITS ];
+
+		while( offsetPos > 0 ) {
+			final int first = offsetStack[ --offsetPos ];
+			final int length = lengthStack[ --lengthPos ];
+			final int level = levelStack[ --levelPos ];
+#if #keyclass(Character)
+			final int signMask = 0;
+#else
+			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
+#endif
+			
+			if ( length < MEDIUM ) {
+				insertionSortIndirect( perm, a, first, first + length );
+				continue;
+			}
+			
+			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
+
+			// Count keys.
+			for( int i = length; i-- != 0; ) count[ ( (int)( KEY2LEXINT( a[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask ]++;
+			// Compute cumulative distribution and push non-singleton keys on stack.
+			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
+				if ( level < maxLevel && count[ i ] > 1 ){
+					offsetStack[ offsetPos++ ] = first + p;
+					lengthStack[ lengthPos++ ] = count[ i ];
+					levelStack[ levelPos++ ] = level + 1;
+				}
+				p = count[ i ] = p + count[ i ];
+			}
+			
+			for( int i = length; i-- != 0; )
+				support[ --count[ ( (int)( KEY2LEXINT( a[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask ] ] = perm[ first + i ]; 
+
+			System.arraycopy( support, 0, perm, first, length );
+			IntArrays.fill( count, 0 );
+		}
+	}
+
+
 
 	private static void selectionSort( final KEY_TYPE[] a, final KEY_TYPE[] b, final int from, final int to ) {
 		for( int i = from; i < to - 1; i++ ) {
@@ -1049,7 +1142,7 @@ public class ARRAYS {
 			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
 #endif
 			
-			if ( length < 50 ) {
+			if ( length < MEDIUM ) {
 				selectionSort( a, b, first, first + length );
 				continue;
 			}
@@ -1159,7 +1252,7 @@ public class ARRAYS {
 			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
 #endif
 			
-			if ( length < 50 ) {
+			if ( length < MEDIUM ) {
 				selectionSort( a, first, first + length, level );
 				continue;
 			}

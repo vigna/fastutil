@@ -1,12 +1,9 @@
 package it.unimi.dsi.fastutil.longs;
 
-import it.unimi.dsi.Util;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Random;
 
-import java.util.Arrays;
-import java.util.Random;
-
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class LongArraysTest {
