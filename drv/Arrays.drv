@@ -1003,16 +1003,16 @@ public class ARRAYS {
 
 	private static KEY_GENERIC void insertionSortIndirect( final int[] perm, final KEY_TYPE[] a, final int from, final int to ) {
 		for ( int i = from; ++i < to; ) { 
-			KEY_GENERIC_TYPE t = a[ perm[ i ] ];
+			int t = perm[ i ];
 			int j = i;
-			for ( KEY_GENERIC_TYPE u = a[ perm[ j - 1 ] ]; t < u; u = a[ perm[ --j - 1 ] ] ) {
-				a[ perm[ j ] ] = u;
+			for ( int u = perm[ j - 1 ]; a[ t ] < a[ u ]; u = perm[ --j - 1 ] ) {
+				perm[ j ] = u;
 				if ( from == j - 1 ) {
 					--j;
 					break;
 				}
 			}
-			a[ perm[ j ] ] = t;
+			perm[ j ] = t;
 		}
 	}
 
@@ -1036,7 +1036,6 @@ public class ARRAYS {
 	 */
 	public static void radixSortIndirectStable( final int[] perm, final KEY_TYPE[] a, final int from, final int to ) {
 		final int maxLevel = DIGITS_PER_ELEMENT - 1;
-		final int[] support = new int[ to - from ];
 
 		final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( DIGITS_PER_ELEMENT - 1 ) + 1;
 		final int[] offsetStack = new int[ stackSize ];
@@ -1051,6 +1050,8 @@ public class ARRAYS {
 		levelStack[ levelPos++ ] = 0;
 
 		final int[] count = new int[ 1 << DIGIT_BITS ];
+		final int[] pos = new int[ 1 << DIGIT_BITS ];
+		final byte[] digit = new byte[ perm.length ];
 
 		while( offsetPos > 0 ) {
 			final int first = offsetStack[ --offsetPos ];
@@ -1070,22 +1071,49 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = length; i-- != 0; ) count[ ( (int)( KEY2LEXINT( a[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask ]++;
-			// Compute cumulative distribution and push non-singleton keys on stack.
-			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
-				if ( level < maxLevel && count[ i ] > 1 ){
-					offsetStack[ offsetPos++ ] = first + p;
-					lengthStack[ lengthPos++ ] = count[ i ];
-					levelStack[ levelPos++ ] = level + 1;
+			for( int i = length; i-- != 0; ) count[ (int)( ( ( KEY2LEXINT( a[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask ) ]++;
+			int lastUsed = -1;
+			
+			for( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
+				if ( count[ i ] != 0 ) {
+					lastUsed = i;
+					if ( level < maxLevel && count[ i ] > 1 ){
+						//System.err.println( " Pushing " + new StackEntry( first + pos[ i - 1 ], first + pos[ i ], level + 1 ) );
+						offsetStack[ offsetPos++ ] = p;
+						lengthStack[ lengthPos++ ] = count[ i ];
+						levelStack[ levelPos++ ] = level + 1;
+					}
 				}
-				p = count[ i ] = p + count[ i ];
+				pos[ i ] = ( p += count[ i ] );
 			}
 			
-			for( int i = length; i-- != 0; )
-				support[ --count[ ( (int)( KEY2LEXINT( a[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask ] ] = perm[ first + i ]; 
+			// When all slots are OK, the last slot is necessarily OK.
+			final int end = first + length - count[ lastUsed ];
+			count[ lastUsed ] = 0;
 
-			System.arraycopy( support, 0, perm, first, length );
-			IntArrays.fill( count, 0 );
+			// i moves through the start of each block
+			for( int i = first, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				int t = perm[ i ];
+
+				while( ( d = --pos[ c = (int)( ( ( KEY2LEXINT( a[ t ] ) >>> shift ) & DIGIT_MASK ) ^ signMask ) ] ) > i ) {
+					final int z = t;
+					t = perm[ d ];
+					perm[ d ] = z;
+				}
+
+				perm[ i ] = t;
+			}
+		}
+		
+		for( int i = from; i < to; ) {
+			final KEY_TYPE k = a[ perm[ i ] ];
+			boolean violation = false;
+			int j;
+			for( j = i + 1; j < to && a[ perm[ j ] ] == k; j++ ) 
+				if ( perm[ j ] < perm[ j - 1 ] ) violation = true;
+			
+			if ( violation ) IntArrays.radixSort( perm, i, j );
+			i = j;
 		}
 	}
 

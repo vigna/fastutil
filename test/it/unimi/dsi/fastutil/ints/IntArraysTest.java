@@ -1,10 +1,13 @@
 package it.unimi.dsi.fastutil.ints;
 
-import java.util.Random;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Random;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class IntArraysTest {
@@ -251,6 +254,12 @@ public class IntArraysTest {
 		perm = identity( t.length );
 		IntArrays.radixSortIndirectStable( perm, t );
 		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = new int[ t.length ];
+		for( int i = 0; i < t.length; i++ ) t[ i ] = random.nextInt( 4 ); 
+		perm = identity( t.length );
+		IntArrays.radixSortIndirectStable( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) if ( t[ perm[ i ] ] == t[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
 
 		t = new int[ 100 ];
 		perm = identity( t.length );
@@ -260,7 +269,6 @@ public class IntArraysTest {
 		for( int i = 10; i < 89; i++ ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
 		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
 		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
-		
 
 		t = new int[ 100000 ];
 		perm = identity( t.length );
@@ -273,11 +281,6 @@ public class IntArraysTest {
 		IntArrays.radixSortIndirectStable( perm, t );
 		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
 
-		t = new int[ t.length ];
-		perm = identity( t.length );
-		IntArrays.radixSortIndirectStable( perm, t );
-		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
-		
 		t = new int[ 10000000 ];
 		perm = identity( t.length );
 		random = new Random( 0 );
@@ -289,6 +292,11 @@ public class IntArraysTest {
 		perm = identity( t.length );
 		IntArrays.radixSortIndirectStable( perm, t );
 		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
-		
+
+		t = new int[ t.length ];
+		for( int i = 0; i < t.length; i++ ) t[ i ] = random.nextInt( 8 ); 
+		perm = identity( t.length );
+		IntArrays.radixSortIndirectStable( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) if ( t[ perm[ i ] ] == t[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
 	}
 }
