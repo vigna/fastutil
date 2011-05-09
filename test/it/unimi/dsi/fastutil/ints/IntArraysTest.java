@@ -266,7 +266,7 @@ public class IntArraysTest {
 		random = new Random( 0 );
 		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
 		IntArrays.radixSortIndirectStable( perm, t, 10, 90 );
-		for( int i = 10; i < 89; i++ ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
 		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
 		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
 
