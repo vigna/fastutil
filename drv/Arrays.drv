@@ -1022,8 +1022,8 @@ public class ARRAYS {
 		}
 	}
 
-	public static void radixSortIndirectStable( final int[] perm, final KEY_TYPE[] a ) {
-		radixSortIndirectStable( perm, a, 0, perm.length );
+	public static void radixSortIndirect( final int[] perm, final KEY_TYPE[] a, final boolean stable ) {
+		radixSortIndirect( perm, a, 0, perm.length, stable );
 	}
 
 	/** Sorts the specified range of elements in ascending order using radix sort.
@@ -1040,7 +1040,7 @@ public class ARRAYS {
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
-	public static void radixSortIndirectStable( final int[] perm, final KEY_TYPE[] a, final int from, final int to ) {
+	public static void radixSortIndirect( final int[] perm, final KEY_TYPE[] a, final int from, final int to, final boolean stable ) {
 		final int maxLevel = DIGITS_PER_ELEMENT - 1;
 
 		final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( DIGITS_PER_ELEMENT - 1 ) + 1;
@@ -1056,7 +1056,8 @@ public class ARRAYS {
 		levelStack[ levelPos++ ] = 0;
 
 		final int[] count = new int[ 1 << DIGIT_BITS ];
-		final int[] support = new int[ perm.length ];
+		final int[] pos = stable ? null : new int[ 1 << DIGIT_BITS ];
+		final int[] support = stable ? new int[ perm.length ] : null;
 		final byte[] digit = new byte[ perm.length ];
 
 		while( offsetPos > 0 ) {
@@ -1079,20 +1080,47 @@ public class ARRAYS {
 			// Count keys.
 			for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( KEY2LEXINT( a[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask );
 			for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
+			// Compute cumulative distribution and push non-singleton keys on stack.
+			int lastUsed = -1;
 			
 			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
-				if ( level < maxLevel && count[ i ] > 1 ){
-					offsetStack[ offsetPos++ ] = p + first;
-					lengthStack[ lengthPos++ ] = count[ i ];
-					levelStack[ levelPos++ ] = level + 1;
+				if ( count[ i ] != 0 ) {
+					lastUsed = i;
+					if ( level < maxLevel && count[ i ] > 1 ){
+						offsetStack[ offsetPos++ ] = p + first;
+						lengthStack[ lengthPos++ ] = count[ i ];
+						levelStack[ levelPos++ ] = level + 1;
+					}
 				}
-				count[ i ] = p += count[ i ];
+				if ( stable ) count[ i ] = p += count[ i ];
+				else pos[ i ] = ( p += count[ i ] );
 			}
 			
-			// i moves through the start of each block
-			for( int i = length; i-- != 0; ) support[ --count[ digit[ i ] & 0xFF ] ] = perm[ first + i ];
-			System.arraycopy( support, 0, perm, first, length );
-			it.unimi.dsi.fastutil.ints.IntArrays.fill( count, 0 );
+			if ( stable ) {
+				for( int i = length; i-- != 0; ) support[ --count[ digit[ i ] & 0xFF ] ] = perm[ first + i ];
+				System.arraycopy( support, 0, perm, first, length );
+				it.unimi.dsi.fastutil.ints.IntArrays.fill( count, 0 );
+			}
+			else {
+				// When all slots are OK, the last slot is necessarily OK.
+				final int end = length - count[ lastUsed ];
+				count[ lastUsed ] = 0;
+				// i moves through the start of each block
+				for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+					int t = perm[ i + first ];
+					c = digit[ i ] & 0xFF;
+					while( ( d = --pos[ c ] ) > i ) {
+						final int z = t;
+						final int zz = c;
+						t = perm[ d + first ];
+						c = digit[ d ] & 0xFF;
+						perm[ d + first ] = z;
+						digit[ d ] = (byte)zz;
+					}
+
+					perm[ i + first ] = t;
+				}
+			}
 		}
 	}
 
