@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class IntArraysTest {
 	
-	private static int[] identity( final int n ) {
+	public static int[] identity( final int n ) {
 		final int[] perm = new int[ n ];
 		for( int i = perm.length; i-- != 0; ) perm[ i ] = i;
 		return perm;
@@ -329,7 +329,7 @@ public class IntArraysTest {
 		IntArrays.radixSortIndirect( perm, t, false );
 		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
 
-		/*t = new int[ 100 ];
+		t = new int[ 100 ];
 		perm = identity( t.length );
 		random = new Random( 0 );
 		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
@@ -337,7 +337,7 @@ public class IntArraysTest {
 		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
 		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
 		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
-*/
+
 		t = new int[ 100000 ];
 		perm = identity( t.length );
 		random = new Random( 0 );

@@ -1,8 +1,11 @@
 package it.unimi.dsi.fastutil.doubles;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.ints.IntArrays;
 
 import java.util.Random;
 
@@ -137,5 +140,146 @@ public class DoubleArraysTest {
 		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+	}
+
+	@Test
+	public void testRadixSortIndirectStable() {
+		double[] d = { 2, 1, 0, 4 };
+		int[] perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+		
+		d = new double[ d.length ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		d = new double[] { 2, -1, 0, -4 };
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+		
+		d = DoubleArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ 100 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		Random random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ d.length ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		d = new double[ d.length ];
+		for( int i = 0; i < d.length; i++ ) d[ i ] = random.nextInt( 4 ); 
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) if ( d[ perm[ i ] ] == d[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
+
+		d = new double[ 100 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, 10, 90, true );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		d = new double[ 100000 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ 10000000 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ d.length ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+
+		d = new double[ d.length ];
+		for( int i = 0; i < d.length; i++ ) d[ i ] = random.nextInt( 8 ); 
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, true );
+		for( int i = d.length - 1; i-- != 0; ) if ( d[ perm[ i ] ] == d[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
+	}
+	
+	@Test
+	public void testRadixSortIndirectUnstable() {
+		double[] d = { 2, 1, 0, 4 };
+		int[] perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+		
+		d = new double[ d.length ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		d = new double[] { 2, -1, 0, -4 };
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+		
+		d = DoubleArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ 100 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		Random random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ 100 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, 10, 90, false );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		d = new double[ 100000 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ 10000000 ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		random = new Random( 0 );
+		for( int i = d.length; i-- != 0; ) d[ i ] = random.nextInt();
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertTrue( d[ perm[ i ] ] <= d[ perm[ i + 1 ] ] );
+
+		d = new double[ d.length ];
+		perm = it.unimi.dsi.fastutil.ints.IntArraysTest.identity( d.length );
+		DoubleArrays.radixSortIndirect( perm, d, false );
+		for( int i = d.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
 	}
 }
