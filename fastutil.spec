@@ -10,7 +10,7 @@ License:        Apache License 2.0
 Source0:        http://fastutil.dsi.unimi.it/fastutil-%{version}-src.tar.gz
 URL:            http://fastutil.dsi.unimi.it/
 BuildArch:      noarch
-Requires:       java >= 1.5.0
+Requires:       java >= 1.6.0
 Provides:	fastutil
 Provides:	fastutil5
 Obsoletes:	fastutil5
