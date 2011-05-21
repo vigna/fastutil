@@ -70,10 +70,11 @@ public class IndirectDoublePriorityQueues {
 			this.sync = this;
 		}
 
-		public void enqueue( int x ) { synchronized( sync ) { q.enqueue( x ); } }
+		public void enqueue( int index ) { synchronized( sync ) { q.enqueue( index ); } }
 		public int dequeue() { synchronized( sync ) { return q.dequeue(); } }
 		public int first() { synchronized( sync ) { return q.first(); } }
 		public int last() { synchronized( sync ) { return q.last(); } }
+		public boolean contains( final int index ) { synchronized( sync ) { return q.contains( index ); } }
 		public int secondaryFirst() { synchronized( sync ) { return q.secondaryFirst(); } }
 		public int secondaryLast() { synchronized( sync ) { return q.secondaryLast(); } }
 		public boolean isEmpty() { synchronized( sync ) { return q.isEmpty(); } }
@@ -82,7 +83,7 @@ public class IndirectDoublePriorityQueues {
 		public void changed() { synchronized( sync ) { q.changed(); } }
 		public void allChanged() { synchronized( sync ) { q.allChanged(); } }
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
-		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
+		public boolean remove( int i ) { synchronized( sync ) { return q.remove( i ); } }
 		public Comparator<? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
 		public Comparator<? super K> secondaryComparator() { synchronized( sync ) { return q.secondaryComparator(); } }
 		public int secondaryFront( int[] a ) { return q.secondaryFront( a ); }

@@ -44,6 +44,7 @@ public class IndirectPriorityQueues {
 		public int dequeue() { throw new NoSuchElementException(); }
 		public boolean isEmpty() { return true; }
 		public int size() { return 0; }
+		public boolean contains( int index ) { return false; }
 		public void clear() {}
 		public int first() { throw new NoSuchElementException(); }
 		public int last() { throw new NoSuchElementException(); }
@@ -51,7 +52,7 @@ public class IndirectPriorityQueues {
 		public void allChanged() {}
 		public Comparator<?> comparator() { return null; }
 		public void changed( final int i ) { throw new IllegalArgumentException( "Index " + i + " is not in the queue" ); }
-		public void remove( final int i ) { throw new IllegalArgumentException( "Index " + i + " is not in the queue" ); }
+		public boolean remove( final int i ) { return false; }
 		public int front( int[] a ) { return 0; }
 		
 	}
@@ -83,6 +84,7 @@ public class IndirectPriorityQueues {
 
 		public void enqueue( int x ) { synchronized( sync ) { q.enqueue( x ); } }
 		public int dequeue() { synchronized( sync ) { return q.dequeue(); } }
+		public boolean contains( final int index ) { synchronized( sync ) { return q.contains( index ); } }
 		public int first() { synchronized( sync ) { return q.first(); } }
 		public int last() { synchronized( sync ) { return q.last(); } }
 		public boolean isEmpty() { synchronized( sync ) { return q.isEmpty(); } }
@@ -91,7 +93,7 @@ public class IndirectPriorityQueues {
 		public void changed() { synchronized( sync ) { q.changed(); } }
 		public void allChanged() { synchronized( sync ) { q.allChanged(); } }
 		public void changed( int i ) { synchronized( sync ) { q.changed( i ); } }
-		public void remove( int i ) { synchronized( sync ) { q.remove( i ); } }
+		public boolean remove( int i ) { synchronized( sync ) { return q.remove( i ); } }
 		public Comparator<? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
 		public int front( int[] a ) { return q.front( a ); }
 	}

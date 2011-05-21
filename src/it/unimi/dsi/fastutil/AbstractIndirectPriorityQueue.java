@@ -27,12 +27,14 @@ public abstract class AbstractIndirectPriorityQueue<K> implements IndirectPriori
 	public int last() { throw new UnsupportedOperationException(); }
 
 	public void changed() { changed( first() ); }
-
+	
 	public void changed( int index ) { throw new UnsupportedOperationException(); }
 
 	public void allChanged() { throw new UnsupportedOperationException(); }
 
-	public void remove( int index ) { throw new UnsupportedOperationException(); }
+	public boolean remove( int index ) { throw new UnsupportedOperationException(); }
+
+	public boolean contains( int index ) { throw new UnsupportedOperationException(); }
 
 	public boolean isEmpty() { return size() == 0; }
 

@@ -34,16 +34,16 @@ import java.util.NoSuchElementException;
  * element that would be dequeued {@linkplain #last() last}.
  *
  * <P>The reference list should not change during queue operations (or, more
- * precisely, the relative order of the elements in the queue should not
+ * precisely, the relative order of the elements corresponding to indices in the queue should not
  * change). Nonetheless, some implementations may give the caller a way to
  * notify the queue that the {@linkplain #changed() first element has changed its 
  * relative position in the order}.
  *
  * <P>Optionally, an indirect priority queue may even provide methods to notify
  * {@linkplain #changed(int) the change of <em>any</em> element of the
- * reference list}, and to {@linkplain #remove(int) remove from the queue} any
- * element of the reference list presently in the queue. It may even allow to
- * notify that {@linkplain #allChanged() all elements have changed}.
+ * reference list}, to check {@linkplain #contains(int) the presence of
+ * an index in the queue}, and to {@linkplain #remove(int) remove an index from the queue}. 
+ * It may even allow to notify that {@linkplain #allChanged() all elements have changed}.
  *
  * <P>It is always possible to enqueue two distinct indices corresponding to
  * equal elements of the reference list. However, depending on the
@@ -62,17 +62,17 @@ public interface IndirectPriorityQueue<K> {
 
 	void enqueue( int index );
 
-	/** Dequeues the {@linkplain #first() first} element from the queue.
+	/** Dequeues the {@linkplain #first() first} element from this queue.
 	 *
 	 * @return the dequeued element.
-	 * @throws NoSuchElementException if the queue is empty.
+	 * @throws NoSuchElementException if this queue is empty.
 	 */
 
 	int dequeue();
 
-	/** Checks whether the queue is empty.
+	/** Checks whether this queue is empty.
 	 *
-	 * @return true if the queue is empty.
+	 * @return true if this queue is empty.
 	 */
 
 	boolean isEmpty();
@@ -89,23 +89,23 @@ public interface IndirectPriorityQueue<K> {
 
 	void clear();
 
-	/** Returns the first element of the queue.
+	/** Returns the first element of this queue.
 	 *
 	 * @return the first element.
-	 * @throws NoSuchElementException if the queue is empty.
+	 * @throws NoSuchElementException if this queue is empty.
 	 */
 
 	int first();
 
-	/** Returns the last element of the queue, that is, the element the would be dequeued last (optional operation).
+	/** Returns the last element of this queue, that is, the element the would be dequeued last (optional operation).
 	 *
 	 * @return the last element.
-	 * @throws NoSuchElementException if the queue is empty.
+	 * @throws NoSuchElementException if this queue is empty.
 	 */
 
 	int last();
 
-	/** Notifies the queue that the {@linkplain #first() first element} has changed (optional operation).
+	/** Notifies this queue that the {@linkplain #first() first element} has changed (optional operation).
 	 *
 	 */
 
@@ -117,36 +117,40 @@ public interface IndirectPriorityQueue<K> {
 	 */
 	Comparator <? super K> comparator();
 
-	/** Notifies the queue that the specified element has changed (optional operation).
+	/** Notifies this queue that the specified element has changed (optional operation).
 	 *
-	 * <P>Note that the specified element must belong to the queue.
+	 * <P>Note that the specified element must belong to this queue.
 	 *
 	 * @param index the element that has changed.
-	 * @throws NoSuchElementException if the specified element is not in the queue.
+	 * @throws NoSuchElementException if the specified element is not in this queue.
 	 */
 
 	public void changed( int index );
 
-	/** Notifies the queue that the all elements have changed (optional operation).
+	/** Notifies this queue that the all elements have changed (optional operation).
 	 */
 
 	public void allChanged();
 
-	/** Removes the specified element from the queue (optional operation).
-	 *
-	 * <P>Note that the specified element must belong to the queue.
+	/** Checks whether a given index belongs to this queue (optional operation).
+	 * 
+	 * @return true if the specified index belongs to this queue.
+	 */
+	public boolean contains( int index );
+	
+	/** Removes the specified element from this queue (optional operation).
 	 *
 	 * @param index the element to be removed.
-	 * @throws NoSuchElementException if the specified element is not in the queue.
+	 * @return true if the index was in the queue.
 	 */
 
-	public void remove( int index );
+	public boolean remove( int index );
 
-    /** Retrieves the front of the queue in a given array (optional operation).
+    /** Retrieves the front of this queue in a given array (optional operation).
      *
      * <p>The <em>front</em> of an indirect queue is the set of indices whose associated elements in the reference array 
      * are equal to the element associated to the {@linkplain #first() first index}. These indices can be always obtain by dequeueing, but 
-     * this method should retrieve efficiently such indices in the given array without modifying the state of the queue.
+     * this method should retrieve efficiently such indices in the given array without modifying the state of this queue.
      * 
      * @param a an array large enough to hold the front (e.g., at least long as the reference array).
      * @return the number of elements actually written (starting from the first position of <code>a</code>).

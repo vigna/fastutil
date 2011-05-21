@@ -159,6 +159,10 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 		INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, size - 1, c );
 	}
 
+	public boolean contains( final int index ) {
+		return inv[ index ] >= 0;
+	}
+
 	public int dequeue() {
 		if ( size == 0 ) throw new NoSuchElementException();
 		final int result = heap[ 0 ];
@@ -188,9 +192,9 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 	}
 
 
-	public void remove( final int index ) {
+	public boolean remove( final int index ) {
 		final int result = inv[ index ];
-		if ( result < 0 ) throw new IllegalArgumentException( "Index " + index + " does not belong to the queue" );
+		if ( result < 0 ) return false;
 		inv[ index ] = -1;
 
 		if ( result < --size ) {
@@ -198,6 +202,8 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 			final int newPos = INDIRECT_HEAPS.upHeap( refArray, heap, inv, size, result, c );
 			INDIRECT_HEAPS.downHeap( refArray, heap, inv, size, newPos, c );
 		}
+		
+		return true;
 	}
 
 
@@ -344,9 +350,9 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 		/** Removes the minimum element with respect to the primary comparator.
 		 *  @return the removed element.
 		 */
-		public void remove() {
+		public boolean remove() {
 			if ( n == 0 ) throw new java.util.NoSuchElementException();
-			if ( inSec[primary[0]] == -1 ) throw new IllegalArgumentException();
+			if ( inSec[primary[0]] == -1 ) return false;
 			int result = primary[0];
 			int ins = inSec[result];
 			inSec[ result ] = -1;
@@ -355,7 +361,7 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 			if ( ins == n-1 ) {
 				n--;
 				heapifyPrimary( 0 );	
-				return;
+				return true;
 			}
 			secondary[ins] = secondary[n-1]; 
 			inSec[secondary[ins]] = ins;
@@ -363,6 +369,7 @@ public class HEAP_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends HEAP_SEMI_INDIRECT
 			n--;
 			heapifyPrimary( 0 );
 			swimSecondary( ins );
+			return true;
 		}
 
 		public void clear() {

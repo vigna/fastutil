@@ -596,7 +596,6 @@ SOURCES = \
 	$(SOURCEDIR)/BigArrays.java \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
-	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \
 	$(SOURCEDIR)/Maps.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/Swapper.java \
@@ -604,10 +603,8 @@ SOURCES = \
 	$(SOURCEDIR)/Size64.java \
 	$(SOURCEDIR)/PriorityQueues.java \
 	$(SOURCEDIR)/IndirectPriorityQueues.java \
-	$(SOURCEDIR)/IndirectDoublePriorityQueues.java \
 	$(SOURCEDIR)/AbstractPriorityQueue.java \
 	$(SOURCEDIR)/AbstractIndirectPriorityQueue.java \
-	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java \
 	$(SOURCEDIR)/AbstractStack.java \
 	$(SOURCEDIR)/io/FastByteArrayInputStream.java \
 	$(SOURCEDIR)/io/FastByteArrayOutputStream.java \
@@ -618,6 +615,12 @@ SOURCES = \
 	$(SOURCEDIR)/io/MeasurableOutputStream.java \
 	$(SOURCEDIR)/io/MeasurableStream.java \
 	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
+
+OLDSOURCES = \
+	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \
+	$(SOURCEDIR)/IndirectDoublePriorityQueues.java \
+	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java
+
 
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
