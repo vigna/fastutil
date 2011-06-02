@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -375,4 +376,71 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertTrue( m.containsKey( 1 ) );
 		assertFalse( m.containsKey( 2 ) );
 	}
+	
+	@Test
+	public void testIterator() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, i ) );
+		assertEquals( 0, m.firstIntKey() );
+		
+		IntListIterator iterator = (IntListIterator)m.keySet().iterator();
+		for( int i = 0; i <= 100; i++ ) {
+			assertEquals( Integer.toString( i ), i - 1, iterator.previousIndex() );
+			assertEquals( Integer.toString( i ), i, iterator.nextIndex() );
+			if ( i != 100 ) assertEquals( Integer.toString( i ), i, iterator.nextInt() );
+		}
+
+		iterator = (IntListIterator)m.keySet().iterator( m.lastIntKey() );
+		for( int i = 100; i-- != 0; ) {
+			assertEquals( Integer.toString( i ), i, iterator.previousIndex() );
+			assertEquals( Integer.toString( i ), i + 1, iterator.nextIndex() );
+			if ( i != 0 ) assertEquals( Integer.toString( i ), i, iterator.previousInt() );
+		}
+
+		iterator = (IntListIterator)m.keySet().iterator( 50 );
+		for( int i = 50; i < 100; i++ ) {
+			assertEquals( Integer.toString( i ), i, iterator.previousIndex() );
+			assertEquals( Integer.toString( i ), i + 1, iterator.nextIndex() );
+			if ( i != 99 ) assertEquals( Integer.toString( i ), i + 1, iterator.nextInt() );
+		}
+
+		iterator = (IntListIterator)m.keySet().iterator( 50 );
+		for( int i = 50; i-- != -1; ) {
+			assertEquals( Integer.toString( i ), i + 1, iterator.previousIndex() );
+			assertEquals( Integer.toString( i ), i + 2, iterator.nextIndex() );
+			if ( i != -1 ) assertEquals( Integer.toString( i ), i + 1, iterator.previousInt() );
+		}
+
+		iterator = (IntListIterator)m.keySet().iterator( 50 );
+		for( int i = 50; i-- != -1; ) assertEquals( Integer.toString( i ), i + 1, iterator.previousInt() );
+		assertEquals( -1, iterator.previousIndex() );
+		assertEquals( 0, iterator.nextIndex() );
+		
+		iterator = (IntListIterator)m.keySet().iterator( 50 );
+		for( int i = 50; i < 100 - 1; i++ ) assertEquals( Integer.toString( i ), i + 1, iterator.nextInt() );
+		assertEquals( 99, iterator.previousIndex() );
+		assertEquals( 100, iterator.nextIndex() );
+
+		iterator = (IntListIterator)m.keySet().iterator( 50 );
+		iterator.previousInt();
+		iterator.remove();
+		assertEquals( 49, iterator.previousIndex() );
+		assertEquals( 49, iterator.previousInt() );
+		
+		iterator = (IntListIterator)m.keySet().iterator( 49 );
+		iterator.nextInt();
+		iterator.remove();
+		assertEquals( 50, iterator.nextIndex() );
+		assertEquals( 52, iterator.nextInt() );
+	}
+	
+	@Test(expected=NoSuchElementException.class)
+	public void testIteratorMissingElement() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, i ) );
+		m.keySet().iterator( 1000 );
+	}
+
 }
