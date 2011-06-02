@@ -289,7 +289,8 @@
 
     <p><strong>Linked classes do not implement wholly the {@link
 	java.util.SortedMap} interface</strong>. They provide methods to get the
-      first and last element in iteration order, but any submap or subset
+      first and last element in iteration order, and to start a bidirectional iterator from any element,
+      but any submap or subset
       method will cause an {@link java.lang.UnsupportedOperationException}
       (this may change in future versions).
 
@@ -725,8 +726,6 @@
     <li>deletions are effective&mdash;there is no &ldquo;marking&rdquo; of
     deleted entries (the claim that this was impossible with open 
     addressing was, of course, wrong);
-    <li>deletions in linked table are significantly slower, as they require
-    even more work on pointers;
     <li>given a size and a load factor, the backing array of a table will
     be in general larger (in the worst case about two times larger);
     <li>it is no longer possible to set the <em>growth factor</em> of the table, which
@@ -735,11 +734,6 @@
       are kept just for backward compatibility);
     <li>there are efficient implementations of {@linkplain it.unimi.dsi.fastutil.ints.IntOpenHashBigSet big sets}.
     </ul>
-    
-    <P>In the case of linked tables we have even slower deletions than before because
-    deleting an entry requires not only updating its pointers, but also 
-    to move around another few entries and updating their pointers (updating
-    pointers needs potentially linear time).
     
     <h3>Memory Usage</h3>
 
@@ -774,12 +768,8 @@
       doubling its size. 
 
     <p>In the case of linked hash tables, there is an additional vector of
-      2<sup>&lceil;log <var>n</var>&nbsp;/&nbsp;<var>f</var>&rceil;</sup> integers that is used to store link information. Each
-      element records the next and previous element indexes exclusive-or'd
-      together. As a result, linked tables provide bidirectional iterators
-      without having to store two pointers per entry (however, iterators
-      starting from a given element require a linear probe to be
-      initialized, unless the element is the last one).
+      2<sup>&lceil;log <var>n</var>&nbsp;/&nbsp;<var>f</var>&rceil;</sup> longs that is used to store link information. Each
+      element records the next and previous element (packed together so to be more cache friendly). 
       
     <h4>Balanced Trees</h4>
 

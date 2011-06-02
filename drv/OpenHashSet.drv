@@ -30,6 +30,20 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 #ifdef Linked
+#define SET_PREV( f64, p32 )       SET_UPPER( f64, p32 )
+#define SET_NEXT( f64, n32 )       SET_LOWER( f64, n32 )
+#define COPY_PREV( f64, p64 )      SET_UPPER64( f64, p64 )
+#define COPY_NEXT( f64, n64 )      SET_LOWER64( f64, n64 )
+#define GET_PREV( f64 )            GET_UPPER( f64 )
+#define GET_NEXT( f64 )            GET_LOWER( f64 )
+#define SET( f64, up32, low32 )    f64 = ( ( up32 & 0xFFFFFFFFL ) << 32 ) | ( low32 & 0xFFFFFFFFL )
+#define SET_UPPER( f64, up32 )     f64 ^= ( ( f64 ^ ( ( up32 & 0xFFFFFFFFL ) << 32 ) ) & 0xFFFFFFFF00000000L )
+#define SET_LOWER( f64, low32 )    f64 ^= ( ( f64 ^ ( low32 & 0xFFFFFFFFL ) ) & 0xFFFFFFFFL )
+#define SET_UPPER64( f64, up64 )   f64 ^= ( ( f64 ^ ( up64 & 0xFFFFFFFF00000000L ) ) & 0xFFFFFFFF00000000L )
+#define SET_LOWER64( f64, low64 )  f64 ^= ( ( f64 ^ ( low64 & 0xFFFFFFFFL ) ) & 0xFFFFFFFFL )
+#define GET_UPPER( f64 )           (int) ( f64 >>> 32 )
+#define GET_LOWER( f64 )           (int) f64
+
 #if #keys(reference)
 import java.util.Comparator;
 #endif
@@ -40,7 +54,8 @@ import java.util.Comparator;
  * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
  * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
- * if you reuse instances of this class.
+ * if you reuse instances of this class. The order is kept by means of a doubly linked list, represented
+ * <i>via</i> an array of longs parallel to the table.
  *
  * <P>Iterators created by this map will enumerate elements in the same order in which they
  * have been added to the set (addition of elements already present 
@@ -55,18 +70,13 @@ import java.util.Comparator;
  * #comparator()} returns always <code>null</code>.
  *
  * <P>The iterators provided by this class are type-specific {@linkplain
- * java.util.ListIterator list iterators}.  However, creation of an iterator
- * using a starting point is going to be very expensive, as the chosen starting
- * point must be linearly searched for, unless it is {@link #last()}, in which
- * case the iterator is created in constant time.
- *
- * <P>Note that deletions in a linked set are very expensive, as they usually
- * require scanning the list until the element to be removed and the elements
- * shifted because of the removal are found.
- *
- * <p><strong>Warning:</strong> The implementation of this class has significantly
- * changed in <code>fastutil</code> 6.1.0. Please read the
- * comments about this issue in the section &ldquo;Faster Hash Tables&rdquo; of the <a href="../../../../../overview-summary.html">overview</a>.
+ * java.util.ListIterator list iterators}, and can be started at any
+ * element <em>which is in the set</em> (if the provided element 
+ * is not in the set, a {@link NoSuchElementException} exception will be thrown).
+ * If, however, the provided element is not the first or last element in the
+ * set, creating the iterator will require linear time, as in the worst case
+ * the entire set must be scanned in iteration order to retrieve the positional
+ * index of the element.
  *
  * @see Hash
  * @see HashCommon
@@ -150,11 +160,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	protected transient int first = -1;
 	/** The index of the last entry in iteration order. It is valid iff {@link #size} is nonzero; otherwise, it contains -1. */
 	protected transient int last = -1;
-	/** For each entry, the next and the previous entry in iteration order
-	exclusive-or'd together. It is valid only on {@link Hash#OCCUPIED}
-	entries. The first and the last entry contain the actual successor and
-	predecessor, respectively, exclusived-or'd with -1. */
-	protected transient int link[];
+	/** For each entry, the next and the previous entry in iteration order,
+     * stored as <code>((prev & 0xFFFFFFFFL) << 32) | (next & 0xFFFFFFFFL)</code>.
+     * The first entry contains predecessor -1, and the last entry 
+     * contains successor -1. */
+	protected transient long link[];
 #endif
 
 #ifdef Custom
@@ -196,7 +206,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
 		used = new boolean[ n ];
 #ifdef Linked
-		link = new int[ n ];
+		link = new long[ n ];
 #endif
 	}
 	 
@@ -580,11 +590,12 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 #ifdef Linked
 		if ( size == 0 ) {
 			first = last = pos;
-			link[ pos ] = 0;
+			// Special case of SET(link[ pos ], -1, -1);
+			link[ pos ] = -1L;
 		}
 		else {
-			link[ last ] ^= pos ^ -1;
-			link[ pos ] = last ^ -1;
+			SET_NEXT( link[ last ], pos );
+			SET(link[ pos ], last, -1);
 			last = pos;
 		}
 #endif
@@ -729,27 +740,29 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			first = last = -1;
 			return;
 		}
-
 		if ( first == i ) {
-			first = link[ i ] ^ -1;
-			link[ first ] ^= i ^ -1;
+			first = GET_NEXT(link[ i ]);
+			if (0 <= first) {
+				// Special case of SET_PREV( link[ first ], -1 )
+				link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
+			}
 			return;
 		}
-
 		if ( last == i ) {
-			last = link[ i ] ^ -1;
-			link[ last ] ^= i ^ -1;
+			last = GET_PREV(link[ i ]);
+			if (0 <= last) {
+				// Special case of SET_NEXT( link[ last ], -1 )
+				link[ last ] |= -1 & 0xFFFFFFFFL;
+			}
 			return;
 		}
-
-		int j = first, prev = -1, next;
-		while( ( next = link[ j ] ^ prev ) != i ) {
-			prev = j;
-			j = next;
-		}
-		link[ j ] ^= link[ i ] ^ i ^ j;
-		link[ link[ i ] ^ j ] ^= i ^ j;
+		final long linki = link[ i ];
+		final int prev = GET_PREV(linki);
+		final int next = GET_NEXT(linki);
+		COPY_NEXT(link[ prev ], linki);
+		COPY_PREV(link[ next ], linki);
 	}
+
 
 	/** Modifies the {@link #link} vector for a shift from s to d.
 	 *
@@ -760,37 +773,30 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * @param d the destination position.
 	 */
 	protected void fixPointers( int s, int d ) {
-
 		if ( size == 1 ) {
 			first = last = d;
-			link[ d ] = 0;
+			// Special case of SET(link[ d ], -1, -1)
+			link[ d ] = -1L;
 			return;
 		}
-
 		if ( first == s ) {
 			first = d;
-			link[ link[ s ] ^ -1 ] ^= s ^ d;
+			SET_PREV( link[ GET_NEXT(link[ s ]) ], d );
 			link[ d ] = link[ s ];
 			return;
 		}
-
 		if ( last == s ) {
 			last = d;
-			link[ link[ s ] ^ -1 ] ^= s ^ d;
+			SET_NEXT( link[ GET_PREV(link[ s ])], d );
 			link[ d ] = link[ s ];
 			return;
 		}
-
-		int j = first, prev = -1, next;
-
-		while( ( next = link[ j ] ^ prev ) != s ) {
-			prev = j;
-			j = next;
-		}
-
-		link[ j ] ^= s ^ d;
-		link[ link[ s ] ^ j ] ^= s ^ d;
-		link[ d ] = link[ s ];
+		final long links = link[ s ];
+		final int prev = GET_PREV(links);
+		final int next = GET_NEXT(links);
+		SET_NEXT( link[ prev ], d );
+		SET_PREV( link[ next ], d );
+		link[ d ] = links;
 	}
 
 
@@ -863,7 +869,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if ( ! hasNext() ) throw new NoSuchElementException();
 
 			curr = next;
-			next = link[ curr ] ^ prev;
+			next = GET_NEXT(link[ curr ]);
 			prev = curr;
 
 			index++;
@@ -875,7 +881,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if ( ! hasPrevious() ) throw new NoSuchElementException();
 
 			curr = prev;
-			prev = link[ curr ] ^ next;
+			prev = GET_PREV(link[ curr ]);
 			next = curr;
 
 			index--;
@@ -900,17 +906,20 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				/* If the last operation was a next(), we are removing an entry that preceeds
 				   the current index, and thus we must decrement it. */
 				index--;
-				prev = link[ curr ] ^ next;
+				prev = GET_PREV(link[ curr ]);
 			}
-			else next = link[ curr ] ^ prev; // curr == next
+			else 
+				next = GET_NEXT(link[ curr ]);
 
 			size--;
 			/* Now we manually fix the pointers. Because of our knowledge of next
 			   and prev, this is going to be faster than calling fixPointers(). */
 			if ( prev == -1 ) first = next;
-			else link[ prev ] ^= curr ^ next;
+			else 
+				SET_NEXT( link[ prev ], next );
 			if ( next == -1 ) last = prev;
-			else link[ next ] ^= curr ^ prev;
+			else
+				SET_PREV( link[ next ], prev );
 
 			int last, slot, pos = curr;
 
@@ -1117,8 +1126,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		final KEY_GENERIC_TYPE newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN ];
 		final boolean newUsed[] = new boolean[ newN ];
 #ifdef Linked
-		final int link[] = this.link;
-		final int newLink[] = new int[ newN ];
+		final long link[] = this.link;
+		final long newLink[] = new long[ newN ];
 		first = -1;
 #endif
 
@@ -1138,17 +1147,18 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 #ifdef Linked
 			if ( prev != -1 ) {
-				newLink[ newPrev ] ^= pos;
-				newLink[ pos ] = newPrev;
+				SET_NEXT( newLink[ newPrev ], pos );
+				SET_PREV( newLink[ pos ], newPrev );
 				newPrev = pos;
 			}
 			else {
 				newPrev = first = pos;
-				newLink[ pos ] = -1;
+				// Special case of SET(newLink[ pos ], -1, -1);
+				newLink[ pos ] = -1L;
 			}
 
 			t = i;
-			i = link[ i ] ^ prev;
+			i = GET_NEXT(link[ i ]);
 			prev = t;
 
 #else
@@ -1164,7 +1174,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 #ifdef Linked
 		this.link = newLink;
 		this.last = newPrev;
-		if ( newPrev != -1 ) newLink[ newPrev ] ^= -1; 
+		if ( newPrev != -1 )
+			// Special case of SET_NEXT( newLink[ newPrev ], -1 );
+			newLink[ newPrev ] |= -1 & 0xFFFFFFFFL;
 #endif
 	}
 
@@ -1240,7 +1252,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
 		final boolean used[] = this.used = new boolean[ n ];
 #ifdef Linked
-		final int link[] = this.link = new int[ n ];
+		final long link[] = this.link = new long[ n ];
 		int prev = -1;
 		first = last = -1;
 #endif
@@ -1259,20 +1271,23 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 #ifdef Linked
 			if ( first != -1 ) {
-				link[ prev ] ^= pos;
-				link[ pos ] = prev;
+				SET_NEXT( link[ prev ], pos );
+				SET_PREV( link[ pos ], prev );
 				prev = pos;
 			}
 			else {
 				prev = first = pos;
-				link[ pos ] = -1;
+				// Special case of SET_PREV( newLink[ pos ], -1 );
+				link[ pos ] |= (-1L & 0xFFFFFFFFL) << 32;
 			}
 #endif
 		}
 
 #ifdef Linked
 		last = prev;
-		if ( prev != -1 ) link[ prev ] ^= -1; 
+		if ( prev != -1 ) 
+			// Special case of SET_NEXT( link[ prev ], -1 );
+			link[ prev ] |= -1 & 0xFFFFFFFFL; 
 #endif
 
 		if ( ASSERTS ) checkTable();
