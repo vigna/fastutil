@@ -443,4 +443,34 @@ public class Int2IntLinkedOpenHashMapTest {
 		m.keySet().iterator( 1000 );
 	}
 
+
+	@Test
+	public void testPutAndMove() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( Integer.MIN_VALUE );
+		for( int i = 0; i < 100; i++ ) assertEquals( Integer.MIN_VALUE, m.putAndMoveToFirst( i, i ) );
+		m.clear();
+		for( int i = 0; i < 100; i++ ) assertEquals( Integer.MIN_VALUE, m.putAndMoveToLast( i, i ) );
+		assertEquals( Integer.MIN_VALUE, m.putAndMoveToFirst( -1, -1 ) );
+		assertEquals( -1, m.firstIntKey() );
+		assertEquals( Integer.MIN_VALUE, m.putAndMoveToFirst( -2, -2 ) );
+		assertEquals( -2, m.firstIntKey() );
+		assertEquals( -1, m.putAndMoveToFirst( -1, -1 ) );
+		assertEquals( -1, m.firstIntKey() );
+		assertEquals( -1, m.putAndMoveToFirst( -1, -1 ) );
+		assertEquals( -1, m.firstIntKey() );
+		assertEquals( -1, m.putAndMoveToLast( -1, -1 ) );
+		assertEquals( -1, m.lastIntKey() );
+		assertEquals( Integer.MIN_VALUE, m.putAndMoveToLast( 100, 100 ) );
+		assertEquals( 100, m.lastIntKey() );
+		assertEquals( Integer.MIN_VALUE, m.putAndMoveToLast( 101, 101 ) );
+		assertEquals( 101, m.lastIntKey() );
+		assertEquals( 100, m.putAndMoveToLast( 100, 100 ) );
+		assertEquals( 100, m.lastIntKey() );
+		assertEquals( 100, m.putAndMoveToLast( 100, 100 ) );
+		assertEquals( 100, m.lastIntKey() );
+		assertEquals( 100, m.putAndMoveToFirst( 100, 100 ) );
+		assertEquals( 100, m.firstIntKey() );
+	}
+
 }

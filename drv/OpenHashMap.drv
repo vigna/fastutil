@@ -39,19 +39,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrays;
 
 
 #ifdef Linked
-#define SET_PREV( f64, p32 )       SET_UPPER( f64, p32 )
-#define SET_NEXT( f64, n32 )       SET_LOWER( f64, n32 )
-#define COPY_PREV( f64, p64 )      SET_UPPER64( f64, p64 )
-#define COPY_NEXT( f64, n64 )      SET_LOWER64( f64, n64 )
-#define GET_PREV( f64 )            GET_UPPER( f64 )
-#define GET_NEXT( f64 )            GET_LOWER( f64 )
-#define SET( f64, up32, low32 )    f64 = ( ( up32 & 0xFFFFFFFFL ) << 32 ) | ( low32 & 0xFFFFFFFFL )
-#define SET_UPPER( f64, up32 )     f64 ^= ( ( f64 ^ ( ( up32 & 0xFFFFFFFFL ) << 32 ) ) & 0xFFFFFFFF00000000L )
-#define SET_LOWER( f64, low32 )    f64 ^= ( ( f64 ^ ( low32 & 0xFFFFFFFFL ) ) & 0xFFFFFFFFL )
-#define SET_UPPER64( f64, up64 )   f64 ^= ( ( f64 ^ ( up64 & 0xFFFFFFFF00000000L ) ) & 0xFFFFFFFF00000000L )
-#define SET_LOWER64( f64, low64 )  f64 ^= ( ( f64 ^ ( low64 & 0xFFFFFFFFL ) ) & 0xFFFFFFFFL )
-#define GET_UPPER( f64 )           (int) ( f64 >>> 32 )
-#define GET_LOWER( f64 )           (int) f64
 
 import java.util.Comparator;
 
@@ -108,6 +95,9 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
  * iterator; however, this class partially violates the {@link java.util.SortedMap}
  * contract because all submap methods throw an exception and {@link
  * #comparator()} returns always <code>null</code>.
+ *
+ * <p>Additional methods, such as <code>getAndMoveToFirst()</code>, make it easy
+ * to use instances of this class as a cache (e.g., with LRU policy).
  *
  * <P>The iterators provided by the views of this class using are type-specific
  * {@linkplain java.util.ListIterator list iterators}, and can be started at any
@@ -508,12 +498,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #ifdef Linked
 		if ( size == 0 ) {
 			first = last = pos;
-			// Special case of SET(link[ pos ], -1, -1);
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
 			link[ pos ] = -1L;
 		}
 		else {
 			SET_NEXT( link[ last ], pos );
-			SET(link[ pos ], last, -1);
+			SET_UPPER_LOWER(  link[ pos ], last, -1  );
 			last = pos;
 		}
 #endif
@@ -551,12 +541,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #ifdef Linked
 		if ( size == 0 ) {
 			first = last = pos;
-			// Special case of SET(link[ pos ], -1, -1);
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
 			link[ pos ] = -1L;
 		}
 		else {
 			SET_NEXT( link[ last ], pos );
-			SET(link[ pos ], last, -1);
+			SET_UPPER_LOWER( link[ pos ], last, -1 );
 			last = pos;
 		}
 #endif
@@ -605,12 +595,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #ifdef Linked
 		if ( size == 0 ) {
 			first = last = pos;
-			// Special case of SET(link[ pos ], -1, -1);
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
 			link[ pos ] = -1L;
 		}
 		else {
 			SET_NEXT( link[ last ], pos );
-			SET(link[ pos ], last, -1);
+			SET_UPPER_LOWER( link[ pos ], last, -1 );
 			last = pos;
 		}
 #endif
@@ -714,7 +704,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #ifdef Linked
 /*
- * Remove first and last for doubly linked maps (same interface as java.util.Deque).
+ * Remove first and last for linked maps (same interface as java.util.Deque).
  */
  
     public VALUE_GENERIC_TYPE removeFirst() {
@@ -733,6 +723,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
         shiftKeys( pos );    
         return v;
     }
+
     public VALUE_GENERIC_TYPE removeLast() {
         if (0 == size) {
             return defRetValue;
@@ -754,311 +745,188 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 
 #ifdef Linked
-/*
- * Get with link re-arrangement methods for doubly linked maps.
- */
 
-    private void moveIndexToFirst( final int i ) {
-        if ( 1 == size ) {
-            return;
-        }
-        if ( first == i ) {
-            return;
-        }
-        if ( last == i ) {
-            last = GET_PREV(link[ i ]);
-            // Special case of SET_NEXT( link[ last ], -1 );
-            link[ last ] |= -1 & 0xFFFFFFFFL;
-        }
-        else {
-            final long linki = link[ i ];
-            final int prev = GET_PREV(linki);
-            final int next = GET_NEXT(linki);
-            COPY_NEXT(link[ prev ], linki);
-            COPY_PREV(link[ next ], linki);
-        }
-        SET_PREV( link[ first ], i );
-        SET(link[ i ], -1, first);
-        first = i;
-    }
-    private void moveIndexToLast( final int i ) {
-        if ( 1 == size ) {
-            return;
-        }
-        if ( last == i ) {
-            return;
-        }
-        if ( first == i ) {
-            first = GET_NEXT(link[ i ]);
-            // Special case of SET_PREV( link[ first ], -1 );
-            link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
-        }
-        else {
-            final long linki = link[ i ];
-            final int prev = GET_PREV(linki);
-            final int next = GET_NEXT(linki);
-            COPY_NEXT(link[ prev ], linki);
-            COPY_PREV(link[ next ], linki);
-        }
-        SET_NEXT( link[ last ], i );
-        SET(link[ i ], last, -1);
-        last = i;
-    }
+	private void moveIndexToFirst( final int i ) {
+		if ( size == 1 || first == i ) return;
+		if ( last == i ) {
+			last = GET_PREV(link[ i ]);
+			// Special case of SET_NEXT( link[ last ], -1 );
+			link[ last ] |= -1 & 0xFFFFFFFFL;
+		}
+		else {
+			final long linki = link[ i ];
+			final int prev = GET_PREV(linki);
+			final int next = GET_NEXT(linki);
+			COPY_NEXT(link[ prev ], linki);
+			COPY_PREV(link[ next ], linki);
+		}
+		SET_PREV( link[ first ], i );
+		SET_UPPER_LOWER( link[ i ], -1, first );
+		first = i;
+	}
 
+	private void moveIndexToLast( final int i ) {
+		if ( size == 1 ||  last == i ) return;
+		if ( first == i ) {
+			first = GET_NEXT(link[ i ]);
+			// Special case of SET_PREV( link[ first ], -1 );
+			link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
+		}
+		else {
+			final long linki = link[ i ];
+			final int prev = GET_PREV(linki);
+			final int next = GET_NEXT(linki);
+			COPY_NEXT(link[ prev ], linki);
+			COPY_PREV(link[ next ], linki);
+		}
+		SET_NEXT( link[ last ], i );
+		SET_UPPER_LOWER( link[ i ], last, -1 );
+		last = i;
+	}
 
-    public VALUE_GENERIC_TYPE getAndMoveToFirst ( final KEY_GENERIC_TYPE k ) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
+	/** Returns the value to which the given key is mapped; if the key is present, it is moved to the first position of the iteration order.
+	 *
+	 * @param k the key.
+	 * @return the corresponding value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	 */
+	public VALUE_GENERIC_TYPE getAndMoveToFirst( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
 
-        // The starting point.
-        int pos = KEY2INTHASH( k ) & mask;
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
 
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if( KEY_EQUALS( k, key[ pos ] ) ) {
+				moveIndexToFirst( pos );
+				return value[ pos ];
+			}
+			pos = ( pos + 1 ) & mask;
+		}
 
-        if ( used[ pos ] ) {
-            moveIndexToFirst( pos );
-            return value[ pos ];
-        } else return defRetValue;
-    }
-    
-    public VALUE_GENERIC_TYPE getAndMoveToLast ( final KEY_GENERIC_TYPE k ) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
+		return defRetValue;
+	}
+	
+	/** Returns the value to which the given key is mapped; if the key is present, it is moved to the last position of the iteration order.
+	 *
+	 * @param k the key.
+	 * @return the corresponding value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	 */
+	public VALUE_GENERIC_TYPE getAndMoveToLast( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
 
-        // The starting point.
-        int pos = KEY2INTHASH( k ) & mask;
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
 
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if( KEY_EQUALS( k, key[ pos ] ) ) {
+				moveIndexToLast( pos );
+				return value[ pos ];
+			}
+			pos = ( pos + 1 ) & mask;
+		}
 
-        if ( used[ pos ] ) {
-            moveIndexToLast( pos );
-            return value[ pos ];
-        } else return defRetValue;
-    }
-    
-    /**
-     * Used by {@link #getAndMoveToFirstIf} and {@link #getAndMoveToLastIf}.
-     * By default, returns <code>true</code>. 
-     * Sub-classes may override to perform some custom logic.
-     * @return true if the map should move the entry in the link order
-     */
-    protected boolean getAndMoveIfTest(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
-        return true;
-    }
-    
-    public VALUE_GENERIC_TYPE getAndMoveToFirstIf ( final KEY_GENERIC_TYPE k ) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
+		return defRetValue;
+	}
+	
+	/** Adds a pair to the map; if the key is already present, it is moved to the first position of the iteration order.
+	 *
+	 * @param k the key.
+	 * @param v the value.
+	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	 */
+	public VALUE_GENERIC_TYPE putAndMoveToFirst( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
 
-        // The starting point.
-        int pos = KEY2INTHASH( KEY_GENERIC_CAST k ) & mask;
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
 
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( KEY_GENERIC_CAST k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if ( KEY_EQUALS( k, key[ pos ] ) ) {
+				final VALUE_GENERIC_TYPE oldValue = value[ pos ];
+				value[ pos ] = v;
+				moveIndexToFirst( pos );
+				return oldValue;
+			}
+			
+			pos = ( pos + 1 ) & mask;
+		}
+		  
+		used[ pos ] = true;
+		key[ pos ] = k;
+		value[ pos ] = v;
+		
+		if ( size == 0 ) {
+			first = last = pos;
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
+			link[ pos ] = -1L;
+		}
+		else {
+			SET_PREV( link[ first ], pos );
+			SET_UPPER_LOWER( link[ pos ], -1, first );
+			first = pos;
+		}
 
-        if ( used[ pos ] ) {
-            final VALUE_GENERIC_TYPE v = value[ pos ];
-            if ( getAndMoveIfTest( k, v ) ) {
-                moveIndexToFirst( pos );
-            }
-            return v;
-        } else return defRetValue;
-    }
-    
-    public VALUE_GENERIC_TYPE getAndMoveToLastIf ( final KEY_GENERIC_TYPE k ) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
+		if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
+		if ( ASSERTS ) checkTable();
+		return defRetValue;
+	}
 
-        // The starting point.
-        int pos = KEY2INTHASH( KEY_GENERIC_CAST k ) & mask;
+	/** Adds a pair to the map; if the key is already present, it is moved to the last position of the iteration order.
+	 *
+	 * @param k the key.
+	 * @param v the value.
+	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	 */
+	public VALUE_GENERIC_TYPE putAndMoveToLast( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
 
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( KEY_GENERIC_CAST k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
 
-        if ( used[ pos ] ) {
-            final VALUE_GENERIC_TYPE v = value[ pos ];
-            if ( getAndMoveIfTest( k, v ) ) {
-                moveIndexToLast( pos );
-            }
-            return v;
-        } else return defRetValue;
-    }
-    
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if ( KEY_EQUALS( k, key[ pos ] ) ) {
+				final VALUE_GENERIC_TYPE oldValue = value[ pos ];
+				value[ pos ] = v;
+				moveIndexToLast( pos );
+				return oldValue;
+			}
+			
+			pos = ( pos + 1 ) & mask;
+		}
+		  
+		used[ pos ] = true;
+		key[ pos ] = k;
+		value[ pos ] = v;
+		
+		if ( size == 0 ) {
+			first = last = pos;
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
+			link[ pos ] = -1L;
+		}
+		else {
+			SET_NEXT( link[ last ], pos );
+			SET_UPPER_LOWER( link[ pos ], last, -1 );
+			last = pos;
+		}
 
-    public VALUE_GENERIC_TYPE putAndMoveToFirst(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
+		if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
+		if ( ASSERTS ) checkTable();
+		return defRetValue;
+	}
 
-        // The starting point.
-        int pos = KEY2INTHASH( k ) & mask;
-
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-        if ( used[ pos ] ) {
-            final VALUE_GENERIC_TYPE oldValue = value[ pos ];
-            value[ pos ] = v;
-            moveIndexToFirst( pos );
-            return oldValue;
-        }
-          
-        used[ pos ] = true;
-        key[ pos ] = k;
-        value[ pos ] = v;
-        
-        if ( size == 0 ) {
-            first = last = pos;
-            // Special case of SET(link[ pos ], -1, -1);
-            link[ pos ] = -1L;
-        }
-        else {
-            SET_PREV( link[ first ], pos );
-            SET(link[ pos ], -1, first);
-            first = pos;
-        }
-
-        if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
-        if ( ASSERTS ) checkTable();
-        return defRetValue;
-    }
-
-    public VALUE_GENERIC_TYPE putAndMoveToLast(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
-
-        // The starting point.
-        int pos = KEY2INTHASH( k ) & mask;
-
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-        if ( used[ pos ] ) {
-            final VALUE_GENERIC_TYPE oldValue = value[ pos ];
-            value[ pos ] = v;
-            moveIndexToLast( pos );
-            return oldValue;
-        }
-          
-        used[ pos ] = true;
-        key[ pos ] = k;
-        value[ pos ] = v;
-        
-        if ( size == 0 ) {
-            first = last = pos;
-            // Special case of SET(link[ pos ], -1, -1);
-            link[ pos ] = -1L;
-        }
-        else {
-            SET_NEXT( link[ last ], pos );
-            SET(link[ pos ], last, -1);
-            last = pos;
-        }
-
-        if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
-        if ( ASSERTS ) checkTable();
-        return defRetValue;
-    }
-
-    /**
-     * Used by {@link #putAndMoveToFirstIf} and {@link #putAndMoveToLastIf}.
-     * By default, returns <code>true</code>. 
-     * Sub-classes may override to perform some custom logic.
-     * @return true if the map should replace the old value with the new value
-     *     and move the entry in the link order
-     */
-    protected boolean putAndMoveIfTest(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE newValue,
-        final VALUE_GENERIC_TYPE oldValue) {
-        return true;
-    }
-
-    public VALUE_GENERIC_TYPE putAndMoveToFirstIf(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
-
-        // The starting point.
-        int pos = KEY2INTHASH( k ) & mask;
-
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-        if ( used[ pos ] ) {
-            final VALUE_GENERIC_TYPE oldValue = value[ pos ];
-            if ( putAndMoveIfTest( k, v, oldValue ) ) { 
-                value[ pos ] = v;
-                moveIndexToFirst( pos );
-            }
-            return oldValue;
-        }
-          
-        used[ pos ] = true;
-        key[ pos ] = k;
-        value[ pos ] = v;
-        
-        if ( size == 0 ) {
-            first = last = pos;
-            // Special case of SET(link[ pos ], -1, -1);
-            link[ pos ] = -1L;
-        }
-        else {
-            SET_PREV( link[ first ], pos );
-            SET(link[ pos ], -1, first);
-            first = pos;
-        }
-
-        if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
-        if ( ASSERTS ) checkTable();
-        return defRetValue;
-    }
-
-    public VALUE_GENERIC_TYPE putAndMoveToLastIf(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v,
-        final VALUE_GENERIC_TYPE check) {
-        final KEY_GENERIC_TYPE key[] = this.key;
-        final boolean used[] = this.used;
-        final int mask = this.mask;
-
-        // The starting point.
-        int pos = KEY2INTHASH( k ) & mask;
-
-        // There's always an unused entry.
-        while( used[ pos ] && ! KEY_EQUALS( k, key[ pos ] ) ) pos = ( pos + 1 ) & mask;
-        if ( used[ pos ] ) {
-            final VALUE_GENERIC_TYPE oldValue = value[ pos ];
-            if ( putAndMoveIfTest( k, v, oldValue ) ) {
-                value[ pos ] = v;
-                moveIndexToLast( pos );
-            }
-            return oldValue;
-        }
-          
-        used[ pos ] = true;
-        key[ pos ] = k;
-        value[ pos ] = v;
-        
-        if ( size == 0 ) {
-            first = last = pos;
-            // Special case of SET(link[ pos ], -1, -1);
-            link[ pos ] = -1L;
-        }
-        else {
-            SET_NEXT( link[ last ], pos );
-            SET(link[ pos ], last, -1);
-            last = pos;
-        }
-
-        if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
-        if ( ASSERTS ) checkTable();
-        return defRetValue;
-    }
-    
 #endif
-
-
 
 #if #keys(primitive)
 
@@ -1287,7 +1155,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	protected void fixPointers( int s, int d ) {
 		if ( size == 1 ) {
 			first = last = d;
-			// Special case of SET(link[ d ], -1, -1)
+			// Special case of SET_UPPER_LOWER( link[ d ], -1, -1 )
 			link[ d ] = -1L;
 			return;
 		}
@@ -2876,7 +2744,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					else if ( r.nextFloat() < 0.3 ) {
 						Object U = VALUE2OBJ(genValue());
 						E.setValue( U );
-                        t.put( F.getKey(), U );
+						t.put( F.getKey(), U );
 					}
 				}
 				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
@@ -2894,7 +2762,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					else if ( r.nextFloat() < 0.3 ) {
 						Object U = VALUE2OBJ(genValue());
 						E.setValue( U );
-                        t.put( F.getKey(), U );
+						t.put( F.getKey(), U );
 					}
 				}
 

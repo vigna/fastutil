@@ -70,7 +70,24 @@ for((v=0; v<${#TYPE_CAP[*]}; v++)); do
     if [[ ${TYPE_CAP[$v]} == $VALUE_TYPE_CAP ]]; then break; fi;
 done
 
-if [[ $root == *Linked* ]]; then Linked=Linked; fi
+if [[ $root == *Linked* ]]; then 
+Linked=Linked
+echo -e \
+"#define SET_PREV( f64, p32 )       SET_UPPER( f64, p32 )\n"\
+"#define SET_NEXT( f64, n32 )       SET_LOWER( f64, n32 )\n"\
+"#define COPY_PREV( f64, p64 )      SET_UPPER64( f64, p64 )\n"\
+"#define COPY_NEXT( f64, n64 )      SET_LOWER64( f64, n64 )\n"\
+"#define GET_PREV( f64 )            GET_UPPER( f64 )\n"\
+"#define GET_NEXT( f64 )            GET_LOWER( f64 )\n"\
+"#define SET_UPPER_LOWER( f64, up32, low32 )    f64 = ( ( up32 & 0xFFFFFFFFL ) << 32 ) | ( low32 & 0xFFFFFFFFL )\n"\
+"#define SET_UPPER( f64, up32 )     f64 ^= ( ( f64 ^ ( ( up32 & 0xFFFFFFFFL ) << 32 ) ) & 0xFFFFFFFF00000000L )\n"\
+"#define SET_LOWER( f64, low32 )    f64 ^= ( ( f64 ^ ( low32 & 0xFFFFFFFFL ) ) & 0xFFFFFFFFL )\n"\
+"#define SET_UPPER64( f64, up64 )   f64 ^= ( ( f64 ^ ( up64 & 0xFFFFFFFF00000000L ) ) & 0xFFFFFFFF00000000L )\n"\
+"#define SET_LOWER64( f64, low64 )  f64 ^= ( ( f64 ^ ( low64 & 0xFFFFFFFFL ) ) & 0xFFFFFFFFL )\n"\
+"#define GET_UPPER( f64 )           (int) ( f64 >>> 32 )\n"\
+"#define GET_LOWER( f64 )           (int) f64\n"
+fi
+
 if [[ $root == *Custom* ]]; then Custom=Custom; fi
 
 echo -e \
