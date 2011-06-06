@@ -403,6 +403,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define WRITE_VALUE write${TYPE_CAP2[$v]}\n"\
 "#define VALUE_ITERATOR_METHOD ${TYPE_LC2[$v]}Iterator\n\n"\
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
+"#define REMOVE_FIRST_VALUE removeFirst${TYPE_STD[$v]}\n"\
+"#define REMOVE_LAST_VALUE removeLast${TYPE_STD[$v]}\n"\
 \
 \
 "/* Methods (keys/values) */\n"\
