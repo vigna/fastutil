@@ -46,7 +46,7 @@ public interface PriorityQueue<K> {
 
 	void enqueue( K x );
 
-	/** Dequeues the {@link #first()} element from the queue.
+	/** Dequeues the {@linkplain #first() first} element from the queue.
 	 *
 	 * @return the dequeued element.
 	 * @throws NoSuchElementException if the queue is empty.
@@ -89,7 +89,7 @@ public interface PriorityQueue<K> {
 
 	K last();
 
-	/** Notifies the queue that the {@linkplain #first() first element} has changed (optional operation).
+	/** Notifies the queue that the {@linkplain #first() first} element has changed (optional operation).
 	 */
 
 	void changed();

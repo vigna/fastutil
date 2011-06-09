@@ -375,6 +375,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define READ_KEY read${TYPE_CAP2[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP2[$k]}\n"\
 "#define DEQUEUE dequeue${TYPE_STD[$k]}\n"\
+"#define DEQUEUE_LAST dequeueLast${TYPE_STD[$k]}\n"\
 "#define SUBLIST_METHOD ${TYPE_LC[$k]}SubList\n"\
 "#define SINGLETON_METHOD ${TYPE_LC[$k]}Singleton\n\n"\
 "#define FIRST first${TYPE_STD[$k]}\n"\
