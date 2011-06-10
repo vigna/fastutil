@@ -56,6 +56,9 @@ import java.util.Comparator;
  * contract because all subset methods throw an exception and {@link
  * #comparator()} returns always <code>null</code>.
  *
+ * <p>Additional methods, such as <code>addAndMoveToFirst()</code>, make it easy
+ * to use instances of this class as a cache (e.g., with LRU policy).
+ *
  * <P>The iterators provided by this class are type-specific {@linkplain
  * java.util.ListIterator list iterators}, and can be started at any
  * element <em>which is in the set</em> (if the provided element 
@@ -661,6 +664,169 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return used[ pos ];
 	}
 
+#ifdef Linked
+	
+	/** Removes the first key in iteration order.
+	 * @return the first key.
+	 * @throws NoSuchElementException is this set is empty.
+	 */
+	public KEY_GENERIC_TYPE REMOVE_FIRST_KEY() {
+		if ( size == 0 ) throw new NoSuchElementException();
+		--size;
+		final int pos = first;
+		// Abbreviated version of fixPointers(pos)
+		first = GET_NEXT(link[ pos ]);
+		if ( 0 <= first ) {
+			// Special case of SET_PREV( link[ first ], -1 )
+			link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
+		}
+		final KEY_GENERIC_TYPE k = key[ pos ];
+		shiftKeys( pos );	
+		return k;
+	}
+
+	/** Removes the the last key in iteration order.
+	 * @return the last key.
+	 * @throws NoSuchElementException is this set is empty.
+	 */
+	public KEY_GENERIC_TYPE REMOVE_LAST_KEY() {
+		if ( size == 0 ) throw new NoSuchElementException();
+		--size;
+		final int pos = last;
+		// Abbreviated version of fixPointers(pos)
+		last = GET_PREV(link[ pos ]);
+		if ( 0 <= last ) {
+			// Special case of SET_NEXT( link[ last ], -1 )
+			link[ last ] |= -1 & 0xFFFFFFFFL;
+		}
+		final KEY_GENERIC_TYPE k = key[ pos ];
+		shiftKeys( pos );
+		return k;
+	}
+
+	private void moveIndexToFirst( final int i ) {
+		if ( size == 1 || first == i ) return;
+		if ( last == i ) {
+			last = GET_PREV(link[ i ]);
+			// Special case of SET_NEXT( link[ last ], -1 );
+			link[ last ] |= -1 & 0xFFFFFFFFL;
+		}
+		else {
+			final long linki = link[ i ];
+			final int prev = GET_PREV(linki);
+			final int next = GET_NEXT(linki);
+			COPY_NEXT(link[ prev ], linki);
+			COPY_PREV(link[ next ], linki);
+		}
+		SET_PREV( link[ first ], i );
+		SET_UPPER_LOWER( link[ i ], -1, first );
+		first = i;
+	}
+
+	private void moveIndexToLast( final int i ) {
+		if ( size == 1 ||  last == i ) return;
+		if ( first == i ) {
+			first = GET_NEXT(link[ i ]);
+			// Special case of SET_PREV( link[ first ], -1 );
+			link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
+		}
+		else {
+			final long linki = link[ i ];
+			final int prev = GET_PREV(linki);
+			final int next = GET_NEXT(linki);
+			COPY_NEXT(link[ prev ], linki);
+			COPY_PREV(link[ next ], linki);
+		}
+		SET_NEXT( link[ last ], i );
+		SET_UPPER_LOWER( link[ i ], last, -1 );
+		last = i;
+	}
+
+	/** Adds a key to the set; if the key is already present, it is moved to the first position of the iteration order.
+	 *
+	 * @param k the key.
+	 * @return true if the key was not present.
+	 */
+	public boolean addAndMoveToFirst( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
+
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if ( KEY_EQUALS( k, key[ pos ] ) ) {
+				moveIndexToFirst( pos );
+				return false;
+			}
+			
+			pos = ( pos + 1 ) & mask;
+		}
+		  
+		used[ pos ] = true;
+		key[ pos ] = k;
+		
+		if ( size == 0 ) {
+			first = last = pos;
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
+			link[ pos ] = -1L;
+		}
+		else {
+			SET_PREV( link[ first ], pos );
+			SET_UPPER_LOWER( link[ pos ], -1, first );
+			first = pos;
+		}
+
+		if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
+		if ( ASSERTS ) checkTable();
+		return true;
+	}
+
+	/** Adds a key to the set; if the key is already present, it is moved to the last position of the iteration order.
+	 *
+	 * @param k the key.
+	 * @return true if the key was not present.
+	 */
+	public boolean addAndMoveToLast( final KEY_GENERIC_TYPE k ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final boolean used[] = this.used;
+		final int mask = this.mask;
+
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if ( KEY_EQUALS( k, key[ pos ] ) ) {
+				moveIndexToLast( pos );
+				return false;
+			}
+			
+			pos = ( pos + 1 ) & mask;
+		}
+		  
+		used[ pos ] = true;
+		key[ pos ] = k;
+		
+		if ( size == 0 ) {
+			first = last = pos;
+			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
+			link[ pos ] = -1L;
+		}
+		else {
+			SET_NEXT( link[ last ], pos );
+			SET_UPPER_LOWER( link[ pos ], last, -1 );
+			last = pos;
+		}
+
+		if ( ++size >= maxFill ) rehash( arraySize( size, f ) );
+		if ( ASSERTS ) checkTable();
+		return true;
+	}
+
+#endif
 
 	/* Removes all elements from this set.
 	 *

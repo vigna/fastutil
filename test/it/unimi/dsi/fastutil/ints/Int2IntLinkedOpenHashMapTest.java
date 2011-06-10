@@ -477,11 +477,19 @@ public class Int2IntLinkedOpenHashMapTest {
 	public void testRemoveFirstLast() {
 		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
 		m.defaultReturnValue( -1 );
-		assertEquals( -1, m.removeFirstInt() );
-		assertEquals( -1, m.removeLastInt() );
 		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, 1 + i ) );
 		assertEquals( 1, m.removeFirstInt() );
 		assertEquals( 2, m.removeFirstInt() );
 		assertEquals( 100, m.removeLastInt() );
 	}	
+
+	@Test(expected=NoSuchElementException.class)
+	public void testRemoveFirstEmpty() {
+		new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE ).removeFirstInt();
+	}
+
+	@Test(expected=NoSuchElementException.class)
+	public void testRemoveLastEmpty() {
+		new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE ).removeLastInt();
+	}
 }

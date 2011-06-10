@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
-import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 import org.junit.Ignore;
@@ -120,7 +119,7 @@ public class IntLinkedOpenHashSetTest {
 		{
 			java.util.ListIterator<Integer> i, j;
 			Integer J;
-			i = (ListIterator<Integer>)s.iterator();
+			i = s.iterator();
 			j = new java.util.LinkedList<Integer>( t ).listIterator();
 			for ( int k = 0; k < 2 * n; k++ ) {
 				assertTrue( "Error: divergence in hasNext()", i.hasNext() == j.hasNext() );
@@ -154,7 +153,7 @@ public class IntLinkedOpenHashSetTest {
 			do
 				from = j.next();
 			while ( e-- != 0 );
-			i = (java.util.ListIterator)s.iterator( ( ( ( (Integer)( from ) ).intValue() ) ) );
+			i = s.iterator( ( ( ( (Integer)( from ) ).intValue() ) ) );
 			for ( int k = 0; k < 2 * n; k++ ) {
 				assertTrue( "Error: divergence in hasNext() (iterator with starting point " + from + ")", i.hasNext() == j.hasNext() );
 				assertTrue( "Error: divergence in hasPrevious() (iterator with starting point " + from + ")", i.hasPrevious() == j.hasPrevious() );
@@ -254,51 +253,51 @@ public class IntLinkedOpenHashSetTest {
 		for( int i = 0; i < 100; i++ ) assertTrue( s.add( i ) );
 		assertEquals( 0, s.firstInt() );
 		
-		IntListIterator iterator = (IntListIterator)s.iterator();
+		IntListIterator iterator = s.iterator();
 		for( int i = 0; i <= 100; i++ ) {
 			assertEquals( Integer.toString( i ), i - 1, iterator.previousIndex() );
 			assertEquals( Integer.toString( i ), i, iterator.nextIndex() );
 			if ( i != 100 ) assertEquals( Integer.toString( i ), i, iterator.nextInt() );
 		}
 
-		iterator = (IntListIterator)s.iterator( s.lastInt() );
+		iterator = s.iterator( s.lastInt() );
 		for( int i = 100; i-- != 0; ) {
 			assertEquals( Integer.toString( i ), i, iterator.previousIndex() );
 			assertEquals( Integer.toString( i ), i + 1, iterator.nextIndex() );
 			if ( i != 0 ) assertEquals( Integer.toString( i ), i, iterator.previousInt() );
 		}
 
-		iterator = (IntListIterator)s.iterator( 50 );
+		iterator = s.iterator( 50 );
 		for( int i = 50; i < 100; i++ ) {
 			assertEquals( Integer.toString( i ), i, iterator.previousIndex() );
 			assertEquals( Integer.toString( i ), i + 1, iterator.nextIndex() );
 			if ( i != 99 ) assertEquals( Integer.toString( i ), i + 1, iterator.nextInt() );
 		}
 
-		iterator = (IntListIterator)s.iterator( 50 );
+		iterator = s.iterator( 50 );
 		for( int i = 50; i-- != -1; ) {
 			assertEquals( Integer.toString( i ), i + 1, iterator.previousIndex() );
 			assertEquals( Integer.toString( i ), i + 2, iterator.nextIndex() );
 			if ( i != -1 ) assertEquals( Integer.toString( i ), i + 1, iterator.previousInt() );
 		}
 
-		iterator = (IntListIterator)s.iterator( 50 );
+		iterator = s.iterator( 50 );
 		for( int i = 50; i-- != -1; ) assertEquals( Integer.toString( i ), i + 1, iterator.previousInt() );
 		assertEquals( -1, iterator.previousIndex() );
 		assertEquals( 0, iterator.nextIndex() );
 		
-		iterator = (IntListIterator)s.iterator( 50 );
+		iterator = s.iterator( 50 );
 		for( int i = 50; i < 100 - 1; i++ ) assertEquals( Integer.toString( i ), i + 1, iterator.nextInt() );
 		assertEquals( 99, iterator.previousIndex() );
 		assertEquals( 100, iterator.nextIndex() );
 
-		iterator = (IntListIterator)s.iterator( 50 );
+		iterator = s.iterator( 50 );
 		iterator.previousInt();
 		iterator.remove();
 		assertEquals( 49, iterator.previousIndex() );
 		assertEquals( 49, iterator.previousInt() );
 		
-		iterator = (IntListIterator)s.iterator( 49 );
+		iterator = s.iterator( 49 );
 		iterator.nextInt();
 		iterator.remove();
 		assertEquals( 50, iterator.nextIndex() );
@@ -310,5 +309,52 @@ public class IntLinkedOpenHashSetTest {
 		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
 		for( int i = 0; i < 100; i++ ) assertTrue( s.add( i ) );
 		s.iterator( 1000 );
+	}
+
+	@Test
+	public void testPutAndMove() {
+		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 0; i < 100; i++ ) assertTrue( s.addAndMoveToFirst( i ) );
+		s.clear();
+		for( int i = 0; i < 100; i++ ) assertTrue( s.addAndMoveToLast( i ) );
+		assertTrue( s.addAndMoveToFirst( -1 ) );
+		assertEquals( -1, s.firstInt() );
+		assertTrue( s.addAndMoveToFirst( -2 ) );
+		assertEquals( -2, s.firstInt() );
+		assertFalse( s.addAndMoveToFirst( -1 ) );
+		assertEquals( -1, s.firstInt() );
+		assertFalse( s.addAndMoveToFirst( -1 ) );
+		assertEquals( -1, s.firstInt() );
+		assertFalse( s.addAndMoveToLast( -1 ) );
+		assertEquals( -1, s.lastInt() );
+		assertTrue( s.addAndMoveToLast( 100 ) );
+		assertEquals( 100, s.lastInt() );
+		assertTrue( s.addAndMoveToLast( 101 ) );
+		assertEquals( 101, s.lastInt() );
+		assertFalse( s.addAndMoveToLast( 100 ) );
+		assertEquals( 100, s.lastInt() );
+		assertFalse( s.addAndMoveToLast( 100 ) );
+		assertEquals( 100, s.lastInt() );
+		assertFalse( s.addAndMoveToFirst( 100 ) );
+		assertEquals( 100, s.firstInt() );
+	}
+
+	@Test
+	public void testRemoveFirstLast() {
+		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 0; i < 100; i++ ) assertTrue( s.add( i ) );
+		assertEquals( 0, s.removeFirstInt() );
+		assertEquals( 1, s.removeFirstInt() );
+		assertEquals( 99, s.removeLastInt() );
+	}	
+
+	@Test(expected=NoSuchElementException.class)
+	public void testRemoveFirstEmpty() {
+		new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE ).firstInt();
+	}
+
+	@Test(expected=NoSuchElementException.class)
+	public void testRemoveLastEmpty() {
+		new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE ).lastInt();
 	}
 }

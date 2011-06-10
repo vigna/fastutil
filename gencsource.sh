@@ -389,6 +389,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
+"#define REMOVE_FIRST_KEY removeFirst${TYPE_STD[$k]}\n"\
+"#define REMOVE_LAST_KEY removeLast${TYPE_STD[$k]}\n"\
 "#define PARSE_KEY parse${TYPE_STD[$k]}\n"\
 "#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
 "#define LOAD_KEYS_BIG load${TYPE_STD[$k]}sBig\n"\
