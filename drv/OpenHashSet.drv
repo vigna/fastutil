@@ -633,11 +633,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
 		// The starting point.
-		int pos = KEY2INTHASH( KEY_GENERIC_CAST k ) & mask;
+		int pos = KEY2INTHASH( k ) & mask;
 
 		// There's always an unused entry.
 		while( used[ pos ] ) {
-			if ( KEY_EQUALS( key[ pos ], KEY_GENERIC_CAST k ) ) {
+			if ( KEY_EQUALS( key[ pos ], k ) ) {
 				size--;
 #ifdef Linked
 				fixPointers( pos );
@@ -654,15 +654,33 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
 		// The starting point.
-		int pos = KEY2INTHASH( KEY_GENERIC_CAST k ) & mask;
+		int pos = KEY2INTHASH( k ) & mask;
 
 		// There's always an unused entry.
 		while( used[ pos ] ) {
-			if ( KEY_EQUALS( key[ pos ], KEY_GENERIC_CAST k ) ) return true;
+			if ( KEY_EQUALS( key[ pos ], k ) ) return true;
 			pos = ( pos + 1 ) & mask;
 		}
-		return used[ pos ];
+		return false;
 	}
+
+#if #keyclass(Object)
+	/** Returns the element of this set that is equal to the given key, or <code>null</code>.
+	 * @return the element of this set that is equal to the given key, or <code>null</code>.
+	 */
+	@SuppressWarnings("unchecked")
+	public K get( final Object k ) {
+		// The starting point.
+		int pos = KEY2INTHASH( k ) & mask;
+
+		// There's always an unused entry.
+		while( used[ pos ] ) {
+			if ( KEY_EQUALS( key[ pos ], k ) ) return key[ pos ];
+			pos = ( pos + 1 ) & mask;
+		}
+		return null;
+	}
+#endif
 
 #ifdef Linked
 	
@@ -857,7 +875,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return size == 0;
 	}
 
-
 	/** A no-op for backward compatibility.
 	 * 
 	 * @param growthFactor unused.
@@ -1010,11 +1027,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			}
 			else {
 				// The starting point.
-				int pos = KEY2INTHASH( KEY_GENERIC_CAST from ) & mask;
+				int pos = KEY2INTHASH( from ) & mask;
 
 				// There's always an unused entry.
 				while( used[ pos ] ) {
-					if ( KEY_EQUALS( key[ pos ], KEY_GENERIC_CAST from ) ) {
+					if ( KEY_EQUALS( key[ pos ], from ) ) {
 						// Note: no valid index known.
 						next = GET_NEXT( link[ pos ] );
 						prev = pos;

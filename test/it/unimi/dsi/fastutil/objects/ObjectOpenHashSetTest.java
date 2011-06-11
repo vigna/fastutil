@@ -1,6 +1,8 @@
 package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 
@@ -207,5 +209,14 @@ public class ObjectOpenHashSetTest {
 		test( 1000, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1000, Hash.FAST_LOAD_FACTOR );
 		test( 1000, Hash.VERY_FAST_LOAD_FACTOR );
+	}
+
+	@Test
+	public void testGet() {
+		final ObjectOpenHashSet<String> s = new ObjectOpenHashSet<String>();
+		String a = "a";
+		assertTrue( s.add( a ) );
+		assertSame( a, s.get(  "a" ) );
+		assertNull( s.get(  "b" ) );
 	}
 }

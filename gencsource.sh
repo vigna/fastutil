@@ -434,7 +434,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 \
 "#ifdef Custom\n"\
-"#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
+"#define KEY_EQUALS(x,y) ( strategy.equals( (x), " KEY_GENERIC_CAST "(y) ) )\n"\
 "#else\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
@@ -466,9 +466,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
-"#define KEY2JAVAHASH(x) ( strategy.hashCode(x) )\n"\
-"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( strategy.hashCode(x) ) )\n"\
-"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)strategy.hashCode(x) ) )\n"\
+"#define KEY2JAVAHASH(x) ( strategy.hashCode(" KEY_GENERIC_CAST "(x)) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( strategy.hashCode(" KEY_GENERIC_CAST "(x)) ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)strategy.hashCode(" KEY_GENERIC_CAST "(x)) ) )\n"\
 "#else\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
 "#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x).hashCode() ) )\n"\

@@ -1,7 +1,6 @@
 package it.unimi.dsi.fastutil.objects;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -201,5 +200,14 @@ public class ObjectOpenHashBigSetTest {
 		test( 1000, Hash.DEFAULT_LOAD_FACTOR );
 		test( 1000, Hash.FAST_LOAD_FACTOR );
 		test( 1000, Hash.VERY_FAST_LOAD_FACTOR );
+	}
+	
+	@Test
+	public void testGet() {
+		final ObjectOpenHashBigSet<String> s = new ObjectOpenHashBigSet<String>();
+		String a = "a";
+		assertTrue( s.add( a ) );
+		assertSame( a, s.get(  "a" ) );
+		assertNull( s.get(  "b" ) );
 	}
 }

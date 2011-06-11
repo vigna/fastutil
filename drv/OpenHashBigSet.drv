@@ -358,6 +358,26 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		return false;
 	}
 
+#if #keyclass(Object)
+	/** Returns the element of this set that is equal to the given key, or <code>null</code>.
+	 * @return the element of this set that is equal to the given key, or <code>null</code>.
+	 */
+	public K get( final KEY_TYPE k ) {
+		final long h = KEY2LONGHASH( k );
+
+		// The starting point.
+		int displ = (int)( h & segmentMask );
+		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
+
+		// There's always an unused entry.
+		while( used[ base ][ displ ] ) {
+			if ( KEY_EQUALS( key[ base ][ displ ], k ) ) return key[ base ][ displ ]; 
+			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		}
+
+		return null;
+	}
+#endif
 
 	/* Removes all elements from this set.
 	 *
@@ -455,11 +475,10 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 * to optimize access speed and size.
 	 *
 	 * <P>If the table size is already the minimum possible, this method
-	 * does nothing. If you want to guarantee rehashing, use {@link #rehash()}.
+	 * does nothing.
 	 *
 	 * @return true if there was enough memory to trim the set.
 	 * @see #trim(long)
-	 * @see #rehash()
 	 */
 
 	public boolean trim() {
@@ -489,7 +508,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 * @param n the threshold for the trimming.
 	 * @return true if there was enough memory to trim the set.
 	 * @see #trim()
-	 * @see #rehash()
 	 */
 
 	public boolean trim( final long n ) {
