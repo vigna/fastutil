@@ -70,7 +70,8 @@ source:
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
 		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
-		fastutil-$(version)/src/overview.html
+		fastutil-$(version)/src/overview.html \
+		fastutil-$(version)/test
 	rm fastutil-$(version)
 
 bin:
