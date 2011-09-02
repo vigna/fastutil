@@ -361,4 +361,10 @@ public class IntArraysTest {
 		IntArrays.radixSortIndirect( perm, t, false );
 		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
 	}
+	
+	@Test
+	public void testBinarySearchLargeKey() {
+		final int[] a = { 1, 2, 3 };
+		IntArrays.binarySearch( a, 4 );
+	}
 }

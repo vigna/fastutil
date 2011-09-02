@@ -286,8 +286,9 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 * and empties the resulting free entry.
 	 *
 	 * @param pos a starting position.
+	 * @return the position cleared by the shifting process.
 	 */
-	protected final void shiftKeys( long pos ) {
+	protected final long shiftKeys( long pos ) {
 		// Shift entries with the same hash.
 		long last, slot;
 
@@ -313,10 +314,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #if #keys(reference)
 		BIG_ARRAYS.set( key, last, null );
 #endif
-		/*
-		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( (long)KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + used[ ( t + i ) & mask ] + ") ");
-		System.err.println();
-		*/
+		return last;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -440,7 +438,11 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		public void remove() {
 			if ( lastBase == -1 ) throw new IllegalStateException();
 			size--;
-			shiftKeys( lastBase * (long)BigArrays.SEGMENT_SIZE + lastDispl );
+			final long shiftPos = lastBase * (long)BigArrays.SEGMENT_SIZE + lastDispl;
+			if ( shiftKeys( shiftPos ) == shiftPos && c > 0 ) {
+				c++;
+				NEXT_KEY();
+			}
 			lastBase = -1; // You can no longer remove this entry.
 
 			if ( ASSERTS ) checkTable();

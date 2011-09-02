@@ -600,8 +600,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * and empties the resulting free entry.
 	 *
 	 * @param pos a starting position.
+	 * @return the position cleared by the shifting process.
 	 */
-	protected final void shiftKeys( int pos ) {
+	protected final int shiftKeys( int pos ) {
 		// Shift entries with the same hash.
 		int last, slot;
 
@@ -627,6 +628,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 #if #keys(reference)
 		key[ last ] = null;
 #endif
+		return last;
 	}
 
 
@@ -1125,7 +1127,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 			int last, slot, pos = curr;
 
-			// We have to horribly duplicated the shiftKeys() code because we need to update next/prev.			
+			// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.			
 			for(;;) {
 				pos = ( ( last = pos ) + 1 ) & mask;
 				while( used[ pos ] ) {
@@ -1205,7 +1207,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
 			size--;
-			shiftKeys( last );
+			if ( shiftKeys( last ) == pos && c > 0 ) {
+				c++;
+				NEXT_KEY();
+			}
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();
 		}

@@ -136,4 +136,10 @@ public class IntBigArraysTest {
 		}
 	}
 
+	@Test
+	public void testBinarySearchLargeKey() {
+		final int[][] a = { { 1, 2, 3 } };
+		IntBigArrays.binarySearch( a, 4 );
+	}
+
 }

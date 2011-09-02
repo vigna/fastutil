@@ -620,8 +620,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 * and empties the resulting free entry.
 	 *
 	 * @param pos a starting position.
+	 * @return the position cleared by the shifting process.
 	 */
-	protected final void shiftKeys( int pos ) {
+	protected final int shiftKeys( int pos ) {
 		// Shift entries with the same hash.
 		int last, slot;
 
@@ -651,6 +652,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #if #values(reference)
 		value[ last ] = null;
 #endif
+		return last;
 	}
 
 
@@ -1047,6 +1049,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 * the map */
 
 	private final class MapEntry implements MAP.Entry KEY_VALUE_GENERIC, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> {
+		// The table index this entry refers to, or -1 if this entry has been deleted.
 		private int index;
 		
 		MapEntry( final int index ) {
@@ -1332,7 +1335,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 			int last, slot, pos = curr;
 
-			// We have to horribly duplicated the shiftKeys() code because we need to update next/prev.			
+			// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.			
 			for(;;) {
 				pos = ( ( last = pos ) + 1 ) & mask;
 				while( used[ pos ] ) {
@@ -1373,6 +1376,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 	private class EntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		private MapEntry entry;
+	
 		public EntryIterator() {}
 
 		public EntryIterator( KEY_GENERIC_TYPE from ) {
@@ -1380,11 +1385,17 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		public MapEntry next() {
-			return new MapEntry( nextEntry() );
+			return entry = new MapEntry( nextEntry() );
 		}
 
 		public MapEntry previous() {
-			return new MapEntry( previousEntry() );
+			return entry = new MapEntry( previousEntry() );
+		}
+		
+		@Override
+		public void remove() {
+			super.remove();
+			entry.index = -1; // You cannot use a deleted entry.
 		}
 
 		public void set( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
@@ -1458,7 +1469,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
 			size--;
-			shiftKeys( last );
+			if ( shiftKeys( last ) == pos && c > 0 ) {
+				c++;
+				nextEntry();
+			}
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();
 		}
@@ -1472,8 +1486,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 
 	private class EntryIterator extends MapIterator implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
+		private MapEntry entry;
+	
 		public MAP.Entry KEY_VALUE_GENERIC next() {
-			return new MapEntry( nextEntry() );
+			return entry = new MapEntry( nextEntry() );
+		}
+
+		@Override
+		public void remove() {
+			super.remove();
+			entry.index = -1; // You cannot use a deleted entry.
 		}
 	}
 
