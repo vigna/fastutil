@@ -63,7 +63,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * <pre>
  *   for( int i = a.length; i-- != 0; ) {
  *      final int[] t = a[ i ];  
- *      for( int d = s.length; d-- != 0; ) { do something with t[ d ] }
+ *      for( int d = t.length; d-- != 0; ) { do something with t[ d ] }
  *   }
  * </pre>
  * <p>Inside the inner loop, the original index in <code>a</code> can be retrieved using {@link #index(int, int) index(segment, displacement)}.
