@@ -89,6 +89,8 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *   }
  * </pre>
  * 
+ * <p>Finally, you might need to iterate over a big array keeping track of a global index. 
+ * 
  * <h2>Literal big arrays</h2>
  * 
  * <p>A literal big array can be easily created by using the suitable type-specific <code>wrap()</code> method
