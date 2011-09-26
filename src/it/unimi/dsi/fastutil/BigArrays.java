@@ -439,4 +439,43 @@ public class BigArrays {
 	private static void vecSwap( final BigSwapper swapper, long from, long l, final long s ) {
 		for ( int i = 0; i < s; i++, from++, l++ ) swapper.swap( from, l );
 	}
+	
+	public static void main( final String arg[] ) {
+		int[][] a = IntBigArrays.newBigArray( 1L << Integer.parseInt( arg[ 0 ] ) );
+		long x, y, z, start;
+
+		for( int k = 10; k-- != 0; ) {
+
+			start = -System.currentTimeMillis();
+
+			x = 0;
+			for( long i = IntBigArrays.length( a ); i-- != 0; ) x ^= i ^ IntBigArrays.get( a, i );
+			if ( x == 0 ) System.err.println();
+
+			System.out.println( "Single loop: " + ( start + System.currentTimeMillis() ) + "ms" );
+
+			start = -System.currentTimeMillis();
+
+			y = 0;
+			for( int i = a.length; i-- != 0; ) {
+				final int[] t = a[ i ];
+				for( int d = t.length; d-- != 0; ) y ^= t[ d ] ^ index( i, d ); 
+			}
+			if ( y == 0 ) System.err.println();
+			if ( x != y ) throw new AssertionError();
+
+			System.out.println( "Double loop: " + ( start + System.currentTimeMillis() ) + "ms" );
+
+			z = 0;
+			long j = IntBigArrays.length( a );
+			for( int i = a.length; i-- != 0; ) {
+				final int[] t = a[ i ];
+				for( int d = t.length; d-- != 0; ) y ^= t[ d ] ^ --j; 
+			}
+			if ( z == 0 ) System.err.println();
+			if ( x != z ) throw new AssertionError();
+
+			System.out.println( "Double loop (with additional index): " + ( start + System.currentTimeMillis() ) + "ms" );
+		}
+	}
 }
