@@ -53,43 +53,51 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * 
  * <p>You can scan a big array using the following idiomatic form:
  * <pre>
- *   for( int i = 0; i &lt; a.length; i++ ) {
- *      final int[] t = a[ i ];
+ *   for( int s = 0; s &lt; a.length; s++ ) {
+ *      final int[] t = a[ s ];
  *      final int l = t.length;
  *      for( int d = 0; d &lt; l; d++ ) { do something with t[ d ] }
  *   }
  * </pre>
  * or using the (simpler and usually faster) reversed version:
  * <pre>
- *   for( int i = a.length; i-- != 0; ) {
- *      final int[] t = a[ i ];  
+ *   for( int s = a.length; s-- != 0; ) {
+ *      final int[] t = a[ s ];  
  *      for( int d = t.length; d-- != 0; ) { do something with t[ d ] }
  *   }
  * </pre>
  * <p>Inside the inner loop, the original index in <code>a</code> can be retrieved using {@link #index(int, int) index(segment, displacement)}.
- * Note that caching is essential in making these loops essentially as fast as those scanning standard arrays (as iterations
+ * Do <em>not</em> use an additional variable to keep track of the value of the original index, as
+ * computing it on the fly is significantly faster. For instance, to inizialise the <var>i</var>-th element of a big array of
+ * long integers to the value <var>i</var> you should use
+ * <pre>
+ *   for( int s = a.length; s-- != 0; ) {
+ *      final long[] t = a[ s ];  
+ *      for( int d = t.length; d-- != 0; ) t[ d ] = index( s, d );
+ *   }
+ * </pre>
+ *  
+ * <p>Note that caching is essential in making these loops essentially as fast as those scanning standard arrays (as iterations
  * of the outer loop happen very rarely). Using loops of this kind is extremely faster than using a standard
  * loop and accessors.
  * 
  * <p>In some situations, you might want to iterate over a part of a big array having an offset and a length. In this case, the
  * idiomatic loops are as follows:
  * <pre>
- *   for( int i = segment( offset ); i &lt; segment( offset + length + SEGMENT_MASK ); i++ ) {
- *      final int[] t = a[ i ];
- *      final int l = Math.min( t.length, offset + length - start( i ) );
- *      for( int d = Math.max( 0, offset - start( i ) ); d &lt; l; d++ ) { do something with t[ d ] }
+ *   for( int s = segment( offset ); s &lt; segment( offset + length + SEGMENT_MASK ); s++ ) {
+ *      final int[] t = a[ s ];
+ *      final int l = (int)Math.min( t.length, offset + length - start( s ) );
+ *      for( int d = (int)Math.max( 0, offset - start( s ) ); d &lt; l; d++ ) { do something with t[ d ] }
  *   }
  * </pre>
  * or, in a reversed form,
  * <pre>
- *   for( int i = segment( offset + length + SEGMENT_MASK ); i-- != segment( offset ); ) {
- *      final int[] t = a[ i ];
- *      final int s = Math.max( 0, offset - start( i ) );
- *      for( int d = Math.min( t.length, offset + length - start( i ) ); d-- != s ; ) { do something with t[ d ] }
+ *   for( int s = segment( offset + length + SEGMENT_MASK ); s-- != segment( offset ); ) {
+ *      final int[] t = a[ s ];
+ *      final int b = (int)Math.max( 0, offset - start( s ) );
+ *      for( int d = (int)Math.min( t.length, offset + length - start( s ) ); d-- != b ; ) { do something with t[ d ] }
  *   }
  * </pre>
- * 
- * <p>Finally, you might need to iterate over a big array keeping track of a global index. 
  * 
  * <h2>Literal big arrays</h2>
  * 
