@@ -77,7 +77,7 @@ source:
 		$$(find fastutil-$(version)/test -iname \*.java)
 	rm fastutil-$(version)
 
-bin:
+binary:
 	make -s clean sources
 	ant jar javadoc
 	-rm -f fastutil-$(version)
