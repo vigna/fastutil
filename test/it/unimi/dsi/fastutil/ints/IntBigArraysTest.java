@@ -138,7 +138,7 @@ public class IntBigArraysTest {
 
 	@Test
 	public void testBinarySearchLargeKey() {
-		final int[][] a = { { 1, 2, 3 } };
+		final int[][] a = IntBigArrays.wrap( new int[] { 1, 2, 3 } );
 		IntBigArrays.binarySearch( a, 4 );
 	}
 
