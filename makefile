@@ -79,7 +79,7 @@ source:
 
 binary:
 	make -s clean sources
-	ant jar javadoc
+	ant clean jar javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \

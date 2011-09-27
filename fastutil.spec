@@ -36,10 +36,7 @@ Javadoc for %{name}.
 
 %build
 make -s sources
-export CLASSPATH=
-ant \
-  -Dj2se.apiurl=%{_javadocdir}/java \
-  jar javadoc
+ant -Dlocal= clean jar javadoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
