@@ -363,6 +363,186 @@ public class IntArraysTest {
 	}
 	
 	@Test
+	public void testRadixSort2IndirectStable() {
+		int[] t = { 2, 1, 0, 4 };
+		int[] u = { 3, 2, 1, 0 };
+		int[] perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		u = IntArrays.shuffle( identity( 100 ), new Random( 1 ) );
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		u = new int[ 100 ];
+		perm = identity( t.length );
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		for( int i = t.length; i-- != 0; ) u[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		u = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		for( int i = 0; i < u.length; i++ ) t[ i ] = random.nextInt( 4 ); 
+		for( int i = 0; i < u.length; i++ ) u[ i ] = random.nextInt( 4 ); 
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) if ( t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] == u[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
+
+		t = new int[ 100 ];
+		u = new int[ 100 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = u.length; i-- != 0; ) u[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, 10, 90, true );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		t = new int[ 100000 ];
+		u = new int[ 100000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ 10000000 ];
+		u = new int[ 10000000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		for( int i = t.length; i-- != 0; ) u[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		u = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+
+		t = new int[ t.length ];
+		for( int i = 0; i < t.length; i++ ) t[ i ] = random.nextInt( 8 ); 
+		for( int i = 0; i < t.length; i++ ) u[ i ] = random.nextInt( 8 ); 
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, true );
+		for( int i = t.length - 1; i-- != 0; ) if ( t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] == u[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
+	}
+	
+	@Test
+	public void testRadixSort2IndirectUnstable() {
+		int[] t = { 2, 1, 0, 4 };
+		int[] u = { 3, 2, 1, 0 };
+		int[] perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		u = IntArrays.shuffle( identity( 100 ), new Random( 1 ) );
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		u = new int[ 100 ];
+		perm = identity( t.length );
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		for( int i = t.length; i-- != 0; ) u[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		u = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		for( int i = 0; i < u.length; i++ ) t[ i ] = random.nextInt( 4 ); 
+		for( int i = 0; i < u.length; i++ ) u[ i ] = random.nextInt( 4 ); 
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] ||  t[ perm[ i ] ] == t[ perm[ i + 1 ] ]&& u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		u = new int[ 100 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = u.length; i-- != 0; ) u[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, 10, 90, false );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		t = new int[ 100000 ];
+		u = new int[ 100000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ 10000000 ];
+		u = new int[ 10000000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		for( int i = t.length; i-- != 0; ) u[ i ] = random.nextInt();
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		u = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+
+		t = new int[ t.length ];
+		for( int i = 0; i < t.length; i++ ) t[ i ] = random.nextInt( 8 ); 
+		for( int i = 0; i < t.length; i++ ) u[ i ] = random.nextInt( 8 ); 
+		perm = identity( t.length );
+		IntArrays.radixSortIndirect( perm, t, u, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue(i + " " +  t[perm[i]]+ " "+ t[perm[i+1]] + " " + u[perm[i]] + " " + u[perm[i+1]] + "  " + perm[i]+ " " +perm[i+1], t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
+	}
+	
+	@Test
 	public void testBinarySearchLargeKey() {
 		final int[] a = { 1, 2, 3 };
 		IntArrays.binarySearch( a, 4 );

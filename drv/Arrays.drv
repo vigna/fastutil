@@ -1330,6 +1330,169 @@ public class ARRAYS {
 	}
 
 
+
+
+	private static KEY_GENERIC void insertionSortIndirect( final int[] perm, final KEY_TYPE[] a, final KEY_TYPE[] b, final int from, final int to ) {
+		for ( int i = from; ++i < to; ) { 
+			int t = perm[ i ];
+			int j = i;
+			for ( int u = perm[ j - 1 ]; a[ t ] < a[ u ] || a[ t ] == a[ u ] && b[ t ] < b[ u ]; u = perm[ --j - 1 ] ) {
+				perm[ j ] = u;
+				if ( from == j - 1 ) {
+					--j;
+					break;
+				}
+			}
+			perm[ j ] = t;
+		}
+	}
+
+	/** Sorts the specified pair of arrays lexicographically using indirect radix sort.
+	 * 
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993),
+	 * and further improved using the digit-oracle idea described by
+	 * Juha K&auml;rkk&auml;inen and Tommi Rantala in &ldquo;Engineering radix sort for strings&rdquo;,
+	 * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
+	 * Lecture Notes in Computer Science, pages 3&minus;14, Springer (2008).
+	 *
+	 * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
+	 * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
+	 * <code>a[ perm[ i ] ] <= a[ perm[ i + 1 ] ]</code>.
+	 *
+	 * <p>This implementation is significantly faster than quicksort (unstable) or mergesort (stable)
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort in ascending order. 
+	 * It will allocate a support array of bytes with the same number of elements as the array to be sorted,
+	 * and, in the stable case, a further support array as large as <code>perm</code> (note that the stable
+	 * version is slightly faster).
+	 * 
+	 * @param perm a permutation array indexing <code>a</code>.
+	 * @param a the array to be sorted.
+	 * @param b the second array to be sorted.
+	 * @param stable whether the sorting algorithm should be stable.
+	 */
+	public static void radixSortIndirect( final int[] perm, final KEY_TYPE[] a, final KEY_TYPE[] b, final boolean stable ) {
+		radixSortIndirect( perm, a, b, 0, perm.length, stable );
+	}
+
+	/** Sorts the specified pair of arrays lexicographically using indirect radix sort.
+	 * 
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993),
+	 * and further improved using the digit-oracle idea described by
+	 * Juha K&auml;rkk&auml;inen and Tommi Rantala in &ldquo;Engineering radix sort for strings&rdquo;,
+	 * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
+	 * Lecture Notes in Computer Science, pages 3&minus;14, Springer (2008).
+	 *
+	 * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
+	 * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
+	 * <code>a[ perm[ i ] ] <= a[ perm[ i + 1 ] ]</code>.
+	 *
+	 * <p>This implementation is significantly faster than quicksort (unstable) or mergesort (stable)
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort in ascending order. 
+	 * It will allocate a support array of bytes with the same number of elements as the array to be sorted,
+	 * and, in the stable case, a further support array as large as <code>perm</code> (note that the stable
+	 * version is slightly faster).
+	 * 
+	 * @param perm a permutation array indexing <code>a</code>.
+	 * @param a the array to be sorted.
+	 * @param b the second array to be sorted.
+	 * @param from the index of the first element of <code>perm</code> (inclusive) to be permuted.
+	 * @param to the index of the last element of <code>perm</code> (exclusive) to be permuted.
+	 * @param stable whether the sorting algorithm should be stable.
+	 */
+	public static void radixSortIndirect( final int[] perm, final KEY_TYPE[] a, final KEY_TYPE[] b, final int from, final int to, final boolean stable ) {
+		final int layers = 2;
+		if ( a.length != b.length ) throw new IllegalArgumentException( "Array size mismatch." );
+		final int maxLevel = DIGITS_PER_ELEMENT * layers - 1;
+		
+		final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( layers * DIGITS_PER_ELEMENT - 1 ) + 1;
+		final int[] offsetStack = new int[ stackSize ];
+		int offsetPos = 0;
+		final int[] lengthStack = new int[ stackSize ];
+		int lengthPos = 0;
+		final int[] levelStack = new int[ stackSize ];
+		int levelPos = 0;
+		
+		offsetStack[ offsetPos++ ] = from;
+		lengthStack[ lengthPos++ ] = to - from;
+		levelStack[ levelPos++ ] = 0;
+
+		final int[] count = new int[ 1 << DIGIT_BITS ];
+		final int[] pos = stable ? null : new int[ 1 << DIGIT_BITS ];
+		final int[] support = stable ? new int[ perm.length ] : null;
+		final byte[] digit = new byte[ perm.length ];
+
+		while( offsetPos > 0 ) {
+			final int first = offsetStack[ --offsetPos ];
+			final int length = lengthStack[ --lengthPos ];
+			final int level = levelStack[ --levelPos ];
+#if #keyclass(Character)
+			final int signMask = 0;
+#else
+			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
+#endif
+			
+			if ( length < MEDIUM ) {
+				insertionSortIndirect( perm, a, b, first, first + length );
+				continue;
+			}
+			
+			final KEY_TYPE[] k = level < DIGITS_PER_ELEMENT ? a : b; // This is the key array
+			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
+
+			// Count keys.
+			for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( KEY2LEXINT( k[ perm[ first + i ] ] ) >>> shift ) & DIGIT_MASK ) ^ signMask );
+			for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
+			// Compute cumulative distribution and push non-singleton keys on stack.
+			int lastUsed = -1;
+			
+			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
+				if ( count[ i ] != 0 ) {
+					lastUsed = i;
+					if ( level < maxLevel && count[ i ] > 1 ){
+						offsetStack[ offsetPos++ ] = p + first;
+						lengthStack[ lengthPos++ ] = count[ i ];
+						levelStack[ levelPos++ ] = level + 1;
+					}
+				}
+				if ( stable ) count[ i ] = p += count[ i ];
+				else pos[ i ] = ( p += count[ i ] );
+			}
+			
+			if ( stable ) {
+				for( int i = length; i-- != 0; ) support[ --count[ digit[ i ] & 0xFF ] ] = perm[ first + i ];
+				System.arraycopy( support, 0, perm, first, length );
+				it.unimi.dsi.fastutil.ints.IntArrays.fill( count, 0 );
+			}
+			else {
+				// When all slots are OK, the last slot is necessarily OK.
+				final int end = length - count[ lastUsed ];
+				count[ lastUsed ] = 0;
+				// i moves through the start of each block
+				for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+					int t = perm[ i + first ];
+					c = digit[ i ] & 0xFF;
+					while( ( d = --pos[ c ] ) > i ) {
+						final int z = t;
+						final int zz = c;
+						t = perm[ d + first ];
+						c = digit[ d ] & 0xFF;
+						perm[ d + first ] = z;
+						digit[ d ] = (byte)zz;
+					}
+
+					perm[ i + first ] = t;
+				}
+			}
+		}
+	}
+
+
+
+
 	private static void selectionSort( final KEY_TYPE[][] a, final int from, final int to, final int level ) {
 		final int layers = a.length;
 		final int firstLayer = level / DIGITS_PER_ELEMENT;
@@ -1354,6 +1517,8 @@ public class ARRAYS {
 			}
 		}
 	}
+
+
 	
 	/** Sorts the specified array of arrays lexicographically using radix sort.
 	 * 
