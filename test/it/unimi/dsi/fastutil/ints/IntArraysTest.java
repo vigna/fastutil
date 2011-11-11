@@ -547,4 +547,10 @@ public class IntArraysTest {
 		final int[] a = { 1, 2, 3 };
 		IntArrays.binarySearch( a, 4 );
 	}
+	
+	@Test
+	public void testReverse() {
+		assertArrayEquals( new int[] { 0, 1, 2, 3 }, IntArrays.reverse( new int[] { 3, 2, 1, 0 } ) );
+		assertArrayEquals( new int[] { 0, 1, 2, 3, 4 }, IntArrays.reverse( new int[] { 4, 3, 2, 1, 0 } ) );
+	}
 }
