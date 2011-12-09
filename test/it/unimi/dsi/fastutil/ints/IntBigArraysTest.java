@@ -11,6 +11,13 @@ import org.junit.Test;
 
 public class IntBigArraysTest {
 
+	
+	public static int[][] identity( final int n ) {
+		final int[][] perm = IntBigArrays.newBigArray( n );
+		for( int i = n; i-- != 0; ) IntBigArrays.set( perm, i , i );
+		return perm;
+	}
+
 	@Test
 	public void testQuickSort() {
 		int[] s = new int[] { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
@@ -108,6 +115,80 @@ public class IntBigArraysTest {
 		b[ 0 ][ 0 ] = 0;
 		assertFalse( IntBigArrays.equals( b, c ) );
 	}
+
+	@Test
+	public void testRadixSort1() {
+		int[][] t = IntBigArrays.wrap( new int[] { 2, 1, 0, 4 } );
+		IntBigArrays.radixSort( t );
+		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+		
+		t = IntBigArrays.wrap( new int[] { 2, -1, 0, -4 } );
+		IntBigArrays.radixSort( t );
+		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+		
+		t = IntBigArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		IntBigArrays.radixSort( t );
+		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+
+		t = IntBigArrays.newBigArray( 100 );
+		Random random = new Random( 0 );
+		for( long i = IntBigArrays.length( t ); i-- != 0; ) IntBigArrays.set( t, i, random.nextInt() );
+		IntBigArrays.radixSort( t );
+		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+
+		t = IntBigArrays.newBigArray( 100000 );
+		random = new Random( 0 );
+		for( long i = IntBigArrays.length( t ); i-- != 0; ) IntBigArrays.set( t, i, random.nextInt() );
+		IntBigArrays.radixSort( t );
+		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+
+		t = IntBigArrays.newBigArray( 1000000 );
+		random = new Random( 0 );
+		for( long i = IntBigArrays.length( t ); i-- != 0; ) IntBigArrays.set( t, i, random.nextInt() );
+		IntBigArrays.radixSort( t );
+		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+	}
+
+	@Test
+	public void testRadixSort2() {
+		int d[][], e[][];
+		d = IntBigArrays.newBigArray( 10 );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( d, i, (int)( 3 - i % 3 ) );
+		e = IntBigArrays.shuffle( identity( 10 ), new Random( 0 ) );
+		IntBigArrays.radixSort( d, e );
+		for( long i = IntBigArrays.length( d ) - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
+		
+		d = IntBigArrays.newBigArray( 100000 );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( d, i, (int)( 100 - i % 100 ) );
+		e = IntBigArrays.shuffle( identity( 100000 ), new Random( 6 ) );
+		IntBigArrays.radixSort( d, e );
+		for( long i = IntBigArrays.length( d ) - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
+
+		d = IntBigArrays.newBigArray( 10 );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( d, i, (int)( i % 3 - 2 ) );
+		Random random = new Random( 0 );
+		e = IntBigArrays.newBigArray( IntBigArrays.length(  d ) );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( e, i, random.nextInt() );
+		IntBigArrays.radixSort( d, e );
+		for( long i = IntBigArrays.length( d ) - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
+		
+		d = IntBigArrays.newBigArray( 100000 );
+		random = new Random( 0 );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( d, i, random.nextInt() );
+		e = IntBigArrays.newBigArray( IntBigArrays.length(  d ) );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( e, i, random.nextInt() );
+		IntBigArrays.radixSort( d, e );
+		for( long i = IntBigArrays.length( d ) - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
+
+		d = IntBigArrays.newBigArray( 1000000 );
+		random = new Random( 0 );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( d, i, random.nextInt() );
+		e = IntBigArrays.newBigArray( IntBigArrays.length(  d ) );
+		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( e, i, random.nextInt() );
+		IntBigArrays.radixSort( d, e );
+		for( long i = IntBigArrays.length( d ) - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
+	}
+
 
 	@Test
 	public void testShuffle() {

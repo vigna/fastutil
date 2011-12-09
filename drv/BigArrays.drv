@@ -33,6 +33,7 @@ import java.util.Random;
 
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
 import static it.unimi.dsi.fastutil.BigArrays.start;
 import static it.unimi.dsi.fastutil.BigArrays.segment;
 import static it.unimi.dsi.fastutil.BigArrays.displacement;
@@ -786,6 +787,13 @@ public class BIG_ARRAYS {
 			( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
+	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[][] a, final long from, final long to, final KEY_COMPARATOR KEY_GENERIC comp ) {
+		for( long i = from; i < to - 1; i++ ) {
+			long m = i;
+			for( long j = i + 1; j < to; j++ ) if ( comp.compare( BIG_ARRAYS.get( a, j ), BIG_ARRAYS.get( a, m ) ) < 0 ) m = j;
+			if ( m != i ) swap( a, i, m );
+		}
+	}
 
 	/** Sorts the specified range of elements according to the order induced by the specified
 	 * comparator using quicksort. 
@@ -863,6 +871,14 @@ public class BIG_ARRAYS {
 			( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
+
+	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[][] a, final long from, final long to ) {
+		for( long i = from; i < to - 1; i++ ) {
+			long m = i;
+			for( long j = i + 1; j < to; j++ ) if ( KEY_LESS( BIG_ARRAYS.get( a, j ), BIG_ARRAYS.get( a, m ) ) ) m = j;
+			if ( m != i ) swap( a, i, m );
+		}
+	}
 
 	/** Sorts the specified big array according to the order induced by the specified
 	 * comparator using quicksort. 
@@ -959,6 +975,9 @@ public class BIG_ARRAYS {
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x ) {
 		quickSort( x, 0, BIG_ARRAYS.length( x ) );
 	}
+
+
+
 
 #if ! #keyclass(Boolean)
 
@@ -1083,7 +1102,301 @@ public class BIG_ARRAYS {
 		return binarySearch( a, 0, BIG_ARRAYS.length( a ), key, c );
 	}
 
+
+#if #keys(primitive)
+	/** The size of a digit used during radix sort (must be a power of 2). */
+	private static final int DIGIT_BITS = 8;
+	/** The mask to extract a digit of {@link #DIGIT_BITS} bits. */
+	private static final int DIGIT_MASK = ( 1 << DIGIT_BITS ) - 1;
+	/** The number of digits per element. */
+	private static final int DIGITS_PER_ELEMENT = KEY_CLASS.SIZE / DIGIT_BITS;
+
+	/** This method fixes negative numbers so that the combination exponent/significand is lexicographically sorted. */
+#if #keyclass(Double)
+	private static final long fixDouble( final double d ) {
+		final long l = Double.doubleToRawLongBits( d );
+		return l >= 0 ? l : l ^ 0x7FFFFFFFFFFFFFFFL;
+	}	   
+#elif #keyclass(Float)
+	private static final long fixFloat( final float f ) {
+		final long i = Float.floatToRawIntBits( f );
+		return i >= 0 ? i : i ^ 0x7FFFFFFF;
+	}
 #endif
+
+
+	/** Sorts the specified big array using radix sort.
+	 * 
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993),
+	 * and further improved using the digit-oracle idea described by
+	 * Juha K&auml;rkk&auml;inen and Tommi Rantala in &ldquo;Engineering radix sort for strings&rdquo;,
+	 * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
+	 * Lecture Notes in Computer Science, pages 3&minus;14, Springer (2008).
+	 *
+	 * <p>This implementation is significantly faster than quicksort 
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort in ascending order. 
+	 * It will allocate a support array of bytes with the same number of elements as the array to be sorted.
+	 * 
+	 * @param a the big array to be sorted.
+	 */
+	public static void radixSort( final KEY_TYPE[][] a ) {
+		radixSort( a, 0, BIG_ARRAYS.length( a ) );
+	}
+
+	/** Sorts the specified big array using radix sort.
+	 * 
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993),
+	 * and further improved using the digit-oracle idea described by
+	 * Juha K&auml;rkk&auml;inen and Tommi Rantala in &ldquo;Engineering radix sort for strings&rdquo;,
+	 * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
+	 * Lecture Notes in Computer Science, pages 3&minus;14, Springer (2008).
+	 *
+	 * <p>This implementation is significantly faster than quicksort 
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort in ascending order. 
+	 * It will allocate a support array of bytes with the same number of elements as the array to be sorted.
+	 * 
+	 * @param a the big array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 */
+	public static void radixSort( final KEY_TYPE[][] a, final long from, final long to ) {
+		final int maxLevel = DIGITS_PER_ELEMENT - 1;
+
+		final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( DIGITS_PER_ELEMENT - 1 ) + 1;
+		final long[] offsetStack = new long[ stackSize ];
+		int offsetPos = 0;
+		final long[] lengthStack = new long[ stackSize ];
+		int lengthPos = 0;
+		final int[] levelStack = new int[ stackSize ];
+		int levelPos = 0;
+		
+		offsetStack[ offsetPos++ ] = from;
+		lengthStack[ lengthPos++ ] = to - from;
+		levelStack[ levelPos++ ] = 0;
+
+		final long[] count = new long[ 1 << DIGIT_BITS ];
+		final long[] pos = new long[ 1 << DIGIT_BITS ];
+		final byte[][] digit = ByteBigArrays.newBigArray( BIG_ARRAYS.length( a ) );
+
+		while( offsetPos > 0 ) {
+			final long first = offsetStack[ --offsetPos ];
+			final long length = lengthStack[ --lengthPos ];
+			final int level = levelStack[ --levelPos ];
+#if #keyclass(Character)
+			final int signMask = 0;
+#else
+			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
+#endif
+			
+			if ( length < MEDIUM ) {
+				selectionSort( a, first, first + length );
+				continue;
+			}
+			
+			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
+
+			// Count keys.
+
+			for( long i = length; i-- != 0; ) ByteBigArrays.set( digit, first + i, (byte)( ( ( KEY2LEXINT( BIG_ARRAYS.get( a, first + i ) ) >>> shift ) & DIGIT_MASK ) ^ signMask  ));
+			for( long i = length; i-- != 0; ) count[ ByteBigArrays.get( digit, first + i ) & 0xFF ]++;
+			// Compute cumulative distribution and push non-singleton keys on stack.
+			int lastUsed = -1;
+			
+			long p = first;
+			for( int i = 0; i < 1 << DIGIT_BITS; i++ ) {
+				if ( count[ i ] != 0 ) {
+					lastUsed = i;
+					if ( level < maxLevel && count[ i ] > 1 ){
+						//System.err.println( " Pushing " + new StackEntry( first + pos[ i - 1 ], first + pos[ i ], level + 1 ) );
+						offsetStack[ offsetPos++ ] = p;
+						lengthStack[ lengthPos++ ] = count[ i ];
+						levelStack[ levelPos++ ] = level + 1;
+					}
+				}
+				pos[ i ] = ( p += count[ i ] );
+			}
+			
+			// When all slots are OK, the last slot is necessarily OK.
+			final long end = first + length - count[ lastUsed ];
+			count[ lastUsed ] = 0;
+
+			// i moves through the start of each block
+			int c = -1;
+			for( long i = first, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				KEY_TYPE t = BIG_ARRAYS.get( a, i );
+				c = ByteBigArrays.get( digit, i ) & 0xFF;
+				while( ( d = --pos[ c ] ) > i ) {
+					final KEY_TYPE z = t;
+					final int zz = c;
+					t = BIG_ARRAYS.get( a, d );
+					c = ByteBigArrays.get( digit, d ) & 0xFF;
+					BIG_ARRAYS.set( a, d, z );
+					ByteBigArrays.set( digit, d, (byte)zz );
+				}
+
+				BIG_ARRAYS.set( a, i , t );
+			}
+		}
+	}
+
+
+	private static void selectionSort( final KEY_TYPE[][] a, final KEY_TYPE[][] b, final long from, final long to ) {
+		for( long i = from; i < to - 1; i++ ) {
+			long m = i;
+			for( long j = i + 1; j < to; j++ ) 
+				if ( BIG_ARRAYS.get( a, j ) < BIG_ARRAYS.get( a, m ) || BIG_ARRAYS.get( a, j ) == BIG_ARRAYS.get( a, m ) && BIG_ARRAYS.get( b, j ) < BIG_ARRAYS.get( b, m ) ) m = j;
+			
+			if ( m != i ) {
+				KEY_TYPE t = BIG_ARRAYS.get( a, i );
+				BIG_ARRAYS.set( a, i, BIG_ARRAYS.get( a, m ) );
+				BIG_ARRAYS.set( a, m, t );
+				t = BIG_ARRAYS.get( b, i );
+				BIG_ARRAYS.set( b, i, BIG_ARRAYS.get( b, m ) );
+				BIG_ARRAYS.set( b, m, t );
+			}
+		}
+	}
+
+	/** Sorts the specified pair of big arrays lexicographically using radix sort.
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993),
+	 * and further improved using the digit-oracle idea described by
+	 * Juha K&auml;rkk&auml;inen and Tommi Rantala in &ldquo;Engineering radix sort for strings&rdquo;,
+	 * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
+	 * Lecture Notes in Computer Science, pages 3&minus;14, Springer (2008).
+	 *
+	 * <p>This method implements a <em>lexicographical</em> sorting of the arguments. Pairs of elements
+	 * in the same position in the two provided arrays will be considered a single key, and permuted
+	 * accordingly. In the end, either <code>a[ i ] < a[ i + 1 ]</code> or <code>a[ i ] == a[ i + 1 ]</code> and <code>b[ i ] <= b[ i + 1 ]</code>.
+	 *
+	 * <p>This implementation is significantly faster than quicksort 
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort in ascending order. It will allocate a support array of bytes with the same number of elements as the arrays to be sorted.
+	 * 
+	 * @param a the first big array to be sorted.
+	 * @param b the second big array to be sorted.
+	 */
+
+	public static void radixSort( final KEY_TYPE[][] a, final KEY_TYPE[][] b ) {
+		radixSort( a, b, 0, BIG_ARRAYS.length( a ) );
+	}
+	
+	/** Sorts the specified pair of big arrays lexicographically using radix sort.
+	 * 
+	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
+	 * McIlroy, &ldquo;Engineering radix sort&rdquo;, <i>Computing Systems</i>, 6(1), pages 5&minus;27 (1993),
+	 * and further improved using the digit-oracle idea described by
+	 * Juha K&auml;rkk&auml;inen and Tommi Rantala in &ldquo;Engineering radix sort for strings&rdquo;,
+	 * <i>String Processing and Information Retrieval, 15th International Symposium</i>, volume 5280 of
+	 * Lecture Notes in Computer Science, pages 3&minus;14, Springer (2008).
+	 *
+	 * <p>This method implements a <em>lexicographical</em> sorting of the arguments. Pairs of elements
+	 * in the same position in the two provided arrays will be considered a single key, and permuted
+	 * accordingly. In the end, either <code>a[ i ] < a[ i + 1 ]</code> or <code>a[ i ] == a[ i + 1 ]</code> and <code>b[ i ] <= b[ i + 1 ]</code>.
+	 *
+	 * <p>This implementation is significantly faster than quicksort 
+	 * already at small sizes (say, more than 10000 elements), but it can only
+	 * sort in ascending order. It will allocate a support array of bytes with the same number of elements as the arrays to be sorted.
+	 * 
+	 * @param a the first big array to be sorted.
+	 * @param b the second big array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 */
+	public static void radixSort( final KEY_TYPE[][] a, final KEY_TYPE[][] b, final long from, final long to ) {
+		final int layers = 2;
+		if ( BIG_ARRAYS.length( a ) != BIG_ARRAYS.length( b ) ) throw new IllegalArgumentException( "Array size mismatch." );
+		final int maxLevel = DIGITS_PER_ELEMENT * layers - 1;
+		
+		final int stackSize = ( ( 1 << DIGIT_BITS ) - 1 ) * ( layers * DIGITS_PER_ELEMENT - 1 ) + 1;
+		final long[] offsetStack = new long[ stackSize ];
+		int offsetPos = 0;
+		final long[] lengthStack = new long[ stackSize ];
+		int lengthPos = 0;
+		final int[] levelStack = new int[ stackSize ];
+		int levelPos = 0;
+		
+		offsetStack[ offsetPos++ ] = from;
+		lengthStack[ lengthPos++ ] = to - from;
+		levelStack[ levelPos++ ] = 0;
+
+		final long[] count = new long[ 1 << DIGIT_BITS ];
+		final long[] pos = new long[ 1 << DIGIT_BITS ];
+		final byte[][] digit = ByteBigArrays.newBigArray( BIG_ARRAYS.length( a ) );
+
+		while( offsetPos > 0 ) {
+			final long first = offsetStack[ --offsetPos ];
+			final long length = lengthStack[ --lengthPos ];
+			final int level = levelStack[ --levelPos ];
+#if #keyclass(Character)
+			final int signMask = 0;
+#else
+			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
+#endif
+			
+			if ( length < MEDIUM ) {
+				selectionSort( a, b, first, first + length );
+				continue;
+			}
+			
+			final KEY_TYPE[][] k = level < DIGITS_PER_ELEMENT ? a : b; // This is the key array
+			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
+
+			// Count keys.
+			for( long i = length; i-- != 0; ) ByteBigArrays.set( digit, first + i, (byte)( ( ( KEY2LEXINT( BIG_ARRAYS.get( k, first + i ) ) >>> shift ) & DIGIT_MASK ) ^ signMask ) );
+			for( long i = length; i-- != 0; ) count[ ByteBigArrays.get( digit, first + i ) & 0xFF ]++;
+			// Compute cumulative distribution and push non-singleton keys on stack.
+			int lastUsed = -1;
+
+			long p = first;
+			for( int i = 0; i < 1 << DIGIT_BITS; i++ ) {
+				if ( count[ i ] != 0 ) {
+					lastUsed = i;
+					if ( level < maxLevel && count[ i ] > 1 ){
+						offsetStack[ offsetPos++ ] = p;
+						lengthStack[ lengthPos++ ] = count[ i ];
+						levelStack[ levelPos++ ] = level + 1;
+					}
+				}
+				pos[ i ] = ( p += count[ i ] );
+			}
+
+			// When all slots are OK, the last slot is necessarily OK.
+			final long end = first + length - count[ lastUsed ];
+			count[ lastUsed ] = 0;
+			
+			// i moves through the start of each block
+			int c = -1;
+			for( long i = first, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				KEY_TYPE t = BIG_ARRAYS.get( a, i );
+				KEY_TYPE u = BIG_ARRAYS.get( b, i );
+				c = ByteBigArrays.get( digit, i ) & 0xFF;
+				while( ( d = --pos[ c ] ) > i ) {
+					KEY_TYPE z = t;
+					final int zz = c;
+					t = BIG_ARRAYS.get( a, d );
+					BIG_ARRAYS.set( a, d, z );
+					z = u;
+					u = BIG_ARRAYS.get( b, d );
+					BIG_ARRAYS.set( b, d, z );
+					c = ByteBigArrays.get( digit, d ) & 0xFF;
+					ByteBigArrays.set( digit, d, (byte)zz );
+				}
+
+				BIG_ARRAYS.set( a, i, t );
+				BIG_ARRAYS.set( b, i, u );
+			}
+		}
+	}
+
+#endif
+
+#endif
+
 
 	/** Shuffles the specified big array fragment using the specified pseudorandom number generator.
 	 * 
