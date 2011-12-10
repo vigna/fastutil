@@ -1,8 +1,8 @@
 %define section free
 
 Name:           fastutil
-Version:        6.4.1
-Release:        1
+Version:        6.4.2
+Release:        2
 Epoch:          0
 Summary:        Fast & compact type-specific Java utility classes
 Group:          Development/Libraries/Java
