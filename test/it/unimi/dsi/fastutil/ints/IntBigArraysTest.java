@@ -141,6 +141,9 @@ public class IntBigArraysTest {
 		for( long i = IntBigArrays.length( t ); i-- != 0; ) IntBigArrays.set( t, i, random.nextInt() );
 		IntBigArrays.radixSort( t );
 		for( long i = IntBigArrays.length( t ) - 1; i-- != 0; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
+		for( long i = 100; i-- != 10; ) IntBigArrays.set( t, i, random.nextInt() );
+		IntBigArrays.radixSort( t, 10, 100 );
+		for( long i = 99; i-- != 10; ) assertTrue( IntBigArrays.get( t, i ) <= IntBigArrays.get( t, i + 1 ) );
 
 		t = IntBigArrays.newBigArray( 1000000 );
 		random = new Random( 0 );
@@ -179,6 +182,9 @@ public class IntBigArraysTest {
 		for( long i = IntBigArrays.length( d ); i-- != 0; ) IntBigArrays.set( e, i, random.nextInt() );
 		IntBigArrays.radixSort( d, e );
 		for( long i = IntBigArrays.length( d ) - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
+		for( long i = 100; i-- != 10; ) IntBigArrays.set( e, i, random.nextInt() );
+		IntBigArrays.radixSort( d, e, 10, 100 );
+		for( long i = 99; i-- != 10; ) assertTrue( Long.toString( i ) + ": <" + IntBigArrays.get( d, i ) + ", " + IntBigArrays.get( e, i ) + ">, <" + IntBigArrays.get( d, i + 1 ) + ", " +  IntBigArrays.get( e, i + 1 ) + ">", IntBigArrays.get( d, i ) < IntBigArrays.get( d, i + 1 ) || IntBigArrays.get( d, i ) == IntBigArrays.get( d, i + 1 ) && IntBigArrays.get( e, i ) <= IntBigArrays.get( e, i + 1 ) );
 
 		d = IntBigArrays.newBigArray( 1000000 );
 		random = new Random( 0 );

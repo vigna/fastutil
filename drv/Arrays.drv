@@ -964,7 +964,7 @@ public class ARRAYS {
 
 		final int[] count = new int[ 1 << DIGIT_BITS ];
 		final int[] pos = new int[ 1 << DIGIT_BITS ];
-		final byte[] digit = new byte[ a.length ];
+		final byte[] digit = new byte[ to - from ];
 
 		while( offsetPos > 0 ) {
 			final int first = offsetStack[ --offsetPos ];
@@ -985,17 +985,17 @@ public class ARRAYS {
 
 			// Count keys.
 
-			for( int i = length; i-- != 0; ) digit[ first + i ] = (byte)( ( ( KEY2LEXINT( a[ first + i ] ) >>> shift ) & DIGIT_MASK ) ^ signMask );
-			for( int i = length; i-- != 0; ) count[ digit[ first + i ] & 0xFF ]++;
+			for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( KEY2LEXINT( a[ first + i ] ) >>> shift ) & DIGIT_MASK ) ^ signMask );
+			for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
 			// Compute cumulative distribution and push non-singleton keys on stack.
 			int lastUsed = -1;
 			
-			for( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
+			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
 				if ( count[ i ] != 0 ) {
 					lastUsed = i;
 					if ( level < maxLevel && count[ i ] > 1 ){
 						//System.err.println( " Pushing " + new StackEntry( first + pos[ i - 1 ], first + pos[ i ], level + 1 ) );
-						offsetStack[ offsetPos++ ] = p;
+						offsetStack[ offsetPos++ ] = p + first;
 						lengthStack[ lengthPos++ ] = count[ i ];
 						levelStack[ levelPos++ ] = level + 1;
 					}
@@ -1004,23 +1004,23 @@ public class ARRAYS {
 			}
 			
 			// When all slots are OK, the last slot is necessarily OK.
-			final int end = first + length - count[ lastUsed ];
+			final int end = length - count[ lastUsed ];
 			count[ lastUsed ] = 0;
 
 			// i moves through the start of each block
-			for( int i = first, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
-				KEY_TYPE t = a[ i ];
+			for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				KEY_TYPE t = a[ i + first ];
 				c = digit[ i ] & 0xFF;
 				while( ( d = --pos[ c ] ) > i ) {
 					final KEY_TYPE z = t;
 					final int zz = c;
-					t = a[ d ];
+					t = a[ d + first ];
 					c = digit[ d ] & 0xFF;
-					a[ d ] = z;
+					a[ d + first ] = z;
 					digit[ d ] = (byte)zz;
 				}
 
-				a[ i ] = t;
+				a[ i + first ] = t;
 			}
 		}
 	}
@@ -1114,7 +1114,7 @@ public class ARRAYS {
 		final int[] count = new int[ 1 << DIGIT_BITS ];
 		final int[] pos = stable ? null : new int[ 1 << DIGIT_BITS ];
 		final int[] support = stable ? new int[ perm.length ] : null;
-		final byte[] digit = new byte[ perm.length ];
+		final byte[] digit = new byte[ to - from ];
 
 		while( offsetPos > 0 ) {
 			final int first = offsetStack[ --offsetPos ];
@@ -1264,7 +1264,7 @@ public class ARRAYS {
 
 		final int[] count = new int[ 1 << DIGIT_BITS ];
 		final int[] pos = new int[ 1 << DIGIT_BITS ];
-		final byte[] digit = new byte[ a.length ];
+		final byte[] digit = new byte[ to - from ];
 
 		while( offsetPos > 0 ) {
 			final int first = offsetStack[ --offsetPos ];
@@ -1285,16 +1285,16 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = length; i-- != 0; ) digit[ first + i ] = (byte)( ( ( KEY2LEXINT( k[ first + i ] ) >>> shift ) & DIGIT_MASK ) ^ signMask );
-			for( int i = length; i-- != 0; ) count[ digit[ first + i ] & 0xFF ]++;
+			for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( ( KEY2LEXINT( k[ first + i ] ) >>> shift ) & DIGIT_MASK ) ^ signMask );
+			for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
 			// Compute cumulative distribution and push non-singleton keys on stack.
 			int lastUsed = -1;
 
-			for( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
+			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
 				if ( count[ i ] != 0 ) {
 					lastUsed = i;
 					if ( level < maxLevel && count[ i ] > 1 ){
-						offsetStack[ offsetPos++ ] = p;
+						offsetStack[ offsetPos++ ] = p + first;
 						lengthStack[ lengthPos++ ] = count[ i ];
 						levelStack[ levelPos++ ] = level + 1;
 					}
@@ -1303,28 +1303,28 @@ public class ARRAYS {
 			}
 
 			// When all slots are OK, the last slot is necessarily OK.
-			final int end = first + length - count[ lastUsed ];
+			final int end = length - count[ lastUsed ];
 			count[ lastUsed ] = 0;
 			
 			// i moves through the start of each block
-			for( int i = first, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
-				KEY_TYPE t = a[ i ];
-				KEY_TYPE u = b[ i ];
+			for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				KEY_TYPE t = a[ i + first ];
+				KEY_TYPE u = b[ i + first ];
 				c = digit[ i ] & 0xFF;
 				while( ( d = --pos[ c ] ) > i ) {
 					KEY_TYPE z = t;
 					final int zz = c;
-					t = a[ d ];
-					a[ d ] = z;
+					t = a[ d + first ];
+					a[ d + first ] = z;
 					z = u;
-					u = b[ d ];
-					b[ d ] = z;
+					u = b[ d + first ];
+					b[ d + first ] = z;
 					c = digit[ d ] & 0xFF;
 					digit[ d ] = (byte)zz;
 				}
 
-				a[ i ] = t;
-				b[ i ] = u;
+				a[ i + first ] = t;
+				b[ i + first ] = u;
 			}
 		}
 	}
@@ -1423,7 +1423,7 @@ public class ARRAYS {
 		final int[] count = new int[ 1 << DIGIT_BITS ];
 		final int[] pos = stable ? null : new int[ 1 << DIGIT_BITS ];
 		final int[] support = stable ? new int[ perm.length ] : null;
-		final byte[] digit = new byte[ perm.length ];
+		final byte[] digit = new byte[ to - from ];
 
 		while( offsetPos > 0 ) {
 			final int first = offsetStack[ --offsetPos ];
@@ -1583,7 +1583,7 @@ public class ARRAYS {
 
 		final int[] count = new int[ 1 << DIGIT_BITS ];
 		final int[] pos = new int[ 1 << DIGIT_BITS ];
-		final byte[] digit = new byte[ a[ 0 ].length ];
+		final byte[] digit = new byte[ to - from ];
 		final KEY_TYPE[] t = new KEY_TYPE[ layers ];
 
 		while( offsetPos > 0 ) {
@@ -1605,16 +1605,16 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = length; i-- != 0; ) digit[ first + i ] = (byte)( ( KEY2LEXINT( k[ first + i ] ) >>> shift & DIGIT_MASK ) ^ signMask );
-			for( int i = length; i-- != 0; ) count[ digit[ first + i ] & 0xFF ]++;
+			for( int i = length; i-- != 0; ) digit[ i ] = (byte)( ( KEY2LEXINT( k[ first + i ] ) >>> shift & DIGIT_MASK ) ^ signMask );
+			for( int i = length; i-- != 0; ) count[ digit[ i ] & 0xFF ]++;
 			// Compute cumulative distribution and push non-singleton keys on stack.
 			int lastUsed = -1;
 			
-			for( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
+			for( int i = 0, p = 0; i < 1 << DIGIT_BITS; i++ ) {
 				if ( count[ i ] != 0 ) {
 					lastUsed = i;
 					if ( level < maxLevel && count[ i ] > 1 ){
-						offsetStack[ offsetPos++ ] = p;
+						offsetStack[ offsetPos++ ] = p + first;
 						lengthStack[ lengthPos++ ] = count[ i ];
 						levelStack[ levelPos++ ] = level + 1;
 					}
@@ -1623,26 +1623,26 @@ public class ARRAYS {
 			}
 
 			// When all slots are OK, the last slot is necessarily OK.
-			final int end = first + length - count[ lastUsed ];
+			final int end = length - count[ lastUsed ];
 			count[ lastUsed ] = 0;
 
 			// i moves through the start of each block
-			for( int i = first, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
-				for( int p = layers; p-- != 0; ) t[ p ] = a[ p ][ i ];
+			for( int i = 0, c = -1, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				for( int p = layers; p-- != 0; ) t[ p ] = a[ p ][ i + first ];
 				c = digit[ i ] & 0xFF;
 				
 				 while( ( d = --pos[ c ] ) > i ) {
 					for( int p = layers; p-- != 0; ) {
 						final KEY_TYPE u = t[ p ];
-						t[ p ] = a[ p ][ d ];
-						a[ p ][ d ] = u;
+						t[ p ] = a[ p ][ d + first ];
+						a[ p ][ d + first ] = u;
 					}
 					final int zz = c;
 					c = digit[ d ] & 0xFF;
 					digit[ d ] = (byte)zz;
 				}
 
-				for( int p = layers; p-- != 0; ) a[ p ][ i ] = t[ p ];
+				for( int p = layers; p-- != 0; ) a[ p ][ i + first ] = t[ p ];
 			}
 		}
 	}

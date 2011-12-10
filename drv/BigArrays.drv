@@ -1180,7 +1180,7 @@ public class BIG_ARRAYS {
 
 		final long[] count = new long[ 1 << DIGIT_BITS ];
 		final long[] pos = new long[ 1 << DIGIT_BITS ];
-		final byte[][] digit = ByteBigArrays.newBigArray( BIG_ARRAYS.length( a ) );
+		final byte[][] digit = ByteBigArrays.newBigArray( to - from );
 
 		while( offsetPos > 0 ) {
 			final long first = offsetStack[ --offsetPos ];
@@ -1201,18 +1201,18 @@ public class BIG_ARRAYS {
 
 			// Count keys.
 
-			for( long i = length; i-- != 0; ) ByteBigArrays.set( digit, first + i, (byte)( ( ( KEY2LEXINT( BIG_ARRAYS.get( a, first + i ) ) >>> shift ) & DIGIT_MASK ) ^ signMask  ));
-			for( long i = length; i-- != 0; ) count[ ByteBigArrays.get( digit, first + i ) & 0xFF ]++;
+			for( long i = length; i-- != 0; ) ByteBigArrays.set( digit, i, (byte)( ( ( KEY2LEXINT( BIG_ARRAYS.get( a, first + i ) ) >>> shift ) & DIGIT_MASK ) ^ signMask  ));
+			for( long i = length; i-- != 0; ) count[ ByteBigArrays.get( digit, i ) & 0xFF ]++;
 			// Compute cumulative distribution and push non-singleton keys on stack.
 			int lastUsed = -1;
 			
-			long p = first;
+			long p = 0;
 			for( int i = 0; i < 1 << DIGIT_BITS; i++ ) {
 				if ( count[ i ] != 0 ) {
 					lastUsed = i;
 					if ( level < maxLevel && count[ i ] > 1 ){
 						//System.err.println( " Pushing " + new StackEntry( first + pos[ i - 1 ], first + pos[ i ], level + 1 ) );
-						offsetStack[ offsetPos++ ] = p;
+						offsetStack[ offsetPos++ ] = p + first;
 						lengthStack[ lengthPos++ ] = count[ i ];
 						levelStack[ levelPos++ ] = level + 1;
 					}
@@ -1221,24 +1221,24 @@ public class BIG_ARRAYS {
 			}
 			
 			// When all slots are OK, the last slot is necessarily OK.
-			final long end = first + length - count[ lastUsed ];
+			final long end = length - count[ lastUsed ];
 			count[ lastUsed ] = 0;
 
 			// i moves through the start of each block
 			int c = -1;
-			for( long i = first, d; i < end; i += count[ c ], count[ c ] = 0 ) {
-				KEY_TYPE t = BIG_ARRAYS.get( a, i );
+			for( long i = 0, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				KEY_TYPE t = BIG_ARRAYS.get( a, i +first );
 				c = ByteBigArrays.get( digit, i ) & 0xFF;
 				while( ( d = --pos[ c ] ) > i ) {
 					final KEY_TYPE z = t;
 					final int zz = c;
-					t = BIG_ARRAYS.get( a, d );
+					t = BIG_ARRAYS.get( a, d + first );
 					c = ByteBigArrays.get( digit, d ) & 0xFF;
-					BIG_ARRAYS.set( a, d, z );
+					BIG_ARRAYS.set( a, d + first, z );
 					ByteBigArrays.set( digit, d, (byte)zz );
 				}
 
-				BIG_ARRAYS.set( a, i , t );
+				BIG_ARRAYS.set( a, i + first, t );
 			}
 		}
 	}
@@ -1326,7 +1326,7 @@ public class BIG_ARRAYS {
 
 		final long[] count = new long[ 1 << DIGIT_BITS ];
 		final long[] pos = new long[ 1 << DIGIT_BITS ];
-		final byte[][] digit = ByteBigArrays.newBigArray( BIG_ARRAYS.length( a ) );
+		final byte[][] digit = ByteBigArrays.newBigArray( to - from );
 
 		while( offsetPos > 0 ) {
 			final long first = offsetStack[ --offsetPos ];
@@ -1347,17 +1347,17 @@ public class BIG_ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( long i = length; i-- != 0; ) ByteBigArrays.set( digit, first + i, (byte)( ( ( KEY2LEXINT( BIG_ARRAYS.get( k, first + i ) ) >>> shift ) & DIGIT_MASK ) ^ signMask ) );
-			for( long i = length; i-- != 0; ) count[ ByteBigArrays.get( digit, first + i ) & 0xFF ]++;
+			for( long i = length; i-- != 0; ) ByteBigArrays.set( digit, i, (byte)( ( ( KEY2LEXINT( BIG_ARRAYS.get( k, first + i ) ) >>> shift ) & DIGIT_MASK ) ^ signMask ) );
+			for( long i = length; i-- != 0; ) count[ ByteBigArrays.get( digit, i ) & 0xFF ]++;
 			// Compute cumulative distribution and push non-singleton keys on stack.
 			int lastUsed = -1;
 
-			long p = first;
+			long p = 0;
 			for( int i = 0; i < 1 << DIGIT_BITS; i++ ) {
 				if ( count[ i ] != 0 ) {
 					lastUsed = i;
 					if ( level < maxLevel && count[ i ] > 1 ){
-						offsetStack[ offsetPos++ ] = p;
+						offsetStack[ offsetPos++ ] = p + first;
 						lengthStack[ lengthPos++ ] = count[ i ];
 						levelStack[ levelPos++ ] = level + 1;
 					}
@@ -1366,29 +1366,29 @@ public class BIG_ARRAYS {
 			}
 
 			// When all slots are OK, the last slot is necessarily OK.
-			final long end = first + length - count[ lastUsed ];
+			final long end = length - count[ lastUsed ];
 			count[ lastUsed ] = 0;
 			
 			// i moves through the start of each block
 			int c = -1;
-			for( long i = first, d; i < end; i += count[ c ], count[ c ] = 0 ) {
-				KEY_TYPE t = BIG_ARRAYS.get( a, i );
-				KEY_TYPE u = BIG_ARRAYS.get( b, i );
+			for( long i = 0, d; i < end; i += count[ c ], count[ c ] = 0 ) {
+				KEY_TYPE t = BIG_ARRAYS.get( a, i + first );
+				KEY_TYPE u = BIG_ARRAYS.get( b, i + first );
 				c = ByteBigArrays.get( digit, i ) & 0xFF;
 				while( ( d = --pos[ c ] ) > i ) {
 					KEY_TYPE z = t;
 					final int zz = c;
-					t = BIG_ARRAYS.get( a, d );
-					BIG_ARRAYS.set( a, d, z );
+					t = BIG_ARRAYS.get( a, d + first );
+					BIG_ARRAYS.set( a, d + first, z );
 					z = u;
-					u = BIG_ARRAYS.get( b, d );
-					BIG_ARRAYS.set( b, d, z );
+					u = BIG_ARRAYS.get( b, d + first );
+					BIG_ARRAYS.set( b, d + first, z );
 					c = ByteBigArrays.get( digit, d ) & 0xFF;
 					ByteBigArrays.set( digit, d, (byte)zz );
 				}
 
-				BIG_ARRAYS.set( a, i, t );
-				BIG_ARRAYS.set( b, i, u );
+				BIG_ARRAYS.set( a, i + first, t );
+				BIG_ARRAYS.set( b, i + first, u );
 			}
 		}
 	}
