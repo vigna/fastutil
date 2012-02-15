@@ -19,7 +19,6 @@ package PACKAGE;
 
 #if #keyclass(Object)
 import java.util.Comparator;
-
 import it.unimi.dsi.fastutil.AbstractPriorityQueue;
 #endif
 
@@ -47,6 +46,12 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 	
 	/** The type-specific comparator used in this queue. */
 	protected KEY_COMPARATOR KEY_SUPER_GENERIC c;
+
+	/** The first index, cached, if {@link #firstIndexValid} is true. */
+	protected int firstIndex;
+
+	/** Whether {@link #firstIndex} contains a valid value. */
+	protected boolean firstIndexValid;
 
 	/** Creates a new empty queue with a given capacity and comparator.
 	 *
@@ -135,6 +140,8 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 
 	@SuppressWarnings("unchecked")
 	private int findFirst() {
+		if ( firstIndexValid ) return this.firstIndex;
+		firstIndexValid = true;
 		int i = size;
 		int firstIndex = --i;
 		KEY_GENERIC_TYPE first = array[ firstIndex ];
@@ -142,7 +149,7 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 		if ( c == null ) { while( i-- != 0 ) if ( KEY_LESS( array[ i ], first ) ) first = array[ firstIndex = i ]; }
 		else while( i-- != 0 ) { if ( c.compare( array[ i ], first ) < 0 ) first = array[ firstIndex = i ]; }
 
-		return firstIndex;
+		return this.firstIndex = firstIndex;
 	}
 
 	private void ensureNonEmpty() {
@@ -151,14 +158,13 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 
 	public void enqueue( KEY_GENERIC_TYPE x ) {
 		if ( size == array.length ) array = ARRAYS.grow( array, size + 1 );
+		if ( firstIndexValid ) {
+			if ( c == null ) { if ( KEY_LESS( x, array[ firstIndex ] ) ) firstIndex = size; }
+			else if ( c.compare( x, array[ firstIndex ] ) < 0 ) firstIndex = size;
+		}
+		else firstIndexValid = false;
 		array[ size++ ] = x;
 	}
-
-	/** Dequeues an element.
-	 *
-	 * <P>Note that each call to this method requires a complete scan of the backing array. Please
-	 * consider caching its result.
-	 */
 
 	public KEY_GENERIC_TYPE DEQUEUE() {
 		ensureNonEmpty();
@@ -168,6 +174,7 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 #if #keyclass(Object)
 		array[ size ] = null;
 #endif
+		firstIndexValid = false;
 		return result;
 	}
 
@@ -187,6 +194,7 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 		ObjectArrays.fill( array, 0, size, null );
 #endif
 		size = 0; 
+		firstIndexValid = false;
 	}
 
 	/** Trims the underlying array so that it has exactly {@link #size()} elements.
@@ -197,5 +205,4 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KE
 	}
 
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return c; }
-
 }

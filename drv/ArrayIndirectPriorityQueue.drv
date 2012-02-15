@@ -19,6 +19,7 @@ package PACKAGE;
 
 #if #keyclass(Object)
 import java.util.Comparator;
+import it.unimi.dsi.fastutil.IndirectPriorityQueue;
 #endif
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
@@ -39,7 +40,7 @@ import java.util.NoSuchElementException;
  * time the same index, without limitations.
  */
 
-public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectPriorityQueue<KEY_GENERIC_CLASS> {
+public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectPriorityQueue<KEY_GENERIC_CLASS> implements INDIRECT_PRIORITY_QUEUE KEY_GENERIC {
 
 	/** The reference array. */
 	protected KEY_GENERIC_TYPE refArray[];
@@ -52,6 +53,13 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
  	
 	/** The type-specific comparator used in this queue. */
 	protected KEY_COMPARATOR KEY_SUPER_GENERIC c;
+
+	/** The first index, cached, if {@link #firstIndexValid} is true. */
+	protected int firstIndex;
+
+	/** Whether {@link #firstIndex} contains a valid value. */
+	protected boolean firstIndexValid;
+	
 
 	/** Creates a new empty queue without elements with a given capacity and comparator.
 	 *
@@ -148,6 +156,8 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 
 	@SuppressWarnings("unchecked")
 	private int findFirst() {
+		if ( firstIndexValid ) return this.firstIndex;
+		firstIndexValid = true;
 		int i = size;
 		int firstIndex = --i;
 		KEY_GENERIC_TYPE first = refArray[ array[ firstIndex ] ];
@@ -155,7 +165,7 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		if ( c == null ) while( i-- != 0 ) { if ( KEY_LESS( refArray[ array[ i ] ], first ) ) first = refArray[ array[ firstIndex = i ] ]; }
 		else while( i-- != 0 ) { if ( c.compare( refArray[ array[ i ] ], first ) < 0 ) first = refArray[ array[ firstIndex = i ] ]; }
 
-		return firstIndex;
+		return this.firstIndex = firstIndex;
 	}
 
 	/** Returns the index (in {@link #array}) of the largest element. */
@@ -176,7 +186,7 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		if ( size == 0 ) throw new NoSuchElementException();
 	}
 
-	/** Ensures that the given index is a valid reference.
+	/** Ensures that the given index is a firstIndexValid reference.
 	 *
 	 * @param index an index in the reference array.
 	 * @throws IndexOutOfBoundsException if the given index is negative or larger than the reference array length.
@@ -194,21 +204,22 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 	 */
 	public void enqueue( int x ) {
 		ensureElement( x );
+		
 		if ( size == array.length ) array = IntArrays.grow( array, size + 1 );
+		if ( firstIndexValid ) {
+			if ( c == null ) { if ( KEY_LESS( refArray[ x ], refArray[ array[ firstIndex ] ] ) ) firstIndex = size; }
+			else if ( c.compare( refArray[ x ], refArray[ array[ firstIndex ] ] ) < 0 ) firstIndex = size;
+		}
+		else firstIndexValid = false;
 		array[ size++ ] = x;
 	}
 
-	/** Dequeues an element.
-	 *
-	 * <P>Note that each call to this method requires a complete scan of the backing array. Please
-	 * consider caching its result.
-	 */
-
 	public int dequeue() {
 		ensureNonEmpty();
-		final int first = findFirst();
-		final int result = array[ first ];
-		if ( --size != 0 ) System.arraycopy( array, first + 1, array, first, size - first );
+		final int firstIndex = findFirst();
+		final int result = array[ firstIndex ];
+		if ( --size != 0 ) System.arraycopy( array, firstIndex + 1, array, firstIndex, size - firstIndex );
+		firstIndexValid = false;
 		return result;
 	}
 
@@ -224,6 +235,7 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 
 	public void changed() {
 		ensureNonEmpty();
+		firstIndexValid = false;
 	}
 
 	/** {@inheritDoc}
@@ -234,9 +246,12 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 
 	public void changed( int index ) {
 		ensureElement( index );
+		if ( index == firstIndex ) firstIndexValid = false;
 	}
 
-	public void allChanged() {}
+	public void allChanged() {
+		firstIndexValid = false;
+	}
 
 	public boolean remove( int index ) {
 		ensureElement( index );
@@ -244,6 +259,7 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		int i = size;
 		while( i-- != 0 ) if ( a[ i ] == index ) break;
 		if ( i < 0 ) return false;
+		firstIndexValid = false;
 		if ( --size != 0 ) System.arraycopy( a, i + 1, a, i, size - i );
 		return true;
 	}
@@ -257,7 +273,7 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 
 	public int size() { return size; }
 
-	public void clear() { size = 0; }
+	public void clear() { size = 0; firstIndexValid = false; }
 
 	/** Trims the backing array so that it has exactly {@link #size()} elements.
 	 */
