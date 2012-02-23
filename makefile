@@ -64,6 +64,7 @@ source:
 	$(TAR) zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/drv/*.drv \
 		fastutil-$(version)/build.xml \
+		fastutil-$(version)/pom.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/CHANGES \
