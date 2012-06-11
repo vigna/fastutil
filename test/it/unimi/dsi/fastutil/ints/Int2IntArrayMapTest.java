@@ -1,8 +1,8 @@
 package it.unimi.dsi.fastutil.ints;
 
-import it.unimi.dsi.fastutil.ints.AbstractInt2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.io.BinIO;
 
 import java.io.ByteArrayInputStream;
@@ -13,9 +13,24 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class Int2IntArrayMapTest  {
+
+
+	@Test
+	public void testEquals() {
+		Int2IntArrayMap a1 = new Int2IntArrayMap();
+		a1.put(0,  1);
+		a1.put(1000, -1);
+		a1.put(2000, 3);
+
+		Int2IntArrayMap a2 = new Int2IntArrayMap();
+		a2.put(0,  1);
+		a2.put(1000, -1);
+		a2.put(2000, 3);
+
+		assertEquals(a1, a2);
+
+	}
 
 	@Test
 	public void testMap() {
