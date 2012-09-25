@@ -1172,14 +1172,18 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** An iterator over a hash set. */
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
-		/** The index of the next entry to be returned. */
+		/** The index of the next entry to be returned, if positive or zero. If negative, the next entry to be
+			returned, if any, is that of index -pos -2 from the {@link #wrapped} list. */
 		int pos = OPEN_HASH_SET.this.n;
-		/** The index of the last entry that has been returned. It is -1 if either
+		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos}). It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
 		int last = -1;
 		/** A downward counter measuring how many entries must still be returned. */
 		int c = size;
-
+		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
+			would not be enumerated (other elements would be usually enumerated twice in their place). */
+		ARRAY_LIST KEY_GENERIC wrapped;
+		
 		{ 
 			final boolean used[] = OPEN_HASH_SET.this.used;
 			if ( c != 0 ) while( ! used[ --pos ] );
@@ -1191,21 +1195,72 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		public KEY_GENERIC_TYPE NEXT_KEY() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
-
+			
+			// We are just enumerating elements from the wrapped list.
+			if ( pos < 0 ) return wrapped.GET_KEY( - ( last = --pos ) - 2  );
+			
 			final KEY_GENERIC_TYPE retVal = key[ last = pos ];
 			
 			//System.err.println( "Count: " + c );
 			if ( --c != 0 ) {
 				final boolean used[] = OPEN_HASH_SET.this.used;
-				while( ! used[ pos = ( pos - 1 ) & mask ] );
+				while ( pos-- != 0 && !used[ pos ] );
+				// When here pos < 0 there are no more elements to be enumerated by scanning, but wrapped might be nonempty.
 			}
 			
 			return retVal;
 		}
 
+
+		/** Shifts left entries with the specified hash code, starting at the specified position,
+		 * and empties the resulting free entry. If any entry wraps around the table, instantiates
+		 * lazily {@link #wrapped} and stores the entry.
+		 *
+		 * @param pos a starting position.
+		 * @return the position cleared by the shifting process.
+		 */
+		final int shiftKeys( int pos ) {
+			// Shift entries with the same hash.
+			int last, slot;
+	
+			for(;;) {
+				pos = ( ( last = pos ) + 1 ) & mask;
+				
+				while( used[ pos ] ) {
+					slot = KEY2INTHASH( key[ pos ] ) & mask;
+					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
+					pos = ( pos + 1 ) & mask;
+				}
+	
+				if ( ! used[ pos ] ) break;
+				if ( pos < last ) {
+					// Wrapped entry.
+					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
+					wrapped.add( key[ pos ] );
+				}
+				key[ last ] = key[ pos ];			
+			}
+	
+			used[ last ] = false;
+#if #keys(reference)
+			key[ last ] = null;
+#endif
+			return last;
+		}
+	
 		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
+			if ( pos < -1 ) {
+				// We're removing wrapped entries.
+#if #keys(reference)
+				OPEN_HASH_SET.this.remove( wrapped.set( - pos - 2, null ) );
+#else
+				OPEN_HASH_SET.this.REMOVE_KEY( wrapped.GET_KEY( - pos - 2 ) );
+#endif
+				last = -1;
+				return;
+			}
 			size--;
 			if ( shiftKeys( last ) == pos && c > 0 ) {
 				c++;
