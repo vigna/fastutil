@@ -395,10 +395,11 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 
 
-	/** An iterator over a hash set. */
+	/** An iterator over a hash big set. */
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
-		/** The base of the next entry to be returned. */
+		/** The base of the next entry to be returned, if positive or zero. If negative, the next entry to be
+			returned, if any, is that of index -base -2 from the {@link #wrapped} list. */
 		int base;
 		/** The displacement of the next entry to be returned. */
 		int displ;
@@ -410,11 +411,20 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int lastDispl;
 		/** A downward counter measuring how many entries must still be returned. */
 		long c = size;
+		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
+			would not be enumerated (other elements would be usually enumerated twice in their place). */
+		ARRAY_LIST KEY_GENERIC wrapped;
 
 		{ 
+			base = key.length;
 			lastBase = -1;
 			final boolean used[][] = OPEN_HASH_BIG_SET.this.used;
-			if ( c != 0 ) while( ! used[ base ][ displ ] ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
+			if ( c != 0 ) do 
+				if ( displ-- == 0 ) {
+					base--;
+				   	displ = (int)mask;
+				}
+			while( ! used[ base ][ displ ] );
 		}
 
 		public boolean hasNext() {
@@ -424,22 +434,82 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		public KEY_GENERIC_TYPE NEXT_KEY() {
 			if ( ! hasNext() ) throw new NoSuchElementException();
 
+			c--;
+			// We are just enumerating elements from the wrapped list.
+			if ( base < 0 ) return wrapped.GET_KEY( - ( lastBase = --base ) - 2  );
+
 			final KEY_GENERIC_TYPE retVal = key[ lastBase = base ][ lastDispl = displ ];
 			
-			if ( --c != 0 ) {
+			if ( c != 0 ) {
 				final boolean used[][] = OPEN_HASH_BIG_SET.this.used;
-				do base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask; while( ! used[ base ][ displ ] );
+				do 
+					if ( displ-- == 0 ) {
+						if ( base-- == 0 ) break;
+				   		displ = (int)mask;
+					}
+				while( ! used[ base ][ displ ] );
+				// When here base < 0 there are no more elements to be enumerated by scanning, but wrapped might be nonempty.
 			}
 			
 			return retVal;
 		}
 
+		/** Shifts left entries with the specified hash code, starting at the specified position,
+		 * and empties the resulting free entry. If any entry wraps around the table, instantiates
+		 * lazily {@link #wrapped} and stores the entry.
+		 *
+		 * @param pos a starting position.
+		 * @return the position cleared by the shifting process.
+		 */
+		protected final long shiftKeys( long pos ) {
+			// Shift entries with the same hash.
+			long last, slot;
+	
+			/*
+			for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( (long)KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + used[ ( t + i ) & mask ] + ") ");
+			System.err.println();
+			*/
+			for(;;) {
+				pos = ( ( last = pos ) + 1 ) & mask;
+				
+				while( BooleanBigArrays.get( used, pos ) ) {
+					slot = KEY2LONGHASH( BIG_ARRAYS.get( key, pos ) ) & mask;
+					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
+					pos = ( pos + 1 ) & mask;
+				}
+	
+				if ( ! BooleanBigArrays.get( used, pos ) ) break;
+				if ( pos < last ) {
+					// Wrapped entry.
+					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
+					wrapped.add( BIG_ARRAYS.get( key, pos ) );
+				}
+
+				BIG_ARRAYS.set( key, last, BIG_ARRAYS.get( key, pos ) );
+			}
+	
+			BooleanBigArrays.set( used, last, false );
+	#if #keys(reference)
+			BIG_ARRAYS.set( key, last, null );
+	#endif
+			return last;
+		}
+
 		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( lastBase == -1 ) throw new IllegalStateException();
+			if ( base < -1 ) {
+				// We're removing wrapped entries.
+#if #keys(reference)
+				OPEN_HASH_BIG_SET.this.remove( wrapped.set( - base - 2, null ) );
+#else
+				OPEN_HASH_BIG_SET.this.remove( wrapped.GET_KEY( - base - 2 ) );
+#endif
+				lastBase = -1;
+				return;
+			}
 			size--;
-			final long shiftPos = lastBase * (long)BigArrays.SEGMENT_SIZE + lastDispl;
-			if ( shiftKeys( shiftPos ) == shiftPos && c > 0 ) {
+			if ( shiftKeys( lastBase * (long)BigArrays.SEGMENT_SIZE + lastDispl ) == base * (long)BigArrays.SEGMENT_SIZE + displ && c > 0 ) {
 				c++;
 				NEXT_KEY();
 			}
