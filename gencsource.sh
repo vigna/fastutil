@@ -500,10 +500,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
 \
 "#if #keyclass(Boolean)\n"\
+"#define KEY_NULL (false)\n"\
 "#define KEY_CMP(x,y) ( !(x) && (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( !(x) && (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( !(x) || (y) )\n"\
 "#else\n"\
+"#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( (x) < (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
@@ -525,31 +527,22 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#else\n"\
 \
 "#if #keyclass(Float)\n"\
-"#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
 "#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
 "#elif #keyclass(Double)\n"\
-"#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.murmurHash3(Double.doubleToRawLongBits(x))\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3(Double.doubleToRawLongBits(x))\n"\
 "#elif #keyclass(Long)\n"\
-"#define KEY_NULL (0)\n"\
 "#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.murmurHash3(x)\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.murmurHash3(x)\n"\
 "#elif #keyclass(Boolean)\n"\
-"#define KEY_NULL (false)\n"\
 "#define KEY2JAVAHASH(x) ((x) ? 1231 : 1237)\n"\
 "#define KEY2INTHASH(x) ((x) ? 0xfab5368 : 0xcba05e7b)\n"\
 "#define KEY2LONGHASH(x) ((x) ? 0x74a19fc8b6428188L : 0xbaeca2031a4fd9ecL)\n"\
 "#else\n"\
-"#if #keyclass(Integer)\n"\
-"#define KEY_NULL (0)\n"\
-"#else\n"\
-"#define KEY_NULL ((KEY_TYPE)0)\n"\
-"#endif\n"\
 "#define KEY2JAVAHASH(x) (x)\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)(x) ) )\n"\

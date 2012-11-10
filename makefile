@@ -323,7 +323,7 @@ $(LINKED_OPEN_HASH_MAPS): drv/LinkedOpenHashMap.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LINKED_OPEN_HASH_MAPS)
 
-OPEN_CUSTOM_HASH_MAPS := $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/objects/Object2$(v)OpenCustomHashMap.c)
+OPEN_CUSTOM_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)OpenCustomHashMap.c))
 $(OPEN_CUSTOM_HASH_MAPS): drv/OpenCustomHashMap.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(OPEN_CUSTOM_HASH_MAPS)
