@@ -16,7 +16,7 @@ import org.junit.Test;
 
 /** Not a particularly good test, but it will check that we use everywhere the same hashing strategy. */
 
-public class IntOpenCustomHashMapTest {
+public class Int2IntOpenCustomHashMapTest {
 
 	private static final class Strategy implements IntHash.Strategy, Serializable {
 		private static final long serialVersionUID = 1L;
