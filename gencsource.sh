@@ -481,6 +481,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#endif\n"\
 \
 "#define KEY_CMP(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) )\n"\
+"#define KEY_CMP_EQ(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) == 0 )\n"\
 "#define KEY_LESS(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) < 0 )\n"\
 "#define KEY_LESSEQ(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) <= 0 )\n"\
 \
@@ -499,6 +500,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_OBJ2TYPE(x) (KEY_CLASS2TYPE((KEY_CLASS)(x)))\n"\
 "#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
 \
+"#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
 "#if #keyclass(Boolean)\n"\
 "#define KEY_NULL (false)\n"\
 "#define KEY_CMP(x,y) ( !(x) && (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
