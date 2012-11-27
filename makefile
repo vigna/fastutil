@@ -91,6 +91,10 @@ binary:
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)
 
+stage:
+	(unset LOCAL_IVY_SETTINGS; ant stage)
+
+
 dirs:
 	mkdir -p $(GEN_SRCDIR)/$(PKG_PATH)
 	mkdir -p $(GEN_SRCDIR)/$(PKG_PATH)/io
