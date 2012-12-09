@@ -28,8 +28,8 @@ import java.util.NoSuchElementException;
 /** A type-specific array-based FIFO queue, supporting also deque operations.
  *
  * <P>Instances of this class represent a FIFO queue using a backing
- * array in a circular way. The array is enlarged as needed, but it is never shrunk. Use the {@link #trim()} method
- * to reduce its size, if necessary.
+ * array in a circular way. The array is enlarged and shrunk as needed. You can use the {@link #trim()} method
+ * to reduce its memory usage, if necessary.
  *
  * <P>This class provides additional methods that implement a <em>deque</em> (double-ended queue).
  */
@@ -59,8 +59,9 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 	 */
 	@SuppressWarnings("unchecked")
 	public ARRAY_FIFO_QUEUE( final int capacity ) {
-		if ( capacity > 0 ) this.array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ capacity ];
-		length = array.length;
+		if ( capacity < 0 ) throw new IllegalArgumentException( "Initial capacity (" + capacity + ") is negative" );
+		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ capacity ];
+		length = capacity;
 	}
 
 
@@ -86,6 +87,7 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 		array[ start ] = null; // Clean-up for the garbage collector.
 #endif
 		if ( ++start == length ) start = 0;
+		reduce();
 		return t;
 	}
 
@@ -101,16 +103,31 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 #if #keys(reference)
 		array[ end ] = null; // Clean-up for the garbage collector.
 #endif
+		reduce();
 		return t;
 	}
 
-	private final void expand() {
-		final KEY_GENERIC_TYPE[] newArray = ARRAYS.grow( array, length + 1, 0 );
-		System.arraycopy( array, start, newArray, 0, length - start );
-		System.arraycopy( array, 0, newArray, length - start, end );
+	@SuppressWarnings("unchecked")
+	private final void resize( final int size, final int newLength ) {
+		final KEY_GENERIC_TYPE[] newArray = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newLength ];
+		if ( start >= end ) {
+			System.arraycopy( array, start, newArray, 0, length - start );
+			System.arraycopy( array, 0, newArray, length - start, end );
+		}
+		else System.arraycopy( array, start, newArray, 0, end - start );
 		start = 0;
-		end = length;
-		length = ( array = newArray ).length;
+		end = size;
+		array = newArray;
+		length = newLength;
+	}	
+
+	private final void expand() {
+		resize( length, (int)Math.min( Integer.MAX_VALUE, 2L * length ) );
+	}
+
+	private final void reduce() {
+		final int size = size();
+		if ( length >= INITIAL_CAPACITY && size <= length / 4 ) resize( size, length / 2 );
 	}
 
 	@Override

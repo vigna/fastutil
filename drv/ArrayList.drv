@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * <P>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of array-based lists. Instances of this class
  * represent a list with an array that is enlarged as needed when new entries
- * are created (by dividing the current length by the golden ratio), but is
+ * are created (by doubling its current length), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing array; this is particularly useful if you reuse instances of this class.
@@ -59,7 +59,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
  * <P>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of array-based lists. Instances of this class
  * represent a list with an array that is enlarged as needed when new entries
- * are created (by dividing the current length by the golden ratio), but is
+ * are created (by doubling the current length), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing array; this is particularly useful if you reuse instances of this class.
@@ -89,9 +89,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	/** The initial default capacity of an array list. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
-
-	/** The inverse of the golden ratio times 2<sup>16</sup>. */
-	protected static final long ONEOVERPHI = 106039;
 
 #if ! #keys(primitive)
 	/** Whether the backing array was passed to <code>wrap()</code>. In
@@ -296,7 +293,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 	/** Grows this array list, ensuring that it can contain the given number of entries without resizing,
-	 * and in case enlarging it at least by the golden ratio.
+	 * and in case enlarging it at least by a factor of two.
 	 *
 	 * @param capacity the new minimum capacity for this array list.
 	 */
@@ -308,7 +305,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if ( wrapped ) a = ARRAYS.grow( a, capacity, size );
 		else {
 			if ( capacity > a.length ) {
-				final int newLength = (int)Math.min( Math.max( ( ARRAYS.ONEOVERPHI * a.length ) >>> 16, capacity ), Integer.MAX_VALUE );
+				final int newLength = (int)Math.min( Math.max( 2L * a.length, capacity ), Integer.MAX_VALUE );
 				final Object t[] = new Object[ newLength ];
 				System.arraycopy( a, 0, t, 0, size );
 				a = (KEY_GENERIC_TYPE[])t;

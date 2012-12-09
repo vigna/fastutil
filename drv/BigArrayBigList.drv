@@ -30,7 +30,7 @@ import it.unimi.dsi.fastutil.BigArrays;
  * <P>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of big-array-based big lists. Instances of this class
  * represent a big list with a big array that is enlarged as needed when new entries
- * are created (by dividing the current length by the golden ratio), but is
+ * are created (by doubling the current length), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing big array; this is particularly useful if you reuse instances of this class.
@@ -58,7 +58,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
  * <P>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of big-array-based big lists. Instances of this class
  * represent a big list with a big array that is enlarged as needed when new entries
- * are created (by dividing the current length by the golden ratio), but is
+ * are created (by doubling the current length), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing big array; this is particularly useful if you reuse instances of this class.
@@ -88,9 +88,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	/** The initial default capacity of a big-array big list. */
 	public final static int DEFAULT_INITIAL_CAPACITY = 16;
-
-	/** The inverse of the golden ratio times 2<sup>16</sup>. */
-	protected static final long ONEOVERPHI = 106039;
 
 #if ! #keys(primitive)
 	/** Whether the backing big array was passed to <code>wrap()</code>. In
@@ -286,7 +283,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	}
 
 	/** Grows this big-array big list, ensuring that it can contain the given number of entries without resizing,
-	 * and in case enlarging it at least by the golden ratio.
+	 * and in case enlarging it at least by a factor of two.
 	 *
 	 * @param capacity the new minimum capacity for this big-array big list.
 	 */
@@ -298,7 +295,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if ( wrapped ) a =  BIG_ARRAYS.grow( a, capacity, size );
 		else {
 			if ( capacity > BIG_ARRAYS.length( a ) ) {
-				final int newLength = (int)Math.min( Math.max( ( ARRAYS.ONEOVERPHI * BIG_ARRAYS.length( a ) ) >>> 16, capacity ), Integer.MAX_VALUE );
+				final int newLength = (int)Math.min( Math.max( 2 * BIG_ARRAYS.length( a ), capacity ), Integer.MAX_VALUE );
 				final Object t[][] = BIG_ARRAYS.newBigArray( newLength );
 				BIG_ARRAYS.copy( a, 0, t, 0, size );
 				a = (KEY_GENERIC_TYPE[][])t;
