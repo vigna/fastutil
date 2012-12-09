@@ -92,6 +92,7 @@ binary:
 	rm fastutil-$(version)
 
 stage:
+	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
 	(unset LOCAL_IVY_SETTINGS; ant stage)
 
 
