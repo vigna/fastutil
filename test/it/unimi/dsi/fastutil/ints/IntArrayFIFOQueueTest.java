@@ -137,4 +137,11 @@ public class IntArrayFIFOQueueTest {
 		assertEquals( 1, q.dequeueInt() );
 		assertEquals( 0, q.dequeueInt() );
 	}
+
+	@Test
+	public void testImmediateReduce() {
+		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		q.enqueue( 0 );
+		q.dequeue();
+	}
 }
