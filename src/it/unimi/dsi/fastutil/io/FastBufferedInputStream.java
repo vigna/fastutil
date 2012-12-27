@@ -126,16 +126,20 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** {@link #is} cast to a measurable stream, if possible. */
 	private MeasurableStream measurableStream;
 
-	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
+	private static int ensureBufferSize( final int bufferSize ) {
+		if ( bufferSize <= 0 ) throw new IllegalArgumentException( "Illegal buffer size: " + bufferSize );
+		return bufferSize;
+	}
+		
+	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer. 
 	 *
 	 * @param is an input stream to wrap.
-	 * @param bufSize the size in bytes of the internal buffer (greater than zero).
+	 * @param buffer a buffer of positive length.
 	 */
-
-	public FastBufferedInputStream( final InputStream is, final int bufSize ) {
-		if ( bufSize <= 0 ) throw new IllegalArgumentException( "Illegal buffer size: " + bufSize );
+	public FastBufferedInputStream( final InputStream is, final byte[] buffer ) {
 		this.is = is;
-		buffer = new byte[ bufSize ];
+		ensureBufferSize( buffer.length );
+		this.buffer = buffer;
 
 		if ( is instanceof RepositionableStream ) repositionableStream = (RepositionableStream)is;
 		if ( is instanceof MeasurableStream ) measurableStream = (MeasurableStream)is;
@@ -153,6 +157,15 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		}
 	}
 
+	/** Creates a new fast buffered input stream by wrapping a given input stream with a given buffer size. 
+	 *
+	 * @param is an input stream to wrap.
+	 * @param bufferSize the size in bytes of the internal buffer (greater than zero).
+	 */
+	public FastBufferedInputStream( final InputStream is, final int bufferSize ) {
+		this( is, new byte[ ensureBufferSize( bufferSize ) ] );		
+	}
+	
 	/** Creates a new fast buffered input stream by wrapping a given input stream with a buffer of {@link #DEFAULT_BUFFER_SIZE} bytes. 
 	 *
 	 * @param is an input stream to wrap.

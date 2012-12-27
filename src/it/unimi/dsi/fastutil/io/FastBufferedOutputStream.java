@@ -79,16 +79,21 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 	/** {@link #os} cast to a measurable stream, if possible. */
 	private MeasurableStream measurableStream;
 
-	/** Creates a new fast buffered output stream by wrapping a given output stream with a given buffer size. 
+	private static int ensureBufferSize( final int bufferSize ) {
+		if ( bufferSize <= 0 ) throw new IllegalArgumentException( "Illegal buffer size: " + bufferSize );
+		return bufferSize;
+	}
+		
+	/** Creates a new fast buffered output stream by wrapping a given output stream with a given buffer. 
 	 *
 	 * @param os an output stream to wrap.
-	 * @param bufferSize the size in bytes of the internal buffer.
+	 * @param buffer a buffer of positive length.
 	 */
-
-	public FastBufferedOutputStream( final OutputStream os, final int bufferSize ) {
+	public FastBufferedOutputStream( final OutputStream os, final byte[] buffer ) {
 		this.os = os;
-		buffer = new byte[ bufferSize ];
-		avail = bufferSize;
+		ensureBufferSize( buffer.length );
+		this.buffer = buffer;
+		avail = buffer.length;
 		
 		if ( os instanceof RepositionableStream ) repositionableStream = (RepositionableStream)os;
 		if ( os instanceof MeasurableStream ) measurableStream = (MeasurableStream)os;
@@ -105,6 +110,15 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 			catch( ClassCastException e ) {}
 		}
 
+	}
+
+	/** Creates a new fast buffered output stream by wrapping a given output stream with a given buffer size. 
+	 *
+	 * @param os an output stream to wrap.
+	 * @param bufferSize the size in bytes of the internal buffer.
+	 */
+	public FastBufferedOutputStream( final OutputStream os, final int bufferSize ) {
+		this( os, new byte[ ensureBufferSize( bufferSize ) ] );
 	}
 
 	/** Creates a new fast buffered ouptut stream by wrapping a given output stream with a buffer of {@link #DEFAULT_BUFFER_SIZE} bytes. 
