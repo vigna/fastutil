@@ -45,6 +45,15 @@ public class IntArraysTest {
 		assertArrayEquals( sorted, d );
 	}
 
+
+	@Test
+	public void testMergeSortSmallSupport() {
+		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < a.length; to++ )
+			for( int from = 0; from <= to; from++ )
+				IntArrays.mergeSort( a, from, to, new int[ to ] );
+	}
+	
 	@Test
 	public void testQuickSort() {
 		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
