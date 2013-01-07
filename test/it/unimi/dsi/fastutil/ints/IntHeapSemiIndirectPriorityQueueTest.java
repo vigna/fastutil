@@ -1,8 +1,12 @@
 package it.unimi.dsi.fastutil.ints;
 
-import it.unimi.dsi.fastutil.ints.IntHeapSemiIndirectPriorityQueue;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import static org.junit.Assert.assertArrayEquals;
+
+import java.util.Arrays;
+
 import junit.framework.TestCase;
+
+import org.junit.Test;
 
 public class IntHeapSemiIndirectPriorityQueueTest extends TestCase {
 
@@ -45,5 +49,25 @@ public class IntHeapSemiIndirectPriorityQueueTest extends TestCase {
 		assertEquals( 1, queue.front( tops ) );	
 	}
 	
+	@Test
+	public void testFrontWithComparator() {
+		final int[] refArray = { 8, 16, 9 };
+
+		IntComparator comparator = new AbstractIntComparator() {
+			@Override
+			public int compare( int k1, int k2 ) {
+				return ( k1 & 3 ) - ( k2 & 3 );
+			}
+		};
+
+		IntHeapSemiIndirectPriorityQueue queue = new IntHeapSemiIndirectPriorityQueue( refArray, comparator );
+		queue.enqueue( 0 );
+		queue.enqueue( 1 );
+		queue.enqueue( 2 );
+		final int[] front = new int[ 2 ];
+		assertEquals( 2, queue.front( front ) );
+		Arrays.sort( front );
+		assertArrayEquals( new int[] { 0, 1 }, front );
+	}
 	
 }
