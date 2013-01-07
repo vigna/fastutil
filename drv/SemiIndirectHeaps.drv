@@ -176,6 +176,7 @@ public class SEMI_INDIRECT_HEAPS {
 	 * @param a an array large enough to hold the front (e.g., at least long as <code>refArray</code>).
 	 * @return the number of elements actually written (starting from the first position of <code>a</code>).
 	 */
+	@SuppressWarnings("unchecked")
 	public static KEY_GENERIC int front( final KEY_GENERIC_TYPE[] refArray, final int[] heap, final int size, final int[] a ) {
 		final KEY_GENERIC_TYPE top = refArray[ heap[ 0 ] ];
 		int j = 0, // The current position in a
@@ -190,6 +191,47 @@ public class SEMI_INDIRECT_HEAPS {
 				l = -1; // Invalidate l
 			}
 			if ( KEY_CMP_EQ( top, refArray[ heap[ i ] ] ) ) {
+				a[ j++ ] = heap[ i ];
+				if ( l == -1 ) l = i * 2 + 1; // If this is the first time in this level, set l
+				r = Math.min( size, i * 2 + 3 ); // Update r, but do not go beyond size
+			}
+		}
+
+		return j;
+	}
+
+	/** Retrieves the front of a heap in a given array using a given comparator.
+	 *
+	 * <p>The <em>front</em> of a semi-indirect heap is the set of indices whose associated elements in the reference array 
+	 * are equal to the element associated to the first index.
+	 *
+	 * <p>In several circumstances you need to know the front, and scanning linearly the entire heap is not
+	 * the best strategy. This method simulates (using a partial linear scan) a breadth-first visit that 
+	 * terminates when all visited nodes are larger than the element associated
+	 * to the top index, which implies that no elements of the front can be found later. 
+	 * In most cases this trick yields a significant improvement.
+	 * 
+	 * @param refArray the reference array.
+	 * @param heap an array containing indices into <code>refArray</code>.
+	 * @param size the number of elements in the heap.
+	 * @param a an array large enough to hold the front (e.g., at least long as <code>refArray</code>).
+	 * @param c a type-specific comparator.
+	 * @return the number of elements actually written (starting from the first position of <code>a</code>).
+	 */
+	public static KEY_GENERIC int front( final KEY_GENERIC_TYPE[] refArray, final int[] heap, final int size, final int[] a, final KEY_COMPARATOR KEY_GENERIC c ) {
+		final KEY_GENERIC_TYPE top = refArray[ heap[ 0 ] ];
+		int j = 0, // The current position in a
+			l = 0, // The first position to visit in the next level (inclusive)
+			r = 1, // The last position to visit in the next level (exclusive)
+			f = 0; // The first position (in the heap array) of the next level
+		for( int i = 0; i < r; i++ ) {
+			if ( i == f ) { // New level
+				if ( l >= r ) break; // If we are crossing the two bounds, we're over
+				f = (f << 1) + 1; // Update the first position of the next level...
+				i = l; // ...and jump directly to position l
+				l = -1; // Invalidate l
+			}
+			if ( c.compare( top, refArray[ heap[ i ] ] ) == 0 ) {
 				a[ j++ ] = heap[ i ];
 				if ( l == -1 ) l = i * 2 + 1; // If this is the first time in this level, set l
 				r = Math.min( size, i * 2 + 3 ); // Update r, but do not go beyond size

@@ -33,7 +33,6 @@ import java.util.Random;
 
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
 import static it.unimi.dsi.fastutil.BigArrays.start;
 import static it.unimi.dsi.fastutil.BigArrays.segment;
 import static it.unimi.dsi.fastutil.BigArrays.displacement;
@@ -41,6 +40,10 @@ import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_MASK;
 import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SIZE;
 
 #if #keys(primitive)
+
+#if ! #keyclass(Byte) && ! #keyclass(Boolean)
+import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
+#endif
 
 /** A class providing static methods and objects that do useful things with {@linkplain BigArrays big arrays}.
  *
@@ -744,7 +747,7 @@ public class BIG_ARRAYS {
 	/** A type-specific content-based hash strategy for big arrays. */
 
 	private static final class BigArrayHashStrategy KEY_GENERIC implements Hash.Strategy<KEY_GENERIC_TYPE[][]>, java.io.Serializable {
-    	public static final long serialVersionUID = -7046029254386353129L;
+    	private static final long serialVersionUID = -7046029254386353129L;
     
 		public int hashCode( final KEY_GENERIC_TYPE[][] o ) {
 			return java.util.Arrays.deepHashCode( o );
@@ -803,10 +806,10 @@ public class BIG_ARRAYS {
 	 */
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x, final long from, final long to, final KEY_COMPARATOR KEY_GENERIC comp ) {
 		final long len = to - from;
-		// Insertion sort on smallest arrays
+
+		// Selection sort on smallest arrays
 		if ( len < SMALL ) {
-			for ( long i = from; i < to; i++ )
-			for ( long j = i; j > from && comp.compare( get( x, j - 1 ), get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
+			selectionSort( x, from, to, comp );
 			return;
 		}
 
@@ -866,6 +869,7 @@ public class BIG_ARRAYS {
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[][] a, final long from, final long to ) {
 		for( long i = from; i < to - 1; i++ ) {
 			long m = i;
@@ -903,10 +907,10 @@ public class BIG_ARRAYS {
 	@SuppressWarnings("unchecked")
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[][] x, final long from, final long to ) {
 		final long len = to - from;
-		// Insertion sort on smallest arrays
+
+		// Selection sort on smallest arrays
 		if ( len < SMALL ) {
-			for ( long i = from; i < to; i++ )
-			for ( long j = i; j > from && KEY_CMP( get( x, j - 1 ), get( x, j ) ) > 0; j-- ) swap( x, j, j - 1 );
+			selectionSort( x, from, to );
 			return;
 		}
 
