@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil.io;
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2012 Sebastiano Vigna 
+ * Copyright (C) 2013 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -26,8 +26,10 @@ import it.unimi.dsi.fastutil.bytes.ByteArrays;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 
@@ -35,7 +37,8 @@ import java.nio.channels.WritableByteChannel;
  * cached data received by a {@link WritableByteChannel} whose first bytes can be inspected directly.
  * 
  * <p>An instance of this class acts as a buffer holding the bytes written through its
- * {@link WritableByteChannel} interface. The data can be discarded at any time using
+ * {@link WritableByteChannel} interface (which can be easily turned into an {@link OutputStream} using
+ * {@link Channels#newOutputStream(WritableByteChannel)}). The data can be discarded at any time using
  * {@link #clear()}. The first {@link #inspectable} bytes of {@link #buffer} contains the first
  * bytes written. When {@link #buffer} is full, the bytes are written to an <em>overflow
  * file</em>.
