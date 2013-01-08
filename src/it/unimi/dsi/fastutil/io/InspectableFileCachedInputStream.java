@@ -36,18 +36,19 @@ import java.nio.channels.WritableByteChannel;
  * 
  * <p>An instance of this class acts as a buffer holding the bytes written through its
  * {@link WritableByteChannel} interface. The data can be discarded at any time using
- * {@link #reset()}. The first {@link #inspectable} bytes of {@link #buffer} contains the first
+ * {@link #clear()}. The first {@link #inspectable} bytes of {@link #buffer} contains the first
  * bytes written. When {@link #buffer} is full, the bytes are written to an <em>overflow
  * file</em>.
  * 
- * <p>At any time, the stream of bytes written since creation (or since the last {@link #reset()})
+ * <p>At any time, the stream of bytes written since creation (or since the last {@link #clear()})
  * are available as a fully implemented {@link MeasurableInputStream} which also implements
- * {@link RepositionableStream}. Note that you must arbitrate carefully write and read accesses,
+ * {@link RepositionableStream} and {@linkplain #mark(int) supports marking}. 
+ * Note that you must arbitrate carefully write and read accesses,
  * as it is always possible to call {@link #write(ByteBuffer)}
  * and thus modify the {@linkplain #length() length} of the {@link MeasurableInputStream}.
  * 
  * <p>The method {@link #close()} makes the {@link MeasurableInputStream} and {@link WritableByteChannel} state-changing methods temporarily throw an {@link IOException}, but
- * does not otherwise modify the state of the stream (i.e., the stream can be {@link #reset()} again). The method {@link #dispose()} can be used to release
+ * does not otherwise modify the state of the stream (i.e., the stream can be {@linkplain #clear() cleared} again). The method {@link #dispose()} can be used to release
  * the resources associated with the stream.
  * 
  * <h2>Buffering</h2>
@@ -55,7 +56,7 @@ import java.nio.channels.WritableByteChannel;
  * <p>This class provides no form of buffering except for the memory buffer described above, both
  * when reading and when writing. Users should consider wrapping instances of this class with a
  * {@link FastBufferedInputStream}, as reads after the buffer has been exhausted will be performed
- * directly on an {@link RandomAccessFile}. */
+ * directly on a {@link RandomAccessFile}. */
 public class InspectableFileCachedInputStream extends MeasurableInputStream implements RepositionableStream, WritableByteChannel {
 	public static final boolean DEBUG = false;
 	
@@ -81,6 +82,9 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	/** The position on this stream (i.e., the index of the next byte to be returned). */
 	private long position;
 
+	/** The {@linkplain #mark(int) mark}, if set, or -1. */
+	private long mark;
+
 	/** The write position of the {@link #randomAccessFile overflow file}. When {@link #inspectable} is equal
 	 * to {@link #buffer buffer.length}, the length of the stream is {@link #inspectable} + {@link #writePosition}.  */
 	private long writePosition;
@@ -98,6 +102,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		buffer = new byte[ bufferSize ];
 		randomAccessFile = new RandomAccessFile( this.overflowFile, "rw" );
 		fileChannel = randomAccessFile.getChannel();
+		mark = -1;
 	}
 	
 	/** Creates a new instance with specified buffer size and default overflow-file directory.
@@ -117,12 +122,12 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		if ( position == -1 ) throw new IOException( "This " + getClass().getSimpleName() + " is closed" );
 	}
 
-	/** Resets this {@link InspectableFileCachedInputStream}, zeroing the length of the represented
+	/** Clears the content of this {@link InspectableFileCachedInputStream}, zeroing the length of the represented
 	 * stream. */
-	@Override
-	public void reset() throws IOException {
+	public void clear() throws IOException {
 		if ( ! fileChannel.isOpen() ) throw new IOException( "This " + getClass().getSimpleName() + " is closed" );
 		writePosition = position = inspectable = 0;
+		mark = -1;
 	}
 	
 	/** Appends the content of a specified buffer to the end of the currently represented stream.
@@ -158,7 +163,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		fileChannel.truncate( Math.max( size, writePosition ) );
 	}
 	
-	/** Makes the stream unreadable until the next {@link #reset()}. */
+	/** Makes the stream unreadable until the next {@link #clear()}. */
 	@Override
 	public void close() throws IOException {
 		position = -1;
@@ -261,5 +266,22 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	@Override
 	public boolean isOpen() {
 		return position != -1;
+	}
+	
+	@Override
+	public void mark( final int readlimit ) {
+		mark = position;
+	}
+
+	@Override
+	public void reset() throws IOException {
+		ensureOpen();
+		if ( mark == -1 ) throw new IOException( "Mark has not been set" );
+		position( mark );
+	}
+
+	@Override
+	public boolean markSupported() {
+		return true;
 	}
 }
