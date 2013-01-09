@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil.io;
 /*		 
  * fastutil: Fast & compact type-specific collections for Java
  *
- * Copyright (C) 2012 Sebastiano Vigna 
+ * Copyright (C) 2013 Sebastiano Vigna 
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -82,7 +82,7 @@ public class InspectableFileCachedInputStreamTest {
 		assertEquals( -1, icis.read( b, 0, b.length ) );
 		assertEquals( 0, icis.read( b, 0, 0 ) );
 
-		icis.reset();
+		icis.clear();
 		assertTrue( icis.isOpen() );
 		data = new byte[] { 1, 2, 3, 4, 5 };
 		icis.write( ByteBuffer.wrap( data ) );
@@ -187,6 +187,16 @@ public class InspectableFileCachedInputStreamTest {
 		icis.read();
 	}
 
+	@Test(expected=IOException.class)
+	public void testClearDisposed() throws IOException {
+		@SuppressWarnings("resource")
+		final InspectableFileCachedInputStream icis = new InspectableFileCachedInputStream();
+		final byte[] data = new byte[] { 1, 2 };
+		icis.write( ByteBuffer.wrap( data ) );
+		icis.dispose();
+		icis.clear();
+	}
+	
 	@Test(expected=IOException.class)
 	public void testResetDisposed() throws IOException {
 		@SuppressWarnings("resource")
