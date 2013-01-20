@@ -624,6 +624,7 @@ SOURCES = \
 	$(SOURCEDIR)/io/FastMultiByteArrayInputStream.java \
 	$(SOURCEDIR)/io/FastBufferedInputStream.java \
 	$(SOURCEDIR)/io/FastBufferedOutputStream.java \
+	$(SOURCEDIR)/io/InspectableFileCachedInputStream.java \
 	$(SOURCEDIR)/io/MeasurableInputStream.java \
 	$(SOURCEDIR)/io/MeasurableOutputStream.java \
 	$(SOURCEDIR)/io/MeasurableStream.java \

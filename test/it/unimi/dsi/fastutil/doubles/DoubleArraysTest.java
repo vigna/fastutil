@@ -2,12 +2,11 @@ package it.unimi.dsi.fastutil.doubles;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
-
 import it.unimi.dsi.fastutil.ints.IntArrays;
 
 import java.util.Random;
+
+import org.junit.Test;
 
 public class DoubleArraysTest {
 	
@@ -469,5 +468,32 @@ public class DoubleArraysTest {
 		DoubleArrays.radixSortIndirect( perm, t, u, false );
 		for( int i = t.length - 1; i-- != 0; ) assertTrue(i + " " +  t[perm[i]]+ " "+ t[perm[i+1]] + " " + u[perm[i]] + " " + u[perm[i+1]] + "  " + perm[i]+ " " +perm[i+1], t[ perm[ i ] ] < t[ perm[ i + 1 ] ] || t[ perm[ i ] ] == t[ perm[ i + 1 ] ] && u[ perm[ i ] ] <= u[ perm[ i + 1 ] ] );
 	}
+
+
+
+
+	@Test
+	public void testMergeSortNaNs() {
+		double[] a = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < a.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				DoubleArrays.mergeSort( a, from, to );
+				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( a[ i ], a[ i + 1 ] ) <= 0 );
+			}
+		
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testQuickSortNaNs() {
+		double[] a = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < a.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				DoubleArrays.quickSort( a, from, to );
+				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( a[ i ], a[ i + 1 ] ) <= 0 );
+			}
+		
+	}
+
 
 }
