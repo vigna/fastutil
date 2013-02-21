@@ -508,9 +508,15 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_LESSEQ(x,y) ( !(x) || (y) )\n"\
 "#else\n"\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#if #keyclass(Float) || #keyclass(Double)\n"\
 "#define KEY_CMP(x,y) ( KEY_CLASS.compare((x),(y)) )\n"\
 "#define KEY_LESS(x,y) ( KEY_CLASS.compare((x),(y)) < 0 )\n"\
 "#define KEY_LESSEQ(x,y) ( KEY_CLASS.compare((x),(y)) <= 0 )\n"\
+"#else\n"\
+"#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
+"#define KEY_LESS(x,y) ( (x) < (y) )\n"\
+"#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
+"#endif\n"\
 \
 "#if #keyclass(Float)\n"\
 "#define KEY2LEXINT(x) fixFloat(x)\n"\
