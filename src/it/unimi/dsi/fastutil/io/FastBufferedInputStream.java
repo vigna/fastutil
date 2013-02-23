@@ -304,7 +304,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * while( ( len = fbis.readLine( array, start, array.length - start, terminators ) ) == array.length - start ) {
 	 *     start += len;
 	 *     array = ByteArrays.grow( array, array.length + 1 );
-	 * };
+	 * }
 	 * </pre>
 	 *
 	 * <p>At the end of the loop, the line will be placed in <code>array</code> starting at
