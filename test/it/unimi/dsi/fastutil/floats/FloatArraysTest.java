@@ -167,6 +167,33 @@ public class FloatArraysTest {
 		
 	}
 
+	@Test
+	public void testRadixSortIndirectNaNs() {
+		final float[] t = { Float.NaN, 1, 5, 2, 1, 0, 9, 1, Float.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final int perm[] = new int[ t.length ];
+				for( int i = perm.length; i-- != 0; ) perm[ i ] = i;
+				FloatArrays.radixSortIndirect( perm, t, from, to, true );
+				for( int i = to - 1; i-- != from; ) assertTrue( Float.compare( t[ perm[ i ] ], t[ perm[ i + 1 ] ] ) <= 0 );
+			}
+		
+	}
+
+	@Test
+	public void testRadixSortIndirect2NaNs() {
+		final float[] t = { Float.NaN, 1, 5, 2, 1, 0, 9, 1, Float.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final int perm[] = new int[ t.length ];
+				for( int i = perm.length; i-- != 0; ) perm[ i ] = i;
+				FloatArrays.radixSortIndirect( perm, t, t, from, to, true );
+				for( int i = to - 1; i-- != from; ) assertTrue( Float.compare( t[ perm[ i ] ], t[ perm[ i + 1 ] ] ) <= 0 );
+			}
+		
+	}
+
+
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testQuickSortNaNs() {

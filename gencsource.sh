@@ -42,7 +42,7 @@ if [[ "$class" == "$name" ]]; then
 else
     abstract=Abstract
 fi
-class=${name#Striped}
+class=${class#Striped}
 
 # Now we rip off the types.
 rem=${class##[A-Z]+([a-z])}
@@ -502,8 +502,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_OBJ2TYPE(x) (KEY_CLASS2TYPE((KEY_CLASS)(x)))\n"\
 "#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
 \
-"#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
 "#if #keyclass(Boolean)\n"\
+"#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
 "#define KEY_NULL (false)\n"\
 "#define KEY_CMP(x,y) ( !(x) && (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( !(x) && (y) )\n"\
@@ -511,10 +511,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#else\n"\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#if #keyclass(Float) || #keyclass(Double)\n"\
+"#define KEY_CMP_EQ(x,y) ( KEY_CLASS.compare((x),(y)) == 0 )\n"\
 "#define KEY_CMP(x,y) ( KEY_CLASS.compare((x),(y)) )\n"\
 "#define KEY_LESS(x,y) ( KEY_CLASS.compare((x),(y)) < 0 )\n"\
 "#define KEY_LESSEQ(x,y) ( KEY_CLASS.compare((x),(y)) <= 0 )\n"\
 "#else\n"\
+"#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
 "#define KEY_CMP(x,y) ( (x) < (y) ? -1 : ( (x) == (y) ? 0 : 1 ) )\n"\
 "#define KEY_LESS(x,y) ( (x) < (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\

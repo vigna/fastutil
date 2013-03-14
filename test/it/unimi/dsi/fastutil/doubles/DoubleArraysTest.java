@@ -497,6 +497,32 @@ public class DoubleArraysTest {
 		
 	}
 
+	@Test
+	public void testRadixSortIndirectNaNs() {
+		final double[] t = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final int perm[] = new int[ t.length ];
+				for( int i = perm.length; i-- != 0; ) perm[ i ] = i;
+				DoubleArrays.radixSortIndirect( perm, t, from, to, true );
+				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( t[ perm[ i ] ], t[ perm[ i + 1 ] ] ) <= 0 );
+			}
+		
+	}
+
+	@Test
+	public void testRadixSortIndirect2NaNs() {
+		final double[] t = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final int perm[] = new int[ t.length ];
+				for( int i = perm.length; i-- != 0; ) perm[ i ] = i;
+				DoubleArrays.radixSortIndirect( perm, t, t, from, to, true );
+				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( t[ perm[ i ] ], t[ perm[ i + 1 ] ] ) <= 0 );
+			}
+		
+	}
+
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testQuickSortNaNs() {
