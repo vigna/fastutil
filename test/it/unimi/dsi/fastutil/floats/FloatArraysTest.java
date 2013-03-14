@@ -2,10 +2,9 @@ package it.unimi.dsi.fastutil.floats;
 
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
-
-import it.unimi.dsi.fastutil.floats.FloatArrays;
 import java.util.Random;
+
+import org.junit.Test;
 
 public class FloatArraysTest {
 	
@@ -139,4 +138,46 @@ public class FloatArraysTest {
 		FloatArrays.radixSort( d );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 	}
+
+
+
+
+	@Test
+	public void testMergeSortNaNs() {
+		final float[] t = { Float.NaN, 1, 5, 2, 1, 0, 9, 1, Float.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final float[] a = t.clone();
+				FloatArrays.mergeSort( a, from, to );
+				for( int i = to - 1; i-- != from; ) assertTrue( Float.compare( a[ i ], a[ i + 1 ] ) <= 0 );
+			}
+		
+	}
+
+
+	@Test
+	public void testRadixSortNaNs() {
+		final float[] t = { Float.NaN, 1, 5, 2, 1, 0, 9, 1, Float.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final float[] a = t.clone();
+				FloatArrays.radixSort( a, from, to );
+				for( int i = to - 1; i-- != from; ) assertTrue( Float.compare( a[ i ], a[ i + 1 ] ) <= 0 );
+			}
+		
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testQuickSortNaNs() {
+		final float[] t = { Float.NaN, 1, 5, 2, 1, 0, 9, 1, Float.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final float[] a = t.clone();
+				FloatArrays.quickSort( a, from, to );
+				for( int i = to - 1; i-- != from; ) assertTrue( Float.compare( a[ i ], a[ i + 1 ] ) <= 0 );
+			}
+		
+	}
+
 }

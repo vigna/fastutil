@@ -1,0 +1,168 @@
+/*		 
+ * Copyright (C) 2002-2013 Sebastiano Vigna 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. 
+ */
+
+package PACKAGE;
+
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+
+import java.io.Serializable;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
+/** A concurrent counting map. The map is made by a number of <em>stripes</em> (instances of {@link Object2IntOpenHashMap}) 
+ * which are accessed independently
+ * using a {@link ReentrantReadWriteLock}. Only one thread can write in a stripe at a time, but different stripes
+ * can be modified independently and read access can happen concurrently on each stripe.
+ *  
+ * @param <K> the type of keys.
+ */
+
+public class STRIPED_OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
+	private static final long serialVersionUID = 1L;
+	
+	/** The stripes. Keys are distributed among them using the lower bits of their {@link Object#hashCode()}. */
+	private final OPEN_HASH_MAP KEY_VALUE_GENERIC[] map;
+	/** An array of locks parallel to {@link #map}, protecting each stripe. */
+	private final transient ReentrantReadWriteLock[] lock;
+	/** {@link #map map.length} &minus; 1, cached. */
+	private final int mask;
+
+	/** Creates a new concurrent counting map with concurrency level equal to {@link Runtime#availableProcessors()}. */
+	public STRIPED_OPEN_HASH_MAP() {
+		this( Runtime.getRuntime().availableProcessors() );
+	}
+
+	/** Creates a new concurrent counting map.
+	 * 
+	 * @param concurrencyLevel the number of stripes (it will be {@linkplain Integer#highestOneBit(int) forced to be a power of two}); ideally, as large as the number of threads that will ever access
+	 * this map, but higher values require more space.
+	 */
+	@SuppressWarnings("unchecked")
+	public STRIPED_OPEN_HASH_MAP( final int concurrencyLevel ) {
+		map = new OPEN_HASH_MAP[ Integer.highestOneBit( concurrencyLevel ) ];
+		lock = new ReentrantReadWriteLock[ map.length ];
+		for( int i = map.length; i-- != 0; ) {
+			map[ i ] = new OPEN_HASH_MAP KEY_VALUE_GENERIC();
+			lock[ i ] = new ReentrantReadWriteLock();
+		}
+		mask = map.length - 1;
+	}
+	
+#if #keys(primitive)
+
+	public VALUE_GENERIC_CLASS get( final KEY_CLASS k ) {
+		final int stripe = KEY2INTHASH( k ) & mask;
+		final ReadLock readLock = lock[ stripe ].readLock();
+		try {
+			readLock.lock();
+			return map[ stripe ].get( k );
+		}
+		finally {
+			readLock.unlock();
+		}
+	}
+
+#endif
+
+	@SuppressWarnings("unchecked")
+	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
+		final int stripe = KEY2INTHASH( k ) & mask;
+		final ReadLock readLock = lock[ stripe ].readLock();
+		try {
+			readLock.lock();
+			return map[ stripe ].GET_VALUE( k );
+		}
+		finally {
+			readLock.unlock();
+		}
+	}
+
+	public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
+		final int stripe = KEY2INTHASH( k ) & mask;
+		final WriteLock writeLock = lock[ stripe ].writeLock();
+		try {
+			writeLock.lock();
+			return map[ stripe ].put( k, v );
+		}
+		finally {
+			writeLock.unlock();
+		}
+	}
+
+	public VALUE_GENERIC_TYPE putIfAbsent( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
+		final int stripe = KEY2INTHASH( k ) & mask;
+		final WriteLock writeLock = lock[ stripe ].writeLock();
+		try {
+			writeLock.lock();
+			if ( map[ stripe ].containsKey( k ) ) return map[ stripe ].get( k );
+			return map[ stripe ].put( k, v );
+		}
+		finally {
+			writeLock.unlock();
+		}
+	}
+
+#if #values(primitive) || #keys(primitive)
+
+	public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
+		final int stripe = KEY2INTHASH( ok ) & mask;
+		final WriteLock writeLock = lock[ stripe ].writeLock();
+		try {
+			writeLock.lock();
+			return map[ stripe ].put( ok, ov );
+		}
+		finally {
+			writeLock.unlock();
+		}
+	}
+
+
+	public VALUE_GENERIC_CLASS putIfAbsent( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
+		final int stripe = KEY2INTHASH( ok ) & mask;
+		final WriteLock writeLock = lock[ stripe ].writeLock();
+		try {
+			writeLock.lock();
+			if ( map[ stripe ].containsKey( ok ) ) return map[ stripe ].get( ok );
+			return map[ stripe ].put( ok, ov );
+		}
+		finally {
+			writeLock.unlock();
+		}
+	}
+
+#endif
+
+	public int size() {
+		int size = 0;
+		for( int stripe = lock.length; stripe-- != 0; ) {	
+			final ReadLock readLock = lock[ stripe ].readLock();
+			try {
+				readLock.lock();
+				size += map[ stripe ].size();
+			}
+			finally {
+				readLock.unlock();
+			}
+		}
+
+		return size;
+	}
+
+	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() {
+		throw new UnsupportedOperationException();
+	}
+}

@@ -474,10 +474,24 @@ public class DoubleArraysTest {
 
 	@Test
 	public void testMergeSortNaNs() {
-		double[] a = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
-		for( int to = 1; to < a.length; to++ )
+		final double[] t = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
 			for( int from = 0; from < to; from++ ) {
+				final double[] a = t.clone();
 				DoubleArrays.mergeSort( a, from, to );
+				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( a[ i ], a[ i + 1 ] ) <= 0 );
+			}
+		
+	}
+
+
+	@Test
+	public void testRadixSortNaNs() {
+		final double[] t = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
+			for( int from = 0; from < to; from++ ) {
+				final double[] a = t.clone();
+				DoubleArrays.radixSort( a, from, to );
 				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( a[ i ], a[ i + 1 ] ) <= 0 );
 			}
 		
@@ -486,9 +500,10 @@ public class DoubleArraysTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testQuickSortNaNs() {
-		double[] a = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
-		for( int to = 1; to < a.length; to++ )
+		final double[] t = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		for( int to = 1; to < t.length; to++ )
 			for( int from = 0; from < to; from++ ) {
+				final double[] a = t.clone();
 				DoubleArrays.quickSort( a, from, to );
 				for( int i = to - 1; i-- != from; ) assertTrue( Double.compare( a[ i ], a[ i + 1 ] ) <= 0 );
 			}
