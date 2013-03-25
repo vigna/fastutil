@@ -85,11 +85,9 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 	}
 
 	public void write( final int b ) {
-		if ( position == length ) {
-			length++;
-			if ( position == array.length ) array = ByteArrays.grow( array, length );
-		}
+		if ( position >= array.length ) array = ByteArrays.grow( array, position + 1, length );
 		array[ position++ ] = (byte)b;
+		if ( length < position ) length = position;
 	}
 
 	public void write( final byte[] b, final int off, final int len ) throws IOException {
