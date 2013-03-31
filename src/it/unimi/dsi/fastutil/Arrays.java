@@ -16,6 +16,8 @@ package it.unimi.dsi.fastutil;
  * limitations under the License. 
  */
 
+import java.util.ArrayList;
+
 import it.unimi.dsi.fastutil.ints.IntComparator;
 
 /** A class providing static methods and objects that do useful things with arrays.
@@ -33,7 +35,11 @@ public class Arrays {
 	
 	private Arrays() {}
 
-	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array of given length.
+	/** This is a safe value used by {@link ArrayList} (as of Java 7) to avoid
+	 *  throwing {@link OutOfMemoryError} on some JVMs. We adopt the same value. */
+    public static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+    /** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array of given length.
 	 *
 	 * <P>This method may be used whenever an array range check is needed.
 	 *

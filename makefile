@@ -338,10 +338,10 @@ $(LINKED_OPEN_CUSTOM_HASH_MAPS): drv/LinkedOpenCustomHashMap.drv; ./gencsource.s
 
 CSOURCES += $(LINKED_OPEN_CUSTOM_HASH_MAPS)
 
-STRIPED_OPEN_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Striped$(k)2$(v)OpenHashMap.c))
-$(STRIPED_OPEN_HASH_MAPS): drv/StripedOpenHashMap.drv; ./gencsource.sh $< $@ >$@
+#STRIPED_OPEN_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Striped$(k)2$(v)OpenHashMap.c))
+#$(STRIPED_OPEN_HASH_MAPS): drv/StripedOpenHashMap.drv; ./gencsource.sh $< $@ >$@
 
-CSOURCES += $(STRIPED_OPEN_HASH_MAPS)
+#CSOURCES += $(STRIPED_OPEN_HASH_MAPS)
 
 ARRAY_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)ArrayMap.c))
 $(ARRAY_MAPS): drv/ArrayMap.drv; ./gencsource.sh $< $@ >$@
