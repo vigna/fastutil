@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 
 public class FastByteArrayOutputStreamTest {
 
+	@SuppressWarnings("resource")
 	@Test
 	public void testWrite() {
 		FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
@@ -32,6 +33,7 @@ public class FastByteArrayOutputStreamTest {
 		for( int i = 0; i < 14; i++ ) assertEquals( i + 10, fbaos.array[ 3 + i ] );
 	}
 
+	@SuppressWarnings("resource")
 	@Test
 	public void testWriteArray() throws IOException {
 		FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
@@ -77,5 +79,22 @@ public class FastByteArrayOutputStreamTest {
 		assertEquals( 2, fbaos.array[ 1 ] );
 		assertEquals( 3, fbaos.array[ 2 ] );
 		for( int i = 0; i < 14; i++ ) assertEquals( i + 10, fbaos.array[ 3 + i ] );
+	}
+
+	@SuppressWarnings("resource")
+	@Test
+	public void testPositionWrite() {
+		FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
+		fbaos.position( 1 );
+		fbaos.write( 1 );
+		assertEquals( 2, fbaos.length );
+	}
+
+	@SuppressWarnings("resource")
+	@Test
+	public void testPositionWrite2() {
+		FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
+		fbaos.position( fbaos.array.length + 2 );
+		fbaos.write( 1 );
 	}
 }
