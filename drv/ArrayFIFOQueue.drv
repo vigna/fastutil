@@ -23,7 +23,9 @@ import java.util.Comparator;
 import it.unimi.dsi.fastutil.AbstractPriorityQueue;
 #endif
 
+import java.io.Serializable;
 import it.unimi.dsi.fastutil.Arrays;
+import it.unimi.dsi.fastutil.HashCommon;
 
 import java.util.NoSuchElementException;
 
@@ -36,24 +38,24 @@ import java.util.NoSuchElementException;
  * <P>This class provides additional methods that implement a <em>deque</em> (double-ended queue).
  */
 
-public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GENERIC {
+public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GENERIC implements Serializable {
 
 	/** The standard initial capacity of a queue. */
 	public final static int INITIAL_CAPACITY = 4;
 
 	/** The backing array. */
 	@SuppressWarnings("unchecked")
-	protected KEY_GENERIC_TYPE array[] = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+	protected transient KEY_GENERIC_TYPE array[] = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
 
 	/** The current (cached) length of {@link #array}. */
-	protected int length;
+	protected transient int length;
 	
 	/** The start position in {@link #array}. It is always strictly smaller than {@link #length}.*/
-	protected int start;
+	protected transient int start;
 	
 	/** The end position in {@link #array}. It is always strictly smaller than {@link #length}.
 	 *  Might be actually smaller than {@link #start} because {@link #array} is used cyclically. */
-	protected int end;
+	protected transient int end;
 	
 	/** Creates a new empty queue with given capacity.
 	 *
@@ -202,5 +204,23 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 	public int size() {
 		final int apparentLength = end - start;
 		return apparentLength >= 0 ? apparentLength : length + apparentLength;
+	}
+
+	private void writeObject( java.io.ObjectOutputStream s ) throws java.io.IOException {
+		s.defaultWriteObject();
+		int size = size();
+		s.writeInt( size );
+		for( int i = start; size-- != 0; ) {
+			s.WRITE_KEY( array[ i++ ] );
+			if ( i == length ) i = 0;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void readObject( java.io.ObjectInputStream s ) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		end = s.readInt();
+		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ length = HashCommon.nextPowerOfTwo( end + 1 ) ];
+		for( int i = 0; i < end; i++ ) array[ i ] = KEY_GENERIC_CAST s.READ_KEY();
 	}
 }
