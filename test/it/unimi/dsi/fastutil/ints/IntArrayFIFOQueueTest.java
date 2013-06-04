@@ -2,6 +2,11 @@ package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
 
+import it.unimi.dsi.fastutil.io.BinIO;
+
+import java.io.File;
+import java.io.IOException;
+
 import org.junit.Test;
 
 public class IntArrayFIFOQueueTest {
@@ -143,5 +148,31 @@ public class IntArrayFIFOQueueTest {
 		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
 		q.enqueue( 0 );
 		q.dequeue();
+	}
+
+	private final static void assertSameQueue( IntArrayFIFOQueue a, IntArrayFIFOQueue b ) {
+		assertEquals( a.size(), b.size() );
+		while( ! a.isEmpty() && ! b.isEmpty() ) assertEquals( a.dequeue(), b.dequeue() );
+		assertEquals( Boolean.valueOf( a.isEmpty() ) , Boolean.valueOf( b.isEmpty() ) );
+	}
+ 	
+	@Test
+	public void testSerialization() throws IOException, ClassNotFoundException {
+		File temp = File.createTempFile( IntArrayFIFOQueueTest.class.getSimpleName() + "-", "-test" );
+		temp.deleteOnExit();
+		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		BinIO.storeObject( q, temp );
+		assertSameQueue( q, (IntArrayFIFOQueue)BinIO.loadObject( temp ) );
+		
+		for( int i = 0; i < 100; i++ ) q.enqueue( i );
+		BinIO.storeObject( q, temp );
+		assertSameQueue( q, (IntArrayFIFOQueue)BinIO.loadObject( temp ) );
+	
+		q.trim();
+		for( int i = 0; i < 128; i++ ) q.enqueue( i );
+		BinIO.storeObject( q, temp );
+		assertSameQueue( q, (IntArrayFIFOQueue)BinIO.loadObject( temp ) );
+	
+		temp.delete();
 	}
 }

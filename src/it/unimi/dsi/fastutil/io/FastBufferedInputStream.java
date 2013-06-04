@@ -65,7 +65,7 @@ import java.util.EnumSet;
  * less bytes than requested can be caused only by reaching the end of file.
  *
  * <li><p>This class keeps also track of the number of bytes read so far, so
- * to be able to implemented {@link MeasurableStream#position()}
+ * to be able to implement {@link MeasurableStream#position()}
  * independently of underlying input stream.
  * 
  * <li><p>This class has limited support for 
