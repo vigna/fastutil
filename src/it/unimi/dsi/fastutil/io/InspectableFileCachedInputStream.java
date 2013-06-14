@@ -51,7 +51,9 @@ import java.nio.channels.WritableByteChannel;
  * and thus modify the {@linkplain #length() length} of the {@link MeasurableInputStream}.
  * 
  * <p>The method {@link #close()} makes the {@link MeasurableInputStream} and {@link WritableByteChannel} state-changing methods temporarily throw an {@link IOException}, but
- * does not otherwise modify the state of the stream (i.e., the stream can be {@linkplain #clear() cleared} again). The method {@link #dispose()} can be used to release
+ * does not otherwise modify the state of the stream. You can {@linkplain #reopen() reopen} the stream
+ * later, or {@linkplain #clear() clear} it.
+ * The method {@link #dispose()} can be used to release
  * the resources associated with the stream.
  * 
  * <h2>Buffering</h2>
@@ -166,10 +168,22 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		fileChannel.truncate( Math.max( size, writePosition ) );
 	}
 	
-	/** Makes the stream unreadable until the next {@link #clear()}. */
+	/** Makes the stream unreadable until the next {@link #clear()}. 
+	 * 
+	 * @see #reopen() 
+	 */
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		position = -1;
+	}
+
+	/** Makes the stream readable again after a {@link #close()}. 
+	 *
+	 * @see #close()
+	 */
+	public void reopen() throws IOException {
+		if ( ! fileChannel.isOpen() ) throw new IOException( "This " + getClass().getSimpleName() + " is closed" );
+		position = 0;
 	}
 
 	/** Disposes this stream, deleting the overflow file. After that, the stream is unusable. */
