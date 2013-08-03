@@ -11,12 +11,13 @@ if [ "$1" != "" ]; then lf=$1; fi
 
 for ((t=1; t<10000; t*=10)); do
 
-    SET=(OpenHashSet LinkedOpenHashSet RBTreeSet AVLTreeSet)
+    SET=(OpenHashSet OpenHashBigSet LinkedOpenHashSet RBTreeSet AVLTreeSet)
 
     for ((f=0; f<${#SET[*]}; f++)); do
 	l=${#TYPE[*]}
 	if [[ ${SET[$f]} != "OpenHashSet" && ${SET[$f]} != "LinkedOpenHashSet" ]]; then l=$((l-1)); fi # Only hash sets may have reference keys.
 	for ((k=1; k<l; k++)); do
+		if [[ ${SET[$f]} == "OpenHashBigSet" && ( ${TYPE_CAP[$k]} == "Byte" || ${TYPE_CAP[$k]} == "Short"  || ${TYPE_CAP[$k]} == "Char" ) ]]; then continue; fi
 		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${SET[$f]}
 		if [[ $f < 2 ]]; then
 			echo "Testing $CLASSNAME ($t elements, load factor $lf)..."
