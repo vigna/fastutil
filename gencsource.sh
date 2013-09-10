@@ -389,6 +389,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_LIST_ITERATOR_METHOD ${TYPE_LC2[$k]}ListIterator\n\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n\n"\
+"#define AS_KEY_ITERABLE as${TYPE_CAP2[$k]}Iterable\n\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
 "#define REMOVE_FIRST_KEY removeFirst${TYPE_STD[$k]}\n"\
