@@ -224,6 +224,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		if ( length > 0 ) { // More to read.
 			fileChannel.position( position - inspectable );
 			final int toRead = (int)Math.min( length() - position, length );
+			// This is *intentionally* not a readFully(). Let the language to its stuff.
 			randomAccessFile.read( b, offset, toRead );
 			position += toRead;
 			read += toRead;
