@@ -135,7 +135,9 @@ public class HashCommon {
 	 * @return the maximum number of entries before rehashing. 
 	 */
 	public static int maxFill( final int n, final float f ) {
-		return (int)Math.ceil( n * f );
+		/* We must guarantee that there is always at least 
+		 * one free entry (even with pathological load factors). */
+		return Math.min( (int)Math.ceil( n * f ), n - 1 );
 	}
 
 	/** Returns the maximum number of entries that can be filled before rehashing. 
@@ -156,7 +158,7 @@ public class HashCommon {
 	 * @throws IllegalArgumentException if the necessary size is larger than 2<sup>30</sup>.
 	 */
 	public static int arraySize( final int expected, final float f ) {
-		final long s = nextPowerOfTwo( (long)Math.ceil( expected / f ) );
+		final long s = Math.max( 2, nextPowerOfTwo( (long)Math.ceil( expected / f ) ) );
 		if ( s > (1 << 30) ) throw new IllegalArgumentException( "Too large (" + expected + " expected elements with load factor " + f + ")" );
 		return (int)s;
 	}

@@ -65,6 +65,18 @@ public class IntOpenHashSetTest {
 		return r.nextInt();
 	}
 
+	@Test
+	public void testSmallExpectedValuesWeirdLoadFactors() {
+		for( int expected = 0; expected < 5; expected ++ )
+			for( float loadFactor: new float[] { Float.MIN_VALUE, .25f, .5f, .75f, 1 - Float.MIN_VALUE } ) {
+				IntOpenHashSet s = new IntOpenHashSet( 0, loadFactor );
+				assertTrue( s.add( 2 ) );
+				assertTrue( s.add( 3 ) );
+				assertFalse( s.add( 2 ) );
+				assertFalse( s.add( 3 ) );
+			}
+	}
+	
 	@SuppressWarnings("boxing")
 	private static void checkTable( IntOpenHashSet s ) {
 		final boolean[] used = s.used;
