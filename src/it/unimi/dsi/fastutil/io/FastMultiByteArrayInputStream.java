@@ -75,7 +75,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 
 		for( int i = 0; i < array.length; i++ ) {
 			array[ i ] = new byte[ size >= SLICE_SIZE ? SLICE_SIZE : (int)size ];
-			if ( is.read( array[ i ] ) != array[ i ].length ) throw new EOFException();
+			if ( BinIO.loadBytes( is, array[ i ] ) != array[ i ].length ) throw new EOFException();
 			size -= array[ i ].length;
 		}
 	}
