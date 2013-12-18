@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
 import org.junit.Ignore;
@@ -82,7 +83,7 @@ public class IntOpenHashBigSetTest {
 			if ( BooleanBigArrays.get( used, i ) && !t.add( IntBigArrays.get( key, i ) ) ) throw new AssertionError( "Key " + IntBigArrays.get( key, i ) + " appears twice" );
 
 	}
-
+	
 	private static void printProbes( IntOpenHashBigSet m ) {
 		long totProbes = 0;
 		double totSquareProbes = 0;

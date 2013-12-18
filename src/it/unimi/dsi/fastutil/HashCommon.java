@@ -147,7 +147,9 @@ public class HashCommon {
 	 * @return the maximum number of entries before rehashing. 
 	 */
 	public static long maxFill( final long n, final float f ) {
-		return (long)Math.ceil( n * f );
+		/* We must guarantee that there is always at least 
+		 * one free entry (even with pathological load factors). */
+		return Math.min( (long)Math.ceil( n * f ), n - 1 );
 	}
 
 	/** Returns the least power of two smaller than or equal to 2<sup>30</sup> and larger than or equal to <code>Math.ceil( expected / f )</code>. 
