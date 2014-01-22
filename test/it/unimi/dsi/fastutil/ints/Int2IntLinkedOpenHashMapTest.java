@@ -311,11 +311,11 @@ public class Int2IntLinkedOpenHashMapTest {
 	}
 
 	@Test
-	public void testAdd() {
+	public void testAddTo() {
 		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
-		assertEquals( 0, m.add( 0, 2 ) );
+		assertEquals( 0, m.addTo( 0, 2 ) );
 		assertEquals( 2, m.get( 0 ) );
-		assertEquals( 2, m.add( 0, 3 ) );
+		assertEquals( 2, m.addTo( 0, 3 ) );
 		assertEquals( 5, m.get( 0 ) );
 		ObjectIterator<Int2IntMap.Entry> fastIterator = m.int2IntEntrySet().fastIterator();
 		Int2IntMap.Entry next = fastIterator.next();
@@ -324,11 +324,11 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertFalse( fastIterator.hasNext() );
 		
 		m.defaultReturnValue( -1 );
-		assertEquals( -1, m.add( 1, 1 ) );
+		assertEquals( -1, m.addTo( 1, 1 ) );
 		assertEquals( 0, m.get( 1 ) );
-		assertEquals( 0, m.add( 1, 1 ) );
+		assertEquals( 0, m.addTo( 1, 1 ) );
 		assertEquals( 1, m.get( 1 ) );
-		assertEquals( 1, m.add( 1, -2 ) );
+		assertEquals( 1, m.addTo( 1, -2 ) );
 		assertEquals( -1, m.get( 1 ) );
 		fastIterator = m.int2IntEntrySet().fastIterator();
 		next = fastIterator.next();
@@ -339,7 +339,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertEquals( -1, next.getIntValue() );
 		assertFalse( fastIterator.hasNext() );
 		
-		for( int i = 0; i < 100; i++ ) m.add( i, 1 );
+		for( int i = 0; i < 100; i++ ) m.addTo( i, 1 );
 		assertEquals( 0, m.firstIntKey() );
 		assertEquals( 99, m.lastIntKey() );
 	}

@@ -49,6 +49,7 @@ public class FastBufferedInputStreamTest {
 
 	}
 
+	@SuppressWarnings("resource")
 	public void testReadline( int bufferSize ) throws IOException {
 		FastBufferedInputStream stream;
 		byte[] b;
@@ -150,6 +151,7 @@ public class FastBufferedInputStreamTest {
 		testReadline( 100 );
 	}
 
+	@SuppressWarnings("resource")
 	public void testSkip( int bufferSize ) throws IOException {
 		FastBufferedInputStream stream;
 		
@@ -260,6 +262,7 @@ public class FastBufferedInputStreamTest {
 
 	}
 	
+	@SuppressWarnings("resource")
 	public void testRandom( int bufferSize ) throws IOException {
 		File temp = File.createTempFile( this.getClass().getSimpleName(), "tmp" );
 		temp.deleteOnExit();

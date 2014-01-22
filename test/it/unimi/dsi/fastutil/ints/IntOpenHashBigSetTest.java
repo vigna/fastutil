@@ -3,12 +3,10 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
 import java.io.IOException;
-
-import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
 import org.junit.Ignore;
 import org.junit.Test;

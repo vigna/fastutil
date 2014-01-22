@@ -58,9 +58,9 @@ public class IntArraysTest {
 	public void testQuickSort() {
 		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
 		Arrays.sort( sorted );
-		IntArrays.quickSort( b );
+		Arrays.sort( b );
 		assertArrayEquals( sorted, b );
-		IntArrays.quickSort( b );
+		Arrays.sort( b );
 		assertArrayEquals( sorted, b );
 
 		final int[] d = a.clone();
@@ -587,5 +587,8 @@ public class IntArraysTest {
 	public void testReverse() {
 		assertArrayEquals( new int[] { 0, 1, 2, 3 }, IntArrays.reverse( new int[] { 3, 2, 1, 0 } ) );
 		assertArrayEquals( new int[] { 0, 1, 2, 3, 4 }, IntArrays.reverse( new int[] { 4, 3, 2, 1, 0 } ) );
+		assertArrayEquals( new int[] { 4, 1, 2, 3, 0 }, IntArrays.reverse( new int[] { 4, 3, 2, 1, 0 }, 1, 4 ) );
+		assertArrayEquals( new int[] { 4, 2, 3, 1, 0 }, IntArrays.reverse( new int[] { 4, 3, 2, 1, 0 }, 1, 3 ) );
+		assertArrayEquals( new int[] { 0, 1, 2, 3, 4 }, IntArrays.reverse( new int[] { 0, 1, 2, 3, 4 }, 1, 2 ) );
 	}
 }

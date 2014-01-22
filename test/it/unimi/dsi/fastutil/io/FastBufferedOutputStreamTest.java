@@ -19,6 +19,7 @@ public class FastBufferedOutputStreamTest {
 
 	@Test
 	public void testWriteEqualToBufferSize() throws IOException {
+		@SuppressWarnings("resource")
 		final FastBufferedOutputStream fbos = new FastBufferedOutputStream( new ByteArrayOutputStream(), 4 );
 		fbos.write( 0 );
 		fbos.write( new byte[ 4 ] );
