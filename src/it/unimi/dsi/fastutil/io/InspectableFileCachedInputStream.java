@@ -1,7 +1,7 @@
 package it.unimi.dsi.fastutil.io;
 
 /*		 
- * Copyright (C) 2005-2013 Sebastiano Vigna 
+ * Copyright (C) 2005-2014 Sebastiano Vigna 
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -221,13 +221,14 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 			read = toCopy;
 		}
 
-		if ( length > 0 ) { // More to read.
+		if ( length > 0 ) { // We want to read more.
+			if ( position == length() ) return read != 0 ? read : -1; // There's nothing more to read.
 			fileChannel.position( position - inspectable );
 			final int toRead = (int)Math.min( length() - position, length );
 			// This is *intentionally* not a readFully(). Let the language to its stuff.
-			randomAccessFile.read( b, offset, toRead );
-			position += toRead;
-			read += toRead;
+			final int t = randomAccessFile.read( b, offset, toRead );
+			position += t;
+			read += t;
 		}
 		
 		return read;
