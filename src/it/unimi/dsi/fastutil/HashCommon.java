@@ -52,6 +52,9 @@ public class HashCommon {
 	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias. It is used, among other things, to scramble quickly (but deeply) the hash
 	 * values returned by {@link Object#hashCode()}.
 	 * 
+	 * <p>Incidentally, iterating this function on a nonzero value generates a sequence of nonzero
+	 * values that <a href="http://prng.di.unimi.it/">passes strongest statistical tests</a>.
+	 * 
 	 * @param x a long integer.
 	 * @return a hash value with good avalanching properties.
 	 */	
