@@ -443,8 +443,16 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
 "#else\n"\
+"#if #keyclass(Float)\n"\
+"#define KEY_EQUALS(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
+"#elif #keyclass(Double)\n"\
+"#define KEY_EQUALS(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
+"#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
+"#endif\n"\
 "#endif\n"\
 "#endif\n\n"\
 \
