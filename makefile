@@ -75,6 +75,7 @@ source:
 		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
 		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
 		fastutil-$(version)/src/overview.html \
+		fastutil-$(version)/src/stylesheet.css \
 		$$(find fastutil-$(version)/test -iname \*.java)
 	rm fastutil-$(version)
 
