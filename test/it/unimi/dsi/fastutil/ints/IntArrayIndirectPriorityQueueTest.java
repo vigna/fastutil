@@ -278,8 +278,8 @@ public class IntArrayIndirectPriorityQueueTest {
 						( ( ref[ m.first() ] ) == ( ref[ t.first() ] ) ) );
 			}
 
-			int[] temp = (int[])t.heap.clone();
-			java.util.Arrays.sort( temp, 0, t.size() ); // To scramble a bit
+			int[] temp = t.heap.clone();
+			IntArrays.quickSort( temp, 0, t.size() ); // To scramble a bit
 			m = new IntArrayIndirectPriorityQueue( m.refArray, temp, t.size() );
 
 			assertTrue( "Error: m and t differ after wrap (" + m + ", " + t + ")", heapEqual( m.array, t.heap, m.size(), t.size() ) );
