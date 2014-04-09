@@ -45,6 +45,9 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	/** The array of arrays backing the input stream. */
 	public byte[][] array;
 
+	/** The current array. */
+	public byte[] current;
+
 	/** The number of valid bytes in {@link #array}. */
 	public long length;
 
@@ -101,21 +104,19 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 		this.length = array.length;
 	}
 
-
+	/** Closing a fast byte array input stream has no effect. */
+	public void close() {}
 
 	public boolean markSupported() {
 		return true;
 	}
 
-	public void reset() {
-		position = mark;
-	}
-
-	/** Closing a fast byte array input stream has no effect. */
-	public void close() {}
-
 	public void mark( final int dummy ) {
 		mark = position;
+	}
+
+	public void reset() {
+		position( mark );
 	}
 
 	/** Returns the number of bytes that can be read (or skipped over) from this input stream without blocking. 
@@ -139,12 +140,15 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 		}
 		n = length - position;
 		position = length;
+		updateCurrent();
 		return n;
 	}
 
 	public int read() {
 		if ( length == position ) return -1;
-		return array[ (int)( position >>> SLICE_BITS ) ][ (int)( position++ & SLICE_MASK ) ] & 0xFF;
+		final int offset = (int)( position++ & SLICE_MASK );
+		if ( offset == 0 ) updateCurrent();
+		return current[ offset ] & 0xFF;
 	}
 
 	public int read( final byte[] b, int offset, final int length ) {
@@ -162,15 +166,22 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 			
 		} while( n > 0 );
 
+		updateCurrent();
+		
 		return m;
 	}
 
+	private void updateCurrent() {
+		current = array[ (int)( position >>> SLICE_BITS ) ];
+	}
+	
 	public long position() {
 		return position;
 	}
 
 	public void position( final long newPosition ) {
 		position = Math.min( newPosition, length );
+		updateCurrent();
 	}
 
 	@Override
