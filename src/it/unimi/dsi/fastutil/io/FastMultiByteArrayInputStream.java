@@ -146,29 +146,28 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 
 	public int read() {
 		if ( length == position ) return -1;
-		final int offset = (int)( position++ & SLICE_MASK );
-		if ( offset == 0 ) updateCurrent();
-		return current[ offset ] & 0xFF;
+		final int disp = (int)( position++ & SLICE_MASK );
+		if ( disp == 0 ) updateCurrent();
+		return current[ disp ] & 0xFF;
 	}
 
 	public int read( final byte[] b, int offset, final int length ) {
-		if ( this.length == this.position ) return length == 0 ? 0 : -1;
-		int res, n = (int)Math.min( length, this.length - this.position ), m = n;
+		final long remaining = this.length - position;
+		if ( remaining == 0 ) return length == 0 ? 0 : -1;
+		int n = (int)Math.min( length, remaining );
+		final int m = n;
 
-		do {
-			res = Math.min( n, array[ (int)( position >>> SLICE_BITS ) ].length - (int)( position & SLICE_MASK ) );
-			System.arraycopy( array[ (int)( position >>> SLICE_BITS ) ], (int)( position & SLICE_MASK ),
-				b, offset, res );
+		for(;;) {
+			final int disp = (int)( position & SLICE_MASK );
+			final int res = Math.min( n, current.length - disp );
+			System.arraycopy( current, disp, b, offset, res );
 				
 			n -= res;
 			offset += res;
 			position += res;
-			
-		} while( n > 0 );
-
-		updateCurrent();
-		
-		return m;
+			updateCurrent();
+			if ( n == 0 ) return m;
+		}
 	}
 
 	private void updateCurrent() {
