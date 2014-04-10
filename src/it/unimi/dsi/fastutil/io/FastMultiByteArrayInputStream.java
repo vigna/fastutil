@@ -34,7 +34,7 @@ s */
 public class FastMultiByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The number of bits of an array slice index. */
-	public final static int SLICE_BITS = 30;
+	public final static int SLICE_BITS = 10;
 
 	/** The maximum length of an array slice. */
 	public final static int SLICE_SIZE = 1 << SLICE_BITS;
@@ -42,7 +42,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	/** The mask to retrieve a slice offset. */
 	public final static int SLICE_MASK = SLICE_SIZE - 1;
 
-	/** The array of arrays backing the input stream. */
+	/** The array of arrays backing the input stream, plus an additional {@code null} entry. */
 	public byte[][] array;
 
 	/** The current array. */
@@ -53,9 +53,6 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 
 	/** The current position. */
 	private long position;
-
-	/** The current mark, or -1 if no mark exists. */
-	private long mark;
 
 	/** Creates a new multi-array input stream loading it from a measurable input stream.
 	 *
@@ -74,16 +71,16 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	
 	public FastMultiByteArrayInputStream( final InputStream is, long size ) throws IOException {
 		length = size;
-		array = new byte[ (int)( ( size + SLICE_SIZE - 1 ) / SLICE_SIZE ) ][];
+		array = new byte[ (int)( ( size + SLICE_SIZE - 1 ) / SLICE_SIZE ) + 1 ][];
 
-		for( int i = 0; i < array.length; i++ ) {
+		for( int i = 0; i < array.length - 1; i++ ) {
 			array[ i ] = new byte[ size >= SLICE_SIZE ? SLICE_SIZE : (int)size ];
 			// It is important *not* to use is.read() directly because of bug #6478546
 			if ( BinIO.loadBytes( is, array[ i ] ) != array[ i ].length ) throw new EOFException();
 			size -= array[ i ].length;
 		}
 
-		this.current = array[ 0 ];
+		current = array[ 0 ];
 	}
 
 	/** Creates a new multi-array input stream sharing the backing arrays of another multi-array input stream. 
@@ -102,25 +99,13 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	 * @param array the backing array.
 	 */
 	public FastMultiByteArrayInputStream( final byte[] array ) {
-		this.array = new byte[ 1 ][];
-		this.array[ 0 ] = array;
-		this.length = array.length;
-		this.current = array;
-	}
-
-	/** Closing a fast byte array input stream has no effect. */
-	public void close() {}
-
-	public boolean markSupported() {
-		return true;
-	}
-
-	public void mark( final int dummy ) {
-		mark = position;
-	}
-
-	public void reset() {
-		position( mark );
+		if ( array.length == 0 ) this.array = new byte[ 1 ][];
+		else {
+			this.array = new byte[ 2 ][];
+			this.array[ 0 ] = array;
+			this.length = array.length;
+			this.current = array;
+		}
 	}
 
 	/** Returns the number of bytes that can be read (or skipped over) from this input stream without blocking. 
@@ -132,18 +117,12 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	 */
 
 	public int available() {
-		if ( length - position > Integer.MAX_VALUE ) return Integer.MAX_VALUE;
-		return (int)( length - position );
+		return (int)Math.min( Integer.MAX_VALUE, length - position );
 	}
 
 	public long skip( long n ) {
-		if ( n <= length - position ) {
-			position += n;
-
-			return n;
-		}
-		n = length - position;
-		position = length;
+		if ( n > length - position ) n = length - position;
+		position += n;
 		updateCurrent();
 		return n;
 	}
@@ -163,11 +142,12 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 
 		for(;;) {
 			final int disp = (int)( position & SLICE_MASK );
+			if ( disp == 0 ) updateCurrent();
 			final int res = Math.min( n, current.length - disp );
 			System.arraycopy( current, disp, b, offset, res );
 				
 			n -= res;
-			if ( ( ( position += res ) & SLICE_MASK ) == 0 ) updateCurrent();
+			position += res;
 			if ( n == 0 ) return m;
 			offset += res;
 		}
@@ -189,5 +169,20 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	@Override
 	public long length() throws IOException {
 		return length;
+	}
+
+	/** NOP. */
+	public void close() {}
+
+	public boolean markSupported() {
+		return false;
+	}
+
+	public void mark( final int dummy ) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void reset() {
+		throw new UnsupportedOperationException();
 	}
 }
