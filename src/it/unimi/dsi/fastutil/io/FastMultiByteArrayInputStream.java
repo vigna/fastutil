@@ -82,6 +82,8 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 			if ( BinIO.loadBytes( is, array[ i ] ) != array[ i ].length ) throw new EOFException();
 			size -= array[ i ].length;
 		}
+
+		this.current = array[ 0 ];
 	}
 
 	/** Creates a new multi-array input stream sharing the backing arrays of another multi-array input stream. 
@@ -91,6 +93,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	public FastMultiByteArrayInputStream( final FastMultiByteArrayInputStream is ) {
 		this.array = is.array;
 		this.length = is.length;
+		this.current = array[ 0 ];
 	}
 
 
@@ -102,6 +105,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 		this.array = new byte[ 1 ][];
 		this.array[ 0 ] = array;
 		this.length = array.length;
+		this.current = array;
 	}
 
 	/** Closing a fast byte array input stream has no effect. */
@@ -163,10 +167,9 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 			System.arraycopy( current, disp, b, offset, res );
 				
 			n -= res;
-			offset += res;
-			position += res;
-			updateCurrent();
+			if ( ( ( position += res ) & SLICE_MASK ) == 0 ) updateCurrent();
 			if ( n == 0 ) return m;
+			offset += res;
 		}
 	}
 
