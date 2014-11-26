@@ -84,7 +84,6 @@ public class Int2IntOpenCustomHashMapTest {
 				) + "; actual: " + expected + "; stddev: " + Math.sqrt( totSquareProbes / m.n - expected * expected ) + "; max probes: " + maxProbes );
 	}
 
-	@SuppressWarnings({ "boxing" })
 	private static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		int c;
 		final Integer key[] = new Integer[ (int)Math.ceil( n * f ) ];
