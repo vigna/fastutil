@@ -1037,26 +1037,35 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 
 		SetIterator( KEY_GENERIC_TYPE from ) {
+			if ( from == KEY_NULL ) {
+				if ( OPEN_HASH_SET.this.containsNull ) {
+					next = GET_NEXT( link[ n ] );
+					prev = n;
+					return;
+				}
+				else throw new NoSuchElementException( "The key " + from + " does not belong to this set." );
+			}
+
 			if ( KEY_EQUALS( key[ last ], from ) ) {
 				prev = last;
 				index = size;
+				return;
 			}
-			else {
-				// The starting point.
-				int pos = KEY2INTHASH( from ) & mask;
 
-				// There's always an unused entry.
-				while( key[ pos ] != KEY_NULL ) {
-					if ( KEY_EQUALS_NOT_NULL( key[ pos ], from ) ) {
-						// Note: no valid index known.
-						next = GET_NEXT( link[ pos ] );
-						prev = pos;
-						return;
-					}
-					pos = ( pos + 1 ) & mask;
+			// The starting point.
+			int pos = KEY2INTHASH( from ) & mask;
+
+			// There's always an unused entry.
+			while( key[ pos ] != KEY_NULL ) {
+				if ( KEY_EQUALS_NOT_NULL( key[ pos ], from ) ) {
+					// Note: no valid index known.
+					next = GET_NEXT( link[ pos ] );
+					prev = pos;
+					return;
 				}
-				throw new NoSuchElementException( "The key " + from + " does not belong to this set." );
+				pos = ( pos + 1 ) & mask;
 			}
+			throw new NoSuchElementException( "The key " + from + " does not belong to this set." );
 		}
 					 
 		public boolean hasNext() { return next != -1; }
@@ -1070,7 +1079,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			prev = curr;
 
 			if ( index >= 0 ) index++;
-			if ( ASSERTS ) assert key[ curr ] != KEY_NULL : "Position " + curr + " is not used";
+			if ( ASSERTS ) assert curr == n || key[ curr ] != KEY_NULL : "Position " + curr + " is not used";
 			return key[ curr ];
 		}
 

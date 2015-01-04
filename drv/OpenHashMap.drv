@@ -1118,6 +1118,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public void clear() {
 		if ( size == 0 ) return;
 		size = 0;
+		containsNullKey = false;
 
 		Arrays.fill( key, KEY_NULL );
 #if #values(reference)
@@ -1341,26 +1342,35 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		private MapIterator( final KEY_GENERIC_TYPE from ) {
+			if ( from == KEY_NULL ) {
+				if ( OPEN_HASH_MAP.this.containsNullKey ) {
+					next = GET_NEXT( link[ n ] );
+					prev = n;
+					return;
+				}
+				else throw new NoSuchElementException( "The key " + from + " does not belong to this map." );
+			}
+
 			if ( KEY_EQUALS( key[ last ], from ) ) {
 				prev = last;
 				index = size;
+				return;
 			}
-			else {
-				// The starting point.
-				int pos = KEY2INTHASH( from ) & mask;
 
-				// There's always an unused entry.
-				while( key[ pos ] != KEY_NULL ) {
-					if ( KEY_EQUALS_NOT_NULL( key[ pos ], from ) ) {
-						// Note: no valid index known.
-						next = GET_NEXT( link[ pos ] );
-						prev = pos;
-						return;
-					}
-					pos = ( pos + 1 ) & mask;
+			// The starting point.
+			int pos = KEY2INTHASH( from ) & mask;
+
+			// There's always an unused entry.
+			while( key[ pos ] != KEY_NULL ) {
+				if ( KEY_EQUALS_NOT_NULL( key[ pos ], from ) ) {
+					// Note: no valid index known.
+					next = GET_NEXT( link[ pos ] );
+					prev = pos;
+					return;
 				}
-				throw new NoSuchElementException( "The key " + from + " does not belong to this map." );
+				pos = ( pos + 1 ) & mask;
 			}
+			throw new NoSuchElementException( "The key " + from + " does not belong to this map." );
 		}
 					 
 		public boolean hasNext() { return next != -1; }
@@ -2120,6 +2130,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			newValue[ pos ] = value[ i ];
 			i++;
 		}
+		
+		newValue[ newN ] = value[ n ];
 
 #endif
 
@@ -2279,8 +2291,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #ifdef ASSERTS_CODE
 	private void checkTable() {
 		assert ( n & -n ) == n : "Table length is not a power of two: " + n;
-		assert n == key.length;
-		int n = key.length;
+		assert n == key.length - 1;
+		int n = key.length - 1;
 		while( n-- != 0 ) 
 			if ( key[ n ] != KEY_NULL && ! containsKey( key[ n ] ) ) 
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
