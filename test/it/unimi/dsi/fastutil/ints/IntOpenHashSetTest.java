@@ -1,12 +1,13 @@
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
-
-import it.unimi.dsi.fastutil.Hash;
+import java.util.Arrays;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -77,21 +78,57 @@ public class IntOpenHashSetTest {
 			}
 	}
 	
+	@Test
+	public void testRemove() {
+		IntOpenHashSet s = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 0; i < 100; i++ ) assertTrue( s.add( i ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( s.remove( 100 + i ) );
+		for( int i = 50; i < 150; i++ ) assertTrue( Integer.toString( i % 100 ), s.remove( i % 100 ) );
+	}
+
+	@Test
+	public void testRemove0() {
+		IntOpenHashSet s = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
+		assertTrue( s.remove( 0 ) );
+		IntIterator iterator = s.iterator();
+		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
+		assertFalse( iterator.hasNext() );
+		
+		s = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
+		iterator = s.iterator();
+		while( iterator.hasNext() ) if ( iterator.nextInt() == 0 ) iterator.remove();
+		
+		assertFalse( s.contains( 0 ) );
+		
+		iterator = s.iterator();
+		int[] content = new int[ 2 ];
+		content[ 0 ] = iterator.nextInt();
+		content[ 1 ] = iterator.nextInt();
+		assertFalse( iterator.hasNext() );
+		Arrays.sort( content );
+		assertArrayEquals( new int[] { -1, 1 }, content );
+	}
+
+	
 	@SuppressWarnings("boxing")
 	private static void checkTable( IntOpenHashSet s ) {
-		final boolean[] used = s.used;
-		final int[]key = s.key;
+		final int[] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == s.key.length;
-		assert s.n == used.length;
+		assert s.n == s.key.length - 1;
 		int n = s.n;
 		while ( n-- != 0 )
-			if ( used[ n ] && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
+			if ( key[ n ] != 0 && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
 					+ " marked as occupied, but the key does not belong to the table" );
+		
+		if ( s.containsNull && ! s.contains( 0 ) ) throw new AssertionError( "Hash table should contain zero by internal state, but it doesn't when queried" );
+		if ( ! s.containsNull && s.contains( 0 ) ) throw new AssertionError( "Hash table should not contain zero by internal state, but it does when queried" );
 
 		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
 		for ( int i = s.size(); i-- != 0; )
-			if ( used[ i ] && !t.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
+			if ( key[ i ] != 0 && !t.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
 
 	}
 
@@ -99,9 +136,10 @@ public class IntOpenHashSetTest {
 		long totProbes = 0;
 		double totSquareProbes = 0;
 		int maxProbes = 0;
+		final int[] key = m.key;
 		final double f = (double)m.size / m.n;
 		for ( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.used[ i ] ) c++;
+			if ( key[ i ] != 0 ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;

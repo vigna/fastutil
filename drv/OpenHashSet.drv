@@ -126,9 +126,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** The array of keys. */
 	protected transient KEY_GENERIC_TYPE key[];
 	 
-	/** The array telling whether a position is used. */
-	protected transient boolean used[];
-
 	/** The acceptable load factor. */
 	protected final float f;
 	 
@@ -141,8 +138,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** The mask for wrapping a position counter. */
 	protected transient int mask;
 
-	/** Number of entries in the set. */
+	/** Number of entries in the set (including the null key, if present). */
 	protected int size;
+
+	/** Whether this set contains the null key. */
+	protected transient boolean containsNull;
 
 #ifdef Linked
 	/** The index of the first entry in iteration order. It is valid iff {@link #size} is nonzero; otherwise, it contains -1. */
@@ -192,10 +192,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		n = arraySize( expected, f );
 		mask = n - 1;
 		maxFill = maxFill( n, f );
-		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
-		used = new boolean[ n ];
+		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n + 1 ];
 #ifdef Linked
-		link = new long[ n ];
+		link = new long[ n + 1 ];
 #endif
 	}
 	 
@@ -558,28 +557,37 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	}
 #endif
 
-	/*
-	 * The following methods implements some basic building blocks used by
-	 * all accessors. They are (and should be maintained) identical to those used in HashMap.drv.
-	 */
+	private int realSize() {
+		return containsNull ? size - 1 : size;
+	}
+
 
 	public boolean add( final KEY_GENERIC_TYPE k ) {
-		// The starting point.
-		int pos = KEY2INTHASH( k ) & mask;
+		int pos;
 
-		// There's always an unused entry.
-		while( used[ pos ] ) {
-			if ( KEY_EQUALS( key[ pos ], k ) ) return false;
-			pos = ( pos + 1 ) & mask;
+		if ( k == KEY_NULL ) {
+			if ( containsNull ) return false;
+			pos = n;
+			containsNull = true;
 		}
+		else {
+			// The starting point.
+			pos = KEY2INTHASH( k ) & mask;
+			final KEY_TYPE[] key = this.key;
 
-		used[ pos ] = true;
-		key[ pos ] = k;
+			// There's always an unused entry.
+			while ( key[ pos ] != KEY_NULL ) {
+				if ( KEY_EQUALS_NOT_NULL( k, key[ pos ] ) ) return false;
+				pos = ( pos + 1 ) & mask;
+			}
+
+			key[ pos ] = k;
+		}
 
 #ifdef Linked
 		if ( size == 0 ) {
 			first = last = pos;
-			// Special case of SET(link[ pos ], -1, -1);
+			// Special case of SET_UPPER_LOWER(link[ pos ], -1, -1);
 			link[ pos ] = -1L;
 		}
 		else {
@@ -603,17 +611,18 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	protected final int shiftKeys( int pos ) {
 		// Shift entries with the same hash.
 		int last, slot;
+		final KEY_TYPE[] key = this.key;
 
 		for(;;) {
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
-			while( used[ pos ] ) {
+			while( key[ pos ] != KEY_NULL ) {
 				slot = KEY2INTHASH( key[ pos ] ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
 
-			if ( ! used[ pos ] ) break;
+			if ( key[ pos ] == KEY_NULL ) break;
 
 			key[ last ] = key[ pos ];			
 
@@ -622,22 +631,32 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 #endif
 		}
 
-		used[ last ] = false;
-#if #keys(reference)
-		key[ last ] = null;
-#endif
+		key[ last ] = KEY_NULL;
 		return last;
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
+		if ( k == KEY_NULL ) {
+			if ( containsNull ) {
+				containsNull = false;
+				size--;
+#ifdef Linked
+				fixPointers( n );
+#endif
+				return true;
+			}
+			return false;
+		}
+	
 		// The starting point.
 		int pos = KEY2INTHASH( k ) & mask;
+		final KEY_TYPE[] key = this.key;
 
 		// There's always an unused entry.
-		while( used[ pos ] ) {
-			if ( KEY_EQUALS( key[ pos ], k ) ) {
+		while( key[ pos ] != KEY_NULL ) {
+			if ( KEY_EQUALS_NOT_NULL( k, key[ pos ] ) ) {
 				size--;
 #ifdef Linked
 				fixPointers( pos );
@@ -646,21 +665,26 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				if ( ASSERTS ) checkTable();
 				return true;
 			}
+				
 			pos = ( pos + 1 ) & mask;
 		}
+
 		return false;
 	}
-	 
+
 	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
-		// The starting point.
+		if ( k == KEY_NULL ) return containsNull;
+	
 		int pos = KEY2INTHASH( k ) & mask;
+		final KEY_TYPE[] key = this.key;
 
 		// There's always an unused entry.
-		while( used[ pos ] ) {
-			if ( KEY_EQUALS( key[ pos ], k ) ) return true;
+		while( key[ pos ] != KEY_NULL ) {
+			if ( KEY_EQUALS_NOT_NULL( key[ pos ], k ) ) return true;
 			pos = ( pos + 1 ) & mask;
 		}
+		
 		return false;
 	}
 
@@ -670,14 +694,17 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 */
 	@SuppressWarnings("unchecked")
 	public K get( final Object k ) {
+		if ( k == null ) return null; // This is correct independently of the value of containsNull
+
 		// The starting point.
 		int pos = KEY2INTHASH( k ) & mask;
 
 		// There's always an unused entry.
-		while( used[ pos ] ) {
-			if ( KEY_EQUALS( key[ pos ], k ) ) return key[ pos ];
+		while( key[ pos ] != KEY_NULL ) {
+			if ( KEY_EQUALS_NOT_NULL( key[ pos ], k ) ) return key[ pos ];
 			pos = ( pos + 1 ) & mask;
 		}
+		
 		return null;
 	}
 #endif
@@ -699,7 +726,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
 		}
 		final KEY_GENERIC_TYPE k = key[ pos ];
-		shiftKeys( pos );	
+		if ( k == KEY_NULL ) containsNull = false;
+		else shiftKeys( pos );
 		return k;
 	}
 
@@ -718,7 +746,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			link[ last ] |= -1 & 0xFFFFFFFFL;
 		}
 		final KEY_GENERIC_TYPE k = key[ pos ];
-		shiftKeys( pos );
+		if ( k == KEY_NULL ) containsNull = false;
+		else shiftKeys( pos );
 		return k;
 	}
 
@@ -766,16 +795,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * @return true if the key was not present.
 	 */
 	public boolean addAndMoveToFirst( final KEY_GENERIC_TYPE k ) {
-		final KEY_GENERIC_TYPE key[] = this.key;
-		final boolean used[] = this.used;
-		final int mask = this.mask;
 
 		// The starting point.
 		int pos = KEY2INTHASH( k ) & mask;
-
-		// There's always an unused entry.
-		while( used[ pos ] ) {
-			if ( KEY_EQUALS( k, key[ pos ] ) ) {
+		final KEY_GENERIC_TYPE key[] = this.key;
+	
+		// There's always an unused entry. TODO
+		while( key[ pos ] != KEY_NULL ) {
+			if ( KEY_EQUALS_NOT_NULL( k, key[ pos ] ) ) {
 				moveIndexToFirst( pos );
 				return false;
 			}
@@ -783,7 +810,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			pos = ( pos + 1 ) & mask;
 		}
 		  
-		used[ pos ] = true;
 		key[ pos ] = k;
 		
 		if ( size == 0 ) {
@@ -808,16 +834,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * @return true if the key was not present.
 	 */
 	public boolean addAndMoveToLast( final KEY_GENERIC_TYPE k ) {
-		final KEY_GENERIC_TYPE key[] = this.key;
-		final boolean used[] = this.used;
-		final int mask = this.mask;
 
 		// The starting point.
 		int pos = KEY2INTHASH( k ) & mask;
+		final KEY_GENERIC_TYPE key[] = this.key;
 
-		// There's always an unused entry.
-		while( used[ pos ] ) {
-			if ( KEY_EQUALS( k, key[ pos ] ) ) {
+		// There's always an unused entry. TODO
+		while( key[ pos ] != KEY_NULL ) {
+			if ( KEY_EQUALS_NOT_NULL( k, key[ pos ] ) ) {
 				moveIndexToLast( pos );
 				return false;
 			}
@@ -825,7 +849,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			pos = ( pos + 1 ) & mask;
 		}
 		  
-		used[ pos ] = true;
 		key[ pos ] = k;
 		
 		if ( size == 0 ) {
@@ -856,11 +879,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public void clear() {
 		if ( size == 0 ) return;
 		size = 0;
-		Arrays.fill( used, false );
+		containsNull = false;
 
-#if #keys(reference)
-		Arrays.fill( key, null );
-#endif
+		Arrays.fill( key, KEY_NULL );
 #ifdef Linked
 		first = last = -1;
 #endif
@@ -1000,6 +1021,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * <P>This class provides a list iterator over a linked hash set. The constructor runs in constant time. 
 	 */
 	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
+		final int n = OPEN_HASH_SET.this.n;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists). */
 		int prev = -1;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists). */
@@ -1024,8 +1046,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				int pos = KEY2INTHASH( from ) & mask;
 
 				// There's always an unused entry.
-				while( used[ pos ] ) {
-					if ( KEY_EQUALS( key[ pos ], from ) ) {
+				while( key[ pos ] != KEY_NULL ) {
+					if ( KEY_EQUALS_NOT_NULL( key[ pos ], from ) ) {
 						// Note: no valid index known.
 						next = GET_NEXT( link[ pos ] );
 						prev = pos;
@@ -1048,7 +1070,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			prev = curr;
 
 			if ( index >= 0 ) index++;
-			if ( ASSERTS ) assert used[ curr ] : "Position " + curr + " is not used";
+			if ( ASSERTS ) assert key[ curr ] != KEY_NULL : "Position " + curr + " is not used";
 			return key[ curr ];
 		}
 
@@ -1119,26 +1141,26 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 			int last, slot, pos = curr;
 
-			// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.			
-			for(;;) {
-				pos = ( ( last = pos ) + 1 ) & mask;
-				while( used[ pos ] ) {
-					slot = KEY2INTHASH( key[ pos ] ) & mask;
-					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
-					pos = ( pos + 1 ) & mask;
-				}
+			if ( pos == n ) OPEN_HASH_SET.this.containsNull = false;
+			else {
+				// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.			
+				for(;;) {
+					pos = ( ( last = pos ) + 1 ) & mask;
+					while( key[ pos ] != KEY_NULL ) {
+						slot = KEY2INTHASH( key[ pos ] ) & mask;
+						if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
+						pos = ( pos + 1 ) & mask;
+					}
 	
-				if ( ! used[ pos ] ) break;
-				key[ last ] = key[ pos ];			
-				if ( next == pos ) next = last;
-				if ( prev == pos ) prev = last;
-				fixPointers( pos, last );
-			}
+					if ( key[ pos ] == KEY_NULL ) break;
+					key[ last ] = key[ pos ];			
+					if ( next == pos ) next = last;
+					if ( prev == pos ) prev = last;
+					fixPointers( pos, last );
+				}
 
-			used[ last ] = false;
-#if #keys(reference)
-			key[ last ] = null;
-#endif
+				key[ last ] = KEY_NULL;
+			}
 			curr = -1;
 		}
 	}
@@ -1164,21 +1186,23 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** An iterator over a hash set. */
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
+		final int n = OPEN_HASH_SET.this.n;
 		/** The index of the next entry to be returned, if positive or zero. If negative, the next entry to be
 			returned, if any, is that of index -pos -2 from the {@link #wrapped} list. */
-		int pos = OPEN_HASH_SET.this.n;
+		int pos = n;
 		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos}). It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
 		int last = -1;
 		/** A downward counter measuring how many entries must still be returned. */
 		int c = size;
+		/** A boolean telling us whether we should return zero. */
+		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
 		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
 			would not be enumerated (other elements would be usually enumerated twice in their place). */
 		ARRAY_LIST KEY_GENERIC wrapped;
 		
 		{ 
-			final boolean used[] = OPEN_HASH_SET.this.used;
-			if ( c != 0 ) while( ! used[ --pos ] );
+			if ( realSize() != 0 ) while( key[ --pos ] == KEY_NULL );
 		}
 
 		public boolean hasNext() {
@@ -1189,6 +1213,13 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if ( ! hasNext() ) throw new NoSuchElementException();
 			
 			c--;
+			
+			if ( mustReturnNull ) {
+				mustReturnNull = false;
+				last = n;
+				return KEY_NULL;
+			}
+			
 			// We are just enumerating elements from the wrapped list.
 			if ( pos < 0 ) return wrapped.GET_KEY( - ( last = --pos ) - 2  );
 			
@@ -1196,8 +1227,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			
 			//System.err.println( "Count: " + c );
 			if ( c != 0 ) {
-				final boolean used[] = OPEN_HASH_SET.this.used;
-				while ( pos-- != 0 && !used[ pos ] );
+				final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+				while ( pos-- != 0 && key[ pos ] == KEY_NULL );
 				// When here pos < 0 there are no more elements to be enumerated by scanning, but wrapped might be nonempty.
 			}
 			
@@ -1219,13 +1250,16 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			for(;;) {
 				pos = ( ( last = pos ) + 1 ) & mask;
 				
-				while( used[ pos ] ) {
+				while( true ) {
+					if ( key[ pos ] == KEY_NULL ) {
+						key[ last ] = KEY_NULL;
+						return last;
+					}
 					slot = KEY2INTHASH( key[ pos ] ) & mask;
 					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 					pos = ( pos + 1 ) & mask;
 				}
 	
-				if ( ! used[ pos ] ) break;
 				if ( pos < last ) {
 					// Wrapped entry.
 					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
@@ -1233,17 +1267,17 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				}
 				key[ last ] = key[ pos ];			
 			}
-	
-			used[ last ] = false;
-#if #keys(reference)
-			key[ last ] = null;
-#endif
-			return last;
 		}
 	
 		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
+			if ( last == n ) {
+				OPEN_HASH_SET.this.containsNull = false;
+				last = -1; // You can no longer remove this entry.
+				size--;
+				return;
+			}
 			if ( pos < -1 ) {
 				// We're removing wrapped entries.
 #if #keys(reference)
@@ -1354,40 +1388,25 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 	@SuppressWarnings("unchecked")
 	protected void rehash( final int newN ) {
-#ifdef Linked
-		int i = first, prev = -1, newPrev = -1, t, pos;
-#else
-		int i = 0, pos;
-		final boolean used[] = this.used;
-#endif
-
-		KEY_GENERIC_TYPE k;
 		final KEY_GENERIC_TYPE key[] = this.key;
 
 		final int mask = newN - 1; // Note that this is used by the hashing macro
-		final KEY_GENERIC_TYPE newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN ];
-		final boolean newUsed[] = new boolean[ newN ];
+		final KEY_GENERIC_TYPE newKey[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newN + 1 ];
+
 #ifdef Linked
+		int i = first, prev = -1, newPrev = -1, t, pos;
 		final long link[] = this.link;
-		final long newLink[] = new long[ newN ];
+		final long newLink[] = new long[ newN + 1 ];
 		first = -1;
-#endif
 
 		for( int j = size; j-- != 0; ) {
+			if ( key[ i ] == KEY_NULL ) pos = newN;
+			else {
+				pos = KEY2INTHASH( key[ i ] ) & mask;
+				while ( newKey[ pos ] != KEY_NULL ) pos = ( pos + 1 ) & mask;
+				newKey[ pos ] = key[ i ];
+			}
 
-#ifndef Linked
-			while( ! used[ i ] ) i++;
-#endif
-
-			k = key[ i ];
-			pos = KEY2INTHASH( k ) & mask;
-
-			while ( newUsed[ pos ] ) pos = ( pos + 1 ) & mask;
-				
-			newUsed[ pos ] = true;
-			newKey[ pos ] = k;
-
-#ifdef Linked
 			if ( prev != -1 ) {
 				SET_NEXT( newLink[ newPrev ], pos );
 				SET_PREV( newLink[ pos ], newPrev );
@@ -1402,24 +1421,29 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			t = i;
 			i = GET_NEXT(link[ i ]);
 			prev = t;
-
-#else
-			i++;
-#endif
 		}
 
-		n = newN;
-		this.mask = mask;
-		maxFill = maxFill( n, f );
-		this.key = newKey;
-		this.used = newUsed;
-#ifdef Linked
 		this.link = newLink;
 		this.last = newPrev;
 		if ( newPrev != -1 )
 			// Special case of SET_NEXT( newLink[ newPrev ], -1 );
 			newLink[ newPrev ] |= -1 & 0xFFFFFFFFL;
+#else
+		int i = 0, pos;
+
+		for( int j = realSize(); j-- != 0; ) {
+			while( key[ i ] == KEY_NULL ) i++;
+			pos = KEY2INTHASH( key[ i ] ) & mask;
+			while ( newKey[ pos ] != KEY_NULL ) pos = ( pos + 1 ) & mask;
+			newKey[ pos ] = key[ i ];
+			i++;
+		}
 #endif
+
+		n = newN;
+		this.mask = mask;
+		maxFill = maxFill( n, f );
+		this.key = newKey;
 	}
 
 
@@ -1441,7 +1465,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			throw new InternalError();
 		}
 		c.key = key.clone();
-		c.used = used.clone();
+		c.containsNull = containsNull;
 #ifdef Linked
 		c.link = link.clone();
 #endif
@@ -1463,15 +1487,17 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 
 	public int hashCode() {
-		int h = 0, i = 0, j = size;
+		int h = 0, i = 0, j = realSize();
 		while( j-- != 0 ) {
-			while( ! used[ i ] ) i++;
+			while( key[ i ] == KEY_NULL ) i++;
 #if #keys(reference)
 			if ( this != key[ i ] )
 #endif
 				h += KEY2JAVAHASH( key[ i ] );
 			i++;
 		}
+
+		// Zero / null have hash zero.		
 		return h;
 	}
 
@@ -1491,25 +1517,28 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		maxFill = maxFill( n, f );
 		mask = n - 1;
 		
-		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n ];
-		final boolean used[] = this.used = new boolean[ n ];
+		final KEY_GENERIC_TYPE key[] = this.key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ n + 1 ];
 #ifdef Linked
-		final long link[] = this.link = new long[ n ];
+		final long link[] = this.link = new long[ n + 1 ];
 		int prev = -1;
 		first = last = -1;
 #endif
 
 		KEY_GENERIC_TYPE k;
 
-		for( int i = size, pos = 0; i-- != 0; ) {
+		for( int i = size, pos; i-- != 0; ) {
 
 			k = KEY_GENERIC_CAST s.READ_KEY();
-			pos = KEY2INTHASH( k ) & mask;
 
-			while ( used[ pos ] ) pos = ( pos + 1 ) & mask;
-
-			used[ pos ] = true;
-			key[ pos ] = k;
+			if ( k == KEY_NULL ) {
+				pos = n;
+				containsNull = true;
+			}
+			else {
+				pos = KEY2INTHASH( k ) & mask;
+				while ( key[ pos ] != KEY_NULL ) pos = ( pos + 1 ) & mask;
+				key[ pos ] = k;
+			}
 
 #ifdef Linked
 			if ( first != -1 ) {
@@ -1538,13 +1567,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 #ifdef ASSERTS_CODE
 	private void checkTable() {
-		final boolean[] used = this.used;
 		assert ( n & -n ) == n : "Table length is not a power of two: " + n;
-		assert n == key.length;
-		assert n == used.length;
-		int n = used.length;
+		assert n == key.length - 1;
+		int n = key.length - 1;
 		while( n-- != 0 ) 
-			if ( used[ n ] && ! contains( key[ n ] ) ) 
+			if ( key[ n ] != KEY_NULL && ! contains( key[ n ] ) ) 
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
 
 #if #keys(primitive)
@@ -1553,8 +1580,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		java.util.HashSet<Object> s = new java.util.HashSet<Object>();
 #endif
 		
-		for( int i = used.length; i-- != 0; )
-			if ( used[ i ] && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice at position " + i );
+		for( int i = key.length - 1; i-- != 0; )
+			if ( key[ i ] != KEY_NULL && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice at position " + i );
 
 #ifdef Linked
 		KEY_LIST_ITERATOR KEY_GENERIC i = iterator();
@@ -1841,7 +1868,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		int maxProbes = 0;	
 		final double f = (double)m.size / m.n;
 		for( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.used[ i ] ) c++;
+			if ( m.key[ i ] != KEY_NULL ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
@@ -2184,7 +2211,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-		int p = m.used.length;
+		int p = m.key.length - 1;
 
 		for(int i=0; i<p; i++) {
 			for (int j=0; j<20; j++) {

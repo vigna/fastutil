@@ -65,19 +65,20 @@ public class ObjectOpenHashSetTest {
 	}
 
 	private static void checkTable( ObjectOpenHashSet<Integer> s ) {
-		final boolean[] used = s.used;
 		final Object[] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == ((Object[])s.key).length;
-		assert s.n == used.length;
+		assert s.n == s.key.length;
 		int n = s.n;
 		while ( n-- != 0 )
-			if ( used[ n ] && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
+			if ( key[ n ] != null && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
 					+ " marked as occupied, but the key does not belong to the table" );
+
+		if ( s.containsNull && ! s.contains( null ) ) throw new AssertionError( "Hash table should contain null by internal state, but it doesn't when queried" );
+		if ( ! s.containsNull && s.contains( null ) ) throw new AssertionError( "Hash table should not contain null by internal state, but it does when queried" );
 
 		java.util.HashSet<String> t = new java.util.HashSet<String>();
 		for ( int i = s.size(); i-- != 0; )
-			if ( used[ i ] && !t.add( (String)key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
+			if ( key[ i ] != null && !t.add( (String)key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice" );
 
 	}
 
@@ -85,9 +86,10 @@ public class ObjectOpenHashSetTest {
 		long totProbes = 0;
 		double totSquareProbes = 0;
 		int maxProbes = 0;
+		final Object[] key = m.key;
 		final double f = (double)m.size / m.n;
 		for ( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( m.used[ i ] ) c++;
+			if ( key[ i ] != null ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;

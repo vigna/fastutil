@@ -168,8 +168,8 @@ public class Int2IntLinkedOpenHashMapTest {
 		/* Now we play with iterators. */
 		{
 			java.util.ListIterator<?> i, j;
-			Object J;
-			Map.Entry<Integer,Integer> E, F;
+			Object J = null;
+			Map.Entry<Integer,Integer> E = null, F = null;
 			i = (java.util.ListIterator<?>)m.entrySet().iterator();
 			j = new java.util.LinkedList<Object>( t.entrySet() ).listIterator();
 			for ( int k = 0; k < 2 * n; k++ ) {
@@ -207,7 +207,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		}
 		if ( t.size() > 0 ) {
 			java.util.ListIterator<Integer> i, j;
-			Object J;
+			Object J = null;
 			j = new java.util.LinkedList<Integer>( t.keySet() ).listIterator();
 			int e = r.nextInt( t.size() );
 			Object from;
@@ -363,6 +363,60 @@ public class Int2IntLinkedOpenHashMapTest {
 		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.remove( i + 100 ) );
 		for( int i = 50; i < 150; i++ ) assertEquals( i % 100, m.remove( i % 100 ) );
 	}
+
+	@Test
+	public void testRemove0() {
+		Int2IntLinkedOpenHashMap s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = -1; i <= 1; i++ ) assertEquals( 0, s.put( i, i ) );
+		s.remove( 0 );
+		IntIterator iterator = s.keySet().iterator();
+		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
+		assertFalse( iterator.hasNext() );
+		
+		s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = -1; i <= 1; i++ ) assertEquals( 0, s.put( i, i ) );
+		iterator = s.keySet().iterator();
+		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 0, iterator.nextInt() );
+		iterator.remove();
+		assertEquals( 1, iterator.nextInt() );
+		assertFalse( iterator.hasNext() );
+
+		assertFalse( s.containsKey( 0 ) );
+		
+		iterator = s.keySet().iterator();
+		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
+		assertFalse( iterator.hasNext() );
+	}
+
+	@Test
+	public void testFirtLast0() {
+		Int2IntLinkedOpenHashMap s;
+		
+		s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 1; i < 100; i++ ) 
+			assertEquals( 0, s.put( i, i ) );
+		for( int i = 1; i < 100; i++ ) assertEquals( i, s.removeFirstInt() );
+		assertTrue( s.isEmpty() );
+		
+		s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 0; i < 100; i++ ) assertEquals( 0, s.put( i, i ) );
+		for( int i = 100; i-- != 0; ) assertEquals( i, s.removeLastInt() );
+		assertTrue( s.isEmpty() );
+
+		s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 100; i-- != 0; ) assertEquals( 0, s.put( i, i ) );
+		for( int i = 0; i < 100; i++ ) assertEquals( i, s.removeLastInt() );
+		assertTrue( s.isEmpty() );
+
+		s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = 100; i-- != 0; ) assertEquals( 0, s.put( i, i ) );
+		for( int i = 100; i-- != 0; ) assertEquals( i, s.removeFirstInt() );
+		assertTrue( s.isEmpty() );
+	}
+
 
 	@Test
 	public void testContainsValue() {

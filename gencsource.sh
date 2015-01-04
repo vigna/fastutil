@@ -437,7 +437,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 \
 "#ifdef Custom\n"\
-"#define KEY_EQUALS(x,y) ( strategy.equals( (x), " KEY_GENERIC_CAST "(y) ) )\n"\
+"#define KEY_EQUALS(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), " KEY_GENERIC_CAST "(y) ) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), " KEY_GENERIC_CAST "(y) ) )\n"\
 "#else\n"\
 "#if #keyclass(Object)\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
@@ -482,13 +483,13 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)( strategy.hashCode(" KEY_GENERIC_CAST "(x)) ^ mask ) ) )\n"\
 "#else\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
-"#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x).hashCode() ^ mask ) )\n"\
-"#define KEY2LONGHASH(x) ( (x) == null ? 0x810879608e4259ccL : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)( (x).hashCode() ^ mask ) ) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (x).hashCode() ^ mask ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)( (x).hashCode() ^ mask ) ) )\n"\
 "#endif\n"\
 "#else\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : System.identityHashCode(x) )\n"\
-"#define KEY2INTHASH(x) ( (x) == null ? 0x87fcd5c : it.unimi.dsi.fastutil.HashCommon.murmurHash3( System.identityHashCode(x) ^ mask ) )\n"\
-"#define KEY2LONGHASH(x) ( (x) == null ? 0x810879608e4259ccL : it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)( System.identityHashCode(x) ^ mask ) ) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( System.identityHashCode(x) ^ mask ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.murmurHash3( (long)( System.identityHashCode(x) ^ mask ) ) )\n"\
 "#endif\n"\
 \
 "#define KEY_CMP(x,y) ( ((Comparable<KEY_GENERIC_CLASS>)(x)).compareTo(y) )\n"\
