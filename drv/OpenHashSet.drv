@@ -124,7 +124,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	private static final boolean ASSERTS = ASSERTS_VALUE;
 
 	/** The array of keys. */
-	protected transient KEY_GENERIC_TYPE key[];
+	protected transient KEY_GENERIC_TYPE[] key;
 	 
 	/** The acceptable load factor. */
 	protected final float f;
@@ -153,7 +153,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
      * stored as <code>((prev & 0xFFFFFFFFL) << 32) | (next & 0xFFFFFFFFL)</code>.
      * The first entry contains predecessor -1, and the last entry 
      * contains successor -1. */
-	protected transient long link[];
+	protected transient long[] link;
 #endif
 
 #ifdef Custom
@@ -573,7 +573,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		else {
 			// The starting point.
 			pos = KEY2INTHASH( k ) & mask;
-			final KEY_TYPE[] key = this.key;
+			final KEY_GENERIC_TYPE[] key = this.key;
 
 			// There's always an unused entry.
 			while ( key[ pos ] != KEY_NULL ) {
@@ -611,28 +611,26 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	protected final int shiftKeys( int pos ) {
 		// Shift entries with the same hash.
 		int last, slot;
-		final KEY_TYPE[] key = this.key;
+		final KEY_GENERIC_TYPE[] key = this.key;
 
 		for(;;) {
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
-			while( key[ pos ] != KEY_NULL ) {
+			for(;;) {
+				if ( key[ pos ] == KEY_NULL ) {
+					key[ last ] = KEY_NULL;
+					return last;
+				}
 				slot = KEY2INTHASH( key[ pos ] ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
 
-			if ( key[ pos ] == KEY_NULL ) break;
-
 			key[ last ] = key[ pos ];			
-
 #ifdef Linked
 			fixPointers( pos, last );
 #endif
 		}
-
-		key[ last ] = KEY_NULL;
-		return last;
 	}
 
 
@@ -652,7 +650,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	
 		// The starting point.
 		int pos = KEY2INTHASH( k ) & mask;
-		final KEY_TYPE[] key = this.key;
+		final KEY_GENERIC_TYPE[] key = this.key;
 
 		// There's always an unused entry.
 		while( key[ pos ] != KEY_NULL ) {
@@ -677,7 +675,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		if ( k == KEY_NULL ) return containsNull;
 	
 		int pos = KEY2INTHASH( k ) & mask;
-		final KEY_TYPE[] key = this.key;
+		final KEY_GENERIC_TYPE[] key = this.key;
 
 		// There's always an unused entry.
 		while( key[ pos ] != KEY_NULL ) {
@@ -1149,28 +1147,30 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				SET_PREV( link[ next ], prev );
 
 			int last, slot, pos = curr;
+			curr = -1;
 
 			if ( pos == n ) OPEN_HASH_SET.this.containsNull = false;
 			else {
+				final KEY_GENERIC_TYPE[] key = OPEN_HASH_SET.this.key;
 				// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.			
 				for(;;) {
 					pos = ( ( last = pos ) + 1 ) & mask;
-					while( key[ pos ] != KEY_NULL ) {
+					for(;;) {
+						if ( key[ pos ] == KEY_NULL ) {
+							key[ last ] = KEY_NULL;
+							return;
+						}
 						slot = KEY2INTHASH( key[ pos ] ) & mask;
 						if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 						pos = ( pos + 1 ) & mask;
 					}
 	
-					if ( key[ pos ] == KEY_NULL ) break;
 					key[ last ] = key[ pos ];			
 					if ( next == pos ) next = last;
 					if ( prev == pos ) prev = last;
 					fixPointers( pos, last );
 				}
-
-				key[ last ] = KEY_NULL;
 			}
-			curr = -1;
 		}
 	}
 
@@ -1255,11 +1255,12 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		final int shiftKeys( int pos ) {
 			// Shift entries with the same hash.
 			int last, slot;
+			final KEY_GENERIC_TYPE[] key = OPEN_HASH_SET.this.key;
 	
 			for(;;) {
 				pos = ( ( last = pos ) + 1 ) & mask;
 				
-				while( true ) {
+				for(;;) {
 					if ( key[ pos ] == KEY_NULL ) {
 						key[ last ] = KEY_NULL;
 						return last;
