@@ -28,6 +28,11 @@ public class HashCommon {
 		search algorithm in the presence of an actual <code>null</code> key. */ 
 	public static final Object REMOVED = new Object();
 
+    /** 2<sup>32</sup> &middot; (&#x221A;5 &minus; 1)/2. */
+    private static final int INT_PHI = 0x9E3779B9;
+    /** 2<sup>64</sup> &middot; (&#x221A;5 &minus; 1)/2. */
+    private static final long LONG_PHI = 0x9E3779B97F4A7C15L;
+
 	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
 	 * 
 	 * <p>This method implements the finalisation step of Austin Appleby's <a href="http://code.google.com/p/smhasher/">MurmurHash3</a>.
@@ -45,6 +50,7 @@ public class HashCommon {
 		x ^= x >>> 16;
 		return x;
 	}
+
 
 	/** Avalanches the bits of a long integer by applying the finalisation step of MurmurHash3.
 	 * 
@@ -66,6 +72,37 @@ public class HashCommon {
 		x ^= x >>> 33;
 
 		return x;
+	}
+
+	/** Quickly mixes the bits of an integer.
+	 * 
+	 * <p>This method mixes the bits of the argument by multiplying by the golden ratio and 
+	 * xorshifting the result. It is borrowed from <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>, and
+	 * it has slightly worse behaviour than {@link #murmurHash3(int)} (in open-addressing hash tables the average number of probes
+	 * is slightly larger), but it's much faster.
+	 * 
+	 * @param x an integer.
+	 * @return a hash value obtained by mixing the bits of {@code x}.
+	 */	
+	public final static int phiMix( final int x ) {
+		final int h = x * INT_PHI;
+		return h ^ (h >> 16);
+	}
+
+	/** Quickly mixes the bits of a long integer.
+	 * 
+	 * <p>This method mixes the bits of the argument by multiplying by the golden ratio and 
+	 * xorshifting twice the result. It is borrowed from <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>, and
+	 * it has slightly worse behaviour than {@link #murmurHash3(long)} (in open-addressing hash tables the average number of probes
+	 * is slightly larger), but it's much faster. 
+	 * 
+	 * @param x a long integer.
+	 * @return a hash value obtained by mixing the bits of {@code x}.
+	 */	
+	public final static long phiMix( final long x ) {
+		long h = x * LONG_PHI;
+		h ^= h >> 32;
+		return h ^ (h >> 16);
 	}
 
 	/** Returns the hash code that would be returned by {@link Float#hashCode()}.
