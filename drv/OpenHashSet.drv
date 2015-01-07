@@ -416,7 +416,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public OPEN_HASH_SET( final Iterator<?> i, final float f ) {
 		this( ITERATORS.AS_KEY_ITERATOR( i ), f );
 	}
+
 #endif
+
 
 #ifdef Custom
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor using elements provided by an iterator.
@@ -561,6 +563,27 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return containsNull ? size - 1 : size;
 	}
 
+	private void ensureCapacity( final int capacity ) {
+		final int needed = arraySize( capacity, f );
+		if ( needed > n ) rehash( needed );
+	}
+
+#if #keys(primitive)
+	/** @inherit */
+	public boolean addAll( COLLECTION c ) {
+		// The resulting collection will be at least c.size() big
+		ensureCapacity( c.size() );
+		return super.addAll( c );
+	}
+#endif
+
+	/** @inherit */
+	public boolean addAll( Collection<? extends KEY_GENERIC_CLASS> c ) {
+		// The resulting collection will be at least c.size() big
+		ensureCapacity( c.size() );
+		return super.addAll( c );
+	}
+
 
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		int pos;
@@ -572,8 +595,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 		else {
 			// The starting point.
-			pos = KEY2INTHASH( k ) & mask;
 			final KEY_GENERIC_TYPE[] key = this.key;
+			final int mask = this.mask;
+			pos = KEY2INTHASH( k ) & mask;
 
 			// There's always an unused entry.
 			while ( key[ pos ] != KEY_NULL ) {
@@ -612,6 +636,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		// Shift entries with the same hash.
 		int last, slot;
 		final KEY_GENERIC_TYPE[] key = this.key;
+		final int mask = this.mask;
 
 		for(;;) {
 			pos = ( ( last = pos ) + 1 ) & mask;
@@ -649,8 +674,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 	
 		// The starting point.
-		int pos = KEY2INTHASH( k ) & mask;
 		final KEY_GENERIC_TYPE[] key = this.key;
+		final int mask = this.mask;
+		int pos = KEY2INTHASH( k ) & mask;
 
 		// There's always an unused entry.
 		while( key[ pos ] != KEY_NULL ) {
@@ -673,17 +699,20 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) return containsNull;
-	
-		int pos = KEY2INTHASH( k ) & mask;
-		final KEY_GENERIC_TYPE[] key = this.key;
 
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[] key = this.key;
+		final int mask = this.mask;
+		int pos;
+
+		// The starting point.
+		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return false;
+		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return true;
 		// There's always an unused entry.
-		while( key[ pos ] != KEY_NULL ) {
-			if ( KEY_EQUALS_NOT_NULL( key[ pos ], k ) ) return true;
-			pos = ( pos + 1 ) & mask;
+		while( true ) {
+			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return false;
+			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return true;
 		}
-		
-		return false;
 	}
 
 #if #keyclass(Object)
@@ -795,8 +824,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public boolean addAndMoveToFirst( final KEY_GENERIC_TYPE k ) {
 
 		// The starting point.
-		int pos = KEY2INTHASH( k ) & mask;
 		final KEY_GENERIC_TYPE key[] = this.key;
+		final int mask = this.mask;
+		int pos = KEY2INTHASH( k ) & mask;
 	
 		// There's always an unused entry. TODO
 		while( key[ pos ] != KEY_NULL ) {
@@ -834,8 +864,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public boolean addAndMoveToLast( final KEY_GENERIC_TYPE k ) {
 
 		// The starting point.
-		int pos = KEY2INTHASH( k ) & mask;
 		final KEY_GENERIC_TYPE key[] = this.key;
+		final int mask = this.mask;
+		int pos = KEY2INTHASH( k ) & mask;
 
 		// There's always an unused entry. TODO
 		while( key[ pos ] != KEY_NULL ) {
@@ -1013,7 +1044,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return null; }
 
 
-
 	/** A list iterator over a linked set.
 	 *
 	 * <P>This class provides a list iterator over a linked hash set. The constructor runs in constant time. 
@@ -1152,6 +1182,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if ( pos == n ) OPEN_HASH_SET.this.containsNull = false;
 			else {
 				final KEY_GENERIC_TYPE[] key = OPEN_HASH_SET.this.key;
+				final int mask = OPEN_HASH_SET.this.mask;
 				// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.			
 				for(;;) {
 					pos = ( ( last = pos ) + 1 ) & mask;
@@ -1256,6 +1287,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			// Shift entries with the same hash.
 			int last, slot;
 			final KEY_GENERIC_TYPE[] key = OPEN_HASH_SET.this.key;
+			final int mask = OPEN_HASH_SET.this.mask;
 	
 			for(;;) {
 				pos = ( ( last = pos ) + 1 ) & mask;
