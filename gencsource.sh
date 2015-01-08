@@ -73,6 +73,11 @@ done
 
 if [[ $root == *Linked* ]]; then 
 Linked=Linked
+
+# Macros for transforming the bi-directional long link. Return values are 32-bit int indexes.
+# SET_UPPER and SET_LOWER do a masked assignment as described at
+# http://www-graphics.stanford.edu/~seander/bithacks.html#MaskedMerge
+
 echo -e \
 "#define SET_PREV( f64, p32 )       SET_UPPER( f64, p32 )\n"\
 "#define SET_NEXT( f64, n32 )       SET_LOWER( f64, n32 )\n"\
