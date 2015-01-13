@@ -84,6 +84,7 @@ binary:
 	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
+	cp dist/lib/fastutil-$(version).jar .
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README \
