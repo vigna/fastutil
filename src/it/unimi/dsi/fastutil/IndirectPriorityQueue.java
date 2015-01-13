@@ -57,7 +57,7 @@ public interface IndirectPriorityQueue<K> {
 
 	/** Enqueues a new element.
 	 *
-	 * @param index the element to enqueue..
+	 * @param index the element to enqueue.
 	 */
 
 	void enqueue( int index );
@@ -134,6 +134,7 @@ public interface IndirectPriorityQueue<K> {
 
 	/** Checks whether a given index belongs to this queue (optional operation).
 	 * 
+	 * @param index an index possibly in the queue.
 	 * @return true if the specified index belongs to this queue.
 	 */
 	public boolean contains( int index );

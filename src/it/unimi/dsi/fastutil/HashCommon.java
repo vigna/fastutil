@@ -106,6 +106,7 @@ public class HashCommon {
 
 	/** Returns the hash code that would be returned by {@link Float#hashCode()}.
 	 *
+	 * @param f a float.
 	 * @return the same code as {@link Float#hashCode() new Float(f).hashCode()}.
 	 */
 
@@ -115,6 +116,7 @@ public class HashCommon {
 
 	/** Returns the hash code that would be returned by {@link Double#hashCode()}.
 	 *
+	 * @param d a double.
 	 * @return the same code as {@link Double#hashCode() new Double(f).hashCode()}.
 	 */
 
@@ -125,6 +127,7 @@ public class HashCommon {
 
 	/** Returns the hash code that would be returned by {@link Long#hashCode()}.
 	 * 
+	 * @param l a long.
 	 * @return the same code as {@link Long#hashCode() new Long(f).hashCode()}.
 	 */
 	final public static int long2int( final long l ) {

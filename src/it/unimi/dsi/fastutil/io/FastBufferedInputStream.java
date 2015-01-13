@@ -534,7 +534,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	/** Resets the internal logic of this fast buffered input stream.
 	 * 
-	 * @deprecated As of <samp>fastutil</samp> 5.0.4, replaced by {@link #flush()}. The old
+	 * @deprecated As of <code>fastutil</code> 5.0.4, replaced by {@link #flush()}. The old
 	 * semantics of this method does not contradict {@link InputStream}'s contract, as
 	 * the semantics of {@link #reset()} is undefined if {@link InputStream#markSupported()}
 	 * returns false. On the other hand, the name was really a poor choice.

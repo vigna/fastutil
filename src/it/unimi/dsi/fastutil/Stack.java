@@ -63,7 +63,8 @@ public interface Stack<K> {
 
 	/** Peeks at an element on the stack (optional operation).
 	 *
-	 * @return the <code>i</code>-th element on the stack; 0 represents the top.
+	 * @param i an index from the stop of the stack (0 represents the top).
+	 * @return the <code>i</code>-th element on the stack.
 	 * @throws IndexOutOfBoundsException if the designated element does not exist..
 	 */
 
