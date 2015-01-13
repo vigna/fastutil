@@ -1,4 +1,6 @@
-<project name="fastutil" default="jar" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="fastutil" default="jar" basedir="."
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+         xmlns:ivy="antlib:org.apache.ivy.ant">
 
 	<property file="build.properties"/>
 
@@ -9,8 +11,10 @@
 	<property name="artifactId" value="fastutil" />
 	<property name="version" value="${version}" />
 
+        <property name="maven-jar" value="${dist}/lib/fastutil-${version}.jar" />
+
         <!-- define artifacts' name, which follows the convention of Maven -->
-	<property name="maven-jar" value="${dist}/lib/${artifactId}-${version}.jar" />
+
 	<property name="maven-javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
 	<property name="maven-sources-jar" value="${dist}/lib/${artifactId}-${version}-sources.jar" />
 
@@ -20,11 +24,26 @@
 	<property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
 	<property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
 
-	<target name="dist" depends="compile,javadoc" description="generate the distribution">
 
-		<!-- build the main artifact -->
-		<jar jarfile="${maven-jar}" basedir="${build}" />
+		<!-- OSGi manifest generation -->
+	<target name="resolve" description="run Ivy to fetch jars">
+		<ivy:retrieve />
+	</target>
 
+	<target name="osgi" depends="resolve,compile">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties"  classpath="lib/bnd-2.4.0.jar"/>
+		<bnd 
+			classpath="build" 
+			eclipse="false" 
+			failok="false" 
+			exceptions="true"
+			output="${maven-jar}"
+			files="fastutil.bnd"/> 
+	</target>
+
+<!-- end OSGi manifest generation -->
+
+	<target name="dist" depends="osgi,javadoc" description="generate the distribution">
 		<!-- build the javadoc artifact (from symbolic link created in init) -->
 		<jar jarfile="${maven-javadoc-jar}">
 			<fileset dir="${dist}/javadoc" />
@@ -36,12 +55,20 @@
 		</jar>
 	</target>
 
-	<target name="deploy" depends="dist" description="deploy snapshot version to Maven snapshot repository">
+	<target name="pom" depends="dist" description="insert version into pom">
+		<copy todir="${build}" file="pom.xml">
+			<filterset>
+				<filter token="version" value="${version}"/>
+			</filterset>
+		</copy>
+	</target>
+
+	<target name="deploy" depends="pom" description="deploy snapshot version to Maven snapshot repository">
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
 			<arg value="-Durl=${maven-snapshots-repository-url}" />
 			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
+			<arg value="-DpomFile=${build}/pom.xml" />
 			<arg value="-Dfile=${maven-jar}" />
 		</artifact:mvn>
 	</target>
@@ -54,7 +81,7 @@
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
 			<arg value="-DpomFile=pom.xml" />
 			<arg value="-Dfile=${maven-jar}" />
-                        <arg value="-Pgpg" />
+			<arg value="-Pgpg" />
 		</artifact:mvn>
 
 		<!-- sign and deploy the sources artifact -->
@@ -65,7 +92,7 @@
 			<arg value="-DpomFile=pom.xml" />
 			<arg value="-Dfile=${maven-sources-jar}" />
 			<arg value="-Dclassifier=sources" />
-                        <arg value="-Pgpg" />
+			<arg value="-Pgpg" />
 		</artifact:mvn>
 
 		<!-- sign and deploy the javadoc artifact -->
@@ -76,7 +103,7 @@
 			<arg value="-DpomFile=pom.xml" />
 			<arg value="-Dfile=${maven-javadoc-jar}" />
 			<arg value="-Dclassifier=javadoc" />
-                        <arg value="-Pgpg" />
+			<arg value="-Pgpg" />
 		</artifact:mvn>
 	</target>
 
