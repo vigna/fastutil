@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 
 import java.io.IOException;
 
@@ -66,19 +65,17 @@ public class IntOpenHashBigSetTest {
 
 	@SuppressWarnings("boxing")
 	private static void checkTable( IntOpenHashBigSet s ) {
-		final boolean[][] used = s.used;
 		final int[][] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == IntBigArrays.length( s.key );
-		assert s.n == BooleanBigArrays.length( used );
+		assert s.n == IntBigArrays.length( key );
 		long n = s.n;
 		while ( n-- != 0 )
-			if ( BooleanBigArrays.get( used, n ) && !s.contains( IntBigArrays.get( key, n ) ) ) throw new AssertionError( "Hash table has key " + IntBigArrays.get( key, n )
+			if ( IntBigArrays.get( key, n ) != 0 && !s.contains( IntBigArrays.get( key, n ) ) ) throw new AssertionError( "Hash table has key " + IntBigArrays.get( key, n )
 					+ " marked as occupied, but the key does not belong to the table" );
 
 		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
 		for ( long i = s.size64(); i-- != 0; )
-			if ( BooleanBigArrays.get( used, i ) && !t.add( IntBigArrays.get( key, i ) ) ) throw new AssertionError( "Key " + IntBigArrays.get( key, i ) + " appears twice" );
+			if ( IntBigArrays.get( key, i ) != 0 && !t.add( IntBigArrays.get( key, i ) ) ) throw new AssertionError( "Key " + IntBigArrays.get( key, i ) + " appears twice" );
 
 	}
 	
@@ -88,7 +85,7 @@ public class IntOpenHashBigSetTest {
 		long maxProbes = 0;
 		final double f = (double)m.size / m.n;
 		for ( long i = 0, c = 0; i < m.n; i++ ) {
-			if ( BooleanBigArrays.get( m.used, i ) ) c++;
+			if ( IntBigArrays.get( m.key, i ) != 0 ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;

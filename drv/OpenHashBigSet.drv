@@ -54,18 +54,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	/** The big array of keys. */
 	protected transient KEY_GENERIC_TYPE[][] key;
 	 
-	/** The big array telling whether a position is used. */
-	protected transient boolean[][] used;
-
-	/** The acceptable load factor. */
-	protected final float f;
-	 
-	/** The current table size (always a power of 2). */
-	protected transient long n;
-
-	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
-	protected transient long maxFill;
-
 	/** The mask for wrapping a position counter. */
 	protected transient long mask;
 
@@ -75,6 +63,18 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	/** The mask for wrapping a base counter. */
 	protected transient int baseMask;
 
+	/** Whether this set contains the null key. */
+	protected transient boolean containsNull;
+
+	/** The current table size (always a power of 2). */
+	protected transient long n;
+
+	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
+	protected transient long maxFill;
+
+	/** The acceptable load factor. */
+	protected final float f;
+	 
 	/** Number of entries in the set. */
 	protected long size;
 
@@ -106,7 +106,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		n = bigArraySize( expected, f );
 		maxFill = maxFill( n, f );
 		key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( n );
-		used = BooleanBigArrays.newBigArray( n );
 		initMasks();
 	}
 	 
@@ -259,21 +258,58 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		this( a, DEFAULT_LOAD_FACTOR );
 	}
 
+	private long realSize() {
+		return containsNull ? size - 1 : size;
+	}
+
+	private void ensureCapacity( final long capacity ) {
+		final long needed = bigArraySize( capacity, f );
+		if ( needed > n ) rehash( needed );
+	}
+
+#if #keys(primitive)
+	/** @inherit */
+	public boolean addAll( COLLECTION c ) {
+		final long size = c instanceof Size64 ? ((Size64)c).size64() : c.size();
+		if ( f <= .5 ) ensureCapacity( size ); // The resulting collection will be size for c.size() elements
+		else ensureCapacity( size64() + size ); // The resulting collection will be sized for size() + c.size() elements
+		return super.addAll( c );
+	}
+#endif
+
+	/** @inherit */
+	public boolean addAll( Collection<? extends KEY_GENERIC_CLASS> c ) {
+		final long size = c instanceof Size64 ? ((Size64)c).size64() : c.size();
+		// The resulting collection will be at least c.size() big
+		if ( f <= .5 ) ensureCapacity( size ); // The resulting collection will be sized for c.size() elements
+		else ensureCapacity( size64() + size ); // The resulting collection will be sized for size() + c.size() elements
+		return super.addAll( c );
+	}
+
+
 	public boolean add( final KEY_GENERIC_TYPE k ) {
-		final long h = KEY2LONGHASH( k );
+		int displ, base;
 
-		// The starting point.
-		int displ = (int)( h & segmentMask );
-		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
-
-		// There's always an unused entry.
-		while( used[ base ][ displ ] ) {
-			if ( KEY_EQUALS( key[ base ][ displ ], k ) ) return false;
-			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		if ( k == KEY_NULL ) {
+			if ( containsNull ) return false;
+			base = (int)(( n & mask ) >>> BigArrays.SEGMENT_SHIFT );
+			displ = (int)( n & segmentMask );
+			containsNull = true;
 		}
+		else {
+			KEY_GENERIC_TYPE curr;
+			final KEY_GENERIC_TYPE[][] key = this.key;
+			final long h = KEY2LONGHASH( k );
 
-		used[ base ][ displ ] = true;
-		key[ base ][ displ ] = k;
+			// The starting point.
+			if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) != KEY_NULL ) {
+				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return false;
+				while( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) != KEY_NULL )
+					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return false;
+			}
+
+			key[ base ][ displ ] = k;
+		}
 
 		if ( size++ >= maxFill ) rehash( 2 * n );
 		if ( ASSERTS ) checkTable();
@@ -289,69 +325,74 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	protected final long shiftKeys( long pos ) {
 		// Shift entries with the same hash.
 		long last, slot;
+		final KEY_GENERIC_TYPE[][] key = this.key;
 
-		/*
-		for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( (long)KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + used[ ( t + i ) & mask ] + ") ");
-		System.err.println();
-		*/
 		for(;;) {
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
-			while( BooleanBigArrays.get( used, pos ) ) {
+			for(;;) {
+				if ( BIG_ARRAYS.get( key, pos ) == KEY_NULL ) {
+					BIG_ARRAYS.set( key, last, KEY_NULL );
+					return last;
+				}
 				slot = KEY2LONGHASH( BIG_ARRAYS.get( key, pos ) ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 				pos = ( pos + 1 ) & mask;
 			}
 
-			if ( ! BooleanBigArrays.get( used, pos ) ) break;
-
 			BIG_ARRAYS.set( key, last, BIG_ARRAYS.get( key, pos ) );
 		}
+	}
 
-		BooleanBigArrays.set( used, last, false );
-#if #keys(reference)
-		BIG_ARRAYS.set( key, last, null );
-#endif
-		return last;
+	private boolean removeEntry( final int base, final int displ ) {
+		size--;
+		shiftKeys( base * (long)BigArrays.SEGMENT_SIZE + displ );
+		return true;	
+	}
+
+	private boolean removeNullEntry() {
+		size--;
+		containsNull = false;
+		return true;	
 	}
 
 	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
-		final long h = KEY2LONGHASH( k );
-
-		// The starting point.
-		int displ = (int)( h & segmentMask );
-		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
-
-		// There's always an unused entry.
-		while( used[ base ][ displ ] ) {
-			if ( KEY_EQUALS( key[ base ][ displ ], k ) ) {
-				size--;
-				shiftKeys( base * (long)BigArrays.SEGMENT_SIZE + displ );
-				if ( ASSERTS ) checkTable();
-				return true;
-			}
-			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		if ( k == KEY_NULL ) {
+			if ( containsNull ) return removeNullEntry();
+			return false;
 		}
 
-		return false;
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[][] key = this.key;
+		final long h = KEY2LONGHASH( k );
+		int displ, base;
+
+		// The starting point.
+		if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) == KEY_NULL ) return false;
+		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( base, displ );
+		while( true ) {
+			if ( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) == KEY_NULL ) return false;
+			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( base, displ );
+		}
 	}
 	 
 	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
+		if ( k == KEY_NULL ) return containsNull;
+
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[][] key = this.key;
 		final long h = KEY2LONGHASH( k );
+		int displ, base;
 
 		// The starting point.
-		int displ = (int)( h & segmentMask );
-		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
-
-		// There's always an unused entry.
-		while( used[ base ][ displ ] ) {
-			if ( KEY_EQUALS( key[ base ][ displ ], k ) ) return true; 
-			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) == KEY_NULL ) return false;
+		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return true;
+		while( true ) {
+			if ( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) == KEY_NULL ) return false;
+			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return true;
 		}
-
-		return false;
 	}
 
 #if #keyclass(Object)
@@ -359,19 +400,20 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 * @return the element of this set that is equal to the given key, or <code>null</code>.
 	 */
 	public K get( final KEY_TYPE k ) {
+		if ( k == null ) return null; // This is correct independently of the value of containsNull
+
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[][] key = this.key;
 		final long h = KEY2LONGHASH( k );
+		int displ, base;
 
 		// The starting point.
-		int displ = (int)( h & segmentMask );
-		int base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
-
-		// There's always an unused entry.
-		while( used[ base ][ displ ] ) {
-			if ( KEY_EQUALS( key[ base ][ displ ], k ) ) return key[ base ][ displ ]; 
-			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
+		if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) == KEY_NULL ) return null;
+		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
+		while( true ) {
+			if ( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) == KEY_NULL ) return null;
+			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
 		}
-
-		return null;
 	}
 #endif
 
@@ -385,10 +427,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	public void clear() {
 		if ( size == 0 ) return;
 		size = 0;
-		BooleanBigArrays.fill( used, false );
-#if #keys(reference)
-		ObjectBigArrays.fill( key, null );
-#endif
+		containsNull = false;
+		BIG_ARRAYS.fill( key, KEY_NULL );
 	}
 
 
@@ -401,28 +441,27 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int base;
 		/** The displacement of the next entry to be returned. */
 		int displ;
-		/** The base of the last entry that has been returned. It is -1 if either
+		/** The last entry that has been returned. It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
-		int lastBase;
-		/** The displacement of the last entry that has been returned. It is undefined if either
-			we did not return an entry yet, or the last returned entry has been removed. */        
-		int lastDispl;
+		long last;
 		/** A downward counter measuring how many entries must still be returned. */
 		long c = size;
+		/** A boolean telling us whether we should return the null key. */
+		boolean mustReturnNull = OPEN_HASH_BIG_SET.this.containsNull;
 		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
 			would not be enumerated (other elements would be usually enumerated twice in their place). */
 		ARRAY_LIST KEY_GENERIC wrapped;
 
 		{ 
 			base = key.length;
-			lastBase = -1;
-			final boolean used[][] = OPEN_HASH_BIG_SET.this.used;
-			if ( c != 0 ) do 
+			last = -1;
+			final KEY_GENERIC_TYPE[][] key = OPEN_HASH_BIG_SET.this.key;
+			if ( realSize() != 0 ) do 
 				if ( displ-- == 0 ) {
 					base--;
-				   	displ = (int)mask;
+				   	displ = segmentMask;
 				}
-			while( ! used[ base ][ displ ] );
+			while( key[ base ][ displ ] == KEY_NULL );
 		}
 
 		public boolean hasNext() {
@@ -433,19 +472,27 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			if ( ! hasNext() ) throw new NoSuchElementException();
 
 			c--;
-			// We are just enumerating elements from the wrapped list.
-			if ( base < 0 ) return wrapped.GET_KEY( - ( lastBase = --base ) - 2  );
 
-			final KEY_GENERIC_TYPE retVal = key[ lastBase = base ][ lastDispl = displ ];
+			if ( mustReturnNull ) {
+				mustReturnNull = false;
+				last = n;
+				return KEY_NULL;
+			}
+			
+			// We are just enumerating elements from the wrapped list.
+			if ( base < 0 ) return wrapped.GET_KEY( - (int)( last = --base ) - 2  );
+
+			final KEY_GENERIC_TYPE retVal = key[ base ][ displ ];
+			last = base * (long)BigArrays.SEGMENT_SIZE + displ;
 			
 			if ( c != 0 ) {
-				final boolean used[][] = OPEN_HASH_BIG_SET.this.used;
+				final KEY_GENERIC_TYPE[][] key = OPEN_HASH_BIG_SET.this.key;
 				do 
 					if ( displ-- == 0 ) {
 						if ( base-- == 0 ) break;
-				   		displ = (int)mask;
+				   		displ = segmentMask;
 					}
-				while( ! used[ base ][ displ ] );
+				while( key[ base ][ displ ] == KEY_NULL );
 				// When here base < 0 there are no more elements to be enumerated by scanning, but wrapped might be nonempty.
 			}
 			
@@ -462,40 +509,41 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		protected final long shiftKeys( long pos ) {
 			// Shift entries with the same hash.
 			long last, slot;
-	
-			/*
-			for( int i = 0; i < 10; i++ ) System.err.print( key[ ( t + i ) & mask ] + "(" + (avalanche( (long)KEY2INT( key[ ( t + i ) & mask ] ) ) & mask) + "; " + used[ ( t + i ) & mask ] + ") ");
-			System.err.println();
-			*/
+			KEY_GENERIC_TYPE curr;
+			final KEY_GENERIC_TYPE[][] key = OPEN_HASH_BIG_SET.this.key;
+
 			for(;;) {
 				pos = ( ( last = pos ) + 1 ) & mask;
-				
-				while( BooleanBigArrays.get( used, pos ) ) {
-					slot = KEY2LONGHASH( BIG_ARRAYS.get( key, pos ) ) & mask;
+			
+				for(;;) {
+					if( ( curr = BIG_ARRAYS.get( key, pos ) ) == KEY_NULL ) {
+						BIG_ARRAYS.set( key, last, KEY_NULL );
+						return last;
+					}
+					slot = KEY2LONGHASH( curr ) & mask;
 					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 					pos = ( pos + 1 ) & mask;
 				}
 	
-				if ( ! BooleanBigArrays.get( used, pos ) ) break;
 				if ( pos < last ) {
 					// Wrapped entry.
 					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
-					wrapped.add( BIG_ARRAYS.get( key, pos ) );
+					wrapped.add( curr );
 				}
 
-				BIG_ARRAYS.set( key, last, BIG_ARRAYS.get( key, pos ) );
+				BIG_ARRAYS.set( key, last, curr );
 			}
-	
-			BooleanBigArrays.set( used, last, false );
-	#if #keys(reference)
-			BIG_ARRAYS.set( key, last, null );
-	#endif
-			return last;
 		}
 
 		@SuppressWarnings("unchecked")
 		public void remove() {
-			if ( lastBase == -1 ) throw new IllegalStateException();
+			if ( last == -1 ) throw new IllegalStateException();
+			if ( last == n ) {
+				OPEN_HASH_BIG_SET.this.containsNull = false;
+				last = -1; // You can no longer remove this entry.
+				size--;
+				return;
+			}
 			if ( base < -1 ) {
 				// We're removing wrapped entries.
 #if #keys(reference)
@@ -503,15 +551,15 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #else
 				OPEN_HASH_BIG_SET.this.remove( wrapped.GET_KEY( - base - 2 ) );
 #endif
-				lastBase = -1;
+				last = -1;
 				return;
 			}
 			size--;
-			if ( shiftKeys( lastBase * (long)BigArrays.SEGMENT_SIZE + lastDispl ) == base * (long)BigArrays.SEGMENT_SIZE + displ && c > 0 ) {
+			if ( shiftKeys( last ) == base * (long)BigArrays.SEGMENT_SIZE + displ && c > 0 ) {
 				c++;
 				NEXT_KEY();
 			}
-			lastBase = -1; // You can no longer remove this entry.
+			last = -1; // You can no longer remove this entry.
 
 			if ( ASSERTS ) checkTable();
 		}
@@ -602,32 +650,27 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 	@SuppressWarnings("unchecked")
 	protected void rehash( final long newN ) {
-		final boolean used[][] = this.used;
 		final KEY_GENERIC_TYPE key[][] = this.key;
-		final boolean newUsed[][] = BooleanBigArrays.newBigArray( newN );
 		final KEY_GENERIC_TYPE newKey[][] = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( newN );
 		final long mask = newN - 1; // Note that this is used by the hashing macro
 		final int newSegmentMask = newKey[ 0 ].length - 1;
 		final int newBaseMask = newKey.length - 1;		
 
-		int base = 0, displ = 0;
+		int base = 0, displ = 0, b, d;
 		long h;
 		KEY_GENERIC_TYPE k;
 
-		for( long i = size; i-- != 0; ) {
+		for( long i = realSize(); i-- != 0; ) {
 
-			while( ! used[ base ][ displ ] ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
+			while( key[ base ][ displ ] == KEY_NULL ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 
 			k = key[ base ][ displ ];
 			h = KEY2LONGHASH( k );
 
 			// The starting point.
-			int d = (int)( h & newSegmentMask );
-			int b = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
+			if ( newKey[ b = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ d = (int)( h & newSegmentMask ) ] != KEY_NULL )
+				while( newKey[ b = ( b + ( ( d = ( d + 1 ) & newSegmentMask ) == 0 ? 1 : 0 ) ) & newBaseMask ][ d ] != KEY_NULL );
 
-			while( newUsed[ b ][ d ] ) b = ( b + ( ( d = ( d + 1 ) & newSegmentMask ) == 0 ? 1 : 0 ) ) & newBaseMask;
-
-			newUsed[ b ][ d ] = true;
 			newKey[ b ][ d ] = k;
 
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
@@ -635,7 +678,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 		this.n = newN;
 		this.key = newKey;
-		this.used = newUsed;
 		initMasks();
 		maxFill = maxFill( n, f );
 	}
@@ -673,7 +715,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			throw new InternalError();
 		}
 		c.key = BIG_ARRAYS.copy( key );
-		c.used = BooleanBigArrays.copy( used );
+		c.containsNull = containsNull;
 		return c;
 	}
 
@@ -689,16 +731,15 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 
 	public int hashCode() {
-		final boolean used[][] = this.used;
 		final KEY_GENERIC_TYPE key[][] = this.key;
-		int h = 0;
-		int base = 0, displ = 0;
-		for( long j = size; j-- != 0; ) {
-			while( ! used[ base ][ displ ] ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
+		int h = 0, base = 0, displ = 0;
+
+		for( long j = realSize(); j-- != 0; ) {
+			while( key[ base ][ displ ] == KEY_NULL ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 #if #keys(reference)
 			if ( this != key[ base ][ displ ] )
 #endif
-				h += KEY2JAVAHASH( key[ base ][ displ ] );
+				h += KEY2JAVAHASH_NOT_NULL( key[ base ][ displ ] );
 			base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 		}
 		return h;
@@ -720,7 +761,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		maxFill = maxFill( n, f );
 		
 		final KEY_GENERIC_TYPE[][] key = this.key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray( n );
-		final boolean used[][] = this.used = BooleanBigArrays.newBigArray( n );
 	
 		initMasks();
 
@@ -729,17 +769,15 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int base, displ;
 
 		for( long i = size; i-- != 0; ) {
-
 			k = KEY_GENERIC_CAST s.READ_KEY();
-			h = KEY2LONGHASH( k );
 
-			base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT );
-			displ = (int)( h & segmentMask );
-			
-			while( used[ base ][ displ ] ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask;
-
-			used[ base ][ displ ] = true;
-			key[ base ][ displ ] = k;
+			if ( k == KEY_NULL ) containsNull = true;
+			else {
+				h = KEY2LONGHASH( k );
+				if ( key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] != KEY_NULL )
+					while( key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] != KEY_NULL );
+				key[ base ][ displ ] = k;
+			}
 		}
 
 		if ( ASSERTS ) checkTable();
@@ -748,13 +786,11 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 #ifdef ASSERTS_CODE
 	private void checkTable() {
-		final boolean[][] used = this.used;
 		assert ( n & -n ) == n : "Table length is not a power of two: " + n;
 		assert n == BIG_ARRAYS.length( key );
-		assert n == BooleanBigArrays.length( used );
 		long n = this.n;
 		while( n-- != 0 ) 
-			if ( BooleanBigArrays.get( used, n ) && ! contains( BIG_ARRAYS.get( key, n ) ) ) 
+			if ( BIG_ARRAYS.get( key, n ) != KEY_NULL && ! contains( BIG_ARRAYS.get( key, n ) ) ) 
 				throw new AssertionError( "Hash table has key " + BIG_ARRAYS.get( key, n ) + " marked as occupied, but the key does not belong to the table" );
 
 #if #keys(primitive)
@@ -764,7 +800,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #endif
 		
 		for( long i = size(); i-- != 0; )
-			if ( BooleanBigArrays.get( used, i ) && ! s.add( BIG_ARRAYS.get( key, i ) ) ) throw new AssertionError( "Key " + BIG_ARRAYS.get( key, i ) + " appears twice" );
+			if ( BIG_ARRAYS.get( key, i ) != KEY_NULL && ! s.add( BIG_ARRAYS.get( key, i ) ) ) throw new AssertionError( "Key " + BIG_ARRAYS.get( key, i ) + " appears twice" );
 
 	}
 #else
@@ -1008,7 +1044,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int maxProbes = 0;	
 		final double f = (double)m.size / m.n;
 		for( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( BooleanBigArrays.get( m.used, i ) ) c++;
+			if ( BIG_ARRAYS.get( m.key, i ) != KEY_NULL ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
@@ -1222,7 +1258,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-		int p = m.used.length;
+		int p = m.key.length - 1;
 
 		for(int i=0; i<p; i++) {
 			for (int j=0; j<20; j++) {

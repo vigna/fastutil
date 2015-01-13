@@ -483,16 +483,17 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
-"#define KEY2JAVAHASH(x) ( strategy.hashCode(" KEY_GENERIC_CAST "(x)) )\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(" KEY_GENERIC_CAST "(x)) )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( strategy.hashCode(" KEY_GENERIC_CAST "(x)) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (long)( strategy.hashCode(" KEY_GENERIC_CAST "(x)) ) ) )\n"\
 "#else\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) ( (x).hashCode() )\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (x).hashCode() ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (long)( (x).hashCode() ) ) )\n"\
 "#endif\n"\
 "#else\n"\
-"#define KEY2JAVAHASH(x) ( (x) == null ? 0 : System.identityHashCode(x) )\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) ( System.identityHashCode(x) )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( System.identityHashCode(x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (long)( System.identityHashCode(x) ) ) )\n"\
 "#endif\n"\
@@ -524,7 +525,11 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_LESS(x,y) ( !(x) && (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( !(x) || (y) )\n"\
 "#else\n"\
+"#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)\n"\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
+"#else\n"\
+"#define KEY_NULL (0)\n"\
+"#endif\n"\
 "#if #keyclass(Float) || #keyclass(Double)\n"\
 "#define KEY_CMP_EQ(x,y) ( KEY_CLASS.compare((x),(y)) == 0 )\n"\
 "#define KEY_CMP(x,y) ( KEY_CLASS.compare((x),(y)) )\n"\
@@ -548,34 +553,38 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#endif\n"\
 \
 "#ifdef Custom\n"\
-"#define KEY2JAVAHASH(x) ( strategy.hashCode(x) )\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(x) )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( strategy.hashCode(x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (long)( strategy.hashCode(x) ) ) )\n"\
 "#else\n"\
 \
 "#if #keyclass(Float)\n"\
-"#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
 "#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.phiMix( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.phiMix( (long)( it.unimi.dsi.fastutil.HashCommon.float2int(x) ) )\n"\
 "#elif #keyclass(Double)\n"\
-"#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.phiMix( Double.doubleToRawLongBits(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.phiMix( Double.doubleToRawLongBits(x) )\n"\
 "#elif #keyclass(Long)\n"\
-"#define KEY2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.phiMix( (x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.phiMix( (x) )\n"\
 "#elif #keyclass(Boolean)\n"\
-"#define KEY2JAVAHASH(x) ((x) ? 1231 : 1237)\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) ((x) ? 1231 : 1237)\n"\
 "#define KEY2INTHASH(x) ((x) ? 0xfab5368 : 0xcba05e7b)\n"\
 "#define KEY2LONGHASH(x) ((x) ? 0x74a19fc8b6428188L : 0xbaeca2031a4fd9ecL)\n"\
 "#else\n"\
-"#define KEY2JAVAHASH(x) (x)\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) (x)\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.phiMix( (long)( (x) ) ) )\n"\
 "#endif\n"\
 "#endif\n"\
 \
+"#endif\n"\
+\
+"#ifndef KEY2JAVAHASH\n"\
+"#define KEY2JAVAHASH(x) KEY2JAVAHASH_NOT_NULL(x)\n"\
 "#endif\n"\
 \
 \

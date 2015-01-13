@@ -28,9 +28,9 @@ public class HashCommon {
 		search algorithm in the presence of an actual <code>null</code> key. */ 
 	public static final Object REMOVED = new Object();
 
-    /** 2<sup>32</sup> &middot; (&#x221A;5 &minus; 1)/2. */
+    /** 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
     private static final int INT_PHI = 0x9E3779B9;
-    /** 2<sup>64</sup> &middot; (&#x221A;5 &minus; 1)/2. */
+    /** 2<sup>64</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
     private static final long LONG_PHI = 0x9E3779B97F4A7C15L;
 
 	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
@@ -70,7 +70,6 @@ public class HashCommon {
 		x ^= x >>> 33;
 		x *= 0xc4ceb9fe1a85ec53L;
 		x ^= x >>> 33;
-
 		return x;
 	}
 

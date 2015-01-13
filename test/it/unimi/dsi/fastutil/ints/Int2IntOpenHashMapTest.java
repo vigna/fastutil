@@ -3,10 +3,12 @@ package it.unimi.dsi.fastutil.ints;
 import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 @SuppressWarnings("rawtypes")
@@ -280,5 +282,57 @@ public class Int2IntOpenHashMapTest {
 		assertEquals( 1, m.addTo( 1, -2 ) );
 		assertEquals( -1, m.get( 1 ) );
 		
+	}
+
+	@Test
+	public void testRemove() {
+		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		s.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.remove( 100 + i ) );
+		for( int i = 50; i < 150; i++ ) assertEquals( Integer.toString( i % 100 ), i % 100, s.remove( i % 100 ) );
+	}
+
+	@Test
+	public void testRemove0() {
+		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		s.defaultReturnValue( -1 );
+		for( int i = -1; i <= 1; i++ ) assertEquals( -1, s.put( i, i ) );
+		assertEquals( 0, s.remove( 0 ) );
+		IntIterator iterator = s.keySet().iterator();
+		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
+		assertFalse( iterator.hasNext() );
+		
+		s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		s.defaultReturnValue( -1 );
+		for( int i = -1; i <= 1; i++ ) assertEquals( -1, s.put( i, i ) );
+		iterator = s.keySet().iterator();
+		while( iterator.hasNext() ) if ( iterator.nextInt() == 0 ) iterator.remove();
+		
+		assertFalse( s.containsKey( 0 ) );
+		assertEquals( -1, s.get( 0 ) );
+		
+		iterator = s.keySet().iterator();
+		int[] content = new int[ 2 ];
+		content[ 0 ] = iterator.nextInt();
+		content[ 1 ] = iterator.nextInt();
+		assertFalse( iterator.hasNext() );
+		Arrays.sort( content );
+		assertArrayEquals( new int[] { -1, 1 }, content );
+	}
+
+
+	@Test
+	public void testEntrySet() {
+		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		s.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( s.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( s.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
+		assertTrue( s.entrySet().isEmpty() );
 	}
 }
