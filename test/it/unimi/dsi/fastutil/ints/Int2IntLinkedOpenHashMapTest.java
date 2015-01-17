@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.IOException;
@@ -545,5 +546,19 @@ public class Int2IntLinkedOpenHashMapTest {
 	@Test(expected=NoSuchElementException.class)
 	public void testRemoveLastEmpty() {
 		new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE ).removeLastInt();
+	}
+
+	@Test
+	public void testFastIterator() {
+		Int2IntLinkedOpenHashMap s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		s.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
+		ObjectIterator<Entry> fastIterator = s.int2IntEntrySet().fastIterator();
+		Entry entry = fastIterator.next();
+		int key = entry.getIntKey();
+		entry.setValue( -1000 );
+		assertEquals( s.get( key ), -1000 );
+		fastIterator.remove();
+		assertEquals( s.get( key ), -1 );
 	}
 }

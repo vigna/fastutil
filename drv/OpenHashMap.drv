@@ -720,7 +720,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public VALUE_GENERIC_CLASS remove( final Object ok ) {
 		final KEY_GENERIC_TYPE k = KEY_GENERIC_CAST KEY_OBJ2TYPE( ok );
 		if ( k == KEY_NULL ) {
-			if ( containsNullKey ) return removeNullEntry();
+			if ( containsNullKey ) return VALUE2OBJ( removeNullEntry() );
 			return OBJECT_DEFAULT_RETURN_VALUE;
 		}
 
@@ -1135,13 +1135,15 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 * is necessary so that calls to {@link java.util.Map.Entry#setValue(Object)} are reflected in
 	 * the map */
 
-	private final class MapEntry implements MAP.Entry KEY_VALUE_GENERIC, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> {
+	final class MapEntry implements MAP.Entry KEY_VALUE_GENERIC, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> {
 		// The table index this entry refers to, or -1 if this entry has been deleted.
-		private int index;
+		int index;
 		
 		MapEntry( final int index ) {
 			this.index = index;
 		}
+		
+		MapEntry() {}
 		
 		public KEY_GENERIC_CLASS getKey() {
 			return KEY2OBJ( key[ index ] );
@@ -1501,7 +1503,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 	private class FastEntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
-		final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
+		final MapEntry entry = new MapEntry();
 	
 		public FastEntryIterator() {}
 
@@ -1509,17 +1511,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			super( from );
 		}
 
-		public BasicEntry KEY_VALUE_GENERIC next() {
-			final int e = nextEntry();
-			entry.key = key[ e ];
-			entry.value = value[ e ];
+		public MapEntry next() {
+			entry.index = nextEntry();
 			return entry;
 		}
 
-		public BasicEntry KEY_VALUE_GENERIC previous() {
-			final int e = previousEntry();
-			entry.key = key[ e ];
-			entry.value = value[ e ];
+		public MapEntry previous() {
+			entry.index = previousEntry();
 			return entry;
 		}
 
@@ -1684,11 +1682,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 	private class FastEntryIterator extends MapIterator implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
-		final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
-		public BasicEntry KEY_VALUE_GENERIC next() {
-			final int e = nextEntry();
-			entry.key = key[ e ];
-			entry.value = value[ e ];
+		private final MapEntry entry = new MapEntry();
+		public MapEntry next() {
+			entry.index = nextEntry();
 			return entry;
 		}
 	}

@@ -1,6 +1,8 @@
 package it.unimi.dsi.fastutil.ints;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -334,5 +336,19 @@ public class Int2IntOpenHashMapTest {
 		for( int i = 0; i < 100; i++ ) assertFalse( s.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
 		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
 		assertTrue( s.entrySet().isEmpty() );
+	}
+	
+	@Test
+	public void testFastIterator() {
+		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		s.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
+		ObjectIterator<Entry> fastIterator = s.int2IntEntrySet().fastIterator();
+		Entry entry = fastIterator.next();
+		int key = entry.getIntKey();
+		entry.setValue( -1000 );
+		assertEquals( s.get( key ), -1000 );
+		fastIterator.remove();
+		assertEquals( s.get( key ), -1 );
 	}
 }
