@@ -302,8 +302,8 @@ public class Int2IntOpenHashMapTest {
 		for( int i = -1; i <= 1; i++ ) assertEquals( -1, s.put( i, i ) );
 		assertEquals( 0, s.remove( 0 ) );
 		IntIterator iterator = s.keySet().iterator();
-		assertEquals( -1, iterator.nextInt() );
 		assertEquals( 1, iterator.nextInt() );
+		assertEquals( -1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
 		s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );

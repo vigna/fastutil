@@ -44,7 +44,7 @@ public class Int2IntOpenCustomHashMapTest {
 	private static void checkTable( Int2IntOpenCustomHashMap s ) {
 		final int[]key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == s.key.length;
+		assert s.n == s.key.length - 1;
 		int n = s.n;
 		while ( n-- != 0 )
 			if ( key[ n ] != 0 && !s.containsKey( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]

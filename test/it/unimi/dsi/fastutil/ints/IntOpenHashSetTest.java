@@ -92,8 +92,8 @@ public class IntOpenHashSetTest {
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
 		assertTrue( s.remove( 0 ) );
 		IntIterator iterator = s.iterator();
-		assertEquals( -1, iterator.nextInt() );
 		assertEquals( 1, iterator.nextInt() );
+		assertEquals( -1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
 		s = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );

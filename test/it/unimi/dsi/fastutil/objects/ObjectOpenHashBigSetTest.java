@@ -68,7 +68,7 @@ public class ObjectOpenHashBigSetTest {
 	private static void checkTable( ObjectOpenHashBigSet<String> s ) {
 		final Object[][] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == ObjectBigArrays.length( key ) - 1;
+		assert s.n == ObjectBigArrays.length( key );
 		long n = s.n;
 		while ( n-- != 0 )
 			if ( ObjectBigArrays.get( key, n ) != null && !s.contains( ObjectBigArrays.get( key, n ) ) ) throw new AssertionError( "Hash table has key " + ObjectBigArrays.get( key, n )

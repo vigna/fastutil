@@ -1254,9 +1254,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
 		final int n = OPEN_HASH_SET.this.n;
-		/** The index of the next entry to be returned, if positive or zero. If negative, the next entry to be
-			returned, if any, is that of index -pos -2 from the {@link #wrapped} list. */
-		int pos = n;
+		/** The index of the last entry returned, if positive or zero; initially, -1. */
+		int pos = -1;
 		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos}). It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
 		int last = -1;
@@ -1264,49 +1263,27 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		int c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
-		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
-			would not be enumerated (other elements would be usually enumerated twice in their place). */
-		ARRAY_LIST KEY_GENERIC wrapped;
 		
-		{ 
-			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
-			if ( realSize() != 0 ) while( key[ --pos ] == KEY_NULL );
-		}
-
 		public boolean hasNext() {
 			return c != 0;
 		}
 
 		public KEY_GENERIC_TYPE NEXT_KEY() {
-			if ( ! hasNext() ) throw new NoSuchElementException();
-			
+			if ( ! hasNext() ) throw new NoSuchElementException();			
 			c--;
-			
 			if ( mustReturnNull ) {
 				mustReturnNull = false;
 				last = n;
 				return KEY_NULL;
 			}
-			
-			// We are just enumerating elements from the wrapped list.
-			if ( pos < 0 ) return wrapped.GET_KEY( - ( last = --pos ) - 2  );
-			
-			final KEY_GENERIC_TYPE retVal = key[ last = pos ];
-			
-			//System.err.println( "Count: " + c );
-			if ( c != 0 ) {
-				final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
-				while ( pos-- != 0 && key[ pos ] == KEY_NULL );
-				// When here pos < 0 there are no more elements to be enumerated by scanning, but wrapped might be nonempty.
-			}
-			
-			return retVal;
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+			while ( key[ ++pos ] == KEY_NULL );
+			return key[ last = pos ];
 		}
 
 
 		/** Shifts left entries with the specified hash code, starting at the specified position,
-		 * and empties the resulting free entry. If any entry wraps around the table, instantiates
-		 * lazily {@link #wrapped} and stores the entry.
+		 * and empties the resulting free entry.
 		 *
 		 * @param pos a starting position.
 		 * @return the position cleared by the shifting process.
@@ -1330,12 +1307,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 					pos = ( pos + 1 ) & mask;
 				}
 	
-				if ( pos < last ) {
-					// Wrapped entry.
-					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
-					wrapped.add( curr );
-				}
-
 				key[ last ] = curr;			
 			}
 		}
@@ -1343,27 +1314,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
-			if ( last == n ) {
-				OPEN_HASH_SET.this.containsNull = false;
-				last = -1; // You can no longer remove this entry.
-				size--;
-				return;
-			}
-			if ( pos < -1 ) {
-				// We're removing wrapped entries.
-#if #keys(reference)
-				OPEN_HASH_SET.this.remove( wrapped.set( - pos - 2, null ) );
-#else
-				OPEN_HASH_SET.this.remove( wrapped.GET_KEY( - pos - 2 ) );
-#endif
-				last = -1;
-				return;
-			}
+			if ( last == n ) OPEN_HASH_SET.this.containsNull = false;
+			else if ( shiftKeys( last ) != last ) pos--;
 			size--;
-			if ( shiftKeys( last ) == pos && c > 0 ) {
-				c++;
-				NEXT_KEY();
-			}
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();
 		}

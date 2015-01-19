@@ -67,7 +67,7 @@ public class ObjectOpenHashSetTest {
 	private static void checkTable( ObjectOpenHashSet<Integer> s ) {
 		final Object[] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == s.key.length;
+		assert s.n == key.length - 1;
 		int n = s.n;
 		while ( n-- != 0 )
 			if ( key[ n ] != null && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]

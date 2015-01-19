@@ -1530,9 +1530,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	/** An iterator over a hash map. */
 
 	private class MapIterator {
-		/** The index of the next entry to be returned, if positive or zero. If negative, the next entry to be
-			returned, if any, is that of index -pos -2 from the {@link #wrapped} list. */
-		int pos = OPEN_HASH_MAP.this.n;
+		/** The index of the last entry returned, if positive or zero; initially, -1. */
+		int pos = -1;
 		/** The index of the last entry that has been returned. It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
 		int last = -1;
@@ -1540,15 +1539,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNullKey = OPEN_HASH_MAP.this.containsNullKey;
-		/** A lazily allocated list containing the keys of elements that have wrapped around the table because of removals; such elements
-			would not be enumerated (other elements would be usually enumerated twice in their place). */
-		ARRAY_LIST KEY_GENERIC wrapped;
 		
-		{ 
-			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
-			if ( realSize() != 0 ) while( key[ --pos ] == KEY_NULL );
-		}
-
 		public boolean hasNext() {
 			return c != 0;
 		}
@@ -1562,35 +1553,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				return last = n;
 			}
                        
-			// We are just enumerating elements from the wrapped list.
-			if ( pos < 0 ) {
-				final KEY_GENERIC_TYPE k = wrapped.GET_KEY( - ( last = --pos ) - 2  );
-				
-				// The starting point.
-				int pos = KEY2INTHASH( k ) & mask;
-
-				// There's always an unused entry.
-				while( key[ pos ] != KEY_NULL ) {
-					if ( KEY_EQUALS_NOT_NULL( key[ pos ], k ) ) return pos;
-					pos = ( pos + 1 ) & mask;
-				}
-			}
-			
-			last = pos;
-			
-			//System.err.println( "Count: " + c );
-			if ( c != 0 ) {
-				final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
-				while ( pos-- != 0 && key[ pos ] == KEY_NULL );
-				// When here pos < 0 there are no more elements to be enumerated by scanning, but wrapped might be nonempty.
-			}
-			
-			return last;
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
+			while ( key[ ++pos ] == KEY_NULL );
+			return last = pos;
 		}
 
 		/** Shifts left entries with the specified hash code, starting at the specified position,
-		 * and empties the resulting free entry. If any entry wraps around the table, instantiates
-		 * lazily {@link #wrapped} and stores the entry key.
+		 * and empties the resulting free entry.
 		 *
 		 * @param pos a starting position.
 		 * @return the position cleared by the shifting process.
@@ -1617,12 +1586,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					pos = ( pos + 1 ) & mask;
 				}
 	
-				if ( pos < last ) {
-					// Wrapped entry.
-					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
-					wrapped.add( curr );
-				}
-
 				key[ last ] = curr;
 				value[ last ] = value[ pos ];	
 			}
@@ -1636,25 +1599,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #if #values(reference)
 				value[ n ] = VALUE_NULL;
 #endif
-				size--;
-				last = -1; // You can no longer remove this entry.
-				return;
 			}
-			if ( pos < -1 ) {
-				// We're removing wrapped entries.
-#if #keys(reference)
-				OPEN_HASH_MAP.this.remove( wrapped.set( - pos - 2, null ) );
-#else
-				OPEN_HASH_MAP.this.REMOVE_VALUE( wrapped.GET_KEY( - pos - 2 ) );
-#endif
-				last = -1;
-				return;
-			}
+			else if ( shiftKeys( last ) != last ) pos--;
 			size--;
-			if ( shiftKeys( last ) == pos && c > 0 ) {
-				c++;
-				nextEntry();
-			}
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();
 		}
