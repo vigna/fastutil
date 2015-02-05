@@ -33,11 +33,17 @@ import java.util.NoSuchElementException;
 /**  A type-specific hash big set with with a fast, small-footprint implementation.
  *
  * <P>Instances of this class use a hash table to represent a big set: the number
- * of elements in the set is limited only by the amount of core memory. The table is
- * backed by a {@linkplain it.unimi.dsi.fastutil.BigArrays big array} and is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim(long) trimming
- * method} lets you control the size of the table; this is particularly useful
+ * of elements in the set is limited only by the amount of core memory. The table 
+ * (backed by a {@linkplain it.unimi.dsi.fastutil.BigArrays big array}) is
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size. However, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size. 
+ * Rather, a family of {@linkplain #trim() trimming
+ * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
  * <p>The methods of this class are about 30% slower than those of the corresponding non-big set.
@@ -345,14 +351,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	}
 
 	private boolean removeEntry( final int base, final int displ ) {
-		size--;
 		shiftKeys( base * (long)BigArrays.SEGMENT_SIZE + displ );
+		if ( --size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return true;	
 	}
 
 	private boolean removeNullEntry() {
-		size--;
 		containsNull = false;
+		if ( --size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return true;	
 	}
 

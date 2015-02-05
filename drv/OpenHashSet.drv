@@ -36,8 +36,14 @@ import java.util.Comparator;
 /**  A type-specific linked hash set with with a fast, small-footprint implementation.
  *
  * <P>Instances of this class use a hash table to represent a set. The table is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size. However, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size. 
+ * Rather, a family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
@@ -81,14 +87,16 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC i
  * is specified at creation time.
  *
  * <P>Instances of this class use a hash table to represent a set. The table is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size. However, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size. 
+ * Rather, a family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
- *
- * <p><strong>Warning:</strong> The implementation of this class has significantly
- * changed in <code>fastutil</code> 6.1.0. Please read the
- * comments about this issue in the section &ldquo;Faster Hash Tables&rdquo; of the <a href="../../../../../overview-summary.html">overview</a>.
  *
  * @see Hash
  * @see HashCommon
@@ -105,10 +113,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
  * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
- *
- * <p><strong>Warning:</strong> The implementation of this class has significantly
- * changed in <code>fastutil</code> 6.1.0. Please read the
- * comments about this issue in the section &ldquo;Faster Hash Tables&rdquo; of the <a href="../../../../../overview-summary.html">overview</a>.
  *
  * @see Hash
  * @see HashCommon
@@ -668,15 +672,17 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		fixPointers( pos );
 #endif
 		shiftKeys( pos );
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return true;	
 	}
 
 	private boolean removeNullEntry() {
-		size--;
 		containsNull = false;
+		size--;
 #ifdef Linked
 		fixPointers( n );
 #endif
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return true;	
 	}
 
@@ -751,7 +757,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 */
 	public KEY_GENERIC_TYPE REMOVE_FIRST_KEY() {
 		if ( size == 0 ) throw new NoSuchElementException();
-		--size;
 		final int pos = first;
 		// Abbreviated version of fixPointers(pos)
 		first = GET_NEXT(link[ pos ]);
@@ -760,8 +765,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
 		}
 		final KEY_GENERIC_TYPE k = key[ pos ];
+		size--;
 		if ( k == KEY_NULL ) containsNull = false;
 		else shiftKeys( pos );
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return k;
 	}
 
@@ -771,7 +778,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 */
 	public KEY_GENERIC_TYPE REMOVE_LAST_KEY() {
 		if ( size == 0 ) throw new NoSuchElementException();
-		--size;
 		final int pos = last;
 		// Abbreviated version of fixPointers(pos)
 		last = GET_PREV(link[ pos ]);
@@ -780,8 +786,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			link[ last ] |= -1 & 0xFFFFFFFFL;
 		}
 		final KEY_GENERIC_TYPE k = key[ pos ];
+		size--;
 		if ( k == KEY_NULL ) containsNull = false;
 		else shiftKeys( pos );
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return k;
 	}
 

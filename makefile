@@ -653,7 +653,7 @@ $(JSOURCES) $(OLDJSOURCES): %.java: %.c
 
 
 clean: 
-	@find . -name \*.class -exec rm {} \;  
+	@find build . -name \*.class -exec rm {} \;  
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
 	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/{booleans,bytes,shorts,chars,ints,longs,floats,doubles,objects}/*.java

@@ -78,8 +78,14 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 /**  A type-specific linked hash map with with a fast, small-footprint implementation.
  *
  * <P>Instances of this class use a hash table to represent a map. The table is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size. However, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size. 
+ * Rather, a family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
@@ -123,14 +129,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VAL
  * is specified at creation time.
  *
  * <P>Instances of this class use a hash table to represent a map. The table is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size. However, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size. 
+ * Rather, a family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
- *
- * <p><strong>Warning:</strong> The implementation of this class has significantly
- * changed in <code>fastutil</code> 6.1.0. Please read the
- * comments about this issue in the section &ldquo;Faster Hash Tables&rdquo; of the <a href="../../../../../overview-summary.html">overview</a>.
  *
  * @see Hash
  * @see HashCommon
@@ -143,14 +151,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 /** A type-specific hash map with a fast, small-footprint implementation.
  *
  * <P>Instances of this class use a hash table to represent a map. The table is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size. However, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size. 
+ * Rather, a family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
- *
- * <p><strong>Warning:</strong> The implementation of this class has significantly
- * changed in <code>fastutil</code> 6.1.0. Please read the
- * comments about this issue in the section &ldquo;Faster Hash Tables&rdquo; of the <a href="../../../../../overview-summary.html">overview</a>.
  *
  * @see Hash
  * @see HashCommon
@@ -492,12 +502,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #if #values(reference)
 		value[ pos ] = VALUE_NULL;
 #endif
+		size--;
 #ifdef Linked
 		fixPointers( pos );
 #endif
 
-		size--;
 		shiftKeys( pos );
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return oldValue;
 	}
 
@@ -507,10 +518,11 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #if #values(reference)
 		value[ n ] = VALUE_NULL;
 #endif
+		size--;
 #ifdef Linked
 		fixPointers( n );
 #endif
-		size--;
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return oldValue;
 	}
 
@@ -747,7 +759,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 */
 	public VALUE_GENERIC_TYPE REMOVE_FIRST_VALUE() {
 		if ( size == 0 ) throw new NoSuchElementException();
-		--size;
 		final int pos = first;
 		// Abbreviated version of fixPointers(pos)
 		first = GET_NEXT(link[ pos ]);
@@ -755,6 +766,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			// Special case of SET_PREV( link[ first ], -1 )
 			link[ first ] |= (-1 & 0xFFFFFFFFL) << 32;
 		}
+		size--;
 		final VALUE_GENERIC_TYPE v = value[ pos ];
 		if ( pos == n ) {
 			containsNullKey = false;
@@ -763,6 +775,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #endif
 		}
 		else shiftKeys( pos );
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return v;
 	}
 
@@ -772,7 +785,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 */
 	public VALUE_GENERIC_TYPE REMOVE_LAST_VALUE() {
 		if ( size == 0 ) throw new NoSuchElementException();
-		--size;
 		final int pos = last;
 		// Abbreviated version of fixPointers(pos)
 		last = GET_PREV(link[ pos ]);
@@ -780,6 +792,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			// Special case of SET_NEXT( link[ last ], -1 )
 			link[ last ] |= -1 & 0xFFFFFFFFL;
 		}
+		size--;
 		final VALUE_GENERIC_TYPE v = value[ pos ];
 		if ( pos == n ) {
 			containsNullKey = false;
@@ -788,6 +801,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #endif
 		}
 		else shiftKeys( pos );
+		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return v;
 	}
 

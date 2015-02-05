@@ -13,13 +13,6 @@
     free software
     distributed under the <A HREF="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</A>.
 
-	<p><strong>Warning:</strong> <code>fastutil 6.1.0</code> has been significantly reorganised.
-	A number of not-so-useful classes (double- and sequi-indirect priority queues) are no longer
-	distributed (but you can still generate their sources). The old implementation of
-	hash tables (both sets and maps) has been replaced by a linear-probing implementation that is
-	about twice faster and has true deletions, but does not let you set a growth factor (again,
-	you can still generate their sources).
-
     <h2>Package Specification</h2>
 
 	<p><code>fastutil</code> is formed by three cores:
@@ -109,7 +102,7 @@
     different than those of {@link java.util}: for instance, open-addressing
     hash tables, threaded AVL trees, threaded red-black trees and exclusive-or
     lists. An effort has also been made to provide powerful derived objects and
-    to expose them overriding covariantly return types:
+    to expose them by overriding covariantly return types:
     for instance, the {@linkplain it.unimi.dsi.fastutil.objects.Object2IntSortedMap#keySet() keys of sorted maps
     are sorted} and iterators on sorted containers are always {@linkplain
     it.unimi.dsi.fastutil.BidirectionalIterator bidirectional}.
@@ -186,9 +179,8 @@
     new type-specific classes by providing automatically generic methods based
     on the type-specific ones.</p>
 
-    <p>The huge number of classes required a suitable division in subpackages
-    (more than anything else, to avoid crashing browsers with a preposterous
-    package summary). Each subpackage is characterized by the type of elements
+    <p>The huge number of classes required a suitable division in subpackages. 
+    Each subpackage is characterized by the type of elements
     or keys: thus, for instance, {@link it.unimi.dsi.fastutil.ints.IntSet}
     belongs to {@link it.unimi.dsi.fastutil.ints} (the plural is required, as
     <code>int</code> is a keyword and cannot be used in a package name), as
@@ -472,7 +464,8 @@
     {@link it.unimi.dsi.fastutil.Function} (and its type-specific versions) is a new
     interface geared towards mathematical functions (e.g., hashes) which associates
     values to keys, but in which enumerating keys or values is not possible. It is essentially
-    a {@link java.util.Map} that does not provide access to set representations.
+    a {@link java.util.Map} that does not provide access to set representations. It is of course
+    unfortunate that Java 8 introduced an identically named interface with a different signature.
 
     <p><code>fastutil</code>
     provides interfaces, abstract implementations and the usual array of wrappers
@@ -683,11 +676,11 @@
     time and in space. The relevant methods of type-specific hash maps and sets
     are something like 2 to 10 times faster than those of the standard
     classes. Note that performance of hash-based classes on object keys is
-    usually <em>worse</em> (from a few percent to doubled time) than that of
+    usually <em>slightly worse</em> than that of
     {@link java.util}, because <code>fastutil</code> classes do not cache hash
     codes (albeit it will not be that bad if keys cache internally hash codes,
     as in the case of {@link java.lang.String}). Of course, you can try to get
-    more speed from hash tables using a small load factors: to this purpose,
+    more speed from hash tables using a small load factor: to this purpose,
     alternative load factors are proposed in {@link it.unimi.dsi.fastutil.Hash#FAST_LOAD_FACTOR}
     and {@link it.unimi.dsi.fastutil.Hash#VERY_FAST_LOAD_FACTOR}.
 
@@ -761,8 +754,7 @@
       java.util}'s.
 
     <p>The memory footprint for a table of length &#x2113; is exactly the
-      memory required for the related types times &#x2113;, plus a
-      overhead of &#x2113; booleans to store the state of each entry. The
+      memory required for the related types times &#x2113;. The
       absence of wrappers around primitive types can reduce space occupancy by
       several times (this applies even more to serialized data, e.g., when you
       save such a data structure in a file).  These figures can greatly vary with
@@ -772,7 +764,8 @@
       elements with load factor 0&nbsp;&lt;&nbsp;<var>f</var>&nbsp;&le;&nbsp;1, 
       2<sup>&lceil;log <var>n</var>&nbsp;/&nbsp;<var>f</var>&rceil;</sup>
       entries are allocated. When the table is filled up beyond the load factor, it is rehashed 
-      doubling its size. 
+      doubling its size. When it is emptied below a <em>fourth</em> of the load factor, it
+      is rehashed halving its size.
 
     <p>In the case of linked hash tables, there is an additional vector of
       2<sup>&lceil;log <var>n</var>&nbsp;/&nbsp;<var>f</var>&rceil;</sup> longs that is used to store link information. Each
