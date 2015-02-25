@@ -638,9 +638,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * and empties the resulting free entry.
 	 *
 	 * @param pos a starting position.
-	 * @return the position cleared by the shifting process.
 	 */
-	protected final int shiftKeys( int pos ) {
+	protected final void shiftKeys( int pos ) {
 		// Shift entries with the same hash.
 		int last, slot;
 		KEY_GENERIC_TYPE curr;
@@ -652,7 +651,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			for(;;) {
 				if ( ( curr = key[ pos ] ) == KEY_NULL ) {
 					key[ last ] = KEY_NULL;
-					return last;
+					return;
 				}
 				slot = KEY2INTHASH( curr ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
@@ -1257,7 +1256,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
 		/** The index of the last entry returned, if positive or zero; initially, {@link #n}. If negative, the last
-			entry returned was from the {@link #wrapped} list. */
+			element returned was that of index {@code - pos - 1} from the {@link #wrapped} list. */
 		int pos = n;
 		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos} if {@link #pos} is positive,
 			or {@link Integer#MIN_VALUE} if {@link #pos} is negative). It is -1 if either
@@ -1267,8 +1266,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		int c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
-		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
-			would not be enumerated (other elements would be usually enumerated twice in their place). */
+		/** A lazily allocated list containing elements that have wrapped around the table because of removals. */
 		ARRAY_LIST KEY_GENERIC wrapped;
 		
 		public boolean hasNext() {
@@ -1286,7 +1284,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
 			for(;;) {
 				if ( pos <= 0 ) {
-					// We are just enumerating elements from the wrapped list
+					// We are just enumerating elements from the wrapped list.
 					last = Integer.MIN_VALUE;
 					return wrapped.GET_KEY( - ( --pos ) - 1 );
 				}
@@ -1299,9 +1297,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		 * and empties the resulting free entry.
 		 *
 		 * @param pos a starting position.
-		 * @return the position cleared by the shifting process.
 		 */
-		final int shiftKeys( int pos ) {
+		private final void shiftKeys( int pos ) {
 			// Shift entries with the same hash.
 			int last, slot;
 			KEY_GENERIC_TYPE curr;
@@ -1313,7 +1310,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				for(;;) {
 					if ( ( curr = key[ pos ] ) == KEY_NULL ) {
 						key[ last ] = KEY_NULL;
-						return last;
+						return;
 					}
 					slot = KEY2INTHASH( curr ) & mask;
 					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;

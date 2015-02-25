@@ -325,9 +325,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 * and empties the resulting free entry.
 	 *
 	 * @param pos a starting position.
-	 * @return the position cleared by the shifting process.
 	 */
-	protected final long shiftKeys( long pos ) {
+	protected final void shiftKeys( long pos ) {
 		// Shift entries with the same hash.
 		long last, slot;
 		final KEY_GENERIC_TYPE[][] key = this.key;
@@ -338,7 +337,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			for(;;) {
 				if ( BIG_ARRAYS.get( key, pos ) == KEY_NULL ) {
 					BIG_ARRAYS.set( key, last, KEY_NULL );
-					return last;
+					return;
 				}
 				slot = KEY2LONGHASH( BIG_ARRAYS.get( key, pos ) ) & mask;
 				if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
@@ -439,9 +438,9 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	/** An iterator over a hash big set. */
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
-		/** The base of the last entry to returned, if positive or zero; initially, the number of components 
-			of the key array. If negative, the next entry to be	returned, if any, is 
-			that of index -base -2 from the {@link #wrapped} list. */
+		/** The base of the last entry returned, if positive or zero; initially, the number of components 
+			of the key array. If negative, the last element returned was
+			that of index {@code - base - 1} from the {@link #wrapped} list. */
 		int base = key.length;
 		/** The displacement of the last entry returned; initially, zero. */
 		int displ;
@@ -452,8 +451,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		long c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNull = OPEN_HASH_BIG_SET.this.containsNull;
-		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
-			would not be enumerated (other elements would be usually enumerated twice in their place). */
+		/** A lazily allocated list containing elements that have wrapped around the table because of removals. */
 		ARRAY_LIST KEY_GENERIC wrapped;
 
 		public boolean hasNext() {
@@ -474,7 +472,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 			for(;;) {
 				if ( displ == 0 && base <= 0 ) {
-					// We are just enumerating elements from the wrapped list
+					// We are just enumerating elements from the wrapped list.
 					last = Long.MIN_VALUE;
 					return wrapped.GET_KEY( - ( --base ) - 1 );
 				}
@@ -493,9 +491,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		 * and empties the resulting free entry.
 		 *
 		 * @param pos a starting position.
-		 * @return the position cleared by the shifting process.
 		 */
-		protected final long shiftKeys( long pos ) {
+		private final void shiftKeys( long pos ) {
 			// Shift entries with the same hash.
 			long last, slot;
 			KEY_GENERIC_TYPE curr;
@@ -507,15 +504,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 				for(;;) {
 					if( ( curr = BIG_ARRAYS.get( key, pos ) ) == KEY_NULL ) {
 						BIG_ARRAYS.set( key, last, KEY_NULL );
-						return last;
+						return;
 					}
 					slot = KEY2LONGHASH( curr ) & mask;
 					if ( last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos ) break;
 					pos = ( pos + 1 ) & mask;
 				}
 	
-				if ( pos < last ) {
-					// Wrapped entry.
+				if ( pos < last ) {	// Wrapped entry.
 					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
 					wrapped.add( BIG_ARRAYS.get( key, pos ) );
 				}
