@@ -1,11 +1,13 @@
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,14 +50,45 @@ public class IntOpenHashBigSetTest {
 		referenceInstance.retainAll(retainElements);
 
 		// print the correct result {586}
-		System.out.println("ref: " + referenceInstance);
+		// System.out.println("ref: " + referenceInstance);
 
 		// prints {586, 7379}, which is clearly wrong
-		System.out.println("ohm: " + instance);
+		// System.out.println("ohm: " + instance);
 
 		// Fails
 		assertEquals( referenceInstance, instance );
 	}	
+
+	
+	
+
+	@Test
+	public void testRemove0() {
+		IntOpenHashBigSet s = new IntOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
+		assertTrue( s.remove( 0 ) );
+		IntIterator iterator = s.iterator();
+		// Order is implementation-dependent
+		assertEquals( 1, iterator.nextInt() );
+		assertEquals( -1, iterator.nextInt() );
+		assertFalse( iterator.hasNext() );
+		
+		s = new IntOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE );
+		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
+		iterator = s.iterator();
+		while( iterator.hasNext() ) if ( iterator.nextInt() == 0 ) iterator.remove();
+		
+		assertFalse( s.contains( 0 ) );
+		
+		iterator = s.iterator();
+		int[] content = new int[ 2 ];
+		content[ 0 ] = iterator.nextInt();
+		content[ 1 ] = iterator.nextInt();
+		assertFalse( iterator.hasNext() );
+		Arrays.sort( content );
+		assertArrayEquals( new int[] { -1, 1 }, content );
+	}
+	
 
 	private static java.util.Random r = new java.util.Random( 0 );
 

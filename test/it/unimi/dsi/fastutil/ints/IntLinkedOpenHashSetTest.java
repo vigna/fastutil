@@ -49,10 +49,10 @@ public class IntLinkedOpenHashSetTest {
 		referenceInstance.retainAll(retainElements);
 
 		// print the correct result {586}
-		System.out.println("ref: " + referenceInstance);
+		// System.out.println("ref: " + referenceInstance);
 
 		// prints {586, 7379}, which is clearly wrong
-		System.out.println("ohm: " + instance);
+		// System.out.println("ohm: " + instance);
 
 		// Fails
 		assertEquals( referenceInstance, instance );

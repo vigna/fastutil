@@ -30,9 +30,13 @@ public class HashCommon {
 
     /** 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
     private static final int INT_PHI = 0x9E3779B9;
+    /** The reciprocal of {@link #INT_PHI} modulo 2<sup>32</sup>. */
+    private static final int INV_INT_PHI = 0x144cbc89;
     /** 2<sup>64</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
     private static final long LONG_PHI = 0x9E3779B97F4A7C15L;
-
+    /** The reciprocal of {@link #LONG_PHI} modulo 2<sup>64</sup>. */
+    private static final long INV_LONG_PHI = 0xf1de83e19937733dL;
+    
 	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
 	 * 
 	 * <p>This method implements the finalisation step of Austin Appleby's <a href="http://code.google.com/p/smhasher/">MurmurHash3</a>.
@@ -82,10 +86,20 @@ public class HashCommon {
 	 * 
 	 * @param x an integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
+	 * @see #invPhiMix(int)
 	 */	
 	public final static int phiMix( final int x ) {
 		final int h = x * INT_PHI;
-		return h ^ (h >> 16);
+		return h ^ (h >>> 16);
+	}
+
+	/** The inverse of {@link #phiMix(int)}. This method is mainly useful to create unit tests.
+	 * 
+	 * @param x an integer.
+	 * @return a value that passed through {@link #phiMix(int)} would give {@code x}.
+	 */	
+	public final static int invPhiMix( final int x ) {
+		return ( x ^ x >>> 16 ) * INV_INT_PHI; 
 	}
 
 	/** Quickly mixes the bits of a long integer.
@@ -100,9 +114,21 @@ public class HashCommon {
 	 */	
 	public final static long phiMix( final long x ) {
 		long h = x * LONG_PHI;
-		h ^= h >> 32;
-		return h ^ (h >> 16);
+		h ^= h >>> 32;
+		return h ^ (h >>> 16);
 	}
+
+	/** The inverse of {@link #phiMix(long)}. This method is mainly useful to create unit tests.
+	 * 
+	 * @param x a long integer.
+	 * @return a value that passed through {@link #phiMix(long)} would give {@code x}.
+	 */	
+	public final static long invPhiMix( long x ) {
+		x ^= x >>> 32;
+		x ^= x >>> 16;
+		return ( x ^ x >>> 32 ) * INV_LONG_PHI; 
+	}
+
 
 	/** Returns the hash code that would be returned by {@link Float#hashCode()}.
 	 *

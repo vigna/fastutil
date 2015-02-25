@@ -33,11 +33,6 @@ import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ITERATOR;
 #endif
 
-#if #keys(reference) || #values(reference)
-import it.unimi.dsi.fastutil.objects.ObjectArrays;
-#endif
-
-
 #ifdef Linked
 
 import java.util.Comparator;
@@ -491,12 +486,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		if ( needed > n ) rehash( needed );
 	}
 
-	private VALUE_GENERIC_TYPE setValue( final int pos, final VALUE_GENERIC_TYPE v ) {
-		final VALUE_GENERIC_TYPE oldValue = value[ pos ];
-		value[ pos ] = v;
-		return oldValue;
-	}
-
 	private VALUE_GENERIC_TYPE removeEntry( final int pos ) {
 		final VALUE_GENERIC_TYPE oldValue = value[ pos ];
 #if #values(reference)
@@ -593,7 +582,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		if ( pos < 0 ) return OBJECT_DEFAULT_RETURN_VALUE;
 		final VALUE_GENERIC_TYPE oldValue = value[ pos ];
 		value[ pos ] = v;
-		return oldValue;
+		return VALUE2OBJ( oldValue );
 	}
 #endif
 
@@ -706,7 +695,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 
 
-	@SuppressWarnings("unchecked")
 	public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) {
 			if ( containsNullKey ) return removeNullEntry();
@@ -728,7 +716,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 
 #if #keys(primitive) || #values(primitive)
-	@SuppressWarnings("unchecked")
 	public VALUE_GENERIC_CLASS remove( final Object ok ) {
 		final KEY_GENERIC_TYPE k = KEY_GENERIC_CAST KEY_OBJ2TYPE( ok );
 		if ( k == KEY_NULL ) {
@@ -742,10 +729,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		// The starting point.
 		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return OBJECT_DEFAULT_RETURN_VALUE;
-		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( pos );
+		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return VALUE2OBJ( removeEntry( pos ) );
 		while( true ) {
 			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return OBJECT_DEFAULT_RETURN_VALUE;
-			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( pos );
+			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return VALUE2OBJ( removeEntry( pos ) );
 		}
 	}
 #endif
@@ -753,6 +740,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #ifdef Linked
 	
+	private VALUE_GENERIC_TYPE setValue( final int pos, final VALUE_GENERIC_TYPE v ) {
+		final VALUE_GENERIC_TYPE oldValue = value[ pos ];
+		value[ pos ] = v;
+		return oldValue;
+	}
+
 	/** Removes the mapping associated with the first key in iteration order.
 	 * @return the value previously associated with the first key in iteration order.
 	 * @throws NoSuchElementException is this map is empty.
@@ -1029,7 +1022,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	public VALUE_GENERIC_CLASS get( final KEY_CLASS ok ) {
 		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( ok );
-		if ( k == KEY_NULL ) return containsNullKey ? value[ n ] : OBJECT_DEFAULT_RETURN_VALUE;
+		if ( k == KEY_NULL ) return containsNullKey ? VALUE2OBJ( value[ n ] ) : OBJECT_DEFAULT_RETURN_VALUE;
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
@@ -1048,7 +1041,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #endif
 
-	@SuppressWarnings("unchecked")
 	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) return containsNullKey ? value[ n ] : defRetValue;
 
@@ -1066,7 +1058,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean containsKey( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) return containsNullKey;
 
@@ -1415,7 +1406,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			return curr;
 		}
 		
-		@SuppressWarnings("unchecked")
 		public void remove() {
 			ensureIndexKnown();
 			if ( curr == -1 ) throw new IllegalStateException();
@@ -1544,15 +1534,20 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	/** An iterator over a hash map. */
 
 	private class MapIterator {
-		/** The index of the last entry returned, if positive or zero; initially, -1. */
-		int pos = -1;
-		/** The index of the last entry that has been returned. It is -1 if either
+		/** The index of the last entry returned, if positive or zero; initially, {@link #n}. If negative, the last
+			entry returned was from the {@link #wrapped} list. */
+		int pos = n;
+		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos} if {@link #pos} is positive,
+			or {@link Integer#MIN_VALUE} if {@link #pos} is negative). It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
 		int last = -1;
 		/** A downward counter measuring how many entries must still be returned. */
 		int c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNullKey = OPEN_HASH_MAP.this.containsNullKey;
+		/** A lazily allocated list containing keys of entries that have wrapped around the table because of removals; such entries
+			would not be enumerated (other entries would be usually enumerated twice in their place). */
+		ARRAY_LIST KEY_GENERIC wrapped;
 		
 		public boolean hasNext() {
 			return c != 0;
@@ -1568,8 +1563,18 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			}
                        
 			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
-			while ( key[ ++pos ] == KEY_NULL );
-			return last = pos;
+
+			for(;;) {
+				if ( pos <= 0 ) {
+					// We are just enumerating elements from the wrapped list.
+					last = Integer.MIN_VALUE;
+					final KEY_GENERIC_TYPE k = wrapped.GET_KEY( - ( --pos ) - 1 );
+					int p = KEY2INTHASH( k ) & mask;
+					while ( ! KEY_EQUALS_NOT_NULL( k, key[ p ] ) ) p = ( p + 1 ) & mask;
+					return p;
+				}
+				if ( key[ --pos ] != KEY_NULL ) return last = pos;
+			}
 		}
 
 		/** Shifts left entries with the specified hash code, starting at the specified position,
@@ -1600,12 +1605,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					pos = ( pos + 1 ) & mask;
 				}
 	
+				if ( pos < last ) { // Wrapped entry.
+					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC( 2 );
+					wrapped.add( key[ pos ] );
+				}
+
 				key[ last ] = curr;
 				value[ last ] = value[ pos ];	
 			}
 		}
 	
-		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
 			if ( last == n ) {
@@ -1614,7 +1623,18 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				value[ n ] = VALUE_NULL;
 #endif
 			}
-			else if ( shiftKeys( last ) != last ) pos--;
+			else if ( pos >= 0 ) shiftKeys( last );
+			else {
+				// We're removing wrapped entries.
+#if #keys(reference)
+				OPEN_HASH_MAP.this.remove( wrapped.set( - pos - 1, null ) );
+#else
+				OPEN_HASH_MAP.this.remove( wrapped.GET_KEY( - pos - 1 ) );
+#endif
+				last = -1; // Note that we must not decrement size
+				return;
+			}
+
 			size--;
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();

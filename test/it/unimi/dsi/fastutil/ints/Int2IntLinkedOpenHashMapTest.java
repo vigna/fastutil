@@ -2,8 +2,10 @@ package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
@@ -16,6 +18,103 @@ import org.junit.Test;
 
 public class Int2IntLinkedOpenHashMapTest {
 
+
+	@Test
+	public void testWrapAround() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( 4, .5f );
+		assertEquals( 8, m.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
+		m.put( HashCommon.invPhiMix( 6 ), 0 );
+		m.put( HashCommon.invPhiMix( 7 ), 0 );
+		m.put( HashCommon.invPhiMix( 6 + 8 ), 0 );
+		assertNotEquals( 0, m.key[ 0 ] );
+		assertNotEquals( 0, m.key[ 6 ] );
+		assertNotEquals( 0, m.key[ 7 ] );
+		IntOpenHashSet keys = new IntOpenHashSet( m.keySet() );
+		IntIterator iterator = m.keySet().iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		t.add( iterator.nextInt() );
+		t.add( iterator.nextInt() );
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		iterator.remove(); 
+		t.add( iterator.nextInt() );
+		assertEquals( keys, t );
+	}	
+
+	@Test
+	public void testWrapAround2() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( 4, .75f );
+		assertEquals( 8, m.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
+		m.put( HashCommon.invPhiMix( 4 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 ), 0 );
+		m.put( HashCommon.invPhiMix( 4 + 8 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 8 ), 0 );
+		m.put( HashCommon.invPhiMix( 4 + 16 ), 0 );
+		assertNotEquals( 0, m.key[ 0 ] );
+		assertNotEquals( 0, m.key[ 4 ] );
+		assertNotEquals( 0, m.key[ 5 ] );
+		assertNotEquals( 0, m.key[ 6 ] );
+		assertNotEquals( 0, m.key[ 7 ] );
+		//System.err.println(Arraym.toString( m.key ));
+		IntOpenHashSet keys = new IntOpenHashSet( m.keySet() );
+		IntIterator iterator = m.keySet().iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		//System.err.println(Arraym.toString( m.key ));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		assertTrue( t.add( iterator.nextInt() ) );
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		assertEquals( 3, m.size() );
+		assertEquals( keys, t );
+	}	
+	
+	@Test
+	public void testWrapAround3() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( 4, .75f );
+		assertEquals( 8, m.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
+		m.put( HashCommon.invPhiMix( 5 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 8 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 16 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 32 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 64 ), 0 );
+		assertNotEquals( 0, m.key[ 5 ] );
+		assertNotEquals( 0, m.key[ 6 ] );
+		assertNotEquals( 0, m.key[ 7 ] );
+		assertNotEquals( 0, m.key[ 0 ] );
+		assertNotEquals( 0, m.key[ 1 ] );
+		//System.err.println(Arraym.toString( m.key ));
+		IntOpenHashSet keys = new IntOpenHashSet( m.keySet() );
+		IntIterator iterator = m.keySet().iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		assertEquals( 0, m.size() );
+		assertEquals( keys, t );
+	}	
+
+	
 	private static java.util.Random r = new java.util.Random( 0 );
 
 	private static int genKey() {

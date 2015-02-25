@@ -2,9 +2,11 @@ package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -51,10 +53,10 @@ public class IntOpenHashSetTest {
 		referenceInstance.retainAll(retainElements);
 
 		// print the correct result {586}
-		System.out.println("ref: " + referenceInstance);
+		// System.out.println("ref: " + referenceInstance);
 
 		// prints {586, 7379}, which is clearly wrong
-		System.out.println("ohm: " + instance);
+		// System.out.println("ohm: " + instance);
 
 		// Fails
 		assertEquals( referenceInstance, instance );
@@ -92,8 +94,9 @@ public class IntOpenHashSetTest {
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
 		assertTrue( s.remove( 0 ) );
 		IntIterator iterator = s.iterator();
-		assertEquals( 1, iterator.nextInt() );
+		// Order is implementation-dependent
 		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
 		s = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
@@ -111,7 +114,101 @@ public class IntOpenHashSetTest {
 		Arrays.sort( content );
 		assertArrayEquals( new int[] { -1, 1 }, content );
 	}
+	
+	@Test
+	public void testWrapAround() {
+		IntOpenHashSet s = new IntOpenHashSet( 4, .5f );
+		assertEquals( 8, s.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
+		s.add( HashCommon.invPhiMix( 6 ) );
+		s.add( HashCommon.invPhiMix( 7 ) );
+		s.add( HashCommon.invPhiMix( 6 + 8 ) );
+		assertNotEquals( 0, s.key[ 0 ] );
+		assertNotEquals( 0, s.key[ 6 ] );
+		assertNotEquals( 0, s.key[ 7 ] );
+		IntOpenHashSet keys = s.clone();
+		IntIterator iterator = s.iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		t.add( iterator.nextInt() );
+		t.add( iterator.nextInt() );
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		iterator.remove(); 
+		t.add( iterator.nextInt() );
+		assertEquals( keys, t );
+	}	
 
+	@Test
+	public void testWrapAround2() {
+		IntOpenHashSet s = new IntOpenHashSet( 4, .75f );
+		assertEquals( 8, s.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
+		s.add( HashCommon.invPhiMix( 4 ) );
+		s.add( HashCommon.invPhiMix( 5 ) );
+		s.add( HashCommon.invPhiMix( 4 + 8 ) );
+		s.add( HashCommon.invPhiMix( 5 + 8 ) );
+		s.add( HashCommon.invPhiMix( 4 + 16 ) );
+		assertNotEquals( 0, s.key[ 0 ] );
+		assertNotEquals( 0, s.key[ 4 ] );
+		assertNotEquals( 0, s.key[ 5 ] );
+		assertNotEquals( 0, s.key[ 6 ] );
+		assertNotEquals( 0, s.key[ 7 ] );
+		//System.err.println(Arrays.toString( s.key ));
+		IntOpenHashSet keys = s.clone();
+		IntIterator iterator = s.iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arrays.toString( s.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		//System.err.println(Arrays.toString( s.key ));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		assertTrue( t.add( iterator.nextInt() ) );
+		//System.err.println(Arrays.toString( s.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arrays.toString( s.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		assertEquals( 3, s.size() );
+		assertEquals( keys, t );
+	}	
+	
+	@Test
+	public void testWrapAround3() {
+		IntOpenHashSet s = new IntOpenHashSet( 4, .75f );
+		assertEquals( 8, s.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
+		s.add( HashCommon.invPhiMix( 5 ) );
+		s.add( HashCommon.invPhiMix( 5 + 8 ) );
+		s.add( HashCommon.invPhiMix( 5 + 16 ) );
+		s.add( HashCommon.invPhiMix( 5 + 32 ) );
+		s.add( HashCommon.invPhiMix( 5 + 64 ) );
+		assertNotEquals( 0, s.key[ 5 ] );
+		assertNotEquals( 0, s.key[ 6 ] );
+		assertNotEquals( 0, s.key[ 7 ] );
+		assertNotEquals( 0, s.key[ 0 ] );
+		assertNotEquals( 0, s.key[ 1 ] );
+		//System.err.println(Arrays.toString( s.key ));
+		IntOpenHashSet keys = s.clone();
+		IntIterator iterator = s.iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arrays.toString( s.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arrays.toString( s.key ));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arrays.toString( s.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arrays.toString( s.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		assertEquals( 0, s.size() );
+		assertEquals( keys, t );
+	}	
 	
 	@SuppressWarnings("boxing")
 	private static void checkTable( IntOpenHashSet s ) {

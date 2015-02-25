@@ -1,6 +1,7 @@
 package it.unimi.dsi.fastutil;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -19,6 +20,18 @@ public class HashCommonTest {
 				final long maxFill = HashCommon.maxFill( n, f );
 				assertTrue( n + " <= " + maxFill, n > maxFill );
 			}
+		}
+	}
+	
+	@Test
+	public void testInverses() {
+		for( int i = 0 ; i < 1 << 30; i += 10000 ) {
+			assertEquals( i, HashCommon.invPhiMix( HashCommon.phiMix( i ) ) );
+			assertEquals( i, HashCommon.phiMix( HashCommon.invPhiMix( i ) ) );
+		}
+		for( long i = 0 ; i < 1 << 62; i += 1000000 ) {
+			assertEquals( i, HashCommon.invPhiMix( HashCommon.phiMix( i ) ) );
+			assertEquals( i, HashCommon.phiMix( HashCommon.invPhiMix( i ) ) );
 		}
 	}
 }

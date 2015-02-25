@@ -194,7 +194,6 @@ public class FloatArraysTest {
 	}
 
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testQuickSortNaNs() {
 		final float[] t = { Float.NaN, 1, 5, 2, 1, 0, 9, 1, Float.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };

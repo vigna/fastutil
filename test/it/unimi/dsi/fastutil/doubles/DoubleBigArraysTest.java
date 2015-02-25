@@ -1,10 +1,11 @@
 package it.unimi.dsi.fastutil.doubles;
 
-import static org.junit.Assert.*;
-import static it.unimi.dsi.fastutil.doubles.DoubleBigArrays.set;
 import static it.unimi.dsi.fastutil.doubles.DoubleBigArrays.get;
-
-import it.unimi.dsi.fastutil.ints.IntBigArrays;
+import static it.unimi.dsi.fastutil.doubles.DoubleBigArrays.set;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -272,7 +273,6 @@ public class DoubleBigArraysTest {
 		
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testQuickSortNaNs() {
 		final double[] t = { Double.NaN, 1, 5, 2, 1, 0, 9, 1, Double.NaN, 2, 4, 6, 8, 9, 10, 12, 1, 7 };

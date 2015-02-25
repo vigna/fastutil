@@ -1,6 +1,7 @@
 package it.unimi.dsi.fastutil.ints;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
@@ -51,10 +52,10 @@ public class Int2IntOpenHashMapTest {
 		referenceInstance.retainAll(retainElements);
 
 		// print the correct result {586}
-		System.out.println("ref: " + referenceInstance);
+		// System.out.println("ref: " + referenceInstance);
 
 		// prints {586, 7379}, which is clearly wrong
-		System.out.println("ohm: " + instance);
+		// System.out.println("ohm: " + instance);
 
 		// Fails
 		assertEquals( referenceInstance, instance.keySet() );
@@ -97,7 +98,7 @@ public class Int2IntOpenHashMapTest {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			assertTrue( "Error: m and t differ on an entry (" + e + ") after insertion (iterating on m)", valEquals( e.getValue(), t.get( e.getKey() ) ) );
 		}
-		/* Now we check that m actually holds the same keys. */
+		/* Now we check that m actually holds the same keym. */
 		for ( java.util.Iterator i = t.keySet().iterator(); i.hasNext(); ) {
 			Object o = i.next();
 			assertTrue( "Error: m and t differ on a key (" + o + ") after insertion (iterating on t)", m.containsKey( o ) );
@@ -109,7 +110,7 @@ public class Int2IntOpenHashMapTest {
 			assertTrue( "Error: m and t differ on a key after insertion (iterating on m)", t.containsKey( o ) );
 			assertTrue( "Error: m and t differ on a key (in keySet()) after insertion (iterating on m)", t.keySet().contains( o ) );
 		}
-		/* Now we check that m actually hold the same values. */
+		/* Now we check that m actually hold the same valuem. */
 		for ( java.util.Iterator i = t.values().iterator(); i.hasNext(); ) {
 			Object o = i.next();
 			assertTrue( "Error: m and t differ on a value after insertion (iterating on t)", m.containsValue( o ) );
@@ -164,7 +165,7 @@ public class Int2IntOpenHashMapTest {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			assertTrue( "Error: m and t differ on an entry (" + e + ") after removal (iterating on m)", valEquals( e.getValue(), t.get( e.getKey() ) ) );
 		}
-		/* Now we check that m actually holds the same keys. */
+		/* Now we check that m actually holds the same keym. */
 		for ( java.util.Iterator i = t.keySet().iterator(); i.hasNext(); ) {
 			Object o = i.next();
 			assertTrue( "Error: m and t differ on a key (" + o + ") after removal (iterating on t)", m.containsKey( o ) );
@@ -176,7 +177,7 @@ public class Int2IntOpenHashMapTest {
 			assertTrue( "Error: m and t differ on a key after removal (iterating on m)", t.containsKey( o ) );
 			assertTrue( "Error: m and t differ on a key (in keySet()) after removal (iterating on m)", t.keySet().contains( o ) );
 		}
-		/* Now we check that m actually hold the same values. */
+		/* Now we check that m actually hold the same valuem. */
 		for ( java.util.Iterator i = t.values().iterator(); i.hasNext(); ) {
 			Object o = i.next();
 			assertTrue( "Error: m and t differ on a value after removal (iterating on t)", m.containsValue( o ) );
@@ -288,34 +289,35 @@ public class Int2IntOpenHashMapTest {
 
 	@Test
 	public void testRemove() {
-		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
-		s.defaultReturnValue( -1 );
-		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
-		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.remove( 100 + i ) );
-		for( int i = 50; i < 150; i++ ) assertEquals( Integer.toString( i % 100 ), i % 100, s.remove( i % 100 ) );
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, i ) );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.remove( 100 + i ) );
+		for( int i = 50; i < 150; i++ ) assertEquals( Integer.toString( i % 100 ), i % 100, m.remove( i % 100 ) );
 	}
 
 	@Test
 	public void testRemove0() {
-		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
-		s.defaultReturnValue( -1 );
-		for( int i = -1; i <= 1; i++ ) assertEquals( -1, s.put( i, i ) );
-		assertEquals( 0, s.remove( 0 ) );
-		IntIterator iterator = s.keySet().iterator();
-		assertEquals( 1, iterator.nextInt() );
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = -1; i <= 1; i++ ) assertEquals( -1, m.put( i, i ) );
+		assertEquals( 0, m.remove( 0 ) );
+		IntIterator iterator = m.keySet().iterator();
+		// Order is implementation-dependent
 		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
-		s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
-		s.defaultReturnValue( -1 );
-		for( int i = -1; i <= 1; i++ ) assertEquals( -1, s.put( i, i ) );
-		iterator = s.keySet().iterator();
+		m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = -1; i <= 1; i++ ) assertEquals( -1, m.put( i, i ) );
+		iterator = m.keySet().iterator();
 		while( iterator.hasNext() ) if ( iterator.nextInt() == 0 ) iterator.remove();
 		
-		assertFalse( s.containsKey( 0 ) );
-		assertEquals( -1, s.get( 0 ) );
+		assertFalse( m.containsKey( 0 ) );
+		assertEquals( -1, m.get( 0 ) );
 		
-		iterator = s.keySet().iterator();
+		iterator = m.keySet().iterator();
 		int[] content = new int[ 2 ];
 		content[ 0 ] = iterator.nextInt();
 		content[ 1 ] = iterator.nextInt();
@@ -324,31 +326,128 @@ public class Int2IntOpenHashMapTest {
 		assertArrayEquals( new int[] { -1, 1 }, content );
 	}
 
+	@Test
+	public void testWrapAround() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( 4, .5f );
+		assertEquals( 8, m.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
+		m.put( HashCommon.invPhiMix( 6 ), 0 );
+		m.put( HashCommon.invPhiMix( 7 ), 0 );
+		m.put( HashCommon.invPhiMix( 6 + 8 ), 0 );
+		assertNotEquals( 0, m.key[ 0 ] );
+		assertNotEquals( 0, m.key[ 6 ] );
+		assertNotEquals( 0, m.key[ 7 ] );
+		IntOpenHashSet keys = new IntOpenHashSet( m.keySet() );
+		IntIterator iterator = m.keySet().iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		t.add( iterator.nextInt() );
+		t.add( iterator.nextInt() );
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		iterator.remove(); 
+		t.add( iterator.nextInt() );
+		assertEquals( keys, t );
+	}	
 
 	@Test
+	public void testWrapAround2() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( 4, .75f );
+		assertEquals( 8, m.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
+		m.put( HashCommon.invPhiMix( 4 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 ), 0 );
+		m.put( HashCommon.invPhiMix( 4 + 8 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 8 ), 0 );
+		m.put( HashCommon.invPhiMix( 4 + 16 ), 0 );
+		assertNotEquals( 0, m.key[ 0 ] );
+		assertNotEquals( 0, m.key[ 4 ] );
+		assertNotEquals( 0, m.key[ 5 ] );
+		assertNotEquals( 0, m.key[ 6 ] );
+		assertNotEquals( 0, m.key[ 7 ] );
+		//System.err.println(Arraym.toString( m.key ));
+		IntOpenHashSet keys = new IntOpenHashSet( m.keySet() );
+		IntIterator iterator = m.keySet().iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		//System.err.println(Arraym.toString( m.key ));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		assertTrue( t.add( iterator.nextInt() ) );
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		assertEquals( 3, m.size() );
+		assertEquals( keys, t );
+	}	
+	
+	@Test
+	public void testWrapAround3() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( 4, .75f );
+		assertEquals( 8, m.n );
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
+		m.put( HashCommon.invPhiMix( 5 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 8 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 16 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 32 ), 0 );
+		m.put( HashCommon.invPhiMix( 5 + 64 ), 0 );
+		assertNotEquals( 0, m.key[ 5 ] );
+		assertNotEquals( 0, m.key[ 6 ] );
+		assertNotEquals( 0, m.key[ 7 ] );
+		assertNotEquals( 0, m.key[ 0 ] );
+		assertNotEquals( 0, m.key[ 1 ] );
+		//System.err.println(Arraym.toString( m.key ));
+		IntOpenHashSet keys = new IntOpenHashSet( m.keySet() );
+		IntIterator iterator = m.keySet().iterator();
+		IntOpenHashSet t = new IntOpenHashSet();
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		//System.err.println(Arraym.toString( m.key ));
+		assertTrue( t.add( iterator.nextInt() ) );
+		iterator.remove();
+		assertEquals( 0, m.size() );
+		assertEquals( keys, t );
+	}	
+	
+
+	
+	
+	@Test
 	public void testEntrySet() {
-		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
-		s.defaultReturnValue( -1 );
-		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
-		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
-		for( int i = 0; i < 100; i++ ) assertFalse( s.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
-		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
-		for( int i = 0; i < 100; i++ ) assertFalse( s.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
-		for( int i = 0; i < 100; i++ ) assertTrue( s.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
-		assertTrue( s.entrySet().isEmpty() );
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, i ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( m.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( m.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
+		assertTrue( m.entrySet().isEmpty() );
 	}
 	
 	@Test
 	public void testFastIterator() {
-		Int2IntOpenHashMap s = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
-		s.defaultReturnValue( -1 );
-		for( int i = 0; i < 100; i++ ) assertEquals( -1, s.put( i, i ) );
-		ObjectIterator<Entry> fastIterator = s.int2IntEntrySet().fastIterator();
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
+		m.defaultReturnValue( -1 );
+		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, i ) );
+		ObjectIterator<Entry> fastIterator = m.int2IntEntrySet().fastIterator();
 		Entry entry = fastIterator.next();
 		int key = entry.getIntKey();
 		entry.setValue( -1000 );
-		assertEquals( s.get( key ), -1000 );
+		assertEquals( m.get( key ), -1000 );
 		fastIterator.remove();
-		assertEquals( s.get( key ), -1 );
+		assertEquals( m.get( key ), -1 );
 	}
 }

@@ -21,7 +21,6 @@ import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.Size64;
 import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
 import static it.unimi.dsi.fastutil.HashCommon.bigArraySize;
 import static it.unimi.dsi.fastutil.HashCommon.maxFill;
 
@@ -362,7 +361,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		return true;	
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) {
 			if ( containsNull ) return removeNullEntry();
@@ -383,7 +381,6 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		}
 	}
 	 
-	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) return containsNull;
 
@@ -442,17 +439,22 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	/** An iterator over a hash big set. */
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
-		/** The base of the next entry to be returned, if positive or zero. */
-		int base = baseMask;
-		/** The displacement of the next entry to be returned. */
-		int displ = segmentMask;
-		/** The last entry that has been returned. It is -1 if either
-			we did not return an entry yet, or the last returned entry has been removed. */
+		/** The base of the last entry to returned, if positive or zero; initially, the number of components 
+			of the key array. If negative, the next entry to be	returned, if any, is 
+			that of index -base -2 from the {@link #wrapped} list. */
+		int base = key.length;
+		/** The displacement of the last entry returned; initially, zero. */
+		int displ;
+		/** The index of the last entry that has been returned (or {@link Long#MIN_VALUE} if {@link #base} is negative). 
+			It is -1 if either we did not return an entry yet, or the last returned entry has been removed. */
 		long last = -1;
 		/** A downward counter measuring how many entries must still be returned. */
 		long c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNull = OPEN_HASH_BIG_SET.this.containsNull;
+		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
+			would not be enumerated (other elements would be usually enumerated twice in their place). */
+		ARRAY_LIST KEY_GENERIC wrapped;
 
 		public boolean hasNext() {
 			return c != 0;
@@ -468,11 +470,23 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 				return KEY_NULL;
 			}
 			
-			
 			final KEY_GENERIC_TYPE[][] key = OPEN_HASH_BIG_SET.this.key;
-			do base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask; while( key[ base ][ displ ] == KEY_NULL );
-			last = base * (long)BigArrays.SEGMENT_SIZE + displ;			
-			return key[ base ][ displ ];
+
+			for(;;) {
+				if ( displ == 0 && base <= 0 ) {
+					// We are just enumerating elements from the wrapped list
+					last = Long.MIN_VALUE;
+					return wrapped.GET_KEY( - ( --base ) - 1 );
+				}
+
+				if ( displ-- == 0 ) displ = key[ --base ].length - 1;
+
+				final KEY_GENERIC_TYPE k = key[ base ][ displ ];			
+				if ( k != KEY_NULL ) {
+					last = base * (long)BigArrays.SEGMENT_SIZE + displ;			
+					return k;
+				}
+			}
 		}
 
 		/** Shifts left entries with the specified hash code, starting at the specified position,
@@ -500,18 +514,31 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 					pos = ( pos + 1 ) & mask;
 				}
 	
+				if ( pos < last ) {
+					// Wrapped entry.
+					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC();
+					wrapped.add( BIG_ARRAYS.get( key, pos ) );
+				}
+
 				BIG_ARRAYS.set( key, last, curr );
 			}
 		}
 
-		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
 			if ( last == n ) OPEN_HASH_BIG_SET.this.containsNull = false;
-			else if ( shiftKeys( last ) != last && displ-- == 0 ) {
-				displ = segmentMask;
-				base = ( base - 1 ) & baseMask;
+			else if ( base >= 0 ) shiftKeys( last );
+			else {
+				// We're removing wrapped entries.
+#if #keys(reference)
+				OPEN_HASH_BIG_SET.this.remove( wrapped.set( - base - 1, null ) );
+#else
+				OPEN_HASH_BIG_SET.this.remove( wrapped.GET_KEY( - base - 1 ) );
+#endif
+				last = -1; // Note that we must not decrement size
+				return;
 			}
+
 			size--;
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();

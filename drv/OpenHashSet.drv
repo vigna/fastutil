@@ -687,7 +687,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	}
 
 
-	@SuppressWarnings("unchecked")
 	public boolean remove( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) {
 			if ( containsNull ) return removeNullEntry();
@@ -708,7 +707,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean contains( final KEY_TYPE k ) {
 		if ( k == KEY_NULL ) return containsNull;
 
@@ -730,7 +728,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** Returns the element of this set that is equal to the given key, or <code>null</code>.
 	 * @return the element of this set that is equal to the given key, or <code>null</code>.
 	 */
-	@SuppressWarnings("unchecked")
 	public K get( final Object k ) {
 		if ( k == null ) return null; // This is correct independently of the value of containsNull
 
@@ -1083,7 +1080,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * <P>This class provides a list iterator over a linked hash set. The constructor runs in constant time. 
 	 */
 	private class SetIterator extends KEY_ABSTRACT_LIST_ITERATOR KEY_GENERIC {
-		final int n = OPEN_HASH_SET.this.n;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or <code>null</code> if no previous entry exists). */
 		int prev = -1;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or <code>null</code> if no next entry exists). */
@@ -1187,7 +1183,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 
 		
-		@SuppressWarnings("unchecked")
 		public void remove() {
 			ensureIndexKnown();
 			if ( curr == -1 ) throw new IllegalStateException();
@@ -1261,16 +1256,20 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** An iterator over a hash set. */
 
 	private class SetIterator extends KEY_ABSTRACT_ITERATOR KEY_GENERIC {
-		final int n = OPEN_HASH_SET.this.n;
-		/** The index of the last entry returned, if positive or zero; initially, -1. */
-		int pos = -1;
-		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos}). It is -1 if either
+		/** The index of the last entry returned, if positive or zero; initially, {@link #n}. If negative, the last
+			entry returned was from the {@link #wrapped} list. */
+		int pos = n;
+		/** The index of the last entry that has been returned (more precisely, the value of {@link #pos} if {@link #pos} is positive,
+			or {@link Integer#MIN_VALUE} if {@link #pos} is negative). It is -1 if either
 			we did not return an entry yet, or the last returned entry has been removed. */
 		int last = -1;
 		/** A downward counter measuring how many entries must still be returned. */
 		int c = size;
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
+		/** A lazily allocated list containing elements that have wrapped around the table because of removals; such elements
+			would not be enumerated (other elements would be usually enumerated twice in their place). */
+		ARRAY_LIST KEY_GENERIC wrapped;
 		
 		public boolean hasNext() {
 			return c != 0;
@@ -1285,8 +1284,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				return KEY_NULL;
 			}
 			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
-			while ( key[ ++pos ] == KEY_NULL );
-			return key[ last = pos ];
+			for(;;) {
+				if ( pos <= 0 ) {
+					// We are just enumerating elements from the wrapped list
+					last = Integer.MIN_VALUE;
+					return wrapped.GET_KEY( - ( --pos ) - 1 );
+				}
+				if ( key[ --pos ] != KEY_NULL ) return key[ last = pos ];
+			}
 		}
 
 
@@ -1315,15 +1320,30 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 					pos = ( pos + 1 ) & mask;
 				}
 	
+				if ( pos < last ) { // Wrapped entry.
+					if ( wrapped == null ) wrapped = new ARRAY_LIST KEY_GENERIC( 2 );
+					wrapped.add( key[ pos ] );
+				}
+
 				key[ last ] = curr;			
 			}
 		}
 	
-		@SuppressWarnings("unchecked")
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
 			if ( last == n ) OPEN_HASH_SET.this.containsNull = false;
-			else if ( shiftKeys( last ) != last ) pos--;
+			else if ( pos >= 0 ) shiftKeys( last );
+			else {
+				// We're removing wrapped entries.
+#if #keys(reference)
+				OPEN_HASH_SET.this.remove( wrapped.set( - pos - 1, null ) );
+#else
+				OPEN_HASH_SET.this.remove( wrapped.GET_KEY( - pos - 1 ) );
+#endif
+				last = -1; // Note that we must not decrement size
+				return;
+			}
+
 			size--;
 			last = -1; // You can no longer remove this entry.
 			if ( ASSERTS ) checkTable();
