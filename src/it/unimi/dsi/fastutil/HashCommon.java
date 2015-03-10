@@ -105,7 +105,7 @@ public class HashCommon {
 	 */	
 	public final static long phiMix( final long x ) {
 		long h = x * 0x5555555555555555L;
-		h ^= h >>> 32;
+		return h ^ ( h >>> 32 );
 	}
 
 	/** The inverse of {@link #phiMix(long)}. This method is mainly useful to create unit tests.
