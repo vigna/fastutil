@@ -69,8 +69,8 @@ public class IntOpenHashBigSetTest {
 		assertTrue( s.remove( 0 ) );
 		IntIterator iterator = s.iterator();
 		// Order is implementation-dependent
-		assertEquals( 1, iterator.nextInt() );
 		assertEquals( -1, iterator.nextInt() );
+		assertEquals( 1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
 		s = new IntOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE );

@@ -26,12 +26,12 @@ public class HashCommonTest {
 	@Test
 	public void testInverses() {
 		for( int i = 0 ; i < 1 << 30; i += 10000 ) {
-			assertEquals( i, HashCommon.invPhiMix( HashCommon.phiMix( i ) ) );
-			assertEquals( i, HashCommon.phiMix( HashCommon.invPhiMix( i ) ) );
+			assertEquals( i, HashCommon.invMix( HashCommon.mix( i ) ) );
+			assertEquals( i, HashCommon.mix( HashCommon.invMix( i ) ) );
 		}
 		for( long i = 0 ; i < 1 << 62; i += 1000000 ) {
-			assertEquals( i, HashCommon.invPhiMix( HashCommon.phiMix( i ) ) );
-			assertEquals( i, HashCommon.phiMix( HashCommon.invPhiMix( i ) ) );
+			assertEquals( i, HashCommon.invMix( HashCommon.mix( i ) ) );
+			assertEquals( i, HashCommon.mix( HashCommon.invMix( i ) ) );
 		}
 	}
 }

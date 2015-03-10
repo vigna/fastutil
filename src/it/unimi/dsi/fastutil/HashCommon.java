@@ -77,19 +77,19 @@ public class HashCommon {
 	 * 
 	 * @param x an integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
-	 * @see #invPhiMix(int)
+	 * @see #invMix(int)
 	 */	
-	public final static int phiMix( final int x ) {
+	public final static int mix( final int x ) {
 		final int h = x * 0xa834aaab;
 		return h ^ (h >>> 16);
 	}
 
-	/** The inverse of {@link #phiMix(int)}. This method is mainly useful to create unit tests.
+	/** The inverse of {@link #mix(int)}. This method is mainly useful to create unit tests.
 	 * 
 	 * @param x an integer.
-	 * @return a value that passed through {@link #phiMix(int)} would give {@code x}.
+	 * @return a value that passed through {@link #mix(int)} would give {@code x}.
 	 */	
-	public final static int invPhiMix( final int x ) {
+	public final static int invMix( final int x ) {
 		return ( x ^ x >>> 16 ) * 0x16260003; 
 	}
 
@@ -103,18 +103,18 @@ public class HashCommon {
 	 * @param x a long integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
 	 */	
-	public final static long phiMix( final long x ) {
-		long h = x * 0x5555555555555555L;
+	public final static long mix( final long x ) {
+		long h = x * 0x55555554aaaaaaabL;
 		return h ^ ( h >>> 32 );
 	}
 
-	/** The inverse of {@link #phiMix(long)}. This method is mainly useful to create unit tests.
+	/** The inverse of {@link #mix(long)}. This method is mainly useful to create unit tests.
 	 * 
 	 * @param x a long integer.
-	 * @return a value that passed through {@link #phiMix(long)} would give {@code x}.
+	 * @return a value that passed through {@link #mix(long)} would give {@code x}.
 	 */	
-	public final static long invPhiMix( long x ) {
-		return ( x ^ x >>> 32 ) * 0xFFFFFFFFFFFFFFFDL;
+	public final static long invMix( long x ) {
+		return ( x ^ x >>> 32 ) * 0x600000003L;
 	}
 
 

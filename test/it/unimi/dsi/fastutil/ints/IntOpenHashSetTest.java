@@ -95,8 +95,8 @@ public class IntOpenHashSetTest {
 		assertTrue( s.remove( 0 ) );
 		IntIterator iterator = s.iterator();
 		// Order is implementation-dependent
-		assertEquals( -1, iterator.nextInt() );
 		assertEquals( 1, iterator.nextInt() );
+		assertEquals( -1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
 		s = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
@@ -120,9 +120,9 @@ public class IntOpenHashSetTest {
 		IntOpenHashSet s = new IntOpenHashSet( 4, .5f );
 		assertEquals( 8, s.n );
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
-		s.add( HashCommon.invPhiMix( 6 ) );
-		s.add( HashCommon.invPhiMix( 7 ) );
-		s.add( HashCommon.invPhiMix( 6 + 8 ) );
+		s.add( HashCommon.invMix( 6 ) );
+		s.add( HashCommon.invMix( 7 ) );
+		s.add( HashCommon.invMix( 6 + 8 ) );
 		assertNotEquals( 0, s.key[ 0 ] );
 		assertNotEquals( 0, s.key[ 6 ] );
 		assertNotEquals( 0, s.key[ 7 ] );
@@ -142,11 +142,11 @@ public class IntOpenHashSetTest {
 		IntOpenHashSet s = new IntOpenHashSet( 4, .75f );
 		assertEquals( 8, s.n );
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
-		s.add( HashCommon.invPhiMix( 4 ) );
-		s.add( HashCommon.invPhiMix( 5 ) );
-		s.add( HashCommon.invPhiMix( 4 + 8 ) );
-		s.add( HashCommon.invPhiMix( 5 + 8 ) );
-		s.add( HashCommon.invPhiMix( 4 + 16 ) );
+		s.add( HashCommon.invMix( 4 ) );
+		s.add( HashCommon.invMix( 5 ) );
+		s.add( HashCommon.invMix( 4 + 8 ) );
+		s.add( HashCommon.invMix( 5 + 8 ) );
+		s.add( HashCommon.invMix( 4 + 16 ) );
 		assertNotEquals( 0, s.key[ 0 ] );
 		assertNotEquals( 0, s.key[ 4 ] );
 		assertNotEquals( 0, s.key[ 5 ] );
@@ -177,11 +177,11 @@ public class IntOpenHashSetTest {
 		IntOpenHashSet s = new IntOpenHashSet( 4, .75f );
 		assertEquals( 8, s.n );
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
-		s.add( HashCommon.invPhiMix( 5 ) );
-		s.add( HashCommon.invPhiMix( 5 + 8 ) );
-		s.add( HashCommon.invPhiMix( 5 + 16 ) );
-		s.add( HashCommon.invPhiMix( 5 + 32 ) );
-		s.add( HashCommon.invPhiMix( 5 + 64 ) );
+		s.add( HashCommon.invMix( 5 ) );
+		s.add( HashCommon.invMix( 5 + 8 ) );
+		s.add( HashCommon.invMix( 5 + 16 ) );
+		s.add( HashCommon.invMix( 5 + 32 ) );
+		s.add( HashCommon.invMix( 5 + 64 ) );
 		assertNotEquals( 0, s.key[ 5 ] );
 		assertNotEquals( 0, s.key[ 6 ] );
 		assertNotEquals( 0, s.key[ 7 ] );

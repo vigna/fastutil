@@ -304,8 +304,8 @@ public class Int2IntOpenHashMapTest {
 		assertEquals( 0, m.remove( 0 ) );
 		IntIterator iterator = m.keySet().iterator();
 		// Order is implementation-dependent
-		assertEquals( -1, iterator.nextInt() );
 		assertEquals( 1, iterator.nextInt() );
+		assertEquals( -1, iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
 		
 		m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
@@ -331,9 +331,9 @@ public class Int2IntOpenHashMapTest {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap( 4, .5f );
 		assertEquals( 8, m.n );
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
-		m.put( HashCommon.invPhiMix( 6 ), 0 );
-		m.put( HashCommon.invPhiMix( 7 ), 0 );
-		m.put( HashCommon.invPhiMix( 6 + 8 ), 0 );
+		m.put( HashCommon.invMix( 6 ), 0 );
+		m.put( HashCommon.invMix( 7 ), 0 );
+		m.put( HashCommon.invMix( 6 + 8 ), 0 );
 		assertNotEquals( 0, m.key[ 0 ] );
 		assertNotEquals( 0, m.key[ 6 ] );
 		assertNotEquals( 0, m.key[ 7 ] );
@@ -353,11 +353,11 @@ public class Int2IntOpenHashMapTest {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap( 4, .75f );
 		assertEquals( 8, m.n );
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
-		m.put( HashCommon.invPhiMix( 4 ), 0 );
-		m.put( HashCommon.invPhiMix( 5 ), 0 );
-		m.put( HashCommon.invPhiMix( 4 + 8 ), 0 );
-		m.put( HashCommon.invPhiMix( 5 + 8 ), 0 );
-		m.put( HashCommon.invPhiMix( 4 + 16 ), 0 );
+		m.put( HashCommon.invMix( 4 ), 0 );
+		m.put( HashCommon.invMix( 5 ), 0 );
+		m.put( HashCommon.invMix( 4 + 8 ), 0 );
+		m.put( HashCommon.invMix( 5 + 8 ), 0 );
+		m.put( HashCommon.invMix( 4 + 16 ), 0 );
 		assertNotEquals( 0, m.key[ 0 ] );
 		assertNotEquals( 0, m.key[ 4 ] );
 		assertNotEquals( 0, m.key[ 5 ] );
@@ -388,11 +388,11 @@ public class Int2IntOpenHashMapTest {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap( 4, .75f );
 		assertEquals( 8, m.n );
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
-		m.put( HashCommon.invPhiMix( 5 ), 0 );
-		m.put( HashCommon.invPhiMix( 5 + 8 ), 0 );
-		m.put( HashCommon.invPhiMix( 5 + 16 ), 0 );
-		m.put( HashCommon.invPhiMix( 5 + 32 ), 0 );
-		m.put( HashCommon.invPhiMix( 5 + 64 ), 0 );
+		m.put( HashCommon.invMix( 5 ), 0 );
+		m.put( HashCommon.invMix( 5 + 8 ), 0 );
+		m.put( HashCommon.invMix( 5 + 16 ), 0 );
+		m.put( HashCommon.invMix( 5 + 32 ), 0 );
+		m.put( HashCommon.invMix( 5 + 64 ), 0 );
 		assertNotEquals( 0, m.key[ 5 ] );
 		assertNotEquals( 0, m.key[ 6 ] );
 		assertNotEquals( 0, m.key[ 7 ] );
