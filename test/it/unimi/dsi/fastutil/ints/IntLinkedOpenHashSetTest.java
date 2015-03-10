@@ -297,9 +297,11 @@ public class IntLinkedOpenHashSetTest {
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
 		assertTrue( s.remove( 0 ) );
 		IntListIterator iterator = s.iterator();
-		assertEquals( -1, iterator.nextInt() );
-		assertEquals( 1, iterator.nextInt() );
+		IntOpenHashSet z = new IntOpenHashSet();
+		z.add( iterator.nextInt() );
+		z.add( iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
+		assertEquals( new IntOpenHashSet( new int[] { -1, 1 } ), z );
 		
 		s = new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );

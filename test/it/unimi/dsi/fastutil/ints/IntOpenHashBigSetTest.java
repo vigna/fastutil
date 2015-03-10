@@ -68,10 +68,11 @@ public class IntOpenHashBigSetTest {
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
 		assertTrue( s.remove( 0 ) );
 		IntIterator iterator = s.iterator();
-		// Order is implementation-dependent
-		assertEquals( -1, iterator.nextInt() );
-		assertEquals( 1, iterator.nextInt() );
+		IntOpenHashSet z = new IntOpenHashSet();
+		z.add( iterator.nextInt() );
+		z.add( iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
+		assertEquals( new IntOpenHashSet( new int[] { -1, 1 } ), z );
 		
 		s = new IntOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE );
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );

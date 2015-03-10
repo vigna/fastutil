@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 import java.util.Arrays;
 
@@ -20,10 +21,11 @@ public class LongOpenHashBigSetTest {
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );
 		assertTrue( s.remove( 0 ) );
 		LongIterator iterator = s.iterator();
-		// Order is implementation-dependent
-		assertEquals( -1, iterator.nextLong() );
-		assertEquals( 1, iterator.nextLong() );
+		LongOpenHashSet z = new LongOpenHashSet();
+		z.add( iterator.nextLong() );
+		z.add( iterator.nextLong() );
 		assertFalse( iterator.hasNext() );
+		assertEquals( new LongOpenHashSet( new long[] { -1, 1 } ), z );
 		
 		s = new LongOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE );
 		for( int i = -1; i <= 1; i++ ) assertTrue( s.add( i ) );

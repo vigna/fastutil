@@ -303,10 +303,11 @@ public class Int2IntOpenHashMapTest {
 		for( int i = -1; i <= 1; i++ ) assertEquals( -1, m.put( i, i ) );
 		assertEquals( 0, m.remove( 0 ) );
 		IntIterator iterator = m.keySet().iterator();
-		// Order is implementation-dependent
-		assertEquals( 1, iterator.nextInt() );
-		assertEquals( -1, iterator.nextInt() );
+		IntOpenHashSet z = new IntOpenHashSet();
+		z.add( iterator.nextInt() );
+		z.add( iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
+		assertEquals( new IntOpenHashSet( new int[] { -1, 1 } ), z );
 		
 		m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
 		m.defaultReturnValue( -1 );

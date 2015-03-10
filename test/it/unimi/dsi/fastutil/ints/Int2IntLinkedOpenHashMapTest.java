@@ -470,9 +470,11 @@ public class Int2IntLinkedOpenHashMapTest {
 		for( int i = -1; i <= 1; i++ ) assertEquals( 0, s.put( i, i ) );
 		s.remove( 0 );
 		IntIterator iterator = s.keySet().iterator();
-		assertEquals( -1, iterator.nextInt() );
-		assertEquals( 1, iterator.nextInt() );
+		IntOpenHashSet z = new IntOpenHashSet();
+		z.add( iterator.nextInt() );
+		z.add( iterator.nextInt() );
 		assertFalse( iterator.hasNext() );
+		assertEquals( new IntOpenHashSet( new int[] { -1, 1 } ), z );
 		
 		s = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
 		for( int i = -1; i <= 1; i++ ) assertEquals( 0, s.put( i, i ) );
