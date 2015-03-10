@@ -73,15 +73,16 @@ public class HashCommon {
 	 * <p>This method mixes the bits of the argument by multiplying by a constant and
 	 * xorshifting the result. The constants where grown using a genetic algorithm so
 	 * to minimize the maximum bias and, in case of a tie, the &chi;-squared statistics
-	 * of the lower 30 bits. The scores were computed using bitvectors with at most three ones.
+	 * of the lower 30 bits. The statistics were computed using low-entropy bit vectors 
+	 * with at most three ones.
 	 * 
 	 * @param x an integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
 	 * @see #invMix(int)
 	 */	
-	public final static int mix( final int x ) {
-		final int h = x * 0xa834aaab;
-		return h ^ (h >>> 16);
+	public final static int mix( int x ) {
+		x *= 0xa834aaab;
+		return x ^ x >>> 16;
 	}
 
 	/** The inverse of {@link #mix(int)}. This method is mainly useful to create unit tests.
@@ -98,14 +99,16 @@ public class HashCommon {
 	 * <p>This method mixes the bits of the argument by multiplying by a constant and
 	 * xorshifting the result. The constants where grown using a genetic algorithm so
 	 * to minimize the maximum bias and, in case of a tie, the &chi;-squared statistics
-	 * of the lower 56 bits. The scores were computed using bitvectors with at most three ones.
-	 *
+	 * of the lower 56 bits. The statistics were computed using low-entropy bit vectors 
+	 * with at most three ones.
+	 * 
 	 * @param x a long integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
+	 * @see #invMix(long)
 	 */	
-	public final static long mix( final long x ) {
-		long h = x * 0x55555554aaaaaaabL;
-		return h ^ ( h >>> 32 );
+	public final static long mix( long x ) {
+		x *= 0x55555554aaaaaaabL;
+		return x ^ x >>> 32;
 	}
 
 	/** The inverse of {@link #mix(long)}. This method is mainly useful to create unit tests.
