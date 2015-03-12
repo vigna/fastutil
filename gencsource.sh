@@ -442,25 +442,27 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 \
 \
+"#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
 "#define KEY_EQUALS(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), " KEY_GENERIC_CAST "(y) ) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), " KEY_GENERIC_CAST "(y) ) )\n"\
 "#else\n"\
-"#if #keyclass(Object)\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
-"#else\n"\
-"#if #keyclass(Float)\n"\
+"#endif\n"\
+"#define KEY_IS_NULL(x) ( (x) == null )\n"\
+"#elif #keyclass(Float)\n"\
 "#define KEY_EQUALS(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
+"#define KEY_IS_NULL(x) ( Float.floatToIntBits(x) == 0 )\n"\
 "#elif #keyclass(Double)\n"\
 "#define KEY_EQUALS(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
+"#define KEY_IS_NULL(x) ( Double.doubleToLongBits(x) == 0 )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
-"#endif\n"\
-"#endif\n"\
+"#define KEY_IS_NULL(x) ( (x) == KEY_NULL )\n"\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\

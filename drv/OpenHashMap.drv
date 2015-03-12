@@ -526,7 +526,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	private int insert(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
 		int pos;
 
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) return n;
 			containsNullKey = true;
 			pos = n;
@@ -536,9 +536,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			final KEY_GENERIC_TYPE[] key = this.key;
 
 			// The starting point.
-			if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) != KEY_NULL ) {
+			if ( ! KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) {
 				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return pos;
-				while( ( curr = key[ pos = ( pos + 1 ) & mask ] ) != KEY_NULL ) 
+				while( ! KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) 
 					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return pos;
 			}
 		
@@ -613,7 +613,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public VALUE_GENERIC_TYPE addTo(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE incr) {
 		int pos;
 	
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) return addToValue( n, incr );
 			pos = n;
 			containsNullKey = true;
@@ -623,9 +623,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			final KEY_GENERIC_TYPE[] key = this.key;
 
 			// The starting point.
-			if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) != KEY_NULL ) {
+			if ( ! KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) {
 				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return addToValue( pos, incr );
-				while( ( curr = key[ pos = ( pos + 1 ) & mask ] ) != KEY_NULL ) 
+				while( ! KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) 
 					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return addToValue( pos, incr );
 			}
 			key[ pos ] = k;		  
@@ -672,7 +672,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
 			for(;;) {
-				if ( ( curr = key[ pos ] ) == KEY_NULL ) {
+				if ( KEY_IS_NULL( curr = key[ pos ] ) ) {
 					key[ last ] = KEY_NULL;
 #if #values(reference)
 					value[ last ] = null;
@@ -695,7 +695,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 
 	public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) return removeNullEntry();
 			return defRetValue;
 		}
@@ -705,10 +705,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return defRetValue;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return defRetValue;
 		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( pos );
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return defRetValue;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return defRetValue;
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( pos );
 		}
 	}
@@ -717,7 +717,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #if #keys(primitive) || #values(primitive)
 	public VALUE_GENERIC_CLASS remove( final Object ok ) {
 		final KEY_GENERIC_TYPE k = KEY_GENERIC_CAST KEY_OBJ2TYPE( ok );
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) return VALUE2OBJ( removeNullEntry() );
 			return OBJECT_DEFAULT_RETURN_VALUE;
 		}
@@ -727,10 +727,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return OBJECT_DEFAULT_RETURN_VALUE;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
 		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return VALUE2OBJ( removeEntry( pos ) );
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return OBJECT_DEFAULT_RETURN_VALUE;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return VALUE2OBJ( removeEntry( pos ) );
 		}
 	}
@@ -841,7 +841,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 * @return the corresponding value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
 	 */
 	public VALUE_GENERIC_TYPE getAndMoveToFirst( final KEY_GENERIC_TYPE k ) {
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) {
 				moveIndexToFirst( n );
 				return value[ n ];
@@ -855,7 +855,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return defRetValue;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return defRetValue;
 		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) {
 			moveIndexToFirst( pos );
 			return value[ pos ];
@@ -863,7 +863,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		// There's always an unused entry.
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return defRetValue;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return defRetValue;
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) )  {
 				moveIndexToFirst( pos );
 				return value[ pos ];
@@ -877,7 +877,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 * @return the corresponding value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
 	 */
 	public VALUE_GENERIC_TYPE getAndMoveToLast( final KEY_GENERIC_TYPE k ) {
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) {
 				moveIndexToLast( n );
 				return value[ n ];
@@ -891,7 +891,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return defRetValue;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return defRetValue;
 		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) {
 			moveIndexToLast( pos );
 			return value[ pos ];
@@ -899,7 +899,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		// There's always an unused entry.
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return defRetValue;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return defRetValue;
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) )  {
 				moveIndexToLast( pos );
 				return value[ pos ];
@@ -916,7 +916,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public VALUE_GENERIC_TYPE putAndMoveToFirst( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
 		int pos;
 
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) {
 				moveIndexToFirst( n );
 				return setValue( n, v );
@@ -929,12 +929,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			final KEY_GENERIC_TYPE[] key = this.key;
 
 			// The starting point.
-			if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) != KEY_NULL ) {
+			if ( ! KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) {
 				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) {
 					moveIndexToFirst( pos );
 					return setValue( pos, v );
 				}
-				while( ( curr = key[ pos = ( pos + 1 ) & mask ] ) != KEY_NULL ) 
+				while( ! KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) 
 					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) {
 						moveIndexToFirst( pos );
 						return setValue( pos, v );
@@ -970,7 +970,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public VALUE_GENERIC_TYPE putAndMoveToLast( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
 		int pos;
 
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNullKey ) {
 				moveIndexToLast( n );
 				return setValue( n, v );
@@ -983,12 +983,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			final KEY_GENERIC_TYPE[] key = this.key;
 
 			// The starting point.
-			if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) != KEY_NULL ) {
+			if ( ! KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) {
 				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) {
 					moveIndexToLast( pos );
 					return setValue( pos, v );
 				}
-				while( ( curr = key[ pos = ( pos + 1 ) & mask ] ) != KEY_NULL ) 
+				while( ! KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) 
 					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) {
 						moveIndexToLast( pos );
 						return setValue( pos, v );
@@ -1021,19 +1021,19 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	public VALUE_GENERIC_CLASS get( final KEY_CLASS ok ) {
 		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( ok );
-		if ( k == KEY_NULL ) return containsNullKey ? VALUE2OBJ( value[ n ] ) : OBJECT_DEFAULT_RETURN_VALUE;
+		if ( KEY_IS_NULL( k ) ) return containsNullKey ? VALUE2OBJ( value[ n ] ) : OBJECT_DEFAULT_RETURN_VALUE;
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return OBJECT_DEFAULT_RETURN_VALUE;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
 		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE2OBJ( value[ pos ] );
 
 		// There's always an unused entry.
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return OBJECT_DEFAULT_RETURN_VALUE;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE2OBJ( value[ pos ] );
 		}
 	}
@@ -1041,35 +1041,35 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #endif
 
 	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
-		if ( k == KEY_NULL ) return containsNullKey ? value[ n ] : defRetValue;
+		if ( KEY_IS_NULL( k ) ) return containsNullKey ? value[ n ] : defRetValue;
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return defRetValue;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return defRetValue;
 		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return value[ pos ];
 		// There's always an unused entry.
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return defRetValue;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return defRetValue;
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return value[ pos ];
 		}
 	}
 
 	public boolean containsKey( final KEY_TYPE k ) {
-		if ( k == KEY_NULL ) return containsNullKey;
+		if ( KEY_IS_NULL( k ) ) return containsNullKey;
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
 		int pos;
 
 		// The starting point.
-		if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return false;
+		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return false;
 		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return true;
 		// There's always an unused entry.
 		while( true ) {
-			if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return false;
+			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return false;
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return true;
 		}
 	}
@@ -1079,7 +1079,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		final VALUE_GENERIC_TYPE value[] = this.value;
 		final KEY_GENERIC_TYPE key[] = this.key;
 		if ( containsNullKey && VALUE_EQUALS( value[ n ], v ) ) return true;
-		for( int i = n; i-- != 0; ) if ( key[ i ] != KEY_NULL && VALUE_EQUALS( value[ i ], v ) ) return true;
+		for( int i = n; i-- != 0; ) if ( ! KEY_IS_NULL( key[ i ] ) && VALUE_EQUALS( value[ i ], v ) ) return true;
 		return false;
 	}
 
@@ -1318,7 +1318,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		private MapIterator( final KEY_GENERIC_TYPE from ) {
-			if ( from == KEY_NULL ) {
+			if ( KEY_IS_NULL( from ) ) {
 				if ( OPEN_HASH_MAP.this.containsNullKey ) {
 					next = GET_NEXT( link[ n ] );
 					prev = n;
@@ -1337,7 +1337,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			int pos = KEY2INTHASH( from ) & mask;
 
 			// There's always an unused entry.
-			while( key[ pos ] != KEY_NULL ) {
+			while( ! KEY_IS_NULL( key[ pos ] ) ) {
 				if ( KEY_EQUALS_NOT_NULL( key[ pos ], from ) ) {
 					// Note: no valid index known.
 					next = GET_NEXT( link[ pos ] );
@@ -1444,7 +1444,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				for(;;) {
 					pos = ( ( last = pos ) + 1 ) & mask;
 					for(;;) {
-						if ( ( curr = key[ pos ] ) == KEY_NULL ) {
+						if ( KEY_IS_NULL( curr = key[ pos ] ) ) {
 							key[ last ] = KEY_NULL;
 #if #values(reference)
 							value[ last ] = null;
@@ -1571,7 +1571,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					while ( ! KEY_EQUALS_NOT_NULL( k, key[ p ] ) ) p = ( p + 1 ) & mask;
 					return p;
 				}
-				if ( key[ pos ] != KEY_NULL ) return last = pos;
+				if ( ! KEY_IS_NULL( key[ pos ] ) ) return last = pos;
 			}
 		}
 
@@ -1590,7 +1590,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				pos = ( ( last = pos ) + 1 ) & mask;
 				
 				for(;;) {
-					if ( ( curr = key[ pos ] ) == KEY_NULL ) {
+					if ( KEY_IS_NULL( curr = key[ pos ] ) ) {
 						key[ last ] = KEY_NULL;
 #if #values(reference)
 						value[ last ] = null;
@@ -1714,18 +1714,18 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
 			
-			if ( k == KEY_NULL ) return ( OPEN_HASH_MAP.this.containsNullKey && VALUE_EQUALS( value[ n ], VALUE_CLASS2TYPE( e.getValue() ) ) );
+			if ( KEY_IS_NULL( k ) ) return ( OPEN_HASH_MAP.this.containsNullKey && VALUE_EQUALS( value[ n ], VALUE_CLASS2TYPE( e.getValue() ) ) );
 
 			KEY_GENERIC_TYPE curr;
 			final KEY_GENERIC_TYPE[] key = OPEN_HASH_MAP.this.key;
 			int pos;
 
 			// The starting point.
-			if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return false;
+			if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return false;
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE_EQUALS( value[ pos ], VALUE_CLASS2TYPE( e.getValue() ) );
 			// There's always an unused entry.
 			while( true ) {
-				if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return false;
+				if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return false;
 				if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE_EQUALS( value[ pos ], VALUE_CLASS2TYPE( e.getValue() ) );
 			}
 		}
@@ -1738,7 +1738,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
 			final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE( e.getValue() );
 
-			if ( k == KEY_NULL ) {
+			if ( KEY_IS_NULL( k ) ) {
 				if ( containsNullKey && VALUE_EQUALS( value[ n ], v ) ) {
 					removeNullEntry();
 					return true;
@@ -1751,7 +1751,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			int pos;
 
 			// The starting point.
-			if ( ( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) == KEY_NULL ) return false;
+			if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return false;
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) {
 				if ( VALUE_EQUALS( value[ pos ], v ) ) {
 					removeEntry( pos );
@@ -1761,7 +1761,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			}
 				
 			while( true ) {
-				if ( ( curr = key[ pos = ( pos + 1 ) & mask ] ) == KEY_NULL ) return false;
+				if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return false;
 				if ( KEY_EQUALS_NOT_NULL( curr, k ) )  {
 					if ( VALUE_EQUALS( value[ pos ], v ) ) {
 						removeEntry( pos );
@@ -2055,10 +2055,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		first = -1;
 
 		for( int j = size; j-- != 0; ) {
-			if ( key[ i ] == KEY_NULL ) pos = newN;
+			if ( KEY_IS_NULL( key[ i ] ) ) pos = newN;
 			else {
 				pos = KEY2INTHASH( key[ i ] ) & mask;
-				while ( newKey[ pos ] != KEY_NULL ) pos = ( pos + 1 ) & mask;
+				while ( ! KEY_IS_NULL( newKey[ pos ] ) ) pos = ( pos + 1 ) & mask;
 				newKey[ pos ] = key[ i ];
 			}
 
@@ -2089,10 +2089,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int i = n, pos;
 
 		for( int j = realSize(); j-- != 0; ) {
-			while( key[ --i ] == KEY_NULL );
+			while( KEY_IS_NULL( key[ --i ] ) );
 		
-			if ( newKey[ pos = KEY2INTHASH( key[ i ] ) & mask ] != KEY_NULL ) 
-				while ( newKey[ pos = ( pos + 1 ) & mask ] != KEY_NULL );
+			if ( ! KEY_IS_NULL( newKey[ pos = KEY2INTHASH( key[ i ] ) & mask ] ) ) 
+				while ( ! KEY_IS_NULL( newKey[ pos = ( pos + 1 ) & mask ] ) );
 				
 			newKey[ pos ] = key[ i ];
 			newValue[ pos ] = value[ i ];
@@ -2158,7 +2158,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public int hashCode() {
 		int h = 0;
 		for( int j = realSize(), i = 0, t = 0; j-- != 0; ) {
-			while( key[ i ] == KEY_NULL ) i++;
+			while( KEY_IS_NULL( key[ i ] ) ) i++;
 #if #keys(reference)
 			if ( this != key[ i ] )
 #endif
@@ -2217,13 +2217,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			k = KEY_GENERIC_CAST s.READ_KEY();
 			v = VALUE_GENERIC_CAST s.READ_VALUE();
 
-			if ( k == KEY_NULL ) {
+			if ( KEY_IS_NULL( k ) ) {
 				pos = n;
 				containsNullKey = true;
 			}
 			else {
 				pos = KEY2INTHASH( k ) & mask;
-				while ( key[ pos ] != KEY_NULL ) pos = ( pos + 1 ) & mask;
+				while ( ! KEY_IS_NULL( key[ pos ] ) ) pos = ( pos + 1 ) & mask;
 				key[ pos ] = k;
 			}
 
@@ -2261,7 +2261,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		assert n == key.length - 1;
 		int n = key.length - 1;
 		while( n-- != 0 ) 
-			if ( key[ n ] != KEY_NULL && ! containsKey( key[ n ] ) ) 
+			if ( ! KEY_IS_NULL( key[ n ] ) && ! containsKey( key[ n ] ) ) 
 				throw new AssertionError( "Hash table has key " + key[ n ] + " marked as occupied, but the key does not belong to the table" );
 
 #if #keys(primitive)
@@ -2271,7 +2271,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #endif
 		
 		for( int i = key.length; i-- != 0; )
-			if ( key[ i ] != KEY_NULL && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice at position " + i );
+			if ( ! KEY_IS_NULL( key[ i ] ) && ! s.add( key[ i ] ) ) throw new AssertionError( "Key " + key[ i ] + " appears twice at position " + i );
 
 #ifdef Linked
 		KEY_BIDI_ITERATOR KEY_GENERIC i = keySet().iterator();

@@ -295,10 +295,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		int displ, base;
 
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNull ) return false;
-			base = (int)(( n & mask ) >>> BigArrays.SEGMENT_SHIFT );
-			displ = (int)( n & segmentMask );
 			containsNull = true;
 		}
 		else {
@@ -307,9 +305,9 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			final long h = KEY2LONGHASH( k );
 
 			// The starting point.
-			if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) != KEY_NULL ) {
+			if ( ! KEY_IS_NULL( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) ) {
 				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return false;
-				while( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) != KEY_NULL )
+				while( ! KEY_IS_NULL( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) )
 					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return false;
 			}
 
@@ -335,7 +333,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			pos = ( ( last = pos ) + 1 ) & mask;
 			
 			for(;;) {
-				if ( BIG_ARRAYS.get( key, pos ) == KEY_NULL ) {
+				if ( KEY_IS_NULL( BIG_ARRAYS.get( key, pos ) ) ) {
 					BIG_ARRAYS.set( key, last, KEY_NULL );
 					return;
 				}
@@ -361,7 +359,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	}
 
 	public boolean remove( final KEY_TYPE k ) {
-		if ( k == KEY_NULL ) {
+		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNull ) return removeNullEntry();
 			return false;
 		}
@@ -372,16 +370,16 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int displ, base;
 
 		// The starting point.
-		if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) == KEY_NULL ) return false;
+		if ( KEY_IS_NULL( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) ) return false;
 		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( base, displ );
 		while( true ) {
-			if ( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) == KEY_NULL ) return false;
+			if ( KEY_IS_NULL( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) ) return false;
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( base, displ );
 		}
 	}
 	 
 	public boolean contains( final KEY_TYPE k ) {
-		if ( k == KEY_NULL ) return containsNull;
+		if ( KEY_IS_NULL( k ) ) return containsNull;
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[][] key = this.key;
@@ -389,10 +387,10 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int displ, base;
 
 		// The starting point.
-		if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) == KEY_NULL ) return false;
+		if ( KEY_IS_NULL( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) ) return false;
 		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return true;
 		while( true ) {
-			if ( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) == KEY_NULL ) return false;
+			if ( KEY_IS_NULL( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) ) return false;
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return true;
 		}
 	}
@@ -410,10 +408,10 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int displ, base;
 
 		// The starting point.
-		if ( ( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) == KEY_NULL ) return null;
+		if ( KEY_IS_NULL( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) ) return null;
 		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
 		while( true ) {
-			if ( ( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) == KEY_NULL ) return null;
+			if ( KEY_IS_NULL( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) ) return null;
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
 		}
 	}
@@ -480,7 +478,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 				if ( displ-- == 0 ) displ = key[ --base ].length - 1;
 
 				final KEY_GENERIC_TYPE k = key[ base ][ displ ];			
-				if ( k != KEY_NULL ) {
+				if ( ! KEY_IS_NULL( k ) ) {
 					last = base * (long)BigArrays.SEGMENT_SIZE + displ;			
 					return k;
 				}
@@ -502,7 +500,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 				pos = ( ( last = pos ) + 1 ) & mask;
 			
 				for(;;) {
-					if( ( curr = BIG_ARRAYS.get( key, pos ) ) == KEY_NULL ) {
+					if( KEY_IS_NULL( curr = BIG_ARRAYS.get( key, pos ) ) ) {
 						BIG_ARRAYS.set( key, last, KEY_NULL );
 						return;
 					}
@@ -638,14 +636,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 		for( long i = realSize(); i-- != 0; ) {
 
-			while( key[ base ][ displ ] == KEY_NULL ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
+			while( KEY_IS_NULL( key[ base ][ displ ] ) ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 
 			k = key[ base ][ displ ];
 			h = KEY2LONGHASH( k );
 
 			// The starting point.
-			if ( newKey[ b = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ d = (int)( h & newSegmentMask ) ] != KEY_NULL )
-				while( newKey[ b = ( b + ( ( d = ( d + 1 ) & newSegmentMask ) == 0 ? 1 : 0 ) ) & newBaseMask ][ d ] != KEY_NULL );
+			if ( ! KEY_IS_NULL( newKey[ b = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ d = (int)( h & newSegmentMask ) ] ) )
+				while( ! KEY_IS_NULL( newKey[ b = ( b + ( ( d = ( d + 1 ) & newSegmentMask ) == 0 ? 1 : 0 ) ) & newBaseMask ][ d ] ) );
 
 			newKey[ b ][ d ] = k;
 
@@ -711,7 +709,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int h = 0, base = 0, displ = 0;
 
 		for( long j = realSize(); j-- != 0; ) {
-			while( key[ base ][ displ ] == KEY_NULL ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
+			while( KEY_IS_NULL( key[ base ][ displ ] ) ) base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) );
 #if #keys(reference)
 			if ( this != key[ base ][ displ ] )
 #endif
@@ -747,11 +745,11 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		for( long i = size; i-- != 0; ) {
 			k = KEY_GENERIC_CAST s.READ_KEY();
 
-			if ( k == KEY_NULL ) containsNull = true;
+			if ( KEY_IS_NULL( k ) ) containsNull = true;
 			else {
 				h = KEY2LONGHASH( k );
-				if ( key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] != KEY_NULL )
-					while( key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] != KEY_NULL );
+				if ( ! KEY_IS_NULL( key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) )
+					while( ! KEY_IS_NULL( key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) );
 				key[ base ][ displ ] = k;
 			}
 		}
@@ -766,7 +764,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		assert n == BIG_ARRAYS.length( key );
 		long n = this.n;
 		while( n-- != 0 ) 
-			if ( BIG_ARRAYS.get( key, n ) != KEY_NULL && ! contains( BIG_ARRAYS.get( key, n ) ) ) 
+			if ( ! KEY_IS_NULL( BIG_ARRAYS.get( key, n ) ) && ! contains( BIG_ARRAYS.get( key, n ) ) ) 
 				throw new AssertionError( "Hash table has key " + BIG_ARRAYS.get( key, n ) + " marked as occupied, but the key does not belong to the table" );
 
 #if #keys(primitive)
@@ -776,7 +774,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #endif
 		
 		for( long i = size(); i-- != 0; )
-			if ( BIG_ARRAYS.get( key, i ) != KEY_NULL && ! s.add( BIG_ARRAYS.get( key, i ) ) ) throw new AssertionError( "Key " + BIG_ARRAYS.get( key, i ) + " appears twice" );
+			if ( ! KEY_IS_NULL( BIG_ARRAYS.get( key, i ) ) && ! s.add( BIG_ARRAYS.get( key, i ) ) ) throw new AssertionError( "Key " + BIG_ARRAYS.get( key, i ) + " appears twice" );
 
 	}
 #else
@@ -1020,7 +1018,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int maxProbes = 0;	
 		final double f = (double)m.size / m.n;
 		for( int i = 0, c = 0; i < m.n; i++ ) {
-			if ( BIG_ARRAYS.get( m.key, i ) != KEY_NULL ) c++;
+			if ( ! KEY_IS_NULL( BIG_ARRAYS.get( m.key, i ) ) ) c++;
 			else {
 				if ( c != 0 ) {
 					final long p = ( c + 1 ) * ( c + 2 ) / 2;
