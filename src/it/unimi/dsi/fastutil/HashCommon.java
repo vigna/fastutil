@@ -28,6 +28,15 @@ public class HashCommon {
 		search algorithm in the presence of an actual <code>null</code> key. */ 
 	public static final Object REMOVED = new Object();
 
+    /** 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
+    private static final int INT_PHI = 0x9E3779B9;
+    /** The reciprocal of {@link #INT_PHI} modulo 2<sup>32</sup>. */
+    private static final int INV_INT_PHI = 0x144cbc89;
+    /** 2<sup>64</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
+    private static final long LONG_PHI = 0x9E3779B97F4A7C15L;
+    /** The reciprocal of {@link #LONG_PHI} modulo 2<sup>64</sup>. */
+    private static final long INV_LONG_PHI = 0xf1de83e19937733dL;
+    
 	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
 	 * 
 	 * <p>This method implements the finalisation step of Austin Appleby's <a href="http://code.google.com/p/smhasher/">MurmurHash3</a>.
@@ -70,19 +79,18 @@ public class HashCommon {
 
 	/** Quickly mixes the bits of an integer.
 	 * 
-	 * <p>This method mixes the bits of the argument by multiplying by a constant and
-	 * xorshifting the result. The constants where grown using a genetic algorithm so
-	 * to minimize the maximum bias and, in case of a tie, the &chi;-squared statistics
-	 * of the lower 30 bits. The statistics were computed using low-entropy bit vectors 
-	 * with at most three ones.
+	 * <p>This method mixes the bits of the argument by multiplying by the golden ratio and 
+	 * xorshifting the result. It is borrowed from <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>, and
+	 * it has slightly worse behaviour than {@link #murmurHash3(int)} (in open-addressing hash tables the average number of probes
+	 * is slightly larger), but it's much faster.
 	 * 
 	 * @param x an integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
 	 * @see #invMix(int)
 	 */	
-	public final static int mix( int x ) {
-		x *= 0xa834aaab;
-		return x ^ x >>> 16;
+	public final static int mix( final int x ) {
+		final int h = x * INT_PHI;
+		return h ^ (h >>> 16);
 	}
 
 	/** The inverse of {@link #mix(int)}. This method is mainly useful to create unit tests.
@@ -91,24 +99,23 @@ public class HashCommon {
 	 * @return a value that passed through {@link #mix(int)} would give {@code x}.
 	 */	
 	public final static int invMix( final int x ) {
-		return ( x ^ x >>> 16 ) * 0x16260003; 
+		return ( x ^ x >>> 16 ) * INV_INT_PHI; 
 	}
 
 	/** Quickly mixes the bits of a long integer.
 	 * 
-	 * <p>This method mixes the bits of the argument by multiplying by a constant and
-	 * xorshifting the result. The constants where grown using a genetic algorithm so
-	 * to minimize the maximum bias and, in case of a tie, the &chi;-squared statistics
-	 * of the lower 56 bits. The statistics were computed using low-entropy bit vectors 
-	 * with at most three ones.
+	 * <p>This method mixes the bits of the argument by multiplying by the golden ratio and 
+	 * xorshifting twice the result. It is borrowed from <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>, and
+	 * it has slightly worse behaviour than {@link #murmurHash3(long)} (in open-addressing hash tables the average number of probes
+	 * is slightly larger), but it's much faster. 
 	 * 
 	 * @param x a long integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
-	 * @see #invMix(long)
 	 */	
-	public final static long mix( long x ) {
-		x *= 0x55555554aaaaaaabL;
-		return x ^ x >>> 32;
+	public final static long mix( final long x ) {
+		long h = x * LONG_PHI;
+		h ^= h >>> 32;
+		return h ^ (h >>> 16);
 	}
 
 	/** The inverse of {@link #mix(long)}. This method is mainly useful to create unit tests.
@@ -117,7 +124,9 @@ public class HashCommon {
 	 * @return a value that passed through {@link #mix(long)} would give {@code x}.
 	 */	
 	public final static long invMix( long x ) {
-		return ( x ^ x >>> 32 ) * 0x600000003L;
+		x ^= x >>> 32;
+		x ^= x >>> 16;
+		return ( x ^ x >>> 32 ) * INV_LONG_PHI; 
 	}
 
 
