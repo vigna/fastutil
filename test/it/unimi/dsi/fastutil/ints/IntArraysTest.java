@@ -142,6 +142,42 @@ public class IntArraysTest {
 	}
 
 	@Test
+	public void testParallelRadixSort1() {
+		int[] t = { 2, 1, 0, 4 };
+		IntArrays.parallelRadixSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		IntArrays.parallelRadixSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		IntArrays.parallelRadixSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 100 ];
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( t, 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+	}
+
+	@Test
 	public void testRadixSort2() {
 		int[][] d = new int[ 2 ][];
 
