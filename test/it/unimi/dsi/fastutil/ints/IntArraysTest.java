@@ -165,7 +165,7 @@ public class IntArraysTest {
 		random = new Random( 0 );
 		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
 		IntArrays.parallelRadixSort( t );
-		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( "@" + i + ": " + t[ i ] + " > " + t[ i + 1 ],  t[ i ] <= t[ i + 1 ] );
 		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
 		IntArrays.parallelRadixSort( t, 10, 100 );
 		for( int i = 99; i-- != 10; ) assertTrue( t[ i ] <= t[ i + 1 ] );
