@@ -170,7 +170,44 @@ public class IntArraysTest {
 		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
 	}
 
-	
+
+	@Test
+	public void testParallelQuickSort1Comp() {
+		int[] t = { 2, 1, 0, 4 };
+		IntArrays.parallelQuickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		IntArrays.parallelQuickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		IntArrays.parallelQuickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+
+		t = new int[ 100 ];
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+
+		t = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t, 10, 100, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = 99; i-- != 10; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+
+		t = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+	}
+
+
 	@Test
 	public void testParallelQuickSort1() {
 		int[] t = { 2, 1, 0, 4 };
@@ -686,6 +723,154 @@ public class IntArraysTest {
 		t = new int[ t.length ];
 		perm = identity( t.length );
 		IntArrays.radixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+	}
+	
+	@Test
+	public void testParallelRadixSortIndirectStable() {
+		int[] t = { 2, 1, 0, 4 };
+		int[] perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = new int[ t.length ];
+		for( int i = 0; i < t.length; i++ ) t[ i ] = random.nextInt( 4 ); 
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) if ( t[ perm[ i ] ] == t[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, 10, 90, true );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		t = new int[ 100000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, 10, 100, true );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 10000000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+
+		t = new int[ t.length ];
+		for( int i = 0; i < t.length; i++ ) t[ i ] = random.nextInt( 8 ); 
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, true );
+		for( int i = t.length - 1; i-- != 0; ) if ( t[ perm[ i ] ] == t[ perm[ i + 1 ] ] ) assertTrue( perm[ i ] < perm[ i + 1 ] );
+	}
+	
+	@Test
+	public void testParallelRadixSortIndirectUnstable() {
+		int[] t = { 2, 1, 0, 4 };
+		int[] perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, 10, 90, false );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		t = new int[ 100000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, 10, 100, false );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 10000000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelRadixSortIndirect( perm, t, false );
 		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
 	}
 	
