@@ -76,7 +76,7 @@ public class DoubleArraysTest {
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = i % 3 - 2;
 		Random random = new Random( 0 );
 		d[ 1 ] = new double[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d[ 0 ], d[ 1 ] );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 		
@@ -84,7 +84,7 @@ public class DoubleArraysTest {
 		random = new Random( 0 );
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
 		d[ 1 ] = new double[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d[ 0 ], d[ 1 ] );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 
@@ -92,7 +92,7 @@ public class DoubleArraysTest {
 		random = new Random( 0 );
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
 		d[ 1 ] = new double[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d[ 0 ], d[ 1 ] );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 	}
@@ -126,7 +126,7 @@ public class DoubleArraysTest {
 		Random random = new Random( 0 );
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
 		d[ 1 ] = new double[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 
@@ -135,7 +135,7 @@ public class DoubleArraysTest {
 		random = new Random( 0 );
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
 		d[ 1 ] = new double[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 
@@ -143,7 +143,7 @@ public class DoubleArraysTest {
 		random = new Random( 0 );
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
 		d[ 1 ] = new double[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		DoubleArrays.radixSort( d );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 	}

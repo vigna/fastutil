@@ -2,7 +2,7 @@ package it.unimi.dsi.fastutil.test;
 
 import it.unimi.dsi.fastutil.ints.IntArrays;
 
-public class RadixSortSpeed2 {
+public class MergeSortSpeed {
 	private static int x;
 	/** 2<sup>64</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
 	private static final long PHI = 0x9E3779B97F4A7C15L;
@@ -22,22 +22,14 @@ public class RadixSortSpeed2 {
 	public static void main( String[] args ) {
 		final int n = Integer.parseInt( args[ 0 ] );
 		int[] a = new int[ n ];
-		int[] b = new int[ n ];
 		long start;
 		
 		for( int repeat = 3; repeat-- != 0; ) {
 			x = 0;
-			for( int i = n; i-- != 0; ) { a[ i ] = (int)nextLong(); b[ i ] = (int)nextLong(); }
+			for( int i = n; i-- != 0; ) a[ i ] = (int)nextLong();
 			start = System.nanoTime();
-			IntArrays.radixSort( a, b );
+			IntArrays.mergeSort( a );
 			System.err.println( "fastutil sequential: " + ( System.nanoTime() - start ) / 1E9 + "s" );
-
-			x = 0;
-			for( int i = n; i-- != 0; ) { a[ i ] = (int)nextLong(); b[ i ] = (int)nextLong(); }
-			start = System.nanoTime();
-			IntArrays.parallelRadixSort( a, b, 0, n );
-			System.err.println( "fastutil parallel: " + ( System.nanoTime() - start ) / 1E9 + "s" );
-
 		}
 	}
 }

@@ -50,8 +50,12 @@ public class IntArraysTest {
 	public void testMergeSortSmallSupport() {
 		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
 		for( int to = 1; to < a.length; to++ )
-			for( int from = 0; from <= to; from++ )
-				IntArrays.mergeSort( a, from, to, new int[ to ] );
+			for( int from = 0; from <= to; from++ ) {
+				final int[] support = new int[ to ];
+				System.arraycopy( a,  0, support, 0,  to );
+				IntArrays.mergeSort( a, from, to, support );
+				if ( from < to ) for( int i = to - 1; i-- != from; ) assertTrue( a[ i ] <= a[ i + 1 ] );
+			}
 	}
 	
 	@Test
@@ -80,6 +84,220 @@ public class IntArraysTest {
 		assertArrayEquals( sorted, d );
 	}
 	
+	@Test
+	public void testParallelQuickSort() {
+		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
+		Arrays.sort( sorted );
+		Arrays.sort( b );
+		assertArrayEquals( sorted, b );
+		Arrays.sort( b );
+		assertArrayEquals( sorted, b );
+
+		final int[] d = a.clone();
+		IntArrays.parallelQuickSort( d, 0, d.length );
+		assertArrayEquals( sorted, d );
+	}
+	
+	@Test
+	public void testQuickSort1() {
+		int[] t = { 2, 1, 0, 4 };
+		IntArrays.quickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		IntArrays.quickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		IntArrays.quickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 100 ];
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t, 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+	}
+
+	@Test
+	public void testQuickSort1Comp() {
+		int[] t = { 2, 1, 0, 4 };
+		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+
+		t = new int[ 100 ];
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+
+		t = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t, 10, 100, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = 99; i-- != 10; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+
+		t = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] >= t[ i + 1 ] );
+	}
+
+	
+	@Test
+	public void testParallelQuickSort1() {
+		int[] t = { 2, 1, 0, 4 };
+		IntArrays.parallelQuickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		IntArrays.parallelQuickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		IntArrays.parallelQuickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 100 ];
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t, 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+
+		t = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
+	}
+
+	@Test
+	public void testQuickSort2() {
+		int[][] d = new int[ 2 ][];
+
+		d[ 0 ] = new int[ 10 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = 3 - i % 3;
+		d[ 1 ] = IntArrays.shuffle( identity( 10 ), new Random( 0 ) );
+		IntArrays.quickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		
+		d[ 0 ] = new int[ 100000 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = 100 - i % 100;
+		d[ 1 ] = IntArrays.shuffle( identity( 100000 ), new Random( 6 ) );
+		IntArrays.quickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+
+		d[ 0 ] = new int[ 10 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = i % 3 - 2;
+		Random random = new Random( 0 );
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.quickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		
+		d[ 0 ] = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.quickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		for( int i = 100; i-- != 10; ) d[ 0 ][ i ] = random.nextInt();
+		for( int i = 100; i-- != 10; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.quickSort( d[ 0 ], d[ 1 ], 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+
+		d[ 0 ] = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.quickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+	}
+
+	
+	@Test
+	public void testParallelQuickSort2() {
+		int[][] d = new int[ 2 ][];
+
+		d[ 0 ] = new int[ 10 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = 3 - i % 3;
+		d[ 1 ] = IntArrays.shuffle( identity( 10 ), new Random( 0 ) );
+		IntArrays.parallelQuickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		
+		d[ 0 ] = new int[ 100000 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = 100 - i % 100;
+		d[ 1 ] = IntArrays.shuffle( identity( 100000 ), new Random( 6 ) );
+		IntArrays.parallelQuickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+
+		d[ 0 ] = new int[ 10 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = i % 3 - 2;
+		Random random = new Random( 0 );
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		
+		d[ 0 ] = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		for( int i = 100; i-- != 10; ) d[ 0 ][ i ] = random.nextInt();
+		for( int i = 100; i-- != 10; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( d[ 0 ], d[ 1 ], 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+
+		d[ 0 ] = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelQuickSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+	}
+
 	@Test
 	public void testShuffle() {
 		int[] a = new int[ 100 ];
@@ -197,7 +415,7 @@ public class IntArraysTest {
 		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = i % 3 - 2;
 		Random random = new Random( 0 );
 		d[ 1 ] = new int[ d[ 0 ].length ];
-		for( int i = d.length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
 		IntArrays.radixSort( d[ 0 ], d[ 1 ] );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 		
@@ -221,6 +439,52 @@ public class IntArraysTest {
 		IntArrays.radixSort( d[ 0 ], d[ 1 ] );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 	}
+
+	@Test
+	public void testParallelRadixSort2() {
+		int[][] d = new int[ 2 ][];
+
+		d[ 0 ] = new int[ 10 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = 3 - i % 3;
+		d[ 1 ] = IntArrays.shuffle( identity( 10 ), new Random( 0 ) );
+		IntArrays.parallelRadixSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		
+		d[ 0 ] = new int[ 100000 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = 100 - i % 100;
+		d[ 1 ] = IntArrays.shuffle( identity( 100000 ), new Random( 6 ) );
+		IntArrays.parallelRadixSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+
+		d[ 0 ] = new int[ 10 ];
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = i % 3 - 2;
+		Random random = new Random( 0 );
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		
+		d[ 0 ] = new int[ 100000 ];
+		random = new Random( 0 );
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+		for( int i = 100; i-- != 10; ) d[ 0 ][ i ] = random.nextInt();
+		for( int i = 100; i-- != 10; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( d[ 0 ], d[ 1 ], 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+
+		d[ 0 ] = new int[ 10000000 ];
+		random = new Random( 0 );
+		for( int i = d[ 0 ].length; i-- != 0; ) d[ 0 ][ i ] = random.nextInt();
+		d[ 1 ] = new int[ d[ 0 ].length ];
+		for( int i = d[ 1 ].length; i-- != 0; ) d[ 1 ][ i ] = random.nextInt();
+		IntArrays.parallelRadixSort( d[ 0 ], d[ 1 ] );
+		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Integer.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
+	}
+
 
 	@Test
 	public void testRadixSort() {
