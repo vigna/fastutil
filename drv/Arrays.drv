@@ -423,10 +423,10 @@ public class ARRAYS {
 		if ( a.length != b.length ) throw new IllegalArgumentException( "Array size mismatch: " + a.length + " != " + b.length );
 	}
 
-	private static final int QUICKSORT_NO_REC = 15;
-	private static final int PARALLEL_QUICKSORT_NO_REC = 40;
-	private static final int QUICKSORT_MEDIAN_OF_9 = 100;
-	private static final int MERGESORT_NO_REC = 15;
+	private static final int QUICKSORT_NO_REC = 16;
+	private static final int PARALLEL_QUICKSORT_NO_REC = 1024;
+	private static final int QUICKSORT_MEDIAN_OF_9 = 128;
+	private static final int MERGESORT_NO_REC = 16;
 	
 	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[], final int a, final int b ) {
 		final KEY_GENERIC_TYPE t = x[ a ];
@@ -580,7 +580,7 @@ public class ARRAYS {
 			final KEY_GENERIC_TYPE[] x = this.x;
 			final int len = to - from;
 			if ( len < PARALLEL_QUICKSORT_NO_REC ) {
-				selectionSort( x, from, to, comp );
+				quickSort( x, from, to, comp );
 				return;
 			}
 			// Choose a partition element, v
@@ -802,7 +802,7 @@ public class ARRAYS {
 			final KEY_GENERIC_TYPE[] x = this.x;
 			final int len = to - from;
 			if ( len < PARALLEL_QUICKSORT_NO_REC ) {
-				selectionSort( x, from, to );
+				quickSort( x, from, to );
 				return;
 			}
 			// Choose a partition element, v
@@ -1027,7 +1027,7 @@ public class ARRAYS {
 			final KEY_GENERIC_TYPE[] y = this.y;
 			final int len = to - from;
 			if ( len < PARALLEL_QUICKSORT_NO_REC ) {
-				selectionSort( x, y, from, to );
+				quickSort( x, y, from, to );
 				return;
 			}
 			// Choose a partition element, v
@@ -1388,8 +1388,8 @@ public class ARRAYS {
 	private static final int DIGIT_MASK = ( 1 << DIGIT_BITS ) - 1;
 	/** The number of digits per element. */
 	private static final int DIGITS_PER_ELEMENT = KEY_CLASS.SIZE / DIGIT_BITS;
-	private static final int RADIXSORT_NO_REC = 200;
-	private static final int PARALLEL_RADIXSORT_NO_REC = 200;
+	private static final int RADIXSORT_NO_REC = 128;
+	private static final int PARALLEL_RADIXSORT_NO_REC = 1024;
 
 	/** This method fixes negative numbers so that the combination exponent/significand is lexicographically sorted. */
 #if #keyclass(Double)
@@ -1435,7 +1435,7 @@ public class ARRAYS {
 	 */
 	public static void radixSort( final KEY_TYPE[] a, final int from, final int to ) {
 		if ( to - from < RADIXSORT_NO_REC ) {
-			selectionSort( a, from, to );
+			quickSort( a, from, to );
 			return;
 		}
 			
@@ -1493,7 +1493,7 @@ public class ARRAYS {
 				}
 
 				if ( level < maxLevel && count[ c ] > 1 ) {
-					if ( count[ c ] < RADIXSORT_NO_REC ) selectionSort( a, i, i + count[ c ] );
+					if ( count[ c ] < RADIXSORT_NO_REC ) quickSort( a, i, i + count[ c ] );
 					else {
 						offsetStack[ offsetPos++ ] = i;
 						lengthStack[ lengthPos++ ] = count[ c ];
@@ -1534,7 +1534,7 @@ public class ARRAYS {
 	 */
 	public static void parallelRadixSort( final KEY_TYPE[] a, final int from, final int to ) {
 		if ( to - from < PARALLEL_RADIXSORT_NO_REC ) {
-			radixSort( a, from, to );
+			quickSort( a, from, to );
 			return;
 		}
 		final int maxLevel = DIGITS_PER_ELEMENT - 1;
@@ -1591,7 +1591,7 @@ public class ARRAYS {
 						}
 						
 						if ( level < maxLevel && count[ c ] > 1 ) {
-							if ( count[ c ] < PARALLEL_RADIXSORT_NO_REC ) selectionSort( a, i, i + count[ c ] );
+							if ( count[ c ] < PARALLEL_RADIXSORT_NO_REC ) quickSort( a, i, i + count[ c ] );
 							else {
 								queueSize.incrementAndGet();
 								queue.add( new Segment( i, count[ c ], level + 1 ) );
@@ -1840,7 +1840,7 @@ public class ARRAYS {
 						System.arraycopy( support, first, perm, first, length );
 						for( int i = 0, p = first; i <= lastUsed; i++ ) {
 							if ( level < maxLevel && count[ i ] > 1 ) {
-								if ( count[ i ] < RADIXSORT_NO_REC ) insertionSortIndirect( perm, a, p, p + count[ i ] );
+								if ( count[ i ] < PARALLEL_RADIXSORT_NO_REC ) radixSortIndirect( perm, a, p, p + count[ i ] );
 								else {
 									queueSize.incrementAndGet();
 									queue.add( new Segment( p, count[ i ], level + 1 ) );
@@ -1868,7 +1868,7 @@ public class ARRAYS {
 							}
 
 							if ( level < maxLevel && count[ c ] > 1 ) {
-								if ( count[ c ] < RADIXSORT_NO_REC ) insertionSortIndirect( perm, a, i, i + count[ c ] );
+								if ( count[ c ] < PARALLEL_RADIXSORT_NO_REC ) radixSortIndirect( perm, a, i, i + count[ c ] );
 								else {
 									queueSize.incrementAndGet();
 									queue.add( new Segment( i, count[ c ], level + 1 ) );
@@ -2044,7 +2044,7 @@ public class ARRAYS {
 	 */
 	public static void parallelRadixSort( final KEY_TYPE[] a, final KEY_TYPE[] b, final int from, final int to ) {
 		if ( to - from < PARALLEL_RADIXSORT_NO_REC ) {
-			radixSort( a, b, from, to );
+			quickSort( a, b, from, to );
 			return;
 		}
 		final int layers = 2;
@@ -2100,7 +2100,7 @@ public class ARRAYS {
 								b[ i ] = u;
 							}
 							if ( level < maxLevel && count[ c ] > 1 ) {
-								if ( count[ c ] < PARALLEL_RADIXSORT_NO_REC ) selectionSort( a, b, i, i + count[ c ] );
+								if ( count[ c ] < PARALLEL_RADIXSORT_NO_REC ) quickSort( a, b, i, i + count[ c ] );
 								else {
 									queueSize.incrementAndGet();
 									queue.add( new Segment( i, count[ c ], level + 1 ) );
