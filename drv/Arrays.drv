@@ -33,16 +33,19 @@ package PACKAGE;
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.Hash;
 import java.util.Random;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
+
+#if #keys(primitive)
+
+#if ! #keyclass(Boolean)
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicInteger;
-
-#if #keys(primitive)
+#endif
 
 /** A class providing static methods and objects that do useful things with type-specific arrays.
  *
@@ -58,7 +61,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <h2>Sorting</h2>
  *
  * <p>There are several sorting methods available. The main theme is that of letting you choose
- * the sorting algorithm you prever (i.e., trading stability of mergesort for no memory allocation in quicksort).
+ * the sorting algorithm you prefer (i.e., trading stability of mergesort for no memory allocation in quicksort).
  * Several algorithms provide a parallel version, that will use the {@linkplain Runtime#availableProcessors() number of cores available}.
  * Some algorithms also provide an explicit <em>indirect</em> sorting facility, which makes it possible
  * to sort an array using the values in another array as comparator.
@@ -99,6 +102,21 @@ import java.util.Comparator;
  * is <em>significantly slower</em> than using <code>new</code>. This phenomenon is particularly
  * evident in the first growth phases of an array reallocated with doubling (or similar) logic.
  *
+ * <h2>Sorting</h2>
+ *
+ * <p>There are several sorting methods available. The main theme is that of letting you choose
+ * the sorting algorithm you prefer (i.e., trading stability of mergesort for no memory allocation in quicksort).
+ * Several algorithms provide a parallel version, that will use the {@linkplain Runtime#availableProcessors() number of cores available}.
+ *
+ * <p>All comparison-based algorithm have an implementation based on a type-specific comparator.
+ *
+ * <p>If you are fine with not knowing exactly which algorithm will be run (in particular, not knowing exactly whether a support array will be allocated), 
+ * the dual-pivot parallel sorts in {@link java.util.Arrays}
+ * are about 50% faster than the classical single-pivot implementation used here.
+ *
+ * <p>In any case, if sorting time is important I suggest that you benchmark your sorting load
+ * with your data distribution and on your architecture.
+ * 
  * @see java.util.Arrays
  */
 
@@ -123,7 +141,7 @@ public class ARRAYS {
 	 * @return a new array of given type and length.
 	 */
 
-	SUPPRESS_WARNINGS_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static <K> K[] newArray( final K[] prototype, final int length ) {
 		final Class<?> componentType = prototype.getClass().getComponentType();
 		if ( length == 0 && componentType == Object.class ) return (K[])EMPTY_ARRAY;
@@ -409,8 +427,6 @@ public class ARRAYS {
 	private static final int PARALLEL_QUICKSORT_NO_REC = 40;
 	private static final int QUICKSORT_MEDIAN_OF_9 = 100;
 	private static final int MERGESORT_NO_REC = 15;
-	private static final int RADIXSORT_NO_REC = 200;
-	private static final int PARALLEL_RADIXSORT_NO_REC = 200;
 	
 	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[], final int a, final int b ) {
 		final KEY_GENERIC_TYPE t = x[ a ];
@@ -603,9 +619,9 @@ public class ARRAYS {
 			// Recursively sort non-partition-elements
 			s = b - a;
 			t = d - c;
-			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSortComp( x, from, from + s, comp ), new ForkJoinQuickSortComp( x, to - t, to, comp ) );
-			else if ( s > 1 ) invokeAll( new ForkJoinQuickSortComp( x, from, from + s, comp ) );
-			else invokeAll( new ForkJoinQuickSortComp( x, to - t, to, comp ) );
+			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSortComp KEY_GENERIC( x, from, from + s, comp ), new ForkJoinQuickSortComp KEY_GENERIC( x, to - t, to, comp ) );
+			else if ( s > 1 ) invokeAll( new ForkJoinQuickSortComp KEY_GENERIC( x, from, from + s, comp ) );
+			else invokeAll( new ForkJoinQuickSortComp KEY_GENERIC( x, to - t, to, comp ) );
 		}		
 	}
 	
@@ -625,7 +641,7 @@ public class ARRAYS {
 	 * @param comp the comparator to determine the sorting order.
 	 */
 	public static KEY_GENERIC void parallelQuickSort( final KEY_GENERIC_TYPE[] x, final int from, final int to, final KEY_COMPARATOR KEY_GENERIC comp ) {
-		new ForkJoinPool( Runtime.getRuntime().availableProcessors() ).invoke( new ForkJoinQuickSortComp( x, from, to, comp ) );
+		new ForkJoinPool( Runtime.getRuntime().availableProcessors() ).invoke( new ForkJoinQuickSortComp KEY_GENERIC( x, from, to, comp ) );
 	}
 
 	/** Sorts an array according to the order induced by the specified
@@ -646,7 +662,7 @@ public class ARRAYS {
 	}
 
 
-	SUPPRESS_WARNINGS_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static KEY_GENERIC int med3( final KEY_GENERIC_TYPE x[], final int a, final int b, final int c ) {
 		final int ab = KEY_CMP( x[ a ], x[ b ] );
 		final int ac = KEY_CMP( x[ a ], x[ c ] );
@@ -656,7 +672,7 @@ public class ARRAYS {
 			( bc > 0 ? b : ac > 0 ? c : a ) );
 	}
 
-	SUPPRESS_WARNINGS_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[] a, final int from, final int to ) {
 		for( int i = from; i < to - 1; i++ ) {
 			int m = i;
@@ -669,7 +685,7 @@ public class ARRAYS {
 		}
 	}
 	
-	SUPPRESS_WARNINGS_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static KEY_GENERIC void insertionSort( final KEY_GENERIC_TYPE[] a, final int from, final int to ) {
 		for ( int i = from; ++i < to; ) { 
 			KEY_GENERIC_TYPE t = a[ i ];
@@ -699,7 +715,7 @@ public class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 
-	SUPPRESS_WARNINGS_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[] x, final int from, final int to ) {
 		final int len = to - from;
 		// Selection sort on smallest arrays
@@ -779,6 +795,7 @@ public class ARRAYS {
 		}
 
 		@Override
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		protected void compute() {
 			final KEY_GENERIC_TYPE[] x = this.x;
 			final int len = to - from;
@@ -822,9 +839,9 @@ public class ARRAYS {
 			// Recursively sort non-partition-elements
 			s = b - a;
 			t = d - c;
-			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSort( x, from, from + s ), new ForkJoinQuickSort( x, to - t, to ) );
-			else if ( s > 1 ) invokeAll( new ForkJoinQuickSort( x, from, from + s ) );
-			else invokeAll( new ForkJoinQuickSort( x, to - t, to ) );
+			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSort KEY_GENERIC( x, from, from + s ), new ForkJoinQuickSort KEY_GENERIC( x, to - t, to ) );
+			else if ( s > 1 ) invokeAll( new ForkJoinQuickSort KEY_GENERIC( x, from, from + s ) );
+			else invokeAll( new ForkJoinQuickSort KEY_GENERIC( x, to - t, to ) );
 		}		
 	}
 	
@@ -842,7 +859,7 @@ public class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void parallelQuickSort( final KEY_GENERIC_TYPE[] x, final int from, final int to ) {
-		new ForkJoinPool( Runtime.getRuntime().availableProcessors() ).invoke( new ForkJoinQuickSort( x, from, to ) );
+		new ForkJoinPool( Runtime.getRuntime().availableProcessors() ).invoke( new ForkJoinQuickSort KEY_GENERIC( x, from, to ) );
 	}
 
 	/** Sorts an array according to the natural ascending order using a parallel quicksort.
@@ -862,6 +879,7 @@ public class ARRAYS {
 	}
 
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static KEY_GENERIC int med3( final KEY_GENERIC_TYPE x[], final KEY_GENERIC_TYPE[] y, final int a, final int b, final int c ) {
 		int t;
 		final int ab = ( t = KEY_CMP( x[ a ], x[ b ] ) ) == 0 ? KEY_CMP( y[ a ], y[ b ] ) : t;
@@ -885,6 +903,7 @@ public class ARRAYS {
 		for ( int i = 0; i < n; i++, a++, b++ ) swap( x, y, a, b );
 	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static KEY_GENERIC void selectionSort( final KEY_GENERIC_TYPE[] a, final KEY_GENERIC_TYPE[] b, final int from, final int to ) {
 		for( int i = from; i < to - 1; i++ ) {
 			int m = i, u;
@@ -920,6 +939,7 @@ public class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC void quickSort( final KEY_GENERIC_TYPE[] x, final KEY_GENERIC_TYPE[] y, final int from, final int to ) {
 		final int len = to - from;
 		if ( len < QUICKSORT_NO_REC ) {
@@ -997,6 +1017,7 @@ public class ARRAYS {
 		}
 
 		@Override
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		protected void compute() {
 			final KEY_GENERIC_TYPE[] x = this.x;
 			final KEY_GENERIC_TYPE[] y = this.y;
@@ -1041,9 +1062,9 @@ public class ARRAYS {
 			s = b - a;
 			t = d - c;
 			// Recursively sort non-partition-elements
-			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSort2( x, y, from, from + s ), new ForkJoinQuickSort2( x, y, to - t, to ) );
-			else if ( s > 1 ) invokeAll( new ForkJoinQuickSort2( x, y, from, from + s ) );
-			else invokeAll( new ForkJoinQuickSort2( x, y, to - t, to ) );
+			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSort2 KEY_GENERIC( x, y, from, from + s ), new ForkJoinQuickSort2 KEY_GENERIC( x, y, to - t, to ) );
+			else if ( s > 1 ) invokeAll( new ForkJoinQuickSort2 KEY_GENERIC( x, y, from, from + s ) );
+			else invokeAll( new ForkJoinQuickSort2 KEY_GENERIC( x, y, to - t, to ) );
 		}		
 	}
 	
@@ -1068,7 +1089,7 @@ public class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void parallelQuickSort( final KEY_GENERIC_TYPE[] x, final KEY_GENERIC_TYPE[] y, final int from, final int to ) {
-		new ForkJoinPool( Runtime.getRuntime().availableProcessors() ).invoke( new ForkJoinQuickSort2( x, y, from, to ) );
+		new ForkJoinPool( Runtime.getRuntime().availableProcessors() ).invoke( new ForkJoinQuickSort2 KEY_GENERIC( x, y, from, to ) );
 	}
 
 	/** Sorts two arrays according to the natural lexicographical 
@@ -1108,7 +1129,7 @@ public class ARRAYS {
 	 * of {@code a} in the specified range.
 	 */
 
-	SUPPRESS_WARNINGS_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], final int from, final int to, final KEY_GENERIC_TYPE supp[] ) {
 		int len = to - from;
 		
@@ -1174,7 +1195,6 @@ public class ARRAYS {
 	 * @param supp a support array containing at least <code>to</code> elements, and whose entries are identical to those
 	 * of {@code a} in the specified range.
 	 */
-	SUPPRESS_WARNINGS_UNCHECKED
 	public static KEY_GENERIC void mergeSort( final KEY_GENERIC_TYPE a[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp, final KEY_GENERIC_TYPE supp[] ) {
 		int len = to - from;
 		
@@ -1253,7 +1273,7 @@ public class ARRAYS {
 	 *             and only if the key is found.
 	 * @see java.util.Arrays
 	 */
-	@SuppressWarnings({"unchecked","rawtypes"})
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC int binarySearch( final KEY_GENERIC_TYPE[] a, int from, int to, final KEY_GENERIC_TYPE key ) {
 		KEY_GENERIC_TYPE midVal;
 		to--;
@@ -1265,7 +1285,7 @@ public class ARRAYS {
 			else if (midVal > key) to = mid - 1;
 			else return mid;
 #else
-			final int cmp = ((Comparable)midVal).compareTo( key );
+			final int cmp = ((Comparable KEY_SUPER_GENERIC)midVal).compareTo( key );
 			if ( cmp < 0 ) from = mid + 1;
 			else if (cmp > 0) to = mid - 1;
 			else return mid;
@@ -1362,6 +1382,8 @@ public class ARRAYS {
 	private static final int DIGIT_MASK = ( 1 << DIGIT_BITS ) - 1;
 	/** The number of digits per element. */
 	private static final int DIGITS_PER_ELEMENT = KEY_CLASS.SIZE / DIGIT_BITS;
+	private static final int RADIXSORT_NO_REC = 200;
+	private static final int PARALLEL_RADIXSORT_NO_REC = 200;
 
 	/** This method fixes negative numbers so that the combination exponent/significand is lexicographically sorted. */
 #if #keyclass(Double)
@@ -1440,7 +1462,7 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( a[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+			for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( a[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 			// Compute cumulative distribution
 			int lastUsed = -1;
 			for ( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
@@ -1452,14 +1474,14 @@ public class ARRAYS {
 			// i moves through the start of each block
 			for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 				KEY_TYPE t = a[ i ];
-				c = (int)( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
+				c = INT( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
 				
 				if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 					while ( ( d = --pos[ c ] ) > i ) {
 						final KEY_TYPE z = t;
 						t = a[ d ];
 						a[ d ] = z;
-						c = (int)( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
+						c = INT( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
 					}
 					a[ i ] = t;
 				}
@@ -1539,7 +1561,7 @@ public class ARRAYS {
 					final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 					// Count keys.
-					for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( a[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+					for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( a[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 					// Compute cumulative distribution
 					int lastUsed = -1;
 					for( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
@@ -1551,13 +1573,13 @@ public class ARRAYS {
 					// i moves through the start of each block
 					for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 						KEY_TYPE t = a[ i ];
-						c = (int)( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
+						c = INT( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
 						if ( i < end ) {
 							while( ( d = --pos[ c ] ) > i ) {
 								final KEY_TYPE z = t;
 								t = a[ d ];
 								a[ d ] = z;
-								c = (int)( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
+								c = INT( KEY2LEXINT( t ) >>> shift & DIGIT_MASK ^ signMask );
 							}
 							a[ i ] = t;
 						}
@@ -1691,7 +1713,7 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+			for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 			// Compute cumulative distribution
 			int lastUsed = -1;
 			for ( int i = 0, p = stable ? 0 : first; i < 1 << DIGIT_BITS; i++ ) {
@@ -1700,7 +1722,7 @@ public class ARRAYS {
 			}
 
 			if ( stable ) {
-				for( int i = first + length; i-- != first; ) support[ --pos[ (int)( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ] ] = perm[ i ];
+				for( int i = first + length; i-- != first; ) support[ --pos[ INT( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ] ] = perm[ i ];
 				System.arraycopy( support, 0, perm, first, length );
 				for( int i = 0, p = first; i <= lastUsed; i++ ) {
 					if ( level < maxLevel && count[ i ] > 1 ) {
@@ -1720,14 +1742,14 @@ public class ARRAYS {
 				// i moves through the start of each block
 				for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 					int t = perm[ i ];
-					c = (int)( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
+					c = INT( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
 
 					if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 						while( ( d = --pos[ c ] ) > i ) {
 							final int z = t;
 							t = perm[ d ];
 							perm[ d ] = z;
-							c = (int)( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
+							c = INT( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
 						}
 						perm[ i ] = t;
 					}
@@ -1799,7 +1821,7 @@ public class ARRAYS {
 
 
 					// Count keys.
-					for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+					for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 					// Compute cumulative distribution
 					int lastUsed = -1;
 					for ( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
@@ -1808,7 +1830,7 @@ public class ARRAYS {
 					}
 
 					if ( stable ) {
-						for( int i = first + length; i-- != first; ) support[ --pos[ (int)( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ] ] = perm[ i ];
+						for( int i = first + length; i-- != first; ) support[ --pos[ INT( KEY2LEXINT( a[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ] ] = perm[ i ];
 						System.arraycopy( support, first, perm, first, length );
 						for( int i = 0, p = first; i <= lastUsed; i++ ) {
 							if ( level < maxLevel && count[ i ] > 1 ) {
@@ -1827,14 +1849,14 @@ public class ARRAYS {
 						// i moves through the start of each block
 						for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 							int t = perm[ i ];
-							c = (int)( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
+							c = INT( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
 
 							if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 								while( ( d = --pos[ c ] ) > i ) {
 									final int z = t;
 									t = perm[ d ];
 									perm[ d ] = z;
-									c = (int)( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
+									c = INT( KEY2LEXINT( a[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
 								}
 								perm[ i ] = t;
 							}
@@ -1954,7 +1976,7 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+			for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 
 			// Compute cumulative distribution
 			int lastUsed = -1;
@@ -1969,11 +1991,11 @@ public class ARRAYS {
 			for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 				KEY_TYPE t = a[ i ];
 				KEY_TYPE u = b[ i ];
-				c = (int)( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask );
+				c = INT( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask );
 
 				if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 					while( ( d = --pos[ c ] ) > i ) {
-						c = (int)( KEY2LEXINT( k[ d ] ) >>> shift & DIGIT_MASK ^ signMask );
+						c = INT( KEY2LEXINT( k[ d ] ) >>> shift & DIGIT_MASK ^ signMask );
 						KEY_TYPE z = t;
 						t = a[ d ];
 						a[ d ] = z;
@@ -2046,7 +2068,7 @@ public class ARRAYS {
 						final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; 
 						// Count keys.
 						for ( int i = first + length; i-- != first; )
-							count[ (int)( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+							count[ INT( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 						// Compute cumulative distribution
 						int lastUsed = -1;
 						for ( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
@@ -2057,10 +2079,10 @@ public class ARRAYS {
 						for ( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 							KEY_TYPE t = a[ i ];
 							KEY_TYPE u = b[ i ];
-							c = (int)( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask );
+							c = INT( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask );
 							if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 								while ( ( d = --pos[ c ] ) > i ) {
-									c = (int)( KEY2LEXINT( k[ d ] ) >>> shift & DIGIT_MASK ^ signMask );
+									c = INT( KEY2LEXINT( k[ d ] ) >>> shift & DIGIT_MASK ^ signMask );
 									final KEY_TYPE z = t;
 									final KEY_TYPE w = u;
 									t = a[ d ];
@@ -2211,7 +2233,7 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( k[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+			for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( k[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 
 			// Compute cumulative distribution
 			int lastUsed = -1;
@@ -2221,7 +2243,7 @@ public class ARRAYS {
 			}
 
 			if ( stable ) {
-				for( int i = first + length; i-- != first; ) support[ --pos[ (int)( KEY2LEXINT( k[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ] ] = perm[ i ];
+				for( int i = first + length; i-- != first; ) support[ --pos[ INT( KEY2LEXINT( k[ perm[ i ] ] ) >>> shift & DIGIT_MASK ^ signMask ) ] ] = perm[ i ];
 				System.arraycopy( support, 0, perm, first, length );
 				for( int i = 0, p = first; i < 1 << DIGIT_BITS; i++ ) {
 					if ( level < maxLevel && count[ i ] > 1 ) {
@@ -2241,14 +2263,14 @@ public class ARRAYS {
 				// i moves through the start of each block
 				for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 					int t = perm[ i ];
-					c = (int)( KEY2LEXINT( k[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
+					c = INT( KEY2LEXINT( k[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
 
 					if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 						while( ( d = --pos[ c ] ) > i ) {
 							final int z = t;
 							t = perm[ d ];
 							perm[ d ] = z;
-							c = (int)( KEY2LEXINT( k[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
+							c = INT( KEY2LEXINT( k[ t ] ) >>> shift & DIGIT_MASK ^ signMask );
 						}
 						perm[ i ] = t;
 					}
@@ -2365,7 +2387,7 @@ public class ARRAYS {
 			final int shift = ( DIGITS_PER_ELEMENT - 1 - level % DIGITS_PER_ELEMENT ) * DIGIT_BITS; // This is the shift that extract the right byte from a key
 
 			// Count keys.
-			for( int i = first + length; i-- != first; ) count[ (int)( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
+			for( int i = first + length; i-- != first; ) count[ INT( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask ) ]++;
 
 			// Compute cumulative distribution
 			int lastUsed = -1;
@@ -2378,11 +2400,11 @@ public class ARRAYS {
 			// i moves through the start of each block
 			for( int i = first, c = -1, d; i <= end; i += count[ c ], count[ c ] = 0 ) {
 				for( int p = layers; p-- != 0; ) t[ p ] = a[ p ][ i ];
-				c = (int)( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask );
+				c = INT( KEY2LEXINT( k[ i ] ) >>> shift & DIGIT_MASK ^ signMask );
 				
 				if ( i < end ) { // When all slots are OK, the last slot is necessarily OK.
 					while( ( d = --pos[ c ] ) > i ) {
-						c = (int)( KEY2LEXINT( k[ d ] ) >>> shift & DIGIT_MASK ^ signMask );
+						c = INT( KEY2LEXINT( k[ d ] ) >>> shift & DIGIT_MASK ^ signMask );
 						for( int p = layers; p-- != 0; ) {
 							final KEY_TYPE u = t[ p ];
 							t[ p ] = a[ p ][ d ];

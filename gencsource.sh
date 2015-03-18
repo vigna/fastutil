@@ -148,6 +148,14 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_GENERIC_CAST (K)\n"\
 "#define KEY_GENERIC_ARRAY_CAST (K[])\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST (K[][])\n"\
+"#define SUPPRESS_WARNINGS_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
+"#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
+"#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
+"#if defined(Custom) && #keyclass(Object)\n"\
+"#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
+"#else\n"\
+"#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
+"#endif\n"\
 "#else\n"\
 "#define KEY_GENERIC_CLASS KEY_CLASS\n"\
 "#define KEY_GENERIC_TYPE KEY_TYPE\n"\
@@ -158,6 +166,10 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_GENERIC_CAST\n"\
 "#define KEY_GENERIC_ARRAY_CAST\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST\n"\
+"#define SUPPRESS_WARNINGS_KEY_UNCHECKED\n"\
+"#define SUPPRESS_WARNINGS_KEY_RAWTYPES\n"\
+"#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
+"#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
 "#endif\n"\
 \
 "#if #valueclass(Object) || #valueclass(Reference)\n"\
@@ -167,6 +179,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#define VALUE_GENERIC_CAST (V)\n"\
 "#define VALUE_GENERIC_ARRAY_CAST (V[])\n"\
+"#define SUPPRESS_WARNINGS_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
+"#define SUPPRESS_WARNINGS_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#else\n"\
 "#define VALUE_GENERIC_CLASS VALUE_CLASS\n"\
 "#define VALUE_GENERIC_TYPE VALUE_TYPE\n"\
@@ -174,6 +188,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define VALUE_EXTENDS_GENERIC\n"\
 "#define VALUE_GENERIC_CAST\n"\
 "#define VALUE_GENERIC_ARRAY_CAST\n"\
+"#define SUPPRESS_WARNINGS_VALUE_UNCHECKED\n"\
+"#define SUPPRESS_WARNINGS_VALUE_RAWTYPES\n"\
 "#endif\n"\
 \
 "#if #keyclass(Object) || #keyclass(Reference)\n"\
@@ -192,6 +208,14 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_VALUE_GENERIC\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC\n"\
 "#endif\n"\
+"#endif\n"\
+\
+"#if #keyclass(Object) || #keyclass(Reference) || #valueclass(Object) || #valueclass(Reference)\n"\
+"#define SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
+"#define SUPPRESS_WARNINGS_KEY_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
+"#else\n"\
+"#define SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED\n"\
+"#define SUPPRESS_WARNINGS_KEY_VALUE_RAWTYPES\n"\
 "#endif\n"\
 \
 \
@@ -442,10 +466,14 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 \
 \
+"#define KEY_EQUALS_NOT_NULL_CAST(x,y) KEY_EQUALS_NOT_NULL(x,y)\n"\
+"#define KEY2INTHASH_CAST(x) KEY2INTHASH(x)\n"\
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
-"#define KEY_EQUALS(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), " KEY_GENERIC_CAST "(y) ) )\n"\
-"#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), " KEY_GENERIC_CAST "(y) ) )\n"\
+"#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( (x), (y) ) )\n"\
+"#undef KEY_EQUALS_NOT_NULL_CAST\n"\
+"#define KEY_EQUALS_NOT_NULL_CAST(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), (y) ) )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
@@ -486,9 +514,11 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
-"#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(" KEY_GENERIC_CAST "(x)) )\n"\
-"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( strategy.hashCode(" KEY_GENERIC_CAST "(x)) ) )\n"\
-"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( strategy.hashCode(" KEY_GENERIC_CAST "(x)) ) ) )\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(x) )\n"\
+"#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( strategy.hashCode(x) ) )\n"\
+"#undef KEY2INTHASH_CAST\n"\
+"#define KEY2INTHASH_CAST(x) ( it.unimi.dsi.fastutil.HashCommon.mix( strategy.hashCode( " KEY_GENERIC_CAST " x) ) )\n"\
+"#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( strategy.hashCode(x)) ) ) )\n"\
 "#else\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( (x).hashCode() )\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
@@ -565,14 +595,17 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
 "#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (long)( it.unimi.dsi.fastutil.HashCommon.float2int(x) ) )\n"\
+"#define INT(x) (x)\n"\
 "#elif #keyclass(Double)\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToRawLongBits(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToRawLongBits(x) )\n"\
+"#define INT(x) (int)(x)\n"\
 "#elif #keyclass(Long)\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( (x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (x) )\n"\
+"#define INT(x) (int)(x)\n"\
 "#elif #keyclass(Boolean)\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ((x) ? 1231 : 1237)\n"\
 "#define KEY2INTHASH(x) ((x) ? 0xfab5368 : 0xcba05e7b)\n"\
@@ -581,6 +614,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2JAVAHASH_NOT_NULL(x) (x)\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( (x) ) ) )\n"\
+"#define INT(x) (x)\n"\
 "#endif\n"\
 "#endif\n"\
 \
