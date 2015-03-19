@@ -135,6 +135,71 @@ public class IntArraysTest {
 	}
 
 	@Test
+	public void testQuickSort1Undirect() {
+		int[] t = { 2, 1, 0, 4 };
+		int[] perm = identity( t.length );
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		perm = identity( t.length );
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		perm = identity( t.length );
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSortIndirect( perm, t, 10, 90 );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		t = new int[ 100000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.quickSortIndirect( perm, t, 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 10000000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.quickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+	}
+	
+	@Test
 	public void testQuickSort1Comp() {
 		int[] t = { 2, 1, 0, 4 };
 		IntArrays.quickSort( t, IntComparators.OPPOSITE_COMPARATOR );
@@ -243,6 +308,72 @@ public class IntArraysTest {
 		IntArrays.parallelQuickSort( t );
 		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ i ] <= t[ i + 1 ] );
 	}
+
+	@Test
+	public void testParallelQuickSort1Undirect() {
+		int[] t = { 2, 1, 0, 4 };
+		int[] perm = identity( t.length );
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+		
+		t = new int[] { 2, -1, 0, -4 };
+		perm = identity( t.length );
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		
+		t = IntArrays.shuffle( identity( 100 ), new Random( 0 ) );
+		perm = identity( t.length );
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		Random random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 100 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSortIndirect( perm, t, 10, 90 );
+		for( int i = 10; i < 89; i++ ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 0; i < 10; i++ ) assertEquals( i, perm[ i ] );
+		for( int i = 90; i < 100; i++ ) assertEquals( i, perm[ i ] );
+
+		t = new int[ 100000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+		for( int i = 100; i-- != 10; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSortIndirect( perm, t, 10, 100 );
+		for( int i = 99; i-- != 10; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		IntArrays.shuffle( perm, new Random( 0 ) );
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( Integer.toString( i ), t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ 10000000 ];
+		perm = identity( t.length );
+		random = new Random( 0 );
+		for( int i = t.length; i-- != 0; ) t[ i ] = random.nextInt();
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertTrue( t[ perm[ i ] ] <= t[ perm[ i + 1 ] ] );
+
+		t = new int[ t.length ];
+		perm = identity( t.length );
+		IntArrays.parallelQuickSortIndirect( perm, t );
+		for( int i = t.length - 1; i-- != 0; ) assertEquals( i, perm[ i ] );
+	}
+	
 
 	@Test
 	public void testQuickSort2() {

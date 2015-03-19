@@ -36,6 +36,10 @@ import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
+#if ! #keyclass(Integer)
+import it.unimi.dsi.fastutil.ints.IntArrays;
+#endif
+
 #if #keys(primitive)
 
 #if ! #keyclass(Boolean)
@@ -428,13 +432,26 @@ public class ARRAYS {
 	private static final int QUICKSORT_MEDIAN_OF_9 = 128;
 	private static final int MERGESORT_NO_REC = 16;
 	
-	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[], final int a, final int b ) {
+	/** Swaps two elements of an anrray.
+	 *
+	 * @param x an array.
+	 * @param a a position in {@code x}.
+	 * @param b another position in {@code x}.
+	 */
+	public static KEY_GENERIC void swap( final KEY_GENERIC_TYPE x[], final int a, final int b ) {
 		final KEY_GENERIC_TYPE t = x[ a ];
 		x[ a ] = x[ b ];
 		x[ b ] = t;
 	}
 
-	private static KEY_GENERIC void vecSwap( final KEY_GENERIC_TYPE[] x, int a, int b, final int n ) {
+	/** Swaps two sequences of elements of an array.
+	 *
+	 * @param x an array.
+	 * @param a a position in {@code x}.
+	 * @param b another position in {@code x}.
+	 * @param n the number of elements to exchange starting at {@code a} and {@code b}.
+	 */
+	public static KEY_GENERIC void swap( final KEY_GENERIC_TYPE[] x, int a, int b, final int n ) {
 		for( int i = 0; i < n; i++, a++, b++ ) swap( x, a, b );
 	}
  
@@ -533,9 +550,9 @@ public class ARRAYS {
 		// Swap partition elements back to middle
 		int s;
 		s = Math.min( a - from, b - a );
-		vecSwap( x, from, b - s, s );
+		swap( x, from, b - s, s );
 		s = Math.min( d - c, to - d - 1 );
-		vecSwap( x, b, to - s, s );
+		swap( x, b, to - s, s );
 
 		// Recursively sort non-partition-elements
 		if ( ( s = b - a ) > 1 ) quickSort( x, from, from + s, comp );
@@ -613,9 +630,9 @@ public class ARRAYS {
 			// Swap partition elements back to middle
 			int s, t;
 			s = Math.min( a - from, b - a );
-			vecSwap( x, from, b - s, s );
+			swap( x, from, b - s, s );
 			s = Math.min( d - c, to - d - 1 );
-			vecSwap( x, b, to - s, s );
+			swap( x, b, to - s, s );
 			// Recursively sort non-partition-elements
 			s = b - a;
 			t = d - c;
@@ -759,9 +776,9 @@ public class ARRAYS {
 		// Swap partition elements back to middle
 		int s;
 		s = Math.min( a - from, b - a );
-		vecSwap( x, from, b - s, s );
+		swap( x, from, b - s, s );
 		s = Math.min( d - c, to - d - 1 );
-		vecSwap( x, b, to - s, s );
+		swap( x, b, to - s, s );
 
 		// Recursively sort non-partition-elements
 		if ( ( s = b - a ) > 1 ) quickSort( x, from, from + s );
@@ -835,9 +852,9 @@ public class ARRAYS {
 			// Swap partition elements back to middle
 			int s, t;
 			s = Math.min( a - from, b - a );
-			vecSwap( x, from, b - s, s );
+			swap( x, from, b - s, s );
 			s = Math.min( d - c, to - d - 1 );
-			vecSwap( x, b, to - s, s );
+			swap( x, b, to - s, s );
 			// Recursively sort non-partition-elements
 			s = b - a;
 			t = d - c;
@@ -884,6 +901,233 @@ public class ARRAYS {
 
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	private static KEY_GENERIC int med3Indirect( final int perm[], final KEY_GENERIC_TYPE x[], final int a, final int b, final int c ) {
+		final KEY_GENERIC_TYPE aa = x[ perm[ a ] ];
+		final KEY_GENERIC_TYPE bb = x[ perm[ b ] ];
+		final KEY_GENERIC_TYPE cc = x[ perm[ c ] ];
+		final int ab = KEY_CMP( aa, bb );
+		final int ac = KEY_CMP( aa, cc );
+		final int bc = KEY_CMP( bb, cc );
+		return ( ab < 0 ?
+			( bc < 0 ? b : ac < 0 ? c : a ) :
+			( bc > 0 ? b : ac > 0 ? c : a ) );
+	}
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	private static KEY_GENERIC void insertionSortIndirect( final int[] perm, final KEY_GENERIC_TYPE[] a, final int from, final int to ) {
+		for ( int i = from; ++i < to; ) { 
+			int t = perm[ i ];
+			int j = i;
+			for ( int u = perm[ j - 1 ]; KEY_LESS( a[ t ], a[ u ] ); u = perm[ --j - 1 ] ) {
+				perm[ j ] = u;
+				if ( from == j - 1 ) {
+					--j;
+					break;
+				}
+			}
+			perm[ j ] = t;
+		}
+	}
+
+	/** Sorts the specified range of elements according to the natural ascending order using indirect quicksort.
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
+	 * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
+	 * <code>a[ perm[ i ] ] &lt;= a[ perm[ i + 1 ] ]</code>.
+	 *
+	 * <p>Note that this implementation does not allocate any object, contrarily to the implementation
+	 * used to sort primitive types in {@link java.util.Arrays}, which switches to mergesort on large inputs.
+	 * 
+	 * @param x the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 */
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC void quickSortIndirect( final int[] perm, final KEY_GENERIC_TYPE[] x, final int from, final int to ) {
+		final int len = to - from;
+		// Selection sort on smallest arrays
+		if ( len < QUICKSORT_NO_REC ) {
+			insertionSortIndirect( perm, x, from, to );
+			return;
+		}
+
+		// Choose a partition element, v
+		int m = from + len / 2;
+		int l = from;
+		int n = to - 1;
+		if ( len > QUICKSORT_MEDIAN_OF_9 ) {		// Big arrays, pseudomedian of 9
+			int s = len / 8;
+			l = med3Indirect( perm, x, l, l + s, l + 2 * s );
+			m = med3Indirect( perm, x, m - s, m, m + s );
+			n = med3Indirect( perm, x, n - 2 * s, n - s, n );
+		}
+		m = med3Indirect( perm, x, l, m, n ); // Mid-size, med of 3
+		
+		final KEY_GENERIC_TYPE v = x[ perm[ m ] ];
+
+		// Establish Invariant: v* (<v)* (>v)* v*
+		int a = from, b = a, c = to - 1, d = c;
+		while(true) {
+			int comparison;
+			while ( b <= c && ( comparison = KEY_CMP( x[ perm[ b ] ], v ) ) <= 0 ) {
+				if ( comparison == 0 ) IntArrays.swap( perm, a++, b );
+				b++;
+			}
+			while (c >= b && ( comparison = KEY_CMP( x[ perm[ c ] ], v ) ) >=0 ) {
+				if ( comparison == 0 ) IntArrays.swap( perm, c, d-- );
+				c--;
+			}
+			if ( b > c ) break;
+			IntArrays.swap( perm, b++, c-- );
+		}
+
+		// Swap partition elements back to middle
+		int s;
+		s = Math.min( a - from, b - a );
+		IntArrays.swap( perm, from, b - s, s );
+		s = Math.min( d - c, to - d - 1 );
+		IntArrays.swap( perm, b, to - s, s );
+
+		// Recursively sort non-partition-elements
+		if ( ( s = b - a ) > 1 ) quickSortIndirect( perm, x, from, from + s );
+		if ( ( s = d - c ) > 1 ) quickSortIndirect( perm, x, to - s, to );
+	}
+
+	/** Sorts an array according to the natural ascending order using indirect quicksort.
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
+	 * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
+	 * <code>a[ perm[ i ] ] &lt;= a[ perm[ i + 1 ] ]</code>.
+	 *
+	 * <p>Note that this implementation does not allocate any object, contrarily to the implementation
+	 * used to sort primitive types in {@link java.util.Arrays}, which switches to mergesort on large inputs.
+	 * 
+	 * @param x the array to be sorted.
+	 * 
+	 */
+	public static KEY_GENERIC void quickSortIndirect( final int perm[], final KEY_GENERIC_TYPE[] x ) {
+		quickSortIndirect( perm, x, 0, x.length );	
+	}
+	
+	protected static class ForkJoinQuickSortIndirect KEY_GENERIC extends RecursiveAction {
+		private static final long serialVersionUID = 1L;
+		private final int from;
+		private final int to;
+		private final int[] perm;
+		private final KEY_GENERIC_TYPE[] x;
+
+		public ForkJoinQuickSortIndirect( final int perm[], final KEY_GENERIC_TYPE[] x , final int from , final int to  ) {
+			this.from = from;
+			this.to = to;
+			this.x = x;
+			this.perm = perm;
+		}
+
+		@Override
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		protected void compute() {
+			final KEY_GENERIC_TYPE[] x = this.x;
+			final int len = to - from;
+			if ( len < PARALLEL_QUICKSORT_NO_FORK ) {
+				quickSortIndirect( perm, x, from, to );
+				return;
+			}
+			// Choose a partition element, v
+			int m = from + len / 2;
+			int l = from;
+			int n = to - 1;
+			if ( len > QUICKSORT_MEDIAN_OF_9 ) { // Big arrays, pseudomedian of 9
+				int s = len / 8;
+				l = med3Indirect( perm, x, l, l + s, l + 2 * s );
+				m = med3Indirect( perm, x, m - s, m, m + s );
+				n = med3Indirect( perm, x, n - 2 * s, n - s, n );
+			}
+			m = med3Indirect( perm, x, l, m, n ); // Mid-size, med of 3
+			final KEY_GENERIC_TYPE v = x[ perm[ m ] ];
+			// Establish Invariant: v* (<v)* (>v)* v*
+			int a = from, b = a, c = to - 1, d = c;
+			while ( true ) {
+				int comparison;
+				while ( b <= c && ( comparison = KEY_CMP( x[ perm[ b ] ], v ) ) <= 0 ) {
+					if ( comparison == 0 ) IntArrays.swap( perm, a++, b );
+					b++;
+				}
+				while ( c >= b && ( comparison = KEY_CMP( x[ perm[ c ] ], v ) ) >= 0 ) {
+					if ( comparison == 0 ) IntArrays.swap( perm, c, d-- );
+					c--;
+				}
+				if ( b > c ) break;
+				IntArrays.swap( perm, b++, c-- );
+			}
+			// Swap partition elements back to middle
+			int s, t;
+			s = Math.min( a - from, b - a );
+			IntArrays.swap( perm, from, b - s, s );
+			s = Math.min( d - c, to - d - 1 );
+			IntArrays.swap( perm, b, to - s, s );
+			// Recursively sort non-partition-elements
+			s = b - a;
+			t = d - c;
+			if ( s > 1 && t > 1 ) invokeAll( new ForkJoinQuickSortIndirect KEY_GENERIC( perm, x, from, from + s ), new ForkJoinQuickSortIndirect KEY_GENERIC( perm, x, to - t, to ) );
+			else if ( s > 1 ) invokeAll( new ForkJoinQuickSortIndirect KEY_GENERIC( perm, x, from, from + s ) );
+			else invokeAll( new ForkJoinQuickSortIndirect KEY_GENERIC( perm, x, to - t, to ) );
+		}		
+	}
+	
+	/**  Sorts the specified range of elements according to the natural ascending order using a parallel indirect quicksort.
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
+	 * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
+	 * <code>a[ perm[ i ] ] &lt;= a[ perm[ i + 1 ] ]</code>.
+	 *
+	 * <p>This implementation uses a {@link ForkJoinPool} executor service with
+	 * {@link Runtime#availableProcessors()} parallel threads.
+	 * 
+	 * @param x the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 */
+	public static KEY_GENERIC void parallelQuickSortIndirect( final int[] perm, final KEY_GENERIC_TYPE[] x, final int from, final int to ) {
+		final ForkJoinPool pool = new ForkJoinPool( Runtime.getRuntime().availableProcessors() );
+		pool.invoke( new ForkJoinQuickSortIndirect KEY_GENERIC( perm, x, from, to ) );
+		pool.shutdown();
+	}
+
+	/** Sorts an array according to the natural ascending order using a parallel indirect quicksort.
+	 * 
+	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
+	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
+	 * 1249&minus;1265, 1993.
+	 * 
+	 * <p>This method implement an <em>indirect</em> sort. The elements of <code>perm</code> (which must
+	 * be exactly the numbers in the interval <code>[0..perm.length)</code>) will be permuted so that
+	 * <code>a[ perm[ i ] ] &lt;= a[ perm[ i + 1 ] ]</code>.
+	 *
+	 * <p>This implementation uses a {@link ForkJoinPool} executor service with
+	 * {@link Runtime#availableProcessors()} parallel threads.
+	 * 
+	 * @param x the array to be sorted.
+	 * 
+	 */
+	public static KEY_GENERIC void parallelQuickSortIndirect( final int perm[], final KEY_GENERIC_TYPE[] x ) {
+		parallelQuickSortIndirect( perm, x, 0, x.length );
+	}
+
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static KEY_GENERIC int med3( final KEY_GENERIC_TYPE x[], final KEY_GENERIC_TYPE[] y, final int a, final int b, final int c ) {
 		int t;
 		final int ab = ( t = KEY_CMP( x[ a ], x[ b ] ) ) == 0 ? KEY_CMP( y[ a ], y[ b ] ) : t;
@@ -903,7 +1147,7 @@ public class ARRAYS {
 		y[ b ] = u;
 	}
 
-	private static KEY_GENERIC void vecSwap( final KEY_GENERIC_TYPE[] x, final KEY_GENERIC_TYPE[] y, int a, int b, final int n ) {
+	private static KEY_GENERIC void swap( final KEY_GENERIC_TYPE[] x, final KEY_GENERIC_TYPE[] y, int a, int b, final int n ) {
 		for ( int i = 0; i < n; i++, a++, b++ ) swap( x, y, a, b );
 	}
 
@@ -980,9 +1224,9 @@ public class ARRAYS {
 		// Swap partition elements back to middle
 		int s;
 		s = Math.min( a - from, b - a );
-		vecSwap( x, y, from, b - s, s );
+		swap( x, y, from, b - s, s );
 		s = Math.min( d - c, to - d - 1 );
-		vecSwap( x, y, b, to - s, s );
+		swap( x, y, b, to - s, s );
 		// Recursively sort non-partition-elements
 		if ( ( s = b - a ) > 1 ) quickSort( x, y, from, from + s );
 		if ( ( s = d - c ) > 1 ) quickSort( x, y, to - s, to );
@@ -1060,9 +1304,9 @@ public class ARRAYS {
 			// Swap partition elements back to middle
 			int s, t;
 			s = Math.min( a - from, b - a );
-			vecSwap( x, y, from, b - s, s );
+			swap( x, y, from, b - s, s );
 			s = Math.min( d - c, to - d - 1 );
-			vecSwap( x, y, b, to - s, s );
+			swap( x, y, b, to - s, s );
 			s = b - a;
 			t = d - c;
 			// Recursively sort non-partition-elements
@@ -1629,21 +1873,6 @@ public class ARRAYS {
 		parallelRadixSort( a, 0, a.length );
 	}
 
-	private static KEY_GENERIC void insertionSortIndirect( final int[] perm, final KEY_TYPE[] a, final int from, final int to ) {
-		for ( int i = from; ++i < to; ) { 
-			int t = perm[ i ];
-			int j = i;
-			for ( int u = perm[ j - 1 ]; KEY_LESS( a[ t ], a[ u ] ); u = perm[ --j - 1 ] ) {
-				perm[ j ] = u;
-				if ( from == j - 1 ) {
-					--j;
-					break;
-				}
-			}
-			perm[ j ] = t;
-		}
-	}
-
 	/** Sorts the specified array using indirect radix sort.
 	 * 
 	 * <p>The sorting algorithm is a tuned radix sort adapted from Peter M. McIlroy, Keith Bostic and M. Douglas
@@ -1802,12 +2031,12 @@ public class ARRAYS {
 		final int numberOfThreads = Runtime.getRuntime().availableProcessors();
 		final ExecutorService executorService = Executors.newFixedThreadPool( numberOfThreads, Executors.defaultThreadFactory() );
 		final ExecutorCompletionService<Void> executorCompletionService = new ExecutorCompletionService<Void>( executorService );
+		final int[] support = stable ? new int[ perm.length ] : null;
 
 		for( int i = numberOfThreads; i-- != 0; ) executorCompletionService.submit( new Callable<Void>() {
 			public Void call() throws Exception {
 				final int[] count = new int[ 1 << DIGIT_BITS ];
 				final int[] pos = new int[ 1 << DIGIT_BITS ];
-				final int[] support = stable ? new int[ perm.length ] : null;
 
 				for(;;) {
 					if ( queueSize.get() == 0 ) for( int i = numberOfThreads; i-- != 0; ) queue.add( POISON_PILL );
