@@ -344,4 +344,40 @@ public class ObjectArraysTest {
 		assertArrayEquals( new Integer[] { 4, 2, 3, 1, 0 }, ObjectArrays.reverse( new Integer[] { 4, 3, 2, 1, 0 }, 1, 3 ) );
 		assertArrayEquals( new Integer[] { 0, 1, 2, 3, 4 }, ObjectArrays.reverse( new Integer[] { 0, 1, 2, 3, 4 }, 1, 2 ) );
 	}
+
+	@Test
+	public void testStabilize() {
+		int[] perm;
+		Integer[] val;
+		
+		perm = new int[] { 0, 1, 2, 3 };
+		val = new Integer[] { 0, 0, 0, 0 };
+		
+		ObjectArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 0, 1, 2, 3 }, perm );
+		
+		perm = new int[] { 3, 1, 2, 0 };
+		val = new Integer[] { 0, 0, 0, 0 };
+		
+		ObjectArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 0, 1, 2, 3 }, perm );
+
+		perm = new int[] { 3, 2, 1, 0 };
+		val = new Integer[] { 0, 1, 1, 2 };
+		
+		ObjectArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 3, 1, 2, 0 }, perm );
+
+		perm = new int[] { 3, 2, 1, 0 };
+		val = new Integer[] { 0, 0, 1, 1 };
+		
+		ObjectArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 2, 3, 0, 1 }, perm );
+
+		perm = new int[] { 4, 3, 2, 1, 0 };
+		val = new Integer[] { 1, 1, 0, 0, 0 };
+		
+		ObjectArrays.stabilize( perm, val, 1, 3 );
+		assertArrayEquals( new int[] { 4, 2, 3, 1, 0 }, perm );
+	}
 }

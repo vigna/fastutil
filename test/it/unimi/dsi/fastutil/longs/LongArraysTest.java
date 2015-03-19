@@ -1,6 +1,8 @@
 package it.unimi.dsi.fastutil.longs;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
+import it.unimi.dsi.fastutil.ints.IntArrays;
 
 import java.util.Random;
 
@@ -123,5 +125,41 @@ public class LongArraysTest {
 		LongArrays.radixSort( d );
 		for( int i = d[ 0 ].length - 1; i-- != 0; ) assertTrue( Long.toString( i ) + ": <" + d[ 0 ][ i ] + ", " + d[ 1 ][ i ] + ">, <" + d[ 0 ][ i + 1 ] + ", " +  d[ 1 ][ i + 1 ] + ">", d[ 0 ][ i ] < d[ 0 ][ i + 1 ] || d[ 0 ][ i ] == d[ 0 ][ i + 1 ] && d[ 1 ][ i ] <= d[ 1 ][ i + 1 ] );
 
+	}
+
+	@Test
+	public void testStabilize() {
+		int[] perm;
+		long[] val;
+		
+		perm = new int[] { 0, 1, 2, 3 };
+		val = new long[] { 0, 0, 0, 0 };
+		
+		LongArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 0, 1, 2, 3 }, perm );
+		
+		perm = new int[] { 3, 1, 2, 0 };
+		val = new long[] { 0, 0, 0, 0 };
+		
+		LongArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 0, 1, 2, 3 }, perm );
+
+		perm = new int[] { 3, 2, 1, 0 };
+		val = new long[] { 0, 1, 1, 2 };
+		
+		LongArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 3, 1, 2, 0 }, perm );
+
+		perm = new int[] { 3, 2, 1, 0 };
+		val = new long[] { 0, 0, 1, 1 };
+		
+		LongArrays.stabilize( perm, val );
+		assertArrayEquals( new int[] { 2, 3, 0, 1 }, perm );
+
+		perm = new int[] { 4, 3, 2, 1, 0 };
+		val = new long[] { 1, 1, 0, 0, 0 };
+		
+		LongArrays.stabilize( perm, val, 1, 3 );
+		assertArrayEquals( new int[] { 4, 2, 3, 1, 0 }, perm );
 	}
 }
