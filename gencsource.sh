@@ -467,17 +467,10 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 \
 "#define KEY_EQUALS_NOT_NULL_CAST(x,y) KEY_EQUALS_NOT_NULL(x,y)\n"\
-"#define KEY2INTHASH_CAST(x) KEY2INTHASH(x)\n"\
+"#define KEY2INTHASH_CAST(x) KEY2INTHASH(x)\n\n"\
 "#if #keyclass(Object)\n"\
-"#ifdef Custom\n"\
-"#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
-"#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( (x), (y) ) )\n"\
-"#undef KEY_EQUALS_NOT_NULL_CAST\n"\
-"#define KEY_EQUALS_NOT_NULL_CAST(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), (y) ) )\n"\
-"#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
-"#endif\n"\
 "#define KEY_IS_NULL(x) ( (x) == null )\n"\
 "#elif #keyclass(Float)\n"\
 "#define KEY_EQUALS(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
@@ -491,6 +484,15 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
 "#define KEY_IS_NULL(x) ( (x) == KEY_NULL )\n"\
+"#endif\n\n"\
+\
+"#ifdef Custom\n"\
+"#undef KEY_EQUALS\n"\
+"#define KEY_EQUALS(x,y) ( strategy.equals( (x), (y) ) )\n"\
+"#undef KEY_EQUALS_NOT_NULL\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( (x), (y) ) )\n"\
+"#undef KEY_EQUALS_NOT_NULL_CAST\n"\
+"#define KEY_EQUALS_NOT_NULL_CAST(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), (y) ) )\n"\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\
@@ -512,19 +514,17 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_CLASS2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
 \
-"#if #keyclass(Object)\n"\
 "#ifdef Custom\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(x) )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( strategy.hashCode(x) ) )\n"\
 "#undef KEY2INTHASH_CAST\n"\
 "#define KEY2INTHASH_CAST(x) ( it.unimi.dsi.fastutil.HashCommon.mix( strategy.hashCode( " KEY_GENERIC_CAST " x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( strategy.hashCode(x)) ) ) )\n"\
-"#else\n"\
+"#elif #keyclass(Object)\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( (x).hashCode() )\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (x).hashCode() ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( (x).hashCode() ) ) )\n"\
-"#endif\n"\
 "#else\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( System.identityHashCode(x) )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( System.identityHashCode(x) ) )\n"\

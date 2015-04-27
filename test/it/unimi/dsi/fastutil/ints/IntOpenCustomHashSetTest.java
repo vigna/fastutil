@@ -17,7 +17,28 @@ import org.junit.Test;
 /** Not a particularly good test, but it will check that we use everywhere the same hashing strategy. */
 
 public class IntOpenCustomHashSetTest {
+	
+	@Test
+	public void testCustomUsed() {
+		IntOpenCustomHashSet set = new IntOpenCustomHashSet( new IntHash.Strategy() {
+			@Override
+			public int hashCode( int e ) {
+				return Integer.hashCode( e & 0xFFFF );
+			}
 
+			@Override
+			public boolean equals( int a, int b ) {
+				return ( a & 0xFFFF ) == ( b & 0xFFFF);
+			}
+		} );
+		
+		set.add( 1 << 16 | 1 );
+		set.add( 1 );
+		assertEquals( 1, set.size() );
+		assertTrue( set.contains( 1 ) );
+		assertTrue( set.contains( 1 << 16 | 1 ) );
+	}
+	
 	private static final class Strategy implements IntHash.Strategy, Serializable {
 		private static final long serialVersionUID = 1L;
 

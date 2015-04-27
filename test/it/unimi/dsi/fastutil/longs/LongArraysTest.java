@@ -2,7 +2,6 @@ package it.unimi.dsi.fastutil.longs;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.ints.IntArrays;
 
 import java.util.Random;
 
