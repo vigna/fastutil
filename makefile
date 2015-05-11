@@ -540,73 +540,8 @@ $(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c: drv/TextIO.drv $(TEXTIO_FRAGMENTS)
 
 CSOURCES += $(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c
 
-#
-# Old sources, generated only with the old target
-#
-
-OPEN_DOUBLE_HASH_SETS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)OpenDoubleHashSet.c)
-$(OPEN_DOUBLE_HASH_SETS): drv/OpenDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(OPEN_DOUBLE_HASH_SETS)
-
-LINKED_OPEN_DOUBLE_HASH_SETS := $(foreach k,$(TYPE_NOBOOL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)LinkedOpenDoubleHashSet.c)
-$(LINKED_OPEN_DOUBLE_HASH_SETS): drv/LinkedOpenDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(LINKED_OPEN_DOUBLE_HASH_SETS)
-
-OPEN_DOUBLE_CUSTOM_HASH_SETS := $(GEN_SRCDIR)/$(PKG_PATH)/objects/ObjectOpenCustomDoubleHashSet.c
-$(OPEN_DOUBLE_CUSTOM_HASH_SETS): drv/OpenCustomDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(OPEN_DOUBLE_CUSTOM_HASH_SETS)
-
-LINKED_OPEN_DOUBLE_CUSTOM_HASH_SETS := $(GEN_SRCDIR)/$(PKG_PATH)/objects/ObjectLinkedOpenCustomDoubleHashSet.c
-$(LINKED_OPEN_DOUBLE_CUSTOM_HASH_SETS): drv/LinkedOpenCustomDoubleHashSet.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(LINKED_OPEN_CUSTOM_DOUBLE_HASH_SETS)
-
-OPEN_DOUBLE_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)OpenDoubleHashMap.c))
-$(OPEN_DOUBLE_HASH_MAPS): drv/OpenDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(OPEN_DOUBLE_HASH_MAPS)
-
-LINKED_OPEN_DOUBLE_HASH_MAPS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)LinkedOpenDoubleHashMap.c))
-$(LINKED_OPEN_DOUBLE_HASH_MAPS): drv/LinkedOpenDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(LINKED_OPEN_DOUBLE_HASH_MAPS)
-
-OPEN_CUSTOM_DOUBLE_HASH_MAPS := $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/objects/Object2$(v)OpenCustomDoubleHashMap.c)
-$(OPEN_CUSTOM_DOUBLE_HASH_MAPS): drv/OpenCustomDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(OPEN_CUSTOM_DOUBLE_HASH_MAPS)
-
-LINKED_OPEN_CUSTOM_DOUBLE_HASH_MAPS := $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/objects/Object2$(v)LinkedOpenCustomDoubleHashMap.c)
-$(LINKED_OPEN_CUSTOM_DOUBLE_HASH_MAPS): drv/LinkedOpenCustomDoubleHashMap.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(LINKED_OPEN_CUSTOM_DOUBLE_HASH_MAPS)
-
-INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)IndirectDoublePriorityQueue.c)
-$(INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/IndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(INDIRECT_DOUBLE_PRIORITY_QUEUES)
-
-HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)HeapSesquiIndirectDoublePriorityQueue.c)
-$(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/HeapSesquiIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUES)
-
-HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)HeapIndirectDoublePriorityQueue.c)
-$(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/HeapIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUES)
-
-ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayIndirectDoublePriorityQueue.c)
-$(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES): drv/ArrayIndirectDoublePriorityQueue.drv; ./gencsource.sh $< $@ >$@
-
-OLDCSOURCES += $(ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUES)
-
 
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
-OLDJSOURCES = $(OLDCSOURCES:.c=.java) 
 
 
 SOURCES = \
@@ -641,16 +576,11 @@ SOURCES = \
 	$(SOURCEDIR)/io/MeasurableStream.java \
 	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
 
-OLDSOURCES = \
-	$(SOURCEDIR)/IndirectDoublePriorityQueue.java \
-	$(SOURCEDIR)/IndirectDoublePriorityQueues.java \
-	$(SOURCEDIR)/AbstractIndirectDoublePriorityQueue.java
-
 
 # We pass each generated Java source through the preprocessor. TEST compiles in the test code,
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
-$(JSOURCES) $(OLDJSOURCES): %.java: %.c
+$(JSOURCES): %.java: %.c
 	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
 
 
@@ -665,8 +595,4 @@ clean:
 
 sources: $(JSOURCES)
 
-oldsources: $(OLDJSOURCES)
-
 csources: $(CSOURCES)
-
-oldcsources: $(OLDCSOURCES)
