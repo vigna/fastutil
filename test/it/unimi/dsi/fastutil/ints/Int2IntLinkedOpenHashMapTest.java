@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.IOException;
@@ -661,5 +662,50 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertEquals( s.get( key ), -1000 );
 		fastIterator.remove();
 		assertEquals( s.get( key ), -1 );
+	}
+	
+	
+	@Test(expected=NoSuchElementException.class)
+	public void testNextAtEnd() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap();
+		m.addTo( 1, 1 );
+		m.addTo( 2, 2 );
+		m.addTo( 3, 3 );
+		ObjectBidirectionalIterator<java.util.Map.Entry<Integer, Integer>> iterator = m.entrySet().iterator( m.entrySet().last() );
+		assertFalse( iterator.hasNext() );
+		iterator.next();
+	}
+
+	@Test(expected=NoSuchElementException.class)
+	public void testNextAtEndFast() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap();
+		m.addTo( 1, 1 );
+		m.addTo( 2, 2 );
+		m.addTo( 3, 3 );
+		ObjectBidirectionalIterator<Entry> iterator = m.int2IntEntrySet().iterator( m.int2IntEntrySet().last() );
+		assertFalse( iterator.hasNext() );
+		iterator.next();
+	}
+
+	@Test(expected=NoSuchElementException.class)
+	public void testPreviousAtStart() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap();
+		m.addTo( 1, 1 );
+		m.addTo( 2, 2 );
+		m.addTo( 3, 3 );
+		ObjectBidirectionalIterator<java.util.Map.Entry<Integer, Integer>> iterator = m.entrySet().iterator();
+		assertFalse( iterator.hasPrevious() );
+		iterator.previous();
+	}
+
+	@Test(expected=NoSuchElementException.class)
+	public void testPreviousAtStartFast() {
+		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap();
+		m.addTo( 1, 1 );
+		m.addTo( 2, 2 );
+		m.addTo( 3, 3 );
+		ObjectBidirectionalIterator<Entry> iterator = m.int2IntEntrySet().iterator();
+		assertFalse( iterator.hasPrevious() );
+		iterator.previous();
 	}
 }
