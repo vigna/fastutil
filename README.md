@@ -30,4 +30,5 @@ produces a (fake) C source, which includes the driver code and some
 definitions that customize the environment.
 
 
-seba (<mailto:sebastiano.vigna@unimi.it>)
+* seba (<mailto:sebastiano.vigna@unimi.it>)
+* <mailto:fastutil@googlegroups.com>
