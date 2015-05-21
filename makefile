@@ -70,7 +70,7 @@ source:
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/CHANGES \
-		fastutil-$(version)/README \
+		fastutil-$(version)/README.md \
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/makefile \
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
@@ -88,7 +88,7 @@ binary:
 	cp dist/lib/fastutil-$(version).jar .
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
-		fastutil-$(version)/README \
+		fastutil-$(version)/README.md \
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/docs \
 		fastutil-$(version)/fastutil-$(version).jar
