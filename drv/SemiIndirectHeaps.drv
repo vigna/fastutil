@@ -54,17 +54,21 @@ public class SEMI_INDIRECT_HEAPS {
 		int child;
 
 		if ( c == null )
-			while ( ( child = 2 * i + 1 ) < size ) {
-				if ( child + 1 < size && KEY_LESS( refArray[ heap[ child + 1 ] ], refArray[ heap[ child ] ] ) ) child++;
-				if ( KEY_LESSEQ( E, refArray[ heap[ child ] ] ) ) break;
-				heap[ i ] = heap[ child ];
+			while ( ( child = ( i << 1 ) + 1 ) < size ) {
+				int t = heap[ child ];
+				final int right = child + 1;
+				if ( right < size && KEY_LESS( refArray[ heap[ right ] ], refArray[ t ] ) ) t = heap[ child = right ];
+				if ( KEY_LESSEQ( E, refArray[ t ] ) ) break;
+				heap[ i ] = t;
 				i = child;
 			}
 		else 
-			while ( ( child = 2 * i + 1 ) < size ) {
-				if ( child + 1 < size && c.compare( refArray[ heap[ child + 1 ] ], refArray[ heap[ child ] ] ) < 0 ) child++;
-				if ( c.compare( E, refArray[ heap[ child ] ] ) <= 0 ) break;
-				heap[ i ] = heap[ child ];
+			while ( ( child = ( i << 1 ) + 1 ) < size ) {
+				int t = heap[ child ];
+				final int right = child + 1;
+				if ( right < size && c.compare( refArray[ heap[ right ] ], refArray[ t ] ) < 0 ) t = heap[ child = right ];
+				if ( c.compare( E, refArray[ t ] ) <= 0 ) break;
+				heap[ i ] = t;
 				i = child;
 			}
 
@@ -88,19 +92,22 @@ public class SEMI_INDIRECT_HEAPS {
 		if ( i >= size ) throw new IllegalArgumentException( "Heap position (" + i + ") is larger than or equal to heap size (" + size + ")" );
 
 		final int e = heap[ i ];
-		int parent;
 		final KEY_GENERIC_TYPE E = refArray[ e ];
 
 		if ( c == null )
-			while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
-				if ( KEY_LESSEQ( refArray[ heap[ parent ] ], E ) ) break;
-				heap[ i ] = heap[ parent ]; 
+			while ( i != 0 ) {
+				final int parent = ( i - 1 ) >>> 1;
+				final int t = heap[ parent ];
+				if ( KEY_LESSEQ( refArray[ t ], E ) ) break;
+				heap[ i ] = t; 
 				i = parent;
 			}
 		else
-			while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
-				if ( c.compare( refArray[ heap[ parent ] ], E ) <= 0 ) break;
-				heap[ i ] = heap[ parent ]; 
+			while ( i != 0 ) {
+				final int parent = ( i - 1 ) >>> 1;
+				final int t = heap[ parent ];
+				if ( c.compare( refArray[ t ], E ) <= 0 ) break;
+				heap[ i ] = t; 
 				i = parent;
 			}
 
@@ -125,7 +132,7 @@ public class SEMI_INDIRECT_HEAPS {
 		int i = length;
 		while( i-- != 0 ) heap[ i ] = offset + i;
 
-		i = length / 2;
+		i = length >>> 1;
 		while( i-- != 0 ) downHeap( refArray, heap, length, i, c );
 	}
 
@@ -155,7 +162,7 @@ public class SEMI_INDIRECT_HEAPS {
 	 */
 
 	public static KEY_GENERIC void makeHeap( final KEY_GENERIC_TYPE[] refArray, final int[] heap, final int size, final KEY_COMPARATOR KEY_GENERIC c ) {
-		int i = size / 2;
+		int i = size >>> 1;
 		while( i-- != 0 ) downHeap( refArray, heap, size, i, c );
 	}
 

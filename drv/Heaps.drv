@@ -50,17 +50,21 @@ public class HEAPS {
 		int child;
 
 		if ( c == null )
-			while ( ( child = 2 * i + 1 ) < size ) {
-				if ( child + 1 < size && KEY_LESS( heap[ child + 1 ], heap[ child ] ) ) child++;
-				if ( KEY_LESSEQ( e, heap[ child ] ) ) break;
-				heap[ i ] = heap[ child ];
+			while ( ( child = ( i << 1 ) + 1 ) < size ) {
+				KEY_GENERIC_TYPE t = heap[ child ];
+				final int right = child + 1;
+				if ( right < size && KEY_LESS( heap[ right ], t ) ) t = heap[ child = right ];
+				if ( KEY_LESSEQ( e, t ) ) break;
+				heap[ i ] = t;
 				i = child;
 			}
 		else 
-			while ( ( child = 2 * i + 1 ) < size ) {
-				if ( child + 1 < size && c.compare( heap[ child + 1 ], heap[ child ] ) < 0 ) child++;
-				if ( c.compare( e, heap[ child ] ) <= 0 ) break;
-				heap[ i ] = heap[ child ];
+			while ( ( child = ( i << 1 ) + 1 ) < size ) {
+				KEY_GENERIC_TYPE t = heap[ child ];
+				final int right = child + 1;
+				if ( right < size && c.compare( heap[ right ], t ) < 0 ) t = heap[ child = right ];
+				if ( c.compare( e, t ) <= 0 ) break;
+				heap[ i ] = t;
 				i = child;
 			}
 
@@ -83,18 +87,21 @@ public class HEAPS {
 		if ( i >= size ) throw new IllegalArgumentException( "Heap position (" + i + ") is larger than or equal to heap size (" + size + ")" );
 
 		final KEY_GENERIC_TYPE e = heap[ i ];
-		int parent;
 
 		if ( c == null )
-			while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
-				if ( KEY_LESSEQ( heap[ parent ], e ) ) break;
-				heap[ i ] = heap[ parent ]; 
+			while ( i != 0 ) {
+				final int parent = ( i - 1 ) >>> 1;
+				final KEY_GENERIC_TYPE t = heap[ parent ];
+				if ( KEY_LESSEQ( t, e ) ) break;
+				heap[ i ] = t;
 				i = parent;
 			}
 		else
-			while ( i != 0 && ( parent = ( i - 1 ) / 2 ) >= 0 ) {
-				if ( c.compare( heap[ parent ], e ) <= 0 ) break;
-				heap[ i ] = heap[ parent ]; 
+			while ( i != 0 ) {
+				final int parent = ( i - 1 ) >>> 1;
+				final KEY_GENERIC_TYPE t = heap[ parent ];
+				if ( c.compare( t, e ) <= 0 ) break;
+				heap[ i ] = t; 
 				i = parent;
 			}
 
@@ -111,8 +118,7 @@ public class HEAPS {
 	 */
 
 	public static KEY_GENERIC void makeHeap( final KEY_GENERIC_TYPE[] heap, final int size, final KEY_COMPARATOR KEY_GENERIC c ) {
-		int i = size / 2;
+		int i = size >>> 1;
 		while( i-- != 0 ) downHeap( heap, size, i, c );
 	}
-
 }
