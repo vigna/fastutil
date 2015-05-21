@@ -68,7 +68,7 @@ public class IntArrayIndirectPriorityQueueTest {
 		return true;
 	}
 
-	public void test( int n ) {
+	public void test( int n, IntComparator comparator ) {
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
 		int rm = 0, rt = 0;
 		Random r = new Random( 0 );
@@ -76,8 +76,8 @@ public class IntArrayIndirectPriorityQueueTest {
 
 		for ( int i = 0; i < n; i++ ) ref[ i ] = r.nextInt();
 
-		IntArrayIndirectPriorityQueue m = new IntArrayIndirectPriorityQueue( ref );
-		IntHeapIndirectPriorityQueue t = new IntHeapIndirectPriorityQueue( ref );
+		IntArrayIndirectPriorityQueue m = new IntArrayIndirectPriorityQueue( ref, comparator );
+		IntHeapIndirectPriorityQueue t = new IntHeapIndirectPriorityQueue( ref, comparator );
 
 		/* We add pairs to t. */
 		for ( int i = 0; i < n / 2; i++ ) {
@@ -280,7 +280,7 @@ public class IntArrayIndirectPriorityQueueTest {
 
 			int[] temp = t.heap.clone();
 			IntArrays.quickSort( temp, 0, t.size() ); // To scramble a bit
-			m = new IntArrayIndirectPriorityQueue( m.refArray, temp, t.size() );
+			m = new IntArrayIndirectPriorityQueue( m.refArray, temp, t.size(), comparator );
 
 			assertTrue( "Error: m and t differ after wrap (" + m + ", " + t + ")", heapEqual( m.array, t.heap, m.size(), t.size() ) );
 
@@ -321,24 +321,27 @@ public class IntArrayIndirectPriorityQueueTest {
 
 	@Test
 	public void test1() {
-		test( 1 );
+		test( 1, null );
+		test( 1, IntComparators.OPPOSITE_COMPARATOR );
 
 	}
 
 	@Test
 	public void test10() {
-		test( 10 );
-
+		test( 10, null );
+		test( 10, IntComparators.OPPOSITE_COMPARATOR );
 	}
 
 	@Test
 	public void test100() {
-		test( 20 );
+		test( 100, null );
+		test( 100, IntComparators.OPPOSITE_COMPARATOR );
 	}
 
 	@Test
 	public void test1000() {
-		test( 1000 );
+		test( 1000, null );
+		test( 1000, IntComparators.OPPOSITE_COMPARATOR );
 	}
 
 }
