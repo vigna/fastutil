@@ -42,31 +42,61 @@ public class HEAPS {
 	 * @return the new position of the element of index <code>i</code>.
 	 */
 
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC int downHeap( final KEY_GENERIC_TYPE[] heap, final int size, int i, final KEY_COMPARATOR KEY_SUPER_GENERIC c ) {
+		return c == null ? downHeap( heap, size, i ) : downHeapComparator( heap, size, i, c );
+	}
+
+	/** Moves the given element down into the heap until it reaches the lowest possible position using the natural order.
+	 *
+	 * @param heap the heap (starting at 0).
+	 * @param size the number of elements in the heap.
+	 * @param i the index of the element that must be moved down.
+	 * @return the new position of the element of index <code>i</code>.
+	 */
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC int downHeap( final KEY_GENERIC_TYPE[] heap, final int size, int i ) {
 		assert i < size;
 
 		final KEY_GENERIC_TYPE e = heap[ i ];
-		int child;
 
-		if ( c == null )
-			while ( ( child = ( i << 1 ) + 1 ) < size ) {
-				KEY_GENERIC_TYPE t = heap[ child ];
-				final int right = child + 1;
-				if ( right < size && KEY_LESS( heap[ right ], t ) ) t = heap[ child = right ];
-				if ( KEY_LESSEQ( e, t ) ) break;
-				heap[ i ] = t;
-				i = child;
-			}
-		else 
-			while ( ( child = ( i << 1 ) + 1 ) < size ) {
-				KEY_GENERIC_TYPE t = heap[ child ];
-				final int right = child + 1;
-				if ( right < size && c.compare( heap[ right ], t ) < 0 ) t = heap[ child = right ];
-				if ( c.compare( e, t ) <= 0 ) break;
-				heap[ i ] = t;
-				i = child;
-			}
+		for( int child; ( child = ( i << 1 ) + 1 ) < size; ) {
+			KEY_GENERIC_TYPE t = heap[ child ];
+			final int right = child + 1;
+			if ( right < size && KEY_LESS( heap[ right ], t ) ) t = heap[ child = right ];
+			if ( KEY_LESSEQ( e, t ) ) break;
+			heap[ i ] = t;
+			i = child;
+		}
+
+		heap[ i ] = e;
+
+		return i;
+	}
+
+	/** Moves the given element down into the heap until it reaches the lowest possible position using a given comparator.
+	 *
+	 * @param heap the heap (starting at 0).
+	 * @param size the number of elements in the heap.
+	 * @param i the index of the element that must be moved down.
+	 * @param c a type-specific comparator.
+	 * @return the new position of the element of index <code>i</code>.
+	 */
+
+	public static KEY_GENERIC int downHeapComparator( final KEY_GENERIC_TYPE[] heap, final int size, int i, final KEY_COMPARATOR KEY_SUPER_GENERIC c ) {
+		assert i < size;
+		assert c != null;
+
+		final KEY_GENERIC_TYPE e = heap[ i ];
+
+		for( int child; ( child = ( i << 1 ) + 1 ) < size; ) {
+			KEY_GENERIC_TYPE t = heap[ child ];
+			final int right = child + 1;
+			if ( right < size && c.compare( heap[ right ], t ) < 0 ) t = heap[ child = right ];
+			if ( c.compare( e, t ) <= 0 ) break;
+			heap[ i ] = t;
+			i = child;
+		}
 
 		heap[ i ] = e;
 
@@ -82,28 +112,55 @@ public class HEAPS {
 	 * @return the new position of the element of index <code>i</code>.
 	 */
 
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC int upHeap( final KEY_GENERIC_TYPE[] heap, final int size, int i, final KEY_COMPARATOR KEY_GENERIC c ) {
 		assert i < size;
+		return c == null ? upHeap( heap, i ) : upHeapComparator( heap, i, c );
+	}
+
+	/** Moves the given element up in the heap until it reaches the highest possible position using the natural order.
+	 *
+	 * @param heap the heap (starting at 0).
+	 * @param i the index of the element that must be moved up.
+	 * @return the new position of the element of index <code>i</code>.
+	 */
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC int upHeap( final KEY_GENERIC_TYPE[] heap, int i ) {
+		final KEY_GENERIC_TYPE e = heap[ i ];
+
+		while ( i != 0 ) {
+			final int parent = ( i - 1 ) >>> 1;
+			final KEY_GENERIC_TYPE t = heap[ parent ];
+			if ( KEY_LESSEQ( t, e ) ) break;
+			heap[ i ] = t;
+			i = parent;
+		}
+
+		heap[ i ] = e;
+
+		return i;
+	}
+
+	/** Moves the given element up in the heap until it reaches the highest possible position using a given comparator.
+	 *
+	 * @param heap the heap (starting at 0).
+	 * @param i the index of the element that must be moved up.
+	 * @param c a type-specific comparator.
+	 * @return the new position of the element of index <code>i</code>.
+	 */
+
+	public static KEY_GENERIC int upHeapComparator( final KEY_GENERIC_TYPE[] heap, int i, final KEY_COMPARATOR KEY_GENERIC c ) {
+		assert c != null;
 
 		final KEY_GENERIC_TYPE e = heap[ i ];
 
-		if ( c == null )
-			while ( i != 0 ) {
-				final int parent = ( i - 1 ) >>> 1;
-				final KEY_GENERIC_TYPE t = heap[ parent ];
-				if ( KEY_LESSEQ( t, e ) ) break;
-				heap[ i ] = t;
-				i = parent;
-			}
-		else
-			while ( i != 0 ) {
-				final int parent = ( i - 1 ) >>> 1;
-				final KEY_GENERIC_TYPE t = heap[ parent ];
-				if ( c.compare( t, e ) <= 0 ) break;
-				heap[ i ] = t; 
-				i = parent;
-			}
+		while ( i != 0 ) {
+			final int parent = ( i - 1 ) >>> 1;
+			final KEY_GENERIC_TYPE t = heap[ parent ];
+			if ( c.compare( t, e ) <= 0 ) break;
+			heap[ i ] = t; 
+			i = parent;
+		}
 
 		heap[ i ] = e;
 
@@ -119,6 +176,7 @@ public class HEAPS {
 
 	public static KEY_GENERIC void makeHeap( final KEY_GENERIC_TYPE[] heap, final int size, final KEY_COMPARATOR KEY_GENERIC c ) {
 		int i = size >>> 1;
-		while( i-- != 0 ) downHeap( heap, size, i, c );
+		if ( c == null ) while( i-- != 0 ) downHeap( heap, size, i );
+		else while( i-- != 0 ) downHeapComparator( heap, size, i, c );
 	}
 }
