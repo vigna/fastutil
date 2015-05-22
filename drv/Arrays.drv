@@ -100,10 +100,11 @@ import java.util.Comparator;
  * arrays much like array lists. This can be very useful when efficiency (or
  * syntactic simplicity) reasons make array lists unsuitable.
  *
- * <P><strong>Warning:</strong> creating arrays 
- * using {@linkplain java.lang.reflect.Array#newInstance(Class,int) reflection}, as it
- * happens in {@link #ensureCapacity(Object[],int,int)} and {@link #grow(Object[],int,int)},
- * is <em>significantly slower</em> than using <code>new</code>. This phenomenon is particularly
+ * <P><strong>Warning:</strong> if your array is not of type {@code Object[]},
+ * {@link #ensureCapacity(Object[],int,int)} and {@link #grow(Object[],int,int)}
+ * will use {@linkplain java.lang.reflect.Array#newInstance(Class,int) reflection}
+ * to preserve your array type. Reflection is <em>significantly slower</em> than using <code>new</code>. 
+ * This phenomenon is particularly
  * evident in the first growth phases of an array reallocated with doubling (or similar) logic.
  *
  * <h2>Sorting</h2>
@@ -147,9 +148,9 @@ public class ARRAYS {
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static <K> K[] newArray( final K[] prototype, final int length ) {
-		final Class<?> componentType = prototype.getClass().getComponentType();
-		if ( length == 0 && componentType == Object.class ) return (K[])EMPTY_ARRAY;
-		return (K[])java.lang.reflect.Array.newInstance( prototype.getClass().getComponentType(), length );
+		final Class<?> klass = prototype.getClass();
+		if ( klass == Object[].class ) return (K[])( length == 0 ? EMPTY_ARRAY : new Object[ length ] );
+		return (K[])java.lang.reflect.Array.newInstance( klass.getComponentType(), length );
 	}
 #endif
 
