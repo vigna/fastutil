@@ -319,6 +319,46 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		return true;
 	}
 
+#if #keyclass(Object)
+	/** Add a random element if not present, get the existing value if already present.
+	 *
+	 * This is equivalent to (but faster than) doing a:
+	 * <pre>
+	 * K exist = set.get(k);
+	 * if (exist == null) {
+	 *   set.add(k);
+	 *   exist = k;
+	 * }
+	 * </pre>
+	 */
+	public KEY_GENERIC_TYPE addOrGet( final KEY_GENERIC_TYPE k ) {
+		int displ, base;
+
+		if ( KEY_IS_NULL( k ) ) {
+			if ( containsNull ) return null;
+			containsNull = true;
+		}
+		else {
+			KEY_GENERIC_TYPE curr;
+			final KEY_GENERIC_TYPE[][] key = this.key;
+			final long h = KEY2LONGHASH( k );
+
+			// The starting point.
+			if ( ! KEY_IS_NULL( curr = key[ base = (int)( ( h & mask ) >>> BigArrays.SEGMENT_SHIFT ) ][ displ = (int)( h & segmentMask ) ] ) ) {
+				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
+				while( ! KEY_IS_NULL( curr = key[ base = ( base + ( ( displ = ( displ + 1 ) & segmentMask ) == 0 ? 1 : 0 ) ) & baseMask ][ displ ] ) )
+					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
+			}
+
+			key[ base ][ displ ] = k;
+		}
+
+		if ( size++ >= maxFill ) rehash( 2 * n );
+		if ( ASSERTS ) checkTable();
+		return k;
+	}
+#endif
+
 	/** Shifts left entries with the specified hash code, starting at the specified position,
 	 * and empties the resulting free entry.
 	 *

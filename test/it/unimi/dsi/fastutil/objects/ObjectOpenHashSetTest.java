@@ -153,6 +153,18 @@ public class ObjectOpenHashSetTest {
 			Object T = genKey();
 			assertTrue( "Error: divergence between t and m (standard method)", m.contains( ( T ) ) == t.contains( ( T ) ) );
 		}
+		/*
+		 * Check that addOrGet does indeed return the original instance, not a copy
+		 */
+		for ( java.util.Iterator i = m.iterator(); i.hasNext(); ) {
+			Object e = i.next();
+			Object e2 = m.addOrGet( new StringBuilder((String)e).toString() ); // Make a new object!
+			assertTrue( "addOrGet does not return the same object", e == e2 );
+		}
+		/* This should not have modified the table */
+		assertTrue( "Error: !m.equals(t) after addOrGet no-op", m.equals( t ) );
+		assertTrue( "Error: !t.equals(m) after addOrGet no-op", t.equals( m ) );
+
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
 		for ( int i = 0; i < 20 * n; i++ ) {
 			Object T = genKey();
@@ -162,7 +174,7 @@ public class ObjectOpenHashSetTest {
 		}
 		assertTrue( "Error: !m.equals(t) after removal", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after removal", t.equals( m ) );
-		
+
 		checkTable( m );
 		printProbes( m );
 
@@ -218,7 +230,7 @@ public class ObjectOpenHashSetTest {
 			assertTrue( "Error: divergence in remove() between t and m after save/read", m.remove( ( T ) ) == t.remove( ( T ) ) );
 		}
 		assertTrue( "Error: !m.equals(t) after post-save/read removal", m.equals( t ) );
-		assertTrue( "Error: !t.equals(m) after post-save/read removal", t.equals( m ) ); 		
+		assertTrue( "Error: !t.equals(m) after post-save/read removal", t.equals( m ) );
 		/*
 		 * Now we take out of m everything , and check that it is empty.
 		 */
