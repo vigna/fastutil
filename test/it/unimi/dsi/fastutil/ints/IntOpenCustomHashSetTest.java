@@ -13,11 +13,30 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
-
 /** Not a particularly good test, but it will check that we use everywhere the same hashing strategy. */
-
 public class IntOpenCustomHashSetTest {
-	
+
+	@Test
+	public void testGetNullKey() {
+		final IntOpenCustomHashSet s = new IntOpenCustomHashSet( new IntHash.Strategy() {
+
+			@Override
+			public int hashCode( int o ) {
+				return o % 10;
+			}
+
+			@Override
+			public boolean equals( int a, int b ) {
+				return ( a - b ) % 10 == 0;
+			}
+		} );
+
+		s.add( 10 );
+		assertTrue( s.contains( 0 ) );
+		assertEquals( 10, s.iterator().nextInt() );
+	}
+
+
 	@Test
 	public void testCustomUsed() {
 		IntOpenCustomHashSet set = new IntOpenCustomHashSet( new IntHash.Strategy() {
@@ -28,17 +47,17 @@ public class IntOpenCustomHashSetTest {
 
 			@Override
 			public boolean equals( int a, int b ) {
-				return ( a & 0xFFFF ) == ( b & 0xFFFF);
+				return ( a & 0xFFFF ) == ( b & 0xFFFF );
 			}
 		} );
-		
+
 		set.add( 1 << 16 | 1 );
 		set.add( 1 );
 		assertEquals( 1, set.size() );
 		assertTrue( set.contains( 1 ) );
 		assertTrue( set.contains( 1 << 16 | 1 ) );
 	}
-	
+
 	private static final class Strategy implements IntHash.Strategy, Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -54,16 +73,16 @@ public class IntOpenCustomHashSetTest {
 	}
 
 	private final static Strategy strategy = new Strategy();
-	
+
 	private static java.util.Random r = new java.util.Random( 0 );
 
 	private static int genKey() {
 		return r.nextInt( 10 );
 	}
-	
+
 	@SuppressWarnings("boxing")
 	private static void checkTable( IntOpenCustomHashSet s ) {
-		final int[]key = s.key;
+		final int[] key = s.key;
 		assert ( s.n & -s.n ) == s.n : "Table length is not a power of two: " + s.n;
 		assert s.n == s.key.length - 1;
 		int n = s.n;
@@ -71,8 +90,8 @@ public class IntOpenCustomHashSetTest {
 			if ( key[ n ] != 0 && !s.contains( key[ n ] ) ) throw new AssertionError( "Hash table has key " + key[ n ]
 					+ " marked as occupied, but the key does not belong to the table" );
 
-		if ( s.containsNull && ! s.contains( 0 ) ) throw new AssertionError( "Hash table should contain zero by internal state, but it doesn't when queried" );
-		if ( ! s.containsNull && s.contains( 0 ) ) throw new AssertionError( "Hash table should not contain zero by internal state, but it does when queried" );
+		if ( s.containsNull && !s.contains( 0 ) ) throw new AssertionError( "Hash table should contain zero by internal state, but it doesn't when queried" );
+		if ( !s.containsNull && s.contains( 0 ) ) throw new AssertionError( "Hash table should not contain zero by internal state, but it does when queried" );
 
 		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
 		for ( int i = s.size(); i-- != 0; )
@@ -114,16 +133,17 @@ public class IntOpenCustomHashSetTest {
 		HashSet<Integer> t = new HashSet<Integer>();
 		/* First of all, we fill t with random data. */
 
-		for ( int i = 0; i < key.length; i++ ) t.add( ( key[ i ] = new Integer( genKey() ) ) );
+		for ( int i = 0; i < key.length; i++ )
+			t.add( ( key[ i ] = new Integer( genKey() ) ) );
 
 		IntOpenCustomHashSet m = new IntOpenCustomHashSet( Hash.DEFAULT_INITIAL_SIZE, f, strategy );
 
-		
+
 		/* Now we add to m the same data */
 
 		m.addAll( t );
 		checkTable( m );
-		
+
 		assertTrue( "Error: !m.equals(t) after insertion", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after insertion", t.equals( m ) );
 		printProbes( m );
@@ -145,20 +165,14 @@ public class IntOpenCustomHashSetTest {
 		}
 
 		assertEquals( "Error: m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)", c, t.size() );
-		/*
-		 * Now we check that inquiries about random data give the same answer in m and t. For m we
-		 * use the polymorphic method.
-		 */
+		/* Now we check that inquiries about random data give the same answer in m and t. For m we use the polymorphic method. */
 
 		for ( int i = 0; i < n; i++ ) {
 			int T = genKey();
 			assertEquals( "Error: divergence in keys between t and m (polymorphic method)", m.contains( T ), t.contains( ( Integer.valueOf( T ) ) ) );
 		}
 
-		/*
-		 * Again, we check that inquiries about random data give the same answer in m and t, but for
-		 * m we use the standard method.
-		 */
+		/* Again, we check that inquiries about random data give the same answer in m and t, but for m we use the standard method. */
 
 		for ( int i = 0; i < n; i++ ) {
 			int T = genKey();
@@ -260,18 +274,19 @@ public class IntOpenCustomHashSetTest {
 
 		/* Now we torture-test the hash table. This part is implemented only for integers and longs. */
 
-		for( int i = n; i-- != 0; ) m.add( i );
+		for ( int i = n; i-- != 0; )
+			m.add( i );
 		t.addAll( m );
 		printProbes( m );
 		checkTable( m );
 
-		for( int i = n; i-- != 0; )
+		for ( int i = n; i-- != 0; )
 			assertEquals( "Error: m and t differ on a key during torture-test insertion.", m.add( i ), t.add( ( Integer.valueOf( i ) ) ) );
 
 		assertTrue( "Error: !m.equals(t) after torture-test insertion", m.equals( t ) );
 		assertTrue( "Error: !t.equals(m) after torture-test insertion", t.equals( m ) );
 
-		for( int i = n; i-- != 0; )
+		for ( int i = n; i-- != 0; )
 			assertEquals( "Error: m and t differ on a key during torture-test insertion.", m.remove( i ), t.remove( ( Integer.valueOf( i ) ) ) );
 
 		assertTrue( "Error: !m.equals(t) after torture-test removal", m.equals( t ) );

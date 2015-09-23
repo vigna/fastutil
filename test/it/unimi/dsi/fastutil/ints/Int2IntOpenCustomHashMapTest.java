@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.Hash;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,6 +18,31 @@ import org.junit.Test;
 /** Not a particularly good test, but it will check that we use everywhere the same hashing strategy. */
 
 public class Int2IntOpenCustomHashMapTest {
+
+	@Test
+	public void testGetNullKey() {
+		final Int2IntOpenCustomHashMap s = new Int2IntOpenCustomHashMap( new IntHash.Strategy() {
+
+			@Override
+			public int hashCode( int o ) {
+				return o % 10;
+			}
+
+			@Override
+			public boolean equals( int a, int b ) {
+				return ( a - b ) % 10 == 0;
+			}
+		} );
+
+		s.put( 10, 10 );
+		assertTrue( s.containsKey( 0 ) );
+		Entry<Integer, Integer> e = s.entrySet().iterator().next();
+		assertEquals( 10, e.getKey().intValue() );
+		assertEquals( 10, e.getValue().intValue() );
+		s.remove( 0 );
+		assertTrue( s.isEmpty() );
+	}
+
 
 	private static final class Strategy implements IntHash.Strategy, Serializable {
 		private static final long serialVersionUID = 1L;

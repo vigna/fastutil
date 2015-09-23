@@ -153,7 +153,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	protected transient long[] link;
 #endif
 
-	/** The current table size. */
+	/** The current table size. Note that an additional element is allocated for storing the null key. */
 	protected transient int n;
 
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
@@ -598,12 +598,15 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		int pos;
 
-		if ( KEY_IS_NULL( k ) ) {
+		if ( KEY_EQUALS_NULL( k ) ) {
 			if ( containsNull ) return false;
 #ifdef Linked
 			pos = n;
 #endif
 			containsNull = true;
+#ifdef Custom
+			key[ n ] = k;
+#endif
 		}
 		else {
 			KEY_GENERIC_TYPE curr;
@@ -679,6 +682,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 	private boolean removeNullEntry() {
 		containsNull = false;
+		key[ n ] = KEY_NULL;
 		size--;
 #ifdef Linked
 		fixPointers( n );
@@ -687,9 +691,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return true;	
 	}
 
-	SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public boolean remove( final KEY_TYPE k ) {
-		if ( KEY_IS_NULL( k ) ) {
+		if ( KEY_EQUALS_NULL( KEY_GENERIC_CAST k ) ) {
 			if ( containsNull ) return removeNullEntry();
 			return false;
 		}
@@ -708,9 +712,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 	}
 
-	SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public boolean contains( final KEY_TYPE k ) {
-		if ( KEY_IS_NULL( k ) ) return containsNull;
+		if ( KEY_EQUALS_NULL( KEY_GENERIC_CAST k ) ) return containsNull;
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
@@ -730,9 +734,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** Returns the element of this set that is equal to the given key, or <code>null</code>.
 	 * @return the element of this set that is equal to the given key, or <code>null</code>.
 	 */
-	SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public K get( final Object k ) {
-		if ( k == null ) return null; // This is correct independently of the value of containsNull
+		if ( KEY_EQUALS_NULL( KEY_GENERIC_CAST k ) ) return key[ n ]; // This is correct independently of the value of containsNull and of the map being custom
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
@@ -766,7 +770,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 		final KEY_GENERIC_TYPE k = key[ pos ];
 		size--;
-		if ( KEY_IS_NULL( k ) ) containsNull = false;
+		if ( KEY_EQUALS_NULL( k ) ) {
+			containsNull = false;
+			key[ n ] = KEY_NULL;
+		}
 		else shiftKeys( pos );
 		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return k;
@@ -787,7 +794,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 		final KEY_GENERIC_TYPE k = key[ pos ];
 		size--;
-		if ( KEY_IS_NULL( k ) ) containsNull = false;
+		if ( KEY_EQUALS_NULL( k ) ) {
+			containsNull = false;
+			key[ n ] = KEY_NULL;
+		}
 		else shiftKeys( pos );
 		if ( size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE ) rehash( n / 2 );
 		return k;
@@ -839,7 +849,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public boolean addAndMoveToFirst( final KEY_GENERIC_TYPE k ) {
 		int pos;
 		
-		if ( KEY_IS_NULL( k ) ) {
+		if ( KEY_EQUALS_NULL( k ) ) {
 			if ( containsNull ) {
 				moveIndexToFirst( n );
 				return false;
@@ -860,11 +870,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				}
 			
 				pos = ( pos + 1 ) & mask;
-			}
-		  
-			key[ pos ] = k;
+			}		  
 		}
 		
+		key[ pos ] = k;
+
 		if ( size == 0 ) {
 			first = last = pos;
 			// Special case of SET_UPPER_LOWER( link[ pos ], -1, -1 );
@@ -889,7 +899,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public boolean addAndMoveToLast( final KEY_GENERIC_TYPE k ) {
 		int pos;
 	
-		if ( KEY_IS_NULL( k ) ) {
+		if ( KEY_EQUALS_NULL( k ) ) {
 			if ( containsNull ) {
 				moveIndexToLast( n );
 				return false;
@@ -911,9 +921,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			
 				pos = ( pos + 1 ) & mask;
 			}
-		  
-			key[ pos ] = k;
 		}
+
+		key[ pos ] = k;
 		
 		if ( size == 0 ) {
 			first = last = pos;
@@ -1098,7 +1108,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 
 		SetIterator( KEY_GENERIC_TYPE from ) {
-			if ( KEY_IS_NULL( from ) ) {
+			if ( KEY_EQUALS_NULL( from ) ) {
 				if ( OPEN_HASH_SET.this.containsNull ) {
 					next = GET_NEXT( link[ n ] );
 					prev = n;
@@ -1212,7 +1222,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			int last, slot, pos = curr;
 			curr = -1;
 
-			if ( pos == n ) OPEN_HASH_SET.this.containsNull = false;
+			if ( pos == n ) {
+				OPEN_HASH_SET.this.containsNull = false;
+				OPEN_HASH_SET.this.key[ n ] = KEY_NULL;
+			}
 			else {
 				KEY_GENERIC_TYPE curr;
 				final KEY_GENERIC_TYPE[] key = OPEN_HASH_SET.this.key;
@@ -1283,7 +1296,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if ( mustReturnNull ) {
 				mustReturnNull = false;
 				last = n;
-				return KEY_NULL;
+				return key[ n ];
 			}
 			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
 			for(;;) {
@@ -1332,7 +1345,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	
 		public void remove() {
 			if ( last == -1 ) throw new IllegalStateException();
-			if ( last == n ) OPEN_HASH_SET.this.containsNull = false;
+			if ( last == n ) {
+				OPEN_HASH_SET.this.containsNull = false;
+				OPEN_HASH_SET.this.key[ n ] = KEY_NULL;
+			}
 			else if ( pos >= 0 ) shiftKeys( last );
 			else {
 				// We're removing wrapped entries.
@@ -1453,12 +1469,13 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		first = -1;
 
 		for( int j = size; j-- != 0; ) {
-			if ( KEY_IS_NULL( key[ i ] ) ) pos = newN;
+			if ( KEY_EQUALS_NULL( key[ i ] ) ) pos = newN;
 			else {
 				pos = KEY2INTHASH( key[ i ] ) & mask;
 				while ( ! KEY_IS_NULL( newKey[ pos ] ) ) pos = ( pos + 1 ) & mask;
-				newKey[ pos ] = key[ i ];
 			}
+
+			newKey[ pos ] = key[ i ];
 
 			if ( prev != -1 ) {
 				SET_NEXT( newLink[ newPrev ], pos );
@@ -1582,15 +1599,16 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 			k = KEY_GENERIC_CAST s.READ_KEY();
 
-			if ( KEY_IS_NULL( k ) ) {
+			if ( KEY_EQUALS_NULL( k ) ) {
 				pos = n;
 				containsNull = true;
 			}
 			else {
 				if ( ! KEY_IS_NULL( key[ pos = KEY2INTHASH( k ) & mask ] ) )
 					while ( ! KEY_IS_NULL( key[ pos = ( pos + 1 ) & mask ] ) );
-				key[ pos ] = k;
 			}
+
+			key[ pos ] = k;
 
 #ifdef Linked
 			if ( first != -1 ) {

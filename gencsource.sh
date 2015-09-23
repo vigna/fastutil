@@ -493,6 +493,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( strategy.equals( (x), (y) ) )\n"\
 "#undef KEY_EQUALS_NOT_NULL_CAST\n"\
 "#define KEY_EQUALS_NOT_NULL_CAST(x,y) ( strategy.equals( " KEY_GENERIC_CAST "(x), (y) ) )\n"\
+"#define KEY_EQUALS_NULL(x) ( strategy.equals( (x), KEY_NULL ) )\n"\
+"#else\n"\
+"#define KEY_EQUALS_NULL(x) KEY_IS_NULL(x)\n"\
 "#endif\n\n"\
 \
 "#if #valueclass(Object)\n"\
