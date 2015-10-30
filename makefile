@@ -577,11 +577,13 @@ SOURCES = \
 	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
 
 
-# We pass each generated Java source through the preprocessor. TEST compiles in the test code,
+# We pass each generated Java source through the gccpreprocessor. TEST compiles in the test code,
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
+GCC=gcc
+
 $(JSOURCES): %.java: %.c
-	gcc -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
+	$(GCC) -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
 
 
 clean: 
