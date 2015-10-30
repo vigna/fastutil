@@ -40,7 +40,7 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY
 
 	/** The heap array. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	protected KEY_GENERIC_TYPE[] heap = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+	protected transient KEY_GENERIC_TYPE[] heap = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
 
 	/** The number of elements in this queue. */
 	protected int size;
@@ -257,6 +257,19 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY
 
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return c; }
 
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+		s.defaultWriteObject();
+		s.writeInt( heap.length );
+		for( int i = 0; i < size; i++ ) s.WRITE_KEY( heap[ i ] );
+	}
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
+		s.defaultReadObject();
+		heap = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ s.readInt() ];
+		for( int i = 0; i < size; i++ ) heap[ i ] = KEY_GENERIC_CAST s.READ_KEY();
+	}
+
 
 #ifdef TEST
 
@@ -398,6 +411,30 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY
 			if ( m.size() != 0 ) {
 				ensure( KEY_EQUALS(m.FIRST(), t.FIRST()), "Error (" + seed + "): m and t differ in first element after dequeue (" + m.FIRST() + ", " + t.FIRST() + ")");
 			}
+
+			/* Now we save and read m. */
+
+			try {
+				java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+				java.io.OutputStream os = new java.io.FileOutputStream(ff);
+				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+				
+				oos.writeObject(m);
+				oos.close();
+				
+				java.io.InputStream is = new java.io.FileInputStream(ff);
+				java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+					
+				m = (HEAP_PRIORITY_QUEUE)ois.readObject();
+				ois.close();
+				ff.delete();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+				System.exit( 1 );
+			}
+
+			ensure( heapEqual( m.heap, t.array, m.size(), t.size() ), "Error (" + seed + "): m and t differ after save/read" );
 
 			HEAP_PRIORITY_QUEUE m2 = new HEAP_PRIORITY_QUEUE( t.array, t.size() );
 			ARRAY_PRIORITY_QUEUE t2 = new ARRAY_PRIORITY_QUEUE( m.heap, m.size() );

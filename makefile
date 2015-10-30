@@ -81,7 +81,7 @@ source:
 	rm fastutil-$(version)
 
 binary:
-	make -s clean sources format
+	make -s clean sources format GCC=$(GCC)
 	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)

@@ -32,6 +32,8 @@ public class IntSemiIndirectHeapsTest {
 		final int[] heap = { 2, 1, 0 };
 
 		IntComparator comparator = new AbstractIntComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( int k1, int k2 ) {
 				return ( k1 & 3 ) - ( k2 & 3 );

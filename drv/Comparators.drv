@@ -29,30 +29,61 @@ public class COMPARATORS {
 	private COMPARATORS() {}
 
 	/** A type-specific comparator mimicking the natural order. */
-
+#if #keys(reference)
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
-	public static final KEY_COMPARATOR NATURAL_COMPARATOR = new KEY_ABSTRACT_COMPARATOR() {
-			public final int compare( final KEY_TYPE a, final KEY_TYPE b ) {
-#if #keys(primitive)
-				return KEY_CMP( a, b );
+	protected static class NaturalImplicitComparator implements Comparator, java.io.Serializable {
 #else
-				return ((Comparable)a).compareTo(b);
+	protected static class NaturalImplicitComparator extends KEY_ABSTRACT_COMPARATOR KEY_GENERIC implements java.io.Serializable {
 #endif
-			}
-		};
+		public final int compare( final KEY_TYPE a, final KEY_TYPE b ) {
+#if #keys(primitive)
+			return KEY_CMP( a, b );
+#else
+			return ((Comparable)a).compareTo(b);
+#endif
+		}
+        private Object readResolve() { return NATURAL_COMPARATOR; }
+	};
+	
+	
+	public static final KEY_COMPARATOR NATURAL_COMPARATOR = new NaturalImplicitComparator();
 
-	/** A type-specific comparator mimicking the opposite of the natural order. */
-
+	/** A type-specific comparator mimicking the opposite of the natural order. */	
+#if #keys(reference)
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
-	public static final KEY_COMPARATOR OPPOSITE_COMPARATOR = new KEY_ABSTRACT_COMPARATOR() {
-			public final int compare( final KEY_TYPE a, final KEY_TYPE b ) {
-#if #keys(primitive)
-				return - KEY_CMP( a, b );
+	protected static class OppositeImplicitComparator implements Comparator, java.io.Serializable {
 #else
-				return ((Comparable)b).compareTo(a);
+	protected static class OppositeImplicitComparator extends KEY_ABSTRACT_COMPARATOR KEY_GENERIC implements java.io.Serializable {
 #endif
-			}
-		};
+		public final int compare( final KEY_TYPE a, final KEY_TYPE b ) {
+#if #keys(primitive)
+			return - KEY_CMP( a, b );
+#else
+			return ((Comparable)b).compareTo(a);
+#endif
+		}
+        private Object readResolve() { return OPPOSITE_COMPARATOR; }
+	};
+
+	
+	public static final KEY_COMPARATOR OPPOSITE_COMPARATOR = new OppositeImplicitComparator();
+
+
+#if #keys(reference)
+	protected static class OppositeComparator KEY_GENERIC implements Comparator KEY_GENERIC, java.io.Serializable {
+#else
+	protected static class OppositeComparator KEY_GENERIC extends KEY_ABSTRACT_COMPARATOR KEY_GENERIC implements java.io.Serializable {
+#endif
+		private final KEY_COMPARATOR KEY_GENERIC comparator;
+		
+		protected OppositeComparator( final KEY_COMPARATOR KEY_GENERIC c ) {
+			comparator = c;
+		}
+		
+		public final int compare( final KEY_GENERIC_TYPE a, final KEY_GENERIC_TYPE b ) {
+			return comparator.compare( b, a );
+		}
+	};
 
 	/** Returns a comparator representing the opposite order of the given comparator. 
 	 *
@@ -60,11 +91,6 @@ public class COMPARATORS {
 	 * @return a comparator representing the opposite order of <code>c</code>.
 	 */
 	public static KEY_GENERIC KEY_COMPARATOR KEY_GENERIC oppositeComparator( final KEY_COMPARATOR KEY_GENERIC c ) {
-		return new KEY_ABSTRACT_COMPARATOR KEY_GENERIC() {
-				private final KEY_COMPARATOR KEY_GENERIC comparator = c;
-				public final int compare( final KEY_GENERIC_TYPE a, final KEY_GENERIC_TYPE b ) {
-					return - comparator.compare( a, b );
-				}
-			};
+		return new OppositeComparator( c );
 	}
 }

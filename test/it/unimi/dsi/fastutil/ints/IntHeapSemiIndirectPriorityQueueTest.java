@@ -54,6 +54,8 @@ public class IntHeapSemiIndirectPriorityQueueTest extends TestCase {
 		final int[] refArray = { 8, 16, 9 };
 
 		IntComparator comparator = new AbstractIntComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( int k1, int k2 ) {
 				return ( k1 & 3 ) - ( k2 & 3 );

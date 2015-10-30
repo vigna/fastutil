@@ -29,6 +29,8 @@ public class IntArraysTest {
 		
 		final int[] d = a.clone();
 		IntArrays.mergeSort( d, new AbstractIntComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( int k1, int k2 ) {
 				return k1 - k2;
@@ -37,6 +39,8 @@ public class IntArraysTest {
 		assertArrayEquals( sorted, d );
 
 		IntArrays.mergeSort( d, new AbstractIntComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( int k1, int k2 ) {
 				return k1 - k2;
@@ -69,6 +73,8 @@ public class IntArraysTest {
 
 		final int[] d = a.clone();
 		IntArrays.quickSort( d, new AbstractIntComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( int k1, int k2 ) {
 				return k1 - k2;
@@ -76,6 +82,8 @@ public class IntArraysTest {
 		});
 		assertArrayEquals( sorted, d );
 		IntArrays.quickSort( d, new AbstractIntComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( int k1, int k2 ) {
 				return k1 - k2;

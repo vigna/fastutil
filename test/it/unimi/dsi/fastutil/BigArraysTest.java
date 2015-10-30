@@ -20,6 +20,8 @@ public class BigArraysTest {
 		Arrays.sort( s );
 		int[][] sorted = IntBigArrays.wrap( s.clone() );
 		BigArrays.mergeSort( 0, IntBigArrays.length( a ), new AbstractLongComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( long k1, long k2 ) {
 				return IntBigArrays.get( a, k1 ) - IntBigArrays.get( a, k2 ); 
@@ -33,6 +35,8 @@ public class BigArraysTest {
 		assertArrayEquals( sorted, a );
 
 		BigArrays.mergeSort( 0, IntBigArrays.length( a ), new AbstractLongComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( long k1, long k2 ) {
 				return IntBigArrays.get( a, k1 ) - IntBigArrays.get( a, k2 ); 
@@ -56,6 +60,8 @@ public class BigArraysTest {
 
 		final int[][] a = IntBigArrays.wrap( s.clone()  );
 		BigArrays.quickSort( 0, IntBigArrays.length( a ), new AbstractLongComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( long k1, long k2 ) {
 				return IntBigArrays.get( a, k1 ) - IntBigArrays.get( a, k2 ); 
@@ -69,6 +75,8 @@ public class BigArraysTest {
 		assertArrayEquals( sorted, a );
 
 		BigArrays.quickSort( 0, IntBigArrays.length( a ), new AbstractLongComparator() {
+			private static final long serialVersionUID = 1L;
+
 			@Override
 			public int compare( long k1, long k2 ) {
 				return IntBigArrays.get( a, k1 ) - IntBigArrays.get( a, k2 ); 

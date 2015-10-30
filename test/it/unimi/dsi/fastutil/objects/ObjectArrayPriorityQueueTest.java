@@ -160,7 +160,6 @@ public class ObjectArrayPriorityQueueTest {
 		File file = File.createTempFile( getClass().getPackage().getName() + "-", "-tmp" );
 		file.deleteOnExit();
 		BinIO.storeObject( q, file );
-		@SuppressWarnings("unchecked")
 		ObjectArrayPriorityQueue<Integer> r = (ObjectArrayPriorityQueue<Integer>)BinIO.loadObject( file );
 		file.delete();
 		for( int i = 0; i < 100; i++ ) {
