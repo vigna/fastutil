@@ -269,27 +269,58 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		dirPath = new boolean[ 48 ];
 	}
 
+	#if #values(primitive) && !#valueclass(Boolean)
+	/** Adds an increment to value currently associated with a key.
+	*
+	* <P>Note that this method respects the {@linkplain #defaultReturnValue() default return value} semantics: when
+	* called with a key that does not currently appears in the map, the key
+	* will be associated with the default return value plus
+	* the given increment.
+	*
+	* @param k the key.
+	* @param incr the increment.
+	* @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	*/
+	public VALUE_GENERIC_TYPE addTo( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE incr) {
+		Entry KEY_VALUE_GENERIC e = add( k );
+		final VALUE_GENERIC_TYPE oldValue = e.value;
+		e.value += incr;
+		return oldValue;
+	}
+	#endif
 
-	/* After execution of this method, modified is true iff a new entry has
-	been inserted. */
-	 
 	public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
+		Entry KEY_VALUE_GENERIC e = add( k );
+		final VALUE_GENERIC_TYPE oldValue = e.value;
+		e.value = v;
+		return oldValue;
+	}
+
+	/** Returns a node with key k in the balanced tree, creating one with defRetValue if necessary.
+	*
+	* @param k the key
+	* @return a node with key k. If a node with key k already exists, then that node is returned,
+	* 				otherwise a new node with defRetValue is created ensuring that the tree is balanced
+						after creation of the node.
+	*/
+	private Entry KEY_VALUE_GENERIC add( final KEY_GENERIC_TYPE k ) {
+  	/* After execution of this method, modified is true iff a new entry has
+  	been inserted. */
 		modified = false;
 
+		Entry KEY_VALUE_GENERIC e = null;
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
-			tree = lastEntry = firstEntry = new Entry KEY_VALUE_GENERIC( k, v );
+			e = tree = lastEntry = firstEntry = new Entry KEY_VALUE_GENERIC( k, defRetValue );
 			modified = true;
 		}
 		else {
-			Entry KEY_VALUE_GENERIC p = tree, q = null, y = tree, z = null, e = null, w = null;
+			Entry KEY_VALUE_GENERIC p = tree, q = null, y = tree, z = null, w = null;
 			int cmp, i = 0;
 
 			while( true ) {
 				if ( ( cmp = compare( k, p.key ) ) == 0 ) {
-					final VALUE_GENERIC_TYPE oldValue = p.value;
-					p.value = v;
-					return oldValue;
+					return p;
 				}
 					 
 				if ( p.balance() != 0 ) {
@@ -301,7 +332,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				if ( dirPath[ i++ ] = cmp > 0 ) {
 					if ( p.succ() ) {
 						count++;
-						e = new Entry KEY_VALUE_GENERIC( k, v );
+						e = new Entry KEY_VALUE_GENERIC( k, defRetValue );
 								
 						modified = true; 
 						if ( p.right == null ) lastEntry = e;
@@ -320,7 +351,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				else {
 					if ( p.pred() ) {
 						count++;
-						e = new Entry KEY_VALUE_GENERIC( k, v );
+						e = new Entry KEY_VALUE_GENERIC( k, defRetValue );
 								
 						modified = true;
 						if ( p.left == null ) firstEntry = e;
@@ -446,7 +477,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 
 				}
 			}
-			else return defRetValue;
+			else return e;
 
 			if ( z == null ) tree = w;
 			else {
@@ -456,7 +487,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		}
 
 		if ( ASSERTS ) checkTree( tree );
-		return defRetValue;
+		return e;
 	}
 
 	/** Finds the parent of an entry.
