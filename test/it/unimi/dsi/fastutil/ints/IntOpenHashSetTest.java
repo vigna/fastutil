@@ -2,8 +2,8 @@ package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
@@ -17,6 +17,16 @@ import org.junit.Test;
 @SuppressWarnings("rawtypes")
 public class IntOpenHashSetTest {
 
+	@Test
+	public void testInfiniteLoop() {
+        IntOpenHashSet set = new IntOpenHashSet(4, 1.0f);
+        set.add(1);
+        set.add(2);
+        set.add(3);
+        set.remove(2);
+        set.trim();
+        set.remove(1); // Will hang inside this call
+    }
 
 	@Test
 	public void testStrangeRetainAllCase() {
