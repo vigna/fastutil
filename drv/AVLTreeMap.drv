@@ -269,27 +269,58 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		dirPath = new boolean[ 48 ];
 	}
 
+	#if #values(primitive) && !#valueclass(Boolean)
+	/** Adds an increment to value currently associated with a key.
+	*
+	* <P>Note that this method respects the {@linkplain #defaultReturnValue() default return value} semantics: when
+	* called with a key that does not currently appears in the map, the key
+	* will be associated with the default return value plus
+	* the given increment.
+	*
+	* @param k the key.
+	* @param incr the increment.
+	* @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
+	*/
+	public VALUE_GENERIC_TYPE addTo( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE incr) {
+		Entry KEY_VALUE_GENERIC e = add( k );
+		final VALUE_GENERIC_TYPE oldValue = e.value;
+		e.value += incr;
+		return oldValue;
+	}
+	#endif
 
-	/* After execution of this method, modified is true iff a new entry has
-	been inserted. */
-	 
 	public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
+		Entry KEY_VALUE_GENERIC e = add( k );
+		final VALUE_GENERIC_TYPE oldValue = e.value;
+		e.value = v;
+		return oldValue;
+	}
+
+	/** Returns a node with key k in the balanced tree, creating one with defRetValue if necessary.
+	*
+	* @param k the key
+	* @return a node with key k. If a node with key k already exists, then that node is returned,
+	* 				otherwise a new node with defRetValue is created ensuring that the tree is balanced
+						after creation of the node.
+	*/
+	private Entry KEY_VALUE_GENERIC add( final KEY_GENERIC_TYPE k ) {
+  	/* After execution of this method, modified is true iff a new entry has
+  	been inserted. */
 		modified = false;
 
+		Entry KEY_VALUE_GENERIC e = null;
 		if ( tree == null ) { // The case of the empty tree is treated separately.
 			count++;
-			tree = lastEntry = firstEntry = new Entry KEY_VALUE_GENERIC( k, v );
+			e = tree = lastEntry = firstEntry = new Entry KEY_VALUE_GENERIC( k, defRetValue );
 			modified = true;
 		}
 		else {
-			Entry KEY_VALUE_GENERIC p = tree, q = null, y = tree, z = null, e = null, w = null;
+			Entry KEY_VALUE_GENERIC p = tree, q = null, y = tree, z = null, w = null;
 			int cmp, i = 0;
 
 			while( true ) {
 				if ( ( cmp = compare( k, p.key ) ) == 0 ) {
-					final VALUE_GENERIC_TYPE oldValue = p.value;
-					p.value = v;
-					return oldValue;
+					return p;
 				}
 					 
 				if ( p.balance() != 0 ) {
@@ -301,7 +332,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				if ( dirPath[ i++ ] = cmp > 0 ) {
 					if ( p.succ() ) {
 						count++;
-						e = new Entry KEY_VALUE_GENERIC( k, v );
+						e = new Entry KEY_VALUE_GENERIC( k, defRetValue );
 								
 						modified = true; 
 						if ( p.right == null ) lastEntry = e;
@@ -320,7 +351,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				else {
 					if ( p.pred() ) {
 						count++;
-						e = new Entry KEY_VALUE_GENERIC( k, v );
+						e = new Entry KEY_VALUE_GENERIC( k, defRetValue );
 								
 						modified = true;
 						if ( p.left == null ) firstEntry = e;
@@ -446,7 +477,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 
 				}
 			}
-			else return defRetValue;
+			else return e;
 
 			if ( z == null ) tree = w;
 			else {
@@ -456,7 +487,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		}
 
 		if ( ASSERTS ) checkTree( tree );
-		return defRetValue;
+		return e;
 	}
 
 	/** Finds the parent of an entry.
@@ -2045,7 +2076,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			v[i] = genValue();
 		}
 
-		double totPut = 0, totYes = 0, totNo = 0, totIterFor = 0, totIterBack = 0, totRemYes = 0, d, dd;
+		double totPut = 0, totYes = 0, totNo = 0, totAddTo = 0, totIterFor = 0, totIterBack = 0, totRemYes = 0, d, dd, ddd;
 
 		if ( comp ) { for( j = 0; j < 20; j++ ) {
 
@@ -2082,6 +2113,15 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			/* And then we put it back. */
 			for( i = 0; i < n/2;  i++ ) t.put( KEY2OBJ( k[i] ), VALUE2OBJ( v[i] )  );
 
+			#if #values(primitive) && !#valueclass(Boolean)
+			/* we perform n/2 addTo() operations with get then put */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n/2; i++ ) t.put( KEY2OBJ( k[i] ), (VALUE_TYPE) ((VALUE_CLASS) t.get( KEY2OBJ(k[i])) + i) );
+			ddd = System.currentTimeMillis() - ms;
+			if ( j > 2 ) totAddTo += n/ddd;
+			System.out.print("AddTo: " + format( n/ddd ) +" K/s " );
+			#endif
+
 			/* We check for pairs in t. */
 			ms = System.currentTimeMillis();
 			for( i = 0; i < n;  i++ ) t.containsKey( KEY2OBJ( k[i] ) );
@@ -2107,12 +2147,12 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		}
 
 		System.out.println();
-		System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) )+ " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s"  );
+		System.out.println( "java.util Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) )+ "K/s AddTo: " + format( totAddTo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s"  );
 
 		System.out.println();
 
 		t = null;
-		totPut = totYes = totNo = totIterFor = totIterBack = totRemYes = 0;
+		totPut = totYes = totNo = totIterFor = totIterBack = totRemYes = totAddTo = 0;
 
 		}
 
@@ -2151,6 +2191,15 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			/* And then we put it back. */
 			for( i = 0; i < n/2;  i++ ) m.put( k[i], v[i]  );
 
+			#if #values(primitive) && !#valueclass(Boolean)
+			/* we perform n/2 addTo() operations with get then put */
+			ms = System.currentTimeMillis();
+			for( i = 0; i < n/2; i++ ) m.addTo( k[i], (VALUE_TYPE) i );
+			ddd = System.currentTimeMillis() - ms;
+			if ( j > 2 ) totAddTo += n/ddd;
+			System.out.print("AddTo: " + format( n/ddd ) +" K/s " );
+			#endif
+
 			/* We check for pairs in m. */
 			ms = System.currentTimeMillis();
 			for( i = 0; i < n;  i++ ) m.containsKey( k[i] );
@@ -2186,7 +2235,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 
 
 		System.out.println();
-		System.out.println( "fastutil  Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) ) + " K/s IterBack: " + format( totIterBack/(j-3) ) + "K/s"  );
+		System.out.println( "fastutil Put: " + format( totPut/(j-3) ) + " K/s RemYes: " + format( totRemYes/(j-3) ) + " K/s Yes: " + format( totYes/(j-3) ) + " K/s No: " + format( totNo/(j-3) )+ "K/s AddTo: " + format( totAddTo/(j-3) ) + " K/s IterFor: " + format( totIterFor/(j-3) )  + " K/s"  );
 
 		System.out.println();
 
@@ -2207,53 +2256,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		fatal( msg );
 	}
 
-	private static Object[] k, v, nk;
-	private static KEY_TYPE kt[];
-	private static KEY_TYPE nkt[];
-	private static VALUE_TYPE vt[];
-	private static AVL_TREE_MAP topMap;
-
-	protected static void testMaps( SORTED_MAP m, SortedMap t, int n, int level ) {
-		long ms;
-		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement;
-		Object rt = null, rm = null;
-
-		if ( level > 4 ) return;
-				
-
-		/* Now we check that both maps agree on first/last keys. */
-
-		mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
-		  
-		try {
-			m.firstKey();
-		}
-		catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
-		try {
-			t.firstKey();
-		}
-		catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
-		  
-		ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): firstKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-		if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.firstKey() + ", " + t.firstKey() +")" );
-
-		mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
-		  
-		try {
-			m.lastKey();
-		}
-		catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
-		try {
-			t.lastKey();
-		}
-		catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
-		  
-		ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): lastKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
-
-
-		if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.lastKey() + ", " + t.lastKey() +")");
-
-
+	private static void compareMT( SORTED_MAP m, SortedMap t, int level, long seed ) {
 		/* Now we check that m and t are equal. */
 		if ( !m.equals( t ) || ! t.equals( m ) ) System.err.println("m: " + m + " t: " + t);
 
@@ -2302,6 +2305,56 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			ensure( t.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after insertion (iterating on m)");
 			ensure( t.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
 		}
+
+	}
+
+	private static Object[] k, v, nk;
+	private static KEY_TYPE kt[];
+	private static KEY_TYPE nkt[];
+	private static VALUE_TYPE vt[];
+	private static AVL_TREE_MAP topMap;
+
+	protected static void testMaps( SORTED_MAP m, SortedMap t, int n, int level ) {
+		long ms;
+		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement;
+		Object rt = null, rm = null;
+
+		if ( level > 4 ) return;
+				
+
+		/* Now we check that both maps agree on first/last keys. */
+
+		mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		try {
+			m.firstKey();
+		}
+		catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		try {
+			t.firstKey();
+		}
+		catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): firstKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+		if ( ! mThrowsNoElement ) ensure( t.firstKey().equals( m.firstKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their first key (" + m.firstKey() + ", " + t.firstKey() +")" );
+
+		mThrowsNoElement = mThrowsIllegal = tThrowsNoElement = tThrowsIllegal = false;
+		  
+		try {
+			m.lastKey();
+		}
+		catch ( NoSuchElementException e ) { mThrowsNoElement = true; }
+		try {
+			t.lastKey();
+		}
+		catch ( NoSuchElementException e ) { tThrowsNoElement = true; }
+		  
+		ensure( mThrowsNoElement == tThrowsNoElement, "Error (" + level + ", " + seed + "): lastKey() divergence at start in NoSuchElementException  (" + mThrowsNoElement + ", " + tThrowsNoElement + ")" );
+
+
+		if ( ! mThrowsNoElement ) ensure( t.lastKey().equals( m.lastKey() ), "Error (" + level + ", " + seed + "): m and t differ at start on their last key (" + m.lastKey() + ", " + t.lastKey() +")");
+
+		compareMT( m, t, level, seed );
 
 		/* Now we check that inquiries about random data give the same answer in m and t. For
 		   m we use the polymorphic method. */
@@ -2416,55 +2469,38 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			if ( !mThrowsNoElement && !mThrowsIllegal ) ensure( valEquals( rm, rt ), "Error (" + level + ", " + seed + "): divergence in remove() between t and m (" + rt + ", " + rm + ")" );
 		}
 
-		ensure( m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals( t ) after removal" );
-		ensure( t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals( m ) after removal" );
+		compareMT( m, t, level, seed );
 
-		/* Now we check that m actually holds the same data. */
-		  
-		for(Iterator i=t.entrySet().iterator(); i.hasNext();  ) {
-			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-			ensure( valEquals(e.getValue(), m.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
+		#if #values(primitive) && !#valueclass(Boolean)
+		/* Now we check that addTo results in the same values as get/put */
+		if (m instanceof AVL_TREE_MAP) {
+			for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
+				Entry e = (Entry)i.next();
+				VALUE_TYPE incr = genValue();
+				((AVL_TREE_MAP) m).addTo( e.key, incr );
+				t.put( e.key, (VALUE_TYPE) ((VALUE_CLASS) t.get(e.key) + incr) );
+			}
+			compareMT( m, t, level, seed );
+
+			/* Now we make sure that addTo works with a key that did not previously exist (with special default return value )*/
+			KEY_TYPE newKey;
+
+			do {
+				newKey = genKey();
+			} while (m.containsKey(newKey));
+
+			VALUE_TYPE newValue, drv;
+			drv = m.defaultReturnValue();
+			newValue = genValue();
+			m.defaultReturnValue( genValue() );
+
+			((AVL_TREE_MAP) m).addTo( newKey, newValue );
+			t.put( newKey, (VALUE_TYPE) (newValue + m.defaultReturnValue()) );
+
+			compareMT( m, t, level, seed );
+			m.defaultReturnValue(drv); // set the default value back to the old drv
 		}
-
-		/* Now we check that m actually holds that data, but iterating on m. */
-		  
-		for(Iterator i=m.entrySet().iterator(); i.hasNext();  ) {
-			Entry e = (Entry)i.next();
-			ensure( valEquals(e.getValue(), t.get(e.getKey())), "Error (" + level + ", " + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)" );
-		}
-
-		/* Now we check that m actually holds the same keys. */
-		  
-		for(Iterator i=t.keySet().iterator(); i.hasNext();  ) {
-			Object o = i.next();
-			ensure( m.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
-			ensure( m.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
-		}
-
-		/* Now we check that m actually holds the same keys, but iterating on m. */
-		  
-		for(Iterator i=m.keySet().iterator(); i.hasNext();  ) {
-			Object o = i.next();
-			ensure( t.containsKey(o), "Error (" + level + ", " + seed + "): m and t differ on a key after removal (iterating on m)");
-			ensure( t.keySet().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
-		}
-
-
-		/* Now we check that m actually hold the same values. */
-		  
-		for(Iterator i=t.values().iterator(); i.hasNext();  ) {
-			Object o = i.next();
-			ensure( m.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after removal (iterating on t)" );
-			ensure( m.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
-		}
-
-		/* Now we check that m actually hold the same values, but iterating on m. */
-		  
-		for(Iterator i=m.values().iterator(); i.hasNext();  ) {
-			Object o = i.next();
-			ensure( t.containsValue(o), "Error (" + level + ", " + seed + "): m and t differ on a value after removal (iterating on m)");
-			ensure( t.values().contains(o), "Error (" + level + ", " + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
-		}
+		#endif
 
 		/* Now we check that both maps agree on first/last keys. */
 
