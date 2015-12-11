@@ -40,8 +40,7 @@ public class HashCommon {
 	/** Avalanches the bits of an integer by applying the finalisation step of MurmurHash3.
 	 * 
 	 * <p>This method implements the finalisation step of Austin Appleby's <a href="http://code.google.com/p/smhasher/">MurmurHash3</a>.
-	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias. It is used, among other things, to scramble quickly (but deeply) the hash
-	 * values returned by {@link Object#hashCode()}.
+	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias.
 	 * 
 	 * @param x an integer.
 	 * @return a hash value with good avalanching properties.
@@ -59,11 +58,7 @@ public class HashCommon {
 	/** Avalanches the bits of a long integer by applying the finalisation step of MurmurHash3.
 	 * 
 	 * <p>This method implements the finalisation step of Austin Appleby's <a href="http://code.google.com/p/smhasher/">MurmurHash3</a>.
-	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias. It is used, among other things, to scramble quickly (but deeply) the hash
-	 * values returned by {@link Object#hashCode()}.
-	 * 
-	 * <p>Incidentally, iterating this method starting from a nonzero value will generate a sequence of nonzero
-	 * values that <a href="http://prng.di.unimi.it/">passes strongest statistical tests</a>.
+	 * Its purpose is to avalanche the bits of the argument to within 0.25% bias.
 	 * 
 	 * @param x a long integer.
 	 * @return a hash value with good avalanching properties.
