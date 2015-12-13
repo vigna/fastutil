@@ -84,7 +84,8 @@ public interface Hash {
 	 * #hashCode(Object) hash function}, with the obvious property that
 	 * equal objects must have the same hash code.
 	 *
-	 * <P>Note that a strategy must be able to handle <code>null</code>, too.
+	 * <P>Note that the {@link #equals(Object,Object) equals()} method of a strategy must 
+	 * be able to handle <code>null</code>, too.
 	 */
 
 	public interface Strategy<K> {
