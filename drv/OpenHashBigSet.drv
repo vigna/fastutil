@@ -417,7 +417,29 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return removeEntry( base, displ );
 		}
 	}
-	 
+
+	public KEY_GENERIC_TYPE POP() {
+		if ( containsNull ) {
+			removeNullEntry();
+			return KEY_NULL;
+		}
+		int base = key.length;
+		int displ = 0;
+		final KEY_GENERIC_TYPE key[][] = OPEN_HASH_BIG_SET.this.key;
+		for(;;) {
+			if ( displ == 0 && base <= 0 ) {
+				throw new NoSuchElementException();
+			}
+			if ( displ-- == 0 ) displ = key[ --base ].length - 1;
+
+			final KEY_GENERIC_TYPE k = key[ base ][ displ ];
+			if ( ! KEY_IS_NULL( k ) ) {
+				removeEntry( base, displ );
+				return k;
+			}
+		}
+	}
+
 	public boolean contains( final KEY_TYPE k ) {
 		if ( KEY_IS_NULL( k ) ) return containsNull;
 
