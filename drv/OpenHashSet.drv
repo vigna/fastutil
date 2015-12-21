@@ -639,6 +639,63 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return true;
 	}
 
+#if #keyclass(Object)
+	/** Add a random element if not present, get the existing value if already present.
+	 *
+	 * This is equivalent to (but faster than) doing a:
+	 * <pre>
+	 * K exist = set.get(k);
+	 * if (exist == null) {
+	 *   set.add(k);
+	 *   exist = k;
+	 * }
+	 * </pre>
+	 */
+	public KEY_GENERIC_TYPE addOrGet( final KEY_GENERIC_TYPE k ) {
+		int pos;
+
+		if ( KEY_EQUALS_NULL( KEY_GENERIC_CAST k ) ) {
+			if ( containsNull ) return key [ n ];
+#ifdef Linked
+			pos = n;
+#endif
+			containsNull = true;
+#ifdef Custom
+			key [ n ] = k;
+#endif
+		}
+		else {
+			KEY_GENERIC_TYPE curr;
+			final KEY_GENERIC_TYPE[] key = this.key;
+
+			// The starting point.
+			if ( ! KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) {
+				if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
+				while( ! KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) 
+					if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return curr;
+			}
+			key[ pos ] = k;
+		}
+
+#ifdef Linked
+		if ( size == 0 ) {
+			first = last = pos;
+			// Special case of SET_UPPER_LOWER(link[ pos ], -1, -1);
+			link[ pos ] = -1L;
+		}
+		else {
+			SET_NEXT( link[ last ], pos );
+			SET_UPPER_LOWER( link[ pos ], last, -1 );
+			last = pos;
+		}
+#endif
+
+		if ( size++ >= maxFill ) rehash( arraySize( size + 1, f ) );
+		if ( ASSERTS ) checkTable();
+		return k;
+	}
+#endif
+
 	/** Shifts left entries with the specified hash code, starting at the specified position,
 	 * and empties the resulting free entry.
 	 *
