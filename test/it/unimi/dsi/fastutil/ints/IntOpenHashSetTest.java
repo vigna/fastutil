@@ -18,7 +18,7 @@ import org.junit.Test;
 public class IntOpenHashSetTest {
 
 	@Test
-	public void testInfiniteLoop() {
+	public void testInfiniteLoop0() {
         IntOpenHashSet set = new IntOpenHashSet(4, 1.0f);
         set.add(1);
         set.add(2);
@@ -26,6 +26,15 @@ public class IntOpenHashSetTest {
         set.remove(2);
         set.trim();
         set.remove(1); // Will hang inside this call
+    }
+
+	@Test
+	public void testInfiniteLoop1() {
+        IntOpenHashSet set = new IntOpenHashSet();
+        set.add(1);
+        set.add(2);
+        set.add(3);
+        set.trim(1);
     }
 
 	@Test
