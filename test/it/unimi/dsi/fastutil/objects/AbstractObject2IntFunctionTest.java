@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 public class AbstractObject2IntFunctionTest {
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testRemove() {
 		final Object2IntArrayMap<Object> a = new Object2IntArrayMap<Object>();

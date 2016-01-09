@@ -32,6 +32,7 @@ public class Int2IntArrayMapTest  {
 
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testMap() {
 		for( int i = 0; i <= 1; i++ ) {

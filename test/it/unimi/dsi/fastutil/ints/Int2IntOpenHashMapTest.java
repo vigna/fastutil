@@ -75,7 +75,7 @@ public class Int2IntOpenHashMapTest {
 		return o1 == null ? o2 == null : o1.equals( o2 );
 	}
 
-	@SuppressWarnings({ "unchecked", "boxing" })
+	@SuppressWarnings({ "unchecked", "boxing", "deprecation" })
 	protected static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE, f );
 		Map t = new java.util.HashMap();

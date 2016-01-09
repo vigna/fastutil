@@ -130,7 +130,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		return o1 == null ? o2 == null : o1.equals( o2 );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	protected static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE, f );
 		Map<Integer,Integer> t = new java.util.LinkedHashMap<Integer,Integer>();
@@ -445,6 +445,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertEquals( 99, m.lastIntKey() );
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testPut() {
 		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );

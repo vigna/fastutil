@@ -1,7 +1,6 @@
 package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
-
 import it.unimi.dsi.fastutil.io.BinIO;
 
 import java.io.File;
@@ -143,6 +142,7 @@ public class IntArrayFIFOQueueTest {
 		assertEquals( 0, q.dequeueInt() );
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testImmediateReduce() {
 		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
@@ -150,6 +150,7 @@ public class IntArrayFIFOQueueTest {
 		q.dequeue();
 	}
 
+	@SuppressWarnings("deprecation")
 	private final static void assertSameQueue( IntArrayFIFOQueue a, IntArrayFIFOQueue b ) {
 		assertEquals( a.size(), b.size() );
 		while( ! a.isEmpty() && ! b.isEmpty() ) assertEquals( a.dequeue(), b.dequeue() );

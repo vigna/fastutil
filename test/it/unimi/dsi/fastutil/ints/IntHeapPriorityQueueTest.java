@@ -9,6 +9,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 public class IntHeapPriorityQueueTest {
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testSerialize() throws IOException, ClassNotFoundException {
 		IntHeapPriorityQueue q = new IntHeapPriorityQueue();

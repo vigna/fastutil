@@ -9,7 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes","deprecation"})
 public class Object2IntOpenHashMapTest {
 
 	private static java.util.Random r = new java.util.Random( 0 );
