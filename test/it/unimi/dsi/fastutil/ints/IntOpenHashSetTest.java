@@ -17,6 +17,16 @@ import org.junit.Test;
 @SuppressWarnings("rawtypes")
 public class IntOpenHashSetTest {
 
+	@SuppressWarnings("boxing")
+	@Test
+	public void testToArrayNullAtEnd() {
+		IntOpenHashSet s = new IntOpenHashSet( new int[] { 1, 2, 3 } );
+		assertEquals( 3, s.toArray( new Object[ 0 ] ).length );
+		assertEquals( 3, s.toArray( new Integer[ 0 ] ).length );
+		assertTrue( s.toArray( new Integer[] { -1, -1, -1, -1 } )[ 3 ] == null );
+	}
+
+
 	@Test
 	public void testInfiniteLoop0() {
         IntOpenHashSet set = new IntOpenHashSet(4, 1.0f);
