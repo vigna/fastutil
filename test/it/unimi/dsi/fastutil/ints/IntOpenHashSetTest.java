@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -26,6 +27,18 @@ public class IntOpenHashSetTest {
 		assertTrue( s.toArray( new Integer[] { -1, -1, -1, -1 } )[ 3 ] == null );
 	}
 
+	@Test
+	public void testContainsNull() {
+		IntOpenHashSet s = new IntOpenHashSet( new int[] { 1, 2, 3 } );
+		assertFalse( s.contains( null ) );
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testEquals() {
+		IntOpenHashSet s = new IntOpenHashSet( new int[] { 1, 2, 3 } );
+		assertFalse( s.equals( new ObjectOpenHashSet<Integer>( new Integer[] { 1, null } ) ) );
+	}
 
 	@Test
 	public void testInfiniteLoop0() {

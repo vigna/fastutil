@@ -1,8 +1,14 @@
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.IOException;
@@ -12,10 +18,24 @@ import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 @SuppressWarnings("rawtypes")
 public class Int2IntOpenHashMapTest {
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testContainsNull() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( new int[] { 1, 2, 3 },  new int[] { 1, 2, 3 } );
+		assertFalse( m.containsKey( null ) );
+		assertTrue( m.get( null ) == null );
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testEquals() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap( new int[] { 1, 2 },  new int[] { 1, 2 } );
+		assertFalse( m.equals( new Object2ObjectOpenHashMap<Integer,Integer>( new Integer[] { 1, null }, new Integer[] { 1, 1 } ) ) );
+	}
+
 
 	@Test
 	public void testStrangeRetainAllCase() {

@@ -213,20 +213,20 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 
 #ifdef Linked
 	/** Cached set of entries. */
-	protected transient volatile FastSortedEntrySet KEY_VALUE_GENERIC entries;
+	protected transient FastSortedEntrySet KEY_VALUE_GENERIC entries;
 
 	/** Cached set of keys. */
-	protected transient volatile SORTED_SET KEY_GENERIC keys;
+	protected transient SORTED_SET KEY_GENERIC keys;
 #else
 	/** Cached set of entries. */
-	protected transient volatile FastEntrySet KEY_VALUE_GENERIC entries;
+	protected transient FastEntrySet KEY_VALUE_GENERIC entries;
 
 	/** Cached set of keys. */
-	protected transient volatile SET KEY_GENERIC keys;
+	protected transient SET KEY_GENERIC keys;
 #endif
 
 	/** Cached collection of values. */
-	protected transient volatile VALUE_COLLECTION VALUE_GENERIC values;
+	protected transient VALUE_COLLECTION VALUE_GENERIC values;
 
 
 #ifdef Custom
@@ -1036,8 +1036,11 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 #endif
 
 #if #keys(primitive)
-
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
 	public VALUE_GENERIC_CLASS get( final KEY_CLASS ok ) {
+		if ( ok == null ) return null;
 		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( ok );
 		if ( KEY_EQUALS_NULL( k ) ) return containsNullKey ? VALUE2OBJ( value[ n ] ) : OBJECT_DEFAULT_RETURN_VALUE;
 
@@ -1055,7 +1058,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE2OBJ( value[ pos ] );
 		}
 	}
-
 #endif
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
@@ -1747,7 +1749,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		public boolean contains( final Object o ) {
 			if ( !( o instanceof Map.Entry ) ) return false;
 			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
-
+#if #keys(primitive)
+			if ( e.getKey() == null ) return false;
+#endif
 			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
 			
 			if ( KEY_EQUALS_NULL( k ) ) return ( OPEN_HASH_MAP.this.containsNullKey && VALUE_EQUALS( value[ n ], VALUE_CLASS2TYPE( e.getValue() ) ) );
@@ -1770,7 +1774,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		public boolean remove( final Object o ) {
 			if ( !( o instanceof Map.Entry ) ) return false;
 			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
-
+#if #keys(primitive)
+			if ( e.getKey() == null ) return false;
+#endif
 			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
 			final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE( e.getValue() );
 
