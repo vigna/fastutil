@@ -8,12 +8,21 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 public class IntArraySetTest {
-	
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testNullInEquals() {
+		assertFalse( new IntArraySet( Arrays.asList( 42 ) ).equals( Collections.singleton( null ) ) );
+	}
+
 	@Test
 	public void testSet() {
 		for( int i = 1; i <= 1; i++ ) {
