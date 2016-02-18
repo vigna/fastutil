@@ -18,6 +18,7 @@
 package PACKAGE;
 
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
 /** A simple, brute-force implementation of a set based on a backing array.
  *
@@ -97,7 +98,26 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public KEY_ITERATOR KEY_GENERIC iterator() {
-		return ITERATORS.wrap( KEY_GENERIC_ARRAY_CAST a, 0, size );
+		return new KEY_ABSTRACT_ITERATOR KEY_GENERIC () {
+			int next = 0;
+
+			public boolean hasNext() {
+				return next < size;
+			}
+
+			public KEY_GENERIC_TYPE NEXT_KEY() {
+				if ( ! hasNext() ) throw new NoSuchElementException();
+				return KEY_GENERIC_CAST a[ next++ ];
+			}
+
+			public void remove() {
+				final int tail = size-- - next--;
+				System.arraycopy( a, next + 1, a, next, tail );
+#if #keys(reference)
+				a[ size ] = null;
+#endif
+			}
+		};
 	}
 
 	public boolean contains( final KEY_TYPE k ) {

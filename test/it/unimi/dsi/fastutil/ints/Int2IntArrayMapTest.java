@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.io.BinIO;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,6 +18,15 @@ import org.junit.Test;
 public class Int2IntArrayMapTest  {
 
 
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testContainsNull() {
+		Int2IntArrayMap m = new Int2IntArrayMap( new int[] { 1, 2, 3 },  new int[] { 1, 2, 3 } );
+		assertFalse( m.containsKey( null ) );
+		assertTrue( m.get( null ) == null );
+	}
+
+	@SuppressWarnings("boxing")
 	@Test
 	public void testEquals() {
 		Int2IntArrayMap a1 = new Int2IntArrayMap();
@@ -30,6 +41,8 @@ public class Int2IntArrayMapTest  {
 
 		assertEquals(a1, a2);
 
+		Int2IntArrayMap m = new Int2IntArrayMap( new int[] { 1, 2 },  new int[] { 1, 2 } );
+		assertFalse( m.equals( new Object2ObjectOpenHashMap<Integer,Integer>( new Integer[] { 1, null }, new Integer[] { 1, 1 } ) ) );
 	}
 
 	@SuppressWarnings("deprecation")
@@ -109,5 +122,18 @@ public class Int2IntArrayMapTest  {
 		oos.writeObject( m );
 		oos.close();
 		assertEquals( m, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
+	}
+
+	@Test
+	public void testIteratorRemove() {
+		Int2IntArrayMap m = new Int2IntArrayMap( new int[] { 1, 2, 3 },  new int[] { 1, 2, 3 } );
+		ObjectIterator<Entry<Integer, Integer>> keySet = m.entrySet().iterator();
+		keySet.next();
+		keySet.next();
+		keySet.remove();
+		assertTrue( keySet.hasNext() );
+		Entry<Integer, Integer> next = keySet.next();
+		assertEquals( Integer.valueOf( 3 ), next.getKey() );
+		assertEquals( Integer.valueOf( 3 ), next.getValue() );
 	}
 }

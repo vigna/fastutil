@@ -25,7 +25,7 @@ public class IntArraySetTest {
 
 	@Test
 	public void testSet() {
-		for( int i = 1; i <= 1; i++ ) {
+		for( int i = 0; i <= 1; i++ ) {
 			final IntArraySet s = i == 0 ? new IntArraySet() : new IntArraySet( new int[ i ] );
 			assertTrue( s.add( 1 ) );
 			assertEquals( 1 + i, s.size() );
@@ -85,5 +85,28 @@ public class IntArraySetTest {
 		oos.writeObject( s );
 		oos.close();
 		assertEquals( s, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
+	}
+
+	@Test
+	public void testRemove() {
+		IntSet set = new IntArraySet( new int[] { 42 } );
+
+		IntIterator iterator = set.iterator();
+		assertTrue(iterator.hasNext());
+		iterator.next();
+		iterator.remove();
+		assertFalse( iterator.hasNext() );
+		assertEquals( 0, set.size() );
+
+		set = new IntArraySet( new int[] { 42, 43, 44 } );
+
+		iterator = set.iterator();
+		assertTrue(iterator.hasNext());
+		iterator.next();
+		iterator.next();
+		iterator.remove();
+		assertEquals( 44, iterator.nextInt () );
+		assertFalse( iterator.hasNext() );
+		assertEquals( new IntArraySet( new int[] { 42, 44 } ), set );
 	}
 }
