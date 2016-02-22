@@ -10,6 +10,16 @@ import org.junit.Test;
 @SuppressWarnings("rawtypes")
 public class IntBigArrayBigListTest {
 
+	@Test(expected = IndexOutOfBoundsException.class)
+	public void testListIteratorTooLow() {
+		new IntBigArrayBigList().listIterator( -1L );
+	}
+
+	@Test(expected = IndexOutOfBoundsException.class)
+	public void testListIteratorTooHigh() {
+		new IntBigArrayBigList().listIterator( 1L );
+	}
+
 	private static java.util.Random r = new java.util.Random( 0 );
 
 	private static int genKey() {
