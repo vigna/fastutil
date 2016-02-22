@@ -116,13 +116,6 @@
 
 	<property name="j2se.apiurl" value="http://java.sun.com/j2se/5.0/docs/api/"/>
 
-	<path id="emma.lib" >
-		<pathelement location="${jar.base}/emma.jar" />
-		<pathelement location="${jar.base}/emma_ant.jar" />
-	</path>
-
-	<taskdef resource="emma_ant.properties" classpathref="emma.lib" />
-
 	<target name="init">
 		<mkdir dir="${build}"/>
 		<mkdir dir="${dist}/lib"/>
@@ -191,21 +184,17 @@
 		</javadoc>
 	</target>
 
-	<target name="junit" depends="instrument" description="Runs JUnit tests">
-
+	<target name="junit" depends="compile-tests" description="Runs JUnit tests">
 		<junit printsummary="yes" fork="yes" haltonfailure="off"  haltonerror="off">
-			<classpath location="${instrumented}/classes"/>
+			<classpath location="${build}"/>
 			<classpath location="${src}"/>
-			<classpath location="${jar.base}/emma.jar"/>
 			<jvmarg value="-Xmx1G" />
-			<jvmarg value="-Demma.coverage.out.file=${coverage}/coverage.emma" />
-			<jvmarg value="-Demma.coverage.out.merge=true" />
 
 			<formatter type="xml"/>
 			<formatter type="plain"/>
 
 			<batchtest fork="yes" todir="${reports}">
-				<fileset dir="${instrumented}/classes">
+				<fileset dir="${build}">
 					<include name="**/*Test.class"/>
 				</fileset>
 			</batchtest>
@@ -217,37 +206,13 @@
 			</fileset>
 			<report todir="reports/html"/>
 		</junitreport>
-
-		<emma>
-			<report sourcepath="${src}" >
-				<fileset file="${coverage}/*a"/>
-				<html outfile="coverage.html" />
-				<xml outfile="${coverage}/coverage.xml" />
-			</report>
-		</emma>
 	</target>
-
-	<target name="instrument" depends="compile" description="Generate instrumented classes">
-		<emma>
-			<instr mode="fullcopy"
-				 outdir="${instrumented}"
-				 merge="no"
-				 metadatafile="${coverage}/metadata.emma"
-				 instrpath="${build}"
-			>
-				<filter excludes="*Test*"/>
-			</instr>
-		</emma>
-	</target>
-
 
 	<!-- ************		CLEAN		********************* -->
 	<target name="clean">
 		<delete dir="${build}"/>
 		<delete dir="${dist}"/>
 		<delete dir="${reports}"/>
-		<delete dir="${coverage}"/>
-		<delete dir="${instrumented}"/>
 		<delete dir="${docs}"/>
 		<delete>
 			<fileset dir="." includes="fastutil-*.jar"/>
