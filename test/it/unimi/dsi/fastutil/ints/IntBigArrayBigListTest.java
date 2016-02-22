@@ -3,6 +3,7 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.junit.Ignore;
@@ -28,6 +29,16 @@ public class IntBigArrayBigListTest {
 		assertEquals( IntBigLists.singleton( 1 ), list );
 	}
 
+	@Test
+	public void testRemoveAll() {
+		IntBigArrayBigList l = IntBigArrayBigList.wrap( new int[][] { { 0, 1, 2 } } );
+		l.removeAll( IntSets.singleton( 1 ) );
+		assertEquals( IntBigArrayBigList.wrap( new int[][] { { 0, 2 } } ), l );
+
+		l = IntBigArrayBigList.wrap( new int[][] { { 0, 1, 1, 2 } } );
+		l.removeAll( Collections.singleton( Integer.valueOf( 1 ) ) );
+		assertEquals( IntBigArrayBigList.wrap( new int[][] { { 0, 2 } } ), l );
+	}
 
 	private static java.util.Random r = new java.util.Random( 0 );
 
