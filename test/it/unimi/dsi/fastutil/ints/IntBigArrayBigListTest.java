@@ -1,5 +1,6 @@
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
@@ -19,6 +20,14 @@ public class IntBigArrayBigListTest {
 	public void testListIteratorTooHigh() {
 		new IntBigArrayBigList().listIterator( 1L );
 	}
+
+	@Test
+	public void testAddWithIterator() {
+		IntBigList list = new IntBigArrayBigList();
+		list.iterator().add( 1 );
+		assertEquals( IntBigLists.singleton( 1 ), list );
+	}
+
 
 	private static java.util.Random r = new java.util.Random( 0 );
 
