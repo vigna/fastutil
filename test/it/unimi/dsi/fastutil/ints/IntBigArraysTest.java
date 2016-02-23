@@ -81,8 +81,8 @@ public class IntBigArraysTest {
 		int[][] b = IntBigArrays.wrap( a.clone() );
 
 		for( int i = -1; i < 20; i++ ) {
-			assertEquals( "" + i, Arrays.binarySearch( a, i ), IntBigArrays.binarySearch( b, i ) );
-			assertEquals( "" + i, Arrays.binarySearch( a, i ), IntBigArrays.binarySearch( b, i, IntComparators.NATURAL_COMPARATOR ) );
+			assertEquals( String.valueOf(i), Arrays.binarySearch( a, i ), IntBigArrays.binarySearch( b, i ) );
+			assertEquals( String.valueOf(i), Arrays.binarySearch( a, i ), IntBigArrays.binarySearch( b, i, IntComparators.NATURAL_COMPARATOR ) );
 		}
 	
 		for( int i = -1; i < 20; i++ ) {

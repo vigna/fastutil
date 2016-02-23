@@ -84,8 +84,8 @@ public class DoubleBigArraysTest {
 		double[][] b = DoubleBigArrays.wrap( a.clone() );
 
 		for( int i = -1; i < 20; i++ ) {
-			assertEquals( "" + i, Arrays.binarySearch( a, i ), DoubleBigArrays.binarySearch( b, i ) );
-			assertEquals( "" + i, Arrays.binarySearch( a, i ), DoubleBigArrays.binarySearch( b, i, DoubleComparators.NATURAL_COMPARATOR ) );
+			assertEquals( String.valueOf(i), Arrays.binarySearch( a, i ), DoubleBigArrays.binarySearch( b, i ) );
+			assertEquals( String.valueOf(i), Arrays.binarySearch( a, i ), DoubleBigArrays.binarySearch( b, i, DoubleComparators.NATURAL_COMPARATOR ) );
 		}
 	
 		for( int i = -1; i < 20; i++ ) {
