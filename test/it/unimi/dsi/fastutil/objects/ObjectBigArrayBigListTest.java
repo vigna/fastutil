@@ -1,7 +1,11 @@
 package it.unimi.dsi.fastutil.objects;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import it.unimi.dsi.fastutil.BigArrays;
 
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.junit.Ignore;
@@ -9,6 +13,23 @@ import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public class ObjectBigArrayBigListTest {
+
+	@Test
+	public void testRemoveAllModifiesCollection() {
+		ObjectBigList<Integer> list = new ObjectBigArrayBigList<Integer>();
+		assertFalse( list.removeAll( Collections.emptySet() ) );
+		assertEquals( ObjectBigLists.EMPTY_BIG_LIST, list );
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testRemoveAllSkipSegment() {
+		ObjectBigList<Integer> list = new ObjectBigArrayBigList<Integer>();
+		for( long i = 0; i < BigArrays.SEGMENT_SIZE + 10; i++ ) list.add( Integer.valueOf( (int)( i % 2 ) ) );
+		assertTrue( list.removeAll( ObjectSets.singleton( 1 ) ) );
+		assertEquals( BigArrays.SEGMENT_SIZE / 2 + 5, list.size64() );
+		for( long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++ ) assertEquals( Integer.valueOf( 0 ), list.get( i ) );
+	}
 
 	private static java.util.Random r = new java.util.Random( 0 );
 

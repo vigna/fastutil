@@ -1,7 +1,9 @@
 package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import it.unimi.dsi.fastutil.BigArrays;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -11,6 +13,30 @@ import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public class IntBigArrayBigListTest {
+
+	@Test
+	public void testRemoveAllModifiesCollection() {
+		IntBigList list = new IntBigArrayBigList();
+		assertFalse( list.removeAll( Collections.emptySet() ) );
+		assertEquals( IntBigLists.EMPTY_BIG_LIST, list );
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testRemoveAllSkipSegment() {
+		IntBigList list = new IntBigArrayBigList();
+		for( long i = 0; i < BigArrays.SEGMENT_SIZE + 10; i++ ) list.add( (int)( i % 2 ) );
+		assertTrue( list.removeAll( IntSets.singleton( 1 ) ) );
+		assertEquals( BigArrays.SEGMENT_SIZE / 2 + 5, list.size64() );
+		for( long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++ ) assertEquals( 0, list.getInt( i ) );
+
+		list = new IntBigArrayBigList();
+		for( long i = 0; i < BigArrays.SEGMENT_SIZE + 10; i++ ) list.add( (int)( i % 2 ) );
+		assertTrue( list.removeAll( Collections.singleton( 1 ) ) );
+		assertEquals( BigArrays.SEGMENT_SIZE / 2 + 5, list.size64() );
+		for( long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++ ) assertEquals( 0, list.getInt( i ) );
+	}
+
 
 	@Test(expected = IndexOutOfBoundsException.class)
 	public void testListIteratorTooLow() {
