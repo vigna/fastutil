@@ -11,12 +11,62 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.Map.Entry;
 
 import org.junit.Test;
 
 public class Int2IntArrayMapTest  {
 
+	@Test
+	public void testRemove() {
+		Int2IntMap map = new Int2IntArrayMap();
+		assertFalse( map.entrySet().remove( new Object() ) );
+		map.put( 1, 2 );
+		map.put( 2, 3 );
+		assertFalse( map.entrySet().remove( new AbstractInt2IntMap.BasicEntry( 1, 1 ) ) );
+		assertFalse( map.entrySet().remove( new AbstractInt2IntMap.BasicEntry( 3, 2 ) ) );
+		assertTrue( map.entrySet().remove( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
+		assertFalse( map.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
+		assertEquals( map.size(), map.entrySet().size() );
+		assertFalse( map.containsKey( 1 ) );
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testArrayMapEmptyEntrySetThrowsExceptionOnIteratorRemove() {
+		ObjectIterator<Entry<Integer, Integer>> iterator = new Int2IntArrayMap( 4 ).entrySet().iterator();
+		assertFalse( iterator.hasNext() );
+		iterator.remove();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testArrayMapEmptyEntrySetThrowsExceptionTwoIteratorRemoves() {
+		Int2IntArrayMap m = new Int2IntArrayMap();
+		m.put( 0, 0 );
+		m.put( 1, 1 );
+		ObjectIterator<Entry<Integer, Integer>> iterator = m.entrySet().iterator();
+		iterator.next();
+		iterator.remove();
+		iterator.remove();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testArrayMapEmptyEntrySetThrowsExceptionOnFastIteratorRemove() {
+		ObjectIterator<it.unimi.dsi.fastutil.ints.Int2IntMap.Entry> iterator = new Int2IntArrayMap().int2IntEntrySet().fastIterator();
+		assertFalse( iterator.hasNext() );
+		iterator.remove();
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testArrayMapEmptyEntrySetThrowsExceptionTwoFastIteratorRemoves() {
+		Int2IntArrayMap m = new Int2IntArrayMap();
+		m.put( 0, 0 );
+		m.put( 1, 1 );
+		ObjectIterator<it.unimi.dsi.fastutil.ints.Int2IntMap.Entry> iterator = m.int2IntEntrySet().fastIterator();
+		iterator.next();
+		iterator.remove();
+		iterator.remove();
+	}
 
 	@SuppressWarnings("deprecation")
 	@Test

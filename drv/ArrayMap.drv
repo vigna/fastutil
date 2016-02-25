@@ -114,7 +114,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
 			return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
-				int next = 0;
+				int curr = -1, next = 0;
 				
 				public boolean hasNext() {
 					return next < size;
@@ -123,10 +123,12 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public Entry KEY_VALUE_GENERIC next() {
 					if ( ! hasNext() ) throw new NoSuchElementException();
-					return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( KEY_GENERIC_CAST key[ next ], VALUE_GENERIC_CAST value[ next++ ] );
+					return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( KEY_GENERIC_CAST key[ curr = next ], VALUE_GENERIC_CAST value[ next++ ] );
 				}
 				
 				public void remove() {
+					if ( curr == -1 ) throw new IllegalStateException();
+					curr = -1;
 					final int tail = size-- - next--;
 					System.arraycopy( key, next + 1, key, next, tail );
 					System.arraycopy( value, next + 1, value, next, tail );
@@ -142,7 +144,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
 			return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
-				int next = 0;
+				int next = 0, curr = -1;
 				final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
 				
 				public boolean hasNext() {
@@ -152,12 +154,14 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public Entry KEY_VALUE_GENERIC next() {
 					if ( ! hasNext() ) throw new NoSuchElementException();
-					entry.key = KEY_GENERIC_CAST key[ next ];
+					entry.key = KEY_GENERIC_CAST key[ curr = next ];
 					entry.value = VALUE_GENERIC_CAST value[ next++ ];
 					return entry;
 				}
 				
 				public void remove() {
+					if ( curr == -1 ) throw new IllegalStateException();
+					curr = -1;
 					final int tail = size-- - next--;
 					System.arraycopy( key, next + 1, key, next, tail );
 					System.arraycopy( value, next + 1, value, next, tail );
@@ -185,7 +189,32 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
 			return ARRAY_MAP.this.containsKey( k ) && VALUE_EQUALS( ARRAY_MAP.this.GET_VALUE( k ), VALUE_CLASS2TYPE( e.getValue() ) );
 		}
-		
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public boolean remove( final Object o ) {
+			if ( !( o instanceof Map.Entry ) ) return false;
+			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+#if #keys(primitive)
+			if ( e.getKey() == null ) return false;
+#endif
+			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
+			final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE( e.getValue() );
+
+			final int oldPos = ARRAY_MAP.this.findKey( k );
+			if ( oldPos == -1 || ! VALUE_EQUALS( v, ARRAY_MAP.this.value[ oldPos ] ) ) return false;
+			final int tail = size - oldPos - 1;
+			System.arraycopy( ARRAY_MAP.this.key, oldPos + 1, ARRAY_MAP.this.key, oldPos, tail );
+			System.arraycopy( ARRAY_MAP.this.value, oldPos + 1, ARRAY_MAP.this.value, oldPos, tail );
+			ARRAY_MAP.this.size--;
+#if #keys(reference)
+			ARRAY_MAP.this.key[ size ] = null;
+#endif
+#if #values(reference)
+			ARRAY_MAP.this.value[ size ] = null;
+#endif
+			return true;
+		}
 	}
 
 	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() {
@@ -280,10 +309,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		if ( oldPos == -1 ) return defRetValue;
 		final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[ oldPos ];
 		final int tail = size - oldPos - 1;
-		for( int i = 0; i < tail; i++ ) {
-			key[ oldPos + i ] = key[ oldPos + i + 1 ];
-			value[ oldPos + i ] = value[ oldPos + i + 1 ];
-		}
+		System.arraycopy( key, oldPos + 1, key, oldPos, tail );
+		System.arraycopy( value, oldPos + 1, value, oldPos, tail );
 		size--;
 #if #keys(reference)
 		key[ size ] = null;
