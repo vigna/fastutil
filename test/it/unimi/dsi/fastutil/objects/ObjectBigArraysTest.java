@@ -76,8 +76,8 @@ public class ObjectBigArraysTest {
 		Integer[][] b = ObjectBigArrays.wrap( a.clone() );
 
 		for( int i = -1; i < 20; i++ ) { 
-			assertEquals( "" + i, Arrays.binarySearch( a, i ), ObjectBigArrays.binarySearch( b, i ) );
-			assertEquals( "" + i, Arrays.binarySearch( a, i ), ObjectBigArrays.binarySearch( b, i, ObjectComparators.NATURAL_COMPARATOR ) );
+			assertEquals( String.valueOf(i), Arrays.binarySearch( a, i ), ObjectBigArrays.binarySearch( b, i ) );
+			assertEquals( String.valueOf(i), Arrays.binarySearch( a, i ), ObjectBigArrays.binarySearch( b, i, ObjectComparators.NATURAL_COMPARATOR ) );
 		}
 	
 		for( int i = -1; i < 20; i++ ) {
