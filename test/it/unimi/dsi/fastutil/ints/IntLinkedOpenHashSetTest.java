@@ -162,7 +162,7 @@ public class IntLinkedOpenHashSetTest {
 		/* Now we play with iterators, but only in the linked case. */
 		{
 			java.util.ListIterator<Integer> i, j;
-			Integer J;
+			Integer J = null;
 			i = s.iterator();
 			j = new java.util.LinkedList<Integer>( t ).listIterator();
 			for ( int k = 0; k < 2 * n; k++ ) {
@@ -190,7 +190,7 @@ public class IntLinkedOpenHashSetTest {
 		}
 		if ( t.size() > 0 ) {
 			java.util.ListIterator i, j;
-			Object J;
+			Object J = null;
 			j = new java.util.LinkedList( t ).listIterator();
 			int e = r.nextInt( t.size() );
 			Object from;

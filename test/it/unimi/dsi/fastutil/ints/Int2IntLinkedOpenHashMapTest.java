@@ -269,8 +269,8 @@ public class Int2IntLinkedOpenHashMapTest {
 		/* Now we play with iterators. */
 		{
 			java.util.ListIterator<?> i, j;
-			Object J;
-			Map.Entry<Integer,Integer> E, F;
+			Object J = null;
+			Map.Entry<Integer,Integer> E = null, F = null;
 			i = (java.util.ListIterator<?>)m.entrySet().iterator();
 			j = new java.util.LinkedList<Object>( t.entrySet() ).listIterator();
 			for ( int k = 0; k < 2 * n; k++ ) {
@@ -308,7 +308,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		}
 		if ( t.size() > 0 ) {
 			java.util.ListIterator<Integer> i, j;
-			Object J;
+			Object J = null;
 			j = new java.util.LinkedList<Integer>( t.keySet() ).listIterator();
 			int e = r.nextInt( t.size() );
 			Object from;
