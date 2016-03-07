@@ -90,19 +90,8 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * </pre>
  * <p>
  * Inside the inner loop, the original index in <code>a</code> can be retrieved
- * using {@link #index(int, int) index(segment, displacement)}. Do <em>not</em>
- * use an additional variable to keep track of the value of the original index,
- * as computing it on the fly is significantly faster. For instance, to
- * initialise the <var>i</var>-th element of a big array of long integers to the
- * value <var>i</var> you should use
- * 
- * <pre>
- * for (int s = a.length; s-- != 0;) {
- *     final long[] t = a[s];
- *     for (int d = t.length; d-- != 0;)
- *         t[d] = index(s, d);
- * }
- * </pre>
+ * using {@link #index(int, int) index(segment, displacement)}. You can also 
+ * use an additional long to keep track of the index.
  * 
  * <p>
  * Note that caching is essential in making these loops essentially as fast as
