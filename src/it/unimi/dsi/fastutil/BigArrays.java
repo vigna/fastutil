@@ -298,7 +298,7 @@ public class BigArrays {
 	private static final int MEDIUM = 40;
 
 	/**
-	 * Transforms two consecutive sorted ranges into a single sorted range. The
+	 * Transforns two consecutive sorted ranges into a single sorted range. The
 	 * initial ranges are <code>[first, middle)</code> and
 	 * <code>[middle, last)</code>, and the resulting range is
 	 * <code>[first, last)</code>. Elements in the first input range will
@@ -346,7 +346,7 @@ public class BigArrays {
 	}
 
 	/**
-	 * Performs a binary search on an already sorted range: finds the first
+	 * Perforns a binary search on an already sorted range: finds the first
 	 * position where an element can be inserted without violating the ordering.
 	 * Sorting is by a user-supplied comparison function.
 	 * 
@@ -522,7 +522,7 @@ public class BigArrays {
 	}
 
 	/**
-	 * Performs a binary search on an already-sorted range: finds the last
+	 * Perforns a binary search on an already-sorted range: finds the last
 	 * position where an element can be inserted without violating the ordering.
 	 * Sorting is by a user-supplied comparison function.
 	 * 
@@ -565,16 +565,16 @@ public class BigArrays {
 
 		for (int k = 10; k-- != 0;) {
 
-			start = -System.currentTimeMillis();
+			start = -System.nanoTime();
 
 			x = 0;
 			for (long i = IntBigArrays.length(a); i-- != 0;)
 				x ^= i ^ IntBigArrays.get(a, i);
 			if (x == 0) System.err.println();
 
-			System.out.println("Single loop: " + (start + System.currentTimeMillis()) + "ms");
+			System.out.println("Single loop: " + (start + System.nanoTime()) * 1E-6 + "ms");
 
-			start = -System.currentTimeMillis();
+			start = -System.nanoTime();
 
 			y = 0;
 			for (int i = a.length; i-- != 0;) {
@@ -585,7 +585,9 @@ public class BigArrays {
 			if (y == 0) System.err.println();
 			if (x != y) throw new AssertionError();
 
-			System.out.println("Double loop: " + (start + System.currentTimeMillis()) + "ms");
+			System.out.println("Double loop: " + (start + System.nanoTime()) * 1E-6 + "ms");
+
+			start = -System.nanoTime();
 
 			z = 0;
 			long j = IntBigArrays.length(a);
@@ -597,7 +599,7 @@ public class BigArrays {
 			if (z == 0) System.err.println();
 			if (x != z) throw new AssertionError();
 
-			System.out.println("Double loop (with additional index): " + (start + System.currentTimeMillis()) + "ms");
+			System.out.println("Double loop (with additional index): " + (start + System.nanoTime()) * 1E-6 + "ms");
 		}
 	}
 }
