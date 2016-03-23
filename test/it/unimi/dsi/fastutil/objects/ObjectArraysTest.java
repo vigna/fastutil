@@ -100,6 +100,32 @@ public class ObjectArraysTest {
 	}
 	
 	@Test
+	public void testLargeParallelQuickSortWithComparator() {
+	  Object [] a = new Object[8192+1]; // PARALLEL_QUICKSORT_NO_FORK
+	  for (int i = 0; i < a.length; i++) {
+	    a[i] = new Object();
+	  }
+	  ObjectArrays.parallelQuickSort(a, new Comparator<Object>(){
+      @Override
+      public int compare(Object o1, Object o2) {
+        return Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2));
+      }});
+	}
+	
+    @Test
+    public void testSmallParallelQuickSortWithComparator() {
+      Object [] a = new Object[8];
+      for (int i = 0; i < a.length; i++) {
+        a[i] = new Object();
+      }
+      ObjectArrays.parallelQuickSort(a, new Comparator<Object>(){
+      @Override
+      public int compare(Object o1, Object o2) {
+        return Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2));
+      }});
+    }
+    
+	@Test
 	public void testQuickSort1() {
 		Integer[] t = { 2, 1, 0, 4 };
 		ObjectArrays.quickSort( t );
