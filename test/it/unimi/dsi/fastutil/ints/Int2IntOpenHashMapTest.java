@@ -12,6 +12,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -80,6 +81,29 @@ public class Int2IntOpenHashMapTest {
 		// Fails
 		assertEquals( referenceInstance, instance.keySet() );
 	}	
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void entrySetContainsTest() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.put(0, 0);
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void entrySetRemoveTest() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.put(0, 0);
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
+	}
+
 
 	private static java.util.Random r = new java.util.Random( 0 );
 

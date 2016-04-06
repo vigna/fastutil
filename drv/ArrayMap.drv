@@ -179,27 +179,33 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			return size;
 		}
 
-		@SuppressWarnings("unchecked")
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public boolean contains( Object o ) {
 			if ( ! ( o instanceof Map.Entry ) ) return false;
-			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 #if #keys(primitive)
-			if ( e.getKey() == null ) return false;
+			if (e.getKey() == null || ! (e.getKey() instanceof KEY_CLASS)) return false;
 #endif
-			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
-			return ARRAY_MAP.this.containsKey( k ) && VALUE_EQUALS( ARRAY_MAP.this.GET_VALUE( k ), VALUE_CLASS2TYPE( e.getValue() ) );
+#if #values(primitive)
+			if (e.getValue() == null || ! (e.getValue() instanceof VALUE_CLASS)) return false;
+#endif
+			final KEY_GENERIC_TYPE k = KEY_OBJ2TYPE( KEY_GENERIC_CAST e.getKey() );
+			return ARRAY_MAP.this.containsKey( k ) && VALUE_EQUALS( ARRAY_MAP.this.GET_VALUE( k ), VALUE_OBJ2TYPE( e.getValue() ) );
 		}
 
-		@SuppressWarnings("unchecked")
+		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 		@Override
 		public boolean remove( final Object o ) {
 			if ( !( o instanceof Map.Entry ) ) return false;
-			final Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 #if #keys(primitive)
-			if ( e.getKey() == null ) return false;
+			if (e.getKey() == null || ! (e.getKey() instanceof KEY_CLASS)) return false;
 #endif
-			final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( e.getKey() );
-			final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE( e.getValue() );
+#if #values(primitive)
+			if (e.getValue() == null || ! (e.getValue() instanceof VALUE_CLASS)) return false;
+#endif
+			final KEY_GENERIC_TYPE k = KEY_OBJ2TYPE( KEY_GENERIC_CAST e.getKey() );
+			final VALUE_GENERIC_TYPE v = VALUE_OBJ2TYPE( VALUE_GENERIC_CAST e.getValue() );
 
 			final int oldPos = ARRAY_MAP.this.findKey( k );
 			if ( oldPos == -1 || ! VALUE_EQUALS( v, ARRAY_MAP.this.value[ oldPos ] ) ) return false;

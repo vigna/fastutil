@@ -11,6 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.AbstractMap;
 import java.util.Map.Entry;
 
 import org.junit.Test;
@@ -184,5 +185,27 @@ public class Int2IntArrayMapTest  {
 		Entry<Integer, Integer> next = keySet.next();
 		assertEquals( Integer.valueOf( 3 ), next.getKey() );
 		assertEquals( Integer.valueOf( 3 ), next.getValue() );
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void entrySetContainsTest() {
+		Int2IntArrayMap m = new Int2IntArrayMap();
+		m.put(0, 0);
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Test
+	public void entrySetRemoveTest() {
+		Int2IntArrayMap m = new Int2IntArrayMap();
+		m.put(0, 0);
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
 }
