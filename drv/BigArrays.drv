@@ -41,9 +41,9 @@ import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_MASK;
 import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SHIFT;
 import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SIZE;
 
-#if #keys(primitive)
+#if KEYS_PRIMITIVE
 
-#if ! #keyclass(Byte) && ! #keyclass(Boolean)
+#if ! KEY_CLASS_Byte && ! KEY_CLASS_Boolean
 import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
 #endif
 
@@ -125,7 +125,7 @@ public class BIG_ARRAYS {
 		array[ segment( second ) ][ displacement( second ) ] = t;
 	}
 	
-#if #keys(primitive) && ! #keyclass(Boolean)
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
 	/** Adds the specified increment the element of the given big array of specified index.
 	 * 
 	 * @param array a big array.
@@ -280,7 +280,7 @@ public class BIG_ARRAYS {
 		}
 	}
 	
-#if #keyclass(Object)	
+#if KEY_CLASS_Object
 	/** Creates a new big array using the given one as prototype. 
 	 *
 	 * <P>This method returns a new big array of the given length whose element
@@ -345,7 +345,7 @@ public class BIG_ARRAYS {
 		return base;
 	}
 
-#if #keyclass(Object)
+#if KEY_CLASS_Object
 	/** Turns a standard array into a big array.
 	 *
 	 * <P>Note that the returned big array might contain as a segment the original array.
@@ -402,7 +402,7 @@ public class BIG_ARRAYS {
 		return ensureCapacity( array, length, length( array ) );
 	}
 
-#if #keyclass(Object)
+#if KEY_CLASS_Object
 
 	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
 	 *
@@ -524,7 +524,7 @@ public class BIG_ARRAYS {
 		return length > oldLength ? ensureCapacity( array, Math.max( 2 * oldLength, length ), preserve ) : array;
 	}
 
-#if #keyclass(Object)
+#if KEY_CLASS_Object
 
 	/** Trims the given big array to the given length.
 	 *
@@ -615,7 +615,7 @@ public class BIG_ARRAYS {
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy( final KEY_GENERIC_TYPE[][] array, final long offset, final long length ) {
 		ensureOffsetLength( array, offset, length );
 		final KEY_GENERIC_TYPE[][] a = 
-#if #keyclass(Object)
+#if KEY_CLASS_Object
 			newBigArray( array, length );
 #else
 			newBigArray( length );
@@ -984,7 +984,7 @@ public class BIG_ARRAYS {
 
 
 
-#if ! #keyclass(Boolean)
+#if ! KEY_CLASS_Boolean
 
 	/**
 	 * Searches a range of the specified big array for the specified value using 
@@ -1013,7 +1013,7 @@ public class BIG_ARRAYS {
 		while (from <= to) {
 			final long mid = (from + to) >>> 1;
 			midVal = get( a, mid );
-#if #keys(primitive)
+#if KEYS_PRIMITIVE
 			if (midVal < key) from = mid + 1;
 			else if (midVal > key) to = mid - 1;
 			else return mid;
@@ -1108,7 +1108,7 @@ public class BIG_ARRAYS {
 	}
 
 
-#if #keys(primitive)
+#if KEYS_PRIMITIVE
 	/** The size of a digit used during radix sort (must be a power of 2). */
 	private static final int DIGIT_BITS = 8;
 	/** The mask to extract a digit of {@link #DIGIT_BITS} bits. */
@@ -1117,12 +1117,12 @@ public class BIG_ARRAYS {
 	private static final int DIGITS_PER_ELEMENT = KEY_CLASS.SIZE / DIGIT_BITS;
 
 	/** This method fixes negative numbers so that the combination exponent/significand is lexicographically sorted. */
-#if #keyclass(Double)
+#if KEY_CLASS_Double
 	private static final long fixDouble( final double d ) {
 		final long l = Double.doubleToRawLongBits( d );
 		return l >= 0 ? l : l ^ 0x7FFFFFFFFFFFFFFFL;
 	}	   
-#elif #keyclass(Float)
+#elif KEY_CLASS_Float
 	private static final long fixFloat( final float f ) {
 		final long i = Float.floatToRawIntBits( f );
 		return i >= 0 ? i : i ^ 0x7FFFFFFF;
@@ -1191,7 +1191,7 @@ public class BIG_ARRAYS {
 			final long first = offsetStack[ --offsetPos ];
 			final long length = lengthStack[ --lengthPos ];
 			final int level = levelStack[ --levelPos ];
-#if #keyclass(Character)
+#if KEY_CLASS_Character
 			final int signMask = 0;
 #else
 			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
@@ -1337,7 +1337,7 @@ public class BIG_ARRAYS {
 			final long first = offsetStack[ --offsetPos ];
 			final long length = lengthStack[ --lengthPos ];
 			final int level = levelStack[ --levelPos ];
-#if #keyclass(Character)
+#if KEY_CLASS_Character
 			final int signMask = 0;
 #else
 			final int signMask = level % DIGITS_PER_ELEMENT == 0 ? 1 << DIGIT_BITS - 1 : 0;
@@ -1438,18 +1438,18 @@ public class BIG_ARRAYS {
 	}
 
 
-#if #keyclass(Integer)
+#if KEY_CLASS_Integer
 #ifdef TEST
 
 	private static long seed = System.currentTimeMillis(); 
 	private static java.util.Random r = new java.util.Random( seed );
 
 	private static KEY_TYPE genKey() {
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+#if KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character
 		return (KEY_TYPE)(r.nextInt());
-#elif #keys(primitive)
+#elif KEYS_PRIMITIVE
 		return r.NEXT_KEY(); 
-#elif #keyclass(Object)
+#elif KEY_CLASS_Object
 		return Integer.toBinaryString( r.nextInt() );
 #else 
 		return new java.io.Serializable() {};

@@ -172,14 +172,14 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return the length coded at <code>pos</code>.
 	 */
 	private static int readInt( final KEY_TYPE a[][], long pos ) {
-#if #keyclass(Integer)
+#if KEY_CLASS_Integer
 		return IntBigArrays.get( a, pos );
-#elif #keyclass(Long)
+#elif KEY_CLASS_Long
 		return (int)LongBigArrays.get( a, pos );
-#elif #keyclass(Character)
+#elif KEY_CLASS_Character
 		final char c0 = CharBigArrays.get( a, pos );
 		return c0  < 0x8000 ? c0 : ( c0 & 0x7FFF ) << 16 | CharBigArrays.get( a, pos + 1 );
-#elif #keyclass(Short)
+#elif KEY_CLASS_Short
 		final short s0 = ShortBigArrays.get( a, pos );
 		return s0 >= 0 ? s0 : s0 << 16 | ( ShortBigArrays.get( a, pos + 1 ) & 0xFFFF );
 #else
@@ -200,9 +200,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return the number of elements coding <code>length</code>.
 	 */
 	private static int count( final int length ) {
-#if #keyclass(Integer) || #keyclass(Long)
+#if KEY_CLASS_Integer || KEY_CLASS_Long
 		return 1;
-#elif #keyclass(Character) || #keyclass(Short)
+#elif KEY_CLASS_Character || KEY_CLASS_Short
 		return length < ( 1 << 15 ) ? 1 : 2;
 #else
 		if ( length < ( 1 << 7 ) ) return 1;
@@ -220,13 +220,13 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return the number of elements coding <code>length</code>.
 	 */
 	private static int writeInt( final KEY_TYPE a[][], int length, long pos ) {
-#if #keyclass(Long)
+#if KEY_CLASS_Long
 		LongBigArrays.set( a, pos, length );
 		return 1;
-#elif #keyclass(Integer)
+#elif KEY_CLASS_Integer
 		IntBigArrays.set( a, pos, length );
 		return 1;
-#elif #keyclass(Character)
+#elif KEY_CLASS_Character
 		if ( length < ( 1 << 15 ) ) {
 			CharBigArrays.set( a, pos, (char)length );
 			return 1;
@@ -234,7 +234,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 		CharBigArrays.set( a, pos++, (char)( length >>> 16 | 0x8000 ) );
 		CharBigArrays.set( a, pos, (char)( length & 0xFFFF ) );
 		return 2;
-#elif #keyclass(Short)
+#elif KEY_CLASS_Short
 		if ( length < ( 1 << 15 ) ) {
 			ShortBigArrays.set( a, pos, (short)length );
 			return 1;
@@ -541,11 +541,11 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	private static java.util.Random r = new java.util.Random( seed );
 
 	private static KEY_TYPE genKey() {
-#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)
+#if KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character
 		return (KEY_TYPE)(r.nextInt());
-#elif #keys(primitive)
+#elif KEYS_PRIMITIVE
 		return r.NEXT_KEY(); 
-#elif #keyclass(Object)
+#elif KEY_CLASS_Object
 		return Integer.toBinaryString( r.nextInt() );
 #else
 		return new java.io.Serializable() {};

@@ -112,19 +112,19 @@ echo -e \
 \
 \
 $(if [[ "${CLASS[$k]}" != "" ]]; then\
-	echo "#unassert keyclass\\n#assert keyclass(${CLASS[$k]})\\n#unassert keys\\n";\
+	echo "#define KEY_CLASS_${CLASS[$k]} 1\\n";\
 	if [[ "${CLASS[$k]}" != "Object" && "${CLASS[$k]}" != "Reference" ]]; then\
-		echo "#assert keys(primitive)\\n";\
+		echo "#define KEYS_PRIMITIVE 1\\n";\
 	else\
-		echo "#assert keys(reference)\\n";\
+		echo "#define KEYS_REFERENCE 1\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
-	echo "#unassert valueclass\\n#assert valueclass(${CLASS[$v]})\\n#unassert values\\n";\
+	echo "#define VALUE_CLASS_${CLASS[$v]} 1\\n";\
 	if [[ "${CLASS[$v]}" != "Object" && "${CLASS[$v]}" != "Reference" ]]; then\
-		echo "#assert values(primitive)\\n";\
+		echo "#define VALUES_PRIMITIVE 1\\n";\
 	else\
-		echo "#assert values(reference)\\n";\
+		echo "#define VALUES_REFERENCE 1\\n";\
 	fi;\
  fi)\
 \
@@ -138,7 +138,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define VALUE_CLASS ${CLASS[$v]}\n"\
 \
 \
-"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#if KEYS_REFERENCE\n"\
 "#define KEY_GENERIC_CLASS K\n"\
 "#define KEY_GENERIC_TYPE K\n"\
 "#define KEY_GENERIC <K>\n"\
@@ -172,7 +172,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
 "#endif\n"\
 \
-"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#if VALUES_REFERENCE\n"\
 "#define VALUE_GENERIC_CLASS V\n"\
 "#define VALUE_GENERIC_TYPE V\n"\
 "#define VALUE_GENERIC <V>\n"\
@@ -192,8 +192,8 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES\n"\
 "#endif\n"\
 \
-"#if #keyclass(Object) || #keyclass(Reference)\n"\
-"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#if KEYS_REFERENCE\n"\
+"#if VALUES_REFERENCE\n"\
 "#define KEY_VALUE_GENERIC <K,V>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K, ? extends V>\n"\
 "#else\n"\
@@ -201,7 +201,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K>\n"\
 "#endif\n"\
 "#else\n"\
-"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#if VALUES_REFERENCE\n"\
 "#define KEY_VALUE_GENERIC <V>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#else\n"\
@@ -210,7 +210,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#endif\n"\
 "#endif\n"\
 \
-"#if #keyclass(Object) || #keyclass(Reference) || #valueclass(Object) || #valueclass(Reference)\n"\
+"#if KEYS_REFERENCE || VALUES_REFERENCE\n"\
 "#define SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#else\n"\
@@ -237,7 +237,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define FUNCTION ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 "#define SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
-"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#if KEYS_REFERENCE\n"\
 "#define STD_SORTED_MAP SortedMap\n\n"\
 "#define STRATEGY Strategy\n\n"\
 "#else\n"\
@@ -287,7 +287,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_ABSTRACT_BIDI_ITERATOR Abstract${TYPE_CAP2[$k]}BidirectionalIterator\n\n"\
 "#define KEY_ABSTRACT_LIST_ITERATOR Abstract${TYPE_CAP2[$k]}ListIterator\n\n"\
 "#define KEY_ABSTRACT_BIG_LIST_ITERATOR Abstract${TYPE_CAP2[$k]}BigListIterator\n\n"\
-"#if #keyclass(Object)\n"\
+"#if KEY_CLASS_Object\n"\
 "#define KEY_ABSTRACT_COMPARATOR Comparator\n\n"\
 "#else\n"\
 "#define KEY_ABSTRACT_COMPARATOR Abstract${TYPE_CAP[$k]}Comparator\n\n"\
@@ -452,7 +452,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "/* Methods that have special names depending on keys (but the special names depend on values) */\n"\
 \
 \
-"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#if KEYS_REFERENCE\n"\
 "#define GET_VALUE get${TYPE_STD[$v]}\n"\
 "#define REMOVE_VALUE remove${TYPE_STD[$v]}\n"\
 "#else\n"\
@@ -468,15 +468,15 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#define KEY_EQUALS_NOT_NULL_CAST(x,y) KEY_EQUALS_NOT_NULL(x,y)\n"\
 "#define KEY2INTHASH_CAST(x) KEY2INTHASH(x)\n\n"\
-"#if #keyclass(Object)\n"\
+"#if KEY_CLASS_Object\n"\
 "#define KEY_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
 "#define KEY_IS_NULL(x) ( (x) == null )\n"\
-"#elif #keyclass(Float)\n"\
+"#elif KEY_CLASS_Float\n"\
 "#define KEY_EQUALS(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
 "#define KEY_IS_NULL(x) ( Float.floatToIntBits(x) == 0 )\n"\
-"#elif #keyclass(Double)\n"\
+"#elif KEY_CLASS_Double\n"\
 "#define KEY_EQUALS(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
 "#define KEY_IS_NULL(x) ( Double.doubleToLongBits(x) == 0 )\n"\
@@ -498,7 +498,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_EQUALS_NULL(x) KEY_IS_NULL(x)\n"\
 "#endif\n\n"\
 \
-"#if #valueclass(Object)\n"\
+"#if VALUE_CLASS_Object\n"\
 "#define VALUE_EQUALS(x,y) ( (x) == null ? (y) == null : (x).equals(y) )\n"\
 "#else\n"\
 "#define VALUE_EQUALS(x,y) ( (x) == (y) )\n"\
@@ -509,7 +509,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "/* Object/Reference-only definitions (keys) */\n"\
 \
 \
-"#if #keyclass(Object) || #keyclass(Reference)\n"\
+"#if KEYS_REFERENCE\n"\
 \
 "#define REMOVE remove\n"\
 \
@@ -523,7 +523,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#undef KEY2INTHASH_CAST\n"\
 "#define KEY2INTHASH_CAST(x) ( it.unimi.dsi.fastutil.HashCommon.mix( strategy.hashCode( " KEY_GENERIC_CAST " x) ) )\n"\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( strategy.hashCode(x)) ) ) )\n"\
-"#elif #keyclass(Object)\n"\
+"#elif KEY_CLASS_Object\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( (x).hashCode() )\n"\
 "#define KEY2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
 "#define KEY2INTHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (x).hashCode() ) )\n"\
@@ -554,19 +554,19 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_OBJ2TYPE(x) (KEY_CLASS2TYPE((KEY_CLASS)(x)))\n"\
 "#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
 \
-"#if #keyclass(Boolean)\n"\
+"#if KEY_CLASS_Boolean\n"\
 "#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
 "#define KEY_NULL (false)\n"\
 "#define KEY_CMP(x,y) ( KEY_CLASS.compare((x),(y)) )\n"\
 "#define KEY_LESS(x,y) ( !(x) && (y) )\n"\
 "#define KEY_LESSEQ(x,y) ( !(x) || (y) )\n"\
 "#else\n"\
-"#if #keyclass(Byte) || #keyclass(Short) || #keyclass(Character)\n"\
+"#if KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character\n"\
 "#define KEY_NULL ((KEY_TYPE)0)\n"\
 "#else\n"\
 "#define KEY_NULL (0)\n"\
 "#endif\n"\
-"#if #keyclass(Float) || #keyclass(Double)\n"\
+"#if KEY_CLASS_Float || KEY_CLASS_Double\n"\
 "#define KEY_CMP_EQ(x,y) ( KEY_CLASS.compare((x),(y)) == 0 )\n"\
 "#define KEY_CMP(x,y) ( KEY_CLASS.compare((x),(y)) )\n"\
 "#define KEY_LESS(x,y) ( KEY_CLASS.compare((x),(y)) < 0 )\n"\
@@ -578,9 +578,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_LESSEQ(x,y) ( (x) <= (y) )\n"\
 "#endif\n"\
 \
-"#if #keyclass(Float)\n"\
+"#if KEY_CLASS_Float\n"\
 "#define KEY2LEXINT(x) fixFloat(x)\n"\
-"#elif #keyclass(Double)\n"\
+"#elif KEY_CLASS_Double\n"\
 "#define KEY2LEXINT(x) fixDouble(x)\n"\
 "#else\n"\
 "#define KEY2LEXINT(x) (x)\n"\
@@ -594,22 +594,22 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY2LONGHASH(x) ( it.unimi.dsi.fastutil.HashCommon.mix( (long)( strategy.hashCode(x) ) ) )\n"\
 "#else\n"\
 \
-"#if #keyclass(Float)\n"\
+"#if KEY_CLASS_Float\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
 "#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (long)( it.unimi.dsi.fastutil.HashCommon.float2int(x) ) )\n"\
 "#define INT(x) (x)\n"\
-"#elif #keyclass(Double)\n"\
+"#elif KEY_CLASS_Double\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToRawLongBits(x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToRawLongBits(x) )\n"\
 "#define INT(x) (int)(x)\n"\
-"#elif #keyclass(Long)\n"\
+"#elif KEY_CLASS_Long\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( (x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (x) )\n"\
 "#define INT(x) (int)(x)\n"\
-"#elif #keyclass(Boolean)\n"\
+"#elif KEY_CLASS_Boolean\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ((x) ? 1231 : 1237)\n"\
 "#define KEY2INTHASH(x) ((x) ? 0xfab5368 : 0xcba05e7b)\n"\
 "#define KEY2LONGHASH(x) ((x) ? 0x74a19fc8b6428188L : 0xbaeca2031a4fd9ecL)\n"\
@@ -632,12 +632,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "/* Object/Reference-only definitions (values) */\n"\
 \
 \
-"#if #valueclass(Object) || #valueclass(Reference)\n"\
+"#if VALUES_REFERENCE\n"\
 "#define VALUE_OBJ2TYPE(x) (x)\n"\
 "#define VALUE_CLASS2TYPE(x) (x)\n"\
 "#define VALUE2OBJ(x) (x)\n"\
 \
-"#if #valueclass(Object)\n"\
+"#if VALUE_CLASS_Object\n"\
 "#define VALUE2JAVAHASH(x) ( (x) == null ? 0 : (x).hashCode() )\n"\
 "#else\n"\
 "#define VALUE2JAVAHASH(x) ( (x) == null ? 0 : System.identityHashCode(x) )\n"\
@@ -656,14 +656,14 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define VALUE_OBJ2TYPE(x) (VALUE_CLASS2TYPE((VALUE_CLASS)(x)))\n"\
 "#define VALUE2OBJ(x) (VALUE_CLASS.valueOf(x))\n"\
 \
-"#if #valueclass(Float) || #valueclass(Double) || #valueclass(Long)\n"\
+"#if VALUE_CLASS_Float || VALUE_CLASS_Double || VALUE_CLASS_Long\n"\
 "#define VALUE_NULL (0)\n"\
 "#define VALUE2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.${TYPE[$v]}2int(x)\n"\
-"#elif #valueclass(Boolean)\n"\
+"#elif VALUE_CLASS_Boolean\n"\
 "#define VALUE_NULL (false)\n"\
 "#define VALUE2JAVAHASH(x) (x ? 1231 : 1237)\n"\
 "#else\n"\
-"#if #valueclass(Integer)\n"\
+"#if VALUE_CLASS_Integer\n"\
 "#define VALUE_NULL (0)\n"\
 "#else\n"\
 "#define VALUE_NULL ((VALUE_TYPE)0)\n"\

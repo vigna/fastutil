@@ -1,6 +1,5 @@
 include build.properties
 
-GCC=gcc
 TAR=tar
 PKG_PATH = it/unimi/dsi/fastutil
 SOURCEDIR = src/$(PKG_PATH)
@@ -82,7 +81,7 @@ source:
 	rm fastutil-$(version)
 
 binary:
-	make -s clean sources format GCC=$(GCC)
+	make -s clean sources format
 	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
@@ -582,7 +581,7 @@ SOURCES = \
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	$(GCC) -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
+	$(CC) -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
 
 
 clean: 
@@ -593,12 +592,6 @@ clean:
 	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.{c,h,j} $(GEN_SRCDIR)/$(PKG_PATH)/*/*.{c,h,j}
 	@rm -fr $(DOCSDIR)/*
 
-
-testgcc:
-	ifeq ($(shell gcc --version 2>/dev/null | grep -o gcc),)
-	$(error $$(GCC) expands to "$(GCC)", but the output of "$(GCC) --version" does not contain the string "gcc"; please set GCC on the command line to point to a real gcc)
-	endif
-
-sources: testgcc $(JSOURCES)
+sources: $(JSOURCES)
 
 csources: $(CSOURCES)
