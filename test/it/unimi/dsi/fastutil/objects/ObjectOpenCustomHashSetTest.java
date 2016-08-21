@@ -2,7 +2,11 @@ package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.Random;
+
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 import org.junit.Test;
 
@@ -29,5 +33,15 @@ public class ObjectOpenCustomHashSetTest {
 		assertEquals( 10, s.iterator().next().intValue() );
 	}
 
+	@Test
+	public void testNullKey() {
+		Random random = new Random(0);
+		ObjectOpenCustomHashSet<byte[]> s = new ObjectOpenCustomHashSet<byte[]>(ByteArrays.HASH_STRATEGY);
+		for(int i = 0; i < 1000000; i++) {
+			byte[] a = new byte[random.nextInt(10)];
+			for(int j = a.length; j-- != 0; ) a[j] = (byte) random.nextInt(4);
+			s.add(a);
+		}
+	}
 
 }

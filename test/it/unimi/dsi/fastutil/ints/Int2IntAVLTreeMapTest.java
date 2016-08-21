@@ -46,4 +46,11 @@ public class Int2IntAVLTreeMapTest {
 		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, null)));
 		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
+
+	@Test
+	public void removeFromKeySetTest() {
+		Int2IntAVLTreeMap m = new Int2IntAVLTreeMap();
+		m.put(0, 0);
+		assertTrue(m.keySet().remove(0));
+	}
 }
