@@ -24,7 +24,7 @@ public class ObjectOpenCustomHashSetTest {
 			@Override
 			public boolean equals( Integer a, Integer b ) {
 				if ( ( ( a == null ) != ( b == null ) ) || a == null ) return false;
-				return ( a.intValue() - b.intValue() % 10 ) == 0;
+				return ( (a.intValue() - b.intValue()) % 10 ) == 0;
 			}
 		});
 		

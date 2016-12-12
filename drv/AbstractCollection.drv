@@ -25,6 +25,12 @@ import java.util.Iterator;
  *
  * <P>In particular, this class provide {@link #iterator()}, <code>add()</code>, {@link #remove(Object)} and
  * {@link #contains(Object)} methods that just call the type-specific counterpart. 
+ *
+ * <p><strong>Warning</strong>: Because of a name clash between the list and collection interfaces
+ * the type-specific deletion method of a type-specific abstract
+ * collection is <code>rem()</code>, rather then <code>remove()</code>. A
+ * subclass must thus override <code>rem()</code>, rather than
+ * <code>remove()</code>, to make all inherited methods work properly.
  */
 
 public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection<KEY_GENERIC_CLASS> implements COLLECTION KEY_GENERIC {
@@ -192,6 +198,14 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
         return false;
     }
 
+#else
+	/** Delegates to {@link #rem(Object)}. */
+	@Override
+	public boolean remove( final Object o ) {
+		return rem(o);
+	}
+#endif
+
 	public boolean rem( final KEY_TYPE k ) {
 		final KEY_ITERATOR iterator = iterator();
 		while ( iterator.hasNext() ) 
@@ -201,8 +215,6 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
 			}
         return false;
     }
-
-#endif
 
 	/** Checks whether this collection contains all elements from the given collection.
 	 *
