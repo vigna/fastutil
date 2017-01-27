@@ -1,0 +1,396 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package PACKAGE;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
+
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
+
+/**
+ * A type-specific immutable {@link java.util.Set}. It provides some additional
+ * methods compared to {@link java.util.Set} that use polymorphism to avoid
+ * (un)boxing.
+ * <p/>
+ * All operations that would modify the content of the set throw
+ * {@link UnsupportedOperationException}.
+ * <p/>
+ * The implementation here is open addressing and is very similar to Guava's
+ * ImmutableSet (see https://github.com/google/guava). Some of the helper
+ * methods are adapted from Guava implementation which is licensed under
+ * Apache 2.0.
+ */
+public abstract class IMMUTABLE_SET extends ABSTRACT_SET {
+
+    /** Returns the empty immutable set. */
+    public static IMMUTABLE_SET of() {
+        return RegularImmutableSet.EMPTY;
+    }
+
+    /** Returns an immutable set containing {@code element}. */
+    public static IMMUTABLE_SET of(KEY_TYPE element) {
+        return new SingletonImmutableSet(element);
+    }
+
+    /**
+     * Returns an immutable set containing the given elements.
+     */
+    public static IMMUTABLE_SET of(KEY_TYPE... elements) {
+    	// Make a copy of the provided elements array since construct
+        // method modifies the provided array and we don't own the
+        // provided elements array here.
+		KEY_TYPE[] copy = Arrays.copyOf(elements, elements.length);
+        return construct(elements.length, copy);
+    }
+
+    /**
+     * Returns an immutable set containing each of {@code elements}.
+     */
+    public static IMMUTABLE_SET copyOf(Collection<KEY_GENERIC_CLASS> elements) {
+        if (elements instanceof IMMUTABLE_SET) {
+            return (IMMUTABLE_SET) elements;
+        }
+        return construct(elements.size(), new ARRAY_LIST(elements).TO_KEY_ARRAY());
+    }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+    @Override
+    public abstract JDK_PRIMITIVE_SPLITERATOR spliterator();
+#endif
+
+    /** Returns a new Builder. */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Returns a new Builder which is initialized with the provided initial
+     * capacity.
+    */
+    public static Builder builder(int initialCapacity) {
+        return new Builder(initialCapacity);
+    }
+
+    public static class Builder extends IMMUTABLES.ArrayBasedBuilder {
+        public Builder(int initialCapacity) {
+            super(initialCapacity);
+        }
+
+        public Builder() {
+            this(DEFAULT_INITIAL_CAPACITY);
+        }
+
+        @Override
+        public Builder add(KEY_TYPE element) {
+            super.add(element);
+            return this;
+        }
+
+        @Override
+        public Builder add(KEY_TYPE... elements) {
+            super.add(elements);
+            return this;
+        }
+
+        @Override
+        public Builder addAll(LIST elements) {
+            super.addAll(elements);
+            return this;
+        }
+
+        @Override
+        public Builder addAll(COLLECTION elements) {
+            super.addAll(elements);
+            return this;
+        }
+
+        @Override
+        public Builder addAll(Iterable<KEY_GENERIC_CLASS> elements) {
+            super.addAll(elements);
+            return this;
+        }
+
+        public IMMUTABLE_SET build() {
+            IMMUTABLE_SET result = construct(size, elements);
+            // construct has the side effect of de-duping contents, so we
+            // update size accordingly.
+            size = result.size();
+            return result;
+        }
+    }
+
+    /**
+     * Constructs an immutable set from the first {@code n} elements of the
+     * specified array. Note that this method modifies the provided
+     * {@code elements} array.
+     */
+    private static IMMUTABLE_SET construct(int n, KEY_TYPE... elements) {
+        switch (n) {
+            case 0:
+                return of();
+            case 1:
+                return of(elements[0]);
+            default:
+                // continue below to handle the general case
+        }
+        int nonZeroCount = nonZeroCount(elements, n);
+        if (nonZeroCount == 0) {
+            // All elements are zero.
+            return new SingletonImmutableSet((KEY_TYPE) 0);
+        }
+
+        int tableSize = chooseTableSize(nonZeroCount);
+        KEY_TYPE[] table = new KEY_TYPE[tableSize];
+        int mask = tableSize - 1;
+        int hashCode = 0;
+        int uniques = 0;
+        boolean hasZero = false;
+        for (int i = 0; i < n; i++) {
+            KEY_TYPE element = elements[i];
+            if (element == 0) {
+                hasZero = true;
+                continue;
+            }
+            int j = KEY2INTHASH(element);
+            while (true) {
+                int index = j & mask;
+                KEY_TYPE value = table[index];
+                if (value == 0) {
+                    // Came to an empty slot. Put the element here.
+                    elements[uniques++] = element;
+                    table[index] = element;
+                    hashCode += KEY2JAVAHASH(element);
+                    break;
+                }
+                if (value == element) {
+                    break;
+                }
+                j++;
+            }
+        }
+        if (uniques == 1 && !hasZero) {
+            return new SingletonImmutableSet(elements[0]);
+        }
+        int size = uniques + (hasZero ? 1 : 0);
+        if (tableSize != chooseTableSize(uniques)) {
+            // Resize the table when the array includes too many duplicates.
+            if (hasZero) {
+                elements[uniques] = 0;
+            }
+            return construct(size, elements);
+        }
+        return new RegularImmutableSet(table, mask, hasZero, size, hashCode);
+    }
+
+    /**
+     * Returns the number of non-zero elements in [0, size) range in the
+     * provided array.
+     */
+    private static int nonZeroCount(KEY_TYPE[] elements, int size) {
+        int nonZeroCount = 0;
+        for (int i = 0; i < size; ++i) {
+            if (elements[i] != 0) {
+                ++nonZeroCount;
+            }
+        }
+        return nonZeroCount;
+    }
+
+    /**
+     * Returns an array size suitable for the backing array of a hash table
+     * that uses open addressing with linear probing in its implementation.
+     * The returned size is the smallest power of two that can hold
+     * {@code setSize} elements with the desired load factor.
+     */
+    private static int chooseTableSize(int setSize) {
+        int tableSize = HashCommon.arraySize(setSize, Hash.DEFAULT_LOAD_FACTOR);
+        assert tableSize > setSize;
+        return tableSize;
+    }
+
+    /** Implementation of this immutable set used for 0 or 2+ elements (not 1). */
+    private static class RegularImmutableSet extends IMMUTABLE_SET {
+        private static final RegularImmutableSet EMPTY = new RegularImmutableSet(null, 0, false, 0, 0);
+
+        /** The array of elements in hashed positions. */
+        private final KEY_TYPE[] table;
+        /** 'and' with an int to get a valid table index. */
+        private final int mask;
+        /** Whether this set contains zero. */
+        private final boolean hasZero;
+        private final int size;
+        private final int hashCode;
+
+        private RegularImmutableSet(KEY_TYPE[] table, int mask, boolean hasZero, int size, int hashCode) {
+            this.table = table;
+            this.mask = mask;
+            this.hasZero = hasZero;
+            this.size = size;
+            this.hashCode = hashCode;
+        }
+
+        @Override
+        public boolean contains(KEY_TYPE k) {
+            if (k == 0) {
+                return hasZero;
+            }
+            if (table == null) {
+                return false;
+            }
+            int i = KEY2INTHASH(k);
+            while (true) {
+                i &= mask;
+                KEY_TYPE candidate = table[i];
+                if (candidate == 0) {
+                    return false;
+                }
+                if (candidate == k) {
+                    return true;
+                }
+                i++;
+            }
+        }
+
+        @Override
+        public KEY_ITERATOR iterator() {
+            if (table == null) {
+                return ITERATORS.EMPTY_ITERATOR;
+            }
+            return new SetIterator();
+        }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+		@Override
+        public JDK_PRIMITIVE_SPLITERATOR spliterator() {
+            return Spliterators.spliterator(iterator(), size, Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.DISTINCT);
+        }
+#endif
+
+        @Override
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other == this) {
+                return true;
+            }
+            if (other instanceof IMMUTABLE_SET && hashCode != other.hashCode()) {
+                return false;
+            }
+            return super.equals(other);
+        }
+
+        /** An iterator over a hash set. */
+        private class SetIterator implements KEY_ITERATOR {
+            /**
+             * The index of the last entry returned; initially,
+             * {@link #size}.
+             */
+            int pos = table.length;
+
+            /**
+             * A downward counter measuring how many entries must still be
+              returned.
+             */
+            private int c = size;
+
+            /** Whether zero should be returned. */
+            private boolean mustReturnZero = hasZero;
+
+            @Override
+            public boolean hasNext() {
+                return c != 0;
+            }
+
+            @Override
+            public KEY_TYPE NEXT_KEY() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                c--;
+                if (mustReturnZero) {
+                    mustReturnZero = false;
+                    return 0;
+                }
+                while (true) {
+                    --pos;
+                    if (table[pos] != 0) {
+                        return table[pos];
+                    }
+                }
+            }
+        }
+    }
+
+    /** Implementation of this immutable set with exactly one element. */
+    private static class SingletonImmutableSet extends IMMUTABLE_SET {
+        private final KEY_TYPE element;
+
+        private SingletonImmutableSet(KEY_TYPE element) {
+            this.element = element;
+        }
+
+        @Override
+        public boolean contains(KEY_TYPE k) {
+            return element == k;
+        }
+
+        @Override
+        public int size() {
+            return 1;
+        }
+
+        @Override
+        public int hashCode() {
+            return KEY2JAVAHASH(element);
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other == this) {
+                return true;
+            }
+            if (other instanceof IMMUTABLE_SET && hashCode() != other.hashCode()) {
+                return false;
+            }
+            return super.equals(other);
+        }
+
+        @Override
+        public KEY_ITERATOR iterator() {
+            return ITERATORS.singleton(element);
+        }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+		@Override
+        public JDK_PRIMITIVE_SPLITERATOR spliterator() {
+            return IMMUTABLES.singletonSpliterator(element);
+        }
+#endif
+    }
+}
+

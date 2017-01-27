@@ -1,0 +1,160 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package PACKAGE;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Spliterator;
+
+final class IMMUTABLES {
+
+    private IMMUTABLES() { }
+
+    private abstract static class Builder {
+        Builder() { }
+
+        public abstract Builder add(KEY_TYPE element);
+
+        public Builder add(KEY_TYPE... elements) {
+            for (KEY_TYPE element : elements) {
+                add(element);
+            }
+            return this;
+        }
+
+        public Builder addAll(Iterable<KEY_GENERIC_CLASS> elements) {
+            for (KEY_TYPE element : elements) {
+                add(element);
+            }
+            return this;
+        }
+    }
+
+    abstract static class ArrayBasedBuilder extends Builder {
+        static final int DEFAULT_INITIAL_CAPACITY = 4;
+
+        static int expandedCapacity(int oldCapacity, int minCapacity) {
+            assert minCapacity > 0;
+            int newCapacity = oldCapacity + (oldCapacity >> 1) + 1;
+            if (newCapacity < minCapacity) {
+                newCapacity = Integer.highestOneBit(minCapacity - 1) << 1;
+            }
+            if (newCapacity < 0) {
+                newCapacity = Integer.MAX_VALUE;
+            }
+            return newCapacity;
+        }
+
+        protected KEY_TYPE[] elements;
+        protected int size;
+
+        ArrayBasedBuilder(int initialCapacity) {
+            elements = new KEY_TYPE[initialCapacity];
+            size = 0;
+        }
+
+        private void ensureCapacity(int minCapacity) {
+            if (elements.length < minCapacity) {
+                int newLength = expandedCapacity(elements.length, minCapacity);
+                elements = Arrays.copyOf(elements, newLength);
+            }
+        }
+
+        @Override
+        public ArrayBasedBuilder add(KEY_TYPE element) {
+            ensureCapacity(size + 1);
+            elements[size++] = element;
+            return this;
+        }
+
+        @Override
+        public ArrayBasedBuilder add(KEY_TYPE... elements) {
+            ensureCapacity(size + elements.length);
+            System.arraycopy(elements, 0, this.elements, size, elements.length);
+            size += elements.length;
+            return this;
+        }
+
+        public ArrayBasedBuilder addAll(LIST elements) {
+            int n = elements.size();
+            ensureCapacity(size + n);
+            for (int i = 0; i < n; ++i) {
+                this.elements[size++] = elements.GET_KEY(i);
+            }
+            return this;
+        }
+
+        public ArrayBasedBuilder addAll(COLLECTION elements) {
+             int n = elements.size();
+             ensureCapacity(size + n);
+             KEY_ITERATOR iterator = elements.iterator();
+             while (iterator.hasNext()) {
+                 this.elements[size++] = iterator.NEXT_KEY();
+             }
+             return this;
+         }
+
+        @Override
+        public ArrayBasedBuilder addAll(Iterable<KEY_GENERIC_CLASS> elements) {
+            if (elements instanceof Collection) {
+                Collection<?> collection = (Collection<?>) elements;
+                ensureCapacity(size + collection.size());
+            }
+            super.addAll(elements);
+            return this;
+        }
+    }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+
+		/**
+     * Creates a {@link Spliterator} with only the specified element.
+     */
+    static JDK_PRIMITIVE_SPLITERATOR singletonSpliterator(KEY_TYPE element) {
+        return new JDK_PRIMITIVE_SPLITERATOR() {
+            private long est = 1;
+
+            @Override
+            public JDK_PRIMITIVE_SPLITERATOR trySplit() {
+                return null;
+            }
+
+            @Override
+            public boolean tryAdvance(JDK_PRIMITIVE_KEY_CONSUMER consumer) {
+                Objects.requireNonNull(consumer);
+                if (est > 0) {
+                    est--;
+                    consumer.accept(element);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public long estimateSize() {
+                return est;
+            }
+
+            @Override
+            public int characteristics() {
+                return Spliterator.NONNULL | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE |
+                       Spliterator.DISTINCT | Spliterator.ORDERED;
+            }
+        };
+    }
+
+#endif
+}

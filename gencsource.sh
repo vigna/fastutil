@@ -46,6 +46,7 @@ else
     abstract=Abstract
 fi
 class=${class#Striped}
+class=${class#Immutable}
 
 # Now we rip off the types.
 rem=${class##[A-Z]+([a-z])}
@@ -138,6 +139,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
+		echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$k]}\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
@@ -322,6 +324,7 @@ fi)\
 \
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n"\
+"#define IMMUTABLE_SET Immutable${TYPE_CAP[$k]}Set\n"\
 "#define HASH ${TYPE_CAP[$k]}Hash\n"\
 "#define SORTED_SET ${TYPE_CAP[$k]}SortedSet\n"\
 "#define STD_SORTED_SET ${TYPE_STD[$k]}SortedSet\n"\
@@ -336,6 +339,7 @@ fi)\
 "#define STRATEGY PACKAGE.${TYPE_CAP[$k]}Hash.Strategy\n"\
 "#endif\n"\
 "#define LIST ${TYPE_CAP[$k]}List\n"\
+"#define IMMUTABLE_LIST Immutable${TYPE_CAP[$k]}List\n"\
 "#define BIG_LIST ${TYPE_CAP[$k]}BigList\n"\
 "#define STACK ${TYPE_STD[$k]}Stack\n"\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n"\
@@ -404,6 +408,7 @@ fi)\
 "#define SORTED_SETS ${TYPE_CAP[$k]}SortedSets\n"\
 "#define LISTS ${TYPE_CAP[$k]}Lists\n"\
 "#define BIG_LISTS ${TYPE_CAP[$k]}BigLists\n"\
+"#define IMMUTABLES ${TYPE_CAP[$k]}Immutables\n"\
 "#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
 "#define FUNCTIONS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Functions\n"\
 "#define SORTED_MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMaps\n"\

@@ -174,6 +174,16 @@ $(LISTS): drv/List.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(LISTS)
 
+IMMUTABLE_LIST := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Immutable$(k)List.c)
+$(IMMUTABLE_LIST): drv/ImmutableList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_LIST)
+
+IMMUTABLE_SET := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Immutable$(k)Set.c)
+$(IMMUTABLE_SET): drv/ImmutableSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_SET)
+
 STACKS := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Stack.c)
 $(STACKS): drv/Stack.drv; ./gencsource.sh $< $@ >$@
 
@@ -223,6 +233,7 @@ BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PAC
 $(BIG_LIST_ITERATORS): drv/BigListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS)
+
 
 #
 # Abstract implementations
@@ -436,6 +447,11 @@ CSOURCES += $(ARRAY_INDIRECT_PRIORITY_QUEUES)
 #
 # Static containers
 #
+
+IMMUTABLES := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Immutables.c)
+$(IMMUTABLES): drv/Immutables.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLES)
 
 ITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterators.c)
 $(ITERATORS_STATIC): drv/Iterators.drv; ./gencsource.sh $< $@ >$@

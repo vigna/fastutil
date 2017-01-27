@@ -1,0 +1,297 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package PACKAGE;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
+
+/**
+ * A type-specific immutable {@link java.util.List}. It provides some
+ * additional methods compared to {@link java.util.List} that use
+ * polymorphism to avoid (un)boxing.
+ * <p/>
+ * All operations that would modify the content of the list throw
+ * {@link UnsupportedOperationException}.
+ */
+public abstract class IMMUTABLE_LIST extends ABSTRACT_LIST {
+
+    public static IMMUTABLE_LIST of() {
+        return RegularImmutableList.EMPTY;
+    }
+
+    public static IMMUTABLE_LIST of(KEY_TYPE element) {
+        return new SingletonImmutableList(element);
+    }
+
+    public static IMMUTABLE_LIST of(KEY_TYPE... elements) {
+        return copyOf(ARRAY_LIST.wrap(elements));
+    }
+
+    public static IMMUTABLE_LIST copyOf(Collection<KEY_GENERIC_CLASS> collection) {
+        if (collection instanceof IMMUTABLE_LIST) {
+            return (IMMUTABLE_LIST) collection;
+        }
+        int size = collection.size();
+        switch (size) {
+            case 0:
+                return of();
+            case 1:
+                return new SingletonImmutableList(collection.iterator().next());
+            default:
+                return new RegularImmutableList(collection);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder builder(int initialCapacity) {
+        return new Builder(initialCapacity);
+    }
+
+    @Override
+    public IMMUTABLE_LIST subList(int from, int to) {
+        ensureIndex(from);
+        ensureIndex(to);
+        if (from > to) {
+            throw new IndexOutOfBoundsException(
+                "Start index (" + from + ") is greater than end index (" + to + ')');
+        }
+        return new ImmutableSubList(this, from, to);
+    }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+    @Override
+    public abstract JDK_PRIMITIVE_SPLITERATOR spliterator();
+#endif
+
+    /** Implementation of this immutable list used for 0 or 2+ elements (not 1). */
+    private static class RegularImmutableList extends IMMUTABLE_LIST {
+        private static final RegularImmutableList EMPTY = new RegularImmutableList(ARRAYS.EMPTY_ARRAY);
+
+        private final KEY_TYPE[] data;
+
+        private RegularImmutableList(KEY_TYPE[] data) {
+            this.data = data;
+        }
+
+        private RegularImmutableList(Collection<KEY_GENERIC_CLASS> collection) {
+            data = new KEY_TYPE[collection.size()];
+            Iterator<KEY_GENERIC_CLASS> iterator = collection.iterator();
+            int pos = 0;
+            while (iterator.hasNext()) {
+                data[pos++] = iterator.next();
+            }
+        }
+
+        @Override
+        public KEY_TYPE GET_KEY(int index) {
+            return data[index];
+        }
+
+        @Override
+        public int size() {
+            return data.length;
+        }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+        @Override
+        public JDK_PRIMITIVE_SPLITERATOR spliterator() {
+            return Spliterators.spliterator(data, Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.ORDERED);
+        }
+#endif
+    }
+
+    /** Implementation of this immutable list with exactly one element. */
+    private static class SingletonImmutableList extends IMMUTABLE_LIST {
+        private final KEY_TYPE element;
+
+        private SingletonImmutableList(KEY_TYPE element) {
+            this.element = element;
+        }
+
+        @Override
+        public KEY_TYPE GET_KEY(int index) {
+            if (index != 0) {
+                throw new IndexOutOfBoundsException();
+            }
+            return element;
+        }
+
+        @Override
+        public int size() {
+            return 1;
+        }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+		@Override
+        public JDK_PRIMITIVE_SPLITERATOR spliterator() {
+            return IMMUTABLES.singletonSpliterator(element);
+        }
+#endif
+    }
+
+    public static class Builder extends IMMUTABLES.ArrayBasedBuilder {
+
+        public Builder(int initialCapacity) {
+            super(initialCapacity);
+        }
+
+        public Builder() {
+            this(DEFAULT_INITIAL_CAPACITY);
+        }
+
+        @Override
+        public Builder add(KEY_TYPE element) {
+            super.add(element);
+            return this;
+        }
+
+        @Override
+        public Builder add(KEY_TYPE... elements) {
+            super.add(elements);
+            return this;
+        }
+
+        @Override
+        public Builder addAll(LIST elements) {
+            super.addAll(elements);
+            return this;
+        }
+
+        @Override
+        public Builder addAll(Iterable<KEY_GENERIC_CLASS> elements) {
+            super.addAll(elements);
+            return this;
+        }
+
+        public int size() {
+            return size;
+        }
+
+        public boolean isEmpty() {
+            return size == 0;
+        }
+
+        public IMMUTABLE_LIST build() {
+            switch (size) {
+                case 0:
+                    return of();
+                case 1:
+                    return new SingletonImmutableList(elements[0]);
+                default:
+                    KEY_TYPE[] copy = new KEY_TYPE[size];
+                    System.arraycopy(elements, 0, copy, 0, size);
+                    return new RegularImmutableList(copy);
+            }
+        }
+    }
+
+    private static class ImmutableSubList extends IMMUTABLE_LIST {
+        /** The list this sublist restricts. */
+        private final IMMUTABLE_LIST l;
+
+        /** Initial (inclusive) index of this sublist. */
+        private final int from;
+
+        /** Final (exclusive) index of this sublist. */
+        private int to;
+
+        private ImmutableSubList(IMMUTABLE_LIST l, int from, int to) {
+            this.l = l;
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        public KEY_TYPE GET_KEY(int index) {
+            ensureRestrictedIndex(index);
+            return l.GET_KEY(from + index);
+        }
+
+        @Override
+        public int size() {
+            return to - from;
+        }
+
+        @Override
+        public void getElements(int from, KEY_TYPE[] a, int offset, int length) {
+            ensureIndex(from);
+            if (from + length > size()) {
+                throw new IndexOutOfBoundsException(
+                    "End index (" + from + length + ") is greater than list size (" + size() + ")");
+            }
+            l.getElements(this.from + from, a, offset, length);
+        }
+
+        @Override
+        public KEY_LIST_ITERATOR KEY_GENERIC listIterator(int index) {
+            ensureIndex(index);
+            return new KEY_LIST_ITERATOR() {
+                private int pos = index;
+
+                @Override
+                public boolean hasNext() {
+                    return pos < size();
+                }
+
+                @Override
+                public boolean hasPrevious() {
+                    return pos > 0;
+                }
+
+                @Override
+                public KEY_GENERIC_TYPE NEXT_KEY() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
+                    return l.GET_KEY(from + (pos++));
+                }
+
+                @Override
+                public KEY_GENERIC_TYPE PREV_KEY() {
+                    if (!hasPrevious()) {
+                        throw new NoSuchElementException();
+                    }
+                    return l.GET_KEY(from + (--pos));
+                }
+
+                @Override
+                public int nextIndex() {
+                    return pos;
+                }
+
+                @Override
+                public int previousIndex() {
+                    return pos - 1;
+                }
+            };
+        }
+
+#ifdef JDK_PRIMITIVE_SPLITERATOR
+        @Override
+        public JDK_PRIMITIVE_SPLITERATOR spliterator() {
+            return Spliterators.spliterator(iterator(), size(), Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.ORDERED);
+        }
+#endif
+
+    }
+}
+
