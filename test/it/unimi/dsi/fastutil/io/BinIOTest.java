@@ -191,4 +191,18 @@ public class BinIOTest {
 		}
 
 	}
+
+	public void testInts(int[] a) throws IOException {
+		final File file = File.createTempFile( getClass().getSimpleName(), "dump" );
+		file.deleteOnExit();
+		for(int i = 0; i < a.length; i++) a[i] = i;
+		BinIO.storeInts(a, file);
+		assertArrayEquals(a, BinIO.loadInts(file));
+	}
+
+	@Test
+	public void testInts() throws IOException {
+		testInts(new int[1024]);
+		testInts(new int[1024 * 1024]);
+	}
 }

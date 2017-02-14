@@ -1,7 +1,7 @@
 package it.unimi.dsi.fastutil;
 
 /*		 
- * Copyright (C) 2003-2016 Paolo Boldi and Sebastiano Vigna
+ * Copyright (C) 2003-2017 Paolo Boldi and Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

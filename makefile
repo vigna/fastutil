@@ -589,6 +589,7 @@ clean:
 	@find . -name \*.java~ -exec rm {} \;  
 	@find . -name \*.html~ -exec rm {} \;  
 	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/{booleans,bytes,shorts,chars,ints,longs,floats,doubles,objects}/*.java
+	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
 	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.{c,h,j} $(GEN_SRCDIR)/$(PKG_PATH)/*/*.{c,h,j}
 	@rm -fr $(DOCSDIR)/*
 
