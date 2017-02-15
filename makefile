@@ -95,7 +95,7 @@ binary:
 	rm fastutil-$(version)
 
 format:
-	/Applications/Extras/eclipse/eclipse  -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
+	/usr/bin/eclipse  -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
 
 stage:
 	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
@@ -585,13 +585,13 @@ $(JSOURCES): %.java: %.c
 
 
 clean: 
-	@find build -name \*.class -exec rm {} \;  
-	@find . -name \*.java~ -exec rm {} \;  
-	@find . -name \*.html~ -exec rm {} \;  
-	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/{booleans,bytes,shorts,chars,ints,longs,floats,doubles,objects}/*.java
-	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
-	@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.{c,h,j} $(GEN_SRCDIR)/$(PKG_PATH)/*/*.{c,h,j}
-	@rm -fr $(DOCSDIR)/*
+	-@find build -name \*.class -exec rm {} \;
+	-@find . -name \*.java~ -exec rm {} \;
+	-@find . -name \*.html~ -exec rm {} \;
+	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/{booleans,bytes,shorts,chars,ints,longs,floats,doubles,objects}/*.java
+	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
+	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.{c,h,j} $(GEN_SRCDIR)/$(PKG_PATH)/*/*.{c,h,j}
+	-@rm -fr $(DOCSDIR)/*
 
 sources: $(JSOURCES)
 
