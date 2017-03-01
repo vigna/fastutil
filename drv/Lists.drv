@@ -20,6 +20,7 @@ package PACKAGE;
 import java.util.List;
 import java.util.Collection;
 import java.util.Random;
+import java.util.RandomAccess;
 
 /** A class providing static methods and objects that do useful things with type-specific lists.
  *
@@ -52,7 +53,7 @@ public class LISTS {
 	 * a type-specific list.
 	 */
 
-	public static class EmptyList KEY_GENERIC extends COLLECTIONS.EmptyCollection KEY_GENERIC implements LIST KEY_GENERIC, java.io.Serializable, Cloneable {
+	public static class EmptyList KEY_GENERIC extends COLLECTIONS.EmptyCollection KEY_GENERIC implements LIST KEY_GENERIC, RandomAccess, java.io.Serializable, Cloneable {
 		
 		private static final long serialVersionUID = -7046029254386353129L;
 
@@ -161,7 +162,7 @@ public class LISTS {
 	 * a type-specific list.
 	 */
 
-	public static class Singleton KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements java.io.Serializable, Cloneable {
+	public static class Singleton KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, java.io.Serializable, Cloneable {
 	
 		private static final long serialVersionUID = -7046029254386353129L;
 
@@ -290,7 +291,7 @@ public class LISTS {
 		@Deprecated
 		public KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD( final int i ) { return listIterator( i ); }
 
-		public LIST KEY_GENERIC subList( final int from, final int to ) { synchronized( sync ) { return synchronize( list.subList( from, to ), sync ); } }
+		public LIST KEY_GENERIC subList( final int from, final int to ) { synchronized( sync ) { return new SynchronizedList KEY_GENERIC( list.subList( from, to ), sync ); } }
 
 		@Deprecated
 		public LIST KEY_GENERIC SUBLIST_METHOD( final int from, final int to ) { return subList( from, to ); }
@@ -317,13 +318,32 @@ public class LISTS {
 	}
 
 
+	/** A synchronized wrapper class for random-access lists. */
+
+	public static class SynchronizedRandomAccessList KEY_GENERIC extends SynchronizedList KEY_GENERIC implements RandomAccess, java.io.Serializable {
+		private static final long serialVersionUID = 0L;
+
+		protected SynchronizedRandomAccessList( final LIST KEY_GENERIC l, final Object sync ) {
+			super( l, sync );
+		}
+
+		protected SynchronizedRandomAccessList( final LIST KEY_GENERIC l ) {
+			super( l );
+		}
+
+		public LIST KEY_GENERIC subList( final int from, final int to ) { synchronized( sync ) { return new SynchronizedRandomAccessList KEY_GENERIC( list.subList( from, to ), sync ); } }
+	}
+
+
 	/** Returns a synchronized type-specific list backed by the given type-specific list.
 	 *
 	 * @param l the list to be wrapped in a synchronized list.
 	 * @return a synchronized view of the specified list.
 	 * @see java.util.Collections#synchronizedList(List)
 	 */
-	public static KEY_GENERIC LIST KEY_GENERIC synchronize( final LIST KEY_GENERIC l ) { return new SynchronizedList KEY_GENERIC( l ); }
+	public static KEY_GENERIC LIST KEY_GENERIC synchronize( final LIST KEY_GENERIC l ) {
+		return l instanceof RandomAccess ? new SynchronizedRandomAccessList KEY_GENERIC( l ) : new SynchronizedList KEY_GENERIC( l );
+	}
 
 	/** Returns a synchronized type-specific list backed by the given type-specific list, using an assigned object to synchronize.
 	 *
@@ -333,7 +353,9 @@ public class LISTS {
 	 * @see java.util.Collections#synchronizedList(List)
 	 */
 
-	public static KEY_GENERIC LIST KEY_GENERIC synchronize( final LIST KEY_GENERIC l, final Object sync ) { return new SynchronizedList KEY_GENERIC( l, sync ); }
+	public static KEY_GENERIC LIST KEY_GENERIC synchronize( final LIST KEY_GENERIC l, final Object sync ) {
+		return l instanceof RandomAccess ? new SynchronizedRandomAccessList KEY_GENERIC( l, sync ) : new SynchronizedList KEY_GENERIC( l, sync );
+	}
 
 
 
@@ -376,7 +398,7 @@ public class LISTS {
 		@Deprecated
 		public KEY_LIST_ITERATOR KEY_GENERIC KEY_LIST_ITERATOR_METHOD( final int i ) { return listIterator( i ); }
 
-		public LIST KEY_GENERIC subList( final int from, final int to ) { return unmodifiable( list.subList( from, to ) ); }
+		public LIST KEY_GENERIC subList( final int from, final int to ) { return new UnmodifiableList KEY_GENERIC( list.subList( from, to ) ); }
 
 		@Deprecated
 		public LIST KEY_GENERIC SUBLIST_METHOD( final int from, final int to ) { return subList( from, to ); }
@@ -402,13 +424,30 @@ public class LISTS {
 	}
 
 
+	/** An unmodifiable wrapper class for random-access lists. */
+
+	public static class UnmodifiableRandomAccessList KEY_GENERIC extends UnmodifiableList KEY_GENERIC implements RandomAccess, java.io.Serializable {
+
+		private static final long serialVersionUID = 0L;
+
+		protected UnmodifiableRandomAccessList( final LIST KEY_GENERIC l ) {
+			super( l );
+		}
+
+
+		public LIST KEY_GENERIC subList( final int from, final int to ) { return new UnmodifiableRandomAccessList KEY_GENERIC( list.subList( from, to ) ); }
+	}
+
+
 	/** Returns an unmodifiable type-specific list backed by the given type-specific list.
 	 *
 	 * @param l the list to be wrapped in an unmodifiable list.
 	 * @return an unmodifiable view of the specified list.
 	 * @see java.util.Collections#unmodifiableList(List)
 	 */
-	public static KEY_GENERIC LIST KEY_GENERIC unmodifiable( final LIST KEY_GENERIC l ) { return new UnmodifiableList KEY_GENERIC( l ); }
+	public static KEY_GENERIC LIST KEY_GENERIC unmodifiable( final LIST KEY_GENERIC l ) {
+		return l instanceof RandomAccess ? new UnmodifiableRandomAccessList KEY_GENERIC( l ) : new UnmodifiableList KEY_GENERIC( l );
+	}
 
 
 
