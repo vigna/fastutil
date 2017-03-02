@@ -26,4 +26,10 @@ public class Int2IntMapsTest {
 		map.entrySet().toArray(values);
 		assertNull(values[0]);
 	}
+
+	@Test
+	public void testReadingDefaultReturnValueFromUnmodifiableMap() {
+		Int2IntMap map = Int2IntMaps.unmodifiable(Int2IntMaps.EMPTY_MAP);
+		assert(map.defaultReturnValue() == 0);
+	}
 }
