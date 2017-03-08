@@ -23,7 +23,7 @@ public class Int2IntMapsTest {
 	public void testToArrayShouldNullElementAfterLastEntry() {
 		Int2IntMap map = Int2IntMaps.EMPTY_MAP;
 		Object[] values = new Object[] { "test" };
-		map.entrySet().toArray(values);
+		map.int2IntEntrySet().toArray(values);
 		assertNull(values[0]);
 	}
 

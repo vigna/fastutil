@@ -84,24 +84,24 @@ public class Int2IntOpenHashMapTest {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void entrySetContainsTest() {
+	public void int2IntEntrySetContainsTest() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.put(0, 0);
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), null)));
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, null)));
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void entrySetRemoveTest() {
+	public void int2IntEntrySetRemoveTest() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.put(0, 0);
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, null)));
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
 
 
@@ -138,7 +138,7 @@ public class Int2IntOpenHashMapTest {
 			assertTrue( "Error: m and t differ on an entry (" + e + ") after insertion (iterating on t)", valEquals( e.getValue(), m.get( e.getKey() ) ) );
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for ( java.util.Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+		for ( java.util.Iterator i = m.int2IntEntrySet().iterator(); i.hasNext(); ) {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			assertTrue( "Error: m and t differ on an entry (" + e + ") after insertion (iterating on m)", valEquals( e.getValue(), t.get( e.getKey() ) ) );
 		}
@@ -205,7 +205,7 @@ public class Int2IntOpenHashMapTest {
 			assertTrue( "Error: m and t differ on an entry (" + e + ") after removal (iterating on t)", valEquals( e.getValue(), m.get( e.getKey() ) ) );
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for ( java.util.Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+		for ( java.util.Iterator i = m.int2IntEntrySet().iterator(); i.hasNext(); ) {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			assertTrue( "Error: m and t differ on an entry (" + e + ") after removal (iterating on m)", valEquals( e.getValue(), t.get( e.getKey() ) ) );
 		}
@@ -470,16 +470,16 @@ public class Int2IntOpenHashMapTest {
 	
 	
 	@Test
-	public void testEntrySet() {
+	public void testint2IntEntrySet() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap( Hash.DEFAULT_INITIAL_SIZE );
 		m.defaultReturnValue( -1 );
 		for( int i = 0; i < 100; i++ ) assertEquals( -1, m.put( i, i ) );
-		for( int i = 0; i < 100; i++ ) assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
-		for( int i = 0; i < 100; i++ ) assertFalse( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
-		for( int i = 0; i < 100; i++ ) assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
-		for( int i = 0; i < 100; i++ ) assertFalse( m.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
-		for( int i = 0; i < 100; i++ ) assertTrue( m.entrySet().remove( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
-		assertTrue( m.entrySet().isEmpty() );
+		for( int i = 0; i < 100; i++ ) assertTrue( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
+		for( int i = 0; i < 100; i++ ) assertFalse( m.int2IntEntrySet().remove( new AbstractInt2IntMap.BasicEntry( i, -1 ) ) );
+		for( int i = 0; i < 100; i++ ) assertTrue( m.int2IntEntrySet().remove( new AbstractInt2IntMap.BasicEntry( i, i ) ) );
+		assertTrue( m.int2IntEntrySet().isEmpty() );
 	}
 	
 	@Test

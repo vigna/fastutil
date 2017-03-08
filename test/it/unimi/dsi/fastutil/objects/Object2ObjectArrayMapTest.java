@@ -69,14 +69,14 @@ public class Object2ObjectArrayMapTest  {
 			assertEquals( new ObjectOpenHashSet<Integer>( i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 } ), new ObjectOpenHashSet<Integer>( m.keySet().iterator() ) );
 			assertEquals( new ObjectOpenHashSet<Integer>( i == 0 ? new Integer[] { 3, 2, 3 } : new Integer[] { 0, 3, 2, 3 } ), new ObjectOpenHashSet<Integer>( m.values().iterator() ) );
 
-			for( Entry<Integer, Integer> e: m.entrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
+			for( Entry<Integer, Integer> e: m.object2ObjectEntrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
 
-			assertTrue( i != 0 == m.entrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 0, 0 ) ) );
-			assertTrue( m.entrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 1, 3 ) ) );
-			assertTrue( m.entrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 2, 2 ) ) );
-			assertTrue( m.entrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 3, 3 ) ) );
-			assertFalse( m.entrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 1, 2 ) ) );
-			assertFalse( m.entrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 2, 1 ) ) );
+			assertTrue( i != 0 == m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 0, 0 ) ) );
+			assertTrue( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 1, 3 ) ) );
+			assertTrue( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 2, 2 ) ) );
+			assertTrue( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 3, 3 ) ) );
+			assertFalse( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 1, 2 ) ) );
+			assertFalse( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 2, 1 ) ) );
 
 			assertEquals( Integer.valueOf( 3 ), m.remove( 3 ) );
 			assertEquals( 2 + i, m.size() );
@@ -128,7 +128,7 @@ public class Object2ObjectArrayMapTest  {
 	@Test
 	public void testIteratorRemove() {
 		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>( new Integer[] { 1, 2, 3 },  new Integer[] { 1, 2, 3 } );
-		ObjectIterator<Entry<Integer, Integer>> keySet = m.entrySet().iterator();
+		ObjectIterator<Object2ObjectMap.Entry<Integer, Integer>> keySet = m.object2ObjectEntrySet().iterator();
 		keySet.next();
 		keySet.next();
 		keySet.remove();

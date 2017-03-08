@@ -17,6 +17,8 @@
 
 package PACKAGE;
 
+import it.unimi.dsi.fastutil.Function;
+
 /** A class providing static methods and objects that do useful things with type-specific functions.
  *
  * @see it.unimi.dsi.fastutil.Function
@@ -40,31 +42,41 @@ public class FUNCTIONS {
 	
 		protected EmptyFunction() {}
 	
+		@Override
 		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { return VALUE_NULL; }
 
+		@Override
 		public boolean containsKey( final KEY_TYPE k ) { return false; }
 
+		@Override
 		public VALUE_GENERIC_TYPE defaultReturnValue()  { return VALUE_NULL; }
+
+		@Override
 		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
 	
-#if KEYS_PRIMITIVE
-#if VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-#endif
 		@Override
-		public VALUE_GENERIC_CLASS get( final Object k ) { return null; }
-#endif
-
 		public int size() { return 0; }
+
+		@Override
 		public void clear() {}
 	
-		private Object readResolve() { return EMPTY_FUNCTION; }
-
+		@Override
 		public Object clone() { return EMPTY_FUNCTION; }
-	}
 
+		@Override
+		public int hashCode() { return 0; }
+
+		@Override
+		public boolean equals( final Object o ) {
+			if ( ! ( o instanceof Function ) ) return false;
+			return ((Function<?,?>)o).size() == 0;
+		}
+
+		@Override
+		public String toString() { return "{}"; }
+
+		private Object readResolve() { return EMPTY_FUNCTION; }
+	}
 
 
 	/** An empty type-specific function (immutable). It is serializable and cloneable. */
@@ -73,7 +85,10 @@ public class FUNCTIONS {
 	public static final EmptyFunction EMPTY_FUNCTION = new EmptyFunction();
 
 
-	/** An immutable class representing a type-specific singleton function.	 
+	/** An immutable class representing a type-specific singleton function.	Note
+	 *  that the default return value is still settable.
+	 *
+	 * <P>Note that albeit the function is immutable, its default return value may be changed.
 	 *
 	 * <P>This class may be useful to implement your own in case you subclass
 	 * a type-specific function.
@@ -91,16 +106,21 @@ public class FUNCTIONS {
 			this.value = value;
 		}
 	
+		@Override
 		public boolean containsKey( final KEY_TYPE k ) { return KEY_EQUALS( key, k ); }
 
-		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { if ( KEY_EQUALS( key, k ) ) return value; return defRetValue; }
+		@Override
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { return KEY_EQUALS( key, k ) ? value : defRetValue; }
 
+		@Override
 		public int size() { return 1; }
 	
+		@Override
 		public Object clone() { return this; }
 	}
 
-	/** Returns a type-specific immutable function containing only the specified pair. The returned function is serializable and cloneable.
+	/** Returns a type-specific immutable function containing only the specified pair. 
+	 * The returned function is serializable and cloneable.
 	 *
 	 * <P>Note that albeit the returned function is immutable, its default return value may be changed.
 	 *
@@ -152,16 +172,30 @@ public class FUNCTIONS {
 			this.sync = this;
 		}
 
+		@Override
 		public int size() { synchronized( sync ) { return function.size(); } }
-		public boolean containsKey( final KEY_TYPE k ) { synchronized( sync ) { return function.containsKey( k ); } }
 
+		@Override
 		public VALUE_GENERIC_TYPE defaultReturnValue()  { synchronized( sync ) { return function.defaultReturnValue(); } }
+		@Override
 		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { synchronized( sync ) { function.defaultReturnValue( defRetValue ); } }
 
+		@Override
+		public boolean containsKey( final KEY_TYPE k ) { synchronized( sync ) { return function.containsKey( k ); } }
+#if KEYS_PRIMITIVE
+		@Deprecated
+		@Override
+		public boolean containsKey( final Object k ) { synchronized( sync ) { return function.containsKey( k ); } }
+#endif
+		@Override
 		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { synchronized( sync ) { return function.put( k, v ); } }
+		@Override
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { synchronized( sync ) { return function.GET_VALUE( k ); } }
+		@Override
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) { synchronized( sync ) { return function.REMOVE_VALUE( k ); } }
 
+		@Override
 		public void clear() { synchronized( sync ) { function.clear(); } }
-		public String toString() { synchronized( sync ) { return function.toString(); } }
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 		/** {@inheritDoc}
@@ -169,39 +203,30 @@ public class FUNCTIONS {
 		@Deprecated
 		@Override
 		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) { synchronized( sync ) { return function.put( k, v ); } }
-#if VALUES_PRIMITIVE
+
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
 		@Deprecated
-#endif
 		@Override
 		public VALUE_GENERIC_CLASS get( final Object k ) { synchronized( sync ) { return function.get( k ); } }
-#if VALUES_PRIMITIVE
+
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
 		@Deprecated
-#endif
 		@Override
 		public VALUE_GENERIC_CLASS remove( final Object k ) { synchronized( sync ) { return function.remove( k ); } }
 #endif
 
-#if KEYS_PRIMITIVE
 		@Override
-		public VALUE_GENERIC_TYPE remove( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return function.remove( k ); } }
-
+		public int hashCode() { synchronized(sync) { return function.hashCode(); } }
 		@Override
-		public VALUE_GENERIC_TYPE get( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return function.get( k ); } }
-		public boolean containsKey( final Object ok ) { synchronized( sync ) { return function.containsKey( ok ); } }
-#endif
-
-#if KEYS_REFERENCE
+		public boolean equals(Object o) { if (o == this) return true; synchronized(sync) { return function.equals(o); } }
 		@Override
-		public VALUE_GENERIC_TYPE REMOVE_VALUE( final Object k ) { synchronized( sync ) { return function.REMOVE_VALUE( k ); } }
+		public String toString() { synchronized(sync) { return function.toString(); } }
 
-		@Override
-		public VALUE_GENERIC_TYPE GET_VALUE( final Object k ) { synchronized( sync ) { return function.GET_VALUE( k ); } }
-#endif
-
+		private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+			synchronized(sync) { s.defaultWriteObject(); } 
+		}
 	}
 
 	/** Returns a synchronized type-specific function backed by the given type-specific function.
@@ -237,42 +262,52 @@ public class FUNCTIONS {
 			this.function = f;
 		}
 
+		@Override
 		public int size() { return function.size(); }
-		public boolean containsKey( final KEY_TYPE k ) { return function.containsKey( k ); }
 
+		@Override
 		public VALUE_GENERIC_TYPE defaultReturnValue()  { return function.defaultReturnValue(); }
+		@Override
 		public void defaultReturnValue( final VALUE_GENERIC_TYPE defRetValue )  { throw new UnsupportedOperationException(); }
 
+		@Override
+		public boolean containsKey( final KEY_TYPE k ) { return function.containsKey( k ); }
+		@Override
 		public VALUE_GENERIC_TYPE put( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+		@Override
+		public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) { return function.GET_VALUE( k ); }
+		@Override
+		public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
 
+		@Override
 		public void clear() { throw new UnsupportedOperationException(); }
+
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v ) { throw new UnsupportedOperationException(); }
+
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS get( final Object k ) { return function.get( k ); }
+
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS remove( final Object k ) { throw new UnsupportedOperationException(); }
+#endif
+
+		@Override
+		public int hashCode() { return function.hashCode(); }
+		@Override
+		public boolean equals(Object o) { return o == this || function.equals(o); }
+		@Override
 		public String toString() { return function.toString(); }
-
-#if KEYS_PRIMITIVE
-#if VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-#endif
-		@Override
-		public VALUE_GENERIC_TYPE remove( final KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
-#if VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-#endif
-		@Override
-		public VALUE_GENERIC_TYPE get( final KEY_GENERIC_TYPE k ) { return function.get( k ); }
-		public boolean containsKey( final Object ok ) { return function.containsKey( ok ); }
-#endif
-
-#if KEYS_REFERENCE || VALUES_REFERENCE
-		@Override
-		public VALUE_GENERIC_TYPE REMOVE_VALUE( final Object k ) { throw new UnsupportedOperationException(); }
-		@Override
-		public VALUE_GENERIC_TYPE GET_VALUE( final Object k ) { return function.GET_VALUE( k ); }
-#endif
-
 	}
 
 	/** Returns an unmodifiable type-specific function backed by the given type-specific function.

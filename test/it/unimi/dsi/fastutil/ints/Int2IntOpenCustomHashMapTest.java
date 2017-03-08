@@ -36,7 +36,7 @@ public class Int2IntOpenCustomHashMapTest {
 
 		s.put( 10, 10 );
 		assertTrue( s.containsKey( 0 ) );
-		Entry<Integer, Integer> e = s.entrySet().iterator().next();
+		Entry<Integer, Integer> e = s.int2IntEntrySet().iterator().next();
 		assertEquals( 10, e.getKey().intValue() );
 		assertEquals( 10, e.getValue().intValue() );
 		s.remove( 0 );

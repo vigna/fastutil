@@ -21,48 +21,48 @@ public class Int2IntArrayMapTest  {
 	@Test
 	public void testRemove() {
 		Int2IntMap map = new Int2IntArrayMap();
-		assertFalse( map.entrySet().remove( new Object() ) );
+		assertFalse( map.int2IntEntrySet().remove( new Object() ) );
 		map.put( 1, 2 );
 		map.put( 2, 3 );
-		assertFalse( map.entrySet().remove( new AbstractInt2IntMap.BasicEntry( 1, 1 ) ) );
-		assertFalse( map.entrySet().remove( new AbstractInt2IntMap.BasicEntry( 3, 2 ) ) );
-		assertTrue( map.entrySet().remove( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
-		assertFalse( map.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
-		assertEquals( map.size(), map.entrySet().size() );
+		assertFalse( map.int2IntEntrySet().remove( new AbstractInt2IntMap.BasicEntry( 1, 1 ) ) );
+		assertFalse( map.int2IntEntrySet().remove( new AbstractInt2IntMap.BasicEntry( 3, 2 ) ) );
+		assertTrue( map.int2IntEntrySet().remove( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
+		assertFalse( map.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
+		assertEquals( map.size(), map.int2IntEntrySet().size() );
 		assertFalse( map.containsKey( 1 ) );
 	}
 
 	@Test(expected = IllegalStateException.class)
-	public void testArrayMapEmptyEntrySetThrowsExceptionOnIteratorRemove() {
-		ObjectIterator<Entry<Integer, Integer>> iterator = new Int2IntArrayMap( 4 ).entrySet().iterator();
+	public void testArrayMapEmptyint2IntEntrySetThrowsExceptionOnIteratorRemove() {
+		ObjectIterator<Int2IntMap.Entry> iterator = new Int2IntArrayMap( 4 ).int2IntEntrySet().iterator();
 		assertFalse( iterator.hasNext() );
 		iterator.remove();
 	}
 
 	@Test(expected = IllegalStateException.class)
-	public void testArrayMapEmptyEntrySetThrowsExceptionTwoIteratorRemoves() {
+	public void testArrayMapEmptyint2IntEntrySetThrowsExceptionTwoIteratorRemoves() {
 		Int2IntArrayMap m = new Int2IntArrayMap();
 		m.put( 0, 0 );
 		m.put( 1, 1 );
-		ObjectIterator<Entry<Integer, Integer>> iterator = m.entrySet().iterator();
+		ObjectIterator<Int2IntMap.Entry> iterator = m.int2IntEntrySet().iterator();
 		iterator.next();
 		iterator.remove();
 		iterator.remove();
 	}
 
 	@Test(expected = IllegalStateException.class)
-	public void testArrayMapEmptyEntrySetThrowsExceptionOnFastIteratorRemove() {
-		ObjectIterator<it.unimi.dsi.fastutil.ints.Int2IntMap.Entry> iterator = new Int2IntArrayMap().int2IntEntrySet().fastIterator();
+	public void testArrayMapEmptyint2IntEntrySetThrowsExceptionOnFastIteratorRemove() {
+		ObjectIterator<Int2IntMap.Entry> iterator = new Int2IntArrayMap().int2IntEntrySet().fastIterator();
 		assertFalse( iterator.hasNext() );
 		iterator.remove();
 	}
 
 	@Test(expected = IllegalStateException.class)
-	public void testArrayMapEmptyEntrySetThrowsExceptionTwoFastIteratorRemoves() {
+	public void testArrayMapEmptyint2IntEntrySetThrowsExceptionTwoFastIteratorRemoves() {
 		Int2IntArrayMap m = new Int2IntArrayMap();
 		m.put( 0, 0 );
 		m.put( 1, 1 );
-		ObjectIterator<it.unimi.dsi.fastutil.ints.Int2IntMap.Entry> iterator = m.int2IntEntrySet().fastIterator();
+		ObjectIterator<Int2IntMap.Entry> iterator = m.int2IntEntrySet().fastIterator();
 		iterator.next();
 		iterator.remove();
 		iterator.remove();
@@ -121,14 +121,14 @@ public class Int2IntArrayMapTest  {
 			assertEquals( new IntOpenHashSet( i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 } ), new IntOpenHashSet( m.keySet().iterator() ) );
 			assertEquals( new IntOpenHashSet( i == 0 ? new int[] { 3, 2, 3 } : new int[] { 0, 3, 2, 3 } ), new IntOpenHashSet( m.values().iterator() ) );
 
-			for( Entry<Integer, Integer> e: m.entrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
+			for( Entry<Integer, Integer> e: m.int2IntEntrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
 
-			assertTrue( i != 0 == m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
-			assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 3 ) ) );
-			assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 2 ) ) );
-			assertTrue( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 3, 3 ) ) );
-			assertFalse( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
-			assertFalse( m.entrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 1 ) ) );
+			assertTrue( i != 0 == m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 0, 0 ) ) );
+			assertTrue( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 3 ) ) );
+			assertTrue( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 2 ) ) );
+			assertTrue( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 3, 3 ) ) );
+			assertFalse( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 1, 2 ) ) );
+			assertFalse( m.int2IntEntrySet().contains( new AbstractInt2IntMap.BasicEntry( 2, 1 ) ) );
 
 			assertEquals( 3, m.remove( 3 ) );
 			assertEquals( 2 + i, m.size() );
@@ -177,7 +177,7 @@ public class Int2IntArrayMapTest  {
 	@Test
 	public void testIteratorRemove() {
 		Int2IntArrayMap m = new Int2IntArrayMap( new int[] { 1, 2, 3 },  new int[] { 1, 2, 3 } );
-		ObjectIterator<Entry<Integer, Integer>> keySet = m.entrySet().iterator();
+		ObjectIterator<Int2IntMap.Entry> keySet = m.int2IntEntrySet().iterator();
 		keySet.next();
 		keySet.next();
 		keySet.remove();
@@ -189,23 +189,23 @@ public class Int2IntArrayMapTest  {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void entrySetContainsTest() {
+	public void int2IntEntrySetContainsTest() {
 		Int2IntArrayMap m = new Int2IntArrayMap();
 		m.put(0, 0);
 		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), null)));
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(null, null)));
-		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
-	public void entrySetRemoveTest() {
+	public void int2IntEntrySetRemoveTest() {
 		Int2IntArrayMap m = new Int2IntArrayMap();
 		m.put(0, 0);
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(null, null)));
-		assertFalse(m.entrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, null)));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
 }

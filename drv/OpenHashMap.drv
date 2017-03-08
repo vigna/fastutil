@@ -567,24 +567,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 
-
-#if VALUES_PRIMITIVE || KEYS_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-	@Override
-	public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
-		final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE( ov );
-
-		final int pos = insert( KEY_CLASS2TYPE( ok ), v );
-		if ( pos < 0 ) return OBJECT_DEFAULT_RETURN_VALUE;
-		final VALUE_GENERIC_TYPE oldValue = value[ pos ];
-		value[ pos ] = v;
-		return VALUE2OBJ( oldValue );
-	}
-#endif
-
-
 #if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Char || VALUE_CLASS_Integer || VALUE_CLASS_Long || VALUE_CLASS_Float || VALUE_CLASS_Double
 
 	private VALUE_GENERIC_TYPE addToValue( final int pos, final VALUE_GENERIC_TYPE incr ) {
@@ -711,34 +693,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			if ( KEY_EQUALS_NOT_NULL_CAST( k, curr ) ) return removeEntry( pos );
 		}
 	}
-
-
-#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-	@Override
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	public VALUE_GENERIC_CLASS remove( final Object ok ) {
-		final KEY_GENERIC_TYPE k = KEY_GENERIC_CAST KEY_OBJ2TYPE( ok );
-		if ( KEY_EQUALS_NULL( k ) ) {
-			if ( containsNullKey ) return VALUE2OBJ( removeNullEntry() );
-			return OBJECT_DEFAULT_RETURN_VALUE;
-		}
-
-		KEY_GENERIC_TYPE curr;
-		final KEY_GENERIC_TYPE[] key = this.key;
-		int pos;
-
-		// The starting point.
-		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
-		if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return VALUE2OBJ( removeEntry( pos ) );
-		while( true ) {
-			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
-			if ( KEY_EQUALS_NOT_NULL( curr, k ) ) return VALUE2OBJ( removeEntry( pos ) );
-		}
-	}
-#endif
 
 
 #ifdef Linked
@@ -1027,30 +981,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #endif
 
-#if KEYS_PRIMITIVE
-	/** @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-	public VALUE_GENERIC_CLASS get( final KEY_CLASS ok ) {
-		if ( ok == null ) return null;
-		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE( ok );
-		if ( KEY_EQUALS_NULL( k ) ) return containsNullKey ? VALUE2OBJ( value[ n ] ) : OBJECT_DEFAULT_RETURN_VALUE;
-
-		KEY_GENERIC_TYPE curr;
-		final KEY_GENERIC_TYPE[] key = this.key;
-		int pos;
-
-		// The starting point.
-		if ( KEY_IS_NULL( curr = key[ pos = KEY2INTHASH( k ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
-		if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE2OBJ( value[ pos ] );
-
-		// There's always an unused entry.
-		while( true ) {
-			if ( KEY_IS_NULL( curr = key[ pos = ( pos + 1 ) & mask ] ) ) return OBJECT_DEFAULT_RETURN_VALUE;
-			if ( KEY_EQUALS_NOT_NULL( k, curr ) ) return VALUE2OBJ( value[ pos ] );
-		}
-	}
-#endif
-
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public VALUE_GENERIC_TYPE GET_VALUE( final KEY_TYPE k ) {
 		if ( KEY_EQUALS_NULL( KEY_GENERIC_CAST k ) ) return containsNullKey ? value[ n ] : defRetValue;
@@ -1162,35 +1092,22 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		
 		MapEntry() {}
 		
+		public KEY_GENERIC_TYPE ENTRY_GET_KEY() {
+	   		return key[ index ];
+		}
+
 #if KEYS_PRIMITIVE
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
 		@Deprecated
-#endif
 		public KEY_GENERIC_CLASS getKey() {
 			return KEY2OBJ( key[ index ] );
 		}
-		  
-#if KEYS_PRIMITIVE
-		public KEY_TYPE ENTRY_GET_KEY() {
-	   		return key[ index ];
-		}
 #endif
 
-#if VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-#endif
-		public VALUE_GENERIC_CLASS getValue() {
-			return VALUE2OBJ( value[ index ] );
-		}
-		  
-#if VALUES_PRIMITIVE
 		public VALUE_GENERIC_TYPE ENTRY_GET_VALUE() {
 			return value[ index ];
 		}
-#endif
 
 		public VALUE_GENERIC_TYPE setValue( final VALUE_GENERIC_TYPE v ) {
 			final VALUE_GENERIC_TYPE oldValue = value[ index ];
@@ -1199,11 +1116,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 		  
 #if VALUES_PRIMITIVE
-		  
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		public VALUE_GENERIC_CLASS getValue() {
+			return VALUE2OBJ( value[ index ] );
+		}
+
 		public VALUE_GENERIC_CLASS setValue( final VALUE_GENERIC_CLASS v ) {
 			return VALUE2OBJ( setValue( VALUE_CLASS2TYPE( v ) ) );
 		}
-
 #endif
 
 		@SuppressWarnings("unchecked")
@@ -1653,9 +1575,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			else {
 				// We're removing wrapped entries.
 #if KEYS_REFERENCE
-				OPEN_HASH_MAP.this.remove( wrapped.set( - pos - 1, null ) );
+				OPEN_HASH_MAP.this.REMOVE_VALUE( wrapped.set( - pos - 1, null ) );
 #else
-				OPEN_HASH_MAP.this.remove( wrapped.GET_KEY( - pos - 1 ) );
+				OPEN_HASH_MAP.this.REMOVE_VALUE( wrapped.GET_KEY( - pos - 1 ) );
 #endif
 				last = -1; // Note that we must not decrement size
 				return;
@@ -1917,7 +1839,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					 
 		public boolean rem( KEY_TYPE k ) {
 			final int oldSize = size;
-			OPEN_HASH_MAP.this.remove( k );
+			OPEN_HASH_MAP.this.REMOVE_VALUE( k );
 			return size != oldSize;
 		}
 					 

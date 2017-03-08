@@ -754,30 +754,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	}
 
 
-
-#if ! KEY_CLASS_Object || VALUES_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-	@Override
-	public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
-		final VALUE_GENERIC_TYPE oldValue = put( KEY_CLASS2TYPE(ok), VALUE_CLASS2TYPE(ov) );
-		return modified ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ( oldValue );
-	}
-#endif
-
-#if ! KEY_CLASS_Object || VALUES_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-	@Override
-	public VALUE_GENERIC_CLASS remove( final Object ok ) {
-		final VALUE_GENERIC_TYPE oldValue = REMOVE_VALUE( KEY_OBJ2TYPE( ok ) );
-		return modified ? VALUE2OBJ( oldValue ) : OBJECT_DEFAULT_RETURN_VALUE;
-	}
-#endif
-
-
 	public boolean containsValue( final VALUE_TYPE v ) {
 		final ValueIterator i = new ValueIterator();
 		VALUE_TYPE ev;
@@ -811,23 +787,21 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	 * considered equivalently a tree.
 	 */
 
-	private static final class Entry KEY_VALUE_GENERIC implements Cloneable, MAP.Entry KEY_VALUE_GENERIC {
+	private static final class Entry KEY_VALUE_GENERIC extends ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC implements Cloneable {
 		/** The the bit in this mask is true, the node is black. */
 		private final static int BLACK_MASK = 1;
 		/** If the bit in this mask is true, {@link #right} points to a successor. */
 		private final static int SUCC_MASK = 1 << 31;
 		/** If the bit in this mask is true, {@link #left} points to a predecessor. */
 		private final static int PRED_MASK = 1 << 30;
-		/** The key of this entry. */
-		KEY_GENERIC_TYPE key;
-		/** The value of this entry. */
-		VALUE_GENERIC_TYPE value;
 		/** The pointers to the left and right subtrees. */
 		Entry KEY_VALUE_GENERIC left, right;
 		/** This integers holds different information in different bits (see {@link #SUCC_MASK} and {@link #PRED_MASK}. */
 		int info;
 
-		Entry() {}
+		Entry() {
+			super(KEY_NULL, VALUE_NULL);
+		}
 
 		/** Creates a new entry with the given key and value.
 		 *
@@ -835,8 +809,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		 * @param v a value.
 		 */
 		Entry( final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v ) {
-			this.key = k;
-			this.value = v;
+			super(k, v);
 			info = SUCC_MASK | PRED_MASK;
 		}
 		  
@@ -958,50 +931,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			return prev;
 		}
 
-#if KEYS_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-#endif
-		public KEY_GENERIC_CLASS getKey() {
-			return KEY2OBJ(key);
-		}
-		  
-#if ! KEY_CLASS_Object
-		public KEY_GENERIC_TYPE ENTRY_GET_KEY() {
-			return key;
-		}
-#endif
-		  
-#if VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-#endif
-		public VALUE_GENERIC_CLASS getValue() {
-			return VALUE2OBJ(value);
-		}
-		  
-#if VALUES_PRIMITIVE
-		public VALUE_TYPE ENTRY_GET_VALUE() {
-			return value;
-		}
-#endif
-		  
-		public VALUE_GENERIC_TYPE setValue(final VALUE_GENERIC_TYPE value) {
-			final VALUE_GENERIC_TYPE oldValue = this.value;
-			this.value = value;
-			return oldValue;
-		}
-		  
-#if VALUES_PRIMITIVE
-		  
-		public VALUE_GENERIC_CLASS setValue(final VALUE_GENERIC_CLASS value) {
-			return VALUE2OBJ(setValue(VALUE_CLASS2TYPE(value)));
-		}
-		  
-#endif
-		  
 		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 		public Entry KEY_VALUE_GENERIC clone() {
 			Entry KEY_VALUE_GENERIC c;
@@ -1087,19 +1016,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		final Entry KEY_VALUE_GENERIC e = findKey( KEY_GENERIC_CAST k );
 		return e == null ? defRetValue : e.value;
 	}
-
-#if KEY_CLASS_Object && VALUES_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-	@Override
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	public VALUE_GENERIC_CLASS get( final Object ok ) {
-		final Entry KEY_VALUE_GENERIC e = findKey( KEY_GENERIC_CAST ok );
-		return e == null ? OBJECT_DEFAULT_RETURN_VALUE : e.getValue();
-	}
-
-#endif
 
 	public KEY_GENERIC_TYPE FIRST_KEY() {
 		if ( tree == null ) throw new NoSuchElementException();
@@ -1416,13 +1332,10 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		/** If true, the submap range goes to &infin;. */
 		boolean top;
 		/** Cached set of entries. */
-		@SuppressWarnings("hiding")
 		protected transient ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> entries;
 		/** Cached set of keys. */
-		@SuppressWarnings("hiding")
 		protected transient SORTED_SET KEY_GENERIC keys;
 		/** Cached collection of values. */
-		@SuppressWarnings("hiding")
 		protected transient VALUE_COLLECTION VALUE_GENERIC values;
 		  
 		/** Creates a new submap with given key range.
@@ -1577,38 +1490,12 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			return in( kk ) && ( e = findKey( kk ) ) != null ? e.value : this.defRetValue;
 		}
 		  
-		  
-#if KEY_CLASS_Object && VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-		@Override
-		SUPPRESS_WARNINGS_KEY_UNCHECKED
-		public VALUE_GENERIC_CLASS get( final Object ok ) {
-			final RB_TREE_MAP.Entry KEY_VALUE_GENERIC e;
-			final KEY_GENERIC_TYPE kk = KEY_GENERIC_CAST KEY_OBJ2TYPE( ok );
-			return in( kk ) && ( e = findKey( kk ) ) != null ? e.getValue() : OBJECT_DEFAULT_RETURN_VALUE;
-		}
-#endif
-		  
 		public VALUE_GENERIC_TYPE put(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
 			modified = false;
 			if ( ! in( k ) ) throw new IllegalArgumentException( "Key (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
 			final VALUE_GENERIC_TYPE oldValue = RB_TREE_MAP.this.put( k, v );
 			return modified ? this.defRetValue : oldValue;
 		}
-
-		  
-#if ! KEY_CLASS_Object || VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-		@Override
-		public VALUE_GENERIC_CLASS put( final KEY_GENERIC_CLASS ok, final VALUE_GENERIC_CLASS ov ) {
-			final VALUE_GENERIC_TYPE oldValue = put( KEY_CLASS2TYPE(ok), VALUE_CLASS2TYPE(ov) );
-			return modified ? OBJECT_DEFAULT_RETURN_VALUE : VALUE2OBJ( oldValue );
-		}
-#endif
 
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
@@ -1617,17 +1504,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			final VALUE_GENERIC_TYPE oldValue = RB_TREE_MAP.this.REMOVE_VALUE( k );
 			return modified ? oldValue : this.defRetValue;
 		}
-
-#if ! KEY_CLASS_Object || VALUES_PRIMITIVE
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-		@Override
-		public VALUE_GENERIC_CLASS remove( final Object ok ) {
-			final VALUE_GENERIC_TYPE oldValue = REMOVE_VALUE( KEY_OBJ2TYPE( ok ) );
-			return modified ? VALUE2OBJ( oldValue ) : OBJECT_DEFAULT_RETURN_VALUE;
-		}
-#endif
 
 		public int size() {
 			final SubmapIterator i = new SubmapIterator();
@@ -1717,28 +1593,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			return e.key;
 		}
 	 
-#if !KEY_CLASS_Object
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-		@Override
-		public KEY_GENERIC_CLASS firstKey() {
-			RB_TREE_MAP.Entry KEY_VALUE_GENERIC e = firstEntry();
-			if ( e == null ) throw new NoSuchElementException();
-			return e.getKey();
-		}
-	 
-		/** {@inheritDoc}
-		 * @deprecated Please use the corresponding type-specific method instead. */
-		@Deprecated
-		@Override
-		public KEY_GENERIC_CLASS lastKey() {
-			RB_TREE_MAP.Entry KEY_VALUE_GENERIC e = lastEntry();
-			if ( e == null ) throw new NoSuchElementException();
-			return e.getKey();
-		}
-#endif
-
 		/** An iterator for subranges.
 		 * 
 		 * <P>This class inherits from {@link TreeIterator}, but overrides the methods that
@@ -2028,7 +1882,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	}
 #else
 	private void checkNodePath() {}
-	@SuppressWarnings("unused")
 	private static KEY_VALUE_GENERIC int checkTree( Entry KEY_VALUE_GENERIC e, int d, int D ) { return 0; }
 #endif
 

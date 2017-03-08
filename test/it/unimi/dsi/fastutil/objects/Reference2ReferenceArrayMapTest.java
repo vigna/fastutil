@@ -40,16 +40,16 @@ public class Reference2ReferenceArrayMapTest {
 			assertEquals( new ReferenceOpenHashSet<Object>( new Object[] { one, two, three } ), new ReferenceOpenHashSet<Object>( m.keySet().iterator() ) );
 			assertEquals( new ReferenceOpenHashSet<Object>( new Object[] { three, two, three } ), new ReferenceOpenHashSet<Object>( m.values().iterator() ) );
 
-			for( Entry<Object, Object> e: m.entrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
+			for( Entry<Object, Object> e: m.reference2ReferenceEntrySet()) assertEquals( e.getValue(), m.get( e.getKey() ) );
 
-			assertTrue( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( one, three ) ) );
-			assertFalse( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( one, new Integer( 3 ) ) ) );
-			assertFalse( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( new Integer( 1 ), three ) ) );
-			assertTrue( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( two, two ) ) );
-			assertFalse( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( one, two ) ) );
-			assertFalse( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( two, one ) ) );
-			assertTrue( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( three, three ) ) );
-			assertFalse( m.entrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( new Integer( 3 ), two ) ) );
+			assertTrue( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( one, three ) ) );
+			assertFalse( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( one, new Integer( 3 ) ) ) );
+			assertFalse( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( new Integer( 1 ), three ) ) );
+			assertTrue( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( two, two ) ) );
+			assertFalse( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( one, two ) ) );
+			assertFalse( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( two, one ) ) );
+			assertTrue( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( three, three ) ) );
+			assertFalse( m.reference2ReferenceEntrySet().contains( new AbstractReference2ReferenceMap.BasicEntry<Object,Object>( new Integer( 3 ), two ) ) );
 
 			assertEquals( three, m.remove( three ) );
 			assertEquals( 2, m.size() );
