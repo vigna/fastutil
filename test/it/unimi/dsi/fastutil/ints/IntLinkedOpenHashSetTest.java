@@ -64,7 +64,7 @@ public class IntLinkedOpenHashSetTest {
 		return r.nextInt();
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	private static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		int c;
 		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE, f );
@@ -270,6 +270,7 @@ public class IntLinkedOpenHashSetTest {
 		test( 1000, Hash.VERY_FAST_LOAD_FACTOR );
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testAdd() {
 		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet( Hash.DEFAULT_INITIAL_SIZE );

@@ -38,40 +38,29 @@ public class COLLECTIONS {
 	 */
 
 	public abstract static class EmptyCollection KEY_GENERIC extends ABSTRACT_COLLECTION KEY_GENERIC {
-		
 		protected EmptyCollection() {}
 
-		public boolean add( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
-
-		public boolean contains( KEY_TYPE k ) { return false; }
+		@Override
+		public boolean contains(KEY_TYPE k) { return false; }
            
+		@Override
 		public Object[] toArray() { return ObjectArrays.EMPTY_ARRAY; }
 
-#if KEYS_PRIMITIVE
-		public KEY_TYPE[] TO_KEY_ARRAY( KEY_TYPE[] a ) { return a; }
-		public KEY_TYPE[] TO_KEY_ARRAY() { return ARRAYS.EMPTY_ARRAY; }
-
-		public boolean rem( KEY_TYPE k ) { throw new UnsupportedOperationException(); }
-		public boolean addAll( COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean removeAll( COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean retainAll( COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean containsAll( COLLECTION c ) { return c.isEmpty(); }
-#else
-		public boolean remove( final Object k ) { throw new UnsupportedOperationException(); }
-		public <T> T[] toArray( T[] a ) {
-			if (a.length != 0) a[0] = null;
-			return a;
-		}
-#endif
-
+		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return ITERATORS.EMPTY_ITERATOR; }
 
+		@Override
 		public int size() { return 0; }
+
+		@Override
 		public void clear() {}
 
+		@Override
 		public int hashCode() { return 0; }
-		public boolean equals( Object o ) { 
+
+		@Override
+		public boolean equals(Object o) { 
 			if ( o == this ) return true;
 			if ( ! ( o instanceof Collection ) ) return false;
 			return ((Collection<?>)o).isEmpty();
@@ -100,44 +89,102 @@ public class COLLECTIONS {
 			this.sync = this;
 		}
 
-		public int size() { synchronized( sync ) { return collection.size(); } }
-		public boolean isEmpty() { synchronized( sync ) { return collection.isEmpty(); } }
-		public boolean contains( final KEY_TYPE o ) { synchronized( sync ) { return collection.contains( o ); } }
+		@Override
+		public boolean add(final KEY_GENERIC_TYPE k) { synchronized( sync ) { return collection.add( k ); } }
 
+		@Override
+		public boolean contains(final KEY_TYPE k) { synchronized( sync ) { return collection.contains(k); } }
+
+		@Override
+		public boolean REMOVE(final KEY_TYPE k) { synchronized( sync ) { return collection.REMOVE(k); } }
+
+		@Override
+		public int size() { synchronized( sync ) { return collection.size(); } }
+
+		@Override
+		public boolean isEmpty() { synchronized( sync ) { return collection.isEmpty(); } }
+
+		@Override
 		public KEY_TYPE[] TO_KEY_ARRAY() { synchronized( sync ) { return collection.TO_KEY_ARRAY(); } }
 
 #if KEYS_PRIMITIVE
+		@Override
 		public Object[] toArray() { synchronized( sync ) { return collection.toArray(); } }
-		public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE[] a ) { synchronized( sync ) { return collection.TO_KEY_ARRAY( a ); } }
-		public KEY_TYPE[] toArray( final KEY_TYPE[] a ) { synchronized( sync ) { return collection.TO_KEY_ARRAY( a ); } }
 
+		@Override
+		@Deprecated
+		public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE[] a ) { return toArray(a); }
+
+		@Override
+		public KEY_TYPE[] toArray( final KEY_TYPE[] a ) { synchronized( sync ) { return collection.toArray( a ); } }
+
+		@Override
 		public boolean addAll( final COLLECTION c ) { synchronized( sync ) { return collection.addAll( c ); } }
+
+		@Override
 		public boolean containsAll( final COLLECTION c ) { synchronized( sync ) { return collection.containsAll( c ); } }
+
+		@Override
 		public boolean removeAll( final COLLECTION c ) { synchronized( sync ) { return collection.removeAll( c ); } }
+
+		@Override
 		public boolean retainAll( final COLLECTION c ) { synchronized( sync ) { return collection.retainAll( c ); } }
 
-		public boolean add( final KEY_GENERIC_CLASS k ) { synchronized( sync ) { return collection.add( k ); } }
+		@Override
+		@Deprecated
+		public boolean add(final KEY_GENERIC_CLASS k) { synchronized( sync ) { return collection.add( k ); } }
+
+		@Override
+		@Deprecated
 		public boolean contains( final Object k ) { synchronized( sync ) { return collection.contains( k ); } }
+
+		@Override
+		@Deprecated
+		public boolean remove(final Object k) { synchronized( sync ) { return collection.remove(k); } }
 #endif
 
+		@Override
 		public <T> T[] toArray( final T[] a ) { synchronized( sync ) { return collection.toArray( a ); } }
 
+		@Override
 		public KEY_ITERATOR KEY_GENERIC iterator() { return collection.iterator(); }
 
+		/** Returns a type-specific iterator on this elements of this collection.
+		 *
+		 * @see #iterator()
+		 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #iterator()}.
+		 */
+		@Override
 		@Deprecated
 		public KEY_ITERATOR KEY_GENERIC KEY_ITERATOR_METHOD() { return iterator(); }
 
-		public boolean add( final KEY_GENERIC_TYPE k ) { synchronized( sync ) { return collection.add( k ); } }
-		public boolean rem( final KEY_TYPE k ) { synchronized( sync ) { return collection.REMOVE( k ); } }
-		public boolean remove( final Object ok ) { synchronized( sync ) { return collection.remove( ok ); } }
-
+		@Override
 		public boolean addAll( final Collection<? extends KEY_GENERIC_CLASS> c ) { synchronized( sync ) { return collection.addAll( c ); } }
-		public boolean containsAll( final Collection<?> c ) { synchronized( sync ) { return collection.containsAll( c ); } }
-		public boolean removeAll( final Collection<?> c ) { synchronized( sync ) { return collection.removeAll( c ); } }
-		public boolean retainAll( final Collection<?> c ) { synchronized( sync ) { return collection.retainAll( c ); } }
 
+		@Override
+		public boolean containsAll( final Collection<?> c ) { synchronized( sync ) { return collection.containsAll( c ); } }
+
+		@Override
+		public boolean removeAll( final Collection<?> c ) { synchronized( sync ) { return collection.removeAll( c ); } }
+
+		@Override
+		public boolean retainAll(final Collection<?> c ) { synchronized( sync ) { return collection.retainAll( c ); } }
+
+		@Override
 		public void clear() { synchronized( sync ) { collection.clear(); } }
+
+		@Override
 		public String toString() { synchronized( sync ) { return collection.toString(); } }
+
+		@Override
+		public int hashCode() { synchronized( sync ) { return collection.hashCode(); } }
+
+		@Override
+		public boolean equals( final Object o ) { if (o == this) return true; synchronized( sync ) { return collection.equals(o); } }
+
+		private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+			synchronized(sync) { s.defaultWriteObject(); } 
+		}
 	}
 
 
@@ -173,44 +220,95 @@ public class COLLECTIONS {
 			this.collection = c;
 		}
 
+		@Override
+		public boolean add(final KEY_GENERIC_TYPE k) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean REMOVE(final KEY_TYPE k) { throw new UnsupportedOperationException(); }
+
+		@Override
 		public int size() { return collection.size(); }
+
+		@Override
 		public boolean isEmpty() { return collection.isEmpty(); }
-		public boolean contains( final KEY_TYPE o ) { return collection.contains( o ); }
 
-		public KEY_ITERATOR KEY_GENERIC iterator() { return ITERATORS.unmodifiable( collection.iterator() ); }
+		@Override
+		public boolean contains(final KEY_TYPE o) { return collection.contains(o); }
 
+		public KEY_ITERATOR KEY_GENERIC iterator() { return ITERATORS.unmodifiable(collection.iterator()); }
+
+		/** Returns a type-specific iterator on this elements of this collection.
+		 *
+		 * @see #iterator()
+		 * @deprecated As of <code>fastutil</code> 5, replaced by {@link #iterator()}.
+		 */
 		@Deprecated
 		public KEY_ITERATOR KEY_GENERIC KEY_ITERATOR_METHOD() { return iterator(); }
 
-		public boolean add( final KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
-		public boolean remove( final Object ok ) { throw new UnsupportedOperationException(); }
-
-		public boolean addAll( final Collection<? extends KEY_GENERIC_CLASS> c ) { throw new UnsupportedOperationException(); }
-		public boolean containsAll( final Collection<?> c ) { return collection.containsAll( c ); }
-		public boolean removeAll( final Collection<?> c ) { throw new UnsupportedOperationException(); }
-		public boolean retainAll( final Collection<?> c ) { throw new UnsupportedOperationException(); }
-
+		@Override
 		public void clear() { throw new UnsupportedOperationException(); }
-		public String toString() { return collection.toString(); }
 
+		@Override
 		public <T> T[] toArray( final T[] a ) { return collection.toArray( a ); }
 
+		@Override
 		public Object[] toArray() { return collection.toArray(); }
 
+		@Override
+        public boolean containsAll(Collection<?> c) { return collection.containsAll(c); }
+
+		@Override
+        public boolean addAll(Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean removeAll(Collection<?> c) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean retainAll(Collection<?> c) { throw new UnsupportedOperationException(); }
+
 #if KEYS_PRIMITIVE
-		public KEY_TYPE[] TO_KEY_ARRAY() { return collection.TO_KEY_ARRAY(); }
-		public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE[] a ) { return collection.TO_KEY_ARRAY( a ); }
-		public KEY_TYPE[] toArray( final KEY_TYPE[] a ) { return collection.toArray( a ); }
-		public boolean rem( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
+		@Override
+		@Deprecated
+		public boolean add(final KEY_GENERIC_CLASS k) { throw new UnsupportedOperationException(); }
 
-		public boolean addAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean containsAll( final COLLECTION c ) { return collection.containsAll( c ); }
-		public boolean removeAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean retainAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-
-		public boolean add( final KEY_GENERIC_CLASS k ) { throw new UnsupportedOperationException(); }
+		@Override
+		@Deprecated
 		public boolean contains( final Object k ) { return collection.contains( k ); }
+
+		@Override
+		@Deprecated
+		public boolean remove(final Object k) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public KEY_TYPE[] TO_KEY_ARRAY() { return collection.TO_KEY_ARRAY(); }
+
+		@Override
+		@Deprecated
+		public KEY_TYPE[] TO_KEY_ARRAY( final KEY_TYPE[] a ) { return toArray(a); }
+
+		@Override
+		public KEY_TYPE[] toArray( final KEY_TYPE[] a ) { return collection.toArray( a ); }
+
+		@Override
+        public boolean containsAll(COLLECTION c) { return collection.containsAll(c); }
+
+		@Override
+        public boolean addAll(COLLECTION c) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean removeAll(COLLECTION c) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean retainAll(COLLECTION c) { throw new UnsupportedOperationException(); }
 #endif
+		@Override
+		public String toString() { return collection.toString(); }
+
+		@Override
+		public int hashCode() { return collection.hashCode(); }
+
+		@Override
+		public boolean equals(final Object o) { if (o == this) return true; return collection.equals(o); }
 	}
 
 
@@ -235,6 +333,7 @@ public class COLLECTIONS {
 			this.iterable = iterable;
 		}
 
+		@Override
 		public int size() { 
 			int c = 0;
 			final KEY_ITERATOR KEY_GENERIC iterator = iterator();
@@ -246,11 +345,11 @@ public class COLLECTIONS {
 			return c;
 		}
 		
+		@Override
 		public boolean isEmpty() { return ! iterable.iterator().hasNext(); }
-		public KEY_ITERATOR KEY_GENERIC iterator() { return iterable.iterator(); }
 
-		@Deprecated
-		public KEY_ITERATOR KEY_GENERIC KEY_ITERATOR_METHOD() { return iterator(); }
+		@Override
+		public KEY_ITERATOR KEY_GENERIC iterator() { return iterable.iterator(); }
 	}
 
 

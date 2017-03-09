@@ -27,6 +27,7 @@ public class IntOpenHashSetTest {
 		assertTrue( s.toArray( new Integer[] { -1, -1, -1, -1 } )[ 3 ] == null );
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testContainsNull() {
 		IntOpenHashSet s = new IntOpenHashSet( new int[] { 1, 2, 3 } );
@@ -299,7 +300,7 @@ public class IntOpenHashSetTest {
 				) + "; actual: " + expected + "; stddev: " + Math.sqrt( totSquareProbes / m.n - expected * expected ) + "; max probes: " + maxProbes );
 	}
 
-	@SuppressWarnings({ "unchecked", "boxing" })
+	@SuppressWarnings({ "unchecked", "boxing", "deprecation" })
 	private static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		int c;
 		IntOpenHashSet m = new IntOpenHashSet( Hash.DEFAULT_INITIAL_SIZE, f );

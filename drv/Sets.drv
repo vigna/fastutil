@@ -17,7 +17,6 @@
 
 package PACKAGE;
 
-import java.util.Collection;
 import java.util.Set;
 
 /** A class providing static methods and objects that do useful things with type-specific sets.
@@ -40,10 +39,16 @@ public class SETS {
 
 		protected EmptySet() {}
 
-		public boolean remove( KEY_TYPE ok ) { throw new UnsupportedOperationException(); }
+		@Override
+		public boolean remove(KEY_TYPE ok) { throw new UnsupportedOperationException(); }
+
+		@Override
 		public Object clone() { return EMPTY_SET; }
+
+		@Override
 		@SuppressWarnings("rawtypes")
-		public boolean equals( final Object o ) { return o instanceof Set && ((Set)o).isEmpty(); }
+		public boolean equals(final Object o) { return o instanceof Set && ((Set)o).isEmpty(); }
+
         private Object readResolve() { return EMPTY_SET; }
 	}
 
@@ -81,31 +86,16 @@ public class SETS {
 			this.element = element;
 		}
 	
-		public boolean add( final KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+		@Override
+		public boolean contains(final KEY_TYPE k) { return KEY_EQUALS(k, element); }
 
-		public boolean contains( final KEY_TYPE k ) { return KEY_EQUALS( k, element ); }
+		@Override
+		public KEY_LIST_ITERATOR KEY_GENERIC iterator() { return ITERATORS.singleton(element); }
 	
-		public boolean addAll( final Collection<? extends KEY_GENERIC_CLASS> c ) { throw new UnsupportedOperationException(); }
-		public boolean removeAll( final Collection<?> c ) { throw new UnsupportedOperationException(); }
-		public boolean retainAll( final Collection<?> c ) { throw new UnsupportedOperationException(); }
-
-#if KEYS_PRIMITIVE
-		/* Slightly optimized w.r.t. the one in ABSTRACT_SET. */
-	
-		public KEY_TYPE[] TO_KEY_ARRAY() {
-			KEY_TYPE a[] = new KEY_TYPE[ 1 ];
-			a[ 0 ] = element;
-			return a;
-		}
-	
-		public boolean addAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean removeAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-		public boolean retainAll( final COLLECTION c ) { throw new UnsupportedOperationException(); }
-#endif
-		public KEY_LIST_ITERATOR KEY_GENERIC iterator() { return ITERATORS.singleton( element ); }
-	
+		@Override
 		public int size() { return 1; }
 	
+		@Override
 		public Object clone() { return this; }
 	}
 
@@ -151,9 +141,8 @@ public class SETS {
 			super( s );
 		}
 
-		public boolean remove( final KEY_TYPE k ) { synchronized( sync ) { return collection.remove( KEY2OBJ( k ) ); } }
-		public boolean equals( final Object o ) { synchronized( sync ) { return collection.equals( o ); } }
-		public int hashCode() { synchronized( sync ) { return collection.hashCode(); } }
+		@Override
+		public boolean remove(final KEY_TYPE k) { synchronized( sync ) { return collection.REMOVE(k); } }
 	}
 
 
@@ -187,8 +176,13 @@ public class SETS {
 			super( s );
 		}
 
-		public boolean remove( final KEY_TYPE k ) { throw new UnsupportedOperationException(); }
-		public boolean equals( final Object o ) { return collection.equals( o ); }
+		@Override
+		public boolean remove(final KEY_TYPE k) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean equals(final Object o) { if (o == this) return true; return collection.equals( o ); }
+
+		@Override
 		public int hashCode() { return collection.hashCode(); }
 	}
 

@@ -139,7 +139,7 @@ public class IntOpenHashBigSetTest {
 				) + "; actual: " + expected + "; stddev: " + Math.sqrt( totSquareProbes / m.n - expected * expected ) + "; max probes: " + maxProbes );
 	}
 
-	@SuppressWarnings({ "unchecked", "boxing" })
+	@SuppressWarnings({ "unchecked", "boxing", "deprecation" })
 	private static void test( int n, float f ) throws IOException, ClassNotFoundException {
 		int c;
 		IntOpenHashBigSet m = new IntOpenHashBigSet( Hash.DEFAULT_INITIAL_SIZE, f );

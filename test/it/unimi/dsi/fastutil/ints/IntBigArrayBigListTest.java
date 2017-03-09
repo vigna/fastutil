@@ -78,7 +78,7 @@ public class IntBigArrayBigListTest {
 
 	private static int nkt[];
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	protected static void testLists( IntBigList m, IntBigList t, int n, int level ) {
 		Exception mThrowsOutOfBounds, tThrowsOutOfBounds;
 		Object rt = null;
@@ -502,6 +502,7 @@ public class IntBigArrayBigListTest {
 		assertTrue( "Error (" + level + "): m is not empty after clear()" ,  m.isEmpty() );
 	}
 
+	@SuppressWarnings("deprecation")
 	protected static void test( int n ) {
 		IntBigArrayBigList m = new IntBigArrayBigList();
 		IntBigList t = IntBigLists.asBigList( new IntArrayList() );

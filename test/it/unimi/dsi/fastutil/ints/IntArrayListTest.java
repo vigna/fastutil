@@ -16,6 +16,7 @@ public class IntArrayListTest {
 		assertFalse(IntSets.EMPTY_SET.equals(IntLists.EMPTY_LIST));
 	}
 
+	@SuppressWarnings("deprecation")
 	@Test
 	public void testNullInContains() {
 		assertFalse(new IntArrayList().contains(null));
