@@ -7,15 +7,21 @@ General rules
 	* All methods overriding some other method must sport
 	  the @Override annotation.
 
+	* All implementation of deprecated methods must
+	  propagate the deprecation annotation and documentation.
+
+	* Annotation must be in the order @Deprecated, @Override,
+	  @SuppressWarnings.
 
 Type-specific methods
 ---------------------
 
 For each new type-specific method, the following must happen:
 
-	* The method documentation must contain only a
-	  `@see` pointing at the corresponding non-type-specific
-	  method.
+	* The method documentation must contain only a short
+	  title (more or less copied from the non-specific JDK
+	  documentation) and a `@see` pointing at the corresponding 
+	  non-type-specific method.
 
 	* The corresponding non-type-specific method must be
 	  redeclared as @Deprecated with the following documentation
@@ -72,3 +78,11 @@ Whenever these methods are implemented, the deprecation must be propagated.
 	@Deprecated
 	@Override
 ```
+
+Unnecessary methods
+-------------------
+
+Over the years, a number of duplicate methods have been implemented
+(e.g., standard versions of type-specific methods). For clarity
+and simplicity, no unnecessary method should be implemented. In doubt,
+follow the example of the JDK.
