@@ -672,6 +672,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		m.addTo( 1, 1 );
 		m.addTo( 2, 2 );
 		m.addTo( 3, 3 );
+		@SuppressWarnings("deprecation")
 		ObjectBidirectionalIterator<java.util.Map.Entry<Integer, Integer>> iterator = m.entrySet().iterator( m.entrySet().last() );
 		assertFalse( iterator.hasNext() );
 		iterator.next();
@@ -694,6 +695,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		m.addTo( 1, 1 );
 		m.addTo( 2, 2 );
 		m.addTo( 3, 3 );
+		@SuppressWarnings("deprecation")
 		ObjectBidirectionalIterator<java.util.Map.Entry<Integer, Integer>> iterator = m.entrySet().iterator();
 		assertFalse( iterator.hasPrevious() );
 		iterator.previous();

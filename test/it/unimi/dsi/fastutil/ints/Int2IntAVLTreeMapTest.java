@@ -25,7 +25,7 @@ public class Int2IntAVLTreeMapTest {
 		assertFalse( m.equals( new Object2ObjectOpenHashMap<Integer,Integer>( new Integer[] { 1, null }, new Integer[] { 1, 1 } ) ) );
 	}	
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
 	@Test
 	public void entrySetContainsTest() {
 		Int2IntAVLTreeMap m = new Int2IntAVLTreeMap();
@@ -36,7 +36,7 @@ public class Int2IntAVLTreeMapTest {
 		assertFalse(m.entrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "deprecation" })
 	@Test
 	public void entrySetRemoveTest() {
 		Int2IntAVLTreeMap m = new Int2IntAVLTreeMap();
