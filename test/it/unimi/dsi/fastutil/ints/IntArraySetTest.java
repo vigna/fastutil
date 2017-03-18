@@ -93,7 +93,7 @@ public class IntArraySetTest {
 
 		IntIterator iterator = set.iterator();
 		assertTrue(iterator.hasNext());
-		iterator.next();
+		iterator.nextInt();
 		iterator.remove();
 		assertFalse( iterator.hasNext() );
 		assertEquals( 0, set.size() );
@@ -102,8 +102,8 @@ public class IntArraySetTest {
 
 		iterator = set.iterator();
 		assertTrue(iterator.hasNext());
-		iterator.next();
-		iterator.next();
+		iterator.nextInt();
+		iterator.nextInt();
 		iterator.remove();
 		assertEquals( 44, iterator.nextInt () );
 		assertFalse( iterator.hasNext() );
