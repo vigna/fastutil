@@ -1,5 +1,5 @@
 /*		 
- * Copyright (C) 2002-2016 Sebastiano Vigna
+ * Copyright (C) 2002-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1010,6 +1010,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return c;
 		}
 
+		@Override
 		@SuppressWarnings("unchecked")
 		public boolean equals( final Object o ) {
 			if (!(o instanceof Map.Entry)) return false;
@@ -1018,11 +1019,13 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return KEY_EQUALS( key, KEY_CLASS2TYPE( e.getKey() ) ) && VALUE_EQUALS( value, VALUE_CLASS2TYPE( e.getValue() ) );
 		}
 		  
+		@Override
 		public int hashCode() {
 			return KEY2JAVAHASH_NOT_NULL(key) ^ VALUE2JAVAHASH(value);
 		}
 		  
 		  
+		@Override
 		public String toString() {
 			return key + "=>" + value;
 		}
@@ -1134,6 +1137,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		}
 
 		public boolean hasNext() { return next != null; }
+
 		public boolean hasPrevious() { return prev != null; }
 
 		void updateNext() {
@@ -1206,10 +1210,16 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			super( k );
 		}
 
+		@Override
 		public MAP.Entry KEY_VALUE_GENERIC next() { return nextEntry(); }
+
+		@Override
 		public MAP.Entry KEY_VALUE_GENERIC previous() { return previousEntry(); }
 
+		@Override
 		public void set( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+
+		@Override
 		public void add( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
 	}
 
@@ -1224,18 +1234,22 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 					}
 				};
 
+				@Override
 				public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() {
 					return comparator;
 				}
 
+				@Override
 				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
 					return new EntryIterator();
 				}
 
+				@Override
 				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
 					return new EntryIterator( from.ENTRY_GET_KEY() );
 				}
 
+				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
 				public boolean contains( final Object o ) {
 					if (!(o instanceof Map.Entry)) return false;
@@ -1250,6 +1264,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 					return e.equals( f );
 				}					 
 
+				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
 				public boolean remove( final Object o ) {
 					if (!(o instanceof Map.Entry)) return false;
@@ -1265,13 +1280,25 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 					return f != null;
 				}
 
+				@Override
 				public int size() { return count; }
+
+				@Override
 				public void clear() { AVL_TREE_MAP.this.clear(); }
 					 
+				@Override
 				public MAP.Entry KEY_VALUE_GENERIC first() { return firstEntry; }
+
+				@Override
 				public MAP.Entry KEY_VALUE_GENERIC last() { return lastEntry; }
+
+				@Override
 				public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> subSet( MAP.Entry KEY_VALUE_GENERIC from, MAP.Entry KEY_VALUE_GENERIC to  ) { return subMap( from.ENTRY_GET_KEY(), to.ENTRY_GET_KEY() ).ENTRYSET(); }
+
+				@Override
 				public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> headSet( MAP.Entry KEY_VALUE_GENERIC to  ) { return headMap( to.ENTRY_GET_KEY() ).ENTRYSET(); }
+
+				@Override
 				public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> tailSet( MAP.Entry KEY_VALUE_GENERIC from  ) { return tailMap( from.ENTRY_GET_KEY() ).ENTRYSET(); }
 			};
 
@@ -1287,23 +1314,44 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	private final class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
 		public KeyIterator() {}
 		public KeyIterator( final KEY_GENERIC_TYPE k ) { super( k ); }
+
+		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
+
+		@Override
 		public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
 
+		@Override
 		public void set( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+
+		@Override
 		public void add( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
 
-#if !KEY_CLASS_Object
+#if KEYS_PRIMITIVE
+		@Deprecated
+		@Override
 		public KEY_GENERIC_CLASS next() { return KEY2OBJ( nextEntry().key ); }
+
+		@Deprecated
+		@Override
 		public KEY_GENERIC_CLASS previous() { return KEY2OBJ( previousEntry().key ); }
+
+		@Deprecated
+		@Override
 		public void set( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
+
+		@Deprecated
+		@Override
 		public void add( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
 #endif						
 	};
 
 	/** A keyset implementation using a more direct implementation for iterators. */
 	private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
+		@Override
 		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new KeyIterator(); }
+
+		@Override
 		public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) { return new KeyIterator( from ); }
 	}
 
@@ -1315,6 +1363,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	 *
 	 * @return a type-specific sorted set view of the keys contained in this map.
 	 */
+	@Override
 	public SORTED_SET KEY_GENERIC keySet() {
 		if ( keys == null ) keys = new KeySet();
 		return keys;
@@ -1327,15 +1376,33 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	 * their type-specific counterparts) so that they return values instead of entries.
 	 */
 	private final class ValueIterator extends TreeIterator implements VALUE_LIST_ITERATOR VALUE_GENERIC {
+		@Override
 		public VALUE_GENERIC_TYPE NEXT_VALUE() { return nextEntry().value; }
+
+		@Override
 		public VALUE_GENERIC_TYPE PREV_VALUE() { return previousEntry().value; }
+
+		@Override
 		public void set( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+
+		@Override
 		public void add( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
 
 #if VALUES_PRIMITIVE
+		@Deprecated
+		@Override
 		public VALUE_GENERIC_CLASS next() { return VALUE2OBJ( nextEntry().value ); }
+
+		@Deprecated
+		@Override
 		public VALUE_GENERIC_CLASS previous() { return VALUE2OBJ( previousEntry().value ); }
+
+		@Deprecated
+		@Override
 		public void set( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+
+		@Deprecated
+		@Override
 		public void add( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
 #endif									
 	};
@@ -1440,6 +1507,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			this.defRetValue = AVL_TREE_MAP.this.defRetValue;
 		}
 
+		@Override
 		public void clear() {
 			final SubmapIterator i = new SubmapIterator();
 			while( i.hasNext() ) {
@@ -1457,18 +1525,23 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				( top || AVL_TREE_MAP.this.compare( k, to ) < 0 );
 		}
 
+		@Override
 		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
 			if ( entries == null ) entries = new AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC>() {
+					@Override
 					public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
 						return new SubmapEntryIterator();
 					}
 						  
+					@Override
 					public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator( final MAP.Entry KEY_VALUE_GENERIC from ) {
 						return new SubmapEntryIterator( from.ENTRY_GET_KEY() );
 					}
 
+					@Override
 					public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return AVL_TREE_MAP.this.ENTRYSET().comparator(); }
 
+					@Override
 					SUPPRESS_WARNINGS_KEY_UNCHECKED
 					public boolean contains( final Object o ) {
 						if (!(o instanceof Map.Entry)) return false;
@@ -1483,6 +1556,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 						return f != null && in( f.key ) && e.equals( f );
 					}					 
 
+					@Override
 					SUPPRESS_WARNINGS_KEY_UNCHECKED
 					public boolean remove( final Object o ) {
 						if (!(o instanceof Map.Entry)) return false;
@@ -1498,6 +1572,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 						return f != null;
 					}
 
+					@Override
 					public int size() {
 						int c = 0;
 						for( Iterator<?> i = iterator(); i.hasNext(); i.next() ) c++;
@@ -1505,18 +1580,29 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 					}
 					 
 
+					@Override
 					public boolean isEmpty() {
 						return ! new SubmapIterator().hasNext();
 					}
 
+					@Override
 					public void clear() {
 						Submap.this.clear();
 					}
 					 
+					@Override
 					public MAP.Entry KEY_VALUE_GENERIC first() { return firstEntry(); }
+
+					@Override
 					public MAP.Entry KEY_VALUE_GENERIC last() { return lastEntry(); }
+
+					@Override
 					public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> subSet( MAP.Entry KEY_VALUE_GENERIC from, MAP.Entry KEY_VALUE_GENERIC to  ) { return subMap( from.ENTRY_GET_KEY(), to.ENTRY_GET_KEY() ).ENTRYSET(); }
+
+					@Override
 					public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> headSet( MAP.Entry KEY_VALUE_GENERIC to  ) { return headMap( to.ENTRY_GET_KEY() ).ENTRYSET(); }
+
+					@Override
 					public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> tailSet( MAP.Entry KEY_VALUE_GENERIC from  ) { return tailMap( from.ENTRY_GET_KEY() ).ENTRYSET(); }
 				};
 
@@ -1528,25 +1614,30 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			public KEY_BIDI_ITERATOR KEY_GENERIC iterator( final KEY_GENERIC_TYPE from ) { return new SubmapKeyIterator( from ); }
 		}
 
+		@Override
 		public SORTED_SET KEY_GENERIC keySet() {
 			if ( keys == null ) keys = new KeySet();
 			return keys;
 		}
-		  
+  
+		@Override
 		public VALUE_COLLECTION VALUE_GENERIC values() {
 			if ( values == null ) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
 					public VALUE_ITERATOR VALUE_GENERIC iterator() {
 						return new SubmapValueIterator();
 					}
 
+					@Override
 					public boolean contains( final VALUE_TYPE k ) {
 						return containsValue( k );
 					} 
 
+					@Override
 					public int size() {
 						return Submap.this.size();
 					}
-						  
+
+					@Override						  
 					public void clear() {
 						Submap.this.clear();
 					}
@@ -1556,11 +1647,13 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return values;
 		}
 		  
+		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public boolean containsKey( final KEY_TYPE k ) {
 			return in( KEY_GENERIC_CAST k ) && AVL_TREE_MAP.this.containsKey( k );
 		}
 
+		@Override
 		public boolean containsValue( final VALUE_TYPE v ) {
 			final SubmapIterator i = new SubmapIterator();
 			VALUE_TYPE ev;
@@ -1574,6 +1667,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		}
 		  
 
+		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public VALUE_GENERIC_TYPE GET_VALUE(final KEY_TYPE k) {
 			final AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e;
@@ -1581,6 +1675,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return in( kk ) && ( e = findKey( kk ) ) != null ? e.value : this.defRetValue;
 		}
 
+		@Override
 		public VALUE_GENERIC_TYPE put(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
 			modified = false;
 			if ( ! in( k ) ) throw new IllegalArgumentException( "Key (" + k + ") out of range [" + ( bottom ? "-" : String.valueOf( from ) ) + ", " + ( top ? "-" : String.valueOf( to ) ) + ")" ); 
@@ -1588,6 +1683,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return modified ? this.defRetValue : oldValue;
 		}
 
+		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
 			modified = false;
@@ -1596,6 +1692,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return modified ? oldValue : this.defRetValue;
 		}
 
+		@Override
 		public int size() {
 			final SubmapIterator i = new SubmapIterator();
 			int n = 0;
@@ -1609,24 +1706,29 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		}
 
 
+		@Override
 		public boolean isEmpty() {
 			return ! new SubmapIterator().hasNext();
 		}
 		  
+		@Override
 		public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
 			return actualComparator;
 		}
 		  
+		@Override
 		public SORTED_MAP KEY_VALUE_GENERIC headMap( final KEY_GENERIC_TYPE to ) {
 			if ( top ) return new Submap( from, bottom, to, false );
 			return compare( to, this.to ) < 0 ? new Submap( from, bottom, to, false ) : this;
 		}
 		  
+		@Override
 		public SORTED_MAP KEY_VALUE_GENERIC tailMap( final KEY_GENERIC_TYPE from ) {
 			if ( bottom ) return new Submap( from, false, to, top );
 			return compare( from, this.from ) > 0 ? new Submap( from, false, to, top ) : this;
 		}
 		  
+		@Override
 		public SORTED_MAP KEY_VALUE_GENERIC subMap( KEY_GENERIC_TYPE from,  KEY_GENERIC_TYPE to ) {
 			if ( top && bottom ) return new Submap( from, false, to, false );
 			if ( ! top ) to = compare( to, this.to ) < 0 ? to : this.to;
@@ -1673,11 +1775,14 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			return e;
 		}
 
+		@Override
 		public KEY_GENERIC_TYPE FIRST_KEY() {
 			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e = firstEntry();
 			if ( e == null ) throw new NoSuchElementException();
 			return e.key;
 		}
+
+		@Override
 		public KEY_GENERIC_TYPE LAST_KEY() {
 			AVL_TREE_MAP.Entry KEY_VALUE_GENERIC e = lastEntry();
 			if ( e == null ) throw new NoSuchElementException();
@@ -1732,10 +1837,16 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				super( k );
 			}
 
+			@Override
 			public MAP.Entry KEY_VALUE_GENERIC next() { return nextEntry(); }
+
+			@Override
 			public MAP.Entry KEY_VALUE_GENERIC previous() { return previousEntry(); }
 
+			@Override
 			public void set( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
+
+			@Override
 			public void add( MAP.Entry KEY_VALUE_GENERIC ok ) { throw new UnsupportedOperationException(); }
 		}
 
@@ -1751,14 +1862,33 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		private final class SubmapKeyIterator extends SubmapIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
 			public SubmapKeyIterator() { super(); }
 			public SubmapKeyIterator( KEY_GENERIC_TYPE from ) { super( from ); }
+
+			@Override
 			public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
+
+			@Override
 			public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
+
+			@Override
 			public void set( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
+
+			@Override
 			public void add( KEY_GENERIC_TYPE k ) { throw new UnsupportedOperationException(); }
 #if !KEY_CLASS_Object
+			@Deprecated
+			@Override
 			public KEY_GENERIC_CLASS next() { return KEY2OBJ( nextEntry().key ); }
+
+			@Deprecated
+			@Override
 			public KEY_GENERIC_CLASS previous() { return KEY2OBJ( previousEntry().key ); }
+
+			@Deprecated
+			@Override
 			public void set( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
+
+			@Deprecated
+			@Override
 			public void add( KEY_CLASS ok ) { throw new UnsupportedOperationException(); }
 #endif									
 		};
@@ -1772,15 +1902,33 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		 * entries.  
 		 */
 		private final class SubmapValueIterator extends SubmapIterator implements VALUE_LIST_ITERATOR VALUE_GENERIC {
+			@Override
 			public VALUE_GENERIC_TYPE NEXT_VALUE() { return nextEntry().value; }
+
+			@Override
 			public VALUE_GENERIC_TYPE PREV_VALUE() { return previousEntry().value; }
+
+			@Override
 			public void set( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
+
+			@Override
 			public void add( VALUE_GENERIC_TYPE v ) { throw new UnsupportedOperationException(); }
 
 #if VALUES_PRIMITIVE
+			@Deprecated
+			@Override
 			public VALUE_GENERIC_CLASS next() { return VALUE2OBJ( nextEntry().value ); }
+
+			@Deprecated
+			@Override
 			public VALUE_GENERIC_CLASS previous() { return VALUE2OBJ( previousEntry().value ); }
+
+			@Deprecated
+			@Override
 			public void set( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
+
+			@Deprecated
+			@Override
 			public void add( VALUE_CLASS ok ) { throw new UnsupportedOperationException(); }
 #endif			
 		};
