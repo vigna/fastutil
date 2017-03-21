@@ -272,8 +272,19 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		if ( needed > n ) rehash( needed );
 	}
 
+	/** {@inheritDoc} */
+	@Override
+	public boolean addAll( Collection<? extends KEY_GENERIC_CLASS> c ) {
+		final long size = c instanceof Size64 ? ((Size64)c).size64() : c.size();
+		// The resulting collection will be at least c.size() big
+		if ( f <= .5 ) ensureCapacity( size ); // The resulting collection will be sized for c.size() elements
+		else ensureCapacity( size64() + size ); // The resulting collection will be sized for size() + c.size() elements
+		return super.addAll( c );
+	}
+
 #if KEYS_PRIMITIVE
 	/** {@inheritDoc} */
+	@Override
 	public boolean addAll( COLLECTION c ) {
 		final long size = c instanceof Size64 ? ((Size64)c).size64() : c.size();
 		if ( f <= .5 ) ensureCapacity( size ); // The resulting collection will be size for c.size() elements
@@ -283,15 +294,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #endif
 
 	/** {@inheritDoc} */
-	public boolean addAll( Collection<? extends KEY_GENERIC_CLASS> c ) {
-		final long size = c instanceof Size64 ? ((Size64)c).size64() : c.size();
-		// The resulting collection will be at least c.size() big
-		if ( f <= .5 ) ensureCapacity( size ); // The resulting collection will be sized for c.size() elements
-		else ensureCapacity( size64() + size ); // The resulting collection will be sized for size() + c.size() elements
-		return super.addAll( c );
-	}
-
-
+	@Override
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		int displ, base;
 
@@ -398,6 +401,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		return true;	
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public boolean remove(final KEY_TYPE k) {
 		if ( KEY_IS_NULL( k ) ) {
 			if ( containsNull ) return removeNullEntry();
@@ -418,6 +423,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		}
 	}
 	 
+	/** {@inheritDoc} */
+	@Override
 	public boolean contains( final KEY_TYPE k ) {
 		if ( KEY_IS_NULL( k ) ) return containsNull;
 
@@ -459,11 +466,14 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 	/* Removes all elements from this set.
 	 *
-	 * <P>To increase object reuse, this method does not change the table size.
-	 * If you want to reduce the table size, you must use {@link #trim(long)}.
-	 *
 	 */
 
+	/** {@inheritDoc} 
+	 *
+	 * <P>To increase object reuse, this method does not change the table size.
+	 * If you want to reduce the table size, you must use {@link #trim(long)}.
+	 */
+	@Override
 	public void clear() {
 		if ( size == 0 ) return;
 		size = 0;
@@ -579,6 +589,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		}
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public KEY_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
 	}
@@ -697,14 +709,19 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	}
 
 	@Deprecated
+	@Override
 	public int size() {
 		return (int)Math.min( Integer.MAX_VALUE, size );
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public long size64() {
 		return size;
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public boolean isEmpty() {
 		return size == 0;
 	}
@@ -743,7 +760,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	 * @return a hash code for this set.
 	 */
 
-
+	@Override
 	public int hashCode() {
 		final KEY_GENERIC_TYPE key[][] = this.key;
 		int h = 0, base = 0, displ = 0;

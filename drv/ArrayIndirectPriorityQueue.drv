@@ -196,12 +196,13 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		if ( index >= refArray.length ) throw new IndexOutOfBoundsException( "Index (" + index + ") is larger than or equal to reference array size (" + refArray.length + ")" );
 	}
 	
-	/** Enqueues a new element.
+	/** {@inheritDoc}
 	 *
 	 * <P>Note that for efficiency reasons this method will <em>not</em> throw an exception
 	 * when <code>x</code> is already in the queue. However, the queue state will become
 	 * inconsistent and the following behaviour will not be predictable.
 	 */
+	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void enqueue( int x ) {
 		ensureElement( x );
@@ -215,6 +216,8 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		array[ size++ ] = x;
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public int dequeue() {
 		ensureNonEmpty();
 		final int firstIndex = findFirst();
@@ -224,16 +227,22 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		return result;
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public int first() {
 		ensureNonEmpty();
 		return array[ findFirst() ];
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public int last() {
 		ensureNonEmpty();
 		return array[ findLast() ];
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public void changed() {
 		ensureNonEmpty();
 		firstIndexValid = false;
@@ -244,16 +253,19 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 	 * <P>Note that for efficiency reasons this method will <em>not</em> throw an exception
 	 * when <code>index</code> is not in the queue.
 	 */
-
+	@Override
 	public void changed( int index ) {
 		ensureElement( index );
 		if ( index == firstIndex ) firstIndexValid = false;
 	}
 
+	/** Signals the queue that all elements have changed. */
 	public void allChanged() {
 		firstIndexValid = false;
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public boolean remove( int index ) {
 		ensureElement( index );
 		final int[] a = array;
@@ -265,6 +277,11 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		return true;
 	}
 
+	/** Writes in the provided array the <em>front</em> of the queue, that is, the set of indices
+	 * whose elements have the same priority as the top. 
+	 * @param a an array whose initial part will be filled with the frnot (must be sized as least as the heap size).
+	 * @return the number of elements of the front.
+	 */
 	public int front( int[] a ) {
 		final KEY_GENERIC_TYPE top = refArray[ array[ findFirst() ] ];
 		int i = size, c = 0;
@@ -272,19 +289,24 @@ public class ARRAY_INDIRECT_PRIORITY_QUEUE KEY_GENERIC extends AbstractIndirectP
 		return c;
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public int size() { return size; }
 
+	/** {@inheritDoc} */
+	@Override
 	public void clear() { size = 0; firstIndexValid = false; }
 
-	/** Trims the backing array so that it has exactly {@link #size()} elements.
-	 */
-
+	/** Trims the backing array so that it has exactly {@link #size()} elements. */
 	public void trim() {
 		array = IntArrays.trim( array, size );
 	}
 
+	/** {@inheritDoc} */
+	@Override
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return c; }
 
+	@Override
 	public String toString() {
 		StringBuffer s = new StringBuffer();
 		s.append( "[" );
