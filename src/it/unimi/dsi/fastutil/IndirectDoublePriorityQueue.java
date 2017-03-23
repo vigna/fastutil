@@ -27,8 +27,11 @@ import java.util.Comparator;
  * the last element using  {@link #secondaryLast()}). The remaining methods
  * work like those of an {@linkplain it.unimi.dsi.fastutil.IndirectPriorityQueue indirect priority queue} based on the
  * primary comparator.
+ * 
+ * @deprecated this interface will be removed in release 8.
  */
 
+@Deprecated
 public interface IndirectDoublePriorityQueue<K> extends IndirectPriorityQueue<K> {
 
 	/** Returns the secondary comparator of this queue.

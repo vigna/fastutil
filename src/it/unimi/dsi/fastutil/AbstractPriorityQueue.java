@@ -26,10 +26,16 @@ import it.unimi.dsi.fastutil.PriorityQueue;
 
 public abstract class AbstractPriorityQueue<K> implements PriorityQueue<K> {
 
+	/** {@inheritDoc}
+	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
+	@Override
 	public void changed() { throw new UnsupportedOperationException(); }
 
+	/** {@inheritDoc}
+	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
+	@Override
 	public K last() { throw new UnsupportedOperationException(); }
 
+	@Override
 	public boolean isEmpty() { return size() == 0; }
-
 }

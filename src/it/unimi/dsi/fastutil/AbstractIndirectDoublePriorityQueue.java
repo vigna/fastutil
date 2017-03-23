@@ -20,8 +20,10 @@ package it.unimi.dsi.fastutil;
  *
  * <P>This class defines  {@link #secondaryLast()} as throwing an
  * {@link UnsupportedOperationException}.
+ * @deprecated this class will be removed in release 8.
  */
 
+@Deprecated
 public abstract class AbstractIndirectDoublePriorityQueue<K> extends AbstractIndirectPriorityQueue<K> implements IndirectDoublePriorityQueue<K> {
 
 	public int secondaryLast() { throw new UnsupportedOperationException(); }

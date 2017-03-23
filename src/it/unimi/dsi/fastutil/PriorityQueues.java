@@ -1,5 +1,7 @@
 package it.unimi.dsi.fastutil;
 
+import java.io.Serializable;
+
 /*		 
  * Copyright (C) 2003-2017 Sebastiano Vigna
  *
@@ -20,8 +22,6 @@ package it.unimi.dsi.fastutil;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
-import it.unimi.dsi.fastutil.PriorityQueue;
-
 /** A class providing static methods and objects that do useful things with priority queues.
  *
  * @see it.unimi.dsi.fastutil.PriorityQueue
@@ -38,32 +38,65 @@ public class PriorityQueues {
 	 */
 
 	@SuppressWarnings("rawtypes")
-	public static class EmptyPriorityQueue extends AbstractPriorityQueue {
+	public static class EmptyPriorityQueue extends AbstractPriorityQueue implements Serializable {
+		private static final long serialVersionUID = 0L;
 
 		protected EmptyPriorityQueue() {}
 
+		@Override
 		public void enqueue( Object o ) { throw new UnsupportedOperationException(); }
+
+		@Override
 		public Object dequeue() { throw new NoSuchElementException(); }
+
+		@Override
 		public boolean isEmpty() { return true; }
+
+		@Override
 		public int size() { return 0; }
+
+		@Override
 		public void clear() {}
+
+		@Override
 		public Object first() { throw new NoSuchElementException(); }
+
+		@Override
 		public Object last() { throw new NoSuchElementException(); }
+
+		@Override
 		public void changed() { throw new NoSuchElementException(); }
+
+		@Override
 		public Comparator<?> comparator() { return null; }
-		
+
+		@Override
+        public Object clone() { return EMPTY_QUEUE; }
+
+        @Override
+        public boolean equals(final Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
+
+        private Object readResolve() { return EMPTY_QUEUE; }
 	}
 
-	/** An empty indirect priority queue (immutable).
-	 */
+	/** An empty indirect priority queue (immutable). */
 
 	public final static EmptyPriorityQueue EMPTY_QUEUE = new EmptyPriorityQueue();
 
+	/** Returns an empty queue (immutable). It is serializable and cloneable.
+	 *
+	 * <P>This method provides a typesafe access to {@link #EMPTY_QUEUE}.
+	 * @param <K> the class of the objects in the queue.
+	 * @return an empty queue (immutable).
+	 */
+	@SuppressWarnings("unchecked")
+	public static <K> PriorityQueue<K> emptyQueue() {
+		return EMPTY_QUEUE;
+	}
 
 	/** A synchronized wrapper class for priority queues. */
 
-	public static class SynchronizedPriorityQueue<K> implements PriorityQueue<K> {
-		
+	public static class SynchronizedPriorityQueue<K> implements PriorityQueue<K>, Serializable {
 		public static final long serialVersionUID = -7046029254386353129L;
 
 		final protected PriorityQueue <K> q;
@@ -79,20 +112,51 @@ public class PriorityQueues {
 			this.sync = this;
 		}
 
+		@Override
 		public void enqueue( K x ) { synchronized( sync ) { q.enqueue( x ); } }
+
+		@Override
 		public K dequeue() { synchronized( sync ) { return q.dequeue(); } }
+
+		@Override
 		public K first() { synchronized( sync ) { return q.first(); } }
+
+		@Override
 		public K last() { synchronized( sync ) { return q.last(); } }
+
+		@Override
 		public boolean isEmpty() { synchronized( sync ) { return q.isEmpty(); } }
+
+		@Override
 		public int size() { synchronized( sync ) { return q.size(); } }
+
+		@Override
 		public void clear() { synchronized( sync ) { q.clear(); } }
+
+		@Override
 		public void changed() { synchronized( sync ) { q.changed(); } }
+
+		@Override
 		public Comparator <? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
+
+		@Override
+		public String toString() { synchronized( sync ) { return q.toString(); } }
+
+		@Override
+		public int hashCode() { synchronized( sync ) { return q.hashCode(); } }
+
+		@Override
+		public boolean equals( final Object o ) { if (o == this) return true; synchronized( sync ) { return q.equals(o); } }
+
+		private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+			synchronized(sync) { s.defaultWriteObject(); } 
+		}
 	}
 
 
 	/** Returns a synchronized priority queue backed by the specified priority queue.
 	 *
+	 * @param <K> the class of the objects in the queue.
 	 * @param q the priority queue to be wrapped in a synchronized priority queue.
 	 * @return a synchronized view of the specified priority queue.
 	 */
@@ -100,6 +164,7 @@ public class PriorityQueues {
 
 	/** Returns a synchronized priority queue backed by the specified priority queue, using an assigned object to synchronize.
 	 *
+	 * @param <K> the class of the objects in the queue.
 	 * @param q the priority queue to be wrapped in a synchronized priority queue.
 	 * @param sync an object that will be used to synchronize the access to the priority queue.
 	 * @return a synchronized view of the specified priority queue.

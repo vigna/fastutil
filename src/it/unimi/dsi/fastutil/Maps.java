@@ -20,8 +20,9 @@ package it.unimi.dsi.fastutil;
 /** A class providing static methods and objects that do useful things with maps.
  *
  * @see java.util.Collections
+ * @deprecated this class will be removed in version 8.
  */
-
+@Deprecated
 public class Maps {
 
 	private Maps() {}

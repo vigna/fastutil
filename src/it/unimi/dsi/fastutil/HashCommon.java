@@ -25,7 +25,9 @@ public class HashCommon {
 
 	/** This reference is used to fill keys and values of removed entries (if
 		they are objects). <code>null</code> cannot be used as it would confuse the
-		search algorithm in the presence of an actual <code>null</code> key. */ 
+		search algorithm in the presence of an actual <code>null</code> key.
+		@deprecated this attribute will be removed in version 8. */
+	@Deprecated
 	public static final Object REMOVED = new Object();
 
     /** 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
@@ -155,7 +157,7 @@ public class HashCommon {
 		return (int)( l ^ ( l >>> 32 ) );
 	}
 	
-	/** Return the least power of two greater than or equal to the specified value.
+	/** Returns the least power of two greater than or equal to the specified value.
 	 * 
 	 * <p>Note that this function will return 1 when the argument is 0.
 	 * 
@@ -172,7 +174,7 @@ public class HashCommon {
 		return ( x | x >> 16 ) + 1;
 	}
 
-	/** Return the least power of two greater than or equal to the specified value.
+	/** Returns the least power of two greater than or equal to the specified value.
 	 * 
 	 * <p>Note that this function will return 1 when the argument is 0.
 	 * 

@@ -17,7 +17,7 @@ package it.unimi.dsi.fastutil;
  */
 
 
-/** An object that can swap elements whose positions is specified by longs. 
+/** An object that can swap elements whose positions are specified by longs. 
  * 
  * @see BigArrays#quickSort(long, long, it.unimi.dsi.fastutil.longs.LongComparator, BigSwapper) 
  */

@@ -108,18 +108,23 @@ public interface Hash {
 	}
 
 	/** The default growth factor of a hash table. */
+	@Deprecated
 	final public int DEFAULT_GROWTH_FACTOR = 16;
 	/** The state of a free hash table entry. */
+	@Deprecated
 	final public byte FREE = 0;
 	/** The state of a occupied hash table entry. */
+	@Deprecated
 	final public byte OCCUPIED = -1;
 	/** The state of a hash table entry freed by a deletion. */
+	@Deprecated
 	final public byte REMOVED = 1;
 	 
 	/** A list of primes to be used as table sizes. The <var>i</var>-th element is 
 	 *  the largest prime <var>p</var> smaller than 2<sup>(<var>i</var>+28)/16</sup> 
 	 * and such that <var>p</var>-2 is also prime (or 1, for the first few entries). */
 
+	@Deprecated
 	final public int PRIMES[] = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7,
 								  7, 7, 7, 7, 7, 7, 7, 7, 13, 13, 13, 13, 13, 13, 13, 13, 19, 19, 19, 19, 19,
 								  19, 19, 19, 19, 19, 19, 19, 31, 31, 31, 31, 31, 31, 31, 43, 43, 43, 43, 43,

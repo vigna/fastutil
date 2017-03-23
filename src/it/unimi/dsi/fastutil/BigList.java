@@ -23,8 +23,8 @@ import java.util.List;
 /** A list with big (i.e., 64-bit) indices.
  *
  * <P>Instances of this class implement the same semantics as that of {@link List}: however,
- * setters methods use long indices, getters return long values, and returned iterators are actually
- * of type {@link BigListIterator}.
+ * getters and setters use long indices, search methods return long values, 
+ * and iterators are of type {@link BigListIterator}.
  */
 
 public interface BigList<K> extends Collection<K>, Size64 {

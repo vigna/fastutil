@@ -23,8 +23,10 @@ import java.util.NoSuchElementException;
 /** A class providing static methods and objects that do useful things with indirect priority queues.
  *
  * @see IndirectDoublePriorityQueue
+ * @deprecated this class will be removed in release 8.
  */
 
+@Deprecated
 public class IndirectDoublePriorityQueues {
 
 	private IndirectDoublePriorityQueues() {}

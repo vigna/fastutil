@@ -304,6 +304,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if ( ASSERTS ) assert size <= BIG_ARRAYS.length( a );
 	}
 
+	@Override
 	public void add( final long index, final KEY_GENERIC_TYPE k ) {
 		ensureIndex( index );
 		grow( size + 1 );
@@ -313,6 +314,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if ( ASSERTS ) assert size <= BIG_ARRAYS.length( a );
 	}
 
+	@Override
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		grow( size + 1 );
 		BIG_ARRAYS.set( a, size++, k );
@@ -320,22 +322,25 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return true;
 	}
 
+	@Override
 	public KEY_GENERIC_TYPE GET_KEY( final long index ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		return BIG_ARRAYS.get( a, index );
 	}
 
+	@Override
 	public long indexOf( final KEY_TYPE k ) {
 		for( long i = 0; i < size; i++ ) if ( KEY_EQUALS( k, BIG_ARRAYS.get( a, i ) ) ) return i;
 		return -1;
 	}
 
-
+	@Override
 	public long lastIndexOf( final KEY_TYPE k ) {
 		for( long i = size; i-- != 0; ) if ( KEY_EQUALS( k, BIG_ARRAYS.get( a, i ) ) ) return i;
 		return -1;
 	}
 
+	@Override
 	public KEY_GENERIC_TYPE REMOVE_KEY( final long index ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		final KEY_GENERIC_TYPE old = BIG_ARRAYS.get( a, index );
@@ -348,7 +353,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return old;
 	}
 
-	public boolean rem( final KEY_TYPE k ) {
+	@Override
+	public boolean REMOVE( final KEY_TYPE k ) {
 		final long index = indexOf( k );
 		if ( index == -1 ) return false;
 		REMOVE_KEY( index );
@@ -356,12 +362,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return true;
 	}
 
-#if KEYS_REFERENCE
-	public boolean remove( final Object o ) {
-		return rem( o );
-	}
-#endif
-
+	@Override
 	public KEY_GENERIC_TYPE set( final long index, final KEY_GENERIC_TYPE k ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		KEY_GENERIC_TYPE old = BIG_ARRAYS.get( a, index );
@@ -394,6 +395,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return modified;
 	}
 
+#endif
+
 	@Override
 	public boolean removeAll( final Collection<?> c ) {
 		KEY_GENERIC_TYPE[] s = null, d = null;
@@ -418,35 +421,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return modified;
 	}
 
-#else
-
 	@Override
-	public boolean removeAll( final Collection<?> c ) {
-		KEY_GENERIC_TYPE[] s = null, d = null;
-		int ss = -1, sd = BigArrays.SEGMENT_SIZE, ds = -1, dd = BigArrays.SEGMENT_SIZE;
-		for ( long i = 0; i < size; i++ ) {
-			if ( sd == BigArrays.SEGMENT_SIZE ) {
-				sd = 0;
-				s = a[ ++ss ];
-			}
-			if ( !c.contains( s[ sd ] ) ) {
-				if ( dd == BigArrays.SEGMENT_SIZE ) {
-					d = a[ ++ds ];
-					dd = 0;
-				}
-				d[ dd++ ] = s[ sd ];
-			}
-			sd++;
-		}
-		final long j = BigArrays.index( ds, dd );
-		final boolean modified = size != j;
-		size = j;
-		return modified;
-	}
-
-#endif
-
-
 	public void clear() {
 #if KEYS_REFERENCE
 		BIG_ARRAYS.fill( a, 0, size, null );
@@ -455,10 +430,12 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if ( ASSERTS ) assert size <= BIG_ARRAYS.length( a );
 	}
 
+	@Override
 	public long size64() {
 		return size;
 	}		
 
+	@Override
 	public void size( final long size ) {
 		if ( size > BIG_ARRAYS.length( a ) ) ensureCapacity( size );
 		if ( size > this.size ) BIG_ARRAYS.fill( a, this.size, size, KEY_NULL );
@@ -468,6 +445,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		this.size = size;
 	}		
 
+	@Override
 	public boolean isEmpty() {
 		return size == 0;
 	}		
@@ -511,7 +489,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 * @param length the number of elements to be copied.
 	 */
 
-	public void getElements( final int from, final KEY_TYPE[][] a, final long offset, final long length ) {
+	@Override
+	public void getElements( final long from, final KEY_TYPE[][] a, final long offset, final long length ) {
 		BIG_ARRAYS.copy( this.a, from, a, offset, length );
 	}
 
@@ -520,7 +499,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 * @param from the start index (inclusive).
 	 * @param to the end index (exclusive).
 	 */
-	public void removeElements( final int from, final int to ) {
+	@Override
+	public void removeElements( final long from, final long to ) {
 		BigArrays.ensureFromTo( size, from, to );
 		BIG_ARRAYS.copy( a, to, a, from, size - to );
 		size -= ( to - from );
@@ -537,7 +517,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 * @param offset the offset of the first element to add.
 	 * @param length the number of elements to add.
 	 */
-	public void addElements( final int index, final KEY_GENERIC_TYPE a[][], final long offset, final long length ) {
+	@Override
+	public void addElements( final long index, final KEY_GENERIC_TYPE a[][], final long offset, final long length ) {
 		ensureIndex( index );
 		BIG_ARRAYS.ensureOffsetLength( a, offset, length );
 		grow( size + length );

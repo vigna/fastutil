@@ -67,7 +67,7 @@ public interface Function<K,V> {
 	 * will always return true.
 	 *
 	 * @param key the key.
-	 * @return true if this function associates a value to <code>key</code>.
+	 * @return true if this function associates a value to {@code key}.
 	 * @see java.util.Map#containsKey(Object)
 	 */
 

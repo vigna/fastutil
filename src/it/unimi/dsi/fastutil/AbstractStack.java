@@ -30,10 +30,14 @@ package it.unimi.dsi.fastutil;
 
 public abstract class AbstractStack<K> implements Stack<K> {
 
+	@Override
 	public K top() {
 		return peek( 0 );
 	}
 
+	/** {@inheritDoc}
+	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
+	@Override
 	public K peek( int i ) {
 		throw new UnsupportedOperationException();
 	}

@@ -323,6 +323,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if ( ASSERTS ) assert size <= a.length;
 	}
 
+	@Override
 	public void add( final int index, final KEY_GENERIC_TYPE k ) {
 		ensureIndex( index );
 		grow( size + 1 );
@@ -332,6 +333,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if ( ASSERTS ) assert size <= a.length;
 	}
 
+	@Override
 	public boolean add( final KEY_GENERIC_TYPE k ) {
 		grow( size + 1 );
 		a[ size++ ] = k;
@@ -339,22 +341,26 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return true;
 	}
 
+	@Override
 	public KEY_GENERIC_TYPE GET_KEY( final int index ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		return a[ index ];
 	}
 
+	@Override
 	public int indexOf( final KEY_TYPE k ) {
 		for( int i = 0; i < size; i++ ) if ( KEY_EQUALS( k, a[ i ] ) ) return i;
 		return -1;
 	}
 
 
+	@Override
 	public int lastIndexOf( final KEY_TYPE k ) {
 		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( k, a[ i ] ) ) return i;
 		return -1;
 	}
 
+	@Override
 	public KEY_GENERIC_TYPE REMOVE_KEY( final int index ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		final KEY_GENERIC_TYPE old = a[ index ];
@@ -367,7 +373,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return old;
 	}
 
-	public boolean rem( final KEY_TYPE k ) {
+	@Override
+	public boolean REMOVE( final KEY_TYPE k ) {
 		int index = indexOf( k );
 		if ( index == -1 ) return false;
 		REMOVE_KEY( index );
@@ -375,12 +382,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return true;
 	}
 
-#if KEYS_REFERENCE
-	public boolean remove( final Object o ) {
-		return rem( o );
-	}
-#endif
-
+	@Override
 	public KEY_GENERIC_TYPE set( final int index, final KEY_GENERIC_TYPE k ) {
 		if ( index >= size ) throw new IndexOutOfBoundsException( "Index (" + index + ") is greater than or equal to list size (" + size + ")" );
 		KEY_GENERIC_TYPE old = a[ index ];
@@ -388,6 +390,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return old;
 	}
 
+	@Override
 	public void clear() {
 #if KEYS_REFERENCE
 		Arrays.fill( a, 0, size, null );
@@ -396,10 +399,12 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if ( ASSERTS ) assert size <= a.length;
 	}
 
+	@Override
 	public int size() {
 		return size;
 	}		
 
+	@Override
 	public void size( final int size ) {
 		if ( size > a.length ) ensureCapacity( size );
 		if ( size > this.size ) Arrays.fill( a, this.size, size, KEY_NULL );
@@ -409,6 +414,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		this.size = size;
 	}		
 
+	@Override
 	public boolean isEmpty() {
 		return size == 0;
 	}		
@@ -454,7 +460,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @param offset the offset into the destination array where to store the first element copied.
 	 * @param length the number of elements to be copied.
 	 */
-
+	@Override
 	public void getElements( final int from, final KEY_TYPE[] a, final int offset, final int length ) {
 		ARRAYS.ensureOffsetLength( a, offset, length );
 		System.arraycopy( this.a, from, a, offset, length );
@@ -465,6 +471,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @param from the start index (inclusive).
 	 * @param to the end index (exclusive).
 	 */
+	@Override
 	public void removeElements( final int from, final int to ) {
 		it.unimi.dsi.fastutil.Arrays.ensureFromTo( size, from, to );
 		System.arraycopy( a, to, a, from, size - to );
@@ -483,6 +490,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @param offset the offset of the first element to add.
 	 * @param length the number of elements to add.
 	 */
+	@Override
 	public void addElements( final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length ) {
 		ensureIndex( index );
 		ARRAYS.ensureOffsetLength( a, offset, length );
@@ -495,13 +503,15 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 
 #if KEYS_PRIMITIVE
-	
+
+	@Override
 	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
 		if ( a == null || a.length < size ) a = new KEY_TYPE[ size ];
 		System.arraycopy( this.a, 0, a, 0, size );
 		return a;
 	}
 
+	@Override
 	public boolean addAll( int index, final COLLECTION c ) {
 		ensureIndex( index );
 		int n = c.size();
@@ -515,6 +525,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return true;
 	}
 
+	@Override
 	public boolean addAll( final int index, final LIST l ) {
 		ensureIndex( index );
 		final int n = l.size();
@@ -538,6 +549,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return modified;
 	}
 
+#endif
+
 	@Override
 	public boolean removeAll( final Collection<?> c ) {
 		final KEY_TYPE[] a = this.a;
@@ -549,22 +562,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return modified;
 	}
 
-#else
-
 	@Override
-	public boolean removeAll( final Collection<?> c ) {
-		final KEY_TYPE[] a = this.a;
-		int j = 0;
-		for( int i = 0; i < size; i++ )
-			if ( ! c.contains( a[ i ] ) ) a[ j++ ] = a[ i ];
-		Arrays.fill( a, j, size, null );
-		final boolean modified = size != j;
-		size = j;
-		return modified;
-	}
-
-#endif
-
 	public KEY_LIST_ITERATOR KEY_GENERIC listIterator( final int index ) {
 		ensureIndex( index );
 
