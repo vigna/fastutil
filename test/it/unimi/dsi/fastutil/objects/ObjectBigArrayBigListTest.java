@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.BigArrays;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -21,7 +22,6 @@ public class ObjectBigArrayBigListTest {
 		assertEquals( ObjectBigLists.EMPTY_BIG_LIST, list );
 	}
 
-	@SuppressWarnings("boxing")
 	@Test
 	public void testRemoveAllSkipSegment() {
 		ObjectBigList<Integer> list = new ObjectBigArrayBigList<Integer>();
@@ -30,6 +30,23 @@ public class ObjectBigArrayBigListTest {
 		assertEquals( BigArrays.SEGMENT_SIZE / 2 + 5, list.size64() );
 		for( long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++ ) assertEquals( Integer.valueOf( 0 ), list.get( i ) );
 	}
+
+	@Test
+	public void testRemoveAll() {
+		ObjectBigArrayBigList<Integer> l = ObjectBigArrayBigList.wrap( new Integer[][] { { 0, 1, 1, 2 } } );
+		l.removeAll( ObjectSets.singleton( 1 ) );
+		assertEquals( ObjectBigArrayBigList.wrap( new Integer[][] { { 0, 2 } } ), l );
+		assertTrue( l.elements()[0][2] == null );
+		assertTrue( l.elements()[0][3] == null );
+
+		l = ObjectBigArrayBigList.wrap( new Integer[][] { { 0, 1, 1, 2 } } );
+		l.removeAll( (Collection<?>)ObjectSets.singleton( 1 ) );
+		assertEquals( ObjectBigArrayBigList.wrap( new Integer[][] { { 0, 2 } } ), l );
+		assertTrue( l.elements()[0][2] == null );
+		assertTrue( l.elements()[0][3] == null );
+	}
+
+
 
 	private static java.util.Random r = new java.util.Random( 0 );
 
