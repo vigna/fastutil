@@ -1,4 +1,4 @@
-/*		 
+/*
  * Copyright (C) 2007-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -28,10 +28,10 @@ import VALUE_PACKAGE.VALUE_COLLECTIONS;
 import VALUE_PACKAGE.VALUE_ARRAY_SET;
 import VALUE_PACKAGE.VALUE_ARRAYS;
 
-/** A simple, brute-force implementation of a map based on two parallel backing arrays. 
- * 
+/** A simple, brute-force implementation of a map based on two parallel backing arrays.
+ *
  * <p>The main purpose of this
- * implementation is that of wrapping cleanly the brute-force approach to the storage of a very 
+ * implementation is that of wrapping cleanly the brute-force approach to the storage of a very
  * small number of pairs: just put them into two parallel arrays and scan linearly to find an item.
  */
 
@@ -44,19 +44,19 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	private transient VALUE_TYPE[] value;
 	/** The number of valid entries in {@link #key} and {@link #value}. */
 	private int size;
-	
+
 	/** Creates a new empty array map with given key and value backing arrays. The resulting map will have as many entries as the given arrays.
-	 * 
+	 *
 	 * <p>It is responsibility of the caller that the elements of <code>key</code> are distinct.
-	 * 
+	 *
 	 * @param key the key array.
 	 * @param value the value array (it <em>must</em> have the same length as <code>key</code>).
 	 */
-	public ARRAY_MAP( final KEY_TYPE[] key, final VALUE_TYPE[] value ) {
+	public ARRAY_MAP(final KEY_TYPE[] key, final VALUE_TYPE[] value) {
 		this.key = key;
 		this.value = value;
 		size = key.length;
-		if( key.length != value.length ) throw new IllegalArgumentException( "Keys and values have different lengths (" + key.length + ", " + value.length + ")" );
+		if(key.length != value.length) throw new IllegalArgumentException("Keys and values have different lengths (" + key.length + ", " + value.length + ")");
 	}
 
 	/** Creates a new empty array map.
@@ -65,48 +65,48 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		this.key = ARRAYS.EMPTY_ARRAY;
 		this.value = VALUE_ARRAYS.EMPTY_ARRAY;
 	}
-	
+
 	/** Creates a new empty array map of given capacity.
 	 *
 	 * @param capacity the initial capacity.
-	 */ 
-	public ARRAY_MAP( final int capacity ) {
-		this.key = new KEY_TYPE[ capacity ];
-		this.value = new VALUE_TYPE[ capacity ];
+	 */
+	public ARRAY_MAP(final int capacity) {
+		this.key = new KEY_TYPE[capacity];
+		this.value = new VALUE_TYPE[capacity];
 	}
-	
+
 	/** Creates a new empty array map copying the entries of a given map.
 	 *
 	 * @param m a map.
-	 */ 
-	public ARRAY_MAP( final MAP KEY_VALUE_GENERIC m ) {
-		this( m.size() );
-		putAll( m );
+	 */
+	public ARRAY_MAP(final MAP KEY_VALUE_GENERIC m) {
+		this(m.size());
+		putAll(m);
 	}
-	
+
 	/** Creates a new empty array map copying the entries of a given map.
 	 *
 	 * @param m a map.
-	 */ 
-	public ARRAY_MAP( final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m ) {
-		this( m.size() );
-		putAll( m );
+	 */
+	public ARRAY_MAP(final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m) {
+		this(m.size());
+		putAll(m);
 	}
-	
+
 	/** Creates a new array map with given key and value backing arrays, using the given number of elements.
-	 * 
+	 *
 	 * <p>It is responsibility of the caller that the first <code>size</code> elements of <code>key</code> are distinct.
-	 * 
+	 *
 	 * @param key the key array.
 	 * @param value the value array (it <em>must</em> have the same length as <code>key</code>).
 	 * @param size the number of valid elements in <code>key</code> and <code>value</code>.
 	 */
-	public ARRAY_MAP( final KEY_TYPE[] key, final VALUE_TYPE[] value, final int size ) {
+	public ARRAY_MAP(final KEY_TYPE[] key, final VALUE_TYPE[] value, final int size) {
 		this.key = key;
 		this.value = value;
 		this.size = size;
-		if( key.length != value.length ) throw new IllegalArgumentException( "Keys and values have different lengths (" + key.length + ", " + value.length + ")" );
-		if ( size > key.length ) throw new IllegalArgumentException( "The provided size (" + size + ") is larger than or equal to the backing-arrays size (" + key.length + ")" );
+		if(key.length != value.length) throw new IllegalArgumentException("Keys and values have different lengths (" + key.length + ", " + value.length + ")");
+		if (size > key.length) throw new IllegalArgumentException("The provided size (" + size + ") is larger than or equal to the backing-arrays size (" + key.length + ")");
 	}
 
 	private final class EntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC {
@@ -116,81 +116,81 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
 				int curr = -1, next = 0;
 
-				@Override				
+				@Override
 				public boolean hasNext() {
 					return next < size;
 				}
 
-				@Override				
+				@Override
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public Entry KEY_VALUE_GENERIC next() {
-					if ( ! hasNext() ) throw new NoSuchElementException();
-					return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC( KEY_GENERIC_CAST key[ curr = next ], VALUE_GENERIC_CAST value[ next++ ] );
+					if (! hasNext()) throw new NoSuchElementException();
+					return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(KEY_GENERIC_CAST key[curr = next], VALUE_GENERIC_CAST value[next++]);
 				}
-				
-				@Override				
+
+				@Override
 				public void remove() {
-					if ( curr == -1 ) throw new IllegalStateException();
+					if (curr == -1) throw new IllegalStateException();
 					curr = -1;
 					final int tail = size-- - next--;
-					System.arraycopy( key, next + 1, key, next, tail );
-					System.arraycopy( value, next + 1, value, next, tail );
+					System.arraycopy(key, next + 1, key, next, tail);
+					System.arraycopy(value, next + 1, value, next, tail);
 #if KEYS_REFERENCE
-					key[ size ] = null;
+					key[size] = null;
 #endif
 #if VALUES_REFERENCE
-					value[ size ] = null;
+					value[size] = null;
 #endif
 				}
 			};
 		}
 
-		@Override				
+		@Override
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
 			return new AbstractObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
 				int next = 0, curr = -1;
-				final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC ( KEY_NULL, VALUE_NULL );
-				
-				@Override				
+				final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC (KEY_NULL, VALUE_NULL);
+
+				@Override
 				public boolean hasNext() {
 					return next < size;
 				}
 
-				@Override				
+				@Override
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public Entry KEY_VALUE_GENERIC next() {
-					if ( ! hasNext() ) throw new NoSuchElementException();
-					entry.key = KEY_GENERIC_CAST key[ curr = next ];
-					entry.value = VALUE_GENERIC_CAST value[ next++ ];
+					if (! hasNext()) throw new NoSuchElementException();
+					entry.key = KEY_GENERIC_CAST key[curr = next];
+					entry.value = VALUE_GENERIC_CAST value[next++];
 					return entry;
 				}
-				
-				@Override				
+
+				@Override
 				public void remove() {
-					if ( curr == -1 ) throw new IllegalStateException();
+					if (curr == -1) throw new IllegalStateException();
 					curr = -1;
 					final int tail = size-- - next--;
-					System.arraycopy( key, next + 1, key, next, tail );
-					System.arraycopy( value, next + 1, value, next, tail );
+					System.arraycopy(key, next + 1, key, next, tail);
+					System.arraycopy(value, next + 1, value, next, tail);
 #if KEYS_REFERENCE
-					key[ size ] = null;
+					key[size] = null;
 #endif
 #if VALUES_REFERENCE
-					value[ size ] = null;
+					value[size] = null;
 #endif
 				}
 			};
 		}
 
-		@Override				
+		@Override
 		public int size() {
 			return size;
 		}
 
-		@Override				
+		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
-		public boolean contains( Object o ) {
-			if ( ! ( o instanceof Map.Entry ) ) return false;
+		public boolean contains(Object o) {
+			if (! (o instanceof Map.Entry)) return false;
 			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 #if KEYS_PRIMITIVE
 			if (e.getKey() == null || ! (e.getKey() instanceof KEY_CLASS)) return false;
@@ -198,14 +198,14 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 #if VALUES_PRIMITIVE
 			if (e.getValue() == null || ! (e.getValue() instanceof VALUE_CLASS)) return false;
 #endif
-			final KEY_GENERIC_TYPE k = KEY_OBJ2TYPE( KEY_GENERIC_CAST e.getKey() );
-			return ARRAY_MAP.this.containsKey( k ) && VALUE_EQUALS( ARRAY_MAP.this.GET_VALUE( k ), VALUE_OBJ2TYPE( e.getValue() ) );
+			final KEY_GENERIC_TYPE k = KEY_OBJ2TYPE(KEY_GENERIC_CAST e.getKey());
+			return ARRAY_MAP.this.containsKey(k) && VALUE_EQUALS(ARRAY_MAP.this.GET_VALUE(k), VALUE_OBJ2TYPE(e.getValue()));
 		}
 
 		@Override
 		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
-		public boolean remove( final Object o ) {
-			if ( !( o instanceof Map.Entry ) ) return false;
+		public boolean remove(final Object o) {
+			if (!(o instanceof Map.Entry)) return false;
 			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 #if KEYS_PRIMITIVE
 			if (e.getKey() == null || ! (e.getKey() instanceof KEY_CLASS)) return false;
@@ -213,135 +213,135 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 #if VALUES_PRIMITIVE
 			if (e.getValue() == null || ! (e.getValue() instanceof VALUE_CLASS)) return false;
 #endif
-			final KEY_GENERIC_TYPE k = KEY_OBJ2TYPE( KEY_GENERIC_CAST e.getKey() );
-			final VALUE_GENERIC_TYPE v = VALUE_OBJ2TYPE( VALUE_GENERIC_CAST e.getValue() );
+			final KEY_GENERIC_TYPE k = KEY_OBJ2TYPE(KEY_GENERIC_CAST e.getKey());
+			final VALUE_GENERIC_TYPE v = VALUE_OBJ2TYPE(VALUE_GENERIC_CAST e.getValue());
 
-			final int oldPos = ARRAY_MAP.this.findKey( k );
-			if ( oldPos == -1 || ! VALUE_EQUALS( v, ARRAY_MAP.this.value[ oldPos ] ) ) return false;
+			final int oldPos = ARRAY_MAP.this.findKey(k);
+			if (oldPos == -1 || ! VALUE_EQUALS(v, ARRAY_MAP.this.value[oldPos])) return false;
 			final int tail = size - oldPos - 1;
-			System.arraycopy( ARRAY_MAP.this.key, oldPos + 1, ARRAY_MAP.this.key, oldPos, tail );
-			System.arraycopy( ARRAY_MAP.this.value, oldPos + 1, ARRAY_MAP.this.value, oldPos, tail );
+			System.arraycopy(ARRAY_MAP.this.key, oldPos + 1, ARRAY_MAP.this.key, oldPos, tail);
+			System.arraycopy(ARRAY_MAP.this.value, oldPos + 1, ARRAY_MAP.this.value, oldPos, tail);
 			ARRAY_MAP.this.size--;
 #if KEYS_REFERENCE
-			ARRAY_MAP.this.key[ size ] = null;
+			ARRAY_MAP.this.key[size] = null;
 #endif
 #if VALUES_REFERENCE
-			ARRAY_MAP.this.value[ size ] = null;
+			ARRAY_MAP.this.value[size] = null;
 #endif
 			return true;
 		}
 	}
 
-	@Override				
+	@Override
 	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() {
 		return new EntrySet();
 	}
 
-	private int findKey( final KEY_TYPE k ) {
+	private int findKey(final KEY_TYPE k) {
 		final KEY_TYPE[] key = this.key;
-		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return i;
+		for(int i = size; i-- != 0;) if (KEY_EQUALS(key[i], k)) return i;
 		return -1;
 	}
 
-	@Override				
+	@Override
 	SUPPRESS_WARNINGS_VALUE_UNCHECKED
 	public VALUE_GENERIC_TYPE GET_VALUE(final KEY_TYPE k) {
 		final KEY_TYPE[] key = this.key;
-		for( int i = size; i-- != 0; ) if ( KEY_EQUALS( key[ i ], k ) ) return VALUE_GENERIC_CAST value[ i ];
+		for(int i = size; i-- != 0;) if (KEY_EQUALS(key[i], k)) return VALUE_GENERIC_CAST value[i];
 		return defRetValue;
 	}
 
-	@Override				
+	@Override
 	public int size() {
 		return size;
 	}
 
-	@Override				
+	@Override
 	public void clear() {
 #if KEYS_REFERENCE || VALUES_REFERENCE
-		for( int i = size; i-- != 0; ) {
+		for(int i = size; i-- != 0;) {
 #if KEYS_REFERENCE
-			key[ i ] = null;
+			key[i] = null;
 #endif
 #if VALUES_REFERENCE
-			value[ i ] = null;
+			value[i] = null;
 #endif
 		}
 #endif
 		size = 0;
 	}
 
-	@Override				
-	public boolean containsKey( final KEY_TYPE k ) {
-		return findKey( k ) != -1;
+	@Override
+	public boolean containsKey(final KEY_TYPE k) {
+		return findKey(k) != -1;
 	}
 
-	@Override				
-	public boolean containsValue( VALUE_TYPE v ) {
-		for( int i = size; i-- != 0; ) if ( VALUE_EQUALS( value[ i ], v ) ) return true;
+	@Override
+	public boolean containsValue(VALUE_TYPE v) {
+		for(int i = size; i-- != 0;) if (VALUE_EQUALS(value[i], v)) return true;
 		return false;
 	}
 
-	@Override				
+	@Override
 	public boolean isEmpty() {
 		return size == 0;
 	}
 
-	@Override				
+	@Override
 	SUPPRESS_WARNINGS_VALUE_UNCHECKED
-	public VALUE_GENERIC_TYPE put( KEY_GENERIC_TYPE k, VALUE_GENERIC_TYPE v ) {
-		final int oldKey = findKey( k );
-		if ( oldKey != -1 ) {
-			final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[ oldKey ];
-			value[ oldKey ] = v;
+	public VALUE_GENERIC_TYPE put(KEY_GENERIC_TYPE k, VALUE_GENERIC_TYPE v) {
+		final int oldKey = findKey(k);
+		if (oldKey != -1) {
+			final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[oldKey];
+			value[oldKey] = v;
 			return oldValue;
 		}
-		if ( size == key.length ) {
-			final KEY_TYPE[] newKey = new KEY_TYPE[ size == 0 ? 2 : size * 2 ];
-			final VALUE_TYPE[] newValue = new VALUE_TYPE[ size == 0 ? 2 : size * 2 ];
-			for( int i = size; i-- != 0; ) {
-				newKey[ i ] = key[ i ];
-				newValue[ i ] = value[ i ];
+		if (size == key.length) {
+			final KEY_TYPE[] newKey = new KEY_TYPE[size == 0 ? 2 : size * 2];
+			final VALUE_TYPE[] newValue = new VALUE_TYPE[size == 0 ? 2 : size * 2];
+			for(int i = size; i-- != 0;) {
+				newKey[i] = key[i];
+				newValue[i] = value[i];
 			}
 			key = newKey;
 			value = newValue;
 		}
-		key[ size ] = k;
-		value[ size ] = v;
+		key[size] = k;
+		value[size] = v;
 		size++;
 		return defRetValue;
 	}
 
-	@Override				
+	@Override
 	SUPPRESS_WARNINGS_VALUE_UNCHECKED
-	public VALUE_GENERIC_TYPE REMOVE_VALUE( final KEY_TYPE k ) {
-		final int oldPos = findKey( k );
-		if ( oldPos == -1 ) return defRetValue;
-		final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[ oldPos ];
+	public VALUE_GENERIC_TYPE REMOVE_VALUE(final KEY_TYPE k) {
+		final int oldPos = findKey(k);
+		if (oldPos == -1) return defRetValue;
+		final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[oldPos];
 		final int tail = size - oldPos - 1;
-		System.arraycopy( key, oldPos + 1, key, oldPos, tail );
-		System.arraycopy( value, oldPos + 1, value, oldPos, tail );
+		System.arraycopy(key, oldPos + 1, key, oldPos, tail);
+		System.arraycopy(value, oldPos + 1, value, oldPos, tail);
 		size--;
 #if KEYS_REFERENCE
-		key[ size ] = null;
+		key[size] = null;
 #endif
 #if VALUES_REFERENCE
-		value[ size ] = null;
+		value[size] = null;
 #endif
 		return oldValue;
 	}
 
-	@Override				
+	@Override
 	public SET KEY_GENERIC keySet() {
-		return new ARRAY_SET KEY_GENERIC( key, size );
+		return new ARRAY_SET KEY_GENERIC(key, size);
 	}
 
-	@Override				
+	@Override
 	public VALUE_COLLECTION VALUE_GENERIC values() {
-		return VALUE_COLLECTIONS.unmodifiable( new VALUE_ARRAY_SET VALUE_GENERIC( value, size ) );
+		return VALUE_COLLECTIONS.unmodifiable(new VALUE_ARRAY_SET VALUE_GENERIC(value, size));
 	}
 
-	/** Returns a deep copy of this map. 
+	/** Returns a deep copy of this map.
 	 *
 	 * <P>This method performs a deep copy of this hash map; the data stored in the
 	 * map, however, is not cloned. Note that this makes a difference only for object keys.
@@ -362,22 +362,22 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		c.value = value.clone();
 		return c;
 	}
-	
+
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
-		for( int i = 0; i < size; i++ ) {
-			s.WRITE_KEY( key[ i ] );
-			s.WRITE_VALUE( value[ i ] );
+		for(int i = 0; i < size; i++) {
+			s.WRITE_KEY(key[i]);
+			s.WRITE_VALUE(value[i]);
 		}
 	}
 
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		key = new KEY_TYPE[ size ];
-		value = new VALUE_TYPE[ size ];
-		for( int i = 0; i < size; i++ ) {
-			key[ i ] = s.READ_KEY();
-			value[ i ] = s.READ_VALUE();
+		key = new KEY_TYPE[size];
+		value = new VALUE_TYPE[size];
+		for(int i = 0; i < size; i++) {
+			key[i] = s.READ_KEY();
+			value[i] = s.READ_VALUE();
 		}
 	}
 }

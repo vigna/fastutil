@@ -1,4 +1,4 @@
-/*		 
+/*
  * Copyright (C) 2002-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 
 /** Compact storage of lists of arrays using front coding.
- * 
+ *
  * <P>This class stores immutably a list of arrays in a single large array
  * using front coding (of course, the compression will be reasonable only if
  * the list is sorted lexicographically&mdash;see below). It implements an
@@ -61,11 +61,11 @@ import java.util.RandomAccess;
  * pointer array is not stored, the serialized format is very small.
  *
  * <H2>Implementation Details</H2>
- * 
+ *
  * <P>All arrays are stored in a {@linkplain it.unimi.dsi.fastutil.BigArrays big array}. A separate array of pointers
  * indexes arrays whose position is a multiple of the ratio: thus, a higher ratio
  * means also less pointers.
- * 
+ *
  * <P>More in detail, an array whose position is a multiple of the ratio is
  * stored as the array length, followed by the elements of the array. The array
  * length is coded by a simple variable-length list of <var>k</var>-1 bit
@@ -80,7 +80,7 @@ import java.util.RandomAccess;
  * character array will contain
  *
  * <pre>
- * <b>3</b> f o o <b>3</b> <b>3</b> b a r <b>5</b> <b>3</b> t b a l l <b>4</b> f o o l 
+ * <b>3</b> f o o <b>3</b> <b>3</b> b a r <b>5</b> <b>3</b> t b a l l <b>4</b> f o o l
  * </pre>
  */
 
@@ -98,45 +98,45 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	protected transient long[] p;
 
 	/** Creates a new front-coded list containing the arrays returned by the given iterator.
-	 * 
+	 *
 	 * @param arrays an iterator returning arrays.
 	 * @param ratio the desired ratio.
 	 */
 
-	public ARRAY_FRONT_CODED_LIST( final Iterator<KEY_TYPE[]> arrays, final int ratio ) {
+	public ARRAY_FRONT_CODED_LIST(final Iterator<KEY_TYPE[]> arrays, final int ratio) {
 
-		if ( ratio < 1 ) throw new IllegalArgumentException( "Illegal ratio (" + ratio + ")" );
+		if (ratio < 1) throw new IllegalArgumentException("Illegal ratio (" + ratio + ")");
 
 		KEY_TYPE[][] array = BIG_ARRAYS.EMPTY_BIG_ARRAY;
 		long[] p = LongArrays.EMPTY_ARRAY;
 
-		KEY_TYPE[][] a = new KEY_TYPE[ 2 ][];
+		KEY_TYPE[][] a = new KEY_TYPE[2][];
 		long curSize = 0;
 		int n = 0, b = 0, common, length, minLength;
-		
-		while( arrays.hasNext() ) {
-			a[ b ] = arrays.next();
-			length = a[ b ].length;
-			
-			if ( n % ratio == 0 ) {
-				p = LongArrays.grow( p, n / ratio + 1 );
-				p[ n / ratio ] = curSize;
 
-				array = BIG_ARRAYS.grow( array, curSize + count( length ) + length, curSize );
-				curSize += writeInt( array, length, curSize );
-				BIG_ARRAYS.copyToBig( a[ b ], 0, array, curSize, length );
+		while(arrays.hasNext()) {
+			a[b] = arrays.next();
+			length = a[b].length;
+
+			if (n % ratio == 0) {
+				p = LongArrays.grow(p, n / ratio + 1);
+				p[n / ratio] = curSize;
+
+				array = BIG_ARRAYS.grow(array, curSize + count(length) + length, curSize);
+				curSize += writeInt(array, length, curSize);
+				BIG_ARRAYS.copyToBig(a[b], 0, array, curSize, length);
 				curSize += length;
 			}
 			else {
-				minLength = a[ 1 - b ].length;
-				if ( length < minLength ) minLength = length;
-				for( common = 0; common < minLength; common++ ) if ( a[ 0 ][ common ] != a[ 1 ][ common ] ) break;
+				minLength = a[1 - b].length;
+				if (length < minLength) minLength = length;
+				for(common = 0; common < minLength; common++) if (a[0][common] != a[1][common]) break;
 				length -= common;
 
-				array = BIG_ARRAYS.grow( array, curSize + count( length ) + count( common ) + length, curSize );
-				curSize += writeInt( array, length, curSize );
-				curSize += writeInt( array, common, curSize );
-				BIG_ARRAYS.copyToBig( a[ b ], common, array, curSize, length );
+				array = BIG_ARRAYS.grow(array, curSize + count(length) + count(common) + length, curSize);
+				curSize += writeInt(array, length, curSize);
+				curSize += writeInt(array, common, curSize);
+				BIG_ARRAYS.copyToBig(a[b], common, array, curSize, length);
 				curSize += length;
 			}
 
@@ -146,19 +146,19 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 		this.n = n;
 		this.ratio = ratio;
-		this.array = BIG_ARRAYS.trim( array, curSize );
-		this.p = LongArrays.trim( p, ( n + ratio - 1 ) / ratio );
+		this.array = BIG_ARRAYS.trim(array, curSize);
+		this.p = LongArrays.trim(p, (n + ratio - 1) / ratio);
 
 	}
 
 	/** Creates a new front-coded list containing the arrays in the given collection.
-	 * 
+	 *
 	 * @param c a collection containing arrays.
 	 * @param ratio the desired ratio.
 	 */
 
-	public ARRAY_FRONT_CODED_LIST( final Collection<KEY_TYPE[]> c, final int ratio ) {
-		this( c.iterator(), ratio );
+	public ARRAY_FRONT_CODED_LIST(final Collection<KEY_TYPE[]> c, final int ratio) {
+		this(c.iterator(), ratio);
 	}
 
 
@@ -171,27 +171,27 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param pos the starting position.
 	 * @return the length coded at <code>pos</code>.
 	 */
-	private static int readInt( final KEY_TYPE a[][], long pos ) {
+	private static int readInt(final KEY_TYPE a[][], long pos) {
 #if KEY_CLASS_Integer
-		return IntBigArrays.get( a, pos );
+		return IntBigArrays.get(a, pos);
 #elif KEY_CLASS_Long
-		return (int)LongBigArrays.get( a, pos );
+		return (int)LongBigArrays.get(a, pos);
 #elif KEY_CLASS_Character
-		final char c0 = CharBigArrays.get( a, pos );
-		return c0  < 0x8000 ? c0 : ( c0 & 0x7FFF ) << 16 | CharBigArrays.get( a, pos + 1 );
+		final char c0 = CharBigArrays.get(a, pos);
+		return c0  < 0x8000 ? c0 : (c0 & 0x7FFF) << 16 | CharBigArrays.get(a, pos + 1);
 #elif KEY_CLASS_Short
-		final short s0 = ShortBigArrays.get( a, pos );
-		return s0 >= 0 ? s0 : s0 << 16 | ( ShortBigArrays.get( a, pos + 1 ) & 0xFFFF );
+		final short s0 = ShortBigArrays.get(a, pos);
+		return s0 >= 0 ? s0 : s0 << 16 | (ShortBigArrays.get(a, pos + 1) & 0xFFFF);
 #else
-		final byte b0 = ByteBigArrays.get( a, pos );
-		if ( b0  >= 0 ) return b0;
-		final byte b1 = ByteBigArrays.get( a, pos + 1 );
-		if ( b1 >= 0 ) return ( - b0 - 1 ) << 7 | b1;
-		final byte b2 = ByteBigArrays.get( a, pos + 2 );
-		if ( b2 >= 0 ) return ( - b0 - 1 ) << 14 | ( - b1 - 1 ) << 7 | b2;
-		final byte b3 = ByteBigArrays.get( a, pos + 3 );
-		if ( b3 >= 0 ) return ( - b0 - 1 ) << 21 | ( - b1 - 1 ) << 14 | ( - b2 - 1 ) << 7 | b3;
-		return ( - b0 - 1 ) << 28 | ( - b1 - 1 ) << 21 | ( - b2 - 1 ) << 14 | ( - b3 - 1 ) << 7 | ByteBigArrays.get( a, pos + 4 );
+		final byte b0 = ByteBigArrays.get(a, pos);
+		if (b0  >= 0) return b0;
+		final byte b1 = ByteBigArrays.get(a, pos + 1);
+		if (b1 >= 0) return (- b0 - 1) << 7 | b1;
+		final byte b2 = ByteBigArrays.get(a, pos + 2);
+		if (b2 >= 0) return (- b0 - 1) << 14 | (- b1 - 1) << 7 | b2;
+		final byte b3 = ByteBigArrays.get(a, pos + 3);
+		if (b3 >= 0) return (- b0 - 1) << 21 | (- b1 - 1) << 14 | (- b2 - 1) << 7 | b3;
+		return (- b0 - 1) << 28 | (- b1 - 1) << 21 | (- b2 - 1) << 14 | (- b3 - 1) << 7 | ByteBigArrays.get(a, pos + 4);
 #endif
 	}
 
@@ -199,16 +199,16 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param length the length to be coded.
 	 * @return the number of elements coding <code>length</code>.
 	 */
-	private static int count( final int length ) {
+	private static int count(final int length) {
 #if KEY_CLASS_Integer || KEY_CLASS_Long
 		return 1;
 #elif KEY_CLASS_Character || KEY_CLASS_Short
-		return length < ( 1 << 15 ) ? 1 : 2;
+		return length < (1 << 15) ? 1 : 2;
 #else
-		if ( length < ( 1 << 7 ) ) return 1;
-		if ( length < ( 1 << 14 ) ) return 2;
-		if ( length < ( 1 << 21 ) ) return 3;
-		if ( length < ( 1 << 28 ) ) return 4;
+		if (length < (1 << 7)) return 1;
+		if (length < (1 << 14)) return 2;
+		if (length < (1 << 21)) return 3;
+		if (length < (1 << 28)) return 4;
 		return 5;
 #endif
 	}
@@ -219,38 +219,38 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param pos the starting position.
 	 * @return the number of elements coding <code>length</code>.
 	 */
-	private static int writeInt( final KEY_TYPE a[][], int length, long pos ) {
+	private static int writeInt(final KEY_TYPE a[][], int length, long pos) {
 #if KEY_CLASS_Long
-		LongBigArrays.set( a, pos, length );
+		LongBigArrays.set(a, pos, length);
 		return 1;
 #elif KEY_CLASS_Integer
-		IntBigArrays.set( a, pos, length );
+		IntBigArrays.set(a, pos, length);
 		return 1;
 #elif KEY_CLASS_Character
-		if ( length < ( 1 << 15 ) ) {
-			CharBigArrays.set( a, pos, (char)length );
+		if (length < (1 << 15)) {
+			CharBigArrays.set(a, pos, (char)length);
 			return 1;
 		}
-		CharBigArrays.set( a, pos++, (char)( length >>> 16 | 0x8000 ) );
-		CharBigArrays.set( a, pos, (char)( length & 0xFFFF ) );
+		CharBigArrays.set(a, pos++, (char)(length >>> 16 | 0x8000));
+		CharBigArrays.set(a, pos, (char)(length & 0xFFFF));
 		return 2;
 #elif KEY_CLASS_Short
-		if ( length < ( 1 << 15 ) ) {
-			ShortBigArrays.set( a, pos, (short)length );
+		if (length < (1 << 15)) {
+			ShortBigArrays.set(a, pos, (short)length);
 			return 1;
 		}
-		ShortBigArrays.set( a, pos++, (short)( - ( length >>> 16 ) - 1 ) );
-		ShortBigArrays.set( a, pos, (short)( length & 0xFFFF ) );
+		ShortBigArrays.set(a, pos++, (short)(- (length >>> 16) - 1));
+		ShortBigArrays.set(a, pos, (short)(length & 0xFFFF));
 		return 2;
 #else
-		final int count = count( length );
-		ByteBigArrays.set( a, pos + count - 1, (byte)( length & 0x7F ) );
+		final int count = count(length);
+		ByteBigArrays.set(a, pos + count - 1, (byte)(length & 0x7F));
 
-		if ( count != 1 ) {
+		if (count != 1) {
 			int i = count - 1;
-			while( i-- != 0 ) {
+			while(i-- != 0) {
 				length >>>= 7;
-				ByteBigArrays.set( a, pos + i, (byte)( - ( length  & 0x7F ) - 1 ) );
+				ByteBigArrays.set(a, pos + i, (byte)(- (length  & 0x7F) - 1));
 			}
 		}
 
@@ -277,25 +277,25 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param index an index.
 	 * @return the length of the <code>index</code>-th array.
 	 */
-	private int length( final int index ) {
+	private int length(final int index) {
 		final KEY_TYPE[][] array = this.array;
 		final int delta = index % ratio; // The index into the p array, and the delta inside the block.
 
-		long pos = p[ index / ratio ]; // The position into the array of the first entire word before the index-th.
-		int length = readInt( array, pos );
+		long pos = p[index / ratio]; // The position into the array of the first entire word before the index-th.
+		int length = readInt(array, pos);
 
-		if ( delta == 0 ) return length;
-		
+		if (delta == 0) return length;
+
 		// First of all, we recover the array length and the maximum amount of copied elements.
 		int common;
-		pos += count( length ) + length;
-		length = readInt( array, pos );
-		common = readInt( array, pos + count( length ) );
+		pos += count(length) + length;
+		length = readInt(array, pos);
+		common = readInt(array, pos + count(length));
 
-		for( int i = 0; i < delta - 1; i++ ) {
-			pos += count( length ) + count( common ) + length;
-			length = readInt( array, pos );
-			common = readInt( array, pos + count( length ) );
+		for(int i = 0; i < delta - 1; i++) {
+			pos += count(length) + count(common) + length;
+			length = readInt(array, pos);
+			common = readInt(array, pos + count(length));
 		}
 
 		return length + common;
@@ -307,9 +307,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param index an index.
 	 * @return the length of the <code>index</code>-th array.
 	 */
-	public int arrayLength( final int index ) {
-		ensureRestrictedIndex( index );
-		return length( index );
+	public int arrayLength(final int index) {
+		ensureRestrictedIndex(index);
+		return length(index);
 	}
 
 	/** Extracts the array at the given index.
@@ -320,36 +320,36 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param length a maximum number of elements to store in <code>a</code>.
 	 * @return the length of the extracted array.
 	 */
-	private int extract( final int index, final KEY_TYPE a[], final int offset, final int length ) {
+	private int extract(final int index, final KEY_TYPE a[], final int offset, final int length) {
 		final int delta = index % ratio; // The delta inside the block.
-		final long startPos = p[ index / ratio ]; // The position into the array of the first entire word before the index-th.
+		final long startPos = p[index / ratio]; // The position into the array of the first entire word before the index-th.
 		long pos, prevArrayPos;
-		int arrayLength = readInt( array, pos = startPos ), currLen = 0, actualCommon;
+		int arrayLength = readInt(array, pos = startPos), currLen = 0, actualCommon;
 
-		if ( delta == 0 ) {
-			pos = p[ index / ratio ] + count( arrayLength );
-			BIG_ARRAYS.copyFromBig( array, pos, a, offset, Math.min( length, arrayLength ) );
+		if (delta == 0) {
+			pos = p[index / ratio] + count(arrayLength);
+			BIG_ARRAYS.copyFromBig(array, pos, a, offset, Math.min(length, arrayLength));
 			return arrayLength;
 		}
-		
+
 		int common = 0;
 
-		for( int i = 0; i < delta; i++ ) {
-			prevArrayPos = pos + count( arrayLength ) + ( i != 0 ? count( common ) : 0 );
+		for(int i = 0; i < delta; i++) {
+			prevArrayPos = pos + count(arrayLength) + (i != 0 ? count(common) : 0);
 			pos = prevArrayPos + arrayLength;
 
-			arrayLength = readInt( array, pos );
-			common = readInt( array, pos + count( arrayLength ) );
+			arrayLength = readInt(array, pos);
+			common = readInt(array, pos + count(arrayLength));
 
-			actualCommon = Math.min( common, length );
-			if ( actualCommon <= currLen ) currLen = actualCommon;
+			actualCommon = Math.min(common, length);
+			if (actualCommon <= currLen) currLen = actualCommon;
 			else {
-				BIG_ARRAYS.copyFromBig( array, prevArrayPos, a, currLen + offset, actualCommon - currLen );
+				BIG_ARRAYS.copyFromBig(array, prevArrayPos, a, currLen + offset, actualCommon - currLen);
 				currLen = actualCommon;
 			}
 		}
 
-		if ( currLen < length ) BIG_ARRAYS.copyFromBig( array, pos + count( arrayLength ) + count( common ), a, currLen + offset, Math.min( arrayLength, length - currLen ) );
+		if (currLen < length) BIG_ARRAYS.copyFromBig(array, pos + count(arrayLength) + count(common), a, currLen + offset, Math.min(arrayLength, length - currLen));
 
 		return arrayLength + common;
 	}
@@ -357,8 +357,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	/** {@inheritDoc}
 	 * <P>This implementation delegates to {@link #getArray(int)}. */
 	@Override
-	public KEY_TYPE[] get( final int index ) {
-		return getArray( index );
+	public KEY_TYPE[] get(final int index) {
+		return getArray(index);
 	}
 
 	/** Returns an array stored in this front-coded list.
@@ -366,11 +366,11 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param index an index.
 	 * @return the corresponding array stored in this front-coded list.
 	 */
-	public KEY_TYPE[] getArray( final int index ) {
-		ensureRestrictedIndex( index );
-		final int length = length( index );
-		final KEY_TYPE a[] = new KEY_TYPE[ length ];
-		extract( index, a, 0, length );
+	public KEY_TYPE[] getArray(final int index) {
+		ensureRestrictedIndex(index);
+		final int length = length(index);
+		final KEY_TYPE a[] = new KEY_TYPE[length];
+		extract(index, a, 0, length);
 		return a;
 	}
 
@@ -383,12 +383,12 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return if <code>a</code> can hold the extracted elements, the number of extracted elements;
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
-	public int get( final int index, final KEY_TYPE[] a, final int offset, final int length ) {
-		ensureRestrictedIndex( index );
-		ARRAYS.ensureOffsetLength( a, offset, length );
+	public int get(final int index, final KEY_TYPE[] a, final int offset, final int length) {
+		ensureRestrictedIndex(index);
+		ARRAYS.ensureOffsetLength(a, offset, length);
 
-		final int arrayLength = extract( index, a, offset, length );
-		if ( length >= arrayLength ) return arrayLength;
+		final int arrayLength = extract(index, a, offset, length);
+		if (length >= arrayLength) return arrayLength;
 		return length - arrayLength;
 	}
 
@@ -399,8 +399,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return if <code>a</code> can hold the extracted elements, the number of extracted elements;
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
-	public int get( final int index, final KEY_TYPE[] a ) {
-		return get( index, a, 0, a.length );
+	public int get(final int index, final KEY_TYPE[] a) {
+		return get(index, a, 0, a.length);
 	}
 
 	@Override
@@ -409,8 +409,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	}
 
 	@Override
-	public ObjectListIterator<KEY_TYPE[]> listIterator( final int start ) {
-		ensureIndex( start );
+	public ObjectListIterator<KEY_TYPE[]> listIterator(final int start) {
+		ensureIndex(start);
 
 		return new AbstractObjectListIterator<KEY_TYPE[]>() {
 				KEY_TYPE s[] = ARRAYS.EMPTY_ARRAY;
@@ -419,17 +419,17 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				boolean inSync; // Whether the current value in a is the string just before the next to be produced.
 
 				{
-					if ( start != 0 ) {
-						if ( start == n ) i = start; // If we start at the end, we do nothing.
+					if (start != 0) {
+						if (start == n) i = start; // If we start at the end, we do nothing.
 						else {
-							pos = p[ start / ratio ];
+							pos = p[start / ratio];
 							int j = start % ratio;
 							i = start - j;
-							while( j-- != 0 ) next();
+							while(j-- != 0) next();
 						}
 					}
 				}
-				
+
 				@Override
 				public boolean hasNext() {
 					return i < n;
@@ -449,50 +449,50 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				public int nextIndex() {
 					return i;
 				}
-				
+
 				@Override
 				public KEY_TYPE[] next() {
 					int length, common;
 
-					if ( ! hasNext() ) throw new NoSuchElementException();
+					if (! hasNext()) throw new NoSuchElementException();
 
-					if ( i % ratio == 0 ) {
-						pos = p[ i / ratio ];
-						length = readInt( array, pos );
-						s = ARRAYS.ensureCapacity( s, length, 0 );
-						BIG_ARRAYS.copyFromBig( array, pos + count( length ), s, 0, length );
-						pos += length + count( length );
+					if (i % ratio == 0) {
+						pos = p[i / ratio];
+						length = readInt(array, pos);
+						s = ARRAYS.ensureCapacity(s, length, 0);
+						BIG_ARRAYS.copyFromBig(array, pos + count(length), s, 0, length);
+						pos += length + count(length);
 						inSync = true;
 					}
 					else {
-						if ( inSync ) {
-							length = readInt( array, pos );
-							common = readInt( array, pos + count( length ) );
-							s = ARRAYS.ensureCapacity( s, length + common, common );
-							BIG_ARRAYS.copyFromBig( array, pos + count( length ) + count ( common ), s, common, length );
-							pos += count( length ) + count( common ) + length;
+						if (inSync) {
+							length = readInt(array, pos);
+							common = readInt(array, pos + count(length));
+							s = ARRAYS.ensureCapacity(s, length + common, common);
+							BIG_ARRAYS.copyFromBig(array, pos + count(length) + count (common), s, common, length);
+							pos += count(length) + count(common) + length;
 							length += common;
 						}
 						else {
-							s = ARRAYS.ensureCapacity( s, length = length( i ), 0 );
-							extract( i, s, 0, length );
+							s = ARRAYS.ensureCapacity(s, length = length(i), 0);
+							extract(i, s, 0, length);
 						}
 					}
 					i++;
-					return ARRAYS.copy( s, 0, length );
+					return ARRAYS.copy(s, 0, length);
 				}
 
 				@Override
 				public KEY_TYPE[] previous() {
-					if ( ! hasPrevious() ) throw new NoSuchElementException();
+					if (! hasPrevious()) throw new NoSuchElementException();
 					inSync = false;
-					return getArray( --i );
+					return getArray(--i);
 				}
 			};
 	}
 
 
-	/** Returns a copy of this list. 
+	/** Returns a copy of this list.
 	 *
 	 *  @return a copy of this list.
 	 */
@@ -504,12 +504,12 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	@Override
 	public String toString() {
 		final StringBuffer s = new StringBuffer();
-		s.append( "[ " );
-		for( int i = 0; i < n; i++ ) {
-			if ( i != 0 ) s.append( ", " );
-			s.append( ARRAY_LIST.wrap( getArray( i ) ).toString() );
+		s.append("[");
+		for(int i = 0; i < n; i++) {
+			if (i != 0) s.append(", ");
+			s.append(ARRAY_LIST.wrap(getArray(i)).toString());
 		}
-		s.append( " ]" );
+		s.append("]");
 		return s.toString();
 	}
 
@@ -519,26 +519,26 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 */
 
 	protected long[] rebuildPointerArray() {
-		final long[] p = new long[ ( n + ratio - 1 ) / ratio ];
+		final long[] p = new long[(n + ratio - 1) / ratio];
 		final KEY_TYPE a[][] = array;
 		int length, count;
 		long pos = 0;
 
-		for( int i = 0, j = 0, skip = ratio - 1; i < n; i++ ) {
-			length = readInt( a, pos );
-			count = count( length );
-			if ( ++skip == ratio ) {
+		for(int i = 0, j = 0, skip = ratio - 1; i < n; i++) {
+			length = readInt(a, pos);
+			count = count(length);
+			if (++skip == ratio) {
 				skip = 0;
-				p[ j++ ] = pos;
+				p[j++] = pos;
 				pos += count + length;
 			}
-			else pos += count + count( readInt( a, pos + count ) ) + length;
+			else pos += count + count(readInt(a, pos + count)) + length;
 		}
 
 		return p;
 	}
 
-	
+
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 
@@ -549,78 +549,78 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 #ifdef TEST
 
-	private static long seed = System.currentTimeMillis(); 
-	private static java.util.Random r = new java.util.Random( seed );
+	private static long seed = System.currentTimeMillis();
+	private static java.util.Random r = new java.util.Random(seed);
 
 	private static KEY_TYPE genKey() {
 #if KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character
 		return (KEY_TYPE)(r.nextInt());
 #elif KEYS_PRIMITIVE
-		return r.NEXT_KEY(); 
+		return r.NEXT_KEY();
 #elif KEY_CLASS_Object
-		return Integer.toBinaryString( r.nextInt() );
+		return Integer.toBinaryString(r.nextInt());
 #else
 		return new java.io.Serializable() {};
 #endif
 	}
 
 
-	private static java.text.NumberFormat format = new java.text.DecimalFormat( "#,###.00" );
-	private static java.text.FieldPosition fp = new java.text.FieldPosition( 0 );
+	private static java.text.NumberFormat format = new java.text.DecimalFormat("#,###.00");
+	private static java.text.FieldPosition fp = new java.text.FieldPosition(0);
 
-	private static String format( double d ) {
+	private static String format(double d) {
 		StringBuffer s = new StringBuffer();
-		return format.format( d, s, fp ).toString();
+		return format.format(d, s, fp).toString();
 	}
 
-	private static void speedTest( int n, boolean comp ) {
-		System.out.println( "There are presently no speed tests for this class." );
+	private static void speedTest(int n, boolean comp) {
+		System.out.println("There are presently no speed tests for this class.");
 	}
 
 
-	private static void fatal( String msg ) {
-		System.out.println( msg );
-		System.exit( 1 );
+	private static void fatal(String msg) {
+		System.out.println(msg);
+		System.exit(1);
 	}
 
-	private static void ensure( boolean cond, String msg ) {
-		if ( cond ) return;
-		fatal( msg );
+	private static void ensure(boolean cond, String msg) {
+		if (cond) return;
+		fatal(msg);
 	}
 
-	private static boolean contentEquals( java.util.List x, java.util.List y ) {
-		if ( x.size() != y.size() ) return false;
-		for( int i = 0; i < x.size(); i++ ) if ( ! java.util.Arrays.equals( (KEY_TYPE[])x.get( i ), (KEY_TYPE[])y.get( i ) ) ) return false;
+	private static boolean contentEquals(java.util.List x, java.util.List y) {
+		if (x.size() != y.size()) return false;
+		for(int i = 0; i < x.size(); i++) if (! java.util.Arrays.equals((KEY_TYPE[])x.get(i), (KEY_TYPE[])y.get(i))) return false;
 		return true;
 	}
 
 	private static int l[];
-	private static KEY_TYPE[][] a; 
+	private static KEY_TYPE[][] a;
 
 
-	private static void test( int n ) {
+	private static void test(int n) {
 		int c;
 
-		l = new int[ n ];
+		l = new int[n];
 		a = new KEY_TYPE[n][];
 
-		for( int i = 0; i < n; i++ ) l[i] = (int)(Math.abs(r.nextGaussian())*32);
-		for( int i = 0; i < n; i++ ) a[i] = new KEY_TYPE[l[i]];
-		for( int i = 0; i < n; i++ ) for( int j = 0; j < l[i]; j++ ) a[i][j] = genKey();
+		for(int i = 0; i < n; i++) l[i] = (int)(Math.abs(r.nextGaussian())*32);
+		for(int i = 0; i < n; i++) a[i] = new KEY_TYPE[l[i]];
+		for(int i = 0; i < n; i++) for(int j = 0; j < l[i]; j++) a[i][j] = genKey();
 
-		ARRAY_FRONT_CODED_LIST m = new ARRAY_FRONT_CODED_LIST( it.unimi.dsi.fastutil.objects.ObjectIterators.wrap( a ), r.nextInt( 4 ) + 1 );
-		it.unimi.dsi.fastutil.objects.ObjectArrayList t = new it.unimi.dsi.fastutil.objects.ObjectArrayList( a );
+		ARRAY_FRONT_CODED_LIST m = new ARRAY_FRONT_CODED_LIST(it.unimi.dsi.fastutil.objects.ObjectIterators.wrap(a), r.nextInt(4) + 1);
+		it.unimi.dsi.fastutil.objects.ObjectArrayList t = new it.unimi.dsi.fastutil.objects.ObjectArrayList(a);
 
 		//System.out.println(m);
-		//for( i = 0; i < t.size(); i++ ) System.out.println(ARRAY_LIST.wrap((KEY_TYPE[])t.get(i)));
+		//for(i = 0; i < t.size(); i++) System.out.println(ARRAY_LIST.wrap((KEY_TYPE[])t.get(i)));
 
 		/* Now we check that m actually holds that data. */
-		  
-		ensure( contentEquals( m, t ), "Error (" + seed + "): m does not equal t at creation" );
+
+		ensure(contentEquals(m, t), "Error (" + seed + "): m does not equal t at creation");
 
 		/* Now we check cloning. */
 
-		ensure( contentEquals( m, (java.util.List)m.clone() ), "Error (" + seed + "): m does not equal m.clone()" );
+		ensure(contentEquals(m, (java.util.List)m.clone()), "Error (" + seed + "): m does not equal m.clone()");
 
 		/* Now we play with iterators. */
 
@@ -628,23 +628,23 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 			ObjectListIterator i;
 			java.util.ListIterator j;
 			Object J;
-			i = m.listIterator(); 
-			j = t.listIterator(); 
+			i = m.listIterator();
+			j = t.listIterator();
 
-			for( int k = 0; k < 2*n; k++ ) {
-				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()" );
-				ensure( i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()" );
+			for(int k = 0; k < 2*n; k++) {
+				ensure(i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext()");
+				ensure(i.hasPrevious() == j.hasPrevious(), "Error (" + seed + "): divergence in hasPrevious()");
 
-				if ( r.nextFloat() < .8 && i.hasNext() ) {
-					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.next(), (KEY_TYPE[])j.next() ), "Error (" + seed + "): divergence in next()" );
+				if (r.nextFloat() < .8 && i.hasNext()) {
+					ensure(java.util.Arrays.equals((KEY_TYPE[])i.next(), (KEY_TYPE[])j.next()), "Error (" + seed + "): divergence in next()");
 
 				}
-				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.previous(), (KEY_TYPE[])j.previous() ), "Error (" + seed + "): divergence in previous()" );
+				else if (r.nextFloat() < .2 && i.hasPrevious()) {
+					ensure(java.util.Arrays.equals((KEY_TYPE[])i.previous(), (KEY_TYPE[])j.previous()), "Error (" + seed + "): divergence in previous()");
 				}
 
-				ensure( i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()" );
-				ensure( i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()" );
+				ensure(i.nextIndex() == j.nextIndex(), "Error (" + seed + "): divergence in nextIndex()");
+				ensure(i.previousIndex() == j.previousIndex(), "Error (" + seed + "): divergence in previousIndex()");
 
 			}
 
@@ -653,68 +653,68 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 		{
 			Object previous = null;
 			Object I, J;
-			int from = r.nextInt( m.size() +1 );
+			int from = r.nextInt(m.size() +1);
 			ObjectListIterator i;
 			java.util.ListIterator j;
-			i = m.listIterator( from ); 
-			j = t.listIterator( from ); 
+			i = m.listIterator(from);
+			j = t.listIterator(from);
 
-			for( int k = 0; k < 2*n; k++ ) {
-				ensure( i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")" );
-				ensure( i.hasPrevious() == j.hasPrevious() , "Error (" + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")" );
+			for(int k = 0; k < 2*n; k++) {
+				ensure(i.hasNext() == j.hasNext(), "Error (" + seed + "): divergence in hasNext() (iterator with starting point " + from + ")");
+				ensure(i.hasPrevious() == j.hasPrevious() , "Error (" + seed + "): divergence in hasPrevious() (iterator with starting point " + from + ")");
 
-				if ( r.nextFloat() < .8 && i.hasNext() ) {
-					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.next(), (KEY_TYPE[])j.next() ), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")" );
+				if (r.nextFloat() < .8 && i.hasNext()) {
+					ensure(java.util.Arrays.equals((KEY_TYPE[])i.next(), (KEY_TYPE[])j.next()), "Error (" + seed + "): divergence in next() (iterator with starting point " + from + ")");
 					//System.err.println("Done next " + I + " " + J + "  " + badPrevious);
 
 				}
-				else if ( r.nextFloat() < .2 && i.hasPrevious() ) {
-					ensure( java.util.Arrays.equals( (KEY_TYPE[])i.previous(), (KEY_TYPE[])j.previous() ), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")" );
+				else if (r.nextFloat() < .2 && i.hasPrevious()) {
+					ensure(java.util.Arrays.equals((KEY_TYPE[])i.previous(), (KEY_TYPE[])j.previous()), "Error (" + seed + "): divergence in previous() (iterator with starting point " + from + ")");
 
 				}
 			}
 
 		}
-		
+
 
 
 		try {
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
-				
+
 			oos.writeObject(m);
 			oos.close();
-				
+
 			java.io.InputStream is = new java.io.FileInputStream(ff);
 			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
-				
+
 			m = (ARRAY_FRONT_CODED_LIST)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			System.exit( 1 );
+			System.exit(1);
 		}
 
-		ensure( contentEquals( m, t ), "Error (" + seed + "): m does not equal t after save/read" );
+		ensure(contentEquals(m, t), "Error (" + seed + "): m does not equal t after save/read");
 
 		System.out.println("Test OK");
 		return;
 	}
 
 
-	public static void main( String args[] ) {
+	public static void main(String args[]) {
 		int n  = Integer.parseInt(args[1]);
-		if ( args.length > 2 ) r = new java.util.Random( seed = Long.parseLong( args[ 2 ] ) );
-		  
+		if (args.length > 2) r = new java.util.Random(seed = Long.parseLong(args[2]));
+
 		try {
-			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest( n, "speedComp".equals(args[0]) );
-			else if ( "test".equals( args[0] ) ) test(n);
-		} catch( Throwable e ) {
-			e.printStackTrace( System.err );
-			System.err.println( "seed: " + seed );
+			if ("speedTest".equals(args[0]) || "speedComp".equals(args[0])) speedTest(n, "speedComp".equals(args[0]));
+			else if ("test".equals(args[0])) test(n);
+		} catch(Throwable e) {
+			e.printStackTrace(System.err);
+			System.err.println("seed: " + seed);
 		}
 	}
 

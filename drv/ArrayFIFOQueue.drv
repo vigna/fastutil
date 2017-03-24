@@ -1,4 +1,4 @@
-/*		 
+/*
  * Copyright (C) 2010-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,7 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -39,7 +39,7 @@ import java.util.NoSuchElementException;
  */
 
 public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GENERIC implements Serializable {
-    private static final long serialVersionUID = 0L;
+	private static final long serialVersionUID = 0L;
 
 	/** The standard initial capacity of a queue. */
 	public final static int INITIAL_CAPACITY = 4;
@@ -49,31 +49,31 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 
 	/** The current (cached) length of {@link #array}. */
 	protected transient int length;
-	
+
 	/** The start position in {@link #array}. It is always strictly smaller than {@link #length}.*/
 	protected transient int start;
-	
+
 	/** The end position in {@link #array}. It is always strictly smaller than {@link #length}.
 	 *  Might be actually smaller than {@link #start} because {@link #array} is used cyclically. */
 	protected transient int end;
-	
+
 	/** Creates a new empty queue with given capacity.
 	 *
 	 * @param capacity the initial capacity of this queue.
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	public ARRAY_FIFO_QUEUE( final int capacity ) {
-		if ( capacity < 0 ) throw new IllegalArgumentException( "Initial capacity (" + capacity + ") is negative" );
-		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ Math.max( 1, capacity ) ]; // Never build a queue with zero-sized backing array.
+	public ARRAY_FIFO_QUEUE(final int capacity) {
+		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
+		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(1, capacity)]; // Never build a queue with zero-sized backing array.
 		length = array.length;
 	}
 
 	/** Creates a new empty queue with standard {@linkplain #INITIAL_CAPACITY initial capacity}. */
 	public ARRAY_FIFO_QUEUE() {
-		this( INITIAL_CAPACITY );
+		this(INITIAL_CAPACITY);
 	}
 
-	/** {@inheritDoc} 
+	/** {@inheritDoc}
 	 * <p>This implementation returns {@code null} (FIFO queues have no comparator). */
 	@Override
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
@@ -82,12 +82,12 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 
 	@Override
 	public KEY_GENERIC_TYPE DEQUEUE() {
-		if ( start == end ) throw new NoSuchElementException();
-		final KEY_GENERIC_TYPE t = array[ start ];
+		if (start == end) throw new NoSuchElementException();
+		final KEY_GENERIC_TYPE t = array[start];
 #if KEYS_REFERENCE
-		array[ start ] = null; // Clean-up for the garbage collector.
+		array[start] = null; // Clean-up for the garbage collector.
 #endif
-		if ( ++start == length ) start = 0;
+		if (++start == length) start = 0;
 		reduce();
 		return t;
 	}
@@ -98,123 +98,123 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC extends ABSTRACT_PRIORITY_QUEUE KEY_GE
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 	public KEY_GENERIC_TYPE DEQUEUE_LAST() {
-		if ( start == end ) throw new NoSuchElementException();
-		if ( end == 0 ) end = length;
-		final KEY_GENERIC_TYPE t = array[ --end ];
+		if (start == end) throw new NoSuchElementException();
+		if (end == 0) end = length;
+		final KEY_GENERIC_TYPE t = array[--end];
 #if KEYS_REFERENCE
-		array[ end ] = null; // Clean-up for the garbage collector.
+		array[end] = null; // Clean-up for the garbage collector.
 #endif
 		reduce();
 		return t;
 	}
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	private final void resize( final int size, final int newLength ) {
-		final KEY_GENERIC_TYPE[] newArray = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ newLength ];
-		if ( start >= end ) {
-			if ( size != 0 ) {
-				System.arraycopy( array, start, newArray, 0, length - start );
-				System.arraycopy( array, 0, newArray, length - start, end );
+	private final void resize(final int size, final int newLength) {
+		final KEY_GENERIC_TYPE[] newArray = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[newLength];
+		if (start >= end) {
+			if (size != 0) {
+				System.arraycopy(array, start, newArray, 0, length - start);
+				System.arraycopy(array, 0, newArray, length - start, end);
 			}
 		}
-		else System.arraycopy( array, start, newArray, 0, end - start );
+		else System.arraycopy(array, start, newArray, 0, end - start);
 		start = 0;
 		end = size;
 		array = newArray;
 		length = newLength;
-	}	
+	}
 
 	private final void expand() {
-		resize( length, (int)Math.min( it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE, 2L * length ) );
+		resize(length, (int)Math.min(it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE, 2L * length));
 	}
 
 	private final void reduce() {
 		final int size = size();
-		if ( length > INITIAL_CAPACITY && size <= length / 4 ) resize( size, length / 2 );
+		if (length > INITIAL_CAPACITY && size <= length / 4) resize(size, length / 2);
 	}
 
 	@Override
-	public void enqueue( KEY_GENERIC_TYPE x ) {
-		array[ end++ ] = x;
-		if ( end == length ) end = 0;
-		if ( end == start ) expand();
+	public void enqueue(KEY_GENERIC_TYPE x) {
+		array[end++] = x;
+		if (end == length) end = 0;
+		if (end == start) expand();
 	}
 
 	/** Enqueues a new element as the first element (in dequeuing order) of the queue.
 	 * @param x the element to enqueue.
 	 */
-	public void enqueueFirst( KEY_GENERIC_TYPE x ) {
-		if ( start == 0 ) start = length;
-		array[ --start ] = x;
-		if ( end == start ) expand();
+	public void enqueueFirst(KEY_GENERIC_TYPE x) {
+		if (start == 0) start = length;
+		array[--start] = x;
+		if (end == start) expand();
 	}
 
 	@Override
 	public KEY_GENERIC_TYPE FIRST() {
-		if ( start == end ) throw new NoSuchElementException();
-		return array[ start ];
+		if (start == end) throw new NoSuchElementException();
+		return array[start];
 	}
 
 
 	@Override
 	public KEY_GENERIC_TYPE LAST() {
-		if ( start == end ) throw new NoSuchElementException();
-		return array[ ( end == 0 ? length : end ) - 1 ];
+		if (start == end) throw new NoSuchElementException();
+		return array[(end == 0 ? length : end) - 1];
 	}
 
 	@Override
 	public void clear() {
 #if KEYS_REFERENCE
-		if ( start <= end ) Arrays.fill( array, start, end, null );
+		if (start <= end) Arrays.fill(array, start, end, null);
 		else {
-			Arrays.fill( array, start, length, null );
-			Arrays.fill( array, 0, end, null );
+			Arrays.fill(array, start, length, null);
+			Arrays.fill(array, 0, end, null);
 		}
 #endif
 		start = end = 0;
 	}
 
-	/** Trims the queue to the smallest possible size. */		
+	/** Trims the queue to the smallest possible size. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void trim() {
 		final int size = size();
-		final KEY_GENERIC_TYPE[] newArray = 
+		final KEY_GENERIC_TYPE[] newArray =
 #if KEYS_PRIMITIVE
-											new KEY_GENERIC_TYPE[ size + 1 ];
+											new KEY_GENERIC_TYPE[size + 1];
 #else
-											(KEY_GENERIC_TYPE[])new Object[ size + 1 ];
+											(KEY_GENERIC_TYPE[])new Object[size + 1];
 #endif
-		if ( start <= end ) System.arraycopy( array, start, newArray, 0, end - start );
+		if (start <= end) System.arraycopy(array, start, newArray, 0, end - start);
 		else {
-			System.arraycopy( array, start, newArray, 0, length - start );
-			System.arraycopy( array, 0, newArray, length - start, end );
+			System.arraycopy(array, start, newArray, 0, length - start);
+			System.arraycopy(array, 0, newArray, length - start, end);
 		}
 		start = 0;
-		length = ( end = size ) + 1;
+		length = (end = size) + 1;
 		array = newArray;
 	}
-		
+
 	@Override
 	public int size() {
 		final int apparentLength = end - start;
 		return apparentLength >= 0 ? apparentLength : length + apparentLength;
 	}
 
-	private void writeObject( java.io.ObjectOutputStream s ) throws java.io.IOException {
+	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
 		int size = size();
-		s.writeInt( size );
-		for( int i = start; size-- != 0; ) {
-			s.WRITE_KEY( array[ i++ ] );
-			if ( i == length ) i = 0;
+		s.writeInt(size);
+		for(int i = start; size-- != 0;) {
+			s.WRITE_KEY(array[i++]);
+			if (i == length) i = 0;
 		}
 	}
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	private void readObject( java.io.ObjectInputStream s ) throws java.io.IOException, ClassNotFoundException {
+	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		end = s.readInt();
-		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[ length = HashCommon.nextPowerOfTwo( end + 1 ) ];
-		for( int i = 0; i < end; i++ ) array[ i ] = KEY_GENERIC_CAST s.READ_KEY();
+		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length = HashCommon.nextPowerOfTwo(end + 1)];
+		for(int i = 0; i < end; i++) array[i] = KEY_GENERIC_CAST s.READ_KEY();
 	}
 }
