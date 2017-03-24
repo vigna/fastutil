@@ -675,4 +675,5 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 \
 "#endif\n"\
 \
+"/* START_OF_JAVA_SOURCE */\n"\
 "#include \"$1\"\n"

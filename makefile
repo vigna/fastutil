@@ -581,7 +581,7 @@ SOURCES = \
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	$(CC) -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< >$@
+	$(CC) -w -I. -ftabstop=4 $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< | sed -e '1,/START_OF_JAVA_SOURCE/d' >$@
 
 
 clean: 
