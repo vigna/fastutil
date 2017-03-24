@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2010-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -31,7 +31,7 @@ import java.util.ListIterator;
 public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	/** Returns the index of the element that would be returned by a subsequent call to next.
 	 * (Returns list size if the list iterator is at the end of the list.)
-	 * 
+	 *
 	 * @return the index of the element that would be returned by a subsequent call to next, or list
 	 * size if list iterator is at end of list.
 	 * @see ListIterator#nextIndex()
@@ -40,7 +40,7 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 
 	/** Returns the index of the element that would be returned by a subsequent call to previous.
 	 * (Returns -1 if the list iterator is at the beginning of the list.)
-	 * 
+	 *
 	 * @return the index of the element that would be returned by a subsequent call to previous, or
 	 * -1 if list iterator is at beginning of list.
 	 * @see ListIterator#previousIndex()
@@ -58,5 +58,5 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	 * @return the number of elements actually skipped.
 	 */
 
-	long skip( long n );
+	long skip(long n);
 }

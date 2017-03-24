@@ -18,7 +18,7 @@ public class Int2IntMapsTest {
 		assertFalse(map.equals(Collections.singletonMap("foo", 2)));
 		assertFalse(map.equals(Collections.singletonMap(1, "foo")));
 	}
-	
+
 	@Test
 	public void testToArrayShouldNullElementAfterLastEntry() {
 		Int2IntMap map = Int2IntMaps.EMPTY_MAP;

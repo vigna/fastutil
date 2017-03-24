@@ -11,9 +11,9 @@ public class ObjectAVLTreeSetTest {
 	@Test
 	public void testGet() {
 		ObjectAVLTreeSet<Integer> s = new ObjectAVLTreeSet<Integer>();
-		Integer o = new Integer( 0 );
-		s.add( o );
-		assertSame( o,  s.get( new Integer( 0 ) ) );
+		Integer o = new Integer(0);
+		s.add(o);
+		assertSame(o,  s.get(new Integer(0)));
 	}
 
 	@Test

@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil.io;
 
-/*		 
+/*
  * Copyright (C) 2005-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil.io;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 /** Simple, fast and repositionable byte-array input stream.
@@ -49,18 +49,18 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	 * @param offset the first valid entry of the array.
 	 * @param length the number of valid bytes.
 	 */
-	public FastByteArrayInputStream( final byte[] array, final int offset, final int length ) {
+	public FastByteArrayInputStream(final byte[] array, final int offset, final int length) {
 		this.array = array;
 		this.offset = offset;
 		this.length = length;
 	}
 
-	/** Creates a new array input stream using a given array. 
+	/** Creates a new array input stream using a given array.
 	 *
 	 * @param array the backing array.
 	 */
-	public FastByteArrayInputStream( final byte[] array ) {
-		this( array, 0, array.length );
+	public FastByteArrayInputStream(final byte[] array) {
+		this(array, 0, array.length);
 	}
 
 	public boolean markSupported() {
@@ -74,7 +74,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	/** Closing a fast byte array input stream has no effect. */
 	public void close() {}
 
-	public void mark( final int dummy ) {
+	public void mark(final int dummy) {
 		mark = position;
 	}
 
@@ -82,8 +82,8 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 		return length - position;
 	}
 
-	public long skip( long n ) {
-		if ( n <= length - position ) {
+	public long skip(long n) {
+		if (n <= length - position) {
 			position += (int)n;
 			return n;
 		}
@@ -93,20 +93,20 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	}
 
 	public int read() {
-		if ( length == position ) return -1;
-		return array[ offset + position++ ] & 0xFF;
+		if (length == position) return -1;
+		return array[offset + position++] & 0xFF;
 	}
 
-	/** Reads bytes from this byte-array input stream as 
+	/** Reads bytes from this byte-array input stream as
 	 * specified in {@link java.io.InputStream#read(byte[], int, int)}.
 	 * Note that the implementation given in {@link java.io.ByteArrayInputStream#read(byte[], int, int)}
 	 * will return -1 on a zero-length read at EOF, contrarily to the specification. We won't.
 	 */
-	
-	public int read( final byte b[], final int offset, final int length ) {
-		if ( this.length == this.position ) return length == 0 ? 0 : -1;
-		final int n = Math.min( length, this.length - this.position );
-		System.arraycopy( array, this.offset + this.position, b, offset, n );
+
+	public int read(final byte b[], final int offset, final int length) {
+		if (this.length == this.position) return length == 0 ? 0 : -1;
+		final int n = Math.min(length, this.length - this.position);
+		System.arraycopy(array, this.offset + this.position, b, offset, n);
 		this.position += n;
 		return n;
 	}
@@ -115,8 +115,8 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 		return position;
 	}
 
-	public void position( final long newPosition ) {
-		position = (int)Math.min( newPosition, length );
+	public void position(final long newPosition) {
+		position = (int)Math.min(newPosition, length);
 	}
 
 	@Override

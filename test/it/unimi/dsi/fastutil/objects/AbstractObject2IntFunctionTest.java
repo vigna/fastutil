@@ -10,8 +10,8 @@ public class AbstractObject2IntFunctionTest {
 	public void testRemove() {
 		final Object2IntArrayMap<Object> a = new Object2IntArrayMap<Object>();
 		final Object key = new Object();
-		a.put( key, 1 );
-		assertEquals( Integer.valueOf( 1 ), a.remove( key ) );
+		a.put(key, 1);
+		assertEquals(Integer.valueOf(1), a.remove(key));
 	}
 }
 

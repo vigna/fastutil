@@ -2,7 +2,7 @@ package it.unimi.dsi.fastutil;
 
 import java.io.Serializable;
 
-/*		 
+/*
  * Copyright (C) 2003-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@ import java.io.Serializable;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -44,7 +44,7 @@ public class PriorityQueues {
 		protected EmptyPriorityQueue() {}
 
 		@Override
-		public void enqueue( Object o ) { throw new UnsupportedOperationException(); }
+		public void enqueue(Object o) { throw new UnsupportedOperationException(); }
 
 		@Override
 		public Object dequeue() { throw new NoSuchElementException(); }
@@ -71,12 +71,12 @@ public class PriorityQueues {
 		public Comparator<?> comparator() { return null; }
 
 		@Override
-        public Object clone() { return EMPTY_QUEUE; }
+		public Object clone() { return EMPTY_QUEUE; }
 
-        @Override
-        public boolean equals(final Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
+		@Override
+		public boolean equals(final Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
 
-        private Object readResolve() { return EMPTY_QUEUE; }
+		private Object readResolve() { return EMPTY_QUEUE; }
 	}
 
 	/** An empty indirect priority queue (immutable). */
@@ -102,54 +102,54 @@ public class PriorityQueues {
 		final protected PriorityQueue <K> q;
 		final protected Object sync;
 
-		protected SynchronizedPriorityQueue( final PriorityQueue <K> q, final Object sync ) {
+		protected SynchronizedPriorityQueue(final PriorityQueue <K> q, final Object sync) {
 			this.q = q;
 			this.sync = sync;
 		}
 
-		protected SynchronizedPriorityQueue( final PriorityQueue <K> q ) {
+		protected SynchronizedPriorityQueue(final PriorityQueue <K> q) {
 			this.q = q;
 			this.sync = this;
 		}
 
 		@Override
-		public void enqueue( K x ) { synchronized( sync ) { q.enqueue( x ); } }
+		public void enqueue(K x) { synchronized(sync) { q.enqueue(x); } }
 
 		@Override
-		public K dequeue() { synchronized( sync ) { return q.dequeue(); } }
+		public K dequeue() { synchronized(sync) { return q.dequeue(); } }
 
 		@Override
-		public K first() { synchronized( sync ) { return q.first(); } }
+		public K first() { synchronized(sync) { return q.first(); } }
 
 		@Override
-		public K last() { synchronized( sync ) { return q.last(); } }
+		public K last() { synchronized(sync) { return q.last(); } }
 
 		@Override
-		public boolean isEmpty() { synchronized( sync ) { return q.isEmpty(); } }
+		public boolean isEmpty() { synchronized(sync) { return q.isEmpty(); } }
 
 		@Override
-		public int size() { synchronized( sync ) { return q.size(); } }
+		public int size() { synchronized(sync) { return q.size(); } }
 
 		@Override
-		public void clear() { synchronized( sync ) { q.clear(); } }
+		public void clear() { synchronized(sync) { q.clear(); } }
 
 		@Override
-		public void changed() { synchronized( sync ) { q.changed(); } }
+		public void changed() { synchronized(sync) { q.changed(); } }
 
 		@Override
-		public Comparator <? super K> comparator() { synchronized( sync ) { return q.comparator(); } }
+		public Comparator <? super K> comparator() { synchronized(sync) { return q.comparator(); } }
 
 		@Override
-		public String toString() { synchronized( sync ) { return q.toString(); } }
+		public String toString() { synchronized(sync) { return q.toString(); } }
 
 		@Override
-		public int hashCode() { synchronized( sync ) { return q.hashCode(); } }
+		public int hashCode() { synchronized(sync) { return q.hashCode(); } }
 
 		@Override
-		public boolean equals( final Object o ) { if (o == this) return true; synchronized( sync ) { return q.equals(o); } }
+		public boolean equals(final Object o) { if (o == this) return true; synchronized(sync) { return q.equals(o); } }
 
 		private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
-			synchronized(sync) { s.defaultWriteObject(); } 
+			synchronized(sync) { s.defaultWriteObject(); }
 		}
 	}
 
@@ -160,7 +160,7 @@ public class PriorityQueues {
 	 * @param q the priority queue to be wrapped in a synchronized priority queue.
 	 * @return a synchronized view of the specified priority queue.
 	 */
-	public static <K> PriorityQueue <K> synchronize( final PriorityQueue <K> q ) {	return new SynchronizedPriorityQueue<K>( q ); }
+	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q) {	return new SynchronizedPriorityQueue<K>(q); }
 
 	/** Returns a synchronized priority queue backed by the specified priority queue, using an assigned object to synchronize.
 	 *
@@ -170,5 +170,5 @@ public class PriorityQueues {
 	 * @return a synchronized view of the specified priority queue.
 	 */
 
-	public static <K> PriorityQueue <K> synchronize( final PriorityQueue <K> q, final Object sync ) { return new SynchronizedPriorityQueue<K>( q, sync ); }
+	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q, final Object sync) { return new SynchronizedPriorityQueue<K>(q, sync); }
 }

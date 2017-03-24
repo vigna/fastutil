@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2003-2017 Paolo Boldi and Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -28,7 +28,7 @@ import java.util.NoSuchElementException;
  * dequeued first.  It is also possible to get the {@linkplain #first() first
  * element}, that is, the element that would be dequeued next.
  *
- * <P>Additionally, the queue may provide a method to peek at 
+ * <P>Additionally, the queue may provide a method to peek at
  * element that would be dequeued {@linkplain #last() last}.
  *
  * <P>The relative order of the elements enqueued should not change during
@@ -44,7 +44,7 @@ public interface PriorityQueue<K> {
 	 * @param x the element to enqueue..
 	 */
 
-	void enqueue( K x );
+	void enqueue(K x);
 
 	/** Dequeues the {@linkplain #first() first} element from the queue.
 	 *
@@ -94,7 +94,7 @@ public interface PriorityQueue<K> {
 
 	void changed();
 
-    /** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
+	/** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
 	 *
 	 * @return the comparator associated with this sorted set, or <code>null</code> if it uses its elements' natural ordering.
 	 */

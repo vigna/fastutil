@@ -24,7 +24,7 @@ public class IntListsTest {
 		assertFalse(IntLists.unmodifiable(fakeList) instanceof RandomAccess);
 		assertFalse(IntLists.synchronize(fakeList) instanceof RandomAccess);
 		assertFalse(IntLists.synchronize(fakeList, new Object()) instanceof RandomAccess);
-		
+
 		assertTrue(IntLists.unmodifiable(new IntArrayList()) instanceof RandomAccess);
 		assertTrue(IntLists.synchronize(new IntArrayList()) instanceof RandomAccess);
 		assertTrue(IntLists.synchronize(new IntArrayList(), new Object()) instanceof RandomAccess);

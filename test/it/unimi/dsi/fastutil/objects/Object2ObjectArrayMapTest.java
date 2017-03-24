@@ -19,9 +19,9 @@ public class Object2ObjectArrayMapTest  {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testContainsNull() {
-		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>( new Integer[] { 1, 2, 3 },  new Integer[] { 1, 2, 3 } );
-		assertFalse( m.containsKey( null ) );
-		assertTrue( m.get( null ) == null );
+		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>(new Integer[] { 1, 2, 3 },  new Integer[] { 1, 2, 3 });
+		assertFalse(m.containsKey(null));
+		assertTrue(m.get(null) == null);
 	}
 
 	@SuppressWarnings("boxing")
@@ -39,69 +39,69 @@ public class Object2ObjectArrayMapTest  {
 
 		assertEquals(a1, a2);
 
-		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>( new Integer[] { 1, 2 },  new Integer[] { 1, 2 } );
-		assertFalse( m.equals( new Object2ObjectOpenHashMap<Integer,Integer>( new Integer[] { 1, null }, new Integer[] { 1, 1 } ) ) );
+		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>(new Integer[] { 1, 2 },  new Integer[] { 1, 2 });
+		assertFalse(m.equals(new Object2ObjectOpenHashMap<Integer,Integer>(new Integer[] { 1, null }, new Integer[] { 1, 1 })));
 	}
 
 	@SuppressWarnings({ "boxing" })
 	@Test
 	public void testMap() {
-		for( int i = 0; i <= 1; i++ ) {
-			Object2ObjectArrayMap<Integer,Integer> m = i == 0 ? new Object2ObjectArrayMap<Integer,Integer>() : new Object2ObjectArrayMap<Integer,Integer>( new Integer[] { 0 }, new Integer[] { 0 } );
-			assertEquals( null, m.put( 1, 1 ) );
-			assertEquals( 1 + i, m.size() );
-			assertTrue( m.containsKey( 1 ) );
-			assertTrue( m.containsValue( 1 ) );
-			assertEquals( null, m.put(  2, 2  ) );
-			assertTrue( m.containsKey( 2 ) );
-			assertTrue( m.containsValue( 2 ) );
-			assertEquals( 2 + i, m.size() );
-			assertEquals(  Integer.valueOf( 1 ), m.put( 1, 3 ) );
-			assertTrue( m.containsValue( 3 ) );
-			assertEquals( null, m.remove( 3 ) );
-			assertEquals( null, m.put(  3, 3  ) );
-			assertTrue( m.containsKey( 3 ) );
-			assertTrue( m.containsValue( 3 ) );
-			assertEquals( 3 + i, m.size() );
-			assertEquals( Integer.valueOf( 3 ), m.get( 1 ) );
-			assertEquals( Integer.valueOf( 2 ), m.get( 2 ) );
-			assertEquals( Integer.valueOf( 3 ), m.get( 3 ) );
-			assertEquals( new ObjectOpenHashSet<Integer>( i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 } ), new ObjectOpenHashSet<Integer>( m.keySet().iterator() ) );
-			assertEquals( new ObjectOpenHashSet<Integer>( i == 0 ? new Integer[] { 3, 2, 3 } : new Integer[] { 0, 3, 2, 3 } ), new ObjectOpenHashSet<Integer>( m.values().iterator() ) );
+		for(int i = 0; i <= 1; i++) {
+			Object2ObjectArrayMap<Integer,Integer> m = i == 0 ? new Object2ObjectArrayMap<Integer,Integer>() : new Object2ObjectArrayMap<Integer,Integer>(new Integer[] { 0 }, new Integer[] { 0 });
+			assertEquals(null, m.put(1, 1));
+			assertEquals(1 + i, m.size());
+			assertTrue(m.containsKey(1));
+			assertTrue(m.containsValue(1));
+			assertEquals(null, m.put(2, 2));
+			assertTrue(m.containsKey(2));
+			assertTrue(m.containsValue(2));
+			assertEquals(2 + i, m.size());
+			assertEquals(Integer.valueOf(1), m.put(1, 3));
+			assertTrue(m.containsValue(3));
+			assertEquals(null, m.remove(3));
+			assertEquals(null, m.put(3, 3));
+			assertTrue(m.containsKey(3));
+			assertTrue(m.containsValue(3));
+			assertEquals(3 + i, m.size());
+			assertEquals(Integer.valueOf(3), m.get(1));
+			assertEquals(Integer.valueOf(2), m.get(2));
+			assertEquals(Integer.valueOf(3), m.get(3));
+			assertEquals(new ObjectOpenHashSet<Integer>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 }), new ObjectOpenHashSet<Integer>(m.keySet().iterator()));
+			assertEquals(new ObjectOpenHashSet<Integer>(i == 0 ? new Integer[] { 3, 2, 3 } : new Integer[] { 0, 3, 2, 3 }), new ObjectOpenHashSet<Integer>(m.values().iterator()));
 
-			for( Entry<Integer, Integer> e: m.object2ObjectEntrySet() ) assertEquals( e.getValue(), m.get( e.getKey() ) );
+			for(Entry<Integer, Integer> e: m.object2ObjectEntrySet()) assertEquals(e.getValue(), m.get(e.getKey()));
 
-			assertTrue( i != 0 == m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 0, 0 ) ) );
-			assertTrue( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 1, 3 ) ) );
-			assertTrue( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 2, 2 ) ) );
-			assertTrue( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 3, 3 ) ) );
-			assertFalse( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 1, 2 ) ) );
-			assertFalse( m.object2ObjectEntrySet().contains( new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>( 2, 1 ) ) );
+			assertTrue(i != 0 == m.object2ObjectEntrySet().contains(new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>(0, 0)));
+			assertTrue(m.object2ObjectEntrySet().contains(new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>(1, 3)));
+			assertTrue(m.object2ObjectEntrySet().contains(new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>(2, 2)));
+			assertTrue(m.object2ObjectEntrySet().contains(new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>(3, 3)));
+			assertFalse(m.object2ObjectEntrySet().contains(new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>(1, 2)));
+			assertFalse(m.object2ObjectEntrySet().contains(new AbstractObject2ObjectMap.BasicEntry<Integer,Integer>(2, 1)));
 
-			assertEquals( Integer.valueOf( 3 ), m.remove( 3 ) );
-			assertEquals( 2 + i, m.size() );
-			assertEquals( Integer.valueOf( 3 ), m.remove( 1 ) );
-			assertEquals( 1 + i, m.size() );
-			assertFalse( m.containsKey( 1 ) );
-			assertEquals( Integer.valueOf( 2 ), m.remove( 2 ) );
-			assertEquals( 0 + i, m.size() );
-			assertFalse( m.containsKey( 1 ) );
+			assertEquals(Integer.valueOf(3), m.remove(3));
+			assertEquals(2 + i, m.size());
+			assertEquals(Integer.valueOf(3), m.remove(1));
+			assertEquals(1 + i, m.size());
+			assertFalse(m.containsKey(1));
+			assertEquals(Integer.valueOf(2), m.remove(2));
+			assertEquals(0 + i, m.size());
+			assertFalse(m.containsKey(1));
 		}
 	}
-	
+
 	@SuppressWarnings("boxing")
 	@Test
 	public void testClone() {
 		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>();
-		assertEquals( m, m.clone() );
-		m.put( 0, 1 );
-		assertEquals( m, m.clone() );
-		m.put( 0, 2 );
-		assertEquals( m, m.clone() );
-		m.put( 1, 2 );
-		assertEquals( m, m.clone() );
-		m.remove( 1 );
-		assertEquals( m, m.clone() );
+		assertEquals(m, m.clone());
+		m.put(0, 1);
+		assertEquals(m, m.clone());
+		m.put(0, 2);
+		assertEquals(m, m.clone());
+		m.put(1, 2);
+		assertEquals(m, m.clone());
+		m.remove(1);
+		assertEquals(m, m.clone());
 	}
 
 	@SuppressWarnings("boxing")
@@ -109,32 +109,32 @@ public class Object2ObjectArrayMapTest  {
 	public void testSerialisation() throws IOException, ClassNotFoundException {
 		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream( baos );
-		oos.writeObject( m );
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(m);
 		oos.close();
-		assertEquals( m, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
-		
-		m.put( 0, 1 );
-		m.put( 1, 2 );
+		assertEquals(m, BinIO.loadObject(new ByteArrayInputStream(baos.toByteArray())));
+
+		m.put(0, 1);
+		m.put(1, 2);
 
 		baos.reset();
-		oos = new ObjectOutputStream( baos );
-		oos.writeObject( m );
+		oos = new ObjectOutputStream(baos);
+		oos.writeObject(m);
 		oos.close();
-		assertEquals( m, BinIO.loadObject( new ByteArrayInputStream( baos.toByteArray() ) ) );
+		assertEquals(m, BinIO.loadObject(new ByteArrayInputStream(baos.toByteArray())));
 	}
-	
+
 	@SuppressWarnings("boxing")
 	@Test
 	public void testIteratorRemove() {
-		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>( new Integer[] { 1, 2, 3 },  new Integer[] { 1, 2, 3 } );
+		Object2ObjectArrayMap<Integer,Integer> m = new Object2ObjectArrayMap<Integer,Integer>(new Integer[] { 1, 2, 3 },  new Integer[] { 1, 2, 3 });
 		ObjectIterator<Object2ObjectMap.Entry<Integer, Integer>> keySet = m.object2ObjectEntrySet().iterator();
 		keySet.next();
 		keySet.next();
 		keySet.remove();
-		assertTrue( keySet.hasNext() );
+		assertTrue(keySet.hasNext());
 		Entry<Integer, Integer> next = keySet.next();
-		assertEquals( Integer.valueOf( 3 ), next.getKey() );
-		assertEquals( Integer.valueOf( 3 ), next.getValue() );
+		assertEquals(Integer.valueOf(3), next.getKey());
+		assertEquals(Integer.valueOf(3), next.getValue());
 	}
 }

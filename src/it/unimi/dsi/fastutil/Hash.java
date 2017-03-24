@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2002-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,18 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
 /** Basic data for all hash-based classes.
  *
  * <h2>Historical note</h2>
- * 
+ *
  * <p><strong>Warning:</strong> the following comments are here for historical reasons,
  * and apply just to the <em>double hash</em> classes that can be optionally generated.
  * The standard <code>fastutil</code> distribution since 6.1.0 uses linear-probing hash
- * tables, and tables are always sized as powers of two. 
+ * tables, and tables are always sized as powers of two.
  *
  * <p>The classes in <code>fastutil</code> are built around open-addressing hashing
  * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
@@ -42,7 +42,7 @@ package it.unimi.dsi.fastutil;
  * If there is a {@link #OCCUPIED} entry with key <var>k</var>, its index in the sequence above comes <em>before</em>
  * the indices of any {@link #REMOVED} entries with key <var>k</var>.
  * </blockquote>
- * 
+ *
  * <p>When we search for the key <var>k</var> we scan the entries in the
  * sequence <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip;,
  * <var>i</var><sub><var>p</var>-1</sub> and stop when <var>k</var> is found,
@@ -55,8 +55,8 @@ package it.unimi.dsi.fastutil;
  * objects as keys or values deleted entries are set to a special fixed value to
  * optimize garbage collection).
  *
- * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet. 
- * If we actually have to insert a new element, we use that 
+ * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet.
+ * If we actually have to insert a new element, we use that
  * entry if we can, thus avoiding to pollute another {@link #FREE} entry. Since this position comes
  * <i>a fortiori</i> before any {@link #REMOVED} entries with the same key, we are also keeping the invariant true.
  */
@@ -84,7 +84,7 @@ public interface Hash {
 	 * #hashCode(Object) hash function}, with the obvious property that
 	 * equal objects must have the same hash code.
 	 *
-	 * <P>Note that the {@link #equals(Object,Object) equals()} method of a strategy must 
+	 * <P>Note that the {@link #equals(Object,Object) equals()} method of a strategy must
 	 * be able to handle <code>null</code>, too.
 	 */
 
@@ -96,7 +96,7 @@ public interface Hash {
 		 * @return the hash code of the given object with respect to this hash strategy.
 		 */
 
-		public int hashCode( K o );
+		public int hashCode(K o);
 
 		/** Returns true if the given objects are equal with respect to this hash strategy.
 		 *
@@ -104,7 +104,7 @@ public interface Hash {
 		 * @param b another object (or <code>null</code>).
 		 * @return true if the two specified objects are equal with respect to this hash strategy.
 		 */
-		public boolean equals( K a, K b );
+		public boolean equals(K a, K b);
 	}
 
 	/** The default growth factor of a hash table. */
@@ -119,9 +119,9 @@ public interface Hash {
 	/** The state of a hash table entry freed by a deletion. */
 	@Deprecated
 	final public byte REMOVED = 1;
-	 
-	/** A list of primes to be used as table sizes. The <var>i</var>-th element is 
-	 *  the largest prime <var>p</var> smaller than 2<sup>(<var>i</var>+28)/16</sup> 
+
+	/** A list of primes to be used as table sizes. The <var>i</var>-th element is
+	 *  the largest prime <var>p</var> smaller than 2<sup>(<var>i</var>+28)/16</sup>
 	 * and such that <var>p</var>-2 is also prime (or 1, for the first few entries). */
 
 	@Deprecated

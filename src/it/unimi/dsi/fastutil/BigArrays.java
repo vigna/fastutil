@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2010-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  *
  * For the sorting code:
  *
@@ -25,7 +25,7 @@ package it.unimi.dsi.fastutil;
  *   both that copyright notice and this permission notice appear in
  *   supporting documentation. CERN makes no representations about the
  *   suitability of this software for any purpose. It is provided "as is"
- *   without expressed or implied warranty. 
+ *   without expressed or implied warranty.
  */
 
 
@@ -36,9 +36,9 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
 /**
  * A class providing static methods and objects that do useful things with big
  * arrays.
- * 
+ *
  * <h2>Introducing big arrays</h2>
- * 
+ *
  * <p>
  * A <em>big array</em> is an array-of-arrays representation of an array. The
  * length of a big array is bounded by {@link #SEGMENT_SIZE} *
@@ -48,7 +48,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * <code>int[][]</code>. Note that {@link #SEGMENT_SIZE} has been chosen so that
  * a single segment is smaller than 2<sup>31</sup> bytes independently of the
  * data type. It might be enlarged in the future.
- * 
+ *
  * <p>
  * If <code>a</code> is a big array, <code>a[0]</code>, <code>a[1]</code>,
  * &hellip; are called the <em>segments</em> of the big array. All segments,
@@ -62,12 +62,12 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * {@link IntBigArrays#set(int[][], long, int)}), but you can also use the
  * methods {@link #segment(long)}/{@link #displacement(long)} to access entries
  * manually.
- * 
+ *
  * <h2>Scanning big arrays</h2>
- * 
+ *
  * <p>
  * You can scan a big array using the following idiomatic form:
- * 
+ *
  * <pre>
  * for(int s = 0; s &lt; a.length; s++) {
  *     final int[] t = a[s];
@@ -77,33 +77,33 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *     }
  * }
  * </pre>
- * 
+ *
  * or using the (simpler and usually faster) reversed version:
- * 
+ *
  * <pre>
- * for( int s = a.length; s-- != 0;) {
+ * for(int s = a.length; s-- != 0;) {
  *     final int[] t = a[s];
- *     for( int d = t.length; d-- != 0;) {
+ *     for(int d = t.length; d-- != 0;) {
  *         do something with t[d]
  *     }
  * }
  * </pre>
  * <p>
  * Inside the inner loop, the original index in <code>a</code> can be retrieved
- * using {@link #index(int, int) index(segment, displacement)}. You can also 
+ * using {@link #index(int, int) index(segment, displacement)}. You can also
  * use an additional long to keep track of the index.
- * 
+ *
  * <p>
  * Note that caching is essential in making these loops essentially as fast as
  * those scanning standard arrays (as iterations of the outer loop happen very
  * rarely). Using loops of this kind is extremely faster than using a standard
  * loop and accessors.
- * 
+ *
  * <p>
  * In some situations, you might want to iterate over a part of a big array
  * having an offset and a length. In this case, the idiomatic loops are as
  * follows:
- * 
+ *
  * <pre>
  * for(int s = segment(offset); s &lt; segment(offset + length + SEGMENT_MASK); s++) {
  *     final int[] t = a[s];
@@ -113,9 +113,9 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *     }
  * }
  * </pre>
- * 
+ *
  * or, in a reversed form,
- * 
+ *
  * <pre>
  * for(int s = segment(offset + length + SEGMENT_MASK); s-- != segment(offset);) {
  *     final int[] t = a[s];
@@ -125,20 +125,20 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *     }
  * }
  * </pre>
- * 
+ *
  * <h2>Literal big arrays</h2>
- * 
+ *
  * <p>
  * A literal big array can be easily created by using the suitable type-specific
  * <code>wrap()</code> method (e.g., {@link IntBigArrays#wrap(int[])}) around a
  * literal standard array. Alternatively, for very small arrays you can just
  * declare a literal array-of-array (e.g., <code>new int[][] { { 1, 2 } }</code>
- * ). Be warned, however, that this can lead to creating illegal big arrays if
+ *). Be warned, however, that this can lead to creating illegal big arrays if
  * for some reason (e.g., stress testing) {@link #SEGMENT_SIZE} is set to a
  * value smaller than the inner array length.
- * 
+ *
  * <h2>Big alternatives</h2>
- * 
+ *
  * <p>
  * If you find the kind of &ldquo;bare hands&rdquo; approach to big arrays not
  * enough object-oriented, please use big lists based on big arrays (.e.g,
@@ -148,7 +148,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * object-oriented approach, but provides some significant performance gains.
  *
  * <h2>Additional methods</h2>
- * 
+ *
  * <p>
  * In addition to commodity methods, this class contains {@link BigSwapper}
  * -based implementations of
@@ -181,7 +181,7 @@ public class BigArrays {
 
 	/**
 	 * Computes the segment associated with a given index.
-	 * 
+	 *
 	 * @param index
 	 *            an index into a big array.
 	 * @return the associated segment.
@@ -192,7 +192,7 @@ public class BigArrays {
 
 	/**
 	 * Computes the displacement associated with a given index.
-	 * 
+	 *
 	 * @param index
 	 *            an index into a big array.
 	 * @return the associated displacement (in the associated
@@ -204,7 +204,7 @@ public class BigArrays {
 
 	/**
 	 * Computes the starting index of a given segment.
-	 * 
+	 *
 	 * @param segment
 	 *            the segment of a big array.
 	 * @return the starting index of the segment.
@@ -215,7 +215,7 @@ public class BigArrays {
 
 	/**
 	 * Computes the index associated with given segment and displacement.
-	 * 
+	 *
 	 * @param segment
 	 *            the segment of a big array.
 	 * @param displacement
@@ -349,7 +349,7 @@ public class BigArrays {
 	 * Performs a binary search on an already sorted range: finds the first
 	 * position where an element can be inserted without violating the ordering.
 	 * Sorting is by a user-supplied comparison function.
-	 * 
+	 *
 	 * @param mid
 	 *            Beginning of the range.
 	 * @param to
@@ -389,7 +389,7 @@ public class BigArrays {
 	 * Sorts the specified range of elements using the specified big swapper and
 	 * according to the order induced by the specified comparator using
 	 * mergesort.
-	 * 
+	 *
 	 * <p>
 	 * This sort is guaranteed to be <i>stable</i>: equal elements will not be
 	 * reordered as a result of the sort. The sorting algorithm is an in-place
@@ -398,7 +398,7 @@ public class BigArrays {
 	 * <i>O</i>(<var>n</var>&nbsp;(log&nbsp;<var>n</var>)<sup>2</sup>), but it
 	 * does not allocate additional memory; as a result, it can be used as a
 	 * generic sorting algorithm.
-	 * 
+	 *
 	 * @param from
 	 *            the index of the first element (inclusive) to be sorted.
 	 * @param to
@@ -440,13 +440,13 @@ public class BigArrays {
 	 * Sorts the specified range of elements using the specified big swapper and
 	 * according to the order induced by the specified comparator using
 	 * quicksort.
-	 * 
+	 *
 	 * <p>
 	 * The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley
 	 * and M. Douglas McIlroy, &ldquo;Engineering a Sort Function&rdquo;,
 	 * <i>Software: Practice and Experience</i>, 23(11), pages 1249&minus;1265,
 	 * 1993.
-	 * 
+	 *
 	 * @param from
 	 *            the index of the first element (inclusive) to be sorted.
 	 * @param to
@@ -525,7 +525,7 @@ public class BigArrays {
 	 * Performs a binary search on an already-sorted range: finds the last
 	 * position where an element can be inserted without violating the ordering.
 	 * Sorting is by a user-supplied comparison function.
-	 * 
+	 *
 	 * @param from
 	 *            Beginning of the range.
 	 * @param mid

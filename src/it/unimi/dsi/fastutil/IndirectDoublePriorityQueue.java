@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2003-2017 Paolo Boldi and Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -27,7 +27,7 @@ import java.util.Comparator;
  * the last element using  {@link #secondaryLast()}). The remaining methods
  * work like those of an {@linkplain it.unimi.dsi.fastutil.IndirectPriorityQueue indirect priority queue} based on the
  * primary comparator.
- * 
+ *
  * @deprecated this interface will be removed in release 8.
  */
 
@@ -53,12 +53,12 @@ public interface IndirectDoublePriorityQueue<K> extends IndirectPriorityQueue<K>
 	 */
 	public int secondaryLast();
 
-    /** Retrieves the secondary front of the queue in a given array (optional operation).
-    *
-    * @param a an array large enough to hold the secondary front (e.g., at least long as the reference array).
-    * @return the number of elements actually written (starting from the first position of <code>a</code>).
-    * @see IndirectPriorityQueue#front(int[])
-    */
+	/** Retrieves the secondary front of the queue in a given array (optional operation).
+	*
+	* @param a an array large enough to hold the secondary front (e.g., at least long as the reference array).
+	* @return the number of elements actually written (starting from the first position of <code>a</code>).
+	* @see IndirectPriorityQueue#front(int[])
+	*/
 
-	public int secondaryFront( final int[] a );
+	public int secondaryFront(final int[] a);
 }

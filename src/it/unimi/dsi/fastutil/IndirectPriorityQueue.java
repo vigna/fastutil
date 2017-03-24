@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2003-2017 Paolo Boldi and Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -36,13 +36,13 @@ import java.util.NoSuchElementException;
  * <P>The reference list should not change during queue operations (or, more
  * precisely, the relative order of the elements corresponding to indices in the queue should not
  * change). Nonetheless, some implementations may give the caller a way to
- * notify the queue that the {@linkplain #changed() first element has changed its 
+ * notify the queue that the {@linkplain #changed() first element has changed its
  * relative position in the order}.
  *
  * <P>Optionally, an indirect priority queue may even provide methods to notify
  * {@linkplain #changed(int) the change of <em>any</em> element of the
  * reference list}, to check {@linkplain #contains(int) the presence of
- * an index in the queue}, and to {@linkplain #remove(int) remove an index from the queue}. 
+ * an index in the queue}, and to {@linkplain #remove(int) remove an index from the queue}.
  * It may even allow to notify that {@linkplain #allChanged() all elements have changed}.
  *
  * <P>It is always possible to enqueue two distinct indices corresponding to
@@ -60,7 +60,7 @@ public interface IndirectPriorityQueue<K> {
 	 * @param index the element to enqueue.
 	 */
 
-	void enqueue( int index );
+	void enqueue(int index);
 
 	/** Dequeues the {@linkplain #first() first} element from this queue.
 	 *
@@ -111,7 +111,7 @@ public interface IndirectPriorityQueue<K> {
 
 	void changed();
 
-    /** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
+	/** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
 	 *
 	 * @return the comparator associated with this sorted set, or <code>null</code> if it uses its elements' natural ordering.
 	 */
@@ -125,7 +125,7 @@ public interface IndirectPriorityQueue<K> {
 	 * @throws NoSuchElementException if the specified element is not in this queue.
 	 */
 
-	public void changed( int index );
+	public void changed(int index);
 
 	/** Notifies this queue that the all elements have changed (optional operation).
 	 */
@@ -133,30 +133,30 @@ public interface IndirectPriorityQueue<K> {
 	public void allChanged();
 
 	/** Checks whether a given index belongs to this queue (optional operation).
-	 * 
+	 *
 	 * @param index an index possibly in the queue.
 	 * @return true if the specified index belongs to this queue.
 	 */
-	public boolean contains( int index );
-	
+	public boolean contains(int index);
+
 	/** Removes the specified element from this queue (optional operation).
 	 *
 	 * @param index the element to be removed.
 	 * @return true if the index was in the queue.
 	 */
 
-	public boolean remove( int index );
+	public boolean remove(int index);
 
-    /** Retrieves the front of this queue in a given array (optional operation).
-     *
-     * <p>The <em>front</em> of an indirect queue is the set of indices whose associated elements in the reference array 
-     * are equal to the element associated to the {@linkplain #first() first index}. These indices can be always obtain by dequeueing, but 
-     * this method should retrieve efficiently such indices in the given array without modifying the state of this queue.
-     * 
-     * @param a an array large enough to hold the front (e.g., at least long as the reference array).
-     * @return the number of elements actually written (starting from the first position of <code>a</code>).
-     */
+	/** Retrieves the front of this queue in a given array (optional operation).
+	 *
+	 * <p>The <em>front</em> of an indirect queue is the set of indices whose associated elements in the reference array
+	 * are equal to the element associated to the {@linkplain #first() first index}. These indices can be always obtain by dequeueing, but
+	 * this method should retrieve efficiently such indices in the given array without modifying the state of this queue.
+	 *
+	 * @param a an array large enough to hold the front (e.g., at least long as the reference array).
+	 * @return the number of elements actually written (starting from the first position of <code>a</code>).
+	 */
 
-	public int front( final int[] a );
+	public int front(final int[] a);
 
 }

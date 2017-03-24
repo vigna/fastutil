@@ -15,7 +15,7 @@ public class IntCollectionsTest {
 				return IntSets.singleton(0).iterator();
 			}
 		});
-		
+
 		assertFalse(test.isEmpty());
 	}
 
@@ -27,7 +27,7 @@ public class IntCollectionsTest {
 				return IntSets.EMPTY_SET.iterator();
 			}
 		});
-		
+
 		assertTrue(test.isEmpty());
 	}
 }

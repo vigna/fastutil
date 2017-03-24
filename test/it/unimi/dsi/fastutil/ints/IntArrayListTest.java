@@ -29,17 +29,17 @@ public class IntArrayListTest {
 		IntListIterator it = list.listIterator();
 		it.add(42);
 		assertTrue(it.hasNext());
-		assertEquals(IntArrayList.wrap( new int[] { 42, 24 } ), list);
+		assertEquals(IntArrayList.wrap(new int[] { 42, 24 }), list);
 	}
-	
+
 	@Test
 	public void testRemoveAll() {
-		IntArrayList l = IntArrayList.wrap( new int[] { 0, 1, 1, 2 } );
-		l.removeAll( IntSets.singleton( 1 ) );
-		assertEquals( IntArrayList.wrap( new int[] { 0, 2 } ), l );
+		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+		l.removeAll(IntSets.singleton(1));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 
-		l = IntArrayList.wrap( new int[] { 0, 1, 1, 2 } );
-		l.removeAll( Collections.singleton( Integer.valueOf( 1 ) ) );
-		assertEquals( IntArrayList.wrap( new int[] { 0, 2 } ), l );
+		l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+		l.removeAll(Collections.singleton(Integer.valueOf(1)));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
 }

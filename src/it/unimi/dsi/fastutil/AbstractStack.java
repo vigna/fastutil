@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2002-2017 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 
@@ -32,13 +32,13 @@ public abstract class AbstractStack<K> implements Stack<K> {
 
 	@Override
 	public K top() {
-		return peek( 0 );
+		return peek(0);
 	}
 
 	/** {@inheritDoc}
 	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
 	@Override
-	public K peek( int i ) {
+	public K peek(int i) {
 		throw new UnsupportedOperationException();
 	}
 

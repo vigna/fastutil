@@ -18,19 +18,19 @@ public class AbstractInt2IntMapTest {
 			public int size() {
 				return 0;
 			}
-			
+
 			@Override
 			public int get(int key) {
 				return -1;
 			}
-			
+
 			@SuppressWarnings("unchecked")
 			@Override
 			public ObjectSet<Entry> int2IntEntrySet() {
 				return ObjectSets.EMPTY_SET;
 			}
 		};
-		
+
 		assertFalse(m.containsKey(0));
 	}
 
@@ -43,18 +43,18 @@ public class AbstractInt2IntMapTest {
 			public int size() {
 				return 1;
 			}
-			
+
 			@Override
 			public int get(int key) {
 				return key == 0 ? 0 : -1;
 			}
-			
+
 			@Override
 			public ObjectSet<Entry> int2IntEntrySet() {
 				return ObjectSets.singleton((Entry)new AbstractInt2IntMap.BasicEntry(0,0));
 			}
 		};
-		
+
 		assertTrue(m.containsKey(0));
 		assertFalse(m.containsKey(1));
 	}

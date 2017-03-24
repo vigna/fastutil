@@ -1,6 +1,6 @@
 package it.unimi.dsi.fastutil;
 
-/*		 
+/*
  * Copyright (C) 2003-2017 Paolo Boldi and Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@ package it.unimi.dsi.fastutil;
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License. 
+ * limitations under the License.
  */
 
 /** An abstract class providing basic methods for implementing the {@link IndirectPriorityQueue} interface.
@@ -26,15 +26,15 @@ public abstract class AbstractIndirectPriorityQueue<K> implements IndirectPriori
 
 	public int last() { throw new UnsupportedOperationException(); }
 
-	public void changed() { changed( first() ); }
-	
-	public void changed( int index ) { throw new UnsupportedOperationException(); }
+	public void changed() { changed(first()); }
+
+	public void changed(int index) { throw new UnsupportedOperationException(); }
 
 	public void allChanged() { throw new UnsupportedOperationException(); }
 
-	public boolean remove( int index ) { throw new UnsupportedOperationException(); }
+	public boolean remove(int index) { throw new UnsupportedOperationException(); }
 
-	public boolean contains( int index ) { throw new UnsupportedOperationException(); }
+	public boolean contains(int index) { throw new UnsupportedOperationException(); }
 
 	public boolean isEmpty() { return size() == 0; }
 
