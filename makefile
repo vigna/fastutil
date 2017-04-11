@@ -589,9 +589,9 @@ clean:
 	-@find build -name \*.class -exec rm {} \;
 	-@find . -name \*.java~ -exec rm {} \;
 	-@find . -name \*.html~ -exec rm {} \;
-	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/{booleans,bytes,shorts,chars,ints,longs,floats,doubles,objects}/*.java
+	-@rm -f $(foreach k, $(sort $(TYPE)), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/*.java)
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
-	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.{c,h,j} $(GEN_SRCDIR)/$(PKG_PATH)/*/*.{c,h,j}
+	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.[chj] $(GEN_SRCDIR)/$(PKG_PATH)/*/*.[chj]
 	-@rm -fr $(DOCSDIR)/*
 
 sources: $(JSOURCES)
