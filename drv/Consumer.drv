@@ -1,0 +1,89 @@
+/*
+ * Copyright (C) 2002-2017 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+#if KEYS_PRIMITIVE
+import java.util.Objects;
+#endif
+import java.util.function.Consumer;
+
+/** A type-specific {@link Consumer}; provides methods to consume a primitive type both as object
+ * and as primitive.
+ *
+ * @see Consumer
+ */
+
+@FunctionalInterface
+#ifdef JDK_PRIMITIVE_CONSUMER
+public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS>, java.util.function.JDK_PRIMITIVE_CONSUMER {
+#else
+public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
+#endif
+
+#if KEYS_PRIMITIVE
+#if !defined JDK_PRIMITIVE_CONSUMER || KEY_WIDENED
+	void accept(KEY_TYPE t);
+#endif
+
+#if KEY_WIDENED
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default void accept(final KEY_TYPE_WIDENED t) {
+		accept(KEY_NARROWING(t));
+	}
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default void accept(final KEY_CLASS t) {
+		this.accept(t.KEY_VALUE());
+	}
+
+#if !defined JDK_PRIMITIVE_CONSUMER || KEY_WIDENED
+	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
+		Objects.requireNonNull(after);
+		return (KEY_TYPE t) -> { accept(t); after.accept(t); };
+	}
+#endif
+
+#ifdef JDK_PRIMITIVE_CONSUMER
+#if KEY_WIDENED
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+#endif
+	@Override
+	default KEY_CONSUMER andThen(final java.util.function.JDK_PRIMITIVE_CONSUMER after) {
+		Objects.requireNonNull(after);
+		return (KEY_TYPE t) -> { accept(t); after.accept(KEY_WIDENING(t)); };
+	}
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default Consumer<KEY_GENERIC_CLASS> andThen(final Consumer<? super KEY_GENERIC_CLASS> after) {
+		return Consumer.super.andThen(after);
+	}
+#endif
+}

@@ -16,8 +16,6 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
-import it.unimi.dsi.fastutil.PriorityQueue;
-
 /**  An abstract class providing basic methods for implementing the {@link PriorityQueue} interface.
  *
  * <P>This class defines {@link #changed()} and {@link #last()} as throwing an

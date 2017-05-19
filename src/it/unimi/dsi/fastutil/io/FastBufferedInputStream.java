@@ -17,8 +17,6 @@ package it.unimi.dsi.fastutil.io;
  */
 
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
-import it.unimi.dsi.fastutil.io.RepositionableStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -142,7 +140,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		if (repositionableStream == null) {
 
 			try {
-				fileChannel = (FileChannel)(is.getClass().getMethod("getChannel", new Class[] {})).invoke(is, new Object[] {});
+				fileChannel = (FileChannel)(is.getClass().getMethod("getChannel", new Class<?>[] {})).invoke(is);
 			}
 			catch(IllegalAccessException e) {}
 			catch(IllegalArgumentException e) {}

@@ -19,11 +19,15 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.Function;
 
+#ifdef JDK_PRIMITIVE_FUNCTION
+import java.util.function.JDK_PRIMITIVE_FUNCTION;
+#endif
+
 /** A type-specific {@link Function}; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
  * <P>Type-specific versions of <code>get()</code>, <code>put()</code> and
  * <code>remove()</code> cannot rely on {@code null} to denote absence of
- * a key.  Rather, they return a {@linkplain #defaultReturnValue() default
+ * a key. Rather, they return a {@linkplain #defaultReturnValue() default
  * return value}, which is set to 0 cast to the return type (<code>false</code>
  * for booleans) at creation, but can be changed using the
  * <code>defaultReturnValue()</code> method.
@@ -43,7 +47,21 @@ import it.unimi.dsi.fastutil.Function;
  * @see Function
  */
 
+#ifdef JDK_PRIMITIVE_FUNCTION
+public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>, JDK_PRIMITIVE_FUNCTION KEY_GENERIC VALUE_GENERIC {
+#else
 public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> {
+#endif
+
+#ifdef JDK_PRIMITIVE_FUNCTION
+#if KEY_WIDENED
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+#endif
+	@Override
+	default VALUE_GENERIC_TYPE_WIDENED JDK_PRIMITIVE_FUNCTION_APPLY(KEY_GENERIC_TYPE_WIDENED operand) { return VALUE_WIDENING(GET_VALUE(KEY_NARROWING(operand))); }
+#endif
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 
@@ -55,7 +73,9 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 	 * @see Function#put(Object,Object)
 	 */
 
-	VALUE_GENERIC_TYPE put(KEY_GENERIC_TYPE key, VALUE_GENERIC_TYPE value);
+	default VALUE_GENERIC_TYPE put(final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value) {
+		throw new UnsupportedOperationException();
+	}
 
 	/** Returns the value to which the given key is mapped.
 	 *
@@ -72,25 +92,51 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 	 * @see Function#remove(Object)
 	 */
 
-	VALUE_GENERIC_TYPE REMOVE_VALUE(KEY_TYPE key);
+	default VALUE_GENERIC_TYPE REMOVE_VALUE(final KEY_TYPE key) {
+		throw new UnsupportedOperationException();
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	VALUE_GENERIC_CLASS put(KEY_GENERIC_CLASS key, VALUE_GENERIC_CLASS value);
+	default VALUE_GENERIC_CLASS put(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value) {
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+#if VALUES_PRIMITIVE
+		final boolean containsKey = containsKey(k);
+		final VALUE_GENERIC_TYPE v = put(k, VALUE_CLASS2TYPE(value));
+		return containsKey ? VALUE2OBJ(v) : null;
+#else
+		return put(k, value);
+#endif
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	VALUE_GENERIC_CLASS get(Object key);
+	default VALUE_GENERIC_CLASS get(final Object key) {
+#if KEYS_PRIMITIVE
+		if (key == null) return null;
+#endif
+		final KEY_TYPE k = KEY_OBJ2TYPE(key);
+		final VALUE_GENERIC_TYPE v = GET_VALUE(k);
+		return (v != defaultReturnValue() || containsKey(k)) ? v : null;
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	VALUE_GENERIC_CLASS remove(Object key);
+	default VALUE_GENERIC_CLASS remove(final Object key) {
+#if KEYS_PRIMITIVE
+		if (key == null) return null;
+#endif
+		final KEY_TYPE k = KEY_OBJ2TYPE(key);
+		final boolean containsKey = containsKey(k);
+		final VALUE_GENERIC_TYPE v = REMOVE_VALUE(k);
+		return containsKey ? VALUE2OBJ(v) : null;
+	}
 
 #endif
 
@@ -104,9 +150,12 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
+
 	@Deprecated
 	@Override
-	boolean containsKey(Object key);
+	default boolean containsKey(final Object key) {
+		return key == null ? false : containsKey(KEY_OBJ2TYPE(key));
+	}
 
 #endif
 
@@ -130,5 +179,4 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 	 */
 
 	VALUE_GENERIC_TYPE defaultReturnValue();
-
 }

@@ -20,9 +20,6 @@ package PACKAGE;
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ITERATOR;
-import VALUE_PACKAGE.VALUE_ABSTRACT_ITERATOR;
-
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 #if KEYS_PRIMITIVE && VALUES_PRIMITIVE
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -51,60 +48,18 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 	protected ABSTRACT_MAP() {}
 
 	@Override
-	public boolean containsValue(VALUE_TYPE v) {
+	public boolean containsValue(final VALUE_TYPE v) {
 		return values().contains(v);
 	}
 
-#if VALUES_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
 	@Override
-	public boolean containsValue(Object ov) {
-		if (ov == null) return false;
-		return containsValue(VALUE_OBJ2TYPE(ov));
-	}
-#endif
-
-	@Override
-	public boolean containsKey(KEY_TYPE k) {
-		ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = ENTRYSET().iterator();
+	public boolean containsKey(final KEY_TYPE k) {
+		final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = ENTRYSET().iterator();
 		while(i.hasNext())
 			if (i.next().ENTRY_GET_KEY() == k)
 				return true;
 
 		return false;
-	}
-
-	/** Puts all pairs in the given map.
-	 * If the map implements the interface of this map,
-	 * it uses the faster iterators.
-	 *
-	 * @param m a map.
-	 */
-#if KEYS_PRIMITIVE && VALUES_PRIMITIVE
-	 @SuppressWarnings("deprecation")
-#elif KEYS_PRIMITIVE ^ VALUES_PRIMITIVE
-	 @SuppressWarnings({"unchecked","deprecation"})
-#endif
-	public void putAll(Map<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS> m) {
-		int n = m.size();
-		final Iterator<? extends Map.Entry<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS>> i = m.entrySet().iterator();
-
-		if (m instanceof MAP) {
-			MAP.Entry KEY_VALUE_EXTENDS_GENERIC e;
-			while(n-- != 0) {
-				e = (MAP.Entry KEY_VALUE_EXTENDS_GENERIC)i.next();
-				put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
-			}
-		}
-		else {
-			Map.Entry<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS> e;
-			while(n-- != 0) {
-				e = i.next();
-				put(e.getKey(), e.getValue());
-			}
-		}
 	}
 
 	public boolean isEmpty() {
@@ -232,10 +187,10 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 				public void clear() { ABSTRACT_MAP.this.clear(); }
 
 				public KEY_ITERATOR KEY_GENERIC iterator() {
-					return new KEY_ABSTRACT_ITERATOR KEY_GENERIC() {
-							final ObjectIterator<Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
+					return new KEY_ITERATOR KEY_GENERIC() {
+							final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = ENTRYSET().iterator();
 							@Override
-							public KEY_GENERIC_TYPE NEXT_KEY() { return ((MAP.Entry KEY_VALUE_GENERIC)i.next()).ENTRY_GET_KEY(); };
+							public KEY_GENERIC_TYPE NEXT_KEY() { return i.next().ENTRY_GET_KEY(); };
 							@Override
 							public boolean hasNext() { return i.hasNext(); }
 							@Override
@@ -266,13 +221,13 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 				public void clear() { ABSTRACT_MAP.this.clear(); }
 
 				public VALUE_ITERATOR VALUE_GENERIC iterator() {
-					return new VALUE_ABSTRACT_ITERATOR VALUE_GENERIC() {
-							final ObjectIterator<Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
+					return new VALUE_ITERATOR VALUE_GENERIC() {
+							final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = ENTRYSET().iterator();
 
 							/** {@inheritDoc}
 							 * @deprecated Please use the corresponding type-specific method instead. */
 							@Deprecated
-							public VALUE_GENERIC_TYPE NEXT_VALUE() { return ((MAP.Entry KEY_VALUE_GENERIC)i.next()).ENTRY_GET_VALUE(); };
+							public VALUE_GENERIC_TYPE NEXT_VALUE() { return i.next().ENTRY_GET_VALUE(); };
 
 							public boolean hasNext() { return i.hasNext(); }
 						};
@@ -280,20 +235,27 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 			};
 	}
 
-
-#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-#else
 	/** {@inheritDoc} */
-#endif
+	@SuppressWarnings({"unchecked","deprecation"})
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
-		return (ObjectSet)ENTRYSET();
-	}
+	public void putAll(final Map<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS> m) {
+		if (m instanceof MAP) {
+			ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = MAPS.fastIterator((MAP) m);
 
+			while (i.hasNext()) {
+				final MAP.Entry KEY_VALUE_EXTENDS_GENERIC e = i.next();
+				put(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
+			}
+		} else {
+			int n = m.size();
+			final Iterator<? extends Map.Entry<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS>> i = m.entrySet().iterator();
+			Map.Entry<? extends KEY_GENERIC_CLASS,? extends VALUE_GENERIC_CLASS> e;
+			while (n-- != 0) {
+				e = i.next();
+				put(e.getKey(), e.getValue());
+			}
+		}
+	}
 
 	/** Returns a hash code for this map.
 	 *
@@ -304,26 +266,26 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 	@Override
 	public int hashCode() {
 		int h = 0, n = size();
-		final ObjectIterator<? extends Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
+		final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = MAPS.fastIterator(this);
 
 		while(n-- != 0) h += i.next().hashCode();
 		return h;
 	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (o == this) return true;
 		if (! (o instanceof Map)) return false;
 
-		Map<?,?> m = (Map<?,?>)o;
+		final Map<?,?> m = (Map<?,?>)o;
 		if (m.size() != size()) return false;
-		return entrySet().containsAll(m.entrySet());
+		return ENTRYSET().containsAll(m.entrySet());
 	}
-
 
 	@Override
 	public String toString() {
 		final StringBuilder s = new StringBuilder();
-		final ObjectIterator<? extends Map.Entry<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS>> i = entrySet().iterator();
+		final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = MAPS.fastIterator(this);
 		int n = size();
 		MAP.Entry KEY_VALUE_GENERIC e;
 		boolean first = true;
@@ -334,7 +296,7 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 			if (first) first = false;
 			else s.append(", ");
 
-			e = (MAP.Entry KEY_VALUE_GENERIC)i.next();
+			e = i.next();
 
 #if KEYS_REFERENCE
 			if (this == e.getKey()) s.append("(this map)"); else

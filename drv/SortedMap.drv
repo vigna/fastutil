@@ -82,7 +82,9 @@ public interface SORTED_MAP KEY_VALUE_GENERIC extends MAP KEY_VALUE_GENERIC, Sor
 	 */
 	@Deprecated
 	@Override
-	SORTED_MAP KEY_VALUE_GENERIC subMap(KEY_GENERIC_CLASS fromKey, KEY_GENERIC_CLASS toKey);
+	default SORTED_MAP KEY_VALUE_GENERIC subMap(final KEY_GENERIC_CLASS from, final KEY_GENERIC_CLASS to) {
+		return subMap(KEY_CLASS2TYPE(from), KEY_CLASS2TYPE(to));
+	}
 
 	/** {@inheritDoc}
 	 * <P>Note that this specification strengthens the one given in {@link SortedMap#headMap(Object)}.
@@ -90,7 +92,9 @@ public interface SORTED_MAP KEY_VALUE_GENERIC extends MAP KEY_VALUE_GENERIC, Sor
 	 */
 	@Deprecated
 	@Override
-	SORTED_MAP KEY_VALUE_GENERIC headMap(KEY_GENERIC_CLASS toKey);
+	default SORTED_MAP KEY_VALUE_GENERIC headMap(final KEY_GENERIC_CLASS to) {
+		return headMap(KEY_CLASS2TYPE(to));
+	}
 
 	/** {@inheritDoc}
 	 * <P>Note that this specification strengthens the one given in {@link SortedMap#tailMap(Object)}.
@@ -98,21 +102,27 @@ public interface SORTED_MAP KEY_VALUE_GENERIC extends MAP KEY_VALUE_GENERIC, Sor
 	 */
 	@Deprecated
 	@Override
-	SORTED_MAP KEY_VALUE_GENERIC tailMap(KEY_GENERIC_CLASS fromKey);
+	default SORTED_MAP KEY_VALUE_GENERIC tailMap(final KEY_GENERIC_CLASS from) {
+		return tailMap(KEY_CLASS2TYPE(from));
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
 	@Deprecated
 	@Override
-	KEY_GENERIC_CLASS firstKey();
+	default KEY_GENERIC_CLASS firstKey() {
+		return KEY2OBJ(FIRST_KEY());
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
 	@Deprecated
 	@Override
-	KEY_GENERIC_CLASS lastKey();
+	default KEY_GENERIC_CLASS lastKey() {
+		return KEY2OBJ(LAST_KEY());
+	}
 #endif
 
 
@@ -137,17 +147,7 @@ public interface SORTED_MAP KEY_VALUE_GENERIC extends MAP KEY_VALUE_GENERIC, Sor
 		ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator(MAP.Entry KEY_VALUE_GENERIC from);
 	}
 
-#if KEYS_Object && VALUES_Object
-	/** Returns a sorted-set view of the mappings contained in this map.
-	 *  <p>Note that this specification strengthens the one given in the
-	 *  corresponding type-specific unsorted map.
-	 *
-	 * @return a sorted-set view of the mappings contained in this map.
-	 * @see Map#entrySet()
-	 */
-	@Override
-	ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet();
-#else
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 	/** Returns a sorted-set view of the mappings contained in this map.
 	 *  <p>Note that this specification strengthens the one given in the
 	 *  corresponding type-specific unsorted map.
@@ -156,11 +156,28 @@ public interface SORTED_MAP KEY_VALUE_GENERIC extends MAP KEY_VALUE_GENERIC, Sor
 	 * @see SortedMap#entrySet()
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Deprecated
 	@Override
-	ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet();
-#endif
+	default ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
+		return (ObjectSortedSet)ENTRYSET();
+	}
+#else
+	/** Returns a sorted-set view of the mappings contained in this map.
+	 *  <p>Note that this specification strengthens the one given in the
+	 *  corresponding type-specific unsorted map.
+	 *
+	 * @return a sorted-set view of the mappings contained in this map.
+	 * @see Map#entrySet()
+	 */
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	default ObjectSortedSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() {
+		return (ObjectSortedSet)ENTRYSET();
+	}
+#endif
 
 	/** Returns a type-specific sorted-set view of the mappings contained in this map.
 	 * <p>Note that this specification strengthens the one given in the
@@ -170,6 +187,7 @@ public interface SORTED_MAP KEY_VALUE_GENERIC extends MAP KEY_VALUE_GENERIC, Sor
 	 * @see #entrySet()
 	 */
 
+	@Override
 	ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET();
 
 	/** Returns a type-specific sorted-set view of the keys contained in this map.
