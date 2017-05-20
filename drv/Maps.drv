@@ -17,6 +17,8 @@
 
 package PACKAGE;
 
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectIterable;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 
@@ -38,6 +40,34 @@ public class MAPS {
 
 	private MAPS() {}
 
+	/** Returns a {@link SORTED_MAP.FastEntrySet#fastIterator()} when supported by the given {@code map}.
+	*/
+	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+	public static KEY_VALUE_GENERIC ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator(MAP map) {
+		ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entries = map.ENTRYSET();
+		if (entries instanceof MAP.FastEntrySet) {
+			return ((MAP.FastEntrySet) entries).fastIterator();
+		}
+		return entries.iterator();
+	}
+
+	/** Returns an iterable yielding a {@link SORTED_MAP.FastEntrySet#fastIterator()} when
+	* supported by the given {@code map}. Useful in conjunction with e.g. foreach loops.
+	*/
+	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+	public static KEY_VALUE_GENERIC ObjectIterable<MAP.Entry KEY_VALUE_GENERIC> fastIterable(MAP map) {
+		ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entries = map.ENTRYSET();
+		if (entries instanceof MAP.FastEntrySet) {
+			final MAP.FastEntrySet fastEntries = (MAP.FastEntrySet) entries;
+			return new ObjectIterable<MAP.Entry KEY_VALUE_GENERIC>() {
+				@Override
+				public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
+					return fastEntries.fastIterator();
+				}
+			};
+		}
+		return entries;
+	}
 
 	/** An immutable class representing an empty type-specific map.
 	 *
@@ -67,7 +97,6 @@ public class MAPS {
 		@SuppressWarnings("unchecked")
 		@Override
 		public ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() { return ObjectSets.EMPTY_SET; }
-
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 		/** {@inheritDoc}
@@ -108,7 +137,6 @@ public class MAPS {
 		@Override
 		public String toString() { return "{}"; }
 	}
-
 
 
 	/** An empty type-specific map (immutable). It is serializable and cloneable.
