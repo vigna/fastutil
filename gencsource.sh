@@ -118,6 +118,9 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
 	fi;\
+	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
+		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
+	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	echo "#define VALUE_CLASS_${CLASS[$v]} 1\\n";\
