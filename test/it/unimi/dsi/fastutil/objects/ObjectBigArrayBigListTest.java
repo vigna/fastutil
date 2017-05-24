@@ -3,14 +3,14 @@ package it.unimi.dsi.fastutil.objects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.BigArrays;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.BigArrays;
 
 @SuppressWarnings("rawtypes")
 public class ObjectBigArrayBigListTest {
@@ -22,6 +22,7 @@ public class ObjectBigArrayBigListTest {
 		assertEquals(ObjectBigLists.EMPTY_BIG_LIST, list);
 	}
 
+	@SuppressWarnings("boxing")
 	@Test
 	public void testRemoveAllSkipSegment() {
 		ObjectBigList<Integer> list = new ObjectBigArrayBigList<Integer>();
@@ -31,6 +32,7 @@ public class ObjectBigArrayBigListTest {
 		for(long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++) assertEquals(Integer.valueOf(0), list.get(i));
 	}
 
+	@SuppressWarnings("boxing")
 	@Test
 	public void testRemoveAll() {
 		ObjectBigArrayBigList<Integer> l = ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 1, 1, 2 } });
@@ -40,7 +42,7 @@ public class ObjectBigArrayBigListTest {
 		assertTrue(l.elements()[0][3] == null);
 
 		l = ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 1, 1, 2 } });
-		l.removeAll((Collection<?>)ObjectSets.singleton(1));
+		l.removeAll(ObjectSets.singleton(1));
 		assertEquals(ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 2 } }), l);
 		assertTrue(l.elements()[0][2] == null);
 		assertTrue(l.elements()[0][3] == null);

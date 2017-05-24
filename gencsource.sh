@@ -412,15 +412,12 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define WRITE_KEY write${TYPE_CAP2[$k]}\n"\
 "#define DEQUEUE dequeue${TYPE_STD[$k]}\n"\
 "#define DEQUEUE_LAST dequeueLast${TYPE_STD[$k]}\n"\
-"#define SUBLIST_METHOD ${TYPE_LC[$k]}SubList\n"\
 "#define SINGLETON_METHOD ${TYPE_LC[$k]}Singleton\n\n"\
 "#define FIRST first${TYPE_STD[$k]}\n"\
 "#define LAST last${TYPE_STD[$k]}\n"\
 "#define TOP top${TYPE_STD[$k]}\n"\
 "#define PEEK peek${TYPE_STD[$k]}\n"\
 "#define POP pop${TYPE_STD[$k]}\n"\
-"#define KEY_ITERATOR_METHOD ${TYPE_LC2[$k]}Iterator\n\n"\
-"#define KEY_LIST_ITERATOR_METHOD ${TYPE_LC2[$k]}ListIterator\n\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define AS_KEY_ITERABLE as${TYPE_CAP2[$k]}Iterable\n\n"\
@@ -441,7 +438,6 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define PREV_VALUE previous${TYPE_STD[$v]}\n"\
 "#define READ_VALUE read${TYPE_CAP2[$v]}\n"\
 "#define WRITE_VALUE write${TYPE_CAP2[$v]}\n"\
-"#define VALUE_ITERATOR_METHOD ${TYPE_LC2[$v]}Iterator\n\n"\
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
 "#define REMOVE_FIRST_VALUE removeFirst${TYPE_STD[$v]}\n"\
 "#define REMOVE_LAST_VALUE removeLast${TYPE_STD[$v]}\n"\

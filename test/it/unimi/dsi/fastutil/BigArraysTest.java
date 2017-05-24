@@ -3,7 +3,7 @@ package it.unimi.dsi.fastutil;
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.BigSwapper;
 import it.unimi.dsi.fastutil.ints.IntBigArrays;
-import it.unimi.dsi.fastutil.longs.AbstractLongComparator;
+import it.unimi.dsi.fastutil.longs.LongComparator;
 
 import java.util.Arrays;
 
@@ -19,9 +19,7 @@ public class BigArraysTest {
 
 		Arrays.sort(s);
 		int[][] sorted = IntBigArrays.wrap(s.clone());
-		BigArrays.mergeSort(0, IntBigArrays.length(a), new AbstractLongComparator() {
-			private static final long serialVersionUID = 1L;
-
+		BigArrays.mergeSort(0, IntBigArrays.length(a), new LongComparator() {
 			@Override
 			public int compare(long k1, long k2) {
 				return IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2);
@@ -34,9 +32,7 @@ public class BigArraysTest {
 		});
 		assertArrayEquals(sorted, a);
 
-		BigArrays.mergeSort(0, IntBigArrays.length(a), new AbstractLongComparator() {
-			private static final long serialVersionUID = 1L;
-
+		BigArrays.mergeSort(0, IntBigArrays.length(a), new LongComparator() {
 			@Override
 			public int compare(long k1, long k2) {
 				return IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2);
@@ -59,9 +55,7 @@ public class BigArraysTest {
 		int[][] sorted = IntBigArrays.wrap(s.clone());
 
 		final int[][] a = IntBigArrays.wrap(s.clone());
-		BigArrays.quickSort(0, IntBigArrays.length(a), new AbstractLongComparator() {
-			private static final long serialVersionUID = 1L;
-
+		BigArrays.quickSort(0, IntBigArrays.length(a), new LongComparator() {
 			@Override
 			public int compare(long k1, long k2) {
 				return IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2);
@@ -74,9 +68,7 @@ public class BigArraysTest {
 		});
 		assertArrayEquals(sorted, a);
 
-		BigArrays.quickSort(0, IntBigArrays.length(a), new AbstractLongComparator() {
-			private static final long serialVersionUID = 1L;
-
+		BigArrays.quickSort(0, IntBigArrays.length(a), new LongComparator() {
 			@Override
 			public int compare(long k1, long k2) {
 				return IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2);

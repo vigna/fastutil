@@ -1,9 +1,9 @@
 package it.unimi.dsi.fastutil;
 
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.ints.AbstractIntComparator;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntArraysTest;
+import it.unimi.dsi.fastutil.ints.IntComparator;
 
 import java.util.Random;
 
@@ -17,9 +17,7 @@ public class ArraysTest {
 	}
 
 	private static void testMergeSort(final int x[], int from, int to) {
-		Arrays.mergeSort(from, to, new AbstractIntComparator() {
-			private static final long serialVersionUID = 1L;
-
+		Arrays.mergeSort(from, to, new IntComparator() {
 			@Override
 			public int compare(int k1, int k2) {
 				return Integer.compare(x[k1], x[k2]);
@@ -65,9 +63,7 @@ public class ArraysTest {
 	}
 
 	private static void testQuickSort(final int x[], int from, int to) {
-		Arrays.quickSort(from, to, new AbstractIntComparator() {
-			private static final long serialVersionUID = 1L;
-
+		Arrays.quickSort(from, to, new IntComparator() {
 			@Override
 			public int compare(int k1, int k2) {
 				return Integer.compare(x[k1], x[k2]);
@@ -113,9 +109,7 @@ public class ArraysTest {
 	}
 
 	private static void testParallelQuickSort(final int x[], int from, int to) {
-		Arrays.parallelQuickSort(from, to, new AbstractIntComparator() {
-			private static final long serialVersionUID = 1L;
-
+		Arrays.parallelQuickSort(from, to, new IntComparator() {
 			@Override
 			public int compare(int k1, int k2) {
 				return Integer.compare(x[k1], x[k2]);

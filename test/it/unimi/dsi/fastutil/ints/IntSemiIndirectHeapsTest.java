@@ -1,11 +1,11 @@
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 
 import org.junit.Test;
-
-import it.unimi.dsi.fastutil.ints.IntSemiIndirectHeaps;
-import static org.junit.Assert.*;
 
 
 public class IntSemiIndirectHeapsTest {
@@ -31,9 +31,7 @@ public class IntSemiIndirectHeapsTest {
 		final int[] refArray = { 8, 16, 9 };
 		final int[] heap = { 2, 1, 0 };
 
-		IntComparator comparator = new AbstractIntComparator() {
-			private static final long serialVersionUID = 1L;
-
+		IntComparator comparator = new IntComparator() {
 			@Override
 			public int compare(int k1, int k2) {
 				return (k1 & 3) - (k2 & 3);
