@@ -3,7 +3,7 @@
 #
 # This script generates from driver files fake C sources to be passed
 # through a C preprocessor to get the actual Java sources. It expects
-# as arguments the name of the driver and the name of the file to be 
+# as arguments the name of the driver and the name of the file to be
 # generated.
 #
 
@@ -71,7 +71,7 @@ for((v=0; v<${#TYPE_CAP[*]}; v++)); do
     if [[ ${TYPE_CAP[$v]} == $VALUE_TYPE_CAP ]]; then break; fi;
 done
 
-if [[ $root == *Linked* ]]; then 
+if [[ $root == *Linked* ]]; then
 Linked=Linked
 
 # Macros for transforming the bi-directional long link. Return values are 32-bit int indexes.
@@ -253,6 +253,7 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n\n"\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n\n"\
+"#define KEY_BIDI_ITERABLE ${TYPE_CAP2[$k]}BidirectionalIterable\n\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n\n"\
 "#define KEY_BIG_LIST_ITERATOR ${TYPE_CAP2[$k]}BigListIterator\n\n"\
 "#define STD_KEY_ITERATOR ${TYPE_STD[$k]}Iterator\n\n"\

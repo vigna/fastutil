@@ -50,13 +50,13 @@ PACKAGE_Object = objects
 PACKAGE_Reference = objects
 
 explain:
-	@echo -e "\nTo build fastutil, you must first use \"make sources\""
-	@echo -e "to obtain the actual Java files. Then, you can build the jar"
-	@echo -e "file using \"ant jar\", or the documentation using \"ant javadoc\".\n"
-	@echo -e "If you set the make variable TEST (e.g., make sources TEST=1), you"
-	@echo -e "will compile behavioral and speed tests into the classes.\n"
-	@echo -e "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1), you"
-	@echo -e "will compile assertions into the classes.\n\n"
+	@echo "\nTo build fastutil, you must first use \"make sources\""
+	@echo "to obtain the actual Java files. Then, you can build the jar"
+	@echo "file using \"ant jar\", or the documentation using \"ant javadoc\".\n"
+	@echo "If you set the make variable TEST (e.g., make sources TEST=1), you"
+	@echo "will compile behavioral and speed tests into the classes.\n"
+	@echo "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1), you"
+	@echo "will compile assertions into the classes.\n\n"
 
 source:
 	-rm -f fastutil-$(version)
@@ -115,6 +115,11 @@ ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k)
 $(ITERABLES): drv/Iterable.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERABLES)
+
+BIDIRECTIONAL_ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterable.c)
+$(BIDIRECTIONAL_ITERABLES): drv/BidirectionalIterable.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIDIRECTIONAL_ITERABLES)
 
 COLLECTIONS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Collection.c)
 $(COLLECTIONS): drv/Collection.drv; ./gencsource.sh $< $@ >$@
@@ -585,7 +590,7 @@ $(JSOURCES): %.java: %.c
 		| sed -e '1,/START_OF_JAVA_SOURCE/d' -e 's/^ /	/' >$@
 
 
-clean: 
+clean:
 	-@find build -name \*.class -exec rm {} \;
 	-@find . -name \*.java~ -exec rm {} \;
 	-@find . -name \*.html~ -exec rm {} \;
