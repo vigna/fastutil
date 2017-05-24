@@ -36,7 +36,10 @@ import java.util.NoSuchElementException;
  * (backed by a {@linkplain it.unimi.dsi.fastutil.BigArrays big array}) is
  * filled up to a specified <em>load factor</em>, and then doubled in size to
  * accommodate new entries. If the table is emptied below <em>one fourth</em>
- * of the load factor, it is halved in size. However, halving is
+ * of the load factor, it is halved in size; however, the table is never reduced to a
+ * size smaller than that at creation time: this approach makes it
+ * possible to create sets with a large capacity in which insertions and
+ * deletions do not cause immediately rehashing. Moreover, halving is
  * not performed when deleting entries from an iterator, as it would interfere
  * with the iteration process.
  *
@@ -77,6 +80,9 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
 	protected transient long maxFill;
 
+	/** We never resize below this threshold, which is the construction-time {#n}. */
+	protected transient long minN;
+
 	/** The acceptable load factor. */
 	protected final float f;
 
@@ -108,7 +114,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 		this.f = f;
 
-		n = bigArraySize(expected, f);
+		minN = n = bigArraySize(expected, f);
 		maxFill = maxFill(n, f);
 		key = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray(n);
 		initMasks();
@@ -388,13 +394,13 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 	private boolean removeEntry(final int base, final int displ) {
 		shiftKeys(base * (long)BigArrays.SEGMENT_SIZE + displ);
-		if (--size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && --size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return true;
 	}
 
 	private boolean removeNullEntry() {
 		containsNull = false;
-		if (--size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && --size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return true;
 	}
 

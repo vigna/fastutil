@@ -38,7 +38,10 @@ import java.util.Comparator;
  * <P>Instances of this class use a hash table to represent a set. The table is
  * filled up to a specified <em>load factor</em>, and then doubled in size to
  * accommodate new entries. If the table is emptied below <em>one fourth</em>
- * of the load factor, it is halved in size. However, halving is
+ * of the load factor, it is halved in size; however, the table is never reduced to a
+ * size smaller than that at creation time: this approach makes it
+ * possible to create sets with a large capacity in which insertions and
+ * deletions do not cause immediately rehashing. Moreover, halving is
  * not performed when deleting entries from an iterator, as it would interfere
  * with the iteration process.
  *
@@ -89,7 +92,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC i
  * <P>Instances of this class use a hash table to represent a set. The table is
  * filled up to a specified <em>load factor</em>, and then doubled in size to
  * accommodate new entries. If the table is emptied below <em>one fourth</em>
- * of the load factor, it is halved in size. However, halving is
+ * of the load factor, it is halved in size; however, the table is never reduced to a
+ * size smaller than that at creation time: this approach makes it
+ * possible to create sets with a large capacity in which insertions and
+ * deletions do not cause immediately rehashing. Moreover, halving is
  * not performed when deleting entries from an iterator, as it would interfere
  * with the iteration process.
  *
@@ -109,8 +115,17 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 /**  A type-specific hash set with with a fast, small-footprint implementation.
  *
  * <P>Instances of this class use a hash table to represent a set. The table is
- * enlarged as needed by doubling its size when new entries are created, but it is <em>never</em> made
- * smaller (even on a {@link #clear()}). A family of {@linkplain #trim() trimming
+ * filled up to a specified <em>load factor</em>, and then doubled in size to
+ * accommodate new entries. If the table is emptied below <em>one fourth</em>
+ * of the load factor, it is halved in size; however, the table is never reduced to a
+ * size smaller than that at creation time: this approach makes it
+ * possible to create sets with a large capacity in which insertions and
+ * deletions do not cause immediately rehashing. Moreover, halving is
+ * not performed when deleting entries from an iterator, as it would interfere
+ * with the iteration process.
+ *
+ * <p>Note that {@link #clear()} does not modify the hash table size.
+ * Rather, a family of {@linkplain #trim() trimming
  * methods} lets you control the size of the table; this is particularly useful
  * if you reuse instances of this class.
  *
@@ -159,6 +174,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	/** Threshold after which we rehash. It must be the table size times {@link #f}. */
 	protected transient int maxFill;
 
+	/** We never resize below this threshold, which is the construction-time {#n}. */
+	protected transient int minN;
+
 	/** Number of entries in the set (including the null key, if present). */
 	protected int size;
 
@@ -193,7 +211,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		this.f = f;
 
-		n = arraySize(expected, f);
+		minN = n = arraySize(expected, f);
 		mask = n - 1;
 		maxFill = maxFill(n, f);
 		key = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[n + 1];
@@ -734,7 +752,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		fixPointers(pos);
 #endif
 		shiftKeys(pos);
-		if (size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return true;
 	}
 
@@ -745,7 +763,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 #ifdef Linked
 		fixPointers(n);
 #endif
-		if (size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return true;
 	}
 
@@ -796,7 +814,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public K get(final Object k) {
-		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return key[n]; // This is correct independently of the value of containsNull and of the map being custom
+		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return key[n]; // This is correct independently of the value of containsNull and of the set being custom
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
@@ -835,7 +853,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			key[n] = KEY_NULL;
 		}
 		else shiftKeys(pos);
-		if (size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return k;
 	}
 
@@ -859,7 +877,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			key[n] = KEY_NULL;
 		}
 		else shiftKeys(pos);
-		if (size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return k;
 	}
 
