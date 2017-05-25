@@ -81,7 +81,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	protected transient long maxFill;
 
 	/** We never resize below this threshold, which is the construction-time {#n}. */
-	protected transient long minN;
+	protected final transient long minN;
 
 	/** The acceptable load factor. */
 	protected final float f;
@@ -393,14 +393,16 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	}
 
 	private boolean removeEntry(final int base, final int displ) {
+		size--;
 		shiftKeys(base * (long)BigArrays.SEGMENT_SIZE + displ);
-		if (n > minN && --size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		if (n > minN && size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return true;
 	}
 
 	private boolean removeNullEntry() {
 		containsNull = false;
-		if (n > minN && --size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
+		size--;
+		if (n > minN && size < maxFill / 4 && n > DEFAULT_INITIAL_SIZE) rehash(n / 2);
 		return true;
 	}
 
