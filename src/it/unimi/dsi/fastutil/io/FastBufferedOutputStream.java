@@ -96,7 +96,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 		if (repositionableStream == null) {
 
 			try {
-				fileChannel = (FileChannel)(os.getClass().getMethod("getChannel", new Class[] {})).invoke(os, new Object[] {});
+				fileChannel = (FileChannel)(os.getClass().getMethod("getChannel", new Class<?>[] {})).invoke(os);
 			}
 			catch(IllegalAccessException e) {}
 			catch(IllegalArgumentException e) {}

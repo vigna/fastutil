@@ -18,6 +18,13 @@
 package PACKAGE;
 
 import java.lang.Iterable;
+#if KEYS_PRIMITIVE
+import java.util.Objects;
+import java.util.function.Consumer;
+#ifdef JDK_PRIMITIVE_CONSUMER
+import java.util.function.JDK_PRIMITIVE_CONSUMER;
+#endif
+#endif
 
 /** A type-specific {@link Iterable} that strengthens that specification of {@link Iterable#iterator()}.
  *
@@ -37,6 +44,31 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * @return a type-specific iterator.
 	 * @see Iterable#iterator()
 	 */
+
 	@Override
 	KEY_ITERATOR KEY_GENERIC iterator();
+
+#if KEYS_PRIMITIVE
+#ifdef JDK_PRIMITIVE_CONSUMER
+	@SuppressWarnings("overloads")
+	default void forEach(final JDK_PRIMITIVE_CONSUMER action) {
+#else
+	default void forEach(final KEY_CONSUMER action) {
+#endif
+		Objects.requireNonNull(action);
+		final KEY_ITERATOR iterator = iterator();
+		while (iterator.hasNext()) {
+			action.accept(iterator.NEXT_KEY());
+		}
+	}
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		Iterable.super.forEach(action);
+	}
+#endif
+
 }

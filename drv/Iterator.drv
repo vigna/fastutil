@@ -17,10 +17,15 @@
 
 package PACKAGE;
 
-#ifdef JDK_PRIMITIVE_ITERATOR
-import java.util.PrimitiveIterator;
-#else
 import java.util.Iterator;
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+import java.util.PrimitiveIterator;
+#endif
+#if (!defined JDK_PRIMITIVE_ITERATOR || KEY_WIDENED) && KEYS_PRIMITIVE
+import java.util.Objects;
+#endif
+#ifdef KEYS_PRIMITIVE
+import java.util.function.Consumer;
 #endif
 
 /** A type-specific {@link Iterator}; provides an additional method to avoid (un)boxing, and
@@ -29,7 +34,7 @@ import java.util.Iterator;
  * @see Iterator
  */
 
-#ifdef JDK_PRIMITIVE_ITERATOR
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
 public interface KEY_ITERATOR KEY_GENERIC extends JDK_PRIMITIVE_ITERATOR {
 #else
 public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
@@ -43,7 +48,7 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	 * @see Iterator#next()
 	 */
 
-#ifdef JDK_PRIMITIVE_ITERATOR
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
 	@Override
 #endif
 	KEY_TYPE NEXT_KEY();
@@ -52,20 +57,46 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	KEY_CLASS next();
+	default KEY_CLASS next() {
+		return KEY_CLASS.valueOf(NEXT_KEY());
+	}
+
+#if !defined JDK_PRIMITIVE_ITERATOR || KEY_WIDENED
+	default void forEachRemaining(final KEY_CONSUMER action) {
+		Objects.requireNonNull(action);
+		while (hasNext()) {
+			action.accept(NEXT_KEY());
+		}
+	}
 #endif
 
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+		JDK_PRIMITIVE_ITERATOR.super.forEachRemaining(action);
+#else
+		Iterator.super.forEachRemaining(action);
+#endif
+	}
+
+#endif
 
 	/** Skips the given number of elements.
 	 *
-	 * <P>The effect of this call is exactly the same as that of
-	 * calling {@link #next()} for <code>n</code> times (possibly stopping
-	 * if {@link #hasNext()} becomes false).
+	 * <p>The effect of this call is exactly the same as that of calling {@link #next()} for {@code n} times (possibly stopping if {@link #hasNext()} becomes false).
 	 *
-	 * @param n the number of elements to skip.
-	 * @return the number of elements actually skipped.
+	 * @param n the number of elements to skip
+	 * @return the number of elements actually skipped
 	 * @see Iterator#next()
 	 */
 
-	int skip(int n);
+	default int skip(final int n) {
+		if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+		int i = n;
+		while(i-- != 0 && hasNext()) NEXT_KEY();
+		return n - i - 1;
+	}
 }

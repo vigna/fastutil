@@ -16,7 +16,6 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
-
 /** A function mapping keys into values.
  *
  * <p>Instances of this class represent functions: the main difference with {@link java.util.Map}
@@ -40,22 +39,37 @@ package it.unimi.dsi.fastutil;
  * @see java.util.Map
  */
 
-public interface Function<K,V> {
+public interface Function<K,V> extends java.util.function.Function<K,V> {
+
+	/** {@inheritDoc} This is equivalent to calling {@link #get(Object)}.
+	 *
+	 * @param key {@inheritDoc}
+	 * @return {@inheritDoc}
+	 * @see java.util.function.Function#apply(Object)
+	 * @see #get(Object)
+	 */
+
+	@Override
+	default V apply(final K key) {
+		return get(key);
+	}
 
 	/** Associates the specified value with the specified key in this function (optional operation).
 	 *
 	 * @param key the key.
 	 * @param value the value.
-	 * @return the old value, or <code>null</code> if no value was present for the given key.
+	 * @return the old value, or {@code null} if no value was present for the given key.
 	 * @see java.util.Map#put(Object,Object)
 	 */
 
-	V put(K key, V value);
+	default V put(final K key, final V value) {
+		throw new UnsupportedOperationException();
+	}
 
 	/** Returns the value associated by this function to the specified key.
 	 *
 	 * @param key the key.
-	 * @return the corresponding value, or <code>null</code> if no value was present for the given key.
+	 * @return the corresponding value, or {@code null} if no value was present for the given key.
 	 * @see java.util.Map#get(Object)
 	 */
 
@@ -71,16 +85,18 @@ public interface Function<K,V> {
 	 * @see java.util.Map#containsKey(Object)
 	 */
 
-	 boolean containsKey(Object key);
+	boolean containsKey(Object key);
 
 	/** Removes this key and the associated value from this function if it is present (optional operation).
 	 *
 	 * @param key the key.
-	 * @return the old value, or <code>null</code> if no value was present for the given key.
+	 * @return the old value, or {@code null} if no value was present for the given key.
 	 * @see java.util.Map#remove(Object)
 	 */
 
-	V remove(Object key);
+	default V remove(final Object key) {
+		throw new UnsupportedOperationException();
+	}
 
 	/** Returns the intended number of keys in this function, or -1 if no such number exists.
 	 *
@@ -89,13 +105,17 @@ public interface Function<K,V> {
 	 *
 	 *  @return the intended number of keys in this function, or -1 if that number is not available.
 	 */
-	int size();
+
+	default int size() {
+		return -1;
+	}
 
 	/** Removes all associations from this function (optional operation).
 	 *
 	 * @see java.util.Map#clear()
 	 */
 
-	void clear();
-
+	default void clear() {
+		throw new UnsupportedOperationException();
+	}
 }

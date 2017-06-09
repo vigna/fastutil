@@ -18,6 +18,7 @@
 package PACKAGE;
 
 import it.unimi.dsi.fastutil.BigListIterator;
+import it.unimi.dsi.fastutil.SafeMath;
 
 /** A type-specific {@link BigListIterator}.
  *
@@ -26,48 +27,57 @@ import it.unimi.dsi.fastutil.BigListIterator;
 
 public interface KEY_BIG_LIST_ITERATOR KEY_GENERIC extends KEY_BIDI_ITERATOR KEY_GENERIC, BigListIterator<KEY_GENERIC_CLASS> {
 
-#if KEYS_PRIMITIVE
-
 	/**
 	 * Replaces the last element returned by {@link BigListIterator#next() next()} or
 	 * {@link BigListIterator#previous() previous()} with the specified element (optional operation).
 	 * @see java.util.ListIterator#set(Object)
 	 */
-	void set(KEY_TYPE k);
+	default void set(final KEY_GENERIC_TYPE k) { throw new UnsupportedOperationException(); }
 
 	/**
 	 * Inserts the specified element into the list (optional operation).
 	 * @see java.util.ListIterator#add(Object)
 	 */
-	void add(KEY_TYPE k);
+	default void add(final KEY_GENERIC_TYPE k)  { throw new UnsupportedOperationException(); }
+
+#if KEYS_PRIMITIVE
 
 	/**
 	 * Replaces the last element returned by {@link #next()} or
 	 * {@link #previous()} with the specified element (optional operation).
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
-	void set(KEY_GENERIC_CLASS k);
+	default void set(final KEY_GENERIC_CLASS k) { set(k.KEY_VALUE()); }
 
 	/**
 	 * Inserts the specified element into the list (optional operation).
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
-	void add(KEY_GENERIC_CLASS k);
-
-#else
-
-	/**
-	 * Replaces the last element returned by {@link #next()} or
-	 * {@link #previous()} with the specified element (optional operation).
-	 * @see java.util.ListIterator#set(Object)
-	 */
-	void set(KEY_GENERIC_CLASS k);
-
-	/**
-	 * Inserts the specified element into the list (optional operation).
-	 * @see java.util.ListIterator#add(Object)
-	 */
-	void add(KEY_GENERIC_CLASS k);
+	default void add(final KEY_GENERIC_CLASS k) { add(k.KEY_VALUE()); }
 
 #endif
+
+	/** {@inheritDoc}
+	 */
+	@Override
+	default long skip(final long n) {
+		long i = n;
+		while(i-- != 0 && hasNext()) NEXT_KEY();
+		return n - i - 1;
+	}
+
+	/** {@inheritDoc}
+	 */
+	default long back(final long n) {
+		long i = n;
+		while(i-- != 0 && hasPrevious()) PREV_KEY();
+		return n - i - 1;
+	}
+
+	/** {@inheritDoc}
+	 */
+	@Override
+	default int skip(int n) {
+		return SafeMath.safeLongToInt(skip((long) n));
+	}
 }
