@@ -25,21 +25,10 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 #endif
 
 import java.util.Map;
-#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
-import java.util.Objects;
-import java.util.function.Function;
-#ifdef JDK_PRIMITIVE_FUNCTION
-import java.util.function.JDK_PRIMITIVE_FUNCTION;
-#endif
-#ifdef JDK_KEY_TO_GENERIC_FUNCTION
-import java.util.function.JDK_KEY_TO_GENERIC_FUNCTION;
-#endif
-import java.util.function.BiFunction;
-#endif
 
 /** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
  *
- * <P>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link #entrySet()},
+ * <P>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link Map#entrySet()},
  * {@link #keySet()} and {@link #values()}. Maps returning entry sets of type {@link FastEntrySet} support also fast iteration.
  *
  * <P>A submap or subset may or may not have an
@@ -55,7 +44,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 *
 	 * <p>In some cases (e.g., hash-based classes) iteration over an entry set requires the creation
 	 * of a large number of {@link java.util.Map.Entry} objects. Some <code>fastutil</code>
-	 * maps might return {@linkplain #entrySet() entry set} objects of type <code>FastEntrySet</code>: in this case, {@link #fastIterator() fastIterator()}
+	 * maps might return {@linkplain Map#entrySet() entry set} objects of type <code>FastEntrySet</code>: in this case, {@link #fastIterator() fastIterator()}
 	 * will return an iterator that is guaranteed not to create a large number of objects, <em>possibly
 	 * by returning always the same entry</em> (of course, mutated).
 	 */
@@ -91,7 +80,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	/** Returns a type-specific set view of the mappings contained in this map.
 	 *
 	 * <p>This method is necessary because there is no inheritance along
-	 * type parameters: it is thus impossible to strengthen {@link #entrySet()}
+	 * type parameters: it is thus impossible to strengthen {@link Map#entrySet()}
 	 * so that it returns an {@link it.unimi.dsi.fastutil.objects.ObjectSet}
 	 * of type-specific entries (the latter makes it possible to
 	 * access keys and values with type-specific methods).
@@ -214,7 +203,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default boolean containsValue(final Object value) {
-		return value != null && containsValue(VALUE_OBJ2TYPE(value));
+		return value == null ? false : containsValue(VALUE_OBJ2TYPE(value));
 	}
 
 #endif
@@ -272,7 +261,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 */
 
 	default boolean remove(final KEY_TYPE key, final VALUE_TYPE value) {
-		final VALUE_GENERIC_TYPE curValue = get(key);
+		final VALUE_GENERIC_TYPE curValue = GET_VALUE(key);
 		if (!VALUE_EQUALS(curValue, value) || (curValue == defaultReturnValue() && !containsKey(key))) return false;
 		REMOVE_VALUE(key);
 		return true;
@@ -330,11 +319,11 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @since 8.0.0
 	 */
 
-#if VALUES_PRIMITIVE
+#ifdef JDK_PRIMITIVE_FUNCTION
 	@SuppressWarnings("overloads")
 #endif
 	default VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE key, final JDK_PRIMITIVE_FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
-		Objects.requireNonNull(mappingFunction);
+		java.util.Objects.requireNonNull(mappingFunction);
 		final VALUE_GENERIC_TYPE v = GET_VALUE(key);
 		if (v != defaultReturnValue() || containsKey(key)) return v;
 
@@ -363,11 +352,11 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@SuppressWarnings("overloads")
 #endif
 	default VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE key, final JDK_KEY_TO_GENERIC_FUNCTION<? extends VALUE_GENERIC_CLASS> mappingFunction) {
-		Objects.requireNonNull(mappingFunction);
+		java.util.Objects.requireNonNull(mappingFunction);
 		final VALUE_GENERIC_TYPE v = GET_VALUE(key), drv = defaultReturnValue();
 		if (v != drv || containsKey(key)) return v;
 
-		VALUE_GENERIC_CLASS mappedValue = mappingFunction.apply(KEY2OBJ(key));
+		VALUE_GENERIC_CLASS mappedValue = mappingFunction.apply(key);
 		if (mappedValue == null) return drv;
 		VALUE_GENERIC_TYPE newValue = VALUE_CLASS2TYPE(mappedValue);
 		put(key, newValue);
@@ -383,12 +372,12 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 *
 	 * @return the new value associated with the specified key, or the {@linkplain #defaultReturnValue() default return value} if none
 	 *
-	 * @see java.util.Map#computeIfPresent(Object, BiFunction)
+	 * @see java.util.Map#computeIfPresent(Object, java.util.function.BiFunction)
 	 * @since 8.0.0
 	 */
 
-	default VALUE_GENERIC_TYPE COMPUTE_IF_PRESENT(final KEY_GENERIC_TYPE key, final BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
-		Objects.requireNonNull(remappingFunction);
+	default VALUE_GENERIC_TYPE COMPUTE_IF_PRESENT(final KEY_GENERIC_TYPE key, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
 
 		final VALUE_GENERIC_TYPE oldValue = GET_VALUE(key), drv = defaultReturnValue();
 		if (oldValue == drv && !containsKey(key)) return drv;
@@ -416,12 +405,12 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 *
 	 * @return the new value associated with the specified key, or the {@linkplain #defaultReturnValue() default return value} if none
 	 *
-	 * @see java.util.Map#compute(Object, BiFunction)
+	 * @see java.util.Map#compute(Object, java.util.function.BiFunction)
 	 * @since 8.0.0
 	 */
 
-	default VALUE_GENERIC_TYPE COMPUTE(final KEY_GENERIC_TYPE key, final BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
-		Objects.requireNonNull(remappingFunction);
+	default VALUE_GENERIC_TYPE COMPUTE(final KEY_GENERIC_TYPE key, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
 		final VALUE_GENERIC_TYPE oldValue = GET_VALUE(key), drv = defaultReturnValue();
 		final boolean contained = oldValue != drv || containsKey(key);
 		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(key), contained ? VALUE2OBJ(oldValue) : null);
@@ -451,7 +440,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 *
 	 * @return the new value associated with the specified key, or the {@linkplain #defaultReturnValue() default return value} if no value is associated with the key
 	 *
-	 * @see java.util.Map#merge(Object, Object, BiFunction)
+	 * @see java.util.Map#merge(Object, Object, java.util.function.BiFunction)
 	 * @since 8.0.0
 	 */
 #else
@@ -465,15 +454,15 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 *
 	 * @return the new value associated with the specified key, or the {@linkplain #defaultReturnValue() default return value} if no value is associated with the key
 	 *
-	 * @see java.util.Map#merge(Object, Object, BiFunction)
+	 * @see java.util.Map#merge(Object, Object, java.util.function.BiFunction)
 	 * @since 8.0.0
 	 */
 #endif
 
-	default VALUE_GENERIC_TYPE MERGE(final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value, final BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
-		Objects.requireNonNull(remappingFunction);
+	default VALUE_GENERIC_TYPE MERGE(final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
 #if VALUES_REFERENCE
-		Objects.requireNonNull(value);
+		java.util.Objects.requireNonNull(value);
 #endif
 		final VALUE_GENERIC_TYPE oldValue = GET_VALUE(key), drv = defaultReturnValue();
 		final VALUE_GENERIC_TYPE newValue;
@@ -535,7 +524,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	default VALUE_GENERIC_CLASS computeIfAbsent(final KEY_GENERIC_CLASS key, final Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> mappingFunction) {
+	default VALUE_GENERIC_CLASS computeIfAbsent(final KEY_GENERIC_CLASS key, final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> mappingFunction) {
 		return Map.super.computeIfAbsent(key, mappingFunction);
 	}
 
@@ -543,7 +532,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	default VALUE_GENERIC_CLASS computeIfPresent(final KEY_GENERIC_CLASS key, final BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+	default VALUE_GENERIC_CLASS computeIfPresent(final KEY_GENERIC_CLASS key, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
 		return Map.super.computeIfPresent(key, remappingFunction);
 	}
 
@@ -551,7 +540,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	default VALUE_GENERIC_CLASS compute(final KEY_GENERIC_CLASS key, final BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+	default VALUE_GENERIC_CLASS compute(final KEY_GENERIC_CLASS key, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
 		return Map.super.compute(key, remappingFunction);
 	}
 
@@ -561,7 +550,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
-	default VALUE_GENERIC_CLASS merge(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value, final BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+	default VALUE_GENERIC_CLASS merge(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
 		return Map.super.merge(key, value, remappingFunction);
 	}
 

@@ -126,15 +126,15 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	echo "#define KEY_CLASS_${CLASS[$k]} 1\\n";\
 	if [[ "${CLASS[$k]}" != "Object" && "${CLASS[$k]}" != "Reference" ]]; then\
 		echo "#define KEYS_PRIMITIVE 1\\n";\
-		echo "#define JDK_KEY_TO_GENERIC_FUNCTION ${TYPE_CAP[$wk]}Function\\n";\
+		echo "#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\\n";\
 		if [[ "${CLASS[$k]}" != "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_CONSUMER ${TYPE_CAP[$wk]}Consumer\\n";\
-			echo "#define JDK_PRIMITIVE_PREDICATE ${TYPE_CAP[$wk]}Predicate\\n";\
+			echo "#define JDK_PRIMITIVE_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
+			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
-		echo "#define JDK_KEY_TO_GENERIC_FUNCTION Function\\n";\
+		echo "#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.Function\\n";\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
@@ -151,44 +151,40 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 	if [[ "${TYPE_CAP[$wk]}" == "Int" || "${TYPE_CAP[$wk]}" == "Long" || "${TYPE_CAP[$wk]}" == "Double" ]]; then\
 		if [[ "${TYPE_CAP[$wk]}" == "${TYPE_CAP[$wv]}" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION ${TYPE_CAP[$wk]}UnaryOperator\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}UnaryOperator\\n";\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
 		elif [[ "${TYPE_CAP[$wv]}" == "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION ${TYPE_CAP[$wk]}Predicate\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
 		elif [[ "${TYPE_CAP[$wv]}" == "Object" || "${TYPE_CAP[$wv]}" == "Reference" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION ${TYPE_CAP[$wk]}Function\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\\n";\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY apply\\n";\
 		elif [[ "${TYPE_CAP[$wv]}" == "Int" || "${TYPE_CAP[$wv]}" == "Long" || "${TYPE_CAP[$wv]}" == "Double" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION ${TYPE_CAP[$wk]}To${TYPE_CAP[$wv]}Function\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}To${TYPE_CAP[$wv]}Function\\n";\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
 		fi;\
 	elif [[ "${TYPE_CAP[$wk]}" == "Object" || "${TYPE_CAP[$wk]}" == "Reference" ]]; then\
 		if [[ "${TYPE_CAP[$wv]}" == "Int" || "${TYPE_CAP[$wv]}" == "Long" || "${TYPE_CAP[$wv]}" == "Double" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION To${TYPE_CAP[$wv]}Function\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.To${TYPE_CAP[$wv]}Function\\n";\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
 		elif [[ "${TYPE_CAP[$wv]}" == "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION Predicate\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
 		fi;\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	if [[ "${TYPE[$wk]}" == "${TYPE[$k]}" ]]; then\
-		echo "#define KEY_WIDENING(x) x\\n";\
 		echo "#define KEY_NARROWING(x) x\\n";\
 	else\
-		echo "#define KEY_WIDENING(x) ((${TYPE[$wk]}) x)\\n";\
 		echo "#define KEY_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safe${TYPE_CAP[$wk]}To${TYPE_CAP[$k]}(x)\\n";\
 		echo "#define KEY_WIDENED 1\\n";\
 	fi;\
 fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	if [[ "${TYPE[$wv]}" == "${TYPE[$v]}" ]]; then\
-		echo "#define VALUE_WIDENING(x) x\\n";\
 		echo "#define VALUE_NARROWING(x) x\\n";\
 	else\
-		echo "#define VALUE_WIDENING(x) ((${TYPE[$wv]}) x)\\n";\
 		echo "#define VALUE_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safe${TYPE_CAP[$wv]}To${TYPE_CAP[$v]}(x)\\n";\
 		echo "#define VALUE_WIDENED 1\\n";\
 	fi;\

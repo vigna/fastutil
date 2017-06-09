@@ -74,6 +74,9 @@ public class PriorityQueues {
 		public Object clone() { return EMPTY_QUEUE; }
 
 		@Override
+		public int hashCode() { return 0; }
+
+		@Override
 		public boolean equals(final Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
 
 		private Object readResolve() { return EMPTY_QUEUE; }

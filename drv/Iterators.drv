@@ -21,11 +21,6 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-#ifdef JDK_PRIMITIVE_PREDICATE
-import java.util.function.JDK_PRIMITIVE_PREDICATE;
-#else
-import java.util.function.Predicate;
-#endif
 
 /** A class providing static methods and objects that do useful things with type-specific iterators.
  *
@@ -534,7 +529,7 @@ public class ITERATORS {
 #ifdef JDK_PRIMITIVE_PREDICATE
 	public static boolean any(final KEY_ITERATOR iterator, final JDK_PRIMITIVE_PREDICATE predicate) {
 #else
-	public static KEY_GENERIC boolean any(final KEY_ITERATOR KEY_GENERIC iterator, final Predicate<? super KEY_GENERIC_CLASS> predicate) {
+	public static KEY_GENERIC boolean any(final KEY_ITERATOR KEY_GENERIC iterator, final java.util.function.Predicate<? super KEY_GENERIC_CLASS> predicate) {
 #endif
 		return indexOf(iterator, predicate) != -1;
 	}
@@ -542,25 +537,33 @@ public class ITERATORS {
 #ifdef JDK_PRIMITIVE_PREDICATE
 	public static boolean all(final KEY_ITERATOR iterator, final JDK_PRIMITIVE_PREDICATE predicate) {
 #else
-	public static KEY_GENERIC boolean all(final KEY_ITERATOR KEY_GENERIC iterator, final Predicate<? super KEY_GENERIC_CLASS> predicate) {
+	public static KEY_GENERIC boolean all(final KEY_ITERATOR KEY_GENERIC iterator, final java.util.function.Predicate<? super KEY_GENERIC_CLASS> predicate) {
 #endif
 		Objects.requireNonNull(predicate);
 
 		do {
 			if (!iterator.hasNext()) return true;
+#if KEY_CLASS_Boolean
+		} while (predicate.test(Boolean.valueOf(iterator.nextBoolean())));
+#else
 		} while (predicate.test(iterator.NEXT_KEY()));
+#endif
 		return false;
 	}
 
 #ifdef JDK_PRIMITIVE_PREDICATE
 	public static int indexOf(final KEY_ITERATOR iterator, final JDK_PRIMITIVE_PREDICATE predicate) {
 #else
-	public static KEY_GENERIC int indexOf(final KEY_ITERATOR KEY_GENERIC iterator, final Predicate<? super KEY_GENERIC_CLASS> predicate) {
+	public static KEY_GENERIC int indexOf(final KEY_ITERATOR KEY_GENERIC iterator, final java.util.function.Predicate<? super KEY_GENERIC_CLASS> predicate) {
 #endif
 		Objects.requireNonNull(predicate);
 
 		for (int i = 0; iterator.hasNext(); ++i) {
+#if KEY_CLASS_Boolean
+			if (predicate.test(Boolean.valueOf(iterator.nextBoolean()))) return i;
+#else
 			if (predicate.test(iterator.NEXT_KEY())) return i;
+#endif
 		}
 
 		return -1;

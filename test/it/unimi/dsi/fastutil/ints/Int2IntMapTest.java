@@ -129,7 +129,7 @@ public class Int2IntMapTest {
 		assertFalse(m.containsKey(Integer.valueOf(2)));
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "boxing" })
 	@Test
 	public void testDefaultComputeIfAbsent() {
 		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
@@ -148,6 +148,7 @@ public class Int2IntMapTest {
 		assertEquals(Integer.valueOf(6), m.get(Integer.valueOf(3)));
 	}
 
+	@SuppressWarnings("boxing")
 	@Test
 	public void testDefaultComputeIfPresent() {
 		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
@@ -181,6 +182,7 @@ public class Int2IntMapTest {
 		assertFalse(m.containsKey(1));
 	}
 
+	@SuppressWarnings("boxing")
 	@Test
 	public void testDefaultMerge() {
 		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
