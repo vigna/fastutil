@@ -1,5 +1,12 @@
 package it.unimi.dsi.fastutil;
 
+import java.util.function.IntToLongFunction;
+import java.util.function.IntUnaryOperator;
+
+import it.unimi.dsi.fastutil.bytes.Byte2CharFunction;
+import it.unimi.dsi.fastutil.ints.Int2IntFunction;
+import it.unimi.dsi.fastutil.ints.Int2LongFunction;
+
 /*
  * Copyright (C) 2002-2017 Sebastiano Vigna
  *
@@ -25,18 +32,48 @@ package it.unimi.dsi.fastutil;
  * In case the domain is known, {@link #containsKey(Object)} can be used to perform membership queries.
  *
  * <p>The choice of naming all methods exactly as in {@link java.util.Map} makes it possible
- * for all type-specific maps to extend type-specific functions (e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntMap}
- * extends {@link it.unimi.dsi.fastutil.ints.Int2IntFunction}). However, {@link #size()} is allowed to return -1 to denote
+ * for all type-specific maps to extend type-specific functions (e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntMap Int2IntMap}
+ * extends {@link it.unimi.dsi.fastutil.ints.Int2IntFunction Int2IntFunction}). However, {@link #size()} is allowed to return -1 to denote
  * that the number of keys is not available (e.g., in the case of a string hash function).
  *
- * <p>Note that there is an {@link it.unimi.dsi.fastutil.objects.Object2ObjectFunction} that
+ * <p>Note that there is an {@link it.unimi.dsi.fastutil.objects.Object2ObjectFunction Object2ObjectFunction} that
  * can also set its default return value.
+ *
+ * <h2>The relatioship with {@link java.util.function.Function}</h2>
+ *
+ * <p>This interface predates Java 8's {@link java.util.function.Function}, but it was conceived with
+ * a different purpose. To ease interoperability, we extend {@link java.util.function.Function} and
+ * implement a default method for {@link #apply(Object)} that delegates to {@link #get(Object)}. However,
+ * while the argument of a {@link java.util.function.Function} with keys of type {@code T} is of type
+ * {@code T}, the argument of {@link #get(Object)} is unparameterized (see the example below).
+ *
+ * <p>No attempt will be made at creating type-specific versions of {@link java.util.function.Function} as
+ * the JDK already provides several specializations, such as {@link IntToLongFunction}.
+ * Rather, type-specific versions of this class do implement the corresponding classes in {@link java.util.function}:
+ * for example, {@link Int2LongFunction} extends {@link IntToLongFunction} and {@link Int2IntFunction} extends
+ * {@link IntUnaryOperator}. For functions that do not have a corresponding JDK function we extend the
+ * closest possible function (widening input and output types): for example, {@link Byte2CharFunction} extends
+ * {@link IntUnaryOperator}.
+ *
+ * <h2>Default methods and lambda expressions</h2>
+ *
+ * <p>All optional operations have default methods throwing an {@link UnsupportedOperationException}, except
+ * for {@link #containsKey(Object)}, which returns false,
+ * and {@link #size()}, which return -1: thus, it is possible to define an instance of this class using
+ * a lambda expression that will specify {@link #get(Object)}. Note that the type signature of {@link #get(Object)} might lead to slightly
+ * counterintuitive behaviour: for example, to define the identity function on {@link Integer} objects
+ * you need to write
+ * <pre>
+ *     it.unimi.dsi.fastutil.Function&lt;Integer, Integer> f = (x) -> (Integer)x;
+ * </pre>
+ * as the argument to {@link #get(Object)} is unparameterized.
  *
  * <p><strong>Warning</strong>: Equality of functions is <em>not specified</em>
  * by contract, and it will usually be <em>by reference</em>, as there is no way to enumerate the keys
  * and establish whether two functions represent the same mathematical entity.
  *
  * @see java.util.Map
+ * @see java.util.function.Function
  */
 
 public interface Function<K,V> extends java.util.function.Function<K,V> {
@@ -78,14 +115,17 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	/** Returns true if this function contains a mapping for the specified key.
 	 *
 	 * <p>Note that for some kind of functions (e.g., hashes) this method
-	 * will always return true.
+	 * will always return true. This default implementation, in particular,
+	 * always return true.
 	 *
 	 * @param key the key.
 	 * @return true if this function associates a value to {@code key}.
 	 * @see java.util.Map#containsKey(Object)
 	 */
 
-	boolean containsKey(Object key);
+	default boolean containsKey(Object key) {
+		return true;
+	}
 
 	/** Removes this key and the associated value from this function if it is present (optional operation).
 	 *
@@ -101,7 +141,8 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	/** Returns the intended number of keys in this function, or -1 if no such number exists.
 	 *
 	 * <p>Most function implementations will have some knowledge of the intended number of keys
-	 * in their domain. In some cases, however, this might not be possible.
+	 * in their domain. In some cases, however, this might not be possible. This default
+	 * implementation, in particular, returns -1.
 	 *
 	 *  @return the intended number of keys in this function, or -1 if that number is not available.
 	 */

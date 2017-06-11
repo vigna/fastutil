@@ -742,7 +742,6 @@ fi)\
 "#endif\n"\
 \
 "#define VALUE_NULL (null)\n"\
-"#define OBJECT_DEFAULT_RETURN_VALUE (this.defRetValue)\n"\
 \
 "#else\n"\
 \
@@ -768,8 +767,6 @@ fi)\
 "#endif\n"\
 "#define VALUE2JAVAHASH(x) (x)\n"\
 "#endif\n"\
-\
-"#define OBJECT_DEFAULT_RETURN_VALUE (null)\n"\
 \
 "#endif\n"\
 \

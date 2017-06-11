@@ -19,30 +19,35 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.Function;
 
-#ifdef JDK_PRIMITIVE_FUNCTION
-import java.util.function.JDK_PRIMITIVE_FUNCTION;
-#endif
-
 /** A type-specific {@link Function}; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
  * <P>Type-specific versions of <code>get()</code>, <code>put()</code> and
  * <code>remove()</code> cannot rely on {@code null} to denote absence of
  * a key. Rather, they return a {@linkplain #defaultReturnValue() default
- * return value}, which is set to 0 cast to the return type (<code>false</code>
- * for booleans) at creation, but can be changed using the
+ * return value}, which is set to 0/false at creation, but can be changed using the
  * <code>defaultReturnValue()</code> method.
  *
  * <P>For uniformity reasons, even maps returning objects implement the default
  * return value (of course, in this case the default return value is
  * initialized to {@code null}).
  *
+ * <P>The default implementation of optional operations just throw an {@link
+ * UnsupportedOperationException}, except for the type-specific {@code containsKey()},
+ * which return true. Generic versions of accessors delegate to
+ * the corresponding type-specific counterparts following the interface rules.
+ *
  * <P><strong>Warning:</strong> to fall in line as much as possible with the
  * {@linkplain java.util.Map standard map interface}, it is strongly suggested
  * that standard versions of <code>get()</code>, <code>put()</code> and
  * <code>remove()</code> for maps with primitive-type values <em>return
  * {@code null} to denote missing keys</em> rather than wrap the default
- * return value in an object (of course, for maps with object keys and values
- * this is not possible, as there is no type-specific version).
+ * return value in an object. Note that
+ * <em>before fastutil 8 abstract methods (now default methods of this interface)
+ * providing standard versions were returning {@code null} when
+ * keys were primitive and values were not</em>. While not strictly
+ * against the policy above, this has been rectified after fastutil 8:
+ * all methods returning an object will return the 
+ * {@linkplain #defaultReturnValue() default return value} instead of {@code null}.
  *
  * @see Function
  */
@@ -119,9 +124,13 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 #if KEYS_PRIMITIVE
 		if (key == null) return null;
 #endif
+#if VALUES_PRIMITIVE
 		final KEY_TYPE k = KEY_OBJ2TYPE(key);
 		final VALUE_GENERIC_TYPE v = GET_VALUE(k);
 		return (v != defaultReturnValue() || containsKey(k)) ? VALUE2OBJ(v) : null;
+#else
+		return get(KEY_OBJ2TYPE(key));
+#endif
 	}
 
 	/** {@inheritDoc}
@@ -132,19 +141,31 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 #if KEYS_PRIMITIVE
 		if (key == null) return null;
 #endif
+#if VALUES_PRIMITIVE
 		final KEY_TYPE k = KEY_OBJ2TYPE(key);
 		return containsKey(k) ? VALUE2OBJ(REMOVE_VALUE(k)) : null;
+#else
+		return remove(KEY_OBJ2TYPE(key));
+#endif
 	}
 
 #endif
 
 #if KEYS_PRIMITIVE
 
-	/** Returns {@code true} if this map contains a mapping for the specified key.
+	/** Returns true if this function contains a mapping for the specified key.
+	 *
+	 * <p>Note that for some kind of functions (e.g., hashes) this method
+	 * will always return true. In particular, this default implementation
+	 * always return true.
+	 *
+	 * @param key the key.
+	 * @return true if this function associates a value to {@code key}.
 	 * @see Function#containsKey(Object)
 	 */
-
-	boolean containsKey(KEY_TYPE key);
+	default boolean containsKey(KEY_TYPE key) {
+		return true;
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
@@ -157,7 +178,7 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 
 #endif
 
-	/** Sets the default return value.
+	/** Sets the default return value (optional operation).
 	 *
 	 * This value must be returned by type-specific versions of
 	 * <code>get()</code>, <code>put()</code> and <code>remove()</code> to
@@ -168,13 +189,20 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 	 * @see #defaultReturnValue()
 	 */
 
-	void defaultReturnValue(VALUE_GENERIC_TYPE rv);
+	default void defaultReturnValue(VALUE_GENERIC_TYPE rv) {
+		throw new UnsupportedOperationException();
+	}
 
 
 	/** Gets the default return value.
 	 *
+	 * <p>This default implementation just return the default null value
+	 * of the type ({@code null} for objects, 0 for scalars, false for Booleans).
+	 *
 	 * @return the current default return value.
 	 */
 
-	VALUE_GENERIC_TYPE defaultReturnValue();
+	default VALUE_GENERIC_TYPE defaultReturnValue() {
+		return VALUE_NULL;
+	}
 }

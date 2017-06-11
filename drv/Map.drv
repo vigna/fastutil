@@ -29,7 +29,9 @@ import java.util.Map;
 /** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
  *
  * <P>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link Map#entrySet()},
- * {@link #keySet()} and {@link #values()}. Maps returning entry sets of type {@link FastEntrySet} support also fast iteration.
+ * {@link #keySet()} and {@link #values()}. Moreover, a number of methods, such as {@link #size()}, {@link #defaultReturnValue()}, etc., are un-defaulted
+ * as their function default do not make sense for a map.
+ * Maps returning entry sets of type {@link FastEntrySet} support also fast iteration.
  *
  * <P>A submap or subset may or may not have an
  * independent default return value (which however must be initialized to the
@@ -57,12 +59,13 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 		ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator();
 	}
 
-	/** Returns the number of key-value mappings in this map. If the map
-	 * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
-	 * <tt>Integer.MAX_VALUE</tt>.
-	 *
-	 * @return the number of key-value mappings in this map */
-
+    /**
+     * Returns the number of key/value mappings in this map.  If the
+     * map contains more than {@link Integer#MAX_VALUE} elements, returns {@link Integer#MAX_VALUE}.
+     *
+     * @return the number of key-value mappings in this map
+	 * @see it.unimi.dsi.fastutil.Size64
+     */
 	@Override
 	int size();
 
@@ -77,6 +80,28 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 		throw new UnsupportedOperationException();
 	}
 
+	/** Sets the default return value (optional operation).
+	 *
+	 * This value must be returned by type-specific versions of
+	 * <code>get()</code>, <code>put()</code> and <code>remove()</code> to
+	 * denote that the map does not contain the specified key. It must be
+	 * 0/<code>false</code>/{@code null} by default.
+	 *
+	 * @param rv the new default return value.
+	 * @see #defaultReturnValue()
+	 */
+	@Override
+	void defaultReturnValue(VALUE_GENERIC_TYPE rv);
+
+
+	/** Gets the default return value.
+	 *
+	 * @return the current default return value.
+	 */
+	@Override
+	VALUE_GENERIC_TYPE defaultReturnValue();
+
+
 	/** Returns a type-specific set view of the mappings contained in this map.
 	 *
 	 * <p>This method is necessary because there is no inheritance along
@@ -88,7 +113,6 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @return a type-specific set view of the mappings contained in this map.
 	 * @see Map#entrySet()
 	 */
-
 	ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET();
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
@@ -177,16 +201,35 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 
 #if KEYS_PRIMITIVE
 
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
+	/** Returns true if this function contains a mapping for the specified key.
+	 *
+	 * @param key the key.
+	 * @return true if this function associates a value to {@code key}.
+	 * @see Map#containsKey(Object)
+	 */
+	boolean containsKey(KEY_TYPE key);
 
+	/** Returns true if this function contains a mapping for the specified key.
+	 * <p>This default implementation just delegates to the corresponding type-specific function method.
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
 	@Deprecated
 	@Override
 	default boolean containsKey(final Object key) {
 		return FUNCTION.super.containsKey(key);
 	}
+#else
+
+	/** Returns true if this function contains a mapping for the specified key.
+	 *
+	 * @param key the key.
+	 * @return true if this function associates a value to {@code key}.
+	 * @see Map#containsKey(Object)
+	 */
+	boolean containsKey(Object key);
 
 #endif
+
 
 #if VALUES_PRIMITIVE
 
