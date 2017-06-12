@@ -55,19 +55,26 @@ public interface Stack<K> {
 
 	/** Peeks at the top of the stack (optional operation).
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 *
 	 * @return the top of the stack.
 	 * @throws NoSuchElementException if the stack is empty.
 	 */
 
-	K top();
+	default K top() {
+		throw new UnsupportedOperationException();
+	}
 
 	/** Peeks at an element on the stack (optional operation).
+	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 *
 	 * @param i an index from the stop of the stack (0 represents the top).
 	 * @return the <code>i</code>-th element on the stack.
 	 * @throws IndexOutOfBoundsException if the designated element does not exist..
 	 */
 
-	K peek(int i);
-
+	default K peek(int i) {
+		throw new UnsupportedOperationException();
+	}
 }

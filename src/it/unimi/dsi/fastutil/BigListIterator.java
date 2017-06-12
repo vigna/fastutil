@@ -47,4 +47,29 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	 */
 
 	long previousIndex();
+
+	/**
+	 * Replaces the last element returned by {@link #next} or
+	 * {@link #previous} with the specified element (optional operation).
+	 *
+	 * <p>This default implemention just throws an {@link UnsupportedOperationException}.
+	 *
+	 * @param e an element.
+	 * @see ListIterator#set(Object)
+	 */
+	default void set(K e) {
+			throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Inserts the specified element into the list (optional operation).
+	 *
+	 * <p>This default implemention just throws an {@link UnsupportedOperationException}.
+	 *
+	 * @param e an element.
+	 * @see ListIterator#add(Object)
+	 */
+	default void add(K e) {
+		throw new UnsupportedOperationException();
+	}
 }
