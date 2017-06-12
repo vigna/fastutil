@@ -18,7 +18,7 @@ import org.junit.Test;
 /** It is a good idea to run this test after lowering manually {@link FastMultiByteArrayInputStream#SLICE_BITS} to 10. */
 
 public class FastMultiByteArrayInputStreamTest {
-	private final static boolean DEBUG = false;
+	private static final boolean DEBUG = false;
 
 	@Test
 	public void testSkip() {

@@ -267,7 +267,7 @@ public class IntOpenHashSetTest {
 		if (s.containsNull && ! s.contains(0)) throw new AssertionError("Hash table should contain zero by internal state, but it doesn't when queried");
 		if (! s.containsNull && s.contains(0)) throw new AssertionError("Hash table should not contain zero by internal state, but it does when queried");
 
-		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
+		java.util.HashSet<Integer> t = new java.util.HashSet<>();
 		for (int i = s.size(); i-- != 0;)
 			if (key[i] != 0 && !t.add(key[i])) throw new AssertionError("Key " + key[i] + " appears twice");
 

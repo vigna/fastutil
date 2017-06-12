@@ -133,7 +133,7 @@ public class Int2IntLinkedOpenHashMapTest {
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	protected static void test(int n, float f) throws IOException, ClassNotFoundException {
 		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(Hash.DEFAULT_INITIAL_SIZE, f);
-		Map<Integer,Integer> t = new java.util.LinkedHashMap<Integer,Integer>();
+		Map<Integer,Integer> t = new java.util.LinkedHashMap<>();
 		/* First of all, we fill t with random data. */
 		for (int i = 0; i < n; i++)
 			t.put((Integer.valueOf(genKey())), (Integer.valueOf(genValue())));
@@ -309,7 +309,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		if (t.size() > 0) {
 			java.util.ListIterator<Integer> i, j;
 			Object J = null;
-			j = new java.util.LinkedList<Integer>(t.keySet()).listIterator();
+			j = new java.util.LinkedList<>(t.keySet()).listIterator();
 			int e = r.nextInt(t.size());
 			Object from;
 			do
@@ -351,7 +351,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		 */
 		{
 			m.clear();
-			final java.util.Deque<Integer> d = new java.util.ArrayDeque<Integer>();
+			final java.util.Deque<Integer> d = new java.util.ArrayDeque<>();
 			for (int k = 0; k < 2 * n; k++) {
 				int T = genKey();
 				int U = genValue();
@@ -368,7 +368,7 @@ public class Int2IntLinkedOpenHashMapTest {
 				}
 			}
 			// Iteration order should be identical
-			assertTrue("Error: Iteration order of map different than iteration order of deque." ,  new java.util.ArrayList<Object>(m.keySet()).equals(new java.util.ArrayList<Integer>(d)));
+			assertTrue("Error: Iteration order of map different than iteration order of deque." ,  new java.util.ArrayList<Object>(m.keySet()).equals(new java.util.ArrayList<>(d)));
 		}
 		m.clear();
 		t.clear();

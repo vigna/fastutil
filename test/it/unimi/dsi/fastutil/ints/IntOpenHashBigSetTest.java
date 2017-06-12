@@ -107,7 +107,7 @@ public class IntOpenHashBigSetTest {
 			if (IntBigArrays.get(key, n) != 0 && !s.contains(IntBigArrays.get(key, n))) throw new AssertionError("Hash table has key " + IntBigArrays.get(key, n)
 					+ " marked as occupied, but the key does not belong to the table");
 
-		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
+		java.util.HashSet<Integer> t = new java.util.HashSet<>();
 		for (long i = s.size64(); i-- != 0;)
 			if (IntBigArrays.get(key, i) != 0 && !t.add(IntBigArrays.get(key, i))) throw new AssertionError("Key " + IntBigArrays.get(key, i) + " appears twice");
 

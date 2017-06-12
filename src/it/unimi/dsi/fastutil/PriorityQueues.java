@@ -32,7 +32,7 @@ public class PriorityQueues {
 
 	/** An immutable class representing the empty priority queue.
 	 *
-	 * <P>This class may be useful to implement your own in case you subclass
+	 * <p>This class may be useful to implement your own in case you subclass
 	 * {@link PriorityQueue}.
 	 */
 
@@ -83,11 +83,11 @@ public class PriorityQueues {
 
 	/** An empty indirect priority queue (immutable). */
 
-	public final static EmptyPriorityQueue EMPTY_QUEUE = new EmptyPriorityQueue();
+	public static final EmptyPriorityQueue EMPTY_QUEUE = new EmptyPriorityQueue();
 
 	/** Returns an empty queue (immutable). It is serializable and cloneable.
 	 *
-	 * <P>This method provides a typesafe access to {@link #EMPTY_QUEUE}.
+	 * <p>This method provides a typesafe access to {@link #EMPTY_QUEUE}.
 	 * @param <K> the class of the objects in the queue.
 	 * @return an empty queue (immutable).
 	 */
@@ -101,8 +101,8 @@ public class PriorityQueues {
 	public static class SynchronizedPriorityQueue<K> implements PriorityQueue<K>, Serializable {
 		public static final long serialVersionUID = -7046029254386353129L;
 
-		final protected PriorityQueue <K> q;
-		final protected Object sync;
+		protected final PriorityQueue <K> q;
+		protected final Object sync;
 
 		protected SynchronizedPriorityQueue(final PriorityQueue <K> q, final Object sync) {
 			this.q = q;
@@ -162,7 +162,7 @@ public class PriorityQueues {
 	 * @param q the priority queue to be wrapped in a synchronized priority queue.
 	 * @return a synchronized view of the specified priority queue.
 	 */
-	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q) {	return new SynchronizedPriorityQueue<K>(q); }
+	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q) { return new SynchronizedPriorityQueue<>(q); }
 
 	/** Returns a synchronized priority queue backed by the specified priority queue, using an assigned object to synchronize.
 	 *
@@ -172,5 +172,5 @@ public class PriorityQueues {
 	 * @return a synchronized view of the specified priority queue.
 	 */
 
-	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q, final Object sync) { return new SynchronizedPriorityQueue<K>(q, sync); }
+	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q, final Object sync) { return new SynchronizedPriorityQueue<>(q, sync); }
 }

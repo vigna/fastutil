@@ -22,10 +22,10 @@ import java.io.IOException;
 
 /** Simple, fast byte-array output stream that exposes the backing array.
  *
- * <P>{@link java.io.ByteArrayOutputStream} is nice, but to get its content you
+ * <p>{@link java.io.ByteArrayOutputStream} is nice, but to get its content you
  * must generate each time a new object. This doesn't happen here.
  *
- * <P>This class will automatically enlarge the backing array, doubling its
+ * <p>This class will automatically enlarge the backing array, doubling its
  * size whenever new space is needed. The {@link #reset()} method will
  * mark the content as empty, but will not decrease the capacity: use
  * {@link #trim()} for that purpose.
@@ -36,7 +36,7 @@ import java.io.IOException;
 public class FastByteArrayOutputStream extends MeasurableOutputStream implements RepositionableStream {
 
 	/** The array backing the output stream. */
-	public final static int DEFAULT_INITIAL_CAPACITY = 16;
+	public static final int DEFAULT_INITIAL_CAPACITY = 16;
 
 	/** The array backing the output stream. */
 	public byte[] array;

@@ -43,13 +43,13 @@ public class Arrays {
 
 	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits an array of given length.
 	 *
-	 * <P>This method may be used whenever an array range check is needed.
+	 * <p>This method may be used whenever an array range check is needed.
 	 *
 	 * @param arrayLength an array length.
 	 * @param from a start index (inclusive).
 	 * @param to an end index (inclusive).
-	 * @throws IllegalArgumentException if <code>from</code> is greater than <code>to</code>.
-	 * @throws ArrayIndexOutOfBoundsException if <code>from</code> or <code>to</code> are greater than <code>arrayLength</code> or negative.
+	 * @throws IllegalArgumentException if {@code from} is greater than {@code to}.
+	 * @throws ArrayIndexOutOfBoundsException if {@code from} or {@code to} are greater than {@code arrayLength} or negative.
 	 */
 	public static void ensureFromTo(final int arrayLength, final int from, final int to) {
 		if (from < 0) throw new ArrayIndexOutOfBoundsException("Start index (" + from + ") is negative");
@@ -59,13 +59,13 @@ public class Arrays {
 
 	/** Ensures that a range given by an offset and a length fits an array of given length.
 	 *
-	 * <P>This method may be used whenever an array range check is needed.
+	 * <p>This method may be used whenever an array range check is needed.
 	 *
 	 * @param arrayLength an array length.
 	 * @param offset a start index for the fragment
 	 * @param length a length (the number of elements in the fragment).
-	 * @throws IllegalArgumentException if <code>length</code> is negative.
-	 * @throws ArrayIndexOutOfBoundsException if <code>offset</code> is negative or <code>offset</code>+<code>length</code> is greater than <code>arrayLength</code>.
+	 * @throws IllegalArgumentException if {@code length} is negative.
+	 * @throws ArrayIndexOutOfBoundsException if {@code offset} is negative or {@code offset}+{@code length} is greater than {@code arrayLength}.
 	 */
 	public static void ensureOffsetLength(final int arrayLength, final int offset, final int length) {
 		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
@@ -75,8 +75,8 @@ public class Arrays {
 
 	/**
 	 * Transforms two consecutive sorted ranges into a single sorted range. The initial ranges are
-	 * <code>[first..middle)</code> and <code>[middle..last)</code>, and the resulting range is
-	 * <code>[first..last)</code>. Elements in the first input range will precede equal elements in
+	 * {@code [first..middle)} and {@code [middle..last)}, and the resulting range is
+	 * {@code [first..last)}. Elements in the first input range will precede equal elements in
 	 * the second.
 	 */
 	private static void inPlaceMerge(final int from, int mid, final int to, final IntComparator comp, final Swapper swapper) {
@@ -130,8 +130,8 @@ public class Arrays {
 	 * @param to the index of the last element (exclusive) to be included in the binary search.
 	 * @param pos the position of the element to be searched for.
 	 * @param comp the comparison function.
-	 * @return the largest index i such that, for every j in the range <code>[first..i)</code>,
-	 * <code>comp.compare(j, pos)</code> is <code>true</code>.
+	 * @return the largest index i such that, for every j in the range {@code [first..i)},
+	 * {@code comp.compare(j, pos)} is {@code true}.
 	 */
 	private static int lowerBound(int from, final int to, final int pos, final IntComparator comp) {
 		// if (comp==null) throw new NullPointerException();
@@ -160,8 +160,8 @@ public class Arrays {
 	 * @param to the index of the last element (exclusive) to be included in the binary search.
 	 * @param pos the position of the element to be searched for.
 	 * @param comp the comparison function.
-	 * @return The largest index i such that, for every j in the range <code>[first..i)</code>,
-	 * <code>comp.compare(pos, j)</code> is <code>false</code>.
+	 * @return The largest index i such that, for every j in the range {@code [first..i)},
+	 * {@code comp.compare(pos, j)} is {@code false}.
 	 */
 	private static int upperBound(int from, final int mid, final int pos, final IntComparator comp) {
 		// if (comp==null) throw new NullPointerException();

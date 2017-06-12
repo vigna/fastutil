@@ -22,7 +22,7 @@ import java.util.NoSuchElementException;
 
 /** An indirect priority queue.
  *
- * <P>An indirect priority queue provides a way to {@linkplain #enqueue(int)
+ * <p>An indirect priority queue provides a way to {@linkplain #enqueue(int)
  * enqueue} by index elements taken from a given <em>reference list</em>,
  * and to {@linkplain #dequeue() dequeue} them in some specified order.
  * Elements that are <em>smaller</em> in the specified order are
@@ -30,27 +30,27 @@ import java.util.NoSuchElementException;
  * is also possible to get the {@linkplain #first() index of the first element}, that
  * is, the index that would be dequeued next.
  *
- * <P>Additionally, the queue may provide a method to peek at the index of the
+ * <p>Additionally, the queue may provide a method to peek at the index of the
  * element that would be dequeued {@linkplain #last() last}.
  *
- * <P>The reference list should not change during queue operations (or, more
+ * <p>The reference list should not change during queue operations (or, more
  * precisely, the relative order of the elements corresponding to indices in the queue should not
  * change). Nonetheless, some implementations may give the caller a way to
  * notify the queue that the {@linkplain #changed() first element has changed its
  * relative position in the order}.
  *
- * <P>Optionally, an indirect priority queue may even provide methods to notify
+ * <p>Optionally, an indirect priority queue may even provide methods to notify
  * {@linkplain #changed(int) the change of <em>any</em> element of the
  * reference list}, to check {@linkplain #contains(int) the presence of
  * an index in the queue}, and to {@linkplain #remove(int) remove an index from the queue}.
  * It may even allow to notify that {@linkplain #allChanged() all elements have changed}.
  *
- * <P>It is always possible to enqueue two distinct indices corresponding to
+ * <p>It is always possible to enqueue two distinct indices corresponding to
  * equal elements of the reference list. However, depending on the
  * implementation, it may or may not be possible to enqueue twice the same
  * index.
  *
- * <P>Note that <em>all element manipulation happens via indices</em>.
+ * <p>Note that <em>all element manipulation happens via indices</em>.
  */
 
 public interface IndirectPriorityQueue<K> {
@@ -117,15 +117,15 @@ public interface IndirectPriorityQueue<K> {
 		changed(first());
 	}
 
-	/** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
+	/** Returns the comparator associated with this queue, or {@code null} if it uses its elements' natural ordering.
 	 *
-	 * @return the comparator associated with this sorted set, or <code>null</code> if it uses its elements' natural ordering.
+	 * @return the comparator associated with this sorted set, or {@code null} if it uses its elements' natural ordering.
 	 */
 	Comparator <? super K> comparator();
 
 	/** Notifies this queue that the specified element has changed (optional operation).
 	 *
-	 * <P>Note that the specified element must belong to this queue.
+	 * <p>Note that the specified element must belong to this queue.
 	 *
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 *
@@ -169,7 +169,7 @@ public interface IndirectPriorityQueue<K> {
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 *
 	 * @param a an array large enough to hold the front (e.g., at least long as the reference array).
-	 * @return the number of elements actually written (starting from the first position of <code>a</code>).
+	 * @return the number of elements actually written (starting from the first position of {@code a}).
 	 */
 
 	default int front(final int[] a) { throw new UnsupportedOperationException(); }

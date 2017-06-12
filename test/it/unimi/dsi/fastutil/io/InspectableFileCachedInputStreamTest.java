@@ -44,7 +44,7 @@ public class InspectableFileCachedInputStreamTest {
 
 	public static List<byte[]> byteArrays;
 	static {
-		byteArrays = new ArrayList<byte[]>();
+		byteArrays = new ArrayList<>();
 		byte[] b;
 		// Now generates byte buffers from 1 byte up to 64KiB; we shuffle them so that they are not increasing in size...
 		for (int k = 0; k < 10; k++) {

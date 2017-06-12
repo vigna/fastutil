@@ -93,7 +93,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	/** Creates a new instance with specified buffer size and overlow-file directory.
 	 *
 	 * @param bufferSize the buffer size, in bytes.
-	 * @param overflowFile the directory where the overflow file should be created, or <code>null</code> for the default temporary directory.
+	 * @param overflowFile the directory where the overflow file should be created, or {@code null} for the default temporary directory.
 	 */
 	public InspectableFileCachedInputStream(final int bufferSize, final File overflowFile) throws IOException {
 		if (bufferSize <= 0) throw new IllegalArgumentException("Illegal buffer size " + bufferSize);

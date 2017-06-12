@@ -19,15 +19,15 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class FastBufferedInputStreamTest {
-	private final static boolean DEBUG = false;
+	private static final boolean DEBUG = false;
 
 	/** A byte array input stream that will return its data in small chunks,
 	 * even it could actually return more data, and skips less bytes than it could.
 	 */
 
 	private static class BastardByteArrayInputStream extends ByteArrayInputStream {
-		private final static long seed = System.currentTimeMillis();
-		private final static Random r = new Random(seed);
+		private static final long seed = System.currentTimeMillis();
+		private static final Random r = new Random(seed);
 		static {
 			System.err.println("Seed: " + seed);
 		}

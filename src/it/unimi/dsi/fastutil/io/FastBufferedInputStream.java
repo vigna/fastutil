@@ -28,14 +28,14 @@ import java.util.EnumSet;
  *  {@linkplain RepositionableStream repositionability}
  *  and {@linkplain #readLine(byte[], int, int, EnumSet) line reading} support.
  *
- * <P>This class provides buffering for input streams, but it does so with
+ * <p>This class provides buffering for input streams, but it does so with
  * purposes and an internal logic that are radically different from the ones
  * adopted in {@link java.io.BufferedInputStream}. The main features follow.
  *
  * <ul>
- * <li><P>There is no support for marking. All methods are unsychronized.
+ * <li><p>There is no support for marking. All methods are unsychronized.
  *
- * <li><P>As an additional feature, this class implements the {@link
+ * <li><p>As an additional feature, this class implements the {@link
  * RepositionableStream} and {@link MeasurableStream} interfaces.
  * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
@@ -69,8 +69,8 @@ import java.util.EnumSet;
  *
  * </ul>
  *
- * <p><strong>Warning:</strong> Since <code>fastutil</code> 6.0.0, this class detects
- * a implementations of {@link MeasurableStream} instead of subclasses <code>MeasurableInputStream</code> (which is deprecated).
+ * <p><strong>Warning:</strong> Since {@code fastutil} 6.0.0, this class detects
+ * a implementations of {@link MeasurableStream} instead of subclasses {@code MeasurableInputStream} (which is deprecated).
  *
  * @since 4.4
  */
@@ -78,7 +78,7 @@ import java.util.EnumSet;
 public class FastBufferedInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The default size of the internal buffer in bytes (8Ki). */
-	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
+	public static final int DEFAULT_BUFFER_SIZE = 8 * 1024;
 
 	/** An enumeration of the supported line terminators. */
 	public static enum LineTerminator {
@@ -91,7 +91,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	}
 
 	/** A set containing <em>all available</em> line terminators. */
-	public final static EnumSet<LineTerminator> ALL_TERMINATORS = EnumSet.allOf(LineTerminator.class);
+	public static final EnumSet<LineTerminator> ALL_TERMINATORS = EnumSet.allOf(LineTerminator.class);
 
 	/** The underlying input stream. */
 	protected InputStream is;
@@ -187,8 +187,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		return false;
 	}
 
-
-
+	@Override
 	public int read() throws IOException {
 		if (noMoreCharacters()) return -1;
 		avail--;
@@ -196,7 +195,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		return buffer[pos++] & 0xFF;
 	}
 
-
+	@Override
 	public int read(final byte b[], final int offset, final int length) throws IOException {
 		if (length <= avail) {
 			System.arraycopy(buffer, pos, b, offset, length);
@@ -234,7 +233,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** Reads a line into the given byte array using {@linkplain #ALL_TERMINATORS all terminators}.
 	 *
 	 * @param array byte array where the next line will be stored.
-	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * @return the number of bytes actually placed in {@code array}, or -1 at end of file.
 	 * @see #readLine(byte[], int, int, EnumSet)
 	 */
 
@@ -247,7 +246,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * @param array byte array where the next line will be stored.
 	 * @param terminators a set containing the line termination sequences that we want
 	 * to consider as valid.
-	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * @return the number of bytes actually placed in {@code array}, or -1 at end of file.
 	 * @see #readLine(byte[], int, int, EnumSet)
 	 */
 
@@ -258,9 +257,9 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	/** Reads a line into the given byte-array fragment	using {@linkplain #ALL_TERMINATORS all terminators}.
 	 *
 	 * @param array byte array where the next line will be stored.
-	 * @param off the first byte to use in <code>array</code>.
+	 * @param off the first byte to use in {@code array}.
 	 * @param len the maximum number of bytes to read.
-	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
+	 * @return the number of bytes actually placed in {@code array}, or -1 at end of file.
 	 * @see #readLine(byte[], int, int, EnumSet)
 	 */
 	public int readLine(final byte[] array, final int off, final int len) throws IOException {
@@ -269,13 +268,13 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	/** Reads a line into the given byte-array fragment.
 	 *
-	 * <P>Reading lines (i.e., characters) out of a byte stream is not always sensible
+	 * <p>Reading lines (i.e., characters) out of a byte stream is not always sensible
 	 * (methods available to that purpose in old versions of Java have been mercilessly deprecated).
 	 * Nonetheless, in several situations, such as when decoding network protocols or headers
 	 * known to be ASCII, it is very useful to be able to read a line from a byte stream.
 	 *
-	 * <p>This method will attempt to read the next line into <code>array</code> starting at <code>off</code>,
-	 * reading at most <code>len</code> bytes. The read, however, will be stopped by the end of file or
+	 * <p>This method will attempt to read the next line into {@code array} starting at {@code off},
+	 * reading at most {@code len} bytes. The read, however, will be stopped by the end of file or
 	 * when meeting a {@linkplain LineTerminator <em>line terminator</em>}. Of course, for this operation
 	 * to be sensible the encoding of the text contained in the stream, if any, must not generate spurious
 	 * carriage returns or line feeds. Note that the termination detection uses a maximisation
@@ -284,12 +283,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 *
 	 * <p>Terminators are <em>not</em> copied into <em>array</em> or included in the returned count. The
 	 * returned integer can be used to check whether the line is complete: if it is smaller than
-	 * <code>len</code>, then more bytes might be available, but note that this method (contrarily
-	 * to {@link #read(byte[], int, int)}) can legitimately return zero when <code>len</code>
+	 * {@code len}, then more bytes might be available, but note that this method (contrarily
+	 * to {@link #read(byte[], int, int)}) can legitimately return zero when {@code len}
 	 * is nonzero just because a terminator was found as the first character. Thus, the intended
-	 * usage of this method is to call it on a given array, check whether <code>len</code> bytes
+	 * usage of this method is to call it on a given array, check whether {@code len} bytes
 	 * have been read, and if so try again (possibly extending the array) until a number of read bytes
-	 * strictly smaller than <code>len</code> (possibly, -1) is returned.
+	 * strictly smaller than {@code len} (possibly, -1) is returned.
 	 *
 	 * <p>If you need to guarantee that a full line is read, use the following idiom:
 	 * <pre>
@@ -300,17 +299,17 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * }
 	 * </pre>
 	 *
-	 * <p>At the end of the loop, the line will be placed in <code>array</code> starting at
-	 * <code>off</code> (inclusive) and ending at <code>start + Math.max(len, 0)</code> (exclusive).
+	 * <p>At the end of the loop, the line will be placed in {@code array} starting at
+	 * {@code off} (inclusive) and ending at {@code start + Math.max(len, 0)} (exclusive).
 	 *
 	 * @param array byte array where the next line will be stored.
-	 * @param off the first byte to use in <code>array</code>.
+	 * @param off the first byte to use in {@code array}.
 	 * @param len the maximum number of bytes to read.
 	 * @param terminators a set containing the line termination sequences that we want
 	 * to consider as valid.
-	 * @return the number of bytes actually placed in <code>array</code>, or -1 at end of file.
-	 * Note that the returned number will be <code>len</code> if no line termination sequence
-	 * specified in <code>terminators</code> has been met before scanning <code>len</code> byte,
+	 * @return the number of bytes actually placed in {@code array}, or -1 at end of file.
+	 * Note that the returned number will be {@code len} if no line termination sequence
+	 * specified in {@code terminators} has been met before scanning {@code len} byte,
 	 * and if also we did not meet the end of file.
 	 */
 
@@ -396,8 +395,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		}
 	}
 
-
-
+	@Override
 	public void position(long newPosition) throws IOException {
 
 		final long position = readBytes;
@@ -422,6 +420,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		avail = pos = 0;
 	}
 
+	@Override
 	public long position() throws IOException {
 		return readBytes;
 	}
@@ -433,12 +432,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * cannot provide a {@link FileChannel}.
 	 */
 
+	@Override
 	public long length() throws IOException {
 		if (measurableStream != null) return measurableStream.length();
 		if (fileChannel != null) return fileChannel.size();
 		throw new UnsupportedOperationException();
 	}
-
 
 	/** Skips the given amount of bytes by repeated reads.
 	 *
@@ -461,7 +460,6 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		return n - toSkip;
 	}
 
-
 	/** Skips over and discards the given number of bytes of data from this fast buffered input stream.
 	 *
 	 * <p>As explained in the {@linkplain FastBufferedInputStream class documentation}, the semantics
@@ -472,11 +470,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	 * repeated reads instead of invoking {@link InputStream#skip(long)}.
 	 *
 	 * @param n the number of bytes to skip.
-	 * @return the number of bytes actually skipped; it can be smaller than <code>n</code>
+	 * @return the number of bytes actually skipped; it can be smaller than {@code n}
 	 * only if the end of file has been reached.
 	 * @see InputStream#skip(long)
 	 */
 
+	@Override
 	public long skip(final long n) throws IOException {
 		if (n <= avail) {
 			final int m = (int)n;
@@ -502,11 +501,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 		return t;
 	}
 
-
+	@Override
 	public int available() throws IOException {
 		return (int)Math.min(is.available() + (long)avail, Integer.MAX_VALUE);
 	}
 
+	@Override
 	public void close() throws IOException {
 		if (is == null) return;
 		if (is != System.in) is.close();
@@ -532,11 +532,12 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	/** Resets the internal logic of this fast buffered input stream.
 	 *
-	 * @deprecated As of <code>fastutil</code> 5.0.4, replaced by {@link #flush()}. The old
+	 * @deprecated As of {@code fastutil} 5.0.4, replaced by {@link #flush()}. The old
 	 * semantics of this method does not contradict {@link InputStream}'s contract, as
 	 * the semantics of {@link #reset()} is undefined if {@link InputStream#markSupported()}
 	 * returns false. On the other hand, the name was really a poor choice.
 	 */
+	@Override
 	@Deprecated
 	public void reset() {
 		flush();

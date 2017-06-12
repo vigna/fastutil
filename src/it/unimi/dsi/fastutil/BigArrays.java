@@ -45,15 +45,15 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * {@link Integer#MAX_VALUE} = {@value #SEGMENT_SIZE} * (2<sup>31</sup> &minus;
  * 1) rather than {@link Integer#MAX_VALUE}. The type of a big array is that of
  * an array-of-arrays, so a big array of integers is of type
- * <code>int[][]</code>. Note that {@link #SEGMENT_SIZE} has been chosen so that
+ * {@code int[][]}. Note that {@link #SEGMENT_SIZE} has been chosen so that
  * a single segment is smaller than 2<sup>31</sup> bytes independently of the
  * data type. It might be enlarged in the future.
  *
  * <p>
- * If <code>a</code> is a big array, <code>a[0]</code>, <code>a[1]</code>,
+ * If {@code a} is a big array, {@code a[0]}, {@code a[1]},
  * &hellip; are called the <em>segments</em> of the big array. All segments,
  * except possibly for the last one, are of length {@link #SEGMENT_SIZE}. Given
- * an index <code>i</code> into a big array, there is an associated
+ * an index {@code i} into a big array, there is an associated
  * <em>{@linkplain #segment(long) segment}</em> and an associated
  * <em>{@linkplain #displacement(long)
  * displacement}</em> into that segment. Access to single members happens by
@@ -89,7 +89,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * }
  * </pre>
  * <p>
- * Inside the inner loop, the original index in <code>a</code> can be retrieved
+ * Inside the inner loop, the original index in {@code a} can be retrieved
  * using {@link #index(int, int) index(segment, displacement)}. You can also
  * use an additional long to keep track of the index.
  *
@@ -130,9 +130,9 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *
  * <p>
  * A literal big array can be easily created by using the suitable type-specific
- * <code>wrap()</code> method (e.g., {@link IntBigArrays#wrap(int[])}) around a
+ * {@code wrap()} method (e.g., {@link IntBigArrays#wrap(int[])}) around a
  * literal standard array. Alternatively, for very small arrays you can just
- * declare a literal array-of-array (e.g., <code>new int[][] { { 1, 2 } }</code>
+ * declare a literal array-of-array (e.g., {@code new int[][] { { 1, 2 } }}
  *). Be warned, however, that this can lead to creating illegal big arrays if
  * for some reason (e.g., stress testing) {@link #SEGMENT_SIZE} is set to a
  * value smaller than the inner array length.
@@ -166,15 +166,15 @@ public class BigArrays {
 	 * The shift used to compute the segment associated with an index
 	 * (equivalently, the logarithm of the segment size).
 	 */
-	public final static int SEGMENT_SHIFT = 27;
+	public static final int SEGMENT_SHIFT = 27;
 	/**
 	 * The current size of a segment (2<sup>27</sup>) is the largest size that
 	 * makes the physical memory allocation for a single segment strictly
 	 * smaller than 2<sup>31</sup> bytes.
 	 */
-	public final static int SEGMENT_SIZE = 1 << SEGMENT_SHIFT;
+	public static final int SEGMENT_SIZE = 1 << SEGMENT_SHIFT;
 	/** The mask used to compute the displacement associated to an index. */
-	public final static int SEGMENT_MASK = SEGMENT_SIZE - 1;
+	public static final int SEGMENT_MASK = SEGMENT_SIZE - 1;
 
 	protected BigArrays() {
 	}
@@ -233,7 +233,7 @@ public class BigArrays {
 	 * Ensures that a range given by its first (inclusive) and last (exclusive)
 	 * elements fits a big array of given length.
 	 *
-	 * <P>
+	 * <p>
 	 * This method may be used whenever a big array range check is needed.
 	 *
 	 * @param bigArrayLength
@@ -243,10 +243,10 @@ public class BigArrays {
 	 * @param to
 	 *            an end index (inclusive).
 	 * @throws IllegalArgumentException
-	 *             if <code>from</code> is greater than <code>to</code>.
+	 *             if {@code from} is greater than {@code to}.
 	 * @throws ArrayIndexOutOfBoundsException
-	 *             if <code>from</code> or <code>to</code> are greater than
-	 *             <code>bigArrayLength</code> or negative.
+	 *             if {@code from} or {@code to} are greater than
+	 *             {@code bigArrayLength} or negative.
 	 */
 	public static void ensureFromTo(final long bigArrayLength, final long from, final long to) {
 		if (from < 0) throw new ArrayIndexOutOfBoundsException("Start index (" + from + ") is negative");
@@ -258,7 +258,7 @@ public class BigArrays {
 	 * Ensures that a range given by an offset and a length fits a big array of
 	 * given length.
 	 *
-	 * <P>
+	 * <p>
 	 * This method may be used whenever a big array range check is needed.
 	 *
 	 * @param bigArrayLength
@@ -268,11 +268,11 @@ public class BigArrays {
 	 * @param length
 	 *            a length (the number of elements in the fragment).
 	 * @throws IllegalArgumentException
-	 *             if <code>length</code> is negative.
+	 *             if {@code length} is negative.
 	 * @throws ArrayIndexOutOfBoundsException
-	 *             if <code>offset</code> is negative or <code>offset</code> +
-	 *             <code>length</code> is greater than
-	 *             <code>bigArrayLength</code>.
+	 *             if {@code offset} is negative or {@code offset} +
+	 *             {@code length} is greater than
+	 *             {@code bigArrayLength}.
 	 */
 	public static void ensureOffsetLength(final long bigArrayLength, final long offset, final long length) {
 		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
@@ -286,7 +286,7 @@ public class BigArrays {
 	 * @param bigArrayLength
 	 *            a big-array length.
 	 * @throws IllegalArgumentException
-	 *             if <code>length</code> is negative, or larger than or equal
+	 *             if {@code length} is negative, or larger than or equal
 	 *             to {@link #SEGMENT_SIZE} * {@link Integer#MAX_VALUE}.
 	 */
 	public static void ensureLength(final long bigArrayLength) {
@@ -299,9 +299,9 @@ public class BigArrays {
 
 	/**
 	 * Transforms two consecutive sorted ranges into a single sorted range. The
-	 * initial ranges are <code>[first, middle)</code> and
-	 * <code>[middle, last)</code>, and the resulting range is
-	 * <code>[first, last)</code>. Elements in the first input range will
+	 * initial ranges are {@code [first, middle)} and
+	 * {@code [middle, last)}, and the resulting range is
+	 * {@code [first, last)}. Elements in the first input range will
 	 * precede equal elements in the second.
 	 */
 	private static void inPlaceMerge(final long from, long mid, final long to, final LongComparator comp, final BigSwapper swapper) {
@@ -359,8 +359,8 @@ public class BigArrays {
 	 * @param comp
 	 *            Comparison function.
 	 * @return The largest index i such that, for every j in the range
-	 *         <code>[first, i)</code>, <code>comp.apply(array[j], x)</code> is
-	 *         <code>true</code>.
+	 *         {@code [first, i)}, {@code comp.apply(array[j], x)} is
+	 *         {@code true}.
 	 */
 	private static long lowerBound(long mid, final long to, final long firstCut, final LongComparator comp) {
 		long len = to - mid;
@@ -535,8 +535,8 @@ public class BigArrays {
 	 * @param comp
 	 *            Comparison function.
 	 * @return The largest index i such that, for every j in the range
-	 *         <code>[first, i)</code>, <code>comp.apply(x, array[j])</code> is
-	 *         <code>false</code>.
+	 *         {@code [first, i)}, {@code comp.apply(x, array[j])} is
+	 *         {@code false}.
 	 */
 	private static long upperBound(long from, final long mid, final long secondCut, final LongComparator comp) {
 		long len = mid - from;

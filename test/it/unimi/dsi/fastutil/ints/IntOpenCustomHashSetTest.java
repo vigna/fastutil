@@ -72,7 +72,7 @@ public class IntOpenCustomHashSetTest {
 		}
 	}
 
-	private final static Strategy strategy = new Strategy();
+	private static final Strategy strategy = new Strategy();
 
 	private static java.util.Random r = new java.util.Random(0);
 
@@ -93,7 +93,7 @@ public class IntOpenCustomHashSetTest {
 		if (s.containsNull && !s.contains(0)) throw new AssertionError("Hash table should contain zero by internal state, but it doesn't when queried");
 		if (!s.containsNull && s.contains(0)) throw new AssertionError("Hash table should not contain zero by internal state, but it does when queried");
 
-		java.util.HashSet<Integer> t = new java.util.HashSet<Integer>();
+		java.util.HashSet<Integer> t = new java.util.HashSet<>();
 		for (int i = s.size(); i-- != 0;)
 			if (key[i] != 0 && !t.add(key[i])) throw new AssertionError("Key " + key[i] + " appears twice");
 
@@ -130,7 +130,7 @@ public class IntOpenCustomHashSetTest {
 	private static void test(int n, float f) throws IOException, ClassNotFoundException {
 		int c;
 		final Integer key[] = new Integer[(int)Math.ceil(n * f)];
-		HashSet<Integer> t = new HashSet<Integer>();
+		HashSet<Integer> t = new HashSet<>();
 		/* First of all, we fill t with random data. */
 
 		for (int i = 0; i < key.length; i++)

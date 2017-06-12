@@ -58,7 +58,7 @@ public class Int2IntOpenCustomHashMapTest {
 		}
 	}
 
-	private final static Strategy strategy = new Strategy();
+	private static final Strategy strategy = new Strategy();
 
 	private static java.util.Random r = new java.util.Random(0);
 
@@ -76,7 +76,7 @@ public class Int2IntOpenCustomHashMapTest {
 			if (key[n] != 0 && !s.containsKey(key[n])) throw new AssertionError("Hash table has key " + key[n]
 					+ " marked as occupied, but the key does not belong to the table");
 
-		java.util.HashMap<Integer,Integer> t = new java.util.HashMap<Integer, Integer>();
+		java.util.HashMap<Integer,Integer> t = new java.util.HashMap<>();
 		for (int i = s.size(); i-- != 0;)
 			if (key[i] != 0 && t.put(key[i], key[i]) != null) throw new AssertionError("Key " + key[i] + " appears twice");
 
@@ -113,7 +113,7 @@ public class Int2IntOpenCustomHashMapTest {
 	private static void test(int n, float f) throws IOException, ClassNotFoundException {
 		int c;
 		final Integer key[] = new Integer[(int)Math.ceil(n * f)];
-		HashMap<Integer,Integer> t = new HashMap<Integer,Integer>();
+		HashMap<Integer,Integer> t = new HashMap<>();
 		/* First of all, we fill t with random data. */
 
 		for (int i = 0; i < key.length; i++) t.put(key[i] = new Integer(genKey()), key[i]);

@@ -22,7 +22,7 @@ import java.util.List;
 
 /** A list with big (i.e., 64-bit) indices.
  *
- * <P>Instances of this class implement the same semantics as that of {@link List}: however,
+ * <p>Instances of this class implement the same semantics as that of {@link List}: however,
  * getters and setters use long indices, search methods return long values,
  * and iterators are of type {@link BigListIterator}.
  */
@@ -35,7 +35,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the element at the specified position.
 	 * @see List#get(int)
 	 */
-	public K get(long index);
+	K get(long index);
 
 	/** Removes the element at the specified position.
 	 *
@@ -43,7 +43,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the element previously at the specified position.
 	 * @see List#remove(int)
 	 */
-	public K remove(long index);
+	K remove(long index);
 
 	/** Replaces the element at the specified position in this big list with the specified element (optional operation).
 	 *
@@ -52,7 +52,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the element previously at the specified positions.
 	 * @see List#set(int,Object)
 	 */
-	public K set(long index, K element);
+	K set(long index, K element);
 
 	/** Inserts the specified element at the specified position in this big list (optional operation).
 	 *
@@ -60,12 +60,12 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @param element an element to be inserted.
 	 * @see List#add(int,Object)
 	 */
-	public void add(long index, K element);
+	void add(long index, K element);
 
 	/** Sets the size of this big list.
 	 *
-	 * <P>If the specified size is smaller than the current size, the last elements are
-	 * discarded. Otherwise, they are filled with 0/<code>null</code>/<code>false</code>.
+	 * <p>If the specified size is smaller than the current size, the last elements are
+	 * discarded. Otherwise, they are filled with 0/{@code null}/{@code false}.
 	 *
 	 * @param size the new size.
 	 */
@@ -76,10 +76,10 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 *
 	 * @param index index at which to insert the first element from the specified collection.
 	 * @param c collection containing elements to be added to this big list.
-	 * @return <code>true</code> if this big list changed as a result of the call
+	 * @return {@code true} if this big list changed as a result of the call
 	 * @see List#addAll(int, Collection)
 	 */
-	public boolean addAll(long index, Collection<? extends K> c);
+	boolean addAll(long index, Collection<? extends K> c);
 
 	/** Returns the index of the first occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
 	 *
@@ -87,7 +87,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the index of the first occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
 	 * @see List#indexOf(Object)
 	 */
-	public long indexOf(Object o);
+	long indexOf(Object o);
 
 	/** Returns the index of the last occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
 	 *
@@ -95,7 +95,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the index of the last occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
  	 * @see List#lastIndexOf(Object)
 	 */
-	public long lastIndexOf(Object o);
+	long lastIndexOf(Object o);
 
 	/** Returns a big-list iterator over the elements in this big list.
 	 *
@@ -103,7 +103,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @see List#listIterator()
 	 */
 
-	public BigListIterator<K> listIterator();
+	BigListIterator<K> listIterator();
 
 	/** Returns a big-list iterator of the elements in this big list, starting at the specified position in this big list.
 	 *
@@ -112,7 +112,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * this big list.
 	 * @see List#listIterator(int)
 	 */
-	public BigListIterator<K> listIterator(long index);
+	BigListIterator<K> listIterator(long index);
 
 	/** Returns a big sublist view of this big list.
 	 *
@@ -121,5 +121,5 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return a big sublist view of this big list.
 	 * @see List#subList(int, int)
 	 */
-	public BigList<K> subList(long from, long to);
+	BigList<K> subList(long from, long to);
 }

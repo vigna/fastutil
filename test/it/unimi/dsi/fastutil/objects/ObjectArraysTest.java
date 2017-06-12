@@ -161,7 +161,7 @@ public class ObjectArraysTest {
 		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
 	}
 
-	private final static Comparator<Integer> OPPOSITE_COMPARATOR = new Comparator<Integer>() {
+	private static final Comparator<Integer> OPPOSITE_COMPARATOR = new Comparator<Integer>() {
 		@Override
 		public int compare(Integer o1, Integer o2) {
 			return o2.compareTo(o1);
