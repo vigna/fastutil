@@ -28,7 +28,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * <p>Instances of this class represent functions: the main difference with {@link java.util.Map}
  * is that functions do not in principle allow enumeration of their domain or range. The need for
  * this interface lies in the existence of several highly optimized implementations of
- * functions (e.g., minimal perfect hashes) which do not actually store their domain or range explicitly.
+ * functions (e.g. minimal perfect hashes) which do not actually store their domain or range explicitly.
  * In case the domain is known, {@link #containsKey(Object)} can be used to perform membership queries.
  *
  * <p>The choice of naming all methods exactly as in {@link java.util.Map} makes it possible
@@ -39,9 +39,9 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * <p>Note that there is an {@link it.unimi.dsi.fastutil.objects.Object2ObjectFunction Object2ObjectFunction} that
  * can also set its default return value.
  *
- * <h2>The relatioship with {@link java.util.function.Function}</h2>
+ * <h2>Relationship with {@link java.util.function.Function}</h2>
  *
- * <p>This interface predates Java 8's {@link java.util.function.Function}, but it was conceived with
+ * <p>This interface predates Java 8's {@link java.util.function.Function} and it was conceived with
  * a different purpose. To ease interoperability, we extend {@link java.util.function.Function} and
  * implement a default method for {@link #apply(Object)} that delegates to {@link #get(Object)}. However,
  * while the argument of a {@link java.util.function.Function} with keys of type {@code T} is of type
@@ -58,10 +58,10 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * <h2>Default methods and lambda expressions</h2>
  *
  * <p>All optional operations have default methods throwing an {@link UnsupportedOperationException}, except
- * for {@link #containsKey(Object)}, which returns false,
- * and {@link #size()}, which return -1: thus, it is possible to define an instance of this class using
- * a lambda expression that will specify {@link #get(Object)}. Note that the type signature of {@link #get(Object)} might lead to slightly
- * counterintuitive behaviour: for example, to define the identity function on {@link Integer} objects
+ * for {@link #containsKey(Object)}, which returns true, and {@link #size()}, which return -1.
+ * Thus, it is possible to define an instance of this class using a lambda expression that will specify
+ * {@link #get(Object)}. Note that the type signature of {@link #get(Object)} might lead to slightly
+ * counter-intuitive behaviour. For example, to define the identity function on {@link Integer} objects
  * you need to write
  * <pre>
  *     it.unimi.dsi.fastutil.Function&lt;Integer, Integer> f = (x) -> (Integer)x;
