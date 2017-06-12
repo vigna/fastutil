@@ -37,8 +37,6 @@
     <li><code>fastutil</code>'s {@link it.unimi.dsi.fastutil.Function} extends JDK's {@link java.util.function.Function} and
     type-specific functions extend corresponding JDK primitive functions, using key widening where applicable (e.g.,
     {@link it.unimi.dsi.fastutil.shorts.Short2IntFunction} extends {@link java.util.function.IntUnaryOperator}).
-    <li><strong>Important:</strong> Type-specific functions with non-primitive values now consistently return the default return
-    value upon missing keys for the generic <code>get()</code>, <code>put()</code> and <code>remove()</code>.
     <li>Type-specific versions of {@link java.util.function.Consumer}.
     <li>Clean-up of all deprecated methods.
     <li>Many abstract classes have been made obsolete by default methods in the associated interfaces, and are now deprecated.
@@ -48,6 +46,8 @@
     <li>Easy ways to exploit fast iterators for maps, even in for loops, using methods such
     as {@link it.unimi.dsi.fastutil.ints.Int2IntMaps#fastIterable(it.unimi.dsi.fastutil.ints.Int2IntMap)}.
     <li>Hash structure never rehash below the original size.
+    <li>Type-specific functions with non-primitive values now consistently return the default return
+    value upon missing keys for the generic versions of <code>get()</code>, <code>put()</code> and <code>remove()</code>.
     </ul>
 
 
@@ -105,13 +105,13 @@
 
     <h2>More on type-specific classes</h2>
 
-    <p>All data structures in <code>fastutil</code> implement their standard
+    <p>All data structures in <code>fastutil</code> extend their standard
     counterpart interface whenever possible (e.g., {@link java.util.Map} for maps). Thus, they
     can be just plugged into existing code, using the standard access methods
     (of course, any attempt to use the wrong type for keys or values will
     produce a {@link java.lang.ClassCastException}). However, they also provide
     (whenever possible) many polymorphic versions of the most used methods that
-    avoid boxing/unboxing. In doing so, they implement more stringent interfaces that
+    avoid boxing/unboxing. In doing so, they specify more stringent interfaces that
     extend and strengthen the standard ones (e.g., {@link
     it.unimi.dsi.fastutil.ints.Int2IntSortedMap} or {@link
     it.unimi.dsi.fastutil.ints.IntListIterator}). All generic methods
@@ -477,8 +477,8 @@
     <li>In JDK 8 a number of classes appeared specifying primitive-type
     interfaces: examples are {@link java.util.PrimitiveIterator} and
     {@link java.util.function.IntToLongFunction}. Whenever possible,
-    <code>fastutil</code> tries to implement such interfaces (e.g.,
-    {@link it.unimi.dsi.fastutil.ints.IntIterator} implements
+    <code>fastutil</code> tries to extend such interfaces (e.g.,
+    {@link it.unimi.dsi.fastutil.ints.IntIterator} extends
     {@link java.util.PrimitiveIterator.OfInt}).</li>
 
     <li>In the implementation new methods such that
@@ -509,7 +509,13 @@
     by lambda expressions.
 
     <p>All <code>fastutil</code> type-specific maps extend their respective type-specific
-    functions: but, alas, we cannot have {@link java.util.Map} extending {@link it.unimi.dsi.fastutil.Function}.
+    functions: but, alas, we cannot have {@link java.util.Map} extending
+	{@link it.unimi.dsi.fastutil.Function}. Moreover, type-specific
+	functions extend the existing type-specific function from {@link
+	java.util.function} that can accommodate the argument and the result with the least
+	widening: for example, {@link
+	it.unimi.dsi.fastutil.shorts.Short2CharFunction} extends {@link
+	java.util.function.IntUnaryOperator}.
 
 
     <h3>Static Container Classes</h3>
@@ -815,48 +821,48 @@ Long2IntSortedMap m = new Long2IntAVLTreeMap();
     </pre>
     <p>Now we can easily modify and access its content:
     <pre>
-m.put( 1, 5 );
-m.put( 2, 6 );
-m.put( 3, 7 );
-m.put( 1000000000L, 10 );
-m.get( 1 ); // This method call will return 5
-m.get( 4 ); // This method call will return 0
+m.put(1, 5);
+m.put(2, 6);
+m.put(3, 7);
+m.put(1000000000L, 10);
+m.get(1); // This method call will return 5
+m.get(4); // This method call will return 0
     </pre>
     <p>We can also try to change the default return value:
     <pre>
-m.defaultReturnValue( -1 );
-m.get( 4 ); // This method call will return -1
+m.defaultReturnValue(-1);
+m.get(4); // This method call will return -1
     </pre>
     <p>We can obtain a type-specific iterator on the key set:
     <pre>
 LongBidirectionalIterator i = m.keySet().iterator();
 // Now we sum all keys
 long s = 0;
-while( i.hasNext() ) s += i.nextLong();
+while(i.hasNext()) s += i.nextLong();
     </pre>
     <p>We now generate a head map, and iterate bidirectionally over it starting
     from a given point:
     <pre>
 // This map contains only keys smaller than 4
-Long2IntSortedMap m1 = m.headMap( 4 );
+Long2IntSortedMap m1 = m.headMap(4);
 // This iterator is positioned between 2 and 3
-LongBidirectionalIterator t = m1.keySet().iterator( 2 );
+LongBidirectionalIterator t = m1.keySet().iterator(2);
 t.previous(); // This method call will return 2 (t.next() would return 3)
     </pre>
     <p>Should we need to access the map concurrently, we can wrap it:
     <pre>
 // This map can be safely accessed by many threads
-Long2IntSortedMap m2 = Long2IntSortedMaps.synchronize( m1 );
+Long2IntSortedMap m2 = Long2IntSortedMaps.synchronize(m1);
     </pre>
     <p>Linked maps are very flexible data structures which can be used to implement, for
     instance, queues whose content can be probed efficiently:
     <pre>
 // This map remembers insertion order (note that we are using the array-based constructor)
-IntSortedSet s = new IntLinkedOpenHashSet( new int[] { 4, 3, 2, 1 } );
+IntSortedSet s = new IntLinkedOpenHashSet(new int[] { 4, 3, 2, 1 });
 s.firstInt(); // This method call will return 4
 s.lastInt(); // This method call will return 1
 s.contains(5); // This method will return false
-IntBidirectionalIterator i = s.iterator( s.lastInt() ); // We could even cast it to a list iterator
+IntBidirectionalIterator i = s.iterator(s.lastInt()); // We could even cast it to a list iterator
 i.previous(); // This method call will return 1
 i.previous(); // This method call will return 2
 s.remove(s.lastInt()); // This will remove the last element in constant time
@@ -864,27 +870,49 @@ s.remove(s.lastInt()); // This will remove the last element in constant time
     <p>Now, we play with iterators. It is easy to create iterators over
       intervals or over arrays, and combine them:
     <pre>
-IntIterator i = IntIterators.fromTo( 0, 10 ); // This iterator will return 0, 1, ..., 9
+IntIterator i = IntIterators.fromTo(0, 10); // This iterator will return 0, 1, ..., 9
 int[] a = new int[] { 5, 1, 9 };
-IntIterator j = IntIterators.wrap( a ); // This iterator will return 5, 1, 9.
-IntIterator k = IntIterators.concat( new IntIterator[] { i , j } ); // This iterator will return 0, 1, ..., 9, 5, 1, 9
+IntIterator j = IntIterators.wrap(a); // This iterator will return 5, 1, 9.
+IntIterator k = IntIterators.concat(new IntIterator[] { i , j }); // This iterator will return 0, 1, ..., 9, 5, 1, 9
     </pre>
     <p>It is easy to build sets and maps on the fly using the array-based
     constructors:
 <pre>
-IntSet s = new IntOpenHashSet( new int[] { 1, 2, 3 } ); // This set will contain 1, 2, and 3
-Char2IntMap m = new Char2IntRBTreeMap( new char[] { '@', '-' }, new int[] { 0, 1 } ); // This map will map '@' to 0 and '-' to 1
+IntSet s = new IntOpenHashSet(new int[] { 1, 2, 3 }); // This set will contain 1, 2, and 3
+Char2IntMap m = new Char2IntRBTreeMap(new char[] { '@', '-' }, new int[] { 0, 1 }); // This map will map '@' to 0 and '-' to 1
 </pre>
     <p>Whenever you have some data structure, it is easy to serialize it in an
     efficient (buffered) way, or to dump their content in textual form:
     <pre>
-BinIO.storeObject( s, "foo" ); // This method call will save s in the file named "foo"
-TextIO.storeInts( s.intIterator(), "foo.txt" ); // This method call will save the content of s in ASCII
-i = TextIO.asIntIterator( "foo.txt" ); // This iterator will parse the file and return the integers therein
+BinIO.storeObject(s, "foo"); // This method call will save s in the file named "foo"
+TextIO.storeInts(s.intIterator(), "foo.txt"); // This method call will save the content of s in ASCII
+i = TextIO.asIntIterator("foo.txt"); // This iterator will parse the file and return the integers therein
     </pre>
     <p>You can sort arrays using type-specific comparators specified by lambda expressions (no boxing/unboxing here):
     <pre>
 IntArrays.quickSort(a, (x, y) -> y - x); // Sorts in reverse order
     </pre>
+    <p>You can also easily specify complex generic sorting, like sorting indirectly on {@code a} while swapping elements in {@code a} and {@code b} in parallel:
+    <pre>
+Arrays.quickSort(0, a.length, (i, j) -> Integer.compare(a[i], a[j]), (i,j) -> { IntArrays.swap(a, i, j); IntArrays.swap(b, i, j); }));
+    </pre>
+	<p>If you have several cores, you can do it in parallel:
+	<pre>
+IntArrays.parallelQuickSort(a, (x, y) -> y - x); // Sorts in reverse order
+Arrays.parallelQuickSort(0, a.length, (i, j) -> Integer.compare(a[i], a[j]), (i,j) -> { IntArrays.swap(a, i, j); IntArrays.swap(b, i, j); }));
+    </pre>
+
+	<p>Some maps provide a <em>fast iterator</em> on their entry set: such iterators are allowed to reuse the {@link java.util.Map.Entry} instance
+	they return, resulting is highly reduced garbage collection (e.g., for large hash maps). To use easily such iterators, we can use
+	the provided helper static methods:
+	<pre>
+Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+// Fill the map
+for (Int2IntMap.Entry e : Int2IntMaps.fastIterable(m)) {
+    // do things with e.getIntKey() and e.getIntValue();
+}
+    </pre>
+	<p>The code above will not generate an object per enumerated item, as <code>for(Entry&lt;Integer,Integer&gt; e: m.entrySet())<code>
+	(or even <code>for(Int2IntMap.Entry e: m.int2IntKeySet())<code>) would do.
   </body>
 </html>
