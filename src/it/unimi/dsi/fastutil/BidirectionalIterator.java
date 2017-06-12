@@ -22,12 +22,12 @@ import java.util.ListIterator;
 
 /** A bidirectional {@link Iterator}.
  *
- * <P>This kind of iterator is essentially a {@link ListIterator} that
+ * <p>This kind of iterator is essentially a {@link ListIterator} that
  * does not support {@link ListIterator#previousIndex()} and {@link
  * ListIterator#nextIndex()}. It is useful for those maps that can easily
  * provide bidirectional iteration, but provide no index.
  *
- * <P>Note that iterators returned by <code>fastutil</code> classes are more
+ * <p>Note that iterators returned by {@code fastutil} classes are more
  * specific, and support skipping. This class serves the purpose of organising
  * in a cleaner way the relationships between various iterators.
  *

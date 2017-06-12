@@ -21,7 +21,7 @@ package it.unimi.dsi.fastutil;
 
 public class HashCommon {
 
-	protected HashCommon() {};
+	protected HashCommon() {}
 
 	/** 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
 	private static final int INT_PHI = 0x9E3779B9;
@@ -40,7 +40,7 @@ public class HashCommon {
 	 * @param x an integer.
 	 * @return a hash value with good avalanching properties.
 	 */
-	public final static int murmurHash3(int x) {
+	public static int murmurHash3(int x) {
 		x ^= x >>> 16;
 		x *= 0x85ebca6b;
 		x ^= x >>> 13;
@@ -58,7 +58,7 @@ public class HashCommon {
 	 * @param x a long integer.
 	 * @return a hash value with good avalanching properties.
 	 */
-	public final static long murmurHash3(long x) {
+	public static long murmurHash3(long x) {
 		x ^= x >>> 33;
 		x *= 0xff51afd7ed558ccdL;
 		x ^= x >>> 33;
@@ -78,7 +78,7 @@ public class HashCommon {
 	 * @return a hash value obtained by mixing the bits of {@code x}.
 	 * @see #invMix(int)
 	 */
-	public final static int mix(final int x) {
+	public static int mix(final int x) {
 		final int h = x * INT_PHI;
 		return h ^ (h >>> 16);
 	}
@@ -88,7 +88,7 @@ public class HashCommon {
 	 * @param x an integer.
 	 * @return a value that passed through {@link #mix(int)} would give {@code x}.
 	 */
-	public final static int invMix(final int x) {
+	public static int invMix(final int x) {
 		return (x ^ x >>> 16) * INV_INT_PHI;
 	}
 
@@ -102,7 +102,7 @@ public class HashCommon {
 	 * @param x a long integer.
 	 * @return a hash value obtained by mixing the bits of {@code x}.
 	 */
-	public final static long mix(final long x) {
+	public static long mix(final long x) {
 		long h = x * LONG_PHI;
 		h ^= h >>> 32;
 		return h ^ (h >>> 16);
@@ -113,7 +113,7 @@ public class HashCommon {
 	 * @param x a long integer.
 	 * @return a value that passed through {@link #mix(long)} would give {@code x}.
 	 */
-	public final static long invMix(long x) {
+	public static long invMix(long x) {
 		x ^= x >>> 32;
 		x ^= x >>> 16;
 		return (x ^ x >>> 32) * INV_LONG_PHI;
@@ -126,7 +126,7 @@ public class HashCommon {
 	 * @return the same code as {@link Float#hashCode() new Float(f).hashCode()}.
 	 */
 
-	final public static int float2int(final float f) {
+	public static int float2int(final float f) {
 		return Float.floatToRawIntBits(f);
 	}
 
@@ -136,7 +136,7 @@ public class HashCommon {
 	 * @return the same code as {@link Double#hashCode() new Double(f).hashCode()}.
 	 */
 
-	final public static int double2int(final double d) {
+	public static int double2int(final double d) {
 		final long l = Double.doubleToRawLongBits(d);
 		return (int)(l ^ (l >>> 32));
 	}
@@ -146,7 +146,7 @@ public class HashCommon {
 	 * @param l a long.
 	 * @return the same code as {@link Long#hashCode() new Long(f).hashCode()}.
 	 */
-	final public static int long2int(final long l) {
+	public static int long2int(final long l) {
 		return (int)(l ^ (l >>> 32));
 	}
 
@@ -210,7 +210,7 @@ public class HashCommon {
 		return Math.min((long)Math.ceil(n * f), n - 1);
 	}
 
-	/** Returns the least power of two smaller than or equal to 2<sup>30</sup> and larger than or equal to <code>Math.ceil(expected / f)</code>.
+	/** Returns the least power of two smaller than or equal to 2<sup>30</sup> and larger than or equal to {@code Math.ceil(expected / f)}.
 	 *
 	 * @param expected the expected number of elements in a hash table.
 	 * @param f the load factor.
@@ -223,7 +223,7 @@ public class HashCommon {
 		return (int)s;
 	}
 
-	/** Returns the least power of two larger than or equal to <code>Math.ceil(expected / f)</code>.
+	/** Returns the least power of two larger than or equal to {@code Math.ceil(expected / f)}.
 	 *
 	 * @param expected the expected number of elements in a hash table.
 	 * @param f the load factor.

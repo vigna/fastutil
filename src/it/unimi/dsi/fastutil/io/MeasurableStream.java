@@ -23,7 +23,7 @@ import java.io.IOException;
  * and keeps track of the current position (e.g., the number of bytes read so far, or the current
  * position of the file pointer).
  *
- * <P>This class has two methods, both specified as optional. This apparently bizarre
+ * <p>This class has two methods, both specified as optional. This apparently bizarre
  * behaviour is necessary because of wrapper classes which use reflection
  * to support those methods (see, e.g., {@link MeasurableInputStream}, {@link FastBufferedInputStream} and {@link FastBufferedOutputStream}).
  *
@@ -38,7 +38,7 @@ public interface MeasurableStream  {
 	 *  Implementing classes should always document what state will the input stream be in
 	 *  after calling this method, and which kind of exception could be thrown.
 	 */
-	public long length() throws IOException;
+	long length() throws IOException;
 
 	/** Returns the current position in this stream (optional operation).
 	 *
@@ -47,5 +47,5 @@ public interface MeasurableStream  {
 	 * {@link it.unimi.dsi.fastutil.io.RepositionableStream} it
 	 * represent the current position.
 	 */
-	public long position() throws IOException;
+	long position() throws IOException;
 }

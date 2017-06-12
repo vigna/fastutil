@@ -23,10 +23,10 @@ package it.unimi.dsi.fastutil;
  *
  * <p><strong>Warning:</strong> the following comments are here for historical reasons,
  * and apply just to the <em>double hash</em> classes that can be optionally generated.
- * The standard <code>fastutil</code> distribution since 6.1.0 uses linear-probing hash
+ * The standard {@code fastutil} distribution since 6.1.0 uses linear-probing hash
  * tables, and tables are always sized as powers of two.
  *
- * <p>The classes in <code>fastutil</code> are built around open-addressing hashing
+ * <p>The classes in {@code fastutil} are built around open-addressing hashing
  * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
  * Programming</em>, we use for the table size a prime <var>p</var> such that
  * <var>p</var>-2 is also prime. In this way hashing is implemented with modulo <var>p</var>,
@@ -34,7 +34,7 @@ package it.unimi.dsi.fastutil;
  *
  * <p>Entries in a table can be in three states: {@link #FREE}, {@link #OCCUPIED} or {@link #REMOVED}.
  * The naive handling of removed entries requires that you search for a free entry as if they were occupied. However,
- * <code>fastutil</code> implements two useful optimizations, based on the following invariant:
+ * {@code fastutil} implements two useful optimizations, based on the following invariant:
  * <blockquote>
  * Let <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip;, <var>i</var><sub><var>p</var>-1</sub> be
  * the permutation of the table indices induced by the key <var>k</var>, that is, <var>i</var><sub>0</sub> is the hash
@@ -64,17 +64,17 @@ package it.unimi.dsi.fastutil;
 public interface Hash {
 
 	/** The initial default size of a hash table. */
-	final public int DEFAULT_INITIAL_SIZE = 16;
+	int DEFAULT_INITIAL_SIZE = 16;
 	/** The default load factor of a hash table. */
-	final public float DEFAULT_LOAD_FACTOR = .75f;
+	float DEFAULT_LOAD_FACTOR = .75f;
 	/** The load factor for a (usually small) table that is meant to be particularly fast. */
-	final public float FAST_LOAD_FACTOR = .5f;
+	float FAST_LOAD_FACTOR = .5f;
 	/** The load factor for a (usually very small) table that is meant to be extremely fast. */
-	final public float VERY_FAST_LOAD_FACTOR = .25f;
+	float VERY_FAST_LOAD_FACTOR = .25f;
 
 	/** A generic hash strategy.
 	 *
-	 * <P>Custom hash structures (e.g., {@link
+	 * <p>Custom hash structures (e.g., {@link
 	 * it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet}) allow to hash objects
 	 * using arbitrary functions, a typical example being that of {@linkplain
 	 * it.unimi.dsi.fastutil.ints.IntArrays#HASH_STRATEGY arrays}. Of course,
@@ -84,48 +84,48 @@ public interface Hash {
 	 * #hashCode(Object) hash function}, with the obvious property that
 	 * equal objects must have the same hash code.
 	 *
-	 * <P>Note that the {@link #equals(Object,Object) equals()} method of a strategy must
-	 * be able to handle <code>null</code>, too.
+	 * <p>Note that the {@link #equals(Object,Object) equals()} method of a strategy must
+	 * be able to handle {@code null}, too.
 	 */
 
-	public interface Strategy<K> {
+	interface Strategy<K> {
 
 		/** Returns the hash code of the specified object with respect to this hash strategy.
 		 *
-		 * @param o an object (or <code>null</code>).
+		 * @param o an object (or {@code null}).
 		 * @return the hash code of the given object with respect to this hash strategy.
 		 */
 
-		public int hashCode(K o);
+		int hashCode(K o);
 
 		/** Returns true if the given objects are equal with respect to this hash strategy.
 		 *
-		 * @param a an object (or <code>null</code>).
-		 * @param b another object (or <code>null</code>).
+		 * @param a an object (or {@code null}).
+		 * @param b another object (or {@code null}).
 		 * @return true if the two specified objects are equal with respect to this hash strategy.
 		 */
-		public boolean equals(K a, K b);
+		boolean equals(K a, K b);
 	}
 
 	/** The default growth factor of a hash table. */
 	@Deprecated
-	final public int DEFAULT_GROWTH_FACTOR = 16;
+	int DEFAULT_GROWTH_FACTOR = 16;
 	/** The state of a free hash table entry. */
 	@Deprecated
-	final public byte FREE = 0;
+	byte FREE = 0;
 	/** The state of a occupied hash table entry. */
 	@Deprecated
-	final public byte OCCUPIED = -1;
+	byte OCCUPIED = -1;
 	/** The state of a hash table entry freed by a deletion. */
 	@Deprecated
-	final public byte REMOVED = 1;
+	byte REMOVED = 1;
 
 	/** A list of primes to be used as table sizes. The <var>i</var>-th element is
 	 *  the largest prime <var>p</var> smaller than 2<sup>(<var>i</var>+28)/16</sup>
 	 * and such that <var>p</var>-2 is also prime (or 1, for the first few entries). */
 
 	@Deprecated
-	final public int PRIMES[] = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7,
+	int PRIMES[] = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 5, 7, 7, 7,
 								  7, 7, 7, 7, 7, 7, 7, 7, 13, 13, 13, 13, 13, 13, 13, 13, 19, 19, 19, 19, 19,
 								  19, 19, 19, 19, 19, 19, 19, 31, 31, 31, 31, 31, 31, 31, 43, 43, 43, 43, 43,
 								  43, 43, 43, 61, 61, 61, 61, 61, 73, 73, 73, 73, 73, 73, 73, 103, 103, 109,

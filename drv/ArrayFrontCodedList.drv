@@ -29,53 +29,53 @@ import java.util.RandomAccess;
 
 /** Compact storage of lists of arrays using front coding.
  *
- * <P>This class stores immutably a list of arrays in a single large array
+ * <p>This class stores immutably a list of arrays in a single large array
  * using front coding (of course, the compression will be reasonable only if
  * the list is sorted lexicographically&mdash;see below). It implements an
  * immutable type-specific list that returns the <var>i</var>-th array when
  * calling {@link #get(int) get(<var>i</var>)}. The returned array may be
  * freely modified.
  *
- * <P>Front coding is based on the idea that if the <var>i</var>-th and the
+ * <p>Front coding is based on the idea that if the <var>i</var>-th and the
  * (<var>i</var>+1)-th array have a common prefix, we might store the length
  * of the common prefix, and then the rest of the second array.
  *
- * <P>This approach, of course, requires that once in a while an array is
+ * <p>This approach, of course, requires that once in a while an array is
  * stored entirely.  The <em>ratio</em> of a front-coded list defines how
  * often this happens (once every {@link #ratio()} arrays). A higher ratio
  * means more compression, but means also a longer access time, as more arrays
  * have to be probed to build the result. Note that we must build an array
  * every time {@link #get(int)} is called, but this class provides also methods
  * that extract one of the stored arrays in a given array, reducing garbage
- * collection. See the documentation of the family of <code>get()</code>
+ * collection. See the documentation of the family of {@code get()}
  * methods.
  *
- * <P>By setting the ratio to 1 we actually disable front coding: however, we
+ * <p>By setting the ratio to 1 we actually disable front coding: however, we
  * still have a data structure storing large list of arrays with a reduced
  * overhead (just one integer per array, plus the space required for lengths).
  *
- * <P>Note that the typical usage of front-coded lists is under the form of
+ * <p>Note that the typical usage of front-coded lists is under the form of
  * serialized objects; usually, the data that has to be compacted is processed
  * offline, and the resulting structure is stored permanently. Since the
  * pointer array is not stored, the serialized format is very small.
  *
  * <H2>Implementation Details</H2>
  *
- * <P>All arrays are stored in a {@linkplain it.unimi.dsi.fastutil.BigArrays big array}. A separate array of pointers
+ * <p>All arrays are stored in a {@linkplain it.unimi.dsi.fastutil.BigArrays big array}. A separate array of pointers
  * indexes arrays whose position is a multiple of the ratio: thus, a higher ratio
  * means also less pointers.
  *
- * <P>More in detail, an array whose position is a multiple of the ratio is
+ * <p>More in detail, an array whose position is a multiple of the ratio is
  * stored as the array length, followed by the elements of the array. The array
  * length is coded by a simple variable-length list of <var>k</var>-1 bit
  * blocks, where <var>k</var> is the number of bits of the underlying primitive
- * type.  All other arrays are stored as follows: let <code>common</code> the
+ * type.  All other arrays are stored as follows: let {@code common} the
  * length of the maximum common prefix between the array and its predecessor.
- * Then we store the array length decremented by <code>common</code>, followed
- * by <code>common</code>, followed by the array elements whose index is
- * greater than or equal to <code>common</code>. For instance, if we store
- * <code>foo</code>, <code>foobar</code>, <code>football</code> and
- * <code>fool</code> in a front-coded character-array list with ratio 3, the
+ * Then we store the array length decremented by {@code common}, followed
+ * by {@code common}, followed by the array elements whose index is
+ * greater than or equal to {@code common}. For instance, if we store
+ * {@code foo}, {@code foobar}, {@code football} and
+ * {@code fool} in a front-coded character-array list with ratio 3, the
  * character array will contain
  *
  * <pre>
@@ -168,7 +168,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	/** Reads a coded length.
 	 * @param a the data big array.
 	 * @param pos the starting position.
-	 * @return the length coded at <code>pos</code>.
+	 * @return the length coded at {@code pos}.
 	 */
 	private static int readInt(final KEY_TYPE a[][], long pos) {
 #if KEY_CLASS_Integer
@@ -196,7 +196,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 	/** Computes the number of elements coding a given length.
 	 * @param length the length to be coded.
-	 * @return the number of elements coding <code>length</code>.
+	 * @return the number of elements coding {@code length}.
 	 */
 	private static int count(final int length) {
 #if KEY_CLASS_Integer || KEY_CLASS_Long
@@ -216,7 +216,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param a the data array.
 	 * @param length the length to be written.
 	 * @param pos the starting position.
-	 * @return the number of elements coding <code>length</code>.
+	 * @return the number of elements coding {@code length}.
 	 */
 	private static int writeInt(final KEY_TYPE a[][], int length, long pos) {
 #if KEY_CLASS_Long
@@ -271,10 +271,10 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 	/** Computes the length of the array at the given index.
 	 *
-	 * <P>This private version of {@link #arrayLength(int)} does not check its argument.
+	 * <p>This private version of {@link #arrayLength(int)} does not check its argument.
 	 *
 	 * @param index an index.
-	 * @return the length of the <code>index</code>-th array.
+	 * @return the length of the {@code index}-th array.
 	 */
 	private int length(final int index) {
 		final KEY_TYPE[][] array = this.array;
@@ -304,7 +304,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	/** Computes the length of the array at the given index.
 	 *
 	 * @param index an index.
-	 * @return the length of the <code>index</code>-th array.
+	 * @return the length of the {@code index}-th array.
 	 */
 	public int arrayLength(final int index) {
 		ensureRestrictedIndex(index);
@@ -315,8 +315,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 *
 	 * @param index an index.
 	 * @param a the array that will store the result (we assume that it can hold the result).
-	 * @param offset an offset into <code>a</code> where elements will be store.
-	 * @param length a maximum number of elements to store in <code>a</code>.
+	 * @param offset an offset into {@code a} where elements will be store.
+	 * @param length a maximum number of elements to store in {@code a}.
 	 * @return the length of the extracted array.
 	 */
 	private int extract(final int index, final KEY_TYPE a[], final int offset, final int length) {
@@ -354,7 +354,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	}
 
 	/** {@inheritDoc}
-	 * <P>This implementation delegates to {@link #getArray(int)}. */
+	 * <p>This implementation delegates to {@link #getArray(int)}. */
 	@Override
 	public KEY_TYPE[] get(final int index) {
 		return getArray(index);
@@ -377,9 +377,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 *
 	 * @param index an index.
 	 * @param a the array that will store the result.
-	 * @param offset an offset into <code>a</code> where elements will be store.
-	 * @param length a maximum number of elements to store in <code>a</code>.
-	 * @return if <code>a</code> can hold the extracted elements, the number of extracted elements;
+	 * @param offset an offset into {@code a} where elements will be store.
+	 * @param length a maximum number of elements to store in {@code a}.
+	 * @return if {@code a} can hold the extracted elements, the number of extracted elements;
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
 	public int get(final int index, final KEY_TYPE[] a, final int offset, final int length) {
@@ -395,7 +395,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 *
 	 * @param index an index.
 	 * @param a the array that will store the content of the result (we assume that it can hold the result).
-	 * @return if <code>a</code> can hold the extracted elements, the number of extracted elements;
+	 * @return if {@code a} can hold the extracted elements, the number of extracted elements;
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
 	public int get(final int index, final KEY_TYPE[] a) {

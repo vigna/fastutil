@@ -73,7 +73,7 @@ public class ObjectOpenHashBigSetTest {
 		while (n-- != 0)
 			if (ObjectBigArrays.get(key, n) != null && !s.contains(ObjectBigArrays.get(key, n))) throw new AssertionError("Hash table has key " + ObjectBigArrays.get(key, n)
 					+ " marked as occupied, but the key does not belong to the table");
-		java.util.HashSet<Object> t = new java.util.HashSet<Object>();
+		java.util.HashSet<Object> t = new java.util.HashSet<>();
 		for (long i = s.size64(); i-- != 0;)
 			if (ObjectBigArrays.get(key, i) != null && !t.add(ObjectBigArrays.get(key, i))) throw new AssertionError("Key " + ObjectBigArrays.get(key, i) + " appears twice");
 	}

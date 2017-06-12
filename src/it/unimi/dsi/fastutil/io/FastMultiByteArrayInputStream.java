@@ -34,13 +34,13 @@ s */
 public class FastMultiByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The number of bits of an array slice index. */
-	public final static int SLICE_BITS = 10;
+	public static final int SLICE_BITS = 10;
 
 	/** The maximum length of an array slice. */
-	public final static int SLICE_SIZE = 1 << SLICE_BITS;
+	public static final int SLICE_SIZE = 1 << SLICE_BITS;
 
 	/** The mask to retrieve a slice offset. */
-	public final static int SLICE_MASK = SLICE_SIZE - 1;
+	public static final int SLICE_MASK = SLICE_SIZE - 1;
 
 	/** The array of arrays backing the input stream, plus an additional {@code null} entry. */
 	public byte[][] array;
@@ -66,7 +66,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	/** Creates a new multi-array input stream loading it from an input stream.
 	 *
 	 * @param is the input stream that will fill the array.
-	 * @param size the number of bytes to be read from <code>is</code>.
+	 * @param size the number of bytes to be read from {@code is}.
 	 */
 
 	public FastMultiByteArrayInputStream(final InputStream is, long size) throws IOException {
@@ -110,7 +110,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 
 	/** Returns the number of bytes that can be read (or skipped over) from this input stream without blocking.
 	 *
-	 * <P>Note that this number may be smaller than the number of bytes actually
+	 * <p>Note that this number may be smaller than the number of bytes actually
 	 * available from the stream if this number exceeds {@link Integer#MAX_VALUE}.
 	 *
 	 * @return the minimum among the number of available bytes and {@link Integer#MAX_VALUE}.

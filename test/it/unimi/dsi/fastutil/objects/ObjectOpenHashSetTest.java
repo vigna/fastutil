@@ -76,7 +76,7 @@ public class ObjectOpenHashSetTest {
 		if (s.containsNull && ! s.contains(null)) throw new AssertionError("Hash table should contain null by internal state, but it doesn't when queried");
 		if (! s.containsNull && s.contains(null)) throw new AssertionError("Hash table should not contain null by internal state, but it does when queried");
 
-		java.util.HashSet<String> t = new java.util.HashSet<String>();
+		java.util.HashSet<String> t = new java.util.HashSet<>();
 		for (int i = s.size(); i-- != 0;)
 			if (key[i] != null && !t.add((String)key[i])) throw new AssertionError("Key " + key[i] + " appears twice");
 

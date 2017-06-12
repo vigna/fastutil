@@ -151,7 +151,7 @@ public class IntArrayFIFOQueueTest {
 	}
 
 	@SuppressWarnings("deprecation")
-	private final static void assertSameQueue(IntArrayFIFOQueue a, IntArrayFIFOQueue b) {
+	private static final void assertSameQueue(IntArrayFIFOQueue a, IntArrayFIFOQueue b) {
 		assertEquals(a.size(), b.size());
 		while(! a.isEmpty() && ! b.isEmpty()) assertEquals(a.dequeue(), b.dequeue());
 		assertEquals(Boolean.valueOf(a.isEmpty()) , Boolean.valueOf(b.isEmpty()));

@@ -28,7 +28,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * <p>Instances of this class represent functions: the main difference with {@link java.util.Map}
  * is that functions do not in principle allow enumeration of their domain or range. The need for
  * this interface lies in the existence of several highly optimized implementations of
- * functions (e.g. minimal perfect hashes) which do not actually store their domain or range explicitly.
+ * functions (e.g., minimal perfect hashes) which do not actually store their domain or range explicitly.
  * In case the domain is known, {@link #containsKey(Object)} can be used to perform membership queries.
  *
  * <p>The choice of naming all methods exactly as in {@link java.util.Map} makes it possible

@@ -105,6 +105,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 	 *
 	 * <p>This implementation delegates to the type-specific version of {@link BigList#addAll(long, Collection)}.
 	 */
+	@Override
 	public boolean addAll(final Collection<? extends KEY_GENERIC_CLASS> c) {
 		return addAll(size64(), c);
 	}
@@ -128,7 +129,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 	}
 
 	/** {@inheritDoc}
-	 * <P>This implementation is based on the random-access methods. */
+	 * <p>This implementation is based on the random-access methods. */
 	@Override
 	public KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator(final long index) {
 		ensureIndex(index);
@@ -228,7 +229,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 
 	/** {@inheritDoc}
 	 *
-	 * <P>This is a trivial iterator-based implementation. It is expected that
+	 * <p>This is a trivial iterator-based implementation. It is expected that
 	 * implementations will override this method with a more optimized version.
 	 */
 	@Override
@@ -245,7 +246,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 
 	/** {@inheritDoc}
 	 *
-	 * <P>This is a trivial iterator-based implementation. It is expected that
+	 * <p>This is a trivial iterator-based implementation. It is expected that
 	 * implementations will override this method with a more optimized version.
 	 */
 	@Override
@@ -257,7 +258,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 
 	/** {@inheritDoc}
 	 *
-	 * <P>This implementation delegates to the analogous method for big-array fragments.
+	 * <p>This implementation delegates to the analogous method for big-array fragments.
 	 */
 	@Override
 	public void addElements(final long index, final KEY_GENERIC_TYPE a[][]) {
@@ -266,7 +267,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 
 	/** {@inheritDoc}
 	 *
-	 * <P>This is a trivial iterator-based implementation. It is expected that
+	 * <p>This is a trivial iterator-based implementation. It is expected that
 	 * implementations will override this method with a more optimized version.
 	 */
 	@Override
@@ -278,7 +279,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 	}
 
 	/** {@inheritDoc}
-	 * <P>This implementation delegates to {@link #removeElements(long, long)}.*/
+	 * <p>This implementation delegates to {@link #removeElements(long, long)}.*/
 	@Override
 	public void clear() {
 		removeElements(0, size64());
@@ -286,7 +287,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 
 	/** {@inheritDoc}
 	 *
-	 * <P>This implementation delegates to {@link #size64()}.
+	 * <p>This implementation delegates to {@link #size64()}.
 	 * @deprecated Please use the {@link #size64()} instead. */
 	@Override
 	@Deprecated
@@ -345,7 +346,7 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 #if ! KEY_CLASS_Reference
 	/** Compares this big list to another object. If the
 	 * argument is a {@link BigList}, this method performs a lexicographical comparison; otherwise,
-	 * it throws a <code>ClassCastException</code>.
+	 * it throws a {@code ClassCastException}.
 	 *
 	 * @param l a big list.
 	 * @return if the argument is a {@link BigList}, a negative integer,
@@ -691,33 +692,42 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 			ensureIndex(index);
 
 			return new KEY_BIG_LIST_ITERATOR KEY_GENERIC() {
-					long pos = index, last = -1;
+				long pos = index, last = -1;
 
-					public boolean hasNext() { return pos < size64(); }
-					public boolean hasPrevious() { return pos > 0; }
-					public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return l.GET_KEY(from + (last = pos++)); }
-					public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return l.GET_KEY(from + (last = --pos)); }
-					public long nextIndex() { return pos; }
-					public long previousIndex() { return pos - 1; }
-					public void add(KEY_GENERIC_TYPE k) {
-						if (last == -1) throw new IllegalStateException();
-						SUBLIST.this.add(pos++, k);
-						last = -1;
-						assert assertRange();
-					}
-					public void set(KEY_GENERIC_TYPE k) {
-						if (last == -1) throw new IllegalStateException();
-						SUBLIST.this.set(last, k);
-					}
-					public void remove() {
-						if (last == -1) throw new IllegalStateException();
-						SUBLIST.this.REMOVE_KEY(last);
-						/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-						if (last < pos) pos--;
-						last = -1;
-						assert assertRange();
-					}
-				};
+				@Override
+				public boolean hasNext() { return pos < size64(); }
+				@Override
+				public boolean hasPrevious() { return pos > 0; }
+				@Override
+				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return l.GET_KEY(from + (last = pos++)); }
+				@Override
+				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return l.GET_KEY(from + (last = --pos)); }
+				@Override
+				public long nextIndex() { return pos; }
+				@Override
+				public long previousIndex() { return pos - 1; }
+				@Override
+				public void add(KEY_GENERIC_TYPE k) {
+					if (last == -1) throw new IllegalStateException();
+					SUBLIST.this.add(pos++, k);
+					last = -1;
+					assert assertRange();
+				}
+				@Override
+				public void set(KEY_GENERIC_TYPE k) {
+					if (last == -1) throw new IllegalStateException();
+					SUBLIST.this.set(last, k);
+				}
+				@Override
+				public void remove() {
+					if (last == -1) throw new IllegalStateException();
+					SUBLIST.this.REMOVE_KEY(last);
+					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+					if (last < pos) pos--;
+					last = -1;
+					assert assertRange();
+				}
+			};
 		}
 
 		@Override

@@ -22,13 +22,14 @@ import java.util.ListIterator;
 
 /** A list iterator over a {@link BigList}.
  *
- * <P>This kind of iterator is essentially a {@link ListIterator} with long indices.
+ * <p>This kind of iterator is essentially a {@link ListIterator} with long indices.
  *
  * @see Iterator
  * @see ListIterator
  */
 
 public interface BigListIterator<K> extends BidirectionalIterator<K> {
+
 	/** Returns the index of the element that would be returned by a subsequent call to next.
 	 * (Returns list size if the list iterator is at the end of the list.)
 	 *
@@ -36,6 +37,7 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	 * size if list iterator is at end of list.
 	 * @see ListIterator#nextIndex()
 	 */
+
 	long nextIndex();
 
 	/** Returns the index of the element that would be returned by a subsequent call to previous.

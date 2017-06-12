@@ -20,8 +20,8 @@ import org.junit.Test;
 
 public class BinIOTest {
 
-	final static byte[] SMALL = new byte[1024];
-	final static byte[] LARGE = new byte[1024 * 1024 + 42];
+	static final byte[] SMALL = new byte[1024];
+	static final byte[] LARGE = new byte[1024 * 1024 + 42];
 
 	static {
 		for(int i = SMALL.length; i-- != 0;) SMALL[i] = (byte)i;

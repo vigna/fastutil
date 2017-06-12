@@ -24,14 +24,14 @@ import java.nio.channels.FileChannel;
  *  {@linkplain MeasurableStream measurability} and
  *  {@linkplain RepositionableStream repositionability}.
  *
- * <P>This class provides buffering for output streams, but it does so with
+ * <p>This class provides buffering for output streams, but it does so with
  * purposes and an internal logic that are radically different from the ones
  * adopted in {@link java.io.BufferedOutputStream}. The main features follow.
  *
  * <ul>
- * <li><P>All methods are unsychronized.
+ * <li><p>All methods are unsychronized.
  *
- * <li><P>As an additional feature, this class implements the {@link
+ * <li><p>As an additional feature, this class implements the {@link
  * RepositionableStream} and {@link MeasurableStream} interfaces.
  * An instance of this class will try to cast
  * the underlying byte stream to a {@link RepositionableStream} and to fetch by
@@ -50,7 +50,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 	private static final boolean ASSERTS = false;
 
 	/** The default size of the internal buffer in bytes (8Ki). */
-	public final static int DEFAULT_BUFFER_SIZE = 8 * 1024;
+	public static final int DEFAULT_BUFFER_SIZE = 8 * 1024;
 
 	/** The internal buffer. */
 	protected byte buffer[];
@@ -59,7 +59,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 	protected int pos;
 
 	/** The number of buffer bytes available starting from {@link #pos}
-	 * (it must be always equal to <code>buffer.length - pos</code>). */
+	 * (it must be always equal to {@code buffer.length - pos}). */
 	protected int avail;
 
 	/** The underlying output stream. */

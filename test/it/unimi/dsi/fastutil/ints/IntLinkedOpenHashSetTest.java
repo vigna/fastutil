@@ -68,7 +68,7 @@ public class IntLinkedOpenHashSetTest {
 	private static void test(int n, float f) throws IOException, ClassNotFoundException {
 		int c;
 		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE, f);
-		java.util.Set<Integer> t = new java.util.LinkedHashSet<Integer>();
+		java.util.Set<Integer> t = new java.util.LinkedHashSet<>();
 		/* First of all, we fill t with random data. */
 		for (int i = 0; i < f * n; i++)
 			t.add((Integer.valueOf(genKey())));
@@ -164,7 +164,7 @@ public class IntLinkedOpenHashSetTest {
 			java.util.ListIterator<Integer> i, j;
 			Integer J = null;
 			i = s.iterator();
-			j = new java.util.LinkedList<Integer>(t).listIterator();
+			j = new java.util.LinkedList<>(t).listIterator();
 			for (int k = 0; k < 2 * n; k++) {
 				assertTrue("Error: divergence in hasNext()", i.hasNext() == j.hasNext());
 				assertTrue("Error: divergence in hasPrevious()", i.hasPrevious() == j.hasPrevious());

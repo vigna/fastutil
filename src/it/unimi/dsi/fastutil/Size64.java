@@ -20,16 +20,16 @@ import java.util.Collection;
 
 /** An interface for data structures whose size can exceed {@link Integer#MAX_VALUE}.
  *
- * <P>The only methods specified by this interfaces are {@link #size64()}, and
+ * <p>The only methods specified by this interfaces are {@link #size64()}, and
  * a deprecated {@link #size()} identical to {@link Collection#size()}. Implementations
  * can work around the type problem of {@link java.util.Collection#size()}
  * (e.g., not being able to return more than {@link Integer#MAX_VALUE}) by implementing this
  * interface. Callers interested in large structures
- * can use a reflective call to <code>instanceof</code> to check for the presence of {@link #size64()}.
+ * can use a reflective call to {@code instanceof} to check for the presence of {@link #size64()}.
  *
  * <p>We remark that it is always a good idea to implement both {@link #size()} <em>and</em> {@link #size64()},
  * as the former might be implemented by a superclass in an incompatible way. If you implement this interface,
- * just implement {@link #size()} as a <em>deprecated</em> method returning <code>Math.min(Integer.MAX_VALUE, size64())</code>.
+ * just implement {@link #size()} as a <em>deprecated</em> method returning {@code Math.min(Integer.MAX_VALUE, size64())}.
  */
 
 public interface Size64 {

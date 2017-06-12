@@ -21,7 +21,7 @@ import java.util.NoSuchElementException;
 
 /** A stack.
  *
- * <P>A stack must provide the classical {@link #push(Object)} and
+ * <p>A stack must provide the classical {@link #push(Object)} and
  * {@link #pop()} operations, but may be also <em>peekable</em>
  * to some extent: it may provide just the {@link #top()} function,
  * or even a more powerful {@link #peek(int)} method that provides
@@ -70,7 +70,7 @@ public interface Stack<K> {
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 *
 	 * @param i an index from the stop of the stack (0 represents the top).
-	 * @return the <code>i</code>-th element on the stack.
+	 * @return the {@code i}-th element on the stack.
 	 * @throws IndexOutOfBoundsException if the designated element does not exist..
 	 */
 
