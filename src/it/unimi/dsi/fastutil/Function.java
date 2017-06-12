@@ -64,7 +64,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * counter-intuitive behaviour. For example, to define the identity function on {@link Integer} objects
  * you need to write
  * <pre>
- *     it.unimi.dsi.fastutil.Function&lt;Integer, Integer> f = (x) -> (Integer)x;
+ *     it.unimi.dsi.fastutil.Function&lt;Integer, Integer&gt; f = (x) -&gt; (Integer)x;
  * </pre>
  * as the argument to {@link #get(Object)} is unparameterized.
  *
