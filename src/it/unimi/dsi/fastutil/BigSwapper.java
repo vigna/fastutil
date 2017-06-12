@@ -21,7 +21,7 @@ package it.unimi.dsi.fastutil;
  *
  * @see BigArrays#quickSort(long, long, it.unimi.dsi.fastutil.longs.LongComparator, BigSwapper)
  */
-
+@FunctionalInterface
 public interface BigSwapper {
 	/** Swaps the data at the given positions.
 	 *

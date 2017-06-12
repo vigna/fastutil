@@ -20,7 +20,7 @@ package it.unimi.dsi.fastutil;
  *
  * @see Arrays#quickSort(int, int, it.unimi.dsi.fastutil.ints.IntComparator, Swapper)
  */
-
+@FunctionalInterface
 public interface Swapper {
 	/** Swaps the data at the given positions.
 	 *
