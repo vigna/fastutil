@@ -18,28 +18,9 @@ package it.unimi.dsi.fastutil;
 
 
 /** An abstract class providing basic methods for implementing the {@link Stack} interface.
- *
- * <P>This class just defines {@link Stack#top()} as {@link Stack#peek(int) peek(0)}, and
- * {@link Stack#peek(int)} as throwing an {@link UnsupportedOperationException}.
- *
- * Subclasses of this class may choose to implement just {@link Stack#push(Object)},
- * {@link Stack#pop()} and {@link Stack#isEmpty()}, or (but this is not
- * required) go farther and implement {@link Stack#top()}, or even {@link
- * Stack#peek(int)}.
+  *
+ * @deprecated As of fastutil 8 this class is no longer necessary, as its previous abstract
+ * methods are now default methods of {@link Stack}.
  */
-
-public abstract class AbstractStack<K> implements Stack<K> {
-
-	@Override
-	public K top() {
-		return peek(0);
-	}
-
-	/** {@inheritDoc}
-	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
-	@Override
-	public K peek(int i) {
-		throw new UnsupportedOperationException();
-	}
-
-}
+@Deprecated
+public abstract class AbstractStack<K> implements Stack<K> {}

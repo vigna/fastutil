@@ -18,24 +18,8 @@ package it.unimi.dsi.fastutil;
 
 /** An abstract class providing basic methods for implementing the {@link IndirectPriorityQueue} interface.
  *
- * <P>This class defines {@link #changed(int)}, {@link #allChanged()},  {@link #remove(int)} and {@link #last()} as throwing an
- * {@link UnsupportedOperationException}.
+ * @deprecated As of fastutil 8 this class is no longer necessary, as its previous abstract
+ * methods are now default methods of {@link IndirectPriorityQueue}.
  */
-
-public abstract class AbstractIndirectPriorityQueue<K> implements IndirectPriorityQueue<K> {
-
-	public int last() { throw new UnsupportedOperationException(); }
-
-	public void changed() { changed(first()); }
-
-	public void changed(int index) { throw new UnsupportedOperationException(); }
-
-	public void allChanged() { throw new UnsupportedOperationException(); }
-
-	public boolean remove(int index) { throw new UnsupportedOperationException(); }
-
-	public boolean contains(int index) { throw new UnsupportedOperationException(); }
-
-	public boolean isEmpty() { return size() == 0; }
-
-}
+@Deprecated
+public abstract class AbstractIndirectPriorityQueue<K> implements IndirectPriorityQueue<K> {}

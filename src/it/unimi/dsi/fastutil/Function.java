@@ -76,6 +76,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * @see java.util.function.Function
  */
 
+@FunctionalInterface
 public interface Function<K,V> extends java.util.function.Function<K,V> {
 
 	/** {@inheritDoc} This is equivalent to calling {@link #get(Object)}.

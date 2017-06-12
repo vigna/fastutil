@@ -18,22 +18,8 @@ package it.unimi.dsi.fastutil;
 
 /**  An abstract class providing basic methods for implementing the {@link PriorityQueue} interface.
  *
- * <P>This class defines {@link #changed()} and {@link #last()} as throwing an
- * {@link UnsupportedOperationException}.
+ * @deprecated As of fastutil 8 this class is no longer necessary, as its previous abstract
+ * methods are now default methods of {@link PriorityQueue}.
  */
-
-public abstract class AbstractPriorityQueue<K> implements PriorityQueue<K> {
-
-	/** {@inheritDoc}
-	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
-	@Override
-	public void changed() { throw new UnsupportedOperationException(); }
-
-	/** {@inheritDoc}
-	 * <p>This implementation just throws an {@link UnsupportedOperationException}. */
-	@Override
-	public K last() { throw new UnsupportedOperationException(); }
-
-	@Override
-	public boolean isEmpty() { return size() == 0; }
-}
+@Deprecated
+public abstract class AbstractPriorityQueue<K> implements PriorityQueue<K> {}

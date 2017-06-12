@@ -23,13 +23,6 @@ public class HashCommon {
 
 	protected HashCommon() {};
 
-	/** This reference is used to fill keys and values of removed entries (if
-		they are objects). <code>null</code> cannot be used as it would confuse the
-		search algorithm in the presence of an actual <code>null</code> key.
-		@deprecated this attribute will be removed in version 8. */
-	@Deprecated
-	public static final Object REMOVED = new Object();
-
 	/** 2<sup>32</sup> &middot; &phi;, &phi; = (&#x221A;5 &minus; 1)/2. */
 	private static final int INT_PHI = 0x9E3779B9;
 	/** The reciprocal of {@link #INT_PHI} modulo 2<sup>32</sup>. */

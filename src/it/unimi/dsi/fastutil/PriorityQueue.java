@@ -41,7 +41,7 @@ public interface PriorityQueue<K> {
 
 	/** Enqueues a new element.
 	 *
-	 * @param x the element to enqueue..
+	 * @param x the element to enqueue.
 	 */
 
 	void enqueue(K x);
@@ -54,12 +54,15 @@ public interface PriorityQueue<K> {
 
 	K dequeue();
 
-	/** Checks whether the queue is empty.
+	/** Checks whether this queue is empty.
 	 *
-	 * @return true if the queue is empty.
+	 * <P>This default implementation checks whether {@link #size()} is zero.
+	 * @return true if this queue is empty.
 	 */
 
-	boolean isEmpty();
+	default boolean isEmpty() {
+		return size() == 0;
+	}
 
 	/** Returns the number of elements in this queue.
 	 *
@@ -83,16 +86,19 @@ public interface PriorityQueue<K> {
 
 	/** Returns the last element of the queue, that is, the element the would be dequeued last (optional operation).
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 * @return the last element.
 	 * @throws NoSuchElementException if the queue is empty.
 	 */
 
-	K last();
+	default K last() { throw new UnsupportedOperationException(); }
 
 	/** Notifies the queue that the {@linkplain #first() first} element has changed (optional operation).
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}. 
 	 */
 
-	void changed();
+	default void changed() { throw new UnsupportedOperationException(); }
+
 
 	/** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
 	 *

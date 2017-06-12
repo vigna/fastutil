@@ -72,10 +72,11 @@ public interface IndirectPriorityQueue<K> {
 
 	/** Checks whether this queue is empty.
 	 *
+	 * <P>This default implementation checks whether {@link #size()} is zero.
 	 * @return true if this queue is empty.
 	 */
 
-	boolean isEmpty();
+	default boolean isEmpty() { return size() == 0; }
 
 	/** Returns the number of elements in this queue.
 	 *
@@ -99,17 +100,22 @@ public interface IndirectPriorityQueue<K> {
 
 	/** Returns the last element of this queue, that is, the element the would be dequeued last (optional operation).
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 *
 	 * @return the last element.
 	 * @throws NoSuchElementException if this queue is empty.
 	 */
 
-	int last();
+	default int last() { throw new UnsupportedOperationException(); }
 
 	/** Notifies this queue that the {@linkplain #first() first element} has changed (optional operation).
 	 *
+	 * <p>This default implementation just calls {@link #changed(int)} with argument {@link #first()}.
 	 */
 
-	void changed();
+	default void changed() {
+		changed(first());
+	}
 
 	/** Returns the comparator associated with this queue, or <code>null</code> if it uses its elements' natural ordering.
 	 *
@@ -121,31 +127,38 @@ public interface IndirectPriorityQueue<K> {
 	 *
 	 * <P>Note that the specified element must belong to this queue.
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 *
 	 * @param index the element that has changed.
 	 * @throws NoSuchElementException if the specified element is not in this queue.
 	 */
 
-	public void changed(int index);
+	default void changed(int index) { throw new UnsupportedOperationException(); }
+
 
 	/** Notifies this queue that the all elements have changed (optional operation).
+	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 */
 
-	public void allChanged();
+	default void allChanged() { throw new UnsupportedOperationException(); }
 
 	/** Checks whether a given index belongs to this queue (optional operation).
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 * @param index an index possibly in the queue.
 	 * @return true if the specified index belongs to this queue.
 	 */
-	public boolean contains(int index);
+	default boolean contains(int index) { throw new UnsupportedOperationException(); }
 
 	/** Removes the specified element from this queue (optional operation).
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 * @param index the element to be removed.
 	 * @return true if the index was in the queue.
 	 */
 
-	public boolean remove(int index);
+	default boolean remove(int index) { throw new UnsupportedOperationException(); }
 
 	/** Retrieves the front of this queue in a given array (optional operation).
 	 *
@@ -153,10 +166,11 @@ public interface IndirectPriorityQueue<K> {
 	 * are equal to the element associated to the {@linkplain #first() first index}. These indices can be always obtain by dequeueing, but
 	 * this method should retrieve efficiently such indices in the given array without modifying the state of this queue.
 	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 *
 	 * @param a an array large enough to hold the front (e.g., at least long as the reference array).
 	 * @return the number of elements actually written (starting from the first position of <code>a</code>).
 	 */
 
-	public int front(final int[] a);
-
+	default int front(final int[] a) { throw new UnsupportedOperationException(); }
 }

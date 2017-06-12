@@ -211,8 +211,8 @@
 	<tr><td>Map<td>AbstractMap<td>OpenHashMap, OpenCustomHashMap, ArrayMap
 	<tr><td>SortedMap<td>AbstractSortedMap<td>RBTreeMap, AVLTreeMap, LinkedOpenHashMap
 	<tr><td>List, BigList&dagger;<td>AbstractList, AbstractBigList<td>ArrayList, BigArrayBigList, ArrayFrontCodedList
-	<tr><td>PriorityQueue&dagger;<td>AbstractPriorityQueue&dagger;<td>HeapPriorityQueue, ArrayPriorityQueue, ArrayFIFOQueue
-	<tr><td>IndirectPriorityQueue&dagger;<td>AbstractIndirectPriorityQueue&dagger;<td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
+	<tr><td>PriorityQueue&dagger;<td><td>HeapPriorityQueue, ArrayPriorityQueue, ArrayFIFOQueue
+	<tr><td>IndirectPriorityQueue&dagger;<td><td>HeapSemiIndirectPriorityQueue, HeapIndirectPriorityQueue, ArrayIndirectPriorityQueue
 	<tr><td>Stack&dagger;<td><td>ArrayList
 	<tr><td>Iterator, BigListIterator&dagger;
 	<tr><td>Comparator
@@ -257,6 +257,7 @@
 	<tr><td>Comparators
 	<tr><td>Hash&Dagger;
 	<tr><td>HashCommon&Dagger;
+	<tr><td>SafeMath&Dagger;
     </table>
     </div>
 
@@ -342,6 +343,8 @@
 	(see, e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap#int2IntEntrySet()});
 	fast entry sets can, in turn, provide a <em>{@linkplain it.unimi.dsi.fastutil.ints.Int2IntMap.FastEntrySet#fastIterator()}</em>
 	that is guaranteed not to create a large number of objects, <em>possibly by returning always the same entry</em> (of course, mutated).
+	To make it possible to access these fast iterators in <code>for</code> loops, there are static helper methods available
+	(e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntMaps#fastIterable(it.unimi.dsi.fastutil.ints.Int2IntMap)}).
 
       <LI>The type-specific sorted set interfaces, moreover, feature an optional
 	method <code>iterator(from)</code> which creates a type-specific {@link
@@ -412,13 +415,13 @@
 	java.util.ListIterator#previous() previous()}.
 
       <li>For the same reason, the method {@link java.util.Collection#toArray}
-	has a polymorphic version accepting a type-specific array, but there are
-	also explicitly typed methods
+	has a polymorphic version accepting a type-specific array, but there is
+	also an explicitly typed method
 	{@link it.unimi.dsi.fastutil.bytes.ByteCollection#toByteArray() to<var>keytype</var>Array()}.</li>
 
 	<li>The standard entry-set iterators for hash-based maps use an entry object
 	that refers to the data contained in the hash table. If you retrieve an
-	entry and deleted it, the entry object will become invalid and will throw
+	entry and delete it, the entry object will become invalid and will throw
 	an {@link java.util.ArrayIndexOutOfBounds} exception. This does not
 	apply to fast iterators (see above).
 
@@ -437,17 +440,7 @@
 	override <code>rem()</code>, rather than <code>remove()</code>, to
 	make all inherited methods work properly.
 
-      <li>There are type-specific versions of {@link java.util.Comparator} that
-	require specifying both a type-specific comparison method and an object-based
-	one; this is necessary as a type-specific comparator must implement {@link
-	java.util.Comparator}. However, to simplify the creation of type-specific
-	comparators there are abstract type-specific comparator classes that
-	implement an object-based comparator wrapping the (abstract)
-	type-specific one; thus, if you need to create a type-specific comparator
-	you just have to inherit from those classes and define the type-specific
-	method. Analogously for iterators.
-
-      <li>Stacks are <em>interfaces</em> implemented by array-based
+    <li>Stacks are <em>interfaces</em> implemented by array-based
 	lists: the interface, moreover, is slightly different from the
 	implementation contained in {@link java.util.Stack}.
     </ul>
@@ -458,12 +451,15 @@
     interface geared towards mathematical functions (e.g., hashes) which associates
     values to keys, but in which enumerating keys or values is not possible. It is essentially
     a {@link java.util.Map} that does not provide access to set representations. It is of course
-    unfortunate that Java 8 introduced an identically named interface with a different signature.
+    unfortunate that Java 8 introduced an identically named interface with a different signature:
+	differences and interoperability issues are discussed in the {@linkplain it.unimi.dsi.fastutil.Function class documentation}.
 
     <p><code>fastutil</code>
     provides interfaces, abstract implementations and the usual array of wrappers
     in the suitable static container (e.g., {@link it.unimi.dsi.fastutil.ints.Int2IntFunctions}).
     Implementations will be provided by other projects (e.g., <a href="http://sux.dsi.unimi.it/">Sux4J</a>).
+	Type-specific functions require just to define their {@code get()} methods: thus, they can be defined
+	by lambda expressions.
 
     <p>All <code>fastutil</code> type-specific maps extend their respective type-specific
     functions: but, alas, we cannot have {@link java.util.Map} extending {@link it.unimi.dsi.fastutil.Function}.

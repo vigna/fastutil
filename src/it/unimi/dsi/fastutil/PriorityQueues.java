@@ -1,7 +1,5 @@
 package it.unimi.dsi.fastutil;
 
-import java.io.Serializable;
-
 /*
  * Copyright (C) 2003-2017 Sebastiano Vigna
  *
@@ -18,6 +16,7 @@ import java.io.Serializable;
  * limitations under the License.
  */
 
+import java.io.Serializable;
 
 import java.util.Comparator;
 import java.util.NoSuchElementException;
@@ -38,7 +37,7 @@ public class PriorityQueues {
 	 */
 
 	@SuppressWarnings("rawtypes")
-	public static class EmptyPriorityQueue extends AbstractPriorityQueue implements Serializable {
+	public static class EmptyPriorityQueue implements PriorityQueue, Serializable {
 		private static final long serialVersionUID = 0L;
 
 		protected EmptyPriorityQueue() {}
