@@ -1,12 +1,5 @@
 package it.unimi.dsi.fastutil;
 
-import java.util.function.IntToLongFunction;
-import java.util.function.IntUnaryOperator;
-
-import it.unimi.dsi.fastutil.bytes.Byte2CharFunction;
-import it.unimi.dsi.fastutil.ints.Int2IntFunction;
-import it.unimi.dsi.fastutil.ints.Int2LongFunction;
-
 /*
  * Copyright (C) 2002-2017 Sebastiano Vigna
  *
@@ -22,6 +15,14 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
+import java.util.function.IntToLongFunction;
+import java.util.function.IntUnaryOperator;
+
+import it.unimi.dsi.fastutil.bytes.Byte2CharFunction;
+import it.unimi.dsi.fastutil.ints.Int2IntFunction;
+import it.unimi.dsi.fastutil.ints.Int2LongFunction;
 
 /** A function mapping keys into values.
  *
