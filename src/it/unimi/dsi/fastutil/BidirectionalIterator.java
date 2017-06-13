@@ -1,4 +1,4 @@
-package it.unimi.dsi.fastutil;
+	package it.unimi.dsi.fastutil;
 
 /*
  * Copyright (C) 2002-2017 Sebastiano Vigna

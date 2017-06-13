@@ -132,8 +132,8 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * A literal big array can be easily created by using the suitable type-specific
  * {@code wrap()} method (e.g., {@link IntBigArrays#wrap(int[])}) around a
  * literal standard array. Alternatively, for very small arrays you can just
- * declare a literal array-of-array (e.g., {@code new int[][] { { 1, 2 } }}
- *). Be warned, however, that this can lead to creating illegal big arrays if
+ * declare a literal array-of-array (e.g., <code>new int[][] { { 1, 2 } }</code>).
+ * Be warned, however, that this can lead to creating illegal big arrays if
  * for some reason (e.g., stress testing) {@link #SEGMENT_SIZE} is set to a
  * value smaller than the inner array length.
  *
