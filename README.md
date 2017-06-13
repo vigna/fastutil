@@ -13,11 +13,10 @@ starting from a parameterized version; the classes are much more compact
 and much faster than the general ones. Please read the package
 documentation for more information.
 
-The compiled code is contained in the jar file, and should be installed
-where you keep Java extensions. Note that the jar file is huge, due to the
-large number of classes: if you plan to ship your own jar with some
-fastutil classes included, you should look at AutoJar or similar tools to
-extract automatically the necessary classes.
+Note that the jar file is huge, due to the large number of classes: if you
+plan to ship your own jar with some fastutil classes included, you should
+look at AutoJar or similar tools to extract automatically the necessary
+classes.
 
 You have to "make sources" to get the actual Java sources; finally, "ant
 jar" and "ant javadoc" will generate the jar file and the API
