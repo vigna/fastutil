@@ -163,7 +163,7 @@
 
     <p>for maps.
 
-    <p>By "type" here I mean a capitalized primitive type, {@link
+    <p>The word "type" here referes to a capitalized primitive type, {@link
     java.lang.Object} or <code>Reference</code>. In the latter case, we
     are treating objects, but their equality is established by reference
     equality (that is, without invoking <code>equals()</code>), similarly
@@ -294,19 +294,19 @@
     <p>&Dagger;: this class has <em>only</em> a non-type-specific implementation in {@link it.unimi.dsi.fastutil}.
 
     <p>The static containers provide also special-purpose implementations for
-    all kinds of {@linkplain it.unimi.dsi.fastutil.objects.ObjectSets#EMPTY_SET empty
-    structures} (including {@linkplain
+    all kinds of {@linkplain it.unimi.dsi.fastutil.objects.ObjectSets#EMPTY_SET
+    empty structures} (including {@linkplain
     it.unimi.dsi.fastutil.objects.ObjectArrays#EMPTY_ARRAY arrays}) and
     {@linkplain it.unimi.dsi.fastutil.ints.Int2IntMaps#singleton(int,int) singletons}.
 
 
     <h3>Warnings</h3>
 
-    <p><strong>All classes are not synchronized</strong>. If multiple threads access one
-    of these classes concurrently, and at least one of the threads modifies it,
-    it must be synchronized externally. Iterators will behave unpredictably in
-    the presence of concurrent modifications. Reads, however, can be carried
-    out concurrently.
+    <p><strong>All classes are not synchronized</strong>. If multiple threads
+    access one of these classes concurrently, and at least one of the threads
+    modifies it, it must be synchronized externally. Iterators will behave
+    unpredictably in the presence of concurrent modifications. Reads, however,
+    can be carried out concurrently.
 
     <p><strong>Reference-based classes violate the {@link java.util.Map}
     contract</strong>. They intentionally compare objects by reference, and do
@@ -314,26 +314,32 @@
     when reference-based equality is desired (for instance, if all
     objects involved are canonized, as it happens with interned strings).
 
+    <p><strong>Setting the default return value for non-primitive value Maps
+    violates the {@link java.util.Map} contract</strong>. There, the generic
+    <code>get()</code>, <code>put()</code>, and <code>remove()</code> methods
+    return the default return value for Maps with non-primitive values. This
+    implies that they might not return <code>null</code> for missing keys.
+
     <p><strong>Linked classes do not implement wholly the {@link
     java.util.SortedMap} interface</strong>. They provide methods to get the
-    first and last element in iteration order, and to start a bidirectional iterator from any element,
-    but any submap or subset
+    first and last element in iteration order, and to start a bidirectional
+    iterator from any element, but any submap or subset
     method will cause an {@link java.lang.UnsupportedOperationException}
     (this may change in future versions).
 
     <p><strong>Substructures in sorted classes allow the creation of
     arbitrary substructures</strong>. In {@link java.util}, instead, you
     can only create contained sub-substructures (BTW, why?). For instance,
-    <code>(new TreeSet()).tailSet(1).tailSet(0)</code> will throw an exception, but {@link
-    it.unimi.dsi.fastutil.ints.IntRBTreeSet (new
+    <code>(new TreeSet()).tailSet(1).tailSet(0)</code> will throw an exception,
+    but {@link it.unimi.dsi.fastutil.ints.IntRBTreeSet (new
     IntRBTreeSet()).tailSet(1).tailSet(0)} won't.
 
 
     <h3>Additional Features and Methods</h3>
 
     <p>The new interfaces add some very natural methods and strengthen many of
-    the old ones. Moreover, whenever possible, the object returned is type-specific,
-    or implements a more powerful interface.
+    the old ones. Moreover, whenever possible, the object returned is
+    type-specific, or implements a more powerful interface.
 
     <p>More in detail:
     <ul>
@@ -385,8 +391,8 @@
     implemented by all type-specific sorted sets and subsets.
 
     <li>Finally, there are constructors that allow you to build easily sets
-    using array and iterators. This means, for instance, that you can create quickly a
-    set of strings with a statement like
+    using array and iterators. This means, for instance, that you can create
+    quickly a set of strings with a statement like
     <blockquote>
       <code>new ObjectOpenHashSet( new String[] { "foo", "bar" } )</code>
     </blockquote>
@@ -421,7 +427,11 @@
     default return value is initialized to <code>null</code>). A
     submap or subset has an independent default return value (which
     however is initialized to the default return value of the
-    originator).</li>
+    originator). Note that for these maps, even the standard
+    {@link java.util.Map#get(Object) get()},
+    {@link java.util.Map#put(Object,Object) put()} and
+    {@link java.util.Map#remove(Object) remove()} return the default return
+    value for missing keys instead of always returning <code>null</code>.</li>
 
     <li>For all maps that have objects as keys, the {@link
     java.util.Map#get(Object) get()} and {@link
@@ -482,12 +492,14 @@
     {@link java.util.PrimitiveIterator.OfInt}).</li>
 
     <li>In the implementation new methods such that
-    {@link java.util.Map#computeIfAbsent(Object,java.util.function.Function) Map.computeIfAbsent()}
-    we do not always have a suitable type-specific version of {@link java.util.function.Function}
-    in the JDK: in this case, we approximate the best we can. For example, a
-    {@link it.unimi.dsi.fastutil.bytes.Byte2ByteMap} expects an {@link java.util.function.IntUnaryOperator}.
-    The default implementation will check that the returned argument actually fits a byte,
-    throwing an exception otherwise.</li>
+    {@link java.util.Map#computeIfAbsent(Object,java.util.function.Function)
+    Map.computeIfAbsent()} we do not always have a suitable type-specific
+    version of {@link java.util.function.Function} in the JDK: in this case,
+    we approximate the best we can. For example, a
+    {@link it.unimi.dsi.fastutil.bytes.Byte2ByteMap} expects an
+    {@link java.util.function.IntUnaryOperator}. The default implementation
+    will check that the returned argument actually fits a byte, throwing an
+    exception otherwise.</li>
     </ul>
 
 
@@ -510,12 +522,12 @@
 
     <p>All <code>fastutil</code> type-specific maps extend their respective type-specific
     functions: but, alas, we cannot have {@link java.util.Map} extending
-	{@link it.unimi.dsi.fastutil.Function}. Moreover, type-specific
-	functions extend the existing type-specific function from {@link
-	java.util.function} that can accommodate the argument and the result with the least
-	widening: for example, {@link
-	it.unimi.dsi.fastutil.shorts.Short2CharFunction} extends {@link
-	java.util.function.IntUnaryOperator}.
+    {@link it.unimi.dsi.fastutil.Function}. Moreover, type-specific
+    functions extend the existing type-specific function from {@link
+    java.util.function} that can accommodate the argument and the result with the least
+    widening: for example, {@link
+    it.unimi.dsi.fastutil.shorts.Short2CharFunction} extends {@link
+    java.util.function.IntUnaryOperator}.
 
 
     <h3>Static Container Classes</h3>
@@ -811,6 +823,8 @@
     particular, we need 48 booleans for AVL trees and 64 pointers plus 64
     booleans for red-black trees.
 
+
+
     <h2><a name="example"></a>An Example</h2>
 
     <p>Suppose you want to store a sorted map from longs to integers. The first
@@ -868,7 +882,7 @@ i.previous(); // This method call will return 2
 s.remove(s.lastInt()); // This will remove the last element in constant time
     </pre>
     <p>Now, we play with iterators. It is easy to create iterators over
-      intervals or over arrays, and combine them:
+    intervals or over arrays, and combine them:
     <pre>
 IntIterator i = IntIterators.fromTo(0, 10); // This iterator will return 0, 1, ..., 9
 int[] a = new int[] { 5, 1, 9 };
@@ -896,23 +910,23 @@ IntArrays.quickSort(a, (x, y) -> y - x); // Sorts in reverse order
     <pre>
 Arrays.quickSort(0, a.length, (i, j) -> Integer.compare(a[i], a[j]), (i, j) -> { IntArrays.swap(a, i, j); IntArrays.swap(b, i, j); }));
     </pre>
-	<p>If you have several cores, you can do it in parallel:
-	<pre>
+    <p>If you have several cores, you can do it in parallel:
+    <pre>
 IntArrays.parallelQuickSort(a, (x, y) -> y - x); // Sorts in reverse order
 Arrays.parallelQuickSort(0, a.length, (i, j) -> Integer.compare(a[i], a[j]), (i, j) -> { IntArrays.swap(a, i, j); IntArrays.swap(b, i, j); }));
     </pre>
 
-	<p>Some maps provide a <em>fast iterator</em> on their entry set: such iterators are allowed to reuse the {@link java.util.Map.Entry} instance
-	they return, resulting is highly reduced garbage collection (e.g., for large hash maps). To access easily such iterators, we can use
-	a helper static method:
-	<pre>
+    <p>Some maps provide a <em>fast iterator</em> on their entry set: such iterators are allowed to reuse the {@link java.util.Map.Entry} instance
+    they return, resulting is highly reduced garbage collection (e.g., for large hash maps). To easily access such iterators, we can use
+    a helper static method:
+    <pre>
 Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 // Fill the map
 for (Int2IntMap.Entry e : Int2IntMaps.fastIterable(m)) {
     // do things with e.getIntKey() and e.getIntValue();
 }
     </pre>
-	<p>The code above will not generate an object per enumerated item, as <code>for(Entry&lt;Integer,Integer&gt; e: m.entrySet())<code>
-	(or even <code>for(Int2IntMap.Entry e: m.int2IntKeySet())<code>) would do.
+    <p>The code above will not generate an object per enumerated item, as <code>for(Entry&lt;Integer,Integer&gt; e: m.entrySet())<code>
+    (or even <code>for(Int2IntMap.Entry e: m.int2IntKeySet())<code>) would do.
   </body>
 </html>
