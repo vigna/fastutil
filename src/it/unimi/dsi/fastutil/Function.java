@@ -86,6 +86,7 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	 * @return {@inheritDoc}
 	 * @see java.util.function.Function#apply(Object)
 	 * @see #get(Object)
+	 * @since 8.0.0
 	 */
 
 	@Override
