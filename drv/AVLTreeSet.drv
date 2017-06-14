@@ -81,13 +81,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 		/* If the provided comparator is already type-specific, we use it. Otherwise,
 		   we use a wrapper anonymous class to fake that it is type-specific. */
 		if (storedComparator == null || storedComparator instanceof KEY_COMPARATOR) actualComparator = (KEY_COMPARATOR)storedComparator;
-		else actualComparator =	new KEY_COMPARATOR KEY_GENERIC() {
-				@Override
-				public int compare(KEY_GENERIC_TYPE k1, KEY_GENERIC_TYPE k2) { return storedComparator.compare(KEY2OBJ(k1), KEY2OBJ(k2)); }
-				@SuppressWarnings("deprecation")
-				@Override
-				public int compare(KEY_CLASS ok1, KEY_CLASS ok2) { return storedComparator.compare(ok1, ok2); }
-			};
+		else actualComparator =	storedComparator::compare;
 #endif
 	}
 
@@ -301,7 +295,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 
 		if (tree == null) { // The case of the empty tree is treated separately.
 			count++;
-			tree = lastEntry = firstEntry = new Entry KEY_GENERIC(k);
+			tree = lastEntry = firstEntry = new Entry KEY_GENERIC_DIAMOND(k);
 		}
 		else {
 			Entry KEY_GENERIC p = tree, q = null, y = tree, z = null, e = null, w = null;
@@ -319,7 +313,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 				if (dirPath[i++] = cmp > 0) {
 					if (p.succ()) {
 						count++;
-						e = new Entry KEY_GENERIC(k);
+						e = new Entry KEY_GENERIC_DIAMOND(k);
 
 						if (p.right == null) lastEntry = e;
 
@@ -337,7 +331,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 				else {
 					if (p.pred()) {
 						count++;
-						e = new Entry KEY_GENERIC(k);
+						e = new Entry KEY_GENERIC_DIAMOND(k);
 
 						if (p.left == null) firstEntry = e;
 
@@ -1393,7 +1387,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 
 		if (count != 0) {
 			// Also this apparently unfathomable code is derived from GNU libavl.
-			Entry KEY_GENERIC e, p, q, rp = new Entry KEY_GENERIC(), rq = new Entry KEY_GENERIC();
+			Entry KEY_GENERIC e, p, q, rp = new Entry KEY_GENERIC_DIAMOND(), rq = new Entry KEY_GENERIC_DIAMOND();
 
 			p = rp;
 			rp.left(tree);
@@ -1465,7 +1459,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private Entry KEY_GENERIC readTree(final java.io.ObjectInputStream s, final int n, final Entry KEY_GENERIC pred, final Entry KEY_GENERIC succ) throws java.io.IOException, ClassNotFoundException {
 		if (n == 1) {
-			final Entry KEY_GENERIC top = new Entry KEY_GENERIC(KEY_GENERIC_CAST s.READ_KEY());
+			final Entry KEY_GENERIC top = new Entry KEY_GENERIC_DIAMOND(KEY_GENERIC_CAST s.READ_KEY());
 			top.pred(pred);
 			top.succ(succ);
 
@@ -1475,8 +1469,8 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 		if (n == 2) {
 			/* We handle separately this case so that recursion will
 			 *always* be on nonempty subtrees. */
-			final Entry KEY_GENERIC top = new Entry KEY_GENERIC(KEY_GENERIC_CAST s.READ_KEY());
-			top.right(new Entry KEY_GENERIC(KEY_GENERIC_CAST s.READ_KEY()));
+			final Entry KEY_GENERIC top = new Entry KEY_GENERIC_DIAMOND(KEY_GENERIC_CAST s.READ_KEY());
+			top.right(new Entry KEY_GENERIC_DIAMOND(KEY_GENERIC_CAST s.READ_KEY()));
 			top.right.pred(top);
 			top.balance(1);
 			top.pred(pred);
@@ -1488,7 +1482,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 		// The right subtree is the largest one.
 		final int rightN = n / 2, leftN = n - rightN - 1;
 
-		final Entry KEY_GENERIC top = new Entry KEY_GENERIC();
+		final Entry KEY_GENERIC top = new Entry KEY_GENERIC_DIAMOND();
 
 		top.left(readTree(s, leftN, pred, top));
 

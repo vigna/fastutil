@@ -210,6 +210,7 @@ fi)\
 "#define KEY_GENERIC_CLASS_WIDENED K\n"\
 "#define KEY_GENERIC_TYPE_WIDENED K\n"\
 "#define KEY_GENERIC <K>\n"\
+"#define KEY_GENERIC_DIAMOND <>\n"\
 "#define KEY_GENERIC_WILDCARD <?>\n"\
 "#define KEY_EXTENDS_GENERIC <? extends K>\n"\
 "#define KEY_SUPER_GENERIC <? super K>\n"\
@@ -230,6 +231,7 @@ fi)\
 "#define KEY_GENERIC_CLASS_WIDENED KEY_CLASS_WIDENED\n"\
 "#define KEY_GENERIC_TYPE_WIDENED KEY_TYPE_WIDENED\n"\
 "#define KEY_GENERIC\n"\
+"#define KEY_GENERIC_DIAMOND\n"\
 "#define KEY_GENERIC_WILDCARD\n"\
 "#define KEY_EXTENDS_GENERIC\n"\
 "#define KEY_SUPER_GENERIC\n"\
@@ -248,6 +250,7 @@ fi)\
 "#define VALUE_GENERIC_CLASS_WIDENED V\n"\
 "#define VALUE_GENERIC_TYPE_WIDENED V\n"\
 "#define VALUE_GENERIC <V>\n"\
+"#define VALUE_GENERIC_DIAMOND <>\n"\
 "#define VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#define VALUE_GENERIC_CAST (V)\n"\
 "#define VALUE_GENERIC_ARRAY_CAST (V[])\n"\
@@ -259,6 +262,7 @@ fi)\
 "#define VALUE_GENERIC_CLASS_WIDENED VALUE_CLASS_WIDENED\n"\
 "#define VALUE_GENERIC_TYPE_WIDENED VALUE_TYPE_WIDENED\n"\
 "#define VALUE_GENERIC\n"\
+"#define VALUE_GENERIC_DIAMOND\n"\
 "#define VALUE_EXTENDS_GENERIC\n"\
 "#define VALUE_GENERIC_CAST\n"\
 "#define VALUE_GENERIC_ARRAY_CAST\n"\
@@ -269,17 +273,21 @@ fi)\
 "#if KEYS_REFERENCE\n"\
 "#if VALUES_REFERENCE\n"\
 "#define KEY_VALUE_GENERIC <K,V>\n"\
+"#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K, ? extends V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC <K>\n"\
+"#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K>\n"\
 "#endif\n"\
 "#else\n"\
 "#if VALUES_REFERENCE\n"\
 "#define KEY_VALUE_GENERIC <V>\n"\
+"#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC\n"\
+"#define KEY_VALUE_GENERIC_DIAMOND\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC\n"\
 "#endif\n"\
 "#endif\n"\
