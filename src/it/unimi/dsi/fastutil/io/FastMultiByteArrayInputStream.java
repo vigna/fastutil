@@ -116,10 +116,12 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	 * @return the minimum among the number of available bytes and {@link Integer#MAX_VALUE}.
 	 */
 
+	@Override
 	public int available() {
 		return (int)Math.min(Integer.MAX_VALUE, length - position);
 	}
 
+	@Override
 	public long skip(long n) {
 		if (n > length - position) n = length - position;
 		position += n;
@@ -127,6 +129,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 		return n;
 	}
 
+	@Override
 	public int read() {
 		if (length == position) return -1;
 		final int disp = (int)(position++ & SLICE_MASK);
@@ -134,6 +137,7 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 		return current[disp] & 0xFF;
 	}
 
+	@Override
 	public int read(final byte[] b, int offset, final int length) {
 		final long remaining = this.length - position;
 		if (remaining == 0) return length == 0 ? 0 : -1;
@@ -157,10 +161,12 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 		current = array[(int)(position >>> SLICE_BITS)];
 	}
 
+	@Override
 	public long position() {
 		return position;
 	}
 
+	@Override
 	public void position(final long newPosition) {
 		position = Math.min(newPosition, length);
 		updateCurrent();
@@ -172,16 +178,20 @@ public class FastMultiByteArrayInputStream extends MeasurableInputStream impleme
 	}
 
 	/** NOP. */
+	@Override
 	public void close() {}
 
+	@Override
 	public boolean markSupported() {
 		return false;
 	}
 
+	@Override
 	public void mark(final int dummy) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void reset() {
 		throw new UnsupportedOperationException();
 	}

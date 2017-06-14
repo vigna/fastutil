@@ -132,6 +132,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 		}
 	}
 
+	@Override
 	public void write(final int b) throws IOException {
 		if (ASSERTS) assert avail > 0;
 		avail--;
@@ -139,7 +140,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 		dumpBuffer(true);
 	}
 
-
+	@Override
 	public void write(final byte b[], final int offset, final int length) throws IOException {
 		if (length >= buffer.length) {
 			dumpBuffer(false);
@@ -162,11 +163,13 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 		avail -= length;
 	}
 
+	@Override
 	public void flush() throws IOException {
 		dumpBuffer(false);
 		os.flush();
 	}
 
+	@Override
 	public void close() throws IOException {
 		if (os == null) return;
 		flush();
@@ -175,6 +178,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 		buffer = null;
 	}
 
+	@Override
 	public long position() throws IOException {
 		if (repositionableStream != null) return repositionableStream.position() + pos;
 		else if (measurableStream != null) return measurableStream.position() + pos;
@@ -187,6 +191,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 	 * <p>Note that this method performs a {@link #flush()} before changing the underlying stream position.
 	 */
 
+	@Override
 	public void position(final long newPosition) throws IOException {
 		flush();
 		if (repositionableStream != null) repositionableStream.position(newPosition);
@@ -203,6 +208,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 	 * cannot provide a {@link FileChannel}.
 	 */
 
+	@Override
 	public long length() throws IOException {
 		flush();
 		if (measurableStream != null) return measurableStream.length();

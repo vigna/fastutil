@@ -63,25 +63,31 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 		this(array, 0, array.length);
 	}
 
+	@Override
 	public boolean markSupported() {
 		return true;
 	}
 
+	@Override
 	public void reset() {
 		position = mark;
 	}
 
 	/** Closing a fast byte array input stream has no effect. */
+	@Override
 	public void close() {}
 
+	@Override
 	public void mark(final int dummy) {
 		mark = position;
 	}
 
+	@Override
 	public int available() {
 		return length - position;
 	}
 
+	@Override
 	public long skip(long n) {
 		if (n <= length - position) {
 			position += (int)n;
@@ -92,6 +98,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 		return n;
 	}
 
+	@Override
 	public int read() {
 		if (length == position) return -1;
 		return array[offset + position++] & 0xFF;
@@ -103,6 +110,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	 * will return -1 on a zero-length read at EOF, contrarily to the specification. We won't.
 	 */
 
+	@Override
 	public int read(final byte b[], final int offset, final int length) {
 		if (this.length == this.position) return length == 0 ? 0 : -1;
 		final int n = Math.min(length, this.length - this.position);
@@ -111,10 +119,12 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 		return n;
 	}
 
+	@Override
 	public long position() {
 		return position;
 	}
 
+	@Override
 	public void position(final long newPosition) {
 		position = (int)Math.min(newPosition, length);
 	}

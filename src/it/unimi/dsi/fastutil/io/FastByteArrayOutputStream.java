@@ -79,12 +79,14 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 		array = ByteArrays.trim(array, length);
 	}
 
+	@Override
 	public void write(final int b) {
 		if (position >= array.length) array = ByteArrays.grow(array, position + 1, length);
 		array[position++] = (byte)b;
 		if (length < position) length = position;
 	}
 
+	@Override
 	public void write(final byte[] b, final int off, final int len) throws IOException {
 		ByteArrays.ensureOffsetLength(b, off, len);
 		if (position + len > array.length) array = ByteArrays.grow(array, position + len, position);
@@ -92,11 +94,13 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 		if (position + len > length) length = position += len;
 	}
 
+	@Override
 	public void position(long newPosition) {
 		if (position > Integer.MAX_VALUE) throw new IllegalArgumentException("Position too large: " + newPosition);
 		position = (int)newPosition;
 	}
 
+	@Override
 	public long position() {
 		return position;
 	}

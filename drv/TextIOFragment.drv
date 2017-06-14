@@ -344,8 +344,8 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final CharSequence filen
 
 /** A wrapper that exhibits the content of a reader as a type-specific iterator. */
 
-final private static class KEY_READER_WRAPPER implements KEY_ITERATOR {
-	final private BufferedReader reader;
+private static final class KEY_READER_WRAPPER implements KEY_ITERATOR {
+	private final BufferedReader reader;
 	private boolean toAdvance = true;
 	private String s;
 	private KEY_TYPE next;
@@ -354,6 +354,7 @@ final private static class KEY_READER_WRAPPER implements KEY_ITERATOR {
 		this.reader = reader;
 	}
 
+	@Override
 	public boolean hasNext() {
 		if (! toAdvance) return s != null;
 
@@ -371,6 +372,7 @@ final private static class KEY_READER_WRAPPER implements KEY_ITERATOR {
 		return true;
 	}
 
+	@Override
 	public KEY_TYPE NEXT_KEY() {
 		if (! hasNext()) throw new NoSuchElementException();
 		toAdvance = true;
@@ -409,15 +411,9 @@ public static KEY_ITERATOR AS_KEY_ITERATOR(final CharSequence filename) throws I
  * @param file a file.
  */
 public static KEY_ITERABLE AS_KEY_ITERABLE(final File file) {
-	return new KEY_ITERABLE() {
-		public KEY_ITERATOR iterator() {
-			try {
-				return AS_KEY_ITERATOR(file);
-			}
-			catch(IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+	return () -> {
+		try { return AS_KEY_ITERATOR(file); }
+		catch(IOException e) { throw new RuntimeException(e); }
 	};
 }
 
@@ -426,15 +422,9 @@ public static KEY_ITERABLE AS_KEY_ITERABLE(final File file) {
  * @param filename a filename.
  */
 public static KEY_ITERABLE AS_KEY_ITERABLE(final CharSequence filename) {
-	return new KEY_ITERABLE() {
-		public KEY_ITERATOR iterator() {
-			try {
-				return AS_KEY_ITERATOR(filename);
-			}
-			catch(IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+	return () -> {
+		try { return AS_KEY_ITERATOR(filename); }
+		catch(IOException e) { throw new RuntimeException(e); }
 	};
 }
 

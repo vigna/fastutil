@@ -20,7 +20,7 @@
 
 // HORRIBLE kluges to work around bug #6478546
 
-private final static int MAX_IO_LENGTH = 1024 * 1024;
+private static final int MAX_IO_LENGTH = 1024 * 1024;
 
 private static int read(final InputStream is, final byte a[], final int offset, final int length) throws IOException {
 	if (length == 0) return 0;
@@ -772,9 +772,6 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final CharSequence filen
 	STORE_KEYS(array, new File(filename.toString()));
 }
 
-
-
-
 /** Stores the element returned by an iterator to a given data output.
  *
  * @param i an iterator whose output will be written to {@code dataOutput}.
@@ -806,8 +803,8 @@ public static void STORE_KEYS(final KEY_ITERATOR i, final CharSequence filename)
 
 /** A wrapper that exhibits the content of a data input stream as a type-specific iterator. */
 
-final private static class KEY_DATA_INPUT_WRAPPER implements KEY_ITERATOR {
-	final private DataInput dataInput;
+private static final class KEY_DATA_INPUT_WRAPPER implements KEY_ITERATOR {
+	private final DataInput dataInput;
 	private boolean toAdvance = true;
 	private boolean endOfProcess = false;
 	private KEY_TYPE next;
@@ -816,30 +813,26 @@ final private static class KEY_DATA_INPUT_WRAPPER implements KEY_ITERATOR {
 		this.dataInput = dataInput;
 	}
 
+	@Override
 	public boolean hasNext() {
 		if (! toAdvance) return ! endOfProcess;
 
 		toAdvance = false;
 
-		try {
-			next = dataInput.READ_KEY();
-		}
-		catch(EOFException eof) {
-			endOfProcess = true;
-		}
+		try { next = dataInput.READ_KEY(); }
+		catch(EOFException eof) { endOfProcess = true; }
 		catch(IOException rethrow) { throw new RuntimeException(rethrow); }
 
 		return ! endOfProcess;
 	}
 
+	@Override
 	public KEY_TYPE NEXT_KEY() {
 		if (! hasNext()) throw new NoSuchElementException();
 		toAdvance = true;
 		return next;
 	}
 }
-
-
 
 /** Wraps the given data input stream into an iterator.
  *
@@ -870,15 +863,9 @@ public static KEY_ITERATOR AS_KEY_ITERATOR(final CharSequence filename) throws I
  * @param file a file.
  */
 public static KEY_ITERABLE AS_KEY_ITERABLE(final File file) {
-	return new KEY_ITERABLE() {
-		public KEY_ITERATOR iterator() {
-			try {
-				return AS_KEY_ITERATOR(file);
-			}
-			catch(IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+	return () -> {
+		try { return AS_KEY_ITERATOR(file); }
+		catch(IOException e) { throw new RuntimeException(e); }
 	};
 }
 
@@ -887,15 +874,9 @@ public static KEY_ITERABLE AS_KEY_ITERABLE(final File file) {
  * @param filename a filename.
  */
 public static KEY_ITERABLE AS_KEY_ITERABLE(final CharSequence filename) {
-	return new KEY_ITERABLE() {
-		public KEY_ITERATOR iterator() {
-			try {
-				return AS_KEY_ITERATOR(filename);
-			}
-			catch(IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+	return () -> {
+		try { return AS_KEY_ITERATOR(filename); }
+		catch(IOException e) { throw new RuntimeException(e); }
 	};
 }
 

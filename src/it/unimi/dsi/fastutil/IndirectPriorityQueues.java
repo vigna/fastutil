@@ -126,12 +126,12 @@ public class IndirectPriorityQueues {
 		public int front(int[] a) { return q.front(a); }
 	}
 
-
 	/** Returns a synchronized type-specific indirect priority queue backed by the specified type-specific indirect priority queue.
 	 *
 	 * @param q the indirect priority queue to be wrapped in a synchronized indirect priority queue.
 	 * @return a synchronized view of the specified indirect priority queue.
 	 */
+
 	public static <K> IndirectPriorityQueue<K> synchronize(final IndirectPriorityQueue<K> q) {	return new SynchronizedIndirectPriorityQueue<>(q); }
 
 	/** Returns a synchronized type-specific indirect priority queue backed by the specified type-specific indirect priority queue, using an assigned object to synchronize.

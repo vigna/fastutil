@@ -35,6 +35,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the element at the specified position.
 	 * @see List#get(int)
 	 */
+
 	K get(long index);
 
 	/** Removes the element at the specified position.
@@ -43,6 +44,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the element previously at the specified position.
 	 * @see List#remove(int)
 	 */
+
 	K remove(long index);
 
 	/** Replaces the element at the specified position in this big list with the specified element (optional operation).
@@ -52,6 +54,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the element previously at the specified positions.
 	 * @see List#set(int,Object)
 	 */
+
 	K set(long index, K element);
 
 	/** Inserts the specified element at the specified position in this big list (optional operation).
@@ -60,6 +63,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @param element an element to be inserted.
 	 * @see List#add(int,Object)
 	 */
+
 	void add(long index, K element);
 
 	/** Sets the size of this big list.
@@ -79,6 +83,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return {@code true} if this big list changed as a result of the call
 	 * @see List#addAll(int, Collection)
 	 */
+
 	boolean addAll(long index, Collection<? extends K> c);
 
 	/** Returns the index of the first occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
@@ -87,6 +92,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the index of the first occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
 	 * @see List#indexOf(Object)
 	 */
+
 	long indexOf(Object o);
 
 	/** Returns the index of the last occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
@@ -95,6 +101,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return the index of the last occurrence of the specified element in this big list, or -1 if this big list does not contain the element.
  	 * @see List#lastIndexOf(Object)
 	 */
+
 	long lastIndexOf(Object o);
 
 	/** Returns a big-list iterator over the elements in this big list.
@@ -112,6 +119,7 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * this big list.
 	 * @see List#listIterator(int)
 	 */
+
 	BigListIterator<K> listIterator(long index);
 
 	/** Returns a big sublist view of this big list.
@@ -121,5 +129,6 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 * @return a big sublist view of this big list.
 	 * @see List#subList(int, int)
 	 */
+
 	BigList<K> subList(long from, long to);
 }

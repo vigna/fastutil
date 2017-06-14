@@ -110,10 +110,12 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		   we use a wrapper anonymous class to fake that it is type-specific. */
 		if (storedComparator == null || storedComparator instanceof KEY_COMPARATOR) actualComparator = (KEY_COMPARATOR)storedComparator;
 		else actualComparator =	new KEY_COMPARATOR KEY_SUPER_GENERIC() {
+				@Override
 				public int compare(KEY_GENERIC_TYPE k1, KEY_GENERIC_TYPE k2) {
 					return storedComparator.compare(KEY2OBJ(k1), KEY2OBJ(k2));
 				}
 				@SuppressWarnings("deprecation")
+				@Override
 				public int compare(KEY_GENERIC_CLASS ok1, KEY_GENERIC_CLASS ok2) {
 					return storedComparator.compare(ok1, ok2);
 				}
@@ -225,8 +227,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	final int compare(final KEY_GENERIC_TYPE k1, final KEY_GENERIC_TYPE k2) {
 		return actualComparator == null ? KEY_CMP(k1, k2) : actualComparator.compare(k1, k2);
 	}
-
-
 
 	/** Returns the entry corresponding to the given key, if it is in the tree; {@code null}, otherwise.
 	 *
@@ -1157,26 +1157,16 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	@Override
 	public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
 		if (entries == null) entries = new AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC>() {
-				final Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator = new Comparator<MAP.Entry KEY_VALUE_GENERIC> () {
-					public int compare(final MAP.Entry KEY_VALUE_GENERIC x, MAP.Entry KEY_VALUE_GENERIC y) {
-						return RB_TREE_MAP.this.actualComparator.compare(x.ENTRY_GET_KEY(), y.ENTRY_GET_KEY());
-					}
-				};
+				final Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator =  (Comparator<MAP.Entry KEY_VALUE_GENERIC>) (x, y) -> RB_TREE_MAP.this.actualComparator.compare(x.ENTRY_GET_KEY(), y.ENTRY_GET_KEY());
 
 				@Override
-				public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() {
-					return comparator;
-				}
+				public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return comparator; }
 
 				@Override
-				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
-					return new EntryIterator();
-				}
+				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() { return new EntryIterator(); }
 
 				@Override
-				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator(final MAP.Entry KEY_VALUE_GENERIC from) {
-					return new EntryIterator(from.ENTRY_GET_KEY());
-				}
+				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator(final MAP.Entry KEY_VALUE_GENERIC from) { return new EntryIterator(from.ENTRY_GET_KEY()); }
 
 				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
@@ -1278,7 +1268,9 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 
 	/** A keyset implementation using a more direct implementation for iterators. */
 	private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
+		@Override
 		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new KeyIterator();	}
+		@Override
 		public KEY_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new KeyIterator(from); }
 	}
 
@@ -1346,49 +1338,32 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	public VALUE_COLLECTION VALUE_GENERIC values() {
 		if (values == null) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
 				@Override
-				public VALUE_ITERATOR VALUE_GENERIC iterator() {
-					return new ValueIterator();
-				}
+				public VALUE_ITERATOR VALUE_GENERIC iterator() { return new ValueIterator(); }
 
 				@Override
-				public boolean contains(final VALUE_TYPE k) {
-					return containsValue(k);
-				}
+				public boolean contains(final VALUE_TYPE k) { return containsValue(k); }
 
 				@Override
-				public int size() {
-					return count;
-				}
+				public int size() { return count; }
 
 				@Override
-				public void clear() {
-					RB_TREE_MAP.this.clear();
-				}
-
+				public void clear() { RB_TREE_MAP.this.clear(); }
 			};
 
 		return values;
 	}
 
 	@Override
-	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() {
-		return actualComparator;
-	}
+	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return actualComparator; }
 
 	@Override
-	public SORTED_MAP KEY_VALUE_GENERIC headMap(KEY_GENERIC_TYPE to) {
-		return new Submap(KEY_NULL, true, to, false);
-	}
+	public SORTED_MAP KEY_VALUE_GENERIC headMap(KEY_GENERIC_TYPE to) { return new Submap(KEY_NULL, true, to, false); }
 
 	@Override
-	public SORTED_MAP KEY_VALUE_GENERIC tailMap(KEY_GENERIC_TYPE from) {
-		return new Submap(from, false, KEY_NULL, true);
-	}
+	public SORTED_MAP KEY_VALUE_GENERIC tailMap(KEY_GENERIC_TYPE from) { return new Submap(from, false, KEY_NULL, true); }
 
 	@Override
-	public SORTED_MAP KEY_VALUE_GENERIC subMap(KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to) {
-		return new Submap(from, false, to, false);
-	}
+	public SORTED_MAP KEY_VALUE_GENERIC subMap(KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to) { return new Submap(from, false, to, false); }
 
 	/** A submap with given range.
 	 *
@@ -1532,7 +1507,9 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		}
 
 		private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
-			public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubmapKeyIterator();	}
+			@Override
+			public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubmapKeyIterator(); }
+			@Override
 			public KEY_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SubmapKeyIterator(from); }
 		}
 
@@ -1545,21 +1522,17 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		@Override
 		public VALUE_COLLECTION VALUE_GENERIC values() {
 			if (values == null) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
-					public VALUE_ITERATOR VALUE_GENERIC iterator() {
-						return new SubmapValueIterator();
-					}
+					@Override
+					public VALUE_ITERATOR VALUE_GENERIC iterator() { return new SubmapValueIterator(); }
 
-					public boolean contains(final VALUE_TYPE k) {
-						return containsValue(k);
-					}
+					@Override
+					public boolean contains(final VALUE_TYPE k) { return containsValue(k); }
 
-					public int size() {
-						return Submap.this.size();
-					}
+					@Override
+					public int size() { return Submap.this.size(); }
 
-					public void clear() {
-						Submap.this.clear();
-					}
+					@Override
+					public void clear() { Submap.this.clear(); }
 
 				};
 
@@ -1738,11 +1711,13 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 				}
 			}
 
+			@Override
 			void updatePrevious() {
 				prev = prev.prev();
 				if (! bottom && prev != null && RB_TREE_MAP.this.compare(prev.key, from) < 0) prev = null;
 			}
 
+			@Override
 			void updateNext() {
 				next = next.next();
 				if (! top && next != null && RB_TREE_MAP.this.compare(next.key, to) >= 0) next = null;

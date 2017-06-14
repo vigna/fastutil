@@ -135,6 +135,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	 * @param byteBuffer a byte buffer.
 	 * @return the number of bytes appended (i.e., {@link ByteBuffer#remaining() byteBuffer.remaining()}).
 	 */
+	@Override
 	public int write(final ByteBuffer byteBuffer) throws IOException {
 		ensureOpen();
 		final int remaining = byteBuffer.remaining();
@@ -188,6 +189,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		overflowFile.delete();
 	}
 
+	@Override
 	protected void finalize() throws Throwable {
 		try {
 			dispose();
@@ -273,6 +275,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	 *
 	 * @param position the new position (will be minimized with {@link #length()}).
 	 */
+	@Override
 	public void position(final long position) throws IOException {
 		this.position = Math.min(position, length());
 	}
