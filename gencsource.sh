@@ -504,6 +504,7 @@ fi)\
 "#define POP pop${TYPE_STD[$k]}\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n"\
+"#define AS_KEY_COMPARATOR as${TYPE_CAP2[$k]}Comparator\n"\
 "#define AS_KEY_ITERABLE as${TYPE_CAP2[$k]}Iterable\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
