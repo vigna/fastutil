@@ -17,7 +17,7 @@ import java.io.PrintStream;
 
 import org.junit.Test;
 
-public class TestIOTest {
+public class TextIOTest {
 
 	static final byte[] SMALL = new byte[1024];
 	static final byte[] LARGE = new byte[1024 * 1024 + 42];
