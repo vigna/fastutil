@@ -561,7 +561,7 @@ public class Int2IntOpenHashMapTest {
 	public void testComputeIfAbsentPrimitive() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.defaultReturnValue(-1);
-		assertEquals(-1, m.computeIfAbsent(0, (x) -> x + 1));
+		assertEquals(1, m.computeIfAbsent(0, (x) -> x + 1));
 		assertEquals(1, m.get(0));
 		assertEquals(1, m.computeIfAbsent(0, (x) -> x + 2));
 		assertEquals(1, m.get(0));
@@ -597,7 +597,7 @@ public class Int2IntOpenHashMapTest {
 		assertEquals(-1, m.get(0));
 
 		m.put(1, 1);
-		assertEquals(1, m.computeIfPresent(1, (x, y) -> x + y));
+		assertEquals(2, m.computeIfPresent(1, (x, y) -> x + y));
 		assertEquals(2, m.get(1));
 		assertEquals(-1, m.computeIfPresent(1, (x, y) -> null));
 		assertEquals(-1, m.get(1));
@@ -608,16 +608,16 @@ public class Int2IntOpenHashMapTest {
 	public void testCompute() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.defaultReturnValue(-1);
-		assertEquals(-1, m.compute(0, (x, y) -> x + (y != null ? y : 1000)));
+		assertEquals(1000, m.compute(0, (x, y) -> x + (y != null ? y : 1000)));
 		assertEquals(1000, m.get(0));
-		assertEquals(1000, m.compute(0, (x, y) -> x + y * 2));
+		assertEquals(2000, m.compute(0, (x, y) -> x + y * 2));
 		assertEquals(2000, m.get(0));
 		assertEquals(-1, m.compute(0, (x, y) -> null));
 		assertEquals(-1, m.get(0));
 
-		assertEquals(-1, m.compute(1, (x, y) -> x + (y != null ? y : 1000)));
+		assertEquals(1001, m.compute(1, (x, y) -> x + (y != null ? y : 1000)));
 		assertEquals(1001, m.get(1));
-		assertEquals(1001, m.compute(1, (x, y) -> x + y * 2));
+		assertEquals(2003, m.compute(1, (x, y) -> x + y * 2));
 		assertEquals(2003, m.get(1));
 		assertEquals(-1, m.compute(1, (x, y) -> null));
 		assertEquals(-1, m.get(1));
@@ -631,22 +631,22 @@ public class Int2IntOpenHashMapTest {
 	public void testMerge() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.defaultReturnValue(-1);
-		assertEquals(-1, m.merge(0, 0, (x, y) -> 1000));
-		assertEquals(0, m.get(0));
 		assertEquals(0, m.merge(0, 0, (x, y) -> 1000));
+		assertEquals(0, m.get(0));
+		assertEquals(1000, m.merge(0, 0, (x, y) -> 1000));
 		assertEquals(1000, m.get(0));
-		assertEquals(1000, m.merge(0, 0, (x, y) -> x + y * 2));
+		assertEquals(2000, m.merge(0, 0, (x, y) -> x + y * 2));
 		assertEquals(2000, m.get(0));
-		assertEquals(2000, m.merge(0, 0, (x, y) -> null));
+		assertEquals(-1, m.merge(0, 0, (x, y) -> null));
 		assertEquals(-1, m.get(0));
 
-		assertEquals(-1, m.merge(1, 0, (x, y) -> 1000));
-		assertEquals(0, m.get(1));
 		assertEquals(0, m.merge(1, 0, (x, y) -> 1000));
+		assertEquals(0, m.get(1));
+		assertEquals(1000, m.merge(1, 0, (x, y) -> 1000));
 		assertEquals(1000, m.get(1));
-		assertEquals(1000, m.merge(1, 0, (x, y) -> x + y * 2));
+		assertEquals(2000, m.merge(1, 0, (x, y) -> x + y * 2));
 		assertEquals(2000, m.get(1));
-		assertEquals(2000, m.merge(1, 0, (x, y) -> null));
+		assertEquals(-1, m.merge(1, 0, (x, y) -> null));
 		assertEquals(-1, m.get(1));
 }
 }

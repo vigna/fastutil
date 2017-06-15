@@ -29,16 +29,10 @@ public class Int2ObjectMapTest {
 		m.put(1, ONE);
 
 		assertEquals(ONE, m.getOrDefault(0, ONE));
+		assertEquals(ONE, m.getOrDefault(null, ONE));
 		assertEquals(ONE, m.getOrDefault(ZERO, ONE));
 		assertEquals(ONE, m.getOrDefault(1, TWO));
 		assertEquals(ONE, m.getOrDefault(ONE, TWO));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected=NullPointerException.class)
-	public void testDefaultGetOrDefaultNullArg() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
-		assertEquals(ONE, m.getOrDefault(null, ONE));
 	}
 
 	@SuppressWarnings("deprecation")

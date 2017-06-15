@@ -530,46 +530,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		super.putAll(m);
 	}
 
-	private int insert(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
-		int pos;
-
-		if (KEY_EQUALS_NULL(k)) {
-			if (containsNullKey) return n;
-			containsNullKey = true;
-			pos = n;
-		}
-		else {
-			KEY_GENERIC_TYPE curr;
-			final KEY_GENERIC_TYPE[] key = this.key;
-
-			// The starting point.
-			if (! KEY_IS_NULL(curr = key[pos = KEY2INTHASH(k) & mask])) {
-				if (KEY_EQUALS_NOT_NULL(curr, k)) return pos;
-				while(! KEY_IS_NULL(curr = key[pos = (pos + 1) & mask]))
-					if (KEY_EQUALS_NOT_NULL(curr, k)) return pos;
-			}
-		}
-
-		key[pos] = k;
-		value[pos] = v;
-#ifdef Linked
-		if (size == 0) {
-			first = last = pos;
-			// Special case of SET_UPPER_LOWER(link[pos], -1, -1);
-			link[pos] = -1L;
-		}
-		else {
-			SET_NEXT(link[last], pos);
-			SET_UPPER_LOWER(link[pos], last, -1);
-			last = pos;
-		}
-#endif
-
-		if (size++ >= maxFill) rehash(arraySize(size + 1, f));
-		if (ASSERTS) checkTable();
-		return -pos - 1;
-	}
-
 	private int find(final KEY_GENERIC_TYPE k) {
 		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return containsNullKey ? n : -(n + 1);
 
@@ -590,7 +550,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	private void insert(final int pos, final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
 		if (pos == n) containsNullKey = true;
-		else key[pos] = k;
+		key[pos] = k;
 		value[pos] = v;
 #ifdef Linked
 		if (size == 0) {
@@ -1168,12 +1128,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	/** {@inheritDoc} */
 	@Override
-	public VALUE_GENERIC_TYPE gi_IF_ABSENT_JDK(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
+	public VALUE_GENERIC_TYPE COMPUTE_IF_ABSENT_JDK(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
 		java.util.Objects.requireNonNull(mappingFunction);
 		final int pos = find(k);
 		if (pos >= 0) return value[pos];
-		insert(-pos -1, k, VALUE_NARROWING(mappingFunction.JDK_PRIMITIVE_FUNCTION_APPLY(k)));
-		return defRetValue;
+		final VALUE_GENERIC_TYPE newValue = VALUE_NARROWING(mappingFunction.JDK_PRIMITIVE_FUNCTION_APPLY(k));
+		insert(-pos -1, k, newValue);
+		return newValue;
 	}
 
 #endif
@@ -1206,9 +1167,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			else removeEntry(pos);
 			return defRetValue;
 		}
-		final VALUE_GENERIC_TYPE oldValue = value[pos];
 		value[pos] = VALUE_CLASS2TYPE(newValue);
-		return oldValue;
+		return newValue;
 	}
 
 	/** {@inheritDoc} */
@@ -1227,12 +1187,11 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		if (pos < 0) {
 			insert(-pos - 1, k, VALUE_CLASS2TYPE(newValue));
-			return defRetValue;
+			return newValue;
 		}
 
-		final VALUE_GENERIC_TYPE oldValue = value[pos];
 		value[pos] = VALUE_CLASS2TYPE(newValue);
-		return oldValue;
+		return newValue;
 	}
 
 	/** {@inheritDoc} */
@@ -1245,7 +1204,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		final int pos = find(k);
 		if (pos < 0) {
 			insert(-pos - 1, k, v);
-			return defRetValue;
+			return v;
 		}
 
 #if VALUES_REFERENCE
@@ -1258,13 +1217,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(VALUE2OBJ(v), VALUE2OBJ(value[pos]));
 		if (newValue == null) {
-			if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return removeNullEntry();
-			else return removeEntry(pos);
+			if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) removeNullEntry();
+			else removeEntry(pos);
+			return defRetValue;
 		}
 
-		final VALUE_GENERIC_TYPE oldValue = value[pos];
 		value[pos] = VALUE_CLASS2TYPE(newValue);
-		return oldValue;
+		return newValue;
 	}
 
 
