@@ -325,7 +325,6 @@ public class Int2IntOpenHashMapTest {
 		assertEquals(1, m.get(1));
 		assertEquals(1, m.addTo(1, -2));
 		assertEquals(-1, m.get(1));
-
 	}
 
 	@Test

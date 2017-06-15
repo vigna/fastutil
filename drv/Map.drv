@@ -98,8 +98,9 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 *
 	 * <p><strong>Warning</strong>: Changing this to a non-null value can have
 	 * unforeseen consequences. Especially, it breaks compatibility with the
-	 * specifications of {@link java.util.Map}. It has to be used with great care
-	 * and thorough study of all method comments is recommended.
+	 * specifications of Java's {@link java.util.Map} interface. It has to be
+	 * used with great care and thorough study of all method comments is
+	 * recommended.
 	 *
 	 * @param rv the new default return value.
 	 * @see #defaultReturnValue()
@@ -248,7 +249,6 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	boolean containsKey(Object key);
 
 #endif
-
 
 #if VALUES_PRIMITIVE
 
@@ -401,7 +401,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @param key key with which the specified value is to be associated.
 	 * @param mappingFunction the function to compute a value.
 	 *
-	 * @return the current (existing or computed) value associated with the specified key, 
+	 * @return the current (existing or computed) value associated with the specified key,
 	 * or the {@linkplain #defaultReturnValue() default return value} if the computed value is {@code null}.
 	 *
 	 * @see java.util.Map#computeIfAbsent(Object, java.util.function.Function)
@@ -616,9 +616,9 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	default VALUE_GENERIC_CLASS replace(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value) {
 		KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
 #if VALUES_PRIMITIVE
-		return containsKey(k) ? put(k, VALUE_CLASS2TYPE(value)) : null;
+		return containsKey(k) ? VALUE2OBJ(put(k, VALUE_CLASS2TYPE(value))) : null;
 #else
-		return containsKey(k) ? VALUE2OBJ(put(k, VALUE_CLASS2TYPE(value))) : defaultReturnValue();
+		return containsKey(k) ? put(k, VALUE_CLASS2TYPE(value)) : defaultReturnValue();
 #endif
 	}
 
@@ -629,6 +629,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS computeIfAbsent(final KEY_GENERIC_CLASS key, final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> mappingFunction) {
+		java.util.Objects.requireNonNull(mappingFunction);
 		return VALUE2OBJ(computeIfAbsent(KEY_CLASS2TYPE(key), (FUNCTION KEY_GENERIC VALUE_GENERIC) k -> VALUE_CLASS2TYPE(mappingFunction.apply(KEY2OBJ(k)))));
 	}
 
