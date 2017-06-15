@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -495,4 +497,164 @@ public class Int2IntOpenHashMapTest {
 		fastIterator.remove();
 		assertEquals(m.get(key), -1);
 	}
+
+
+	@Test
+	public void testGetOrDefault() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(0, m.getOrDefault(0, 0));
+		m.put(0, 1);
+		assertEquals(1, m.getOrDefault(0, 0));
+		assertEquals(0, m.getOrDefault(1, 0));
+		m.put(1, 1);
+		assertEquals(1, m.getOrDefault(1, 2));
+	}
+
+	@Test
+	public void testPutIfAbsent() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.putIfAbsent(0, 0));
+		assertTrue(m.containsKey(0));
+		assertEquals(0, m.get(0));
+		assertEquals(0, m.putIfAbsent(0, 1));
+		assertEquals(0, m.get(0));
+	}
+
+	@Test
+	public void testRemoveWithValue() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertFalse(m.remove(0, 0));
+		m.put(0, 1);
+		assertFalse(m.remove(0, 0));
+		assertTrue(m.containsKey(0));
+		m.put(0, 0);
+		assertTrue(m.remove(0, 0));
+		assertFalse(m.containsKey(0));
+
+		assertFalse(m.remove(1, 0));
+		m.put(1, 1);
+		assertFalse(m.remove(1, 0));
+		assertTrue(m.containsKey(1));
+		m.put(1, 0);
+		assertTrue(m.remove(1, 0));
+		assertFalse(m.containsKey(1));
+}
+
+	@Test
+	public void testReplaceWithValue() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertFalse(m.replace(0, 0, 1));
+		m.put(0, 1);
+		assertFalse(m.replace(0, 0, 1));
+		assertEquals(1, m.get(0));
+		assertTrue(m.replace(0, 1, 0));
+		assertEquals(0, m.get(0));
+	}
+
+	@Test
+	public void testReplace() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.replace(0, 0));
+		m.put(0, 1);
+		assertEquals(1, m.replace(0, 0));
+		assertEquals(0, m.get(0));
+	}
+
+	@Test
+	public void testComputeIfAbsentPrimitive() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.computeIfAbsent(0, (IntUnaryOperator)(x) -> x + 1));
+		assertEquals(1, m.get(0));
+		assertEquals(1, m.computeIfAbsent(0, (IntUnaryOperator)(x) -> x + 2));
+		assertEquals(1, m.get(0));
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testComputeIfAbsentObject() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> x + 1));
+		assertEquals(1, m.get(0));
+		m.remove(0);
+		assertEquals(-1, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> x + 2));
+		assertEquals(2, m.get(0));
+		assertEquals(2, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> null));
+		m.remove(0);
+		assertEquals(-1, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> null));
+		assertEquals(-1, m.get(0));
+	}
+
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testComputeIfPresent() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.computeIfPresent(0, (x, y) -> x + y));
+		assertEquals(-1, m.get(0));
+		assertEquals(-1, m.computeIfPresent(0, (x, y) -> x + y));
+		m.put(0, 0);
+		assertEquals(-1, m.computeIfPresent(0, (x, y) -> null));
+		assertEquals(-1, m.get(0));
+
+		m.put(1, 1);
+		assertEquals(1, m.computeIfPresent(1, (x, y) -> x + y));
+		assertEquals(2, m.get(1));
+		assertEquals(-1, m.computeIfPresent(1, (x, y) -> null));
+		assertEquals(-1, m.get(1));
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testCompute() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.compute(0, (x, y) -> x + (y != null ? y : 1000)));
+		assertEquals(1000, m.get(0));
+		assertEquals(1000, m.compute(0, (x, y) -> x + y * 2));
+		assertEquals(2000, m.get(0));
+		assertEquals(-1, m.compute(0, (x, y) -> null));
+		assertEquals(-1, m.get(0));
+
+		assertEquals(-1, m.compute(1, (x, y) -> x + (y != null ? y : 1000)));
+		assertEquals(1001, m.get(1));
+		assertEquals(1001, m.compute(1, (x, y) -> x + y * 2));
+		assertEquals(2003, m.get(1));
+		assertEquals(-1, m.compute(1, (x, y) -> null));
+		assertEquals(-1, m.get(1));
+
+		assertEquals(-1, m.compute(2, (x, y) -> null));
+		assertEquals(-1, m.get(2));
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testMerge() {
+		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.merge(0, 0, (x, y) -> 1000));
+		assertEquals(0, m.get(0));
+		assertEquals(0, m.merge(0, 0, (x, y) -> 1000));
+		assertEquals(1000, m.get(0));
+		assertEquals(1000, m.merge(0, 0, (x, y) -> x + y * 2));
+		assertEquals(2000, m.get(0));
+		assertEquals(2000, m.merge(0, 0, (x, y) -> null));
+		assertEquals(-1, m.get(0));
+
+		assertEquals(-1, m.merge(1, 0, (x, y) -> 1000));
+		assertEquals(0, m.get(1));
+		assertEquals(0, m.merge(1, 0, (x, y) -> 1000));
+		assertEquals(1000, m.get(1));
+		assertEquals(1000, m.merge(1, 0, (x, y) -> x + y * 2));
+		assertEquals(2000, m.get(1));
+		assertEquals(2000, m.merge(1, 0, (x, y) -> null));
+		assertEquals(-1, m.get(1));
+}
 }
