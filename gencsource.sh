@@ -540,12 +540,18 @@ fi)\
 "#if KEYS_REFERENCE\n"\
 "#define GET_VALUE get${TYPE_STD[$v]}\n"\
 "#define REMOVE_VALUE remove${TYPE_STD[$v]}\n"\
+"#define COMPUTE_IF_ABSENT_JDK compute${TYPE_CAP[$v]}IfAbsent\n"\
+"#define COMPUTE_IF_ABSENT_GENERIC_VALUE compute${TYPE_CAP[$v]}IfAbsentNullable\n"\
+"#define COMPUTE_IF_ABSENT_FUNCTION compute${TYPE_CAP[$v]}IfAbsentPartial\n"\
 "#define COMPUTE compute${TYPE_STD[$v]}\n"\
 "#define COMPUTE_IF_PRESENT compute${TYPE_STD[$v]}IfPresent\n"\
 "#define MERGE merge${TYPE_STD[$v]}\n"\
 "#else\n"\
 "#define GET_VALUE get\n"\
 "#define REMOVE_VALUE remove\n"\
+"#define COMPUTE_IF_ABSENT_JDK computeIfAbsent\n"\
+"#define COMPUTE_IF_ABSENT_GENERIC_VALUE computeIfAbsentNullable\n"\
+"#define COMPUTE_IF_ABSENT_FUNCTION computeIfAbsentPartial\n"\
 "#define COMPUTE compute\n"\
 "#define COMPUTE_IF_PRESENT computeIfPresent\n"\
 "#define MERGE merge\n"\
@@ -621,6 +627,7 @@ fi)\
 "#define KEY_OBJ2TYPE(x) (x)\n"\
 "#define KEY_CLASS2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
+"#define KEY_OBJ2GENERIC(x) (K)(x)\n"\
 \
 "#ifdef Custom\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(x) )\n"\
@@ -655,9 +662,10 @@ fi)\
 \
 "#define REMOVE rem\n"\
 \
-"#define KEY_CLASS2TYPE(x) ((x).KEY_VALUE())\n"\
+"#define KEY_CLASS2TYPE(x) (x).KEY_VALUE()\n"\
 "#define KEY_OBJ2TYPE(x) KEY_CLASS2TYPE((KEY_CLASS)(x))\n"\
-"#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
+"#define KEY2OBJ(x) KEY_CLASS.valueOf(x)\n"\
+"#define KEY_OBJ2GENERIC(x) KEY_OBJ2TYPE(x)\n"\
 \
 "#if KEY_CLASS_Boolean\n"\
 "#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
@@ -756,9 +764,9 @@ fi)\
 "/* Primitive-type-only definitions (values) */\n"\
 \
 \
-"#define VALUE_CLASS2TYPE(x) ((x).VALUE_VALUE())\n"\
+"#define VALUE_CLASS2TYPE(x) (x).VALUE_VALUE()\n"\
 "#define VALUE_OBJ2TYPE(x) VALUE_CLASS2TYPE((VALUE_CLASS)(x))\n"\
-"#define VALUE2OBJ(x) (VALUE_CLASS.valueOf(x))\n"\
+"#define VALUE2OBJ(x) VALUE_CLASS.valueOf(x)\n"\
 \
 "#if VALUE_CLASS_Float || VALUE_CLASS_Double || VALUE_CLASS_Long\n"\
 "#define VALUE_NULL (0)\n"\

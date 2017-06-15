@@ -29,7 +29,6 @@ public final class FUNCTIONS {
 
 	private FUNCTIONS() {}
 
-
 	/** An immutable class representing an empty type-specific function.
 	 *
 	 * <p>This class may be useful to implement your own in case you subclass
@@ -357,4 +356,85 @@ public final class FUNCTIONS {
 	 * @see java.util.Collections#unmodifiableMap(java.util.Map)
 	 */
 	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC unmodifiable(final FUNCTION KEY_VALUE_GENERIC f) { return new UnmodifiableFunction KEY_VALUE_GENERIC_DIAMOND(f); }
+
+
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
+	/** An adapter for mapping generic total functions to partial primitive functions. */
+
+	public static class PrimitiveFunction KEY_VALUE_GENERIC implements FUNCTION KEY_VALUE_GENERIC {
+		protected final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> function;
+
+		protected PrimitiveFunction(java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> function) {
+			this.function = function;
+		}
+
+#if KEYS_PRIMITIVE
+		@Override
+		public boolean containsKey(KEY_GENERIC_TYPE key) { return function.apply(KEY2OBJ(key)) != null; }
+#endif
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean containsKey(Object key) {
+#if KEYS_PRIMITIVE
+			if (key == null) return false;
+#endif
+			return function.apply(KEY_OBJ2GENERIC(key)) != null;
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public VALUE_GENERIC_TYPE GET_VALUE(KEY_TYPE key) {
+			VALUE_GENERIC_CLASS v = function.apply(KEY_OBJ2GENERIC(key));
+			if (v == null) return defaultReturnValue();
+			return VALUE_CLASS2TYPE(v);
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS get(Object key) {
+#if KEYS_PRIMITIVE
+			if (key == null) return defaultReturnValue();
+#endif
+			return VALUE2OBJ(function.apply(KEY_OBJ2GENERIC(key)));
+		}
+
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS put(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value) { throw new UnsupportedOperationException(); }
+	}
+
+	/** Returns a (partial) type-specific function based on the given total generic function.
+	 * <p>The returned function contains all keys which are not mapped to {@code null}. If the function already
+	 * is a primitive function, it is returned without changes.
+	 * <p><strong>Warning</strong>: If the given function is a "widened" primitive function (e.g. an
+	 * {@code Int2IntFunction} given to {@code Short2ShortFunctions}), it still is wrapped into a proxy,
+	 * decreasing performance.
+	 *
+	 * @param f the function to be converted to a type-specific function.
+	 * @return a primitive view of the specified function.
+	 * @see PrimitiveFunction
+	 */
+	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC primitive(final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> f) {
+		if (f instanceof FUNCTION) return (FUNCTION KEY_VALUE_GENERIC) f;
+#if defined JDK_PRIMITIVE_FUNCTION
+		if (f instanceof JDK_PRIMITIVE_FUNCTION)
+#if KEYS_PRIMITIVE
+#if VALUE_WIDENED
+			return key -> VALUE_NARROWING(((JDK_PRIMITIVE_FUNCTION KEY_VALUE_GENERIC) f).JDK_PRIMITIVE_FUNCTION_APPLY(key));
+#else
+			return ((JDK_PRIMITIVE_FUNCTION KEY_VALUE_GENERIC) f)::JDK_PRIMITIVE_FUNCTION_APPLY;
+#endif
+#else
+			return key -> VALUE_NARROWING(((JDK_PRIMITIVE_FUNCTION KEY_VALUE_GENERIC) f).JDK_PRIMITIVE_FUNCTION_APPLY((K)(key)));
+#endif
+#endif
+		return new PrimitiveFunction KEY_VALUE_GENERIC_DIAMOND(f);
+	}
+#endif
 }

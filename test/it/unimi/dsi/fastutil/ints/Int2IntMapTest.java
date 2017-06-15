@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.IntUnaryOperator;
 import org.junit.Test;
 
 public class Int2IntMapTest {
@@ -136,15 +135,33 @@ public class Int2IntMapTest {
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
-		assertEquals(1, m.computeIfAbsent(1, (IntUnaryOperator) key -> key * 2));
-		assertEquals(4, m.computeIfAbsent(2, (IntUnaryOperator) key -> key * 2));
-		assertEquals(4, m.computeIfAbsent(2, (IntUnaryOperator) key -> key * 3));
+		assertEquals(1, m.computeIfAbsent(1, key -> key * 2));
+		assertEquals(4, m.computeIfAbsent(2, key -> key * 2));
+		assertEquals(4, m.computeIfAbsent(2, key -> key * 3));
 		assertEquals(4, m.get(2));
+
+		assertEquals(1, m.computeIfAbsentNullable(1, key -> null));
+		assertEquals(4, m.computeIfAbsentNullable(2, key -> null));
+		assertEquals(4, m.computeIfAbsentNullable(2, key -> null));
+		assertEquals(2, m.size());
+
+		m.clear();
+		assertEquals(-1, m.computeIfAbsentNullable(1, key -> null));
+
+		Int2IntFunction f = new SimpleInt2IntMap(new Int2IntArrayMap());
+		f.defaultReturnValue(1);
+		f.put(1, 1);
+
+		assertEquals(1, m.computeIfAbsentPartial(1, f));
+		assertEquals(-1, m.computeIfAbsentPartial(2, f));
+		f.put(2, 2);
+		assertEquals(2, m.computeIfAbsentPartial(2, f));
 
 		assertEquals(Integer.valueOf(1), m.computeIfAbsent(Integer.valueOf(1), key -> key * 2));
 		assertEquals(Integer.valueOf(6), m.computeIfAbsent(Integer.valueOf(3), key -> key * 2));
 		assertEquals(Integer.valueOf(6), m.computeIfAbsent(Integer.valueOf(3), key -> key * 3));
-		assertEquals(Integer.valueOf(4), m.get(Integer.valueOf(2)));
+		assertEquals(Integer.valueOf(1), m.get(Integer.valueOf(1)));
+		assertEquals(Integer.valueOf(2), m.get(Integer.valueOf(2)));
 		assertEquals(Integer.valueOf(6), m.get(Integer.valueOf(3)));
 	}
 
