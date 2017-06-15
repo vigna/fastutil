@@ -334,7 +334,7 @@ fi)\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n"\
 "#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n"\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n"\
-"#define KEY_CONSUMER ${TYPE_CAP2[$k]}Consumer\n"\
+"#define KEY_CONSUMER ${TYPE_STD[$k]}Consumer\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n"\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n"\
