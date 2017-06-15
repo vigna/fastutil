@@ -567,18 +567,60 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		if (size++ >= maxFill) rehash(arraySize(size + 1, f));
 		if (ASSERTS) checkTable();
-		return -1;
+		return -pos - 1;
 	}
+
+	private int find(final KEY_GENERIC_TYPE k) {
+		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return containsNullKey ? n : -(n + 1);
+
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[] key = this.key;
+		int pos;
+
+		// The starting point.
+		if (KEY_IS_NULL(curr = key[pos = KEY2INTHASH_CAST(k) & mask])) return -(pos + 1);
+		if (KEY_EQUALS_NOT_NULL_CAST(k, curr)) return pos;
+		// There's always an unused entry.
+		while(true) {
+			if (KEY_IS_NULL(curr = key[pos = (pos + 1) & mask])) return -(pos + 1);
+			if (KEY_EQUALS_NOT_NULL_CAST(k, curr)) return pos;
+		}
+	}
+
+
+	private void insert(final int pos, final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
+		if (pos == n) containsNullKey = true;
+		else key[pos] = k;
+		value[pos] = v;
+#ifdef Linked
+		if (size == 0) {
+			first = last = pos;
+			// Special case of SET_UPPER_LOWER(link[pos], -1, -1);
+			link[pos] = -1L;
+		}
+		else {
+			SET_NEXT(link[last], pos);
+			SET_UPPER_LOWER(link[pos], last, -1);
+			last = pos;
+		}
+#endif
+
+		if (size++ >= maxFill) rehash(arraySize(size + 1, f));
+		if (ASSERTS) checkTable();
+	}
+
 
 	@Override
 	public VALUE_GENERIC_TYPE put(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
-		final int pos = insert(k, v);
-		if (pos < 0) return defRetValue;
+		final int pos = find(k);
+		if (pos < 0) {
+			insert(-pos - 1, k, v);
+			return defRetValue;
+		}
 		final VALUE_GENERIC_TYPE oldValue = value[pos];
 		value[pos] = v;
 		return oldValue;
 	}
-
 
 #if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Char || VALUE_CLASS_Integer || VALUE_CLASS_Long || VALUE_CLASS_Float || VALUE_CLASS_Double
 
@@ -1041,6 +1083,198 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		for(int i = n; i-- != 0;) if (! KEY_IS_NULL(key[i]) && VALUE_EQUALS(value[i], v)) return true;
 		return false;
 	}
+
+
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE GET_VALUE_OR_DEFAULT(final KEY_TYPE k, final VALUE_GENERIC_TYPE defaultValue) {
+		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return containsNullKey ? value[n] : defaultValue;
+
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[] key = this.key;
+		int pos;
+
+		// The starting point.
+		if (KEY_IS_NULL(curr = key[pos = KEY2INTHASH_CAST(k) & mask])) return defaultValue;
+		if (KEY_EQUALS_NOT_NULL_CAST(k, curr)) return value[pos];
+		// There's always an unused entry.
+		while(true) {
+			if (KEY_IS_NULL(curr = key[pos = (pos + 1) & mask])) return defaultValue;
+			if (KEY_EQUALS_NOT_NULL_CAST(k, curr)) return value[pos];
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE putIfAbsent(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
+		final int pos = find(k);
+		if (pos >= 0) return value[pos];
+		insert(-pos - 1, k, v);
+		return defRetValue;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public boolean remove(final KEY_TYPE k, final VALUE_TYPE v) {
+		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) {
+			if (containsNullKey && VALUE_EQUALS(v, value[n])) {
+				removeNullEntry();
+				return true;
+			}
+			return false;
+		}
+
+		KEY_GENERIC_TYPE curr;
+		final KEY_GENERIC_TYPE[] key = this.key;
+		int pos;
+
+		// The starting point.
+		if (KEY_IS_NULL(curr = key[pos = KEY2INTHASH_CAST(k) & mask])) return false;
+		if (KEY_EQUALS_NOT_NULL_CAST(k, curr) && VALUE_EQUALS(v, value[pos])) {
+			removeEntry(pos);
+			return true;
+		}
+		while(true) {
+			if (KEY_IS_NULL(curr = key[pos = (pos + 1) & mask])) return false;
+			if (KEY_EQUALS_NOT_NULL_CAST(k, curr) && VALUE_EQUALS(v, value[pos])) {
+				removeEntry(pos);
+				return true;
+			}
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public boolean replace(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE oldValue, final VALUE_GENERIC_TYPE v) {
+		final int pos = find(k);
+		if (pos < 0 || ! VALUE_EQUALS(oldValue, value[pos])) return false;
+		value[pos] = v;
+		return true;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE replace(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v) {
+		final int pos = find(k);
+		if (pos < 0) return defRetValue;
+		final VALUE_GENERIC_TYPE oldValue = value[pos];
+		value[pos] = v;
+		return oldValue;
+	}
+
+#ifdef JDK_PRIMITIVE_FUNCTION
+
+	/** {@inheritDoc} */
+	@Override
+#ifdef JDK_PRIMITIVE_FUNCTION
+	@SuppressWarnings("overloads")
+#endif
+	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
+		java.util.Objects.requireNonNull(mappingFunction);
+		final int pos = find(k);
+		if (pos >= 0) return value[pos];
+		insert(-pos -1, k, VALUE_NARROWING(mappingFunction.JDK_PRIMITIVE_FUNCTION_APPLY(k)));
+		return defRetValue;
+	}
+
+#endif
+
+#if KEYS_PRIMITIVE && VALUES_PRIMITIVE
+
+	/** {@inheritDoc} */
+	@Override
+#ifdef JDK_PRIMITIVE_FUNCTION
+	@SuppressWarnings("overloads")
+#endif
+	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE k, final JDK_KEY_TO_GENERIC_FUNCTION<? extends VALUE_GENERIC_CLASS> mappingFunction) {
+		java.util.Objects.requireNonNull(mappingFunction);
+		final int pos = find(k);
+		if (pos >= 0) return value[pos];
+		final VALUE_GENERIC_CLASS newValue = mappingFunction.apply(k);
+		if (newValue == null) return defRetValue;
+		insert(-pos - 1, k, VALUE_CLASS2TYPE(newValue));
+		return defRetValue;
+	}
+
+#endif
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE COMPUTE_IF_PRESENT(final KEY_GENERIC_TYPE k, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		final int pos = find(k);
+		if (pos < 0) return defRetValue;
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), VALUE2OBJ(value[pos]));
+		if (newValue == null) {
+			if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) removeNullEntry();
+			else removeEntry(pos);
+			return defRetValue;
+		}
+		final VALUE_GENERIC_TYPE oldValue = value[pos];
+		value[pos] = VALUE_CLASS2TYPE(newValue);
+		return oldValue;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE COMPUTE(final KEY_GENERIC_TYPE k, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		final int pos = find(k);
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), pos >= 0 ? VALUE2OBJ(value[pos]) : null);
+		if (newValue == null) {
+			if (pos >= 0) {
+				if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) removeNullEntry();
+				else removeEntry(pos);
+			}
+			return defRetValue;
+		}
+	
+		if (pos < 0) {
+			insert(-pos - 1, k, VALUE_CLASS2TYPE(newValue));
+			return defRetValue;
+		}
+	
+		final VALUE_GENERIC_TYPE oldValue = value[pos];
+		value[pos] = VALUE_CLASS2TYPE(newValue);
+		return oldValue;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE MERGE(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+#if VALUES_REFERENCE
+		java.util.Objects.requireNonNull(value);
+#endif
+		final int pos = find(k);
+		if (pos < 0) {
+			insert(-pos - 1, k, v);
+			return defRetValue;
+		}
+
+#if VALUES_REFERENCE
+		if (value[pos] == null) {
+			final VALUE_GENERIC_TYPE oldValue = value[pos];
+			value[pos] = v;
+			return oldValue;
+		}
+#endif
+
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(VALUE2OBJ(v), VALUE2OBJ(value[pos]));
+		if (newValue == null) {
+			if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return removeNullEntry();
+			else return removeEntry(pos);
+		}
+
+		final VALUE_GENERIC_TYPE oldValue = value[pos];
+		value[pos] = VALUE_CLASS2TYPE(newValue);
+		return oldValue;
+	}
+
+
+#endif
 
 	/* Removes all elements from this map.
 	 *
