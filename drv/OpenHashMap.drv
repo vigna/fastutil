@@ -25,6 +25,7 @@ import static it.unimi.dsi.fastutil.HashCommon.maxFill;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
@@ -1990,6 +1991,23 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			OPEN_HASH_MAP.this.clear();
 		}
 
+		/** {@inheritDoc} */
+		@Override
+		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			ABSTRACT_MAP.BasicEntry entry = new ABSTRACT_MAP.BasicEntry();
+			if (containsNullKey) {
+				entry.key = key[n];
+				entry.value = value[n];
+				consumer.accept(entry);
+			}
+			for(int pos = n; --pos != 0;)
+				if (! KEY_IS_NULL(key[pos])) {
+					entry.key = key[pos];
+					entry.value = value[pos];
+					consumer.accept(entry);
+				}
+		}
+
 #ifdef Linked
 		/** Returns a type-specific list iterator on the elements in this set, starting from a given element of the set.
 		 * Please see the class documentation for implementation details.
@@ -2041,7 +2059,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		return entries;
 	}
 
-
 	/** An iterator on keys.
 	 *
 	 * <p>We simply override the {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods
@@ -2081,6 +2098,20 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		@Override
 		public KEY_ITERATOR KEY_GENERIC iterator() { return new KeyIterator(); }
 #endif
+
+		/** {@inheritDoc} */
+		@Override
+#ifdef JDK_PRIMITIVE_CONSUMER
+		public void forEach(final JDK_PRIMITIVE_CONSUMER consumer) {
+#else
+		public void forEach(final KEY_CONSUMER KEY_SUPER_GENERIC consumer) {
+#endif
+			if (containsNullKey) consumer.accept(key[n]);
+			for(int pos = n; --pos != 0;) {
+				final KEY_GENERIC_TYPE k = key[pos];
+				if (! KEY_IS_NULL(k)) consumer.accept(k);
+			}
+		}
 
 		@Override
 		public int size() { return size; }

@@ -183,7 +183,7 @@ $(COMPARATORS): drv/Comparator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COMPARATORS)
 
-CONSUMERS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Consumer.c)
+CONSUMERS := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Consumer.c)
 $(CONSUMERS): drv/Consumer.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(CONSUMERS)
