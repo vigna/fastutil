@@ -560,6 +560,9 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS getOrDefault(final Object key, final VALUE_GENERIC_CLASS defaultValue) {
+#if KEYS_PRIMITIVE
+		if (key == null) return defaultValue;
+#endif
 		final KEY_TYPE k = KEY_OBJ2TYPE(key);
 		final VALUE_GENERIC_TYPE v;
 		return ((v = GET_VALUE(k)) != defaultReturnValue() || containsKey(k)) ? VALUE2OBJ(v) : defaultValue;
@@ -570,7 +573,15 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS putIfAbsent(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value) {
-		return VALUE2OBJ(putIfAbsent(KEY_CLASS2TYPE(key), VALUE_CLASS2TYPE(value)));
+#if VALUES_PRIMITIVE
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+		final VALUE_GENERIC_TYPE v = GET_VALUE(k);
+		if (v != defaultReturnValue() || containsKey(k)) return v;
+		put(key, value);
+		return null;
+#else
+		return putIfAbsent(KEY_CLASS2TYPE(key), VALUE_CLASS2TYPE(value));
+#endif
 	}
 
   /** {@inheritDoc}
@@ -594,7 +605,12 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS replace(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value) {
-		return VALUE2OBJ(replace(KEY_CLASS2TYPE(key), VALUE_CLASS2TYPE(value)));
+		KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+#if VALUES_PRIMITIVE
+		return containsKey(k) ? put(k, VALUE_CLASS2TYPE(value)) : null;
+#else
+		return containsKey(k) ? put(k, VALUE_CLASS2TYPE(value)) : defaultReturnValue();
+#endif
 	}
 
 #if KEYS_PRIMITIVE

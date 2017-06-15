@@ -5,19 +5,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.function.IntFunction;
-import java.util.function.IntUnaryOperator;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -38,7 +35,6 @@ public class Int2IntOpenHashMapTest {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap(new int[] { 1, 2 },  new int[] { 1, 2 });
 		assertFalse(m.equals(new Object2ObjectOpenHashMap<Integer,Integer>(new Integer[] { 1, null }, new Integer[] { 1, 1 })));
 	}
-
 
 	@Test
 	public void testStrangeRetainAllCase() {
@@ -105,7 +101,6 @@ public class Int2IntOpenHashMapTest {
 		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, null)));
 		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
 	}
-
 
 	private static java.util.Random r = new java.util.Random(0);
 
@@ -468,9 +463,6 @@ public class Int2IntOpenHashMapTest {
 		assertEquals(keys, t);
 	}
 
-
-
-
 	@Test
 	public void testint2IntEntrySet() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
@@ -569,9 +561,9 @@ public class Int2IntOpenHashMapTest {
 	public void testComputeIfAbsentPrimitive() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.defaultReturnValue(-1);
-		assertEquals(-1, m.computeIfAbsent(0, (IntUnaryOperator)(x) -> x + 1));
+		assertEquals(-1, m.computeIfAbsent(0, (x) -> x + 1));
 		assertEquals(1, m.get(0));
-		assertEquals(1, m.computeIfAbsent(0, (IntUnaryOperator)(x) -> x + 2));
+		assertEquals(1, m.computeIfAbsent(0, (x) -> x + 2));
 		assertEquals(1, m.get(0));
 	}
 
@@ -580,14 +572,14 @@ public class Int2IntOpenHashMapTest {
 	public void testComputeIfAbsentObject() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.defaultReturnValue(-1);
-		assertEquals(-1, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> x + 1));
+		assertEquals(-1, m.computeIfAbsentNullable(0, x -> x + 1));
 		assertEquals(1, m.get(0));
 		m.remove(0);
-		assertEquals(-1, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> x + 2));
+		assertEquals(-1, m.computeIfAbsentNullable(0, x -> x + 2));
 		assertEquals(2, m.get(0));
-		assertEquals(2, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> null));
+		assertEquals(2, m.computeIfAbsentNullable(0, x -> null));
 		m.remove(0);
-		assertEquals(-1, m.computeIfAbsent(0, (IntFunction<? extends Integer>)(x) -> null));
+		assertEquals(-1, m.computeIfAbsentNullable(0, x -> null));
 		assertEquals(-1, m.get(0));
 	}
 

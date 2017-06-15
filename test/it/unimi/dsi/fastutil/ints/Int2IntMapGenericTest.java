@@ -5,16 +5,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import it.unimi.dsi.fastutil.objects.ObjectSet;
-import java.util.Map;
 import java.util.function.BiFunction;
 import org.junit.Test;
 
-public class Int2IntMapTest {
+public abstract class Int2IntMapGenericTest {
+	protected Int2IntMap m;
+
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultGetOrDefault() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.put(1, 1);
 
 		assertEquals(1, m.getOrDefault(0, 1));
@@ -27,7 +26,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultPutIfAbsent() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -46,7 +44,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultRemove() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -74,7 +71,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultReplaceTernary() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -103,7 +99,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultReplaceBinary() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -131,7 +126,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings({ "deprecation", "boxing" })
 	@Test
 	public void testDefaultComputeIfAbsent() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -148,7 +142,7 @@ public class Int2IntMapTest {
 		m.clear();
 		assertEquals(-1, m.computeIfAbsentNullable(1, key -> null));
 
-		Int2IntFunction f = new SimpleInt2IntMap(new Int2IntArrayMap());
+		Int2IntFunction f = new Int2IntArrayMap();
 		f.defaultReturnValue(1);
 		f.put(1, 1);
 
@@ -168,7 +162,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testDefaultComputeIfPresent() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -183,7 +176,6 @@ public class Int2IntMapTest {
 
 	@Test
 	public void testDefaultCompute() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 
 		assertEquals(1, m.compute(1, (key, value) -> {
@@ -202,7 +194,6 @@ public class Int2IntMapTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testDefaultMerge() {
-		Int2IntMap m = new SimpleInt2IntMap(new Int2IntArrayMap());
 		m.defaultReturnValue(-1);
 
 		BiFunction<Integer, Integer, Integer> add = (key, value) -> key + value;
@@ -217,83 +208,5 @@ public class Int2IntMapTest {
 		assertEquals(-1, m.merge(2, 2, (key, value) -> null));
 
 		assertTrue(m.isEmpty());
-	}
-
-	private static final class SimpleInt2IntMap implements Int2IntMap {
-		private final Int2IntMap delegate;
-
-		SimpleInt2IntMap(Int2IntMap delegate) {
-			this.delegate = delegate;
-		}
-
-		@Override
-		public void clear() {
-			delegate.clear();
-		}
-
-		@Override
-		public boolean containsKey(int key) {
-			return delegate.containsKey(key);
-		}
-
-		@Override
-		public boolean containsValue(int value) {
-			return delegate.containsValue(value);
-		}
-
-		@Override
-		public void defaultReturnValue(int rv) {
-			delegate.defaultReturnValue(rv);
-		}
-
-		@Override
-		public int defaultReturnValue() {
-			return delegate.defaultReturnValue();
-		}
-
-		@Override
-		public int get(int key) {
-			return delegate.get(key);
-		}
-
-		@Override
-		public ObjectSet<Entry> int2IntEntrySet() {
-			return delegate.int2IntEntrySet();
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return delegate.isEmpty();
-		}
-
-		@Override
-		public IntSet keySet() {
-			return delegate.keySet();
-		}
-
-		@Override
-		public int put(int key, int value) {
-			return delegate.put(key, value);
-		}
-
-		@Override
-		public void putAll(Map<? extends Integer, ? extends Integer> m) {
-			delegate.putAll(m);
-		}
-
-		@Override
-		public int remove(int key) {
-			return delegate.remove(key);
-		}
-
-		@Override
-		public int size() {
-			return delegate.size();
-		}
-
-		@Override
-		public IntCollection values() {
-			return delegate.values();
-		}
 	}
 }
