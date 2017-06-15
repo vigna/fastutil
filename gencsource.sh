@@ -539,14 +539,12 @@ fi)\
 \
 "#if KEYS_REFERENCE\n"\
 "#define GET_VALUE get${TYPE_STD[$v]}\n"\
-"#define GET_VALUE_OR_DEFAULT get${TYPE_STD[$v]}OrDefault\n"\
 "#define REMOVE_VALUE remove${TYPE_STD[$v]}\n"\
 "#define COMPUTE compute${TYPE_STD[$v]}\n"\
 "#define COMPUTE_IF_PRESENT compute${TYPE_STD[$v]}IfPresent\n"\
 "#define MERGE merge${TYPE_STD[$v]}\n"\
 "#else\n"\
 "#define GET_VALUE get\n"\
-"#define GET_VALUE_OR_DEFAULT getOrDefault\n"\
 "#define REMOVE_VALUE remove\n"\
 "#define COMPUTE compute\n"\
 "#define COMPUTE_IF_PRESENT computeIfPresent\n"\
@@ -658,7 +656,7 @@ fi)\
 "#define REMOVE rem\n"\
 \
 "#define KEY_CLASS2TYPE(x) ((x).KEY_VALUE())\n"\
-"#define KEY_OBJ2TYPE(x) (KEY_CLASS2TYPE((KEY_CLASS)(x)))\n"\
+"#define KEY_OBJ2TYPE(x) KEY_CLASS2TYPE((KEY_CLASS)(x))\n"\
 "#define KEY2OBJ(x) (KEY_CLASS.valueOf(x))\n"\
 \
 "#if KEY_CLASS_Boolean\n"\
@@ -759,7 +757,7 @@ fi)\
 \
 \
 "#define VALUE_CLASS2TYPE(x) ((x).VALUE_VALUE())\n"\
-"#define VALUE_OBJ2TYPE(x) (VALUE_CLASS2TYPE((VALUE_CLASS)(x)))\n"\
+"#define VALUE_OBJ2TYPE(x) VALUE_CLASS2TYPE((VALUE_CLASS)(x))\n"\
 "#define VALUE2OBJ(x) (VALUE_CLASS.valueOf(x))\n"\
 \
 "#if VALUE_CLASS_Float || VALUE_CLASS_Double || VALUE_CLASS_Long\n"\
