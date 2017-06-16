@@ -571,10 +571,10 @@ public class Int2IntOpenHashMapTest {
 	public void testComputeIfAbsentObject() {
 		Int2IntOpenHashMap m = new Int2IntOpenHashMap();
 		m.defaultReturnValue(-1);
-		assertEquals(-1, m.computeIfAbsentNullable(0, x -> x + 1));
+		assertEquals(1, m.computeIfAbsentNullable(0, x -> x + 1));
 		assertEquals(1, m.get(0));
 		m.remove(0);
-		assertEquals(-1, m.computeIfAbsentNullable(0, x -> x + 2));
+		assertEquals(2, m.computeIfAbsentNullable(0, x -> x + 2));
 		assertEquals(2, m.get(0));
 		assertEquals(2, m.computeIfAbsentNullable(0, x -> null));
 		m.remove(0);

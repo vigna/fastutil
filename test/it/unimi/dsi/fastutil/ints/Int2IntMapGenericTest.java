@@ -672,10 +672,6 @@ public abstract class Int2IntMapGenericTest {
 		final Set<Int2IntMap.Entry> s = new HashSet<>();
 		Int2IntMaps.fastForEach(m, (x) -> { s.add(new AbstractInt2IntMap.BasicEntry(x.getIntKey(), x.getIntValue())); });
 		assertEquals(m.int2IntEntrySet(), s);
-
-		s.clear();
-		Int2IntMaps.fastForEach(m, (x) -> { s.add(x); });
-		assertEquals(1, s.size()); // Should be always the same entry, mutated
 	}
 
 	@Test
