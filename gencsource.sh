@@ -128,7 +128,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 		echo "#define KEYS_PRIMITIVE 1\\n";\
 		echo "#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\\n";\
 		if [[ "${CLASS[$k]}" != "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
+			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
 		fi\
@@ -144,6 +144,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	echo "#define VALUE_CLASS_${CLASS[$v]} 1\\n";\
 	if [[ "${CLASS[$v]}" != "Object" && "${CLASS[$v]}" != "Reference" ]]; then\
 		echo "#define VALUES_PRIMITIVE 1\\n";\
+		if [[ "${CLASS[$v]}" != "Boolean" ]]; then\
+			echo "#define JDK_PRIMITIVE_VALUE_CONSUMER java.util.function.${TYPE_CAP[$wv]}Consumer\\n";\
+		fi\
 	else\
 		echo "#define VALUES_REFERENCE 1\\n";\
 	fi;\
@@ -252,6 +255,7 @@ fi)\
 "#define VALUE_GENERIC <V>\n"\
 "#define VALUE_GENERIC_DIAMOND <>\n"\
 "#define VALUE_EXTENDS_GENERIC <? extends V>\n"\
+"#define VALUE_SUPER_GENERIC <? super V>\n"\
 "#define VALUE_GENERIC_CAST (V)\n"\
 "#define VALUE_GENERIC_ARRAY_CAST (V[])\n"\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
@@ -264,6 +268,7 @@ fi)\
 "#define VALUE_GENERIC\n"\
 "#define VALUE_GENERIC_DIAMOND\n"\
 "#define VALUE_EXTENDS_GENERIC\n"\
+"#define VALUE_SUPER_GENERIC\n"\
 "#define VALUE_GENERIC_CAST\n"\
 "#define VALUE_GENERIC_ARRAY_CAST\n"\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED\n"\
@@ -350,6 +355,7 @@ fi)\
 \
 "#define VALUE_COLLECTION ${TYPE_CAP[$v]}Collection\n"\
 "#define VALUE_ARRAY_SET ${TYPE_CAP[$v]}ArraySet\n"\
+"#define VALUE_CONSUMER ${TYPE_STD[$v]}Consumer\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP2[$v]}Iterator\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
 \
