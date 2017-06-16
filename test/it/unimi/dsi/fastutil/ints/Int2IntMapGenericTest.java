@@ -690,4 +690,22 @@ public abstract class Int2IntMapGenericTest {
 		assertEquals(s, new IntOpenHashSet(m.values()));
 	}
 
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testKeySetIteratorForEachObject() {
+		for(int i = 0; i < 100; i++) m.put(i, i);
+		final IntOpenHashSet s = new IntOpenHashSet();
+		m.keySet().forEach((Integer x) -> { s.add(x); });
+		assertEquals(s, m.keySet());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testValueSetIteratorForEachObject() {
+		for(int i = 0; i < 100; i++) m.put(i, i);
+		final IntOpenHashSet s = new IntOpenHashSet();
+		m.values().forEach((Integer x) -> { s.add(x); });
+		assertEquals(s, new IntOpenHashSet(m.values()));
+	}
+
 }
