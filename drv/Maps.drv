@@ -29,6 +29,7 @@ import VALUE_PACKAGE.VALUE_SETS;
 #endif
 
 import java.util.Map;
+import java.util.function.Consumer;
 import PACKAGE.MAP.FastEntrySet;
 
 /** A class providing static methods and objects that do useful things with type-specific maps.
@@ -51,6 +52,18 @@ public final class MAPS {
 		return entries instanceof MAP.FastEntrySet ? ((MAP.FastEntrySet KEY_VALUE_GENERIC) entries).fastIterator() : entries.iterator();
 	}
 
+	/** Iterates {@linkplain FastEntrySet#fastForEach(Consumer) quickly}, if possible, on the {@linkplain Map#entrySet() entry set} of the provided {@code map}.
+	 * @param map a map on which we will try to iterate {@linkplain FastEntrySet#fastForEach(Consumer) quickly}.
+	 * @param consumer the consumer that will be passed to  {@link FastEntrySet#fastForEach(Consumer)}, if possible, or to {@link Iterable#forEach(Consumer)}.
+	 * @since 8.1.0
+	 */
+	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+	public static KEY_VALUE_GENERIC void fastForEach(MAP KEY_VALUE_GENERIC map, final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+		final ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entries = map.ENTRYSET();
+		if (entries instanceof MAP.FastEntrySet) ((MAP.FastEntrySet KEY_VALUE_GENERIC) entries).fastForEach(consumer);
+		else entries.forEach(consumer);
+	}
+
 	/** Returns an iterable yielding an iterator that will be {@linkplain FastEntrySet fast}, if possible, on the {@linkplain Map#entrySet() entry set} of the provided {@code map}.
 	 * @param map a map from which we will try to extract an iterable yielding a (fast) iterator on the entry set.
 	 * @return an iterable  yielding an iterator on the entry set of the given map that will be
@@ -60,7 +73,10 @@ public final class MAPS {
 	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 	public static KEY_VALUE_GENERIC ObjectIterable<MAP.Entry KEY_VALUE_GENERIC> fastIterable(MAP KEY_VALUE_GENERIC map) {
 		final ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entries = map.ENTRYSET();
-		return entries instanceof MAP.FastEntrySet ? ((MAP.FastEntrySet KEY_VALUE_GENERIC) entries)::fastIterator : entries;
+		return entries instanceof MAP.FastEntrySet ? new ObjectIterable<MAP.Entry KEY_VALUE_GENERIC>() {
+			public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() { return ((MAP.FastEntrySet KEY_VALUE_GENERIC)entries).fastIterator(); }
+			public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) { ((MAP.FastEntrySet KEY_VALUE_GENERIC)entries).fastForEach(consumer); }
+		} : entries;
 	}
 
 	/** An immutable class representing an empty type-specific map.

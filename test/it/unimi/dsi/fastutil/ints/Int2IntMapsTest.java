@@ -3,6 +3,7 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
+import java.util.HashSet;
 
 import org.junit.Test;
 
@@ -50,5 +51,8 @@ public class Int2IntMapsTest {
 		e = fastIterator.next();
 		assertSame(e, fastIterator.next());
 
+		HashSet<Int2IntMap.Entry> s = new HashSet<>();
+		Int2IntMaps.fastIterable(m).forEach((x) -> { s.add(x); });
+		assertEquals(1, s.size()); // Should be always the same entry, mutated
 	}
 }

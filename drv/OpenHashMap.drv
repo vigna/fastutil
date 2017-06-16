@@ -1147,8 +1147,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		if (pos >= 0) return value[pos];
 		final VALUE_GENERIC_CLASS newValue = mappingFunction.apply(k);
 		if (newValue == null) return defRetValue;
-		insert(-pos - 1, k, VALUE_CLASS2TYPE(newValue));
-		return defRetValue;
+		final VALUE_GENERIC_TYPE v = VALUE_CLASS2TYPE(newValue);
+		insert(-pos - 1, k, v);
+		return v;
 	}
 
 #endif
@@ -1989,13 +1990,21 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** {@inheritDoc} */
 		@Override
 		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
+			if (containsNullKey) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[n], value[n]));
+			for(int pos = n; pos-- != 0;)
+				if (! KEY_IS_NULL(key[pos])) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[pos], value[pos]));
+		}
+
+		/** {@inheritDoc} */
+		@Override
+		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			final ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
 			if (containsNullKey) {
 				entry.key = key[n];
 				entry.value = value[n];
 				consumer.accept(entry);
 			}
-			for(int pos = n; --pos != 0;)
+			for(int pos = n; pos-- != 0;)
 				if (! KEY_IS_NULL(key[pos])) {
 					entry.key = key[pos];
 					entry.value = value[pos];
@@ -2102,7 +2111,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		public void forEach(final KEY_CONSUMER KEY_SUPER_GENERIC consumer) {
 #endif
 			if (containsNullKey) consumer.accept(key[n]);
-			for(int pos = n; --pos != 0;) {
+			for(int pos = n; pos-- != 0;) {
 				final KEY_GENERIC_TYPE k = key[pos];
 				if (! KEY_IS_NULL(k)) consumer.accept(k);
 			}
@@ -2205,7 +2214,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				public void forEach(final VALUE_CONSUMER VALUE_SUPER_GENERIC consumer) {
 #endif
 					if (containsNullKey) consumer.accept(value[n]);
-					for(int pos = n; --pos != 0;)
+					for(int pos = n; pos-- != 0;)
 						if (! KEY_IS_NULL(key[pos])) consumer.accept(value[pos]);
 				}
 

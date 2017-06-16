@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 #endif
 
+import java.util.function.Consumer;
 import java.util.Map;
 
 /** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
@@ -48,7 +49,9 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * of a large number of {@link java.util.Map.Entry} objects. Some {@code fastutil}
 	 * maps might return {@linkplain Map#entrySet() entry set} objects of type {@code FastEntrySet}: in this case, {@link #fastIterator() fastIterator()}
 	 * will return an iterator that is guaranteed not to create a large number of objects, <em>possibly
-	 * by returning always the same entry</em> (of course, mutated).
+	 * by returning always the same entry</em> (of course, mutated), and {@link #fastForEach(Consumer)} will apply
+	 * the provided consumer to all elements of the entry set, <em>which might be represented
+	 * always by the same entry</em> (of course, mutated).
 	 */
 
 	interface FastEntrySet KEY_VALUE_GENERIC extends ObjectSet<MAP.Entry KEY_VALUE_GENERIC> {
@@ -57,6 +60,18 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 		 * @return a fast iterator over this entry set; the iterator might return always the same {@link java.util.Map.Entry} instance, suitably mutated.
 		 */
 		ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator();
+
+		/** Iterates quickly over this entry set; the iteration might happen always on the same entry instance, suitably mutated.
+		 *
+		 * <p>This default implementation just delegates to {@link #forEach(Consumer)}.
+		 *
+		 * @param consumer a consumer that will by applied to the entries of this set; the entries might be represented
+		 * by the same entry instance, suitably mutated.
+		 * @since 8.1.0
+		 */
+		default void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			forEach(consumer);
+		}
 	}
 
 	/**

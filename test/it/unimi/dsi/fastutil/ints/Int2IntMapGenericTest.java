@@ -5,7 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.BiFunction;
+
 import org.junit.Test;
 
 public abstract class Int2IntMapGenericTest {
@@ -653,6 +656,42 @@ public abstract class Int2IntMapGenericTest {
 	@Test(expected = NullPointerException.class)
 	public void testGenericMergeNullFunctionMissingKey() {
 		m.merge(ONE, ONE, null);
+	}
+
+	@Test
+	public void testEntrySetIteratorForEach() {
+		for(int i = 0; i < 100; i++) m.put(i, i);
+		final Set<Int2IntMap.Entry> s = new HashSet<>();
+		m.int2IntEntrySet().forEach((x) -> { s.add(x); });
+		assertEquals(m.int2IntEntrySet(), s);
+	}
+
+	@Test
+	public void testEntrySetIteratorFastForEach() {
+		for(int i = 0; i < 100; i++) m.put(i, i);
+		final Set<Int2IntMap.Entry> s = new HashSet<>();
+		Int2IntMaps.fastForEach(m, (x) -> { s.add(new AbstractInt2IntMap.BasicEntry(x.getIntKey(), x.getIntValue())); });
+		assertEquals(m.int2IntEntrySet(), s);
+
+		s.clear();
+		Int2IntMaps.fastForEach(m, (x) -> { s.add(x); });
+		assertEquals(1, s.size()); // Should be always the same entry, mutated
+	}
+
+	@Test
+	public void testKeySetIteratorForEach() {
+		for(int i = 0; i < 100; i++) m.put(i, i);
+		final IntOpenHashSet s = new IntOpenHashSet();
+		m.keySet().forEach((int x) -> { s.add(x); });
+		assertEquals(s, m.keySet());
+	}
+
+	@Test
+	public void testValueSetIteratorForEach() {
+		for(int i = 0; i < 100; i++) m.put(i, i);
+		final IntOpenHashSet s = new IntOpenHashSet();
+		m.values().forEach((int x) -> { s.add(x); });
+		assertEquals(s, new IntOpenHashSet(m.values()));
 	}
 
 }
