@@ -532,19 +532,19 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 	private int find(final KEY_GENERIC_TYPE k) {
-		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return containsNullKey ? n : -(n + 1);
+		if (KEY_EQUALS_NULL(k)) return containsNullKey ? n : -(n + 1);
 
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
 		int pos;
 
 		// The starting point.
-		if (KEY_IS_NULL(curr = key[pos = KEY2INTHASH_CAST(k) & mask])) return -(pos + 1);
-		if (KEY_EQUALS_NOT_NULL_CAST(k, curr)) return pos;
+		if (KEY_IS_NULL(curr = key[pos = KEY2INTHASH(k) & mask])) return -(pos + 1);
+		if (KEY_EQUALS_NOT_NULL(k, curr)) return pos;
 		// There's always an unused entry.
 		while(true) {
 			if (KEY_IS_NULL(curr = key[pos = (pos + 1) & mask])) return -(pos + 1);
-			if (KEY_EQUALS_NOT_NULL_CAST(k, curr)) return pos;
+			if (KEY_EQUALS_NOT_NULL(k, curr)) return pos;
 		}
 	}
 
@@ -1050,6 +1050,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	/** {@inheritDoc} */
 	@Override
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE k, final VALUE_GENERIC_TYPE defaultValue) {
 		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) return containsNullKey ? value[n] : defaultValue;
 
@@ -1078,6 +1079,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	/** {@inheritDoc} */
 	@Override
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public boolean remove(final KEY_TYPE k, final VALUE_TYPE v) {
 		if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) {
 			if (containsNullKey && VALUE_EQUALS(v, value[n])) {
@@ -1164,12 +1166,14 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		if (pos < 0) return defRetValue;
 		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), VALUE2OBJ(value[pos]));
 		if (newValue == null) {
-			if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) removeNullEntry();
+			if (KEY_EQUALS_NULL(k)) removeNullEntry();
 			else removeEntry(pos);
 			return defRetValue;
 		}
-		value[pos] = VALUE_CLASS2TYPE(newValue);
-		return newValue;
+
+		VALUE_GENERIC_TYPE newVal = VALUE_CLASS2TYPE(newValue);
+		value[pos] = newVal;
+		return newVal;
 	}
 
 	/** {@inheritDoc} */
@@ -1180,19 +1184,19 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), pos >= 0 ? VALUE2OBJ(value[pos]) : null);
 		if (newValue == null) {
 			if (pos >= 0) {
-				if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) removeNullEntry();
+				if (KEY_EQUALS_NULL(k)) removeNullEntry();
 				else removeEntry(pos);
 			}
 			return defRetValue;
 		}
 
+		VALUE_GENERIC_TYPE newVal = VALUE_CLASS2TYPE(newValue);
 		if (pos < 0) {
-			insert(-pos - 1, k, VALUE_CLASS2TYPE(newValue));
-			return newValue;
+			insert(-pos - 1, k, newVal);
+			return newVal;
 		}
-
-		value[pos] = VALUE_CLASS2TYPE(newValue);
-		return newValue;
+		value[pos] = newVal;
+		return newVal;
 	}
 
 	/** {@inheritDoc} */
@@ -1218,13 +1222,14 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(VALUE2OBJ(v), VALUE2OBJ(value[pos]));
 		if (newValue == null) {
-			if (KEY_EQUALS_NULL(KEY_GENERIC_CAST k)) removeNullEntry();
+			if (KEY_EQUALS_NULL(k)) removeNullEntry();
 			else removeEntry(pos);
 			return defRetValue;
 		}
 
-		value[pos] = VALUE_CLASS2TYPE(newValue);
-		return newValue;
+		VALUE_GENERIC_TYPE newVal = VALUE_CLASS2TYPE(newValue);
+		value[pos] = newVal;
+		return newVal;
 	}
 
 
@@ -1768,7 +1773,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		 *
 		 * @param pos a starting position.
 		 */
-		private final void shiftKeys(int pos) {
+		private void shiftKeys(int pos) {
 			// Shift entries with the same hash.
 			int last, slot;
 			KEY_GENERIC_TYPE curr;
@@ -1994,7 +1999,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** {@inheritDoc} */
 		@Override
 		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			ABSTRACT_MAP.BasicEntry entry = new ABSTRACT_MAP.BasicEntry();
+			ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
 			if (containsNullKey) {
 				entry.key = key[n];
 				entry.value = value[n];
