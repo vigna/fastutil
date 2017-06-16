@@ -217,6 +217,7 @@ fi)\
 "#define KEY_GENERIC_WILDCARD <?>\n"\
 "#define KEY_EXTENDS_GENERIC <? extends K>\n"\
 "#define KEY_SUPER_GENERIC <? super K>\n"\
+"#define KEY_CLASS_CAST (K)\n"\
 "#define KEY_GENERIC_CAST (K)\n"\
 "#define KEY_GENERIC_ARRAY_CAST (K[])\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST (K[][])\n"\
@@ -238,6 +239,7 @@ fi)\
 "#define KEY_GENERIC_WILDCARD\n"\
 "#define KEY_EXTENDS_GENERIC\n"\
 "#define KEY_SUPER_GENERIC\n"\
+"#define KEY_CLASS_CAST (KEY_CLASS)\n"\
 "#define KEY_GENERIC_CAST\n"\
 "#define KEY_GENERIC_ARRAY_CAST\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST\n"\
@@ -633,7 +635,6 @@ fi)\
 "#define KEY_OBJ2TYPE(x) (x)\n"\
 "#define KEY_CLASS2TYPE(x) (x)\n"\
 "#define KEY2OBJ(x) (x)\n"\
-"#define KEY_OBJ2GENERIC(x) (K)(x)\n"\
 \
 "#ifdef Custom\n"\
 "#define KEY2JAVAHASH_NOT_NULL(x) ( strategy.hashCode(x) )\n"\
@@ -671,7 +672,6 @@ fi)\
 "#define KEY_CLASS2TYPE(x) (x).KEY_VALUE()\n"\
 "#define KEY_OBJ2TYPE(x) KEY_CLASS2TYPE((KEY_CLASS)(x))\n"\
 "#define KEY2OBJ(x) KEY_CLASS.valueOf(x)\n"\
-"#define KEY_OBJ2GENERIC(x) KEY_OBJ2TYPE(x)\n"\
 \
 "#if KEY_CLASS_Boolean\n"\
 "#define KEY_CMP_EQ(x,y) ( (x) == (y) )\n"\
