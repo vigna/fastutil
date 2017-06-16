@@ -21,16 +21,16 @@ import java.lang.Iterable;
 #if KEYS_PRIMITIVE
 import java.util.Objects;
 import java.util.function.Consumer;
-#endif
 
 /** A type-specific {@link Iterable} that strengthens that specification of {@link #iterator()} and {@link #forEach(Consumer)}.
  *
  * <p>Note that whenever there exist a primitive consumer in {@link java.util.function} (e.g., {@link java.util.function.IntConsumer}),
- * trying to access any version of {@link #forEach(Consumer)} using a lambda expression with untyped arguments 
- * will generate an ambiguous method error. This can be easily solved by specifying the type of the arguments, as in
+ * trying to access any version of {@link #forEach(Consumer)} using a lambda expression with untyped arguments
+ * will generate an ambiguous method error. This can be easily solved by specifying the type of the argument, as in
  * <pre>
  *    intIterable.forEach((int x) -> { // Do something with x });
  * </pre>
+ * <p>The same problem plagues, for example, {@link java.util.PrimitiveIterator.OfInt#forEachRemaining(java.util.function.IntConsumer)}.
  *
  * <p><strong>Warning</strong>: Java will let you write &ldquo;colon&rdquo; {@code for} statements with primitive-type
  * loop variables; however, what is (unfortunately) really happening is that at each iteration an
@@ -38,6 +38,16 @@ import java.util.function.Consumer;
  *
  * @see Iterable
  */
+
+#else
+
+/** A type-specific {@link Iterable} that strengthens that specification of {@link #iterator()}.
+ *
+ * @see Iterable
+ */
+
+#endif
+
 
 public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 
@@ -53,6 +63,7 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	KEY_ITERATOR KEY_GENERIC iterator();
 
 
+#if KEYS_PRIMITIVE
 	/**
 	 * Performs the given action for each element of this type-specific {@link java.lang.Iterable}
 	 * until all elements have been processed or the action throws an
@@ -61,7 +72,6 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
 	 * @since 8.0.0
 	 */
-#if KEYS_PRIMITIVE
 #ifdef JDK_PRIMITIVE_KEY_CONSUMER
 	@SuppressWarnings("overloads")
 	default void forEach(final JDK_PRIMITIVE_KEY_CONSUMER action) {
@@ -69,10 +79,8 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	default void forEach(final KEY_CONSUMER action) {
 #endif
 		Objects.requireNonNull(action);
-		final KEY_ITERATOR iterator = iterator();
-		while (iterator.hasNext()) {
+		for(final KEY_ITERATOR iterator = iterator(); iterator.hasNext();)
 			action.accept(iterator.NEXT_KEY());
-		}
 	}
 
 	/** {@inheritDoc}
@@ -80,7 +88,19 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	@Deprecated
 	@Override
 	default void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) {
-		Iterable.super.forEach(action);
+#ifdef JDK_PRIMITIVE_KEY_CONSUMER
+#ifdef KEY_WIDENED
+		forEach(new JDK_PRIMITIVE_KEY_CONSUMER() {
+			public void accept(final KEY_TYPE_WIDENED key) {
+				action.accept(KEY2OBJ((KEY_TYPE)key));
+			}
+		});
+#else
+		forEach((JDK_PRIMITIVE_KEY_CONSUMER) action::accept);
+#endif
+#else
+		forEach((KEY_CONSUMER) action::accept);
+#endif
 	}
 #endif
 
