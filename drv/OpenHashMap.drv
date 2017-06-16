@@ -32,7 +32,13 @@ import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 
 #if VALUES_PRIMITIVE || KEYS_PRIMITIVE && VALUE_CLASS_Object
 import VALUE_PACKAGE.VALUE_ITERATOR;
+#if VALUE_CLASS_Boolean
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 #endif
+#endif
+
+import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 #ifdef Linked
 
@@ -42,27 +48,11 @@ import java.util.Comparator;
 import VALUE_PACKAGE.VALUE_LIST_ITERATOR;
 #endif
 
-#if KEYS_PRIMITIVE && VALUE_CLASS_Reference
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-#endif
-
 import it.unimi.dsi.fastutil.objects.AbstractObjectSortedSet;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
 
-#else
-
-import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
-
-#if KEYS_PRIMITIVE && ! VALUE_CLASS_Object
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-#endif
-
-#endif
-
-
-#ifdef Linked
 /**  A type-specific linked hash map with with a fast, small-footprint implementation.
  *
  * <p>Instances of this class use a hash table to represent a map. The table is
@@ -1171,9 +1161,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			return defRetValue;
 		}
 
-		VALUE_GENERIC_TYPE newVal = VALUE_CLASS2TYPE(newValue);
-		value[pos] = newVal;
-		return newVal;
+		return value[pos] = VALUE_CLASS2TYPE(newValue);
 	}
 
 	/** {@inheritDoc} */
@@ -1195,8 +1183,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			insert(-pos - 1, k, newVal);
 			return newVal;
 		}
-		value[pos] = newVal;
-		return newVal;
+
+		return value[pos] = newVal;
 	}
 
 	/** {@inheritDoc} */
@@ -2106,8 +2094,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		/** {@inheritDoc} */
 		@Override
-#ifdef JDK_PRIMITIVE_CONSUMER
-		public void forEach(final JDK_PRIMITIVE_CONSUMER consumer) {
+#ifdef JDK_PRIMITIVE_KEY_CONSUMER
+		public void forEach(final JDK_PRIMITIVE_KEY_CONSUMER consumer) {
 #else
 		public void forEach(final KEY_CONSUMER KEY_SUPER_GENERIC consumer) {
 #endif
@@ -2206,6 +2194,19 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				public boolean contains(VALUE_TYPE v) { return containsValue(v); }
 				@Override
 				public void clear() { OPEN_HASH_MAP.this.clear(); }
+
+				/** {@inheritDoc} */
+				@Override
+#ifdef JDK_PRIMITIVE_VALUE_CONSUMER
+				public void forEach(final JDK_PRIMITIVE_VALUE_CONSUMER consumer) {
+#else
+				public void forEach(final VALUE_CONSUMER VALUE_SUPER_GENERIC consumer) {
+#endif
+					if (containsNullKey) consumer.accept(value[n]);
+					for(int pos = n; --pos != 0;)
+						if (! KEY_IS_NULL(key[pos])) consumer.accept(value[pos]);
+				}
+
 			};
 
 		return values;
