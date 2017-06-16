@@ -542,7 +542,7 @@ fi)\
 "#define REMOVE_VALUE remove${TYPE_STD[$v]}\n"\
 "#define COMPUTE_IF_ABSENT_JDK compute${TYPE_CAP[$v]}IfAbsent\n"\
 "#define COMPUTE_IF_ABSENT_NULLABLE compute${TYPE_CAP[$v]}IfAbsentNullable\n"\
-"#define COMPUTE_IF_ABSENT_FUNCTION compute${TYPE_CAP[$v]}IfAbsentPartial\n"\
+"#define COMPUTE_IF_ABSENT_PARTIAL compute${TYPE_CAP[$v]}IfAbsentPartial\n"\
 "#define COMPUTE compute${TYPE_STD[$v]}\n"\
 "#define COMPUTE_IF_PRESENT compute${TYPE_STD[$v]}IfPresent\n"\
 "#define MERGE merge${TYPE_STD[$v]}\n"\
@@ -551,7 +551,7 @@ fi)\
 "#define REMOVE_VALUE remove\n"\
 "#define COMPUTE_IF_ABSENT_JDK computeIfAbsent\n"\
 "#define COMPUTE_IF_ABSENT_NULLABLE computeIfAbsentNullable\n"\
-"#define COMPUTE_IF_ABSENT_FUNCTION computeIfAbsentPartial\n"\
+"#define COMPUTE_IF_ABSENT_PARTIAL computeIfAbsentPartial\n"\
 "#define COMPUTE compute\n"\
 "#define COMPUTE_IF_PRESENT computeIfPresent\n"\
 "#define MERGE merge\n"\

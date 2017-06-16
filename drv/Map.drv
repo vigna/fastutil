@@ -440,7 +440,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @since 8.0.0
 	 */
 
-	default VALUE_GENERIC_TYPE COMPUTE_IF_ABSENT_FUNCTION(final KEY_GENERIC_TYPE key, final FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
+	default VALUE_GENERIC_TYPE COMPUTE_IF_ABSENT_PARTIAL(final KEY_GENERIC_TYPE key, final FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
 		java.util.Objects.requireNonNull(mappingFunction);
 		final VALUE_GENERIC_TYPE v = GET_VALUE(key), drv = defaultReturnValue();
 		if (v != drv || containsKey(key)) return v;
@@ -472,9 +472,9 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 		if (newValue == null) { REMOVE_VALUE(key); return drv; }
 
 #if VALUES_PRIMITIVE
-		VALUE_GENERIC_TYPE newValuePrimitive = VALUE_CLASS2TYPE(newValue);
-		put(key, newValuePrimitive);
-		return newValuePrimitive;
+		VALUE_GENERIC_TYPE newVal = VALUE_CLASS2TYPE(newValue);
+		put(key, newVal);
+		return newVal;
 #else
 		put(key, newValue);
 		return newValue;
@@ -506,9 +506,9 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 			return drv;
 		}
 #if VALUES_PRIMITIVE
-		final VALUE_GENERIC_TYPE newValuePrimitive = VALUE_CLASS2TYPE(newValue);
-		put(key, newValuePrimitive);
-		return newValuePrimitive;
+		final VALUE_GENERIC_TYPE newVal = VALUE_CLASS2TYPE(newValue);
+		put(key, newVal);
+		return newVal;
 #else
 		put(key, newValue);
 		return newValue;
@@ -630,7 +630,21 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Override
 	default VALUE_GENERIC_CLASS computeIfAbsent(final KEY_GENERIC_CLASS key, final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> mappingFunction) {
 		java.util.Objects.requireNonNull(mappingFunction);
-		return VALUE2OBJ(computeIfAbsent(KEY_CLASS2TYPE(key), (FUNCTION KEY_GENERIC VALUE_GENERIC) k -> VALUE_CLASS2TYPE(mappingFunction.apply(KEY2OBJ(k)))));
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+		final VALUE_GENERIC_TYPE v = GET_VALUE(k), drv = defaultReturnValue();
+		if (v != drv || containsKey(key)) return VALUE2OBJ(v);
+
+		VALUE_GENERIC_CLASS mappedValue = mappingFunction.apply(key);
+#if VALUES_PRIMITIVE
+		if (mappedValue == null) return null;
+		VALUE_GENERIC_TYPE newValue = VALUE_CLASS2TYPE(mappedValue);
+		put(k, newValue);
+		return VALUE2OBJ(newValue);
+#else
+		if (mappedValue == null) return drv;
+		put(k, mappedValue);
+		return mappedValue;
+#endif
 	}
 
   /** {@inheritDoc}
@@ -638,7 +652,20 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS computeIfPresent(final KEY_GENERIC_CLASS key, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
-		return VALUE2OBJ(COMPUTE_IF_PRESENT(KEY_CLASS2TYPE(key), remappingFunction));
+#if VALUES_PRIMITIVE
+		java.util.Objects.requireNonNull(remappingFunction);
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+		final VALUE_GENERIC_TYPE oldValue = GET_VALUE(k);
+		if (oldValue == defaultReturnValue() && !containsKey(k)) return null;
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(key, VALUE2OBJ(oldValue));
+
+		if (newValue == null) { REMOVE_VALUE(k); return null; }
+
+		put(k, VALUE_CLASS2TYPE(newValue));
+		return newValue;
+#else
+		return COMPUTE_IF_PRESENT(KEY_CLASS2TYPE(key), remappingFunction);
+#endif
 	}
 
   /** {@inheritDoc}
@@ -646,7 +673,23 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS compute(final KEY_GENERIC_CLASS key, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
-		return VALUE2OBJ(COMPUTE(KEY_CLASS2TYPE(key), remappingFunction));
+#if VALUES_PRIMITIVE
+		java.util.Objects.requireNonNull(remappingFunction);
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+		final VALUE_GENERIC_TYPE oldValue = GET_VALUE(k);
+		final boolean contained = oldValue != defaultReturnValue() || containsKey(k);
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(key, contained ? VALUE2OBJ(oldValue) : null);
+
+		if (newValue == null) {
+			if (contained) REMOVE_VALUE(k);
+			return null;
+		}
+
+		put(k, VALUE_CLASS2TYPE(newValue));
+		return newValue;
+#else
+		return COMPUTE(KEY_CLASS2TYPE(key), remappingFunction);
+#endif
 	}
 
 #endif
@@ -656,7 +699,24 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS merge(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+#if VALUES_PRIMITIVE
+		java.util.Objects.requireNonNull(remappingFunction);
+		java.util.Objects.requireNonNull(value);
+		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
+		final VALUE_GENERIC_TYPE oldValue = GET_VALUE(k);
+		final VALUE_GENERIC_CLASS newValue;
+		if (oldValue != defaultReturnValue() || containsKey(k)) {
+			newValue = remappingFunction.apply(VALUE2OBJ(oldValue), value);
+			if (newValue == null) { REMOVE_VALUE(k); return null; }
+		} else {
+			newValue = value;
+		}
+
+		put(k, VALUE_CLASS2TYPE(newValue));
+		return newValue;
+#else
 		return VALUE2OBJ(MERGE(KEY_CLASS2TYPE(key), VALUE_CLASS2TYPE(value), remappingFunction));
+#endif
 	}
 
 #endif

@@ -454,7 +454,7 @@ public abstract class Int2IntMapGenericTest {
 		assertEquals(THREE, m.computeIfPresent(ONE, add));
 		assertEquals(THREE, m.get(ONE));
 
-		assertEquals(null, m.computeIfPresent(ONE, (key, value) -> MINUS_ONE));
+		assertEquals(MINUS_ONE, m.computeIfPresent(ONE, (key, value) -> MINUS_ONE));
 		assertTrue(m.containsKey(ONE));
 
 		assertEquals(null, m.computeIfPresent(ONE, (key, value) -> null));

@@ -382,13 +382,13 @@ public final class FUNCTIONS {
 #if KEYS_PRIMITIVE
 			if (key == null) return false;
 #endif
-			return function.apply(KEY_OBJ2GENERIC(key)) != null;
+			return function.apply((KEY_GENERIC_CLASS) key) != null;
 		}
 
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		@Override
 		public VALUE_GENERIC_TYPE GET_VALUE(KEY_TYPE key) {
-			VALUE_GENERIC_CLASS v = function.apply(KEY_OBJ2GENERIC(key));
+			VALUE_GENERIC_CLASS v = function.apply((KEY_GENERIC_CLASS) key);
 			if (v == null) return defaultReturnValue();
 			return VALUE_CLASS2TYPE(v);
 		}
@@ -398,9 +398,9 @@ public final class FUNCTIONS {
 		@Override
 		public VALUE_GENERIC_CLASS get(Object key) {
 #if KEYS_PRIMITIVE
-			if (key == null) return defaultReturnValue();
+			if (key == null) return VALUE2OBJ(defaultReturnValue());
 #endif
-			return VALUE2OBJ(function.apply(KEY_OBJ2GENERIC(key)));
+			return VALUE2OBJ(function.apply((KEY_GENERIC_CLASS) key));
 		}
 
 		@Deprecated
@@ -417,10 +417,13 @@ public final class FUNCTIONS {
 	 *
 	 * @param f the function to be converted to a type-specific function.
 	 * @return a primitive view of the specified function.
+	 * @throws NullPointerException if {@code f} is null.
 	 * @see PrimitiveFunction
 	 */
 	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 	public static KEY_VALUE_GENERIC FUNCTION KEY_VALUE_GENERIC primitive(final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> f) {
+		java.util.Objects.requireNonNull(f);
+
 		if (f instanceof FUNCTION) return (FUNCTION KEY_VALUE_GENERIC) f;
 #if defined JDK_PRIMITIVE_FUNCTION
 		if (f instanceof JDK_PRIMITIVE_FUNCTION)
