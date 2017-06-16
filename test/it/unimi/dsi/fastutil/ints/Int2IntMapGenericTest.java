@@ -132,20 +132,20 @@ public abstract class Int2IntMapGenericTest {
 	@Test
 	public void int2IntEntrySetContainsTest() {
 		m.put(0, 0);
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), null)));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(null, new Object())));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(null, null)));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry(new Object(), new Object())));
+//		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(new Object(), null)));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(null, new Object())));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(null, null)));
+		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
 	@SuppressWarnings({"unchecked", "SuspiciousMethodCalls"})
 	@Test
 	public void int2IntEntrySetRemoveTest() {
 		m.put(0, 0);
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), null)));
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, new Object())));
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(null, null)));
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry(new Object(), new Object())));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), null)));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(null, new Object())));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(null, null)));
+		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
 	@Before
