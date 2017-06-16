@@ -17,13 +17,13 @@ public class Int2IntMapGenericOpenHashTest extends Int2IntMapGenericTest {
 	public float loadFactor;
 
 	@SuppressWarnings("AutoBoxing")
-	@Parameters(name = "{index}: lf {1}")
+	@Parameters(name = "{index}: lf {2}")
 	public static Iterable<Object[]> data() {
 		final EnumSet<Capability> capabilities = EnumSet.allOf(Capability.class);
 		final int defSize = Int2IntOpenHashMap.DEFAULT_INITIAL_SIZE;
 		final Collection<Object[]> data = new ArrayList<>();
 		for (final float loadFactor : Arrays.asList(Hash.DEFAULT_LOAD_FACTOR, Hash.FAST_LOAD_FACTOR, Hash.VERY_FAST_LOAD_FACTOR)) {
-			data.add(new Object[] {supplier(defSize, loadFactor), loadFactor, capabilities});
+			data.add(new Object[] {supplier(defSize, loadFactor), capabilities, loadFactor});
 		}
 		return data;
 	}

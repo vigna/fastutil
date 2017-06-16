@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import org.junit.Before;
@@ -29,12 +29,13 @@ import org.junit.runners.Parameterized.Parameter;
 
 @RunWith(Parameterized.class)
 public abstract class Int2IntMapGenericTest {
-	static final Integer MINUS_ONE = Integer.valueOf(-1);
-	static final Integer ONE = Integer.valueOf(1);
-	static final Integer THREE = Integer.valueOf(3);
-	static final Integer TWO = Integer.valueOf(2);
-	static final Integer ZERO = Integer.valueOf(0);
+	private static final Integer MINUS_ONE = Integer.valueOf(-1);
+	private static final Integer ONE = Integer.valueOf(1);
+	private static final Integer THREE = Integer.valueOf(3);
+	private static final Integer TWO = Integer.valueOf(2);
+	private static final Integer ZERO = Integer.valueOf(0);
 	private static final java.util.Random r = new java.util.Random(0);
+
 	@Parameter(1)
 	public EnumSet<Capability> capabilities;
 	@Parameter(0)
@@ -69,7 +70,7 @@ public abstract class Int2IntMapGenericTest {
 	}
 
 	@SuppressWarnings("deprecation")
-	protected void checkEquality(final Int2IntMap m, final Map<Integer, Integer> t, final Collection<Integer> keys, final String description) {
+	private void checkEquality(final Int2IntMap m, final Map<Integer, Integer> t, final Iterable<Integer> keys, final String description) {
 		final int drv = m.defaultReturnValue();
 
 		assertTrue("Error: !m.equals(t) " + description, m.equals(t));
@@ -173,49 +174,37 @@ public abstract class Int2IntMapGenericTest {
 		assertEquals(-1, m.get(2));
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
-	public void testComputeGeneric() {
+	public void testComputeIfAbsentNullablePrimitive() {
 		m.defaultReturnValue(-1);
 
-		assertEquals(ONE, m.compute(ONE, (key, value) -> {
-			assertEquals(ONE, key);
-			assertNull(value);
-			return ONE;
-		}));
-		assertEquals(ONE, m.get(ONE));
+		assertEquals(-1, m.computeIfAbsentNullable(1, key -> null));
+		assertEquals(-1, m.computeIfAbsentNullable(2, key -> null));
 
-		assertEquals(TWO, m.compute(ONE, (key, value) -> {
-			assertEquals(ONE, key);
-			assertEquals(ONE, value);
-			return TWO;
-		}));
-		assertEquals(TWO, m.get(ONE));
-
-		assertEquals(null, m.compute(ONE, (key, value) -> {
-			assertEquals(ONE, key);
-			assertEquals(TWO, value);
-			return null;
-		}));
-		assertFalse(m.containsKey(ONE));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testComputeGenericNullFunction() {
 		m.put(1, 1);
-		m.compute(ONE, null);
+		assertEquals(1, m.computeIfAbsentNullable(1, key -> null));
+		assertEquals(-1, m.computeIfAbsentNullable(2, key -> null));
+
+		assertEquals(1, m.computeIfAbsentNullable(1, Integer::valueOf));
+		assertEquals(2, m.computeIfAbsentNullable(2, Integer::valueOf));
+		assertEquals(2, m.computeIfAbsentNullable(2, key -> null));
+		assertEquals(2, m.get(2));
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeGenericNullFunctionMissingKey() {
-		m.compute(ONE, null);
+	public void testComputeIfAbsentNullablePrimitiveNullFunction() {
+		m.put(1, 1);
+		m.computeIfAbsentNullable(1, null);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void testComputeIfAbsentNullablePrimitiveNullFunctionMissingKey() {
+		m.computeIfAbsentNullable(1, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testComputeIfAbsentGeneric() {
+	public void testComputeIfAbsentObject() {
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -244,49 +233,21 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentGenericNullFunction() {
+	public void testComputeIfAbsentObjectNullFunction() {
 		m.put(1, 1);
 		m.computeIfAbsent(ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentGenericNullFunctionMissingKey() {
+	public void testComputeIfAbsentObjectNullFunctionMissingKey() {
 		m.computeIfAbsent(ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentGenericNullKey() {
+	public void testComputeIfAbsentObjectNullKey() {
 		m.computeIfAbsent(null, key -> key);
-	}
-
-	@Test
-	public void testComputeIfAbsentNullablePrimitive() {
-		m.defaultReturnValue(-1);
-
-		assertEquals(-1, m.computeIfAbsentNullable(1, key -> null));
-		assertEquals(-1, m.computeIfAbsentNullable(2, key -> null));
-
-		m.put(1, 1);
-		assertEquals(1, m.computeIfAbsentNullable(1, key -> null));
-		assertEquals(-1, m.computeIfAbsentNullable(2, key -> null));
-
-		assertEquals(1, m.computeIfAbsentNullable(1, Integer::valueOf));
-		assertEquals(2, m.computeIfAbsentNullable(2, Integer::valueOf));
-		assertEquals(2, m.computeIfAbsentNullable(2, key -> null));
-		assertEquals(2, m.get(2));
-	}
-
-	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentNullablePrimitiveNullFunction() {
-		m.put(1, 1);
-		m.computeIfAbsentNullable(1, null);
-	}
-
-	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentNullablePrimitiveNullFunctionMissingKey() {
-		m.computeIfAbsentNullable(1, null);
 	}
 
 	@Test
@@ -346,7 +307,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testComputeIfPresentGeneric() {
+	public void testComputeIfPresentObject() {
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -370,20 +331,20 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeIfPresentGenericNullFunction() {
+	public void testComputeIfPresentObjectNullFunction() {
 		m.put(1, 1);
 		m.computeIfPresent(ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeIfPresentGenericNullFunctionMissingKey() {
+	public void testComputeIfPresentObjectNullFunctionMissingKey() {
 		m.computeIfPresent(ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testComputeIfPresentGenericNullKey() {
+	public void testComputeIfPresentObjectNullKey() {
 		m.computeIfPresent(null, (key, value) -> key);
 	}
 
@@ -419,6 +380,46 @@ public abstract class Int2IntMapGenericTest {
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfPresentPrimitiveNullFunctionMissingKey() {
 		m.computeIfPresent(1, null);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testComputeObject() {
+		m.defaultReturnValue(-1);
+
+		assertEquals(ONE, m.compute(ONE, (key, value) -> {
+			assertEquals(ONE, key);
+			assertNull(value);
+			return ONE;
+		}));
+		assertEquals(ONE, m.get(ONE));
+
+		assertEquals(TWO, m.compute(ONE, (key, value) -> {
+			assertEquals(ONE, key);
+			assertEquals(ONE, value);
+			return TWO;
+		}));
+		assertEquals(TWO, m.get(ONE));
+
+		assertEquals(null, m.compute(ONE, (key, value) -> {
+			assertEquals(ONE, key);
+			assertEquals(TWO, value);
+			return null;
+		}));
+		assertFalse(m.containsKey(ONE));
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test(expected = NullPointerException.class)
+	public void testComputeObjectNullFunction() {
+		m.put(1, 1);
+		m.compute(ONE, null);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test(expected = NullPointerException.class)
+	public void testComputeObjectNullFunctionMissingKey() {
+		m.compute(ONE, null);
 	}
 
 	@Test
@@ -508,7 +509,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testGetOrDefaultGeneric() {
+	public void testGetOrDefaultObject() {
 		m.put(1, 1);
 
 		assertEquals(THREE, m.getOrDefault(null, THREE));
@@ -522,7 +523,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = ClassCastException.class)
-	public void testGetOrDefaultGenericInvalidKey() {
+	public void testGetOrDefaultObjectInvalidKey() {
 		m.getOrDefault(Long.valueOf(1), ONE);
 	}
 
@@ -568,6 +569,17 @@ public abstract class Int2IntMapGenericTest {
 		assertEquals(s, m.keySet());
 	}
 
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testKeySetIteratorForEachObject() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, i);
+		}
+		final IntOpenHashSet s = new IntOpenHashSet();
+		m.keySet().forEach((Consumer<Integer>) s::add);
+		assertEquals(s, m.keySet());
+	}
+
 	@Test
 	public void testMerge() {
 		m.defaultReturnValue(-1);
@@ -592,7 +604,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testMergeGeneric() {
+	public void testMergeObject() {
 		m.defaultReturnValue(-1);
 
 		assertEquals(ZERO, m.merge(ONE, ZERO, (oldVal, newVal) -> {
@@ -619,33 +631,33 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testMergeGenericNullFunction() {
+	public void testMergeObjectNullFunction() {
 		m.put(1, 1);
 		m.merge(ONE, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testMergeGenericNullFunctionMissingKey() {
+	public void testMergeObjectNullFunctionMissingKey() {
 		m.merge(ONE, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testMergeGenericNullKey() {
+	public void testMergeObjectNullKey() {
 		m.merge(null, ONE, (key, vale) -> ONE);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testMergeGenericNullValue() {
+	public void testMergeObjectNullValue() {
 		m.put(1, 1);
 		m.merge(ONE, null, (key, vale) -> ONE);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testMergeGenericNullValueMissingKey() {
+	public void testMergeObjectNullValueMissingKey() {
 		m.merge(ONE, null, (key, vale) -> ONE);
 	}
 
@@ -711,7 +723,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testPutIfAbsentGeneric() {
+	public void testPutIfAbsentObject() {
 		m.defaultReturnValue(-1);
 
 		m.put(1, 1);
@@ -727,7 +739,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testPutIfAbsentGenericNullValueMissingKey() {
+	public void testPutIfAbsentObjectNullValueMissingKey() {
 		m.putIfAbsent(ONE, null);
 	}
 
@@ -802,7 +814,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testRemoveGeneric() {
+	public void testRemoveObject() {
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 		assertTrue(m.containsKey(ONE));
@@ -825,21 +837,21 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = ClassCastException.class)
-	public void testRemoveGenericInvalidKey() {
+	public void testRemoveObjectInvalidKey() {
 		m.put(1, 1);
 		m.remove(Long.valueOf(1), ONE);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = ClassCastException.class)
-	public void testRemoveGenericInvalidValue() {
+	public void testRemoveObjectInvalidValue() {
 		m.put(1, 1);
 		m.remove(ONE, Long.valueOf(1));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = ClassCastException.class)
-	public void testRemoveGenericInvalidValueMissingKey() {
+	public void testRemoveObjectInvalidValueMissingKey() {
 		m.remove(ONE, Long.valueOf(1));
 	}
 
@@ -896,7 +908,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testReplaceBinaryGeneric() {
+	public void testReplaceBinaryObject() {
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -913,20 +925,20 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testReplaceBinaryGenericNullKey() {
+	public void testReplaceBinaryObjectNullKey() {
 		m.replace(null, ONE);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testReplaceBinaryGenericNullValue() {
+	public void testReplaceBinaryObjectNullValue() {
 		m.put(1, 1);
 		m.replace(ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testReplaceBinaryGenericNullValueMissingKey() {
+	public void testReplaceBinaryObjectNullValueMissingKey() {
 		assertNull(m.replace(ONE, null));
 	}
 
@@ -948,7 +960,7 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testReplaceTernaryGeneric() {
+	public void testReplaceTernaryObject() {
 		m.defaultReturnValue(-1);
 		m.put(1, 1);
 
@@ -968,26 +980,26 @@ public abstract class Int2IntMapGenericTest {
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryGenericNullKey() {
+	public void testReplaceTernaryObjectNullKey() {
 		m.replace(null, ONE, ONE);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryGenericNullNewValue() {
+	public void testReplaceTernaryObjectNullNewValue() {
 		m.put(1, 1);
 		m.replace(ONE, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryGenericNullNewValueMissingKey() {
+	public void testReplaceTernaryObjectNullNewValueMissingKey() {
 		m.replace(ONE, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryGenericNullOldValueMissingKey() {
+	public void testReplaceTernaryObjectNullOldValueMissingKey() {
 		m.replace(ONE, null, ONE);
 	}
 
@@ -1055,6 +1067,17 @@ public abstract class Int2IntMapGenericTest {
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
 		m.values().forEach((java.util.function.IntConsumer) s::add);
+		assertEquals(s, new IntOpenHashSet(m.values()));
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testValueSetIteratorForEachObject() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, i);
+		}
+		final IntOpenHashSet s = new IntOpenHashSet();
+		m.values().forEach((Consumer<Integer>) s::add);
 		assertEquals(s, new IntOpenHashSet(m.values()));
 	}
 
