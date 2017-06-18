@@ -9,7 +9,6 @@ import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.junit.Test;
 
-@SuppressWarnings("rawtypes")
 public class Int2IntOpenHashMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
@@ -59,12 +58,6 @@ public class Int2IntOpenHashMapTest {
 		instance.keySet().retainAll(retainElements);
 		referenceInstance.retainAll(retainElements);
 
-		// print the correct result {586}
-		// System.out.println("ref: " + referenceInstance);
-
-		// prints {586, 7379}, which is clearly wrong
-		// System.out.println("ohm: " + instance);
-
 		// Fails
 		assertEquals(referenceInstance, instance.keySet());
 	}
@@ -106,21 +99,17 @@ public class Int2IntOpenHashMapTest {
 		assertNotEquals(0, m.key[5]);
 		assertNotEquals(0, m.key[6]);
 		assertNotEquals(0, m.key[7]);
-		//System.err.println(Arraym.toString(m.key));
+
 		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
 		final IntIterator iterator = m.keySet().iterator();
 		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
-		//System.err.println(Arraym.toString(m.key));
 		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
 		assertTrue(t.add(iterator.nextInt()));
-		//System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		assertEquals(3, m.size());
 		assertEquals(keys, t);
@@ -141,23 +130,19 @@ public class Int2IntOpenHashMapTest {
 		assertNotEquals(0, m.key[7]);
 		assertNotEquals(0, m.key[0]);
 		assertNotEquals(0, m.key[1]);
-		//System.err.println(Arraym.toString(m.key));
+
 		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
 		final IntIterator iterator = m.keySet().iterator();
 		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
 		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
 		assertEquals(0, m.size());

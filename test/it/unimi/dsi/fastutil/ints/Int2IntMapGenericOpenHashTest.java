@@ -13,7 +13,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import it.unimi.dsi.fastutil.Hash;
 
-public class Int2IntMapGenericOpenHashTest extends Int2IntMapGenericTest {
+public class Int2IntMapGenericOpenHashTest extends Int2IntMapGenericTest<Int2IntOpenHashMap> {
 	@Parameter(2)
 	public float loadFactor;
 
@@ -35,17 +35,16 @@ public class Int2IntMapGenericOpenHashTest extends Int2IntMapGenericTest {
 
 	@Test
 	public void testAddTo() {
-		final Int2IntOpenHashMap map = (Int2IntOpenHashMap) m;
-		assertEquals(0, map.addTo(0, 2));
-		assertEquals(2, map.get(0));
-		assertEquals(2, map.addTo(0, 3));
-		assertEquals(5, map.get(0));
-		map.defaultReturnValue(-1);
-		assertEquals(-1, map.addTo(1, 1));
-		assertEquals(0, map.get(1));
-		assertEquals(0, map.addTo(1, 1));
-		assertEquals(1, map.get(1));
-		assertEquals(1, map.addTo(1, -2));
-		assertEquals(-1, map.get(1));
+		assertEquals(0, m.addTo(0, 2));
+		assertEquals(2, m.get(0));
+		assertEquals(2, m.addTo(0, 3));
+		assertEquals(5, m.get(0));
+		m.defaultReturnValue(-1);
+		assertEquals(-1, m.addTo(1, 1));
+		assertEquals(0, m.get(1));
+		assertEquals(0, m.addTo(1, 1));
+		assertEquals(1, m.get(1));
+		assertEquals(1, m.addTo(1, -2));
+		assertEquals(-1, m.get(1));
 	}
 }

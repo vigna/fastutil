@@ -4,13 +4,15 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.io.BinIO;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,22 +41,23 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 
 @RunWith(Parameterized.class)
-public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
+public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>> {
 	private static final Integer MINUS_ONE = Integer.valueOf(-1);
 	private static final Integer ONE = Integer.valueOf(1);
 	private static final Integer THREE = Integer.valueOf(3);
 	private static final Integer TWO = Integer.valueOf(2);
 	private static final Integer ZERO = Integer.valueOf(0);
+	private static final Integer DEFAULT = Integer.valueOf(Integer.MIN_VALUE);
 	private static final java.util.Random r = new java.util.Random(0);
 
 	@Parameter(1)
 	public EnumSet<Capability> capabilities;
-	@Parameter()
+	@Parameter(0)
 	public Supplier<M> mapSupplier;
 	protected M m;
 
 	@SuppressWarnings("deprecation")
-	protected void check(final Int2IntMap m, final Map<Integer, Integer> t, final IntSupplier keyProvider, final IntSupplier valueProvider, final int size) {
+	protected void check(final Int2ObjectMap<Integer> m, final Map<Integer, Integer> t, final IntSupplier keyProvider, final IntSupplier valueProvider, final int size) {
 		/* First of all, we fill t with random data. */
 		for (int i = 0; i < size; i++) {
 			t.put(Integer.valueOf(keyProvider.getAsInt()), Integer.valueOf(valueProvider.getAsInt()));
@@ -69,9 +72,9 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 			final int putKey = keyProvider.getAsInt();
 			final int val = valueProvider.getAsInt();
 
-			final Integer mPutObj = m.put(Integer.valueOf(putKey), Integer.valueOf(val));
+			final Integer mPut = m.put(putKey, Integer.valueOf(val));
 			final Integer tPut = t.put(Integer.valueOf(putKey), Integer.valueOf(val));
-			assertEquals("Error: divergence in put() between t and m", mPutObj, tPut);
+			assertEquals("Error: divergence in put() between t and m", mPut, tPut);
 
 			final int remKey = keyProvider.getAsInt();
 			assertEquals("Error: divergence in remove() between t and m", m.remove(Integer.valueOf(remKey)), t.remove(Integer.valueOf(remKey)));
@@ -81,8 +84,8 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	}
 
 	@SuppressWarnings("deprecation")
-	private void checkEquality(final Int2IntMap m, final Map<Integer, Integer> t, final Iterable<Integer> keys, final String description) {
-		final int drv = m.defaultReturnValue();
+	private void checkEquality(final Int2ObjectMap<Integer> m, final Map<Integer, Integer> t, final Iterable<Integer> keys, final String description) {
+		final Integer drv = m.defaultReturnValue();
 
 		assertTrue("Error: !m.equals(t) " + description, m.equals(t));
 		assertTrue("Error: !t.equals(m) " + description, t.equals(m));
@@ -92,7 +95,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 			assertTrue("Error: m and t differ on an entry (" + o2 + ") " + description + " (iterating on t)", Objects.equals(o2.getValue(), m.get(o2.getKey())));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for (final Map.Entry<Integer, Integer> entry : m.int2IntEntrySet()) {
+		for (final Map.Entry<Integer, Integer> entry : m.int2ObjectEntrySet()) {
 			assertTrue("Error: m and t differ on an entry (" + entry + ") " + description + " (iterating on m)", Objects.equals(entry.getValue(), t.get(entry.getKey())));
 		}
 
@@ -122,12 +125,12 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		for (final Integer objKey : keys) {
 			assertTrue("Error: divergence in keys between t and m (polymorphic method)", m.containsKey(objKey) == t.containsKey(objKey));
 
-			final int mVal = m.get(objKey.intValue());
+			final Integer mVal = m.get(objKey.intValue());
 			final Integer mValObj = m.get(objKey);
 			final Integer tVal = t.get(objKey);
 			assertEquals("Error: divergence between t and m " + description + " (polymorphic method)", tVal, mValObj);
-			assertTrue("Error: divergence between polymorphic and standard method " + description, mVal == (mValObj == null ? drv : mValObj.intValue()));
-			assertEquals("Error: divergence between t and m " + description + " (standard method)", tVal == null ? drv : tVal.intValue(), mVal);
+			assertTrue("Error: divergence between polymorphic and standard method " + description, mVal == (mValObj == null ? drv : mValObj));
+			assertEquals("Error: divergence between t and m " + description + " (standard method)", tVal == null ? drv : tVal, mVal);
 		}
 	}
 
@@ -170,49 +173,21 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		final Method clone = m.getClass().getMethod("clone");
 
 		assertEquals(m, clone.invoke(m));
-		m.put(0, 1);
+		m.put(0, ONE);
 		assertEquals(m, clone.invoke(m));
-		m.put(0, 2);
+		m.put(0, TWO);
 		assertEquals(m, clone.invoke(m));
-		m.put(1, 2);
+		m.put(1, THREE);
 		assertEquals(m, clone.invoke(m));
 		m.remove(1);
 		assertEquals(m, clone.invoke(m));
 	}
 
-	@Test
-	public void testComputeIfAbsentNullablePrimitive() {
-		m.defaultReturnValue(-1);
-
-		assertEquals(-1, m.computeIfAbsentNullable(1, key -> null));
-		assertEquals(-1, m.computeIfAbsentNullable(2, key -> null));
-
-		m.put(1, 1);
-		assertEquals(1, m.computeIfAbsentNullable(1, key -> null));
-		assertEquals(-1, m.computeIfAbsentNullable(2, key -> null));
-
-		assertEquals(1, m.computeIfAbsentNullable(1, Integer::valueOf));
-		assertEquals(2, m.computeIfAbsentNullable(2, Integer::valueOf));
-		assertEquals(2, m.computeIfAbsentNullable(2, key -> null));
-		assertEquals(2, m.get(2));
-	}
-
-	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentNullablePrimitiveNullFunction() {
-		m.put(1, 1);
-		m.computeIfAbsentNullable(1, null);
-	}
-
-	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentNullablePrimitiveNullFunctionMissingKey() {
-		m.computeIfAbsentNullable(1, null);
-	}
-
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testComputeIfAbsentObject() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
 		assertEquals(ONE, m.computeIfAbsent(ONE, key -> Integer.valueOf(key.intValue() - 1)));
 
@@ -223,13 +198,13 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(2, m.size());
 		m.clear();
 
-		assertNull(m.computeIfAbsent(ONE, key -> null));
-		assertNull(m.computeIfAbsent(TWO, key -> null));
+		assertSame(DEFAULT, m.computeIfAbsent(ONE, key -> null));
+		assertSame(DEFAULT, m.computeIfAbsent(TWO, key -> null));
 		assertTrue(m.isEmpty());
 
 		m.put(ONE, ONE);
 		assertEquals(ONE, m.computeIfAbsent(ONE, key -> null));
-		assertNull(m.computeIfAbsent(TWO, key -> null));
+		assertSame(DEFAULT, m.computeIfAbsent(TWO, key -> null));
 
 		assertEquals(ONE, m.computeIfAbsent(ONE, key -> key));
 		assertEquals(TWO, m.computeIfAbsent(TWO, key -> key));
@@ -240,7 +215,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentObjectNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.computeIfAbsent(ONE, null);
 	}
 
@@ -258,26 +233,25 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testComputeIfAbsentPartialPrimitive() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
-		final Int2IntFunction f = new Int2IntArrayMap();
-		f.defaultReturnValue(1);
-		f.put(1, 1);
+		final Int2ObjectFunction<Integer> f = new Int2ObjectArrayMap<>();
+		f.put(1, ONE);
 
-		assertEquals(1, m.computeIfAbsentPartial(1, f));
-		assertEquals(1, m.get(1));
+		assertEquals(ONE, m.computeIfAbsentPartial(1, f));
+		assertEquals(ONE, m.get(1));
 
-		assertEquals(-1, m.computeIfAbsentPartial(2, f));
+		assertSame(DEFAULT, m.computeIfAbsentPartial(2, f));
 		assertFalse(m.containsKey(2));
 
-		f.put(2, 2);
-		assertEquals(2, m.computeIfAbsentPartial(2, f));
+		f.put(2, TWO);
+		assertEquals(TWO, m.computeIfAbsentPartial(2, f));
 		assertTrue(m.containsKey(2));
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentPartialPrimitiveNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.computeIfAbsentPartial(1, null);
 	}
 
@@ -288,21 +262,21 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testComputeIfAbsentPrimitive() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
-		assertEquals(1, m.computeIfAbsent(1, key -> key - 1));
+		assertEquals(ONE, m.computeIfAbsent(1, key -> Integer.valueOf(key - 1)));
 
-		assertEquals(1, m.computeIfAbsent(2, key -> key - 1));
-		assertEquals(1, m.computeIfAbsent(2, key -> key - 2));
-		assertEquals(1, m.get(2));
+		assertEquals(ONE, m.computeIfAbsent(2, key -> Integer.valueOf(key - 1)));
+		assertEquals(ONE, m.computeIfAbsent(2, key -> Integer.valueOf(key - 2)));
+		assertEquals(ONE, m.get(2));
 
 		assertEquals(2, m.size());
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentPrimitiveNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.computeIfAbsent(1, null);
 	}
 
@@ -314,13 +288,13 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testComputeIfPresentObject() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
 		final BiFunction<Integer, Integer, Integer> add = (key, value) -> Integer.valueOf(key.intValue() + value.intValue());
 
-		assertNull(m.computeIfPresent(TWO, add));
-		assertNull(m.computeIfPresent(TWO, (key, value) -> null));
+		assertSame(DEFAULT, m.computeIfPresent(TWO, add));
+		assertSame(DEFAULT, m.computeIfPresent(TWO, (key, value) -> null));
 		assertFalse(m.containsKey(TWO));
 
 		assertEquals(TWO, m.computeIfPresent(ONE, add));
@@ -331,14 +305,14 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(MINUS_ONE, m.computeIfPresent(ONE, (key, value) -> MINUS_ONE));
 		assertTrue(m.containsKey(ONE));
 
-		assertNull(m.computeIfPresent(ONE, (key, value) -> null));
+		assertSame(DEFAULT, m.computeIfPresent(ONE, (key, value) -> null));
 		assertFalse(m.containsKey(ONE));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfPresentObjectNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.computeIfPresent(ONE, null);
 	}
 
@@ -356,30 +330,27 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testComputeIfPresentPrimitive() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
 		final BiFunction<Integer, Integer, Integer> add = (key, value) -> Integer.valueOf(key.intValue() + value.intValue());
 
-		assertEquals(-1, m.computeIfPresent(2, add));
-		assertEquals(-1, m.computeIfPresent(2, (key, value) -> null));
+		assertSame(DEFAULT, m.computeIfPresent(2, add));
+		assertSame(DEFAULT, m.computeIfPresent(2, (key, value) -> null));
 		assertFalse(m.containsKey(2));
 
-		assertEquals(2, m.computeIfPresent(1, add));
-		assertEquals(2, m.get(1));
-		assertEquals(3, m.computeIfPresent(1, add));
-		assertEquals(3, m.get(1));
+		assertEquals(TWO, m.computeIfPresent(1, add));
+		assertEquals(TWO, m.get(1));
+		assertEquals(THREE, m.computeIfPresent(1, add));
+		assertEquals(THREE, m.get(1));
 
-		assertEquals(-1, m.computeIfPresent(1, (key, value) -> Integer.valueOf(-1)));
-		assertTrue(m.containsKey(1));
-
-		assertEquals(-1, m.computeIfPresent(1, (key, value) -> null));
+		assertSame(DEFAULT, m.computeIfPresent(1, (key, value) -> null));
 		assertFalse(m.containsKey(1));
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfPresentPrimitiveNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.computeIfPresent(1, null);
 	}
 
@@ -391,7 +362,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testComputeObject() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
 		// Test parameters of function
 		assertEquals(ONE, m.compute(ONE, (key, value) -> {
@@ -408,7 +379,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		}));
 		assertEquals(TWO, m.get(ONE));
 
-		assertNull(m.compute(ONE, (key, value) -> {
+		assertSame(DEFAULT, m.compute(ONE, (key, value) -> {
 			assertEquals(ONE, key);
 			assertEquals(TWO, value);
 			return null;
@@ -420,24 +391,24 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(Integer.valueOf(1000), m.get(ZERO));
 		assertEquals(Integer.valueOf(2000), m.compute(ZERO, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
 		assertEquals(Integer.valueOf(2000), m.get(ZERO));
-		assertNull(m.compute(ZERO, (x, y) -> null));
+		assertSame(DEFAULT, m.compute(ZERO, (x, y) -> null));
 		assertFalse(m.containsKey(0));
 
 		assertEquals(Integer.valueOf(1001), m.compute(ONE, (x, y) -> Integer.valueOf(x.intValue() + (y != null ? y.intValue() : 1000))));
 		assertEquals(Integer.valueOf(1001), m.get(ONE));
 		assertEquals(Integer.valueOf(2003), m.compute(ONE, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
 		assertEquals(Integer.valueOf(2003), m.get(ONE));
-		assertNull(m.compute(ONE, (x, y) -> null));
+		assertSame(DEFAULT, m.compute(ONE, (x, y) -> null));
 		assertFalse(m.containsKey(1));
 
-		assertNull(m.compute(TWO, (x, y) -> null));
+		assertSame(DEFAULT, m.compute(TWO, (x, y) -> null));
 		assertFalse(m.containsKey(2));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testComputeObjectNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.compute(ONE, null);
 	}
 
@@ -449,24 +420,24 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testComputePrimitive() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
 		// Test parameters of function
-		assertEquals(1, m.compute(1, (key, value) -> {
+		assertEquals(ONE, m.compute(1, (key, value) -> {
 			assertEquals(1, key.intValue());
 			assertNull(value);
 			return Integer.valueOf(1);
 		}));
-		assertEquals(1, m.get(1));
+		assertEquals(ONE, m.get(1));
 
-		assertEquals(2, m.compute(1, (key, value) -> {
+		assertEquals(TWO, m.compute(1, (key, value) -> {
 			assertEquals(1, key.intValue());
 			assertEquals(1, value.intValue());
 			return Integer.valueOf(2);
 		}));
-		assertEquals(2, m.get(1));
+		assertEquals(TWO, m.get(1));
 
-		assertEquals(-1, m.compute(1, (key, value) -> {
+		assertSame(DEFAULT, m.compute(1, (key, value) -> {
 			assertEquals(1, key.intValue());
 			assertEquals(2, value.intValue());
 			return null;
@@ -474,27 +445,27 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.containsKey(1));
 
 		// Test functionality
-		assertEquals(1000, m.compute(0, (x, y) -> Integer.valueOf(x.intValue() + (y != null ? y.intValue() : 1000))));
-		assertEquals(1000, m.get(0));
-		assertEquals(2000, m.compute(0, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
-		assertEquals(2000, m.get(0));
-		assertEquals(-1, m.compute(0, (x, y) -> null));
-		assertEquals(-1, m.get(0));
+		assertEquals(1000, m.compute(0, (x, y) -> Integer.valueOf(x.intValue() + (y != null ? y.intValue() : 1000))).intValue());
+		assertEquals(1000, m.get(0).intValue());
+		assertEquals(2000, m.compute(0, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)).intValue());
+		assertEquals(2000, m.get(0).intValue());
+		assertSame(DEFAULT, m.compute(0, (x, y) -> null));
+		assertSame(DEFAULT, m.get(0));
 
-		assertEquals(1001, m.compute(1, (x, y) -> Integer.valueOf(x.intValue() + (y != null ? y.intValue() : 1000))));
-		assertEquals(1001, m.get(1));
-		assertEquals(2003, m.compute(1, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
-		assertEquals(2003, m.get(1));
-		assertEquals(-1, m.compute(1, (x, y) -> null));
-		assertEquals(-1, m.get(1));
+		assertEquals(1001, m.compute(1, (x, y) -> Integer.valueOf(x.intValue() + (y != null ? y.intValue() : 1000))).intValue());
+		assertEquals(1001, m.get(1).intValue());
+		assertEquals(2003, m.compute(1, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)).intValue());
+		assertEquals(2003, m.get(1).intValue());
+		assertSame(DEFAULT, m.compute(1, (x, y) -> null));
+		assertSame(DEFAULT, m.get(1));
 
-		assertEquals(-1, m.compute(2, (x, y) -> null));
-		assertEquals(-1, m.get(2));
+		assertSame(DEFAULT, m.compute(2, (x, y) -> null));
+		assertSame(DEFAULT, m.get(2));
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputePrimitiveNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.compute(1, null);
 	}
 
@@ -509,7 +480,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.containsKey(null));
 		assertFalse(m.containsValue(null));
 
-		m.put(0, 0);
+		m.put(0, ZERO);
 		assertFalse(m.containsKey(null));
 		assertFalse(m.containsValue(null));
 
@@ -518,41 +489,41 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testEntrySet() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 		for (int i = 0; i < 100; i++) {
-			assertEquals(-1, m.put(i, i));
+			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertTrue(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(0, 0)));
+			assertTrue(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(0, Integer.valueOf(0))));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertFalse(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(i, -1)));
+			assertFalse(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(i, DEFAULT)));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertTrue(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(i, i)));
+			assertTrue(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(i, Integer.valueOf(i))));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i, -1)));
+			assertFalse(m.int2ObjectEntrySet().remove(new AbstractInt2ObjectMap.BasicEntry<>(i, DEFAULT)));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertTrue(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i, i)));
+			assertTrue(m.int2ObjectEntrySet().remove(new AbstractInt2ObjectMap.BasicEntry<>(i, Integer.valueOf(i))));
 		}
-		assertTrue(m.int2IntEntrySet().isEmpty());
+		assertTrue(m.int2ObjectEntrySet().isEmpty());
 	}
 
 	@SuppressWarnings("SuspiciousMethodCalls")
 	@Test
 	public void testEntrySetContains() {
-		m.put(0, 0);
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(new Object(), null)));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(null, new Object())));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(null, null)));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
+		m.put(0, ZERO);
+		assertFalse(m.int2ObjectEntrySet().contains(new AbstractMap.SimpleEntry<>(new Object(), null)));
+		assertFalse(m.int2ObjectEntrySet().contains(new AbstractMap.SimpleEntry<>(null, new Object())));
+		assertFalse(m.int2ObjectEntrySet().contains(new AbstractMap.SimpleEntry<>(null, null)));
+		assertFalse(m.int2ObjectEntrySet().contains(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
 	@Test(expected = IllegalStateException.class)
 	public void testEntrySetEmptyIteratorRemove() {
-		final ObjectIterator<Int2IntMap.Entry> iterator = m.int2IntEntrySet().iterator();
+		final ObjectIterator<Entry<Integer>> iterator = m.int2ObjectEntrySet().iterator();
 		assertFalse(iterator.hasNext());
 		iterator.remove();
 	}
@@ -560,29 +531,29 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@Test
 	public void testEntrySetIteratorFastForEach() {
 		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
+			m.put(i, Integer.valueOf(i));
 		}
-		final Set<Int2IntMap.Entry> s = new HashSet<>();
-		Int2IntMaps.fastForEach(m, x -> s.add(new AbstractInt2IntMap.BasicEntry(x.getIntKey(), x.getIntValue())));
-		assertEquals(m.int2IntEntrySet(), s);
+		final Set<Entry<Integer>> s = new HashSet<>();
+		Int2ObjectMaps.fastForEach(m, x -> s.add(new AbstractInt2ObjectMap.BasicEntry<>(x.getIntKey(), x.getValue())));
+		assertEquals(m.int2ObjectEntrySet(), s);
 	}
 
 	@Test
 	public void testEntrySetIteratorForEach() {
 		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
+			m.put(i, Integer.valueOf(i));
 		}
-		final Set<Entry> s = new HashSet<>();
+		final Set<Entry<Integer>> s = new HashSet<>();
 		//noinspection UseBulkOperation
-		m.int2IntEntrySet().forEach(s::add);
-		assertEquals(m.int2IntEntrySet(), s);
+		m.int2ObjectEntrySet().forEach(s::add);
+		assertEquals(m.int2ObjectEntrySet(), s);
 	}
 
 	@Test(expected = IllegalStateException.class)
 	public void testEntrySetIteratorTwoRemoves() {
-		m.put(0, 0);
-		m.put(1, 1);
-		final ObjectIterator<Int2IntMap.Entry> iterator = m.int2IntEntrySet().iterator();
+		m.put(0, ZERO);
+		m.put(1, ONE);
+		final ObjectIterator<Entry<Integer>> iterator = m.int2ObjectEntrySet().iterator();
 		iterator.next();
 		iterator.remove();
 		iterator.remove();
@@ -591,36 +562,38 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("SuspiciousMethodCalls")
 	@Test
 	public void testEntrySetRemove() {
-		m.put(0, 0);
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), null)));
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(null, new Object())));
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(null, null)));
-		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
+		m.put(0, ZERO);
+		assertFalse(m.int2ObjectEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), null)));
+		assertFalse(m.int2ObjectEntrySet().remove(new AbstractMap.SimpleEntry<>(null, new Object())));
+		assertFalse(m.int2ObjectEntrySet().remove(new AbstractMap.SimpleEntry<>(null, null)));
+		assertFalse(m.int2ObjectEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
 	@Test
 	public void testEquals() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		assertFalse(m.equals(new Object2ObjectOpenHashMap<>(new Integer[] {ONE, null}, new Integer[] {ONE, null})));
 		assertTrue(m.equals(new Object2ObjectOpenHashMap<>(new Integer[] {ONE}, new Integer[] {ONE})));
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test(expected = IllegalStateException.class)
 	public void testFastEntrySetEmptyIteratorRemove() {
-		final ObjectSet<Entry> entries = m.int2IntEntrySet();
-		assumeTrue(entries instanceof Int2IntMap.FastEntrySet);
-		final ObjectIterator<Int2IntMap.Entry> iterator = ((Int2IntMap.FastEntrySet) entries).fastIterator();
+		final ObjectSet<Entry<Integer>> entries = m.int2ObjectEntrySet();
+		assumeTrue(entries instanceof Int2ObjectMap.FastEntrySet);
+		final ObjectIterator<Entry<Integer>> iterator = ((Int2ObjectMap.FastEntrySet) entries).fastIterator();
 		assertFalse(iterator.hasNext());
 		iterator.remove();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test(expected = IllegalStateException.class)
 	public void testFastEntrySetIteratorTwoRemoves() {
-		m.put(0, 0);
-		m.put(1, 1);
-		final ObjectSet<Entry> entries = m.int2IntEntrySet();
-		assumeTrue(entries instanceof Int2IntMap.FastEntrySet);
-		final ObjectIterator<Int2IntMap.Entry> iterator = ((Int2IntMap.FastEntrySet) entries).fastIterator();
+		m.put(0, ZERO);
+		m.put(1, ONE);
+		final ObjectSet<Entry<Integer>> entries = m.int2ObjectEntrySet();
+		assumeTrue(entries instanceof Int2ObjectMap.FastEntrySet);
+		final ObjectIterator<Entry<Integer>> iterator = ((Int2ObjectMap.FastEntrySet) entries).fastIterator();
 		iterator.next();
 		iterator.remove();
 		iterator.remove();
@@ -628,36 +601,36 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testFastIterator() {
-		assumeTrue(m.int2IntEntrySet() instanceof Int2IntMap.FastEntrySet);
+		assumeTrue(m.int2ObjectEntrySet() instanceof Int2ObjectMap.FastEntrySet);
 		assumeTrue(capabilities.contains(Capability.ITERATOR_MODIFY));
 
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 		for (int i = 0; i < 100; i++) {
-			assertEquals(-1, m.put(i, i));
+			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
-		final ObjectIterator<Entry> fastIterator = Int2IntMaps.fastIterator(m);
+		final ObjectIterator<Entry<Integer>> fastIterator = Int2ObjectMaps.fastIterator(m);
 		final Entry entry = fastIterator.next();
 		final int key = entry.getIntKey();
-		entry.setValue(-1000);
-		assertEquals(m.get(key), -1000);
+		entry.setValue(Integer.valueOf(1000));
+		assertEquals(m.get(key), Integer.valueOf(1000));
 		fastIterator.remove();
-		assertEquals(m.get(key), -1);
+		assertEquals(m.get(key), DEFAULT);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testGetOrDefaultObject() {
-		m.put(1, 1);
+		m.put(1, ONE);
 
 		assertEquals(ZERO, m.getOrDefault(ZERO, ZERO));
 		assertEquals(ONE, m.getOrDefault(ZERO, ONE));
 		assertEquals(ONE, m.getOrDefault(ONE, TWO));
 
-		m.put(0, 1);
+		m.put(0, ONE);
 		assertEquals(ONE, m.getOrDefault(ZERO, ZERO));
 		assertEquals(ONE, m.getOrDefault(ONE, ZERO));
 
-		m.put(1, 1);
+		m.put(1, ONE);
 		assertEquals(ONE, m.getOrDefault(ONE, TWO));
 
 		assertEquals(THREE, m.getOrDefault(null, THREE));
@@ -674,24 +647,24 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testGetOrDefaultPrimitive() {
-		m.put(1, 1);
+		m.put(1, ONE);
 
-		assertEquals(0, m.getOrDefault(0, 0));
-		assertEquals(1, m.getOrDefault(0, 1));
-		assertEquals(1, m.getOrDefault(1, 2));
+		assertEquals(ZERO, m.getOrDefault(0, ZERO));
+		assertEquals(ONE, m.getOrDefault(0, ONE));
+		assertEquals(ONE, m.getOrDefault(1, TWO));
 
-		m.put(0, 1);
-		assertEquals(1, m.getOrDefault(0, 0));
-		assertEquals(1, m.getOrDefault(1, 0));
+		m.put(0, ONE);
+		assertEquals(ONE, m.getOrDefault(0, ZERO));
+		assertEquals(ONE, m.getOrDefault(1, ZERO));
 
-		m.put(1, 1);
-		assertEquals(1, m.getOrDefault(1, 2));
+		m.put(1, ONE);
+		assertEquals(ONE, m.getOrDefault(1, TWO));
 	}
 
 	@Test
 	public void testKeySetIteratorForEach() {
 		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
+			m.put(i, Integer.valueOf(i));
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
 		m.keySet().forEach((java.util.function.IntConsumer) s::add);
@@ -702,7 +675,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@Test
 	public void testKeySetIteratorForEachObject() {
 		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
+			m.put(i, Integer.valueOf(i));
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
 		m.keySet().forEach((Consumer<Integer>) s::add);
@@ -712,80 +685,82 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testMap() {
-		assertEquals(0, m.put(1, 1));
+		assertNull(m.put(1, ONE));
 		assertEquals(1, m.size());
 		assertTrue(m.containsKey(1));
-		assertTrue(m.containsValue(1));
+		assertTrue(m.containsValue(ONE));
 
-		assertEquals(0, m.put(2, 2));
+		assertNull(m.put(2, TWO));
 		assertTrue(m.containsKey(2));
-		assertTrue(m.containsValue(2));
+		assertTrue(m.containsValue(TWO));
 		assertEquals(2, m.size());
 
-		assertEquals(1, m.put(1, 3));
-		assertTrue(m.containsValue(3));
-		assertEquals(0, m.remove(3));
-		assertEquals(0, m.put(3, 3));
-		assertTrue(m.containsKey(3));
-		assertTrue(m.containsValue(3));
+		m.defaultReturnValue(DEFAULT);
+
+		assertEquals(ONE, m.put(1, THREE));
+		assertTrue(m.containsValue(THREE));
+		assertEquals(DEFAULT, m.remove(THREE));
+		assertEquals(DEFAULT, m.put(3, THREE));
+		assertTrue(m.containsKey(THREE));
+		assertTrue(m.containsValue(THREE));
 		assertEquals(3, m.size());
 
-		assertEquals(3, m.get(1));
-		assertEquals(2, m.get(2));
-		assertEquals(3, m.get(3));
+		assertEquals(THREE, m.get(1));
+		assertEquals(TWO, m.get(2));
+		assertEquals(THREE, m.get(3));
 
 		assertEquals(new IntOpenHashSet(new int[] {1, 2, 3}), new IntOpenHashSet(m.keySet().iterator()));
-		assertEquals(new IntOpenHashSet(new int[] {3, 2, 3}), new IntOpenHashSet(m.values().iterator()));
+		assertEquals(new ObjectOpenHashSet<>(new Integer[] {THREE, TWO, THREE}), new ObjectOpenHashSet<>(m.values().iterator()));
 
-		for (final Map.Entry<Integer, Integer> entry : m.int2IntEntrySet()) {
+		for (final Map.Entry<Integer, Integer> entry : m.int2ObjectEntrySet()) {
 			assertEquals(entry.getValue(), m.get(entry.getKey()));
 		}
 
-		assertTrue(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(1, 3)));
-		assertTrue(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(2, 2)));
-		assertTrue(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(3, 3)));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(1, 2)));
-		assertFalse(m.int2IntEntrySet().contains(new AbstractInt2IntMap.BasicEntry(2, 1)));
+		assertTrue(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(1, THREE)));
+		assertTrue(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(2, TWO)));
+		assertTrue(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(3, THREE)));
+		assertFalse(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(1, TWO)));
+		assertFalse(m.int2ObjectEntrySet().contains(new AbstractInt2ObjectMap.BasicEntry<>(2, ONE)));
 
-		assertEquals(3, m.remove(3));
+		assertEquals(THREE, m.remove(3));
 		assertEquals(2, m.size());
-		assertEquals(3, m.remove(1));
+		assertEquals(THREE, m.remove(1));
 		assertEquals(1, m.size());
 		assertFalse(m.containsKey(1));
-		assertEquals(2, m.remove(2));
+		assertEquals(TWO, m.remove(2));
 		assertEquals(0, m.size());
 		assertFalse(m.containsKey(1));
 	}
 
 	@Test
 	public void testMerge() {
-		m.defaultReturnValue(-1);
-		assertEquals(0, m.merge(0, 0, (x, y) -> Integer.valueOf(1000)));
-		assertEquals(0, m.get(0));
-		assertEquals(1000, m.merge(0, 0, (x, y) -> Integer.valueOf(1000)));
-		assertEquals(1000, m.get(0));
-		assertEquals(2000, m.merge(0, 500, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
-		assertEquals(2000, m.get(0));
-		assertEquals(-1, m.merge(0, 0, (x, y) -> null));
-		assertEquals(-1, m.get(0));
+		m.defaultReturnValue(DEFAULT);
+		assertEquals(ZERO, m.merge(0, ZERO, (x, y) -> Integer.valueOf(1000)));
+		assertEquals(ZERO, m.get(0));
+		assertEquals(Integer.valueOf(1000), m.merge(0, ZERO, (x, y) -> Integer.valueOf(1000)));
+		assertEquals(Integer.valueOf(1000), m.get(0));
+		assertEquals(Integer.valueOf(2000), m.merge(0, Integer.valueOf(500), (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
+		assertEquals(Integer.valueOf(2000), m.get(0));
+		assertSame(DEFAULT, m.merge(0, ZERO, (x, y) -> null));
+		assertSame(DEFAULT, m.get(0));
 
-		assertEquals(0, m.merge(1, 0, (x, y) -> Integer.valueOf(1000)));
-		assertEquals(0, m.get(1));
-		assertEquals(1000, m.merge(1, 0, (x, y) -> Integer.valueOf(1000)));
-		assertEquals(1000, m.get(1));
-		assertEquals(2000, m.merge(1, 500, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
-		assertEquals(2000, m.get(1));
-		assertEquals(-1, m.merge(1, 0, (x, y) -> null));
-		assertEquals(-1, m.get(1));
+		assertEquals(ZERO, m.merge(1, ZERO, (x, y) -> Integer.valueOf(1000)));
+		assertEquals(ZERO, m.get(1));
+		assertEquals(Integer.valueOf(1000), m.merge(1, ZERO, (x, y) -> Integer.valueOf(1000)));
+		assertEquals(Integer.valueOf(1000), m.get(1));
+		assertEquals(Integer.valueOf(2000), m.merge(1, Integer.valueOf(500), (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
+		assertEquals(Integer.valueOf(2000), m.get(1));
+		assertSame(DEFAULT, m.merge(1, ZERO, (x, y) -> null));
+		assertSame(DEFAULT, m.get(1));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testMergeObject() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
 		assertEquals(ZERO, m.merge(ONE, ZERO, (oldVal, newVal) -> {
-			assertNull(oldVal);
+			assertSame(DEFAULT, oldVal);
 			assertEquals(ZERO, newVal);
 			return ZERO;
 		}));
@@ -800,8 +775,8 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(ZERO, m.merge(TWO, ZERO, add));
 		assertTrue(m.containsKey(ONE));
 
-		assertNull(m.merge(ONE, TWO, (key, value) -> null));
-		assertNull(m.merge(TWO, TWO, (key, value) -> null));
+		assertSame(DEFAULT, m.merge(ONE, TWO, (key, value) -> null));
+		assertSame(DEFAULT, m.merge(TWO, TWO, (key, value) -> null));
 
 		assertTrue(m.isEmpty());
 	}
@@ -809,7 +784,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullFunction() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.merge(ONE, ONE, null);
 	}
 
@@ -828,7 +803,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullValue() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.merge(ONE, null, (key, vale) -> ONE);
 	}
 
@@ -840,26 +815,26 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@Test
 	public void testMergePrimitive() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
-		assertEquals(0, m.merge(1, 0, (oldVal, newVal) -> {
-			assertNull(oldVal);
-			assertEquals(0, newVal.intValue());
+		assertEquals(ZERO, m.merge(1, ZERO, (oldVal, newVal) -> {
+			assertSame(DEFAULT, oldVal);
+			assertEquals(ZERO, newVal);
 			return Integer.valueOf(0);
 		}));
-		assertEquals(0, m.get(1));
+		assertEquals(ZERO, m.get(1));
 		m.clear();
 
 		final BiFunction<Integer, Integer, Integer> add = (oldVal, newVal) -> Integer.valueOf(oldVal.intValue() + newVal.intValue());
 
-		assertEquals(0, m.merge(1, 0, add));
-		assertEquals(1, m.merge(1, 1, add));
-		assertEquals(3, m.merge(1, 2, add));
-		assertEquals(0, m.merge(2, 0, add));
+		assertEquals(ZERO, m.merge(1, ZERO, add));
+		assertEquals(ONE, m.merge(1, ONE, add));
+		assertEquals(THREE, m.merge(1, TWO, add));
+		assertEquals(ZERO, m.merge(2, ZERO, add));
 		assertTrue(m.containsKey(1));
 
-		assertEquals(-1, m.merge(1, 2, (key, value) -> null));
-		assertEquals(-1, m.merge(2, 2, (key, value) -> null));
+		assertSame(DEFAULT, m.merge(1, TWO, (key, value) -> null));
+		assertSame(DEFAULT, m.merge(2, TWO, (key, value) -> null));
 
 		assertTrue(m.isEmpty());
 	}
@@ -867,85 +842,87 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testMergePrimitiveNullFunction() {
-		m.put(1, 1);
-		m.merge(1, 1, null);
+		m.put(1, ONE);
+		m.merge(1, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testMergePrimitiveNullFunctionMissingKey() {
-		m.merge(1, 1, null);
+		m.merge(1, ONE, null);
 	}
 
 	@Test
 	public void testPutAndGetPrimitive() {
-		m.defaultReturnValue(-1);
-		assertEquals(-1, m.get(1));
-		m.put(1, 1);
-		assertEquals(1, m.get(1));
-		m.defaultReturnValue(1);
+		m.defaultReturnValue(DEFAULT);
+		assertSame(DEFAULT, m.get(1));
+		m.put(1, ONE);
+		assertEquals(ONE, m.get(1));
+		m.defaultReturnValue(ONE);
 		assertTrue(m.containsKey(1));
-		assertEquals(1, m.get(1));
+		assertEquals(ONE, m.get(1));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testPutIfAbsentObject() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
-		m.put(1, 1);
+		m.put(1, ONE);
 		assertEquals(ONE, m.putIfAbsent(ONE, TWO));
 		assertEquals(ONE, m.putIfAbsent(ONE, null));
 
-		assertNull(m.putIfAbsent(TWO, TWO));
+		assertSame(DEFAULT, m.putIfAbsent(TWO, TWO));
 		assertEquals(TWO, m.get(TWO));
 
 		assertEquals(TWO, m.putIfAbsent(TWO, THREE));
 		assertEquals(TWO, m.get(TWO));
-	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testPutIfAbsentObjectNullValueMissingKey() {
-		m.putIfAbsent(ONE, null);
+		m.remove(1);
+		assertSame(DEFAULT, m.putIfAbsent(ONE, null));
+		assertNull(m.get(ONE));
 	}
 
 	@Test
 	public void testPutIfAbsentPrimitive() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
-		m.put(1, 1);
-		assertEquals(1, m.putIfAbsent(1, 2));
+		m.put(1, ONE);
+		assertEquals(ONE, m.putIfAbsent(1, TWO));
 
-		assertEquals(-1, m.putIfAbsent(2, 2));
-		assertEquals(2, m.get(2));
+		assertSame(DEFAULT, m.putIfAbsent(2, TWO));
+		assertEquals(TWO, m.get(2));
 
-		assertEquals(2, m.putIfAbsent(2, 3));
-		assertEquals(2, m.get(2));
+		assertEquals(TWO, m.putIfAbsent(2, THREE));
+		assertEquals(TWO, m.get(2));
+
+		m.remove(1);
+		assertSame(DEFAULT, m.putIfAbsent(1, null));
+		assertNull(m.get(1));
 	}
 
 	@Test
 	public void testRemove() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 		for (int i = 0; i < 100; i++) {
-			assertEquals(-1, m.put(i, i));
+			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertEquals(-1, m.remove(100 + i));
+			assertSame(DEFAULT, m.remove(100 + i));
 		}
 		for (int i = 50; i < 150; i++) {
-			assertEquals(i % 100, m.remove(i % 100));
-			assertEquals(m.size(), m.int2IntEntrySet().size());
+			assertEquals(Integer.valueOf(i % 100), m.remove(i % 100));
+			assertEquals(m.size(), m.int2ObjectEntrySet().size());
 		}
 		assertTrue(m.isEmpty());
 		for (int i = 0; i < 100; i++) {
-			assertEquals(-1, m.put(i, i));
+			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
 		for (int i = 0; i < 100; i++) {
-			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i + 1, i)));
-			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i, i + 1)));
+			assertFalse(m.int2ObjectEntrySet().remove(new AbstractInt2ObjectMap.BasicEntry<>(i + 1, Integer.valueOf(i))));
+			assertFalse(m.int2ObjectEntrySet().remove(new AbstractInt2ObjectMap.BasicEntry<>(i, Integer.valueOf(i + 1))));
 			assertTrue(m.containsKey(i));
-			assertTrue(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i, i)));
+			assertTrue(m.int2ObjectEntrySet().remove(new AbstractInt2ObjectMap.BasicEntry<>(i, Integer.valueOf(i))));
 			assertFalse(m.containsKey(i));
 		}
 	}
@@ -953,8 +930,8 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testRemoveObject() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 		assertTrue(m.containsKey(ONE));
 
 		assertFalse(m.remove(TWO, ONE));
@@ -969,81 +946,68 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.remove(ONE, ONE));
 		assertFalse(m.remove(ONE, MINUS_ONE));
 
-		assertNull(m.get(ONE));
+		assertSame(DEFAULT, m.get(ONE));
 		assertFalse(m.containsKey(ONE));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test(expected = ClassCastException.class)
 	public void testRemoveObjectInvalidKey() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.remove(Long.valueOf(1), ONE);
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected = ClassCastException.class)
-	public void testRemoveObjectInvalidValue() {
-		m.put(1, 1);
-		m.remove(ONE, Long.valueOf(1));
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected = ClassCastException.class)
-	public void testRemoveObjectInvalidValueMissingKey() {
-		m.remove(ONE, Long.valueOf(1));
 	}
 
 	@Test
 	public void testRemovePrimitive() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
-		m.put(1, 1);
+		m.put(1, ONE);
 		assertTrue(m.containsKey(1));
 
-		assertFalse(m.remove(2, 1));
-		assertFalse(m.remove(2, 2));
-		assertFalse(m.remove(1, 2));
+		assertFalse(m.remove(2, ONE));
+		assertFalse(m.remove(2, TWO));
+		assertFalse(m.remove(1, TWO));
 
 		assertTrue(m.containsKey(1));
 
-		assertTrue(m.remove(1, 1));
+		assertTrue(m.remove(1, ONE));
 		assertFalse(m.containsKey(1));
 
-		assertFalse(m.remove(1, 1));
-		assertFalse(m.remove(1, -1));
+		assertFalse(m.remove(1, ONE));
+		assertFalse(m.remove(1, DEFAULT));
 
-		assertEquals(-1, m.get(1));
+		assertSame(DEFAULT, m.get(1));
 		assertFalse(m.containsKey(1));
 	}
 
 	@Test
 	public void testRemoveWithValue() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 
-		assertFalse(m.remove(0, 0));
-		m.put(0, 1);
-		assertFalse(m.remove(0, 0));
+		assertFalse(m.remove(0, ZERO));
+		m.put(0, ONE);
+		assertFalse(m.remove(0, ZERO));
 		assertTrue(m.containsKey(0));
-		m.put(0, 0);
-		assertTrue(m.remove(0, 0));
+		m.put(0, ZERO);
+		assertTrue(m.remove(0, ZERO));
 		assertFalse(m.containsKey(0));
 
-		assertFalse(m.remove(1, 0));
-		m.put(1, 1);
-		assertFalse(m.remove(1, 0));
+		assertFalse(m.remove(1, ZERO));
+		m.put(1, ONE);
+		assertFalse(m.remove(1, ZERO));
 		assertTrue(m.containsKey(1));
-		m.put(1, 0);
-		assertTrue(m.remove(1, 0));
+		m.put(1, ZERO);
+		assertTrue(m.remove(1, ZERO));
 		assertFalse(m.containsKey(1));
 	}
 
 	@Test
 	public void testRemoveZero() {
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 		for (int i = -1; i <= 1; i++) {
-			assertEquals(-1, m.put(i, i));
+			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
-		assertEquals(0, m.remove(0));
+		assertEquals(ZERO, m.remove(0));
 		final IntIterator iterator = m.keySet().iterator();
 		final IntOpenHashSet z = new IntOpenHashSet();
 		z.add(iterator.nextInt());
@@ -1056,9 +1020,9 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	public void testRemoveZeroKeySet() {
 		assumeTrue(capabilities.contains(Capability.KEY_SET_MODIFY));
 
-		m.defaultReturnValue(-1);
+		m.defaultReturnValue(DEFAULT);
 		for (int i = -1; i <= 1; i++) {
-			assertEquals(-1, m.put(i, i));
+			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
 		IntIterator iterator = m.keySet().iterator();
 		boolean removed = false;
@@ -1072,7 +1036,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(removed);
 
 		assertFalse(m.containsKey(0));
-		assertEquals(-1, m.get(0));
+		assertSame(DEFAULT, m.get(0));
 
 		assertEquals(2, m.size());
 		assertEquals(2, m.keySet().size());
@@ -1088,11 +1052,11 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testReplaceBinaryObject() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
-		assertNull(m.replace(TWO, ONE));
-		assertNull(m.replace(TWO, TWO));
+		assertSame(DEFAULT, m.replace(TWO, ONE));
+		assertSame(DEFAULT, m.replace(TWO, TWO));
 		assertFalse(m.containsKey(TWO));
 
 		assertEquals(ONE, m.replace(ONE, TWO));
@@ -1109,39 +1073,39 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	}
 
 	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
 	public void testReplaceBinaryObjectNullValue() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.replace(ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testReplaceBinaryObjectNullValueMissingKey() {
-		assertNull(m.replace(ONE, null));
+		m.defaultReturnValue(DEFAULT);
+		assertSame(DEFAULT, m.replace(ONE, null));
 	}
 
 	@Test
 	public void testReplaceBinaryPrimitive() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
-		assertEquals(-1, m.replace(2, 1));
-		assertEquals(-1, m.replace(2, 2));
+		assertSame(DEFAULT, m.replace(2, ONE));
+		assertSame(DEFAULT, m.replace(2, TWO));
 		assertFalse(m.containsKey(2));
 
-		assertEquals(1, m.replace(1, 2));
-		assertEquals(2, m.replace(1, 2));
-		assertEquals(2, m.replace(1, 1));
-		assertEquals(1, m.get(1));
+		assertEquals(ONE, m.replace(1, TWO));
+		assertEquals(TWO, m.replace(1, TWO));
+		assertEquals(TWO, m.replace(1, ONE));
+		assertEquals(ONE, m.get(1));
 		assertTrue(m.containsKey(1));
 	}
 
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testReplaceTernaryObject() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
 		assertFalse(m.replace(TWO, ONE, ONE));
 		assertFalse(m.replace(TWO, TWO, ONE));
@@ -1164,40 +1128,37 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	}
 
 	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
 	public void testReplaceTernaryObjectNullNewValue() {
-		m.put(1, 1);
+		m.put(1, ONE);
 		m.replace(ONE, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
 	public void testReplaceTernaryObjectNullNewValueMissingKey() {
 		m.replace(ONE, ONE, null);
 	}
 
 	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
 	public void testReplaceTernaryObjectNullOldValueMissingKey() {
 		m.replace(ONE, null, ONE);
 	}
 
 	@Test
 	public void testReplaceTernaryPrimitive() {
-		m.defaultReturnValue(-1);
-		m.put(1, 1);
+		m.defaultReturnValue(DEFAULT);
+		m.put(1, ONE);
 
-		assertFalse(m.replace(2, 1, 1));
-		assertFalse(m.replace(2, 2, 1));
-		assertFalse(m.replace(1, 2, 1));
-		assertEquals(1, m.get(1));
+		assertFalse(m.replace(2, ONE, ONE));
+		assertFalse(m.replace(2, TWO, ONE));
+		assertFalse(m.replace(1, TWO, ONE));
+		assertEquals(ONE, m.get(1));
 
-		assertTrue(m.replace(1, 1, 1));
-		assertTrue(m.replace(1, 1, 2));
-		assertFalse(m.replace(1, 1, 2));
+		assertTrue(m.replace(1, ONE, ONE));
+		assertTrue(m.replace(1, ONE, TWO));
+		assertFalse(m.replace(1, ONE, TWO));
 
-		assertTrue(m.replace(1, 2, -1));
-		assertEquals(-1, m.get(1));
+		assertTrue(m.replace(1, TWO, DEFAULT));
+		assertSame(DEFAULT, m.get(1));
 		assertTrue(m.containsKey(1));
 	}
 
@@ -1211,8 +1172,8 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		}
 		assertEquals(m, BinIO.loadObject(new ByteArrayInputStream(store.toByteArray())));
 
-		m.put(0, 1);
-		m.put(1, 2);
+		m.put(0, ONE);
+		m.put(1, TWO);
 
 		store.reset();
 		try (ObjectOutput oos = new ObjectOutputStream(store)) {
@@ -1227,21 +1188,21 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.isEmpty());
 		for (int i = 0; i < 100; i++) {
 			assertEquals(i, m.size());
-			assertEquals(m.defaultReturnValue(), m.put(i, i));
+			assertEquals(m.defaultReturnValue(), m.put(i, Integer.valueOf(i)));
 			assertFalse(m.isEmpty());
 		}
 		for (int i = 0; i < 100; i++) {
 			assertEquals(100, m.size());
-			assertEquals(i, m.put(i, i));
+			assertEquals(Integer.valueOf(i), m.put(i, Integer.valueOf(i)));
 		}
 		for (int i = 99; i >= 0; i--) {
-			assertEquals(i, m.remove(i));
+			assertEquals(Integer.valueOf(i), m.remove(i));
 			assertEquals(i, m.size());
 		}
 		assertEquals(0, m.size());
 		assertTrue(m.isEmpty());
 		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
+			m.put(i, Integer.valueOf(i));
 		}
 		m.clear();
 		assertEquals(0, m.size());
@@ -1250,22 +1211,12 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 	@SuppressWarnings("deprecation")
 	@Test
-	public void testValueSetIteratorForEachObject() {
+	public void testValueSetIteratorForEach() {
 		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
+			m.put(i, Integer.valueOf(i));
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
-		m.values().forEach((Consumer<Integer>) s::add);
-		assertEquals(s, new IntOpenHashSet(m.values()));
-	}
-
-	@Test
-	public void testValueSetIteratorForEachPrimitive() {
-		for (int i = 0; i < 100; i++) {
-			m.put(i, i);
-		}
-		final IntOpenHashSet s = new IntOpenHashSet();
-		m.values().forEach((java.util.function.IntConsumer) s::add);
+		m.values().forEach(s::add);
 		assertEquals(s, new IntOpenHashSet(m.values()));
 	}
 

@@ -1,5 +1,6 @@
 package it.unimi.dsi.fastutil.ints;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMapGenericDefaultTest.SimpleInt2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -7,7 +8,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.junit.runners.Parameterized.Parameters;
 
-public class Int2IntMapGenericDefaultTest extends Int2IntMapGenericTest {
+public class Int2IntMapGenericDefaultTest extends Int2IntMapGenericTest<SimpleInt2IntMap> {
 	@Parameters
 	public static Iterable<Object[]> data() {
 		final EnumSet<Capability> capabilities = EnumSet.allOf(Capability.class);
@@ -18,7 +19,7 @@ public class Int2IntMapGenericDefaultTest extends Int2IntMapGenericTest {
 		});
 	}
 
-	private static final class SimpleInt2IntMap implements Int2IntMap {
+	static final class SimpleInt2IntMap implements Int2IntMap {
 		private final Int2IntMap delegate;
 
 		SimpleInt2IntMap(final Int2IntMap delegate) {

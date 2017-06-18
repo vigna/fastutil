@@ -14,18 +14,18 @@ import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 public class Int2ObjectMapTest {
-	private final static Integer ZERO = new Integer(0);
-	private final static Integer ONE = new Integer(1);
-	private final static Integer TWO = new Integer(2);
-	private final static Integer THREE = new Integer(3);
-	private final static Integer FOUR = new Integer(4);
-	private final static Integer SIX = new Integer(6);
-	private final static	 Integer DEFAULT = new Integer(-1);
-	
+	private static final Integer ZERO = new Integer(0);
+	private static final Integer ONE = new Integer(1);
+	private static final Integer TWO = new Integer(2);
+	private static final Integer THREE = new Integer(3);
+	private static final Integer FOUR = new Integer(4);
+	private static final Integer SIX = new Integer(6);
+	private static final Integer DEFAULT = new Integer(-1);
+
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultGetOrDefault() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.put(1, ONE);
 
 		assertEquals(ONE, m.getOrDefault(0, ONE));
@@ -38,7 +38,7 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultPutIfAbsent() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
@@ -57,7 +57,7 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultRemove() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
@@ -85,7 +85,7 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultReplaceTernary() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
@@ -114,7 +114,7 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultReplaceBinary() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
@@ -142,7 +142,7 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings({ "deprecation", "boxing" })
 	@Test
 	public void testDefaultComputeIfAbsent() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
@@ -161,7 +161,7 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testDefaultComputeIfPresent() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
@@ -176,7 +176,7 @@ public class Int2ObjectMapTest {
 
 	@Test
 	public void testDefaultCompute() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 
 		assertEquals(ONE, m.compute(1, (key, value) -> {
@@ -195,10 +195,10 @@ public class Int2ObjectMapTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testDefaultMerge() {
-		Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
+		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());
 		m.defaultReturnValue(DEFAULT);
 
-		BiFunction<Object, Object, Object> add = (key, value) -> (Integer)key + (Integer)value;
+		final BiFunction<Object, Object, Object> add = (key, value) -> (Integer)key + (Integer)value;
 
 		assertEquals(ONE, m.merge(1, ONE, add));
 		assertEquals(TWO, m.merge(1, ONE, add));
@@ -215,7 +215,7 @@ public class Int2ObjectMapTest {
 	private static final class SimpleInt2ObjectMap implements Int2ObjectMap<Object> {
 		private final Int2ObjectMap<Object> delegate;
 
-		SimpleInt2ObjectMap(Int2ObjectMap<Object> delegate) {
+		SimpleInt2ObjectMap(final Int2ObjectMap<Object> delegate) {
 			this.delegate = delegate;
 		}
 
@@ -225,17 +225,17 @@ public class Int2ObjectMapTest {
 		}
 
 		@Override
-		public boolean containsKey(int key) {
+		public boolean containsKey(final int key) {
 			return delegate.containsKey(key);
 		}
 
 		@Override
-		public boolean containsValue(Object value) {
+		public boolean containsValue(final Object value) {
 			return delegate.containsValue(value);
 		}
 
 		@Override
-		public void defaultReturnValue(Object rv) {
+		public void defaultReturnValue(final Object rv) {
 			delegate.defaultReturnValue(rv);
 		}
 
@@ -245,7 +245,7 @@ public class Int2ObjectMapTest {
 		}
 
 		@Override
-		public Object get(int key) {
+		public Object get(final int key) {
 			return delegate.get(key);
 		}
 
@@ -265,17 +265,17 @@ public class Int2ObjectMapTest {
 		}
 
 		@Override
-		public Object put(int key, Object value) {
+		public Object put(final int key, final Object value) {
 			return delegate.put(key, value);
 		}
 
 		@Override
-		public void putAll(Map<? extends Integer, ? extends Object> m) {
+		public void putAll(final Map<? extends Integer, ? extends Object> m) {
 			delegate.putAll(m);
 		}
 
 		@Override
-		public Object remove(int key) {
+		public Object remove(final int key) {
 			return delegate.remove(key);
 		}
 
