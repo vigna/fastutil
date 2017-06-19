@@ -42,12 +42,12 @@ import org.junit.runners.Parameterized.Parameter;
 
 @RunWith(Parameterized.class)
 public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>> {
-	private static final Integer MINUS_ONE = Integer.valueOf(-1);
-	private static final Integer ONE = Integer.valueOf(1);
-	private static final Integer THREE = Integer.valueOf(3);
-	private static final Integer TWO = Integer.valueOf(2);
-	private static final Integer ZERO = Integer.valueOf(0);
-	private static final Integer DEFAULT = Integer.valueOf(Integer.MIN_VALUE);
+	static final Integer MINUS_ONE = Integer.valueOf(-1);
+	static final Integer ONE = Integer.valueOf(1);
+	static final Integer THREE = Integer.valueOf(3);
+	static final Integer TWO = Integer.valueOf(2);
+	static final Integer ZERO = Integer.valueOf(0);
+	static final Integer DEFAULT = Integer.valueOf(Integer.MIN_VALUE);
 	private static final java.util.Random r = new java.util.Random(0);
 
 	@Parameter(1)

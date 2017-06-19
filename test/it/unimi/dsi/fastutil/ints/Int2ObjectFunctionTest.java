@@ -11,16 +11,15 @@ public class Int2ObjectFunctionTest {
 	@Test
 	public void testDefaultGenericMethods() {
 		final Integer zero = Integer.valueOf(0);
-		
+
 		@SuppressWarnings("serial")
-		Int2ObjectFunction<Object> f = new AbstractInt2ObjectFunction<Object>() {
+		final Int2ObjectFunction<Object> f = new AbstractInt2ObjectFunction<Object>() {
 			@Override
 			public Object get(int key) {
 				return key == 0 ? zero : defRetValue;
 			}
 		};
-		
-		
+
 		final Object drv = new Object();
 		f.defaultReturnValue(drv);
 		assertSame(Integer.valueOf(0), f.get(0));
