@@ -941,6 +941,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		for (int i = 0; i < 100; i++) {
 			assertEquals(-1, m.put(i, i));
 		}
+		System.err.println(m);
 		for (int i = 0; i < 100; i++) {
 			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i + 1, i)));
 			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i, i + 1)));

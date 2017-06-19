@@ -581,7 +581,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 	public void testFastEntrySetEmptyIteratorRemove() {
 		final ObjectSet<Entry<Integer>> entries = m.int2ObjectEntrySet();
 		assumeTrue(entries instanceof Int2ObjectMap.FastEntrySet);
-		final ObjectIterator<Entry<Integer>> iterator = ((Int2ObjectMap.FastEntrySet) entries).fastIterator();
+		final ObjectIterator<Entry<Integer>> iterator = ((Int2ObjectMap.FastEntrySet<Integer>) entries).fastIterator();
 		assertFalse(iterator.hasNext());
 		iterator.remove();
 	}
@@ -593,7 +593,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		m.put(1, ONE);
 		final ObjectSet<Entry<Integer>> entries = m.int2ObjectEntrySet();
 		assumeTrue(entries instanceof Int2ObjectMap.FastEntrySet);
-		final ObjectIterator<Entry<Integer>> iterator = ((Int2ObjectMap.FastEntrySet) entries).fastIterator();
+		final ObjectIterator<Entry<Integer>> iterator = ((Int2ObjectMap.FastEntrySet<Integer>) entries).fastIterator();
 		iterator.next();
 		iterator.remove();
 		iterator.remove();
@@ -609,7 +609,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 			assertSame(DEFAULT, m.put(i, Integer.valueOf(i)));
 		}
 		final ObjectIterator<Entry<Integer>> fastIterator = Int2ObjectMaps.fastIterator(m);
-		final Entry entry = fastIterator.next();
+		final Entry<Integer> entry = fastIterator.next();
 		final int key = entry.getIntKey();
 		entry.setValue(Integer.valueOf(1000));
 		assertEquals(m.get(key), Integer.valueOf(1000));
