@@ -23,8 +23,7 @@ import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import VALUE_PACKAGE.VALUE_COLLECTION;
-import VALUE_PACKAGE.VALUE_COLLECTIONS;
-import VALUE_PACKAGE.VALUE_ARRAY_SET;
+import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ARRAYS;
 
 /** A simple, brute-force implementation of a map based on two parallel backing arrays.
@@ -317,10 +316,110 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	}
 
 	@Override
-	public SET KEY_GENERIC keySet() { return new ARRAY_SET KEY_GENERIC_DIAMOND(key, size); }
+	public SET KEY_GENERIC keySet() {
+		return new ABSTRACT_SET KEY_GENERIC() {
+			@Override
+			public boolean contains(final KEY_TYPE k) {
+				return findKey(k) != -1;
+			}
+
+			@Override
+			public boolean remove(final KEY_TYPE k) {
+				 final int oldPos = findKey(k);
+				 if (oldPos == -1) return false;
+				 final int tail = size - oldPos - 1;
+				 System.arraycopy(key, oldPos + 1, key, oldPos, tail);
+				 System.arraycopy(value, oldPos + 1, value, oldPos, tail);
+				 size--;
+				 return true;
+			}
+
+			@Override
+			public KEY_ITERATOR KEY_GENERIC iterator() {
+				return new KEY_ITERATOR KEY_GENERIC() {
+					int pos = 0;
+					@Override
+					public boolean hasNext() {
+						return pos < size;
+					}
+
+					@Override
+					SUPPRESS_WARNINGS_KEY_UNCHECKED
+					public KEY_GENERIC_TYPE NEXT_KEY() {
+						if (! hasNext()) throw new NoSuchElementException();
+						return KEY_GENERIC_CAST key[pos++];
+					}
+
+					@Override
+					public void remove() {
+						if (pos == 0) throw new IllegalStateException();
+						final int tail = size - pos;
+						System.arraycopy(key, pos, key, pos - 1, tail);
+						System.arraycopy(value, pos, value, pos - 1, tail);
+						size--;
+					}
+				};
+			}
+
+			@Override
+			public int size() {
+				return size;
+			}
+
+			@Override
+			public void clear() {
+				ARRAY_MAP.this.clear();
+			}
+		};
+	}
 
 	@Override
-	public VALUE_COLLECTION VALUE_GENERIC values() { return VALUE_COLLECTIONS.unmodifiable(new VALUE_ARRAY_SET VALUE_GENERIC_DIAMOND(value, size)); }
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		return new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
+
+			@Override
+			public boolean contains(final VALUE_TYPE v) {
+				return containsValue(v);
+			}
+
+			@Override
+			public VALUE_PACKAGE.VALUE_ITERATOR VALUE_GENERIC iterator() {
+				return new VALUE_PACKAGE.VALUE_ITERATOR VALUE_GENERIC() {
+					int pos = 0;
+					@Override
+					public boolean hasNext() {
+						return pos < size;
+					}
+
+					@Override
+					SUPPRESS_WARNINGS_VALUE_UNCHECKED
+					public VALUE_GENERIC_TYPE NEXT_VALUE() {
+						if (! hasNext()) throw new NoSuchElementException();
+						return VALUE_GENERIC_CAST value[pos++];
+					}
+
+					@Override
+					public void remove() {
+						if (pos == 0) throw new IllegalStateException();
+						final int tail = size - pos;
+						System.arraycopy(key, pos, key, pos - 1, tail);
+						System.arraycopy(value, pos, value, pos - 1, tail);
+						size--;
+					}
+				};
+			}
+
+			@Override
+			public int size() {
+				return size;
+			}
+
+			@Override
+			public void clear() {
+				ARRAY_MAP.this.clear();
+			}
+		};
+	}
 
 	/** Returns a deep copy of this map.
 	 *
