@@ -198,13 +198,13 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertEquals(2, m.size());
 		m.clear();
 
-		assertSame(DEFAULT, m.computeIfAbsent(ONE, key -> null));
-		assertSame(DEFAULT, m.computeIfAbsent(TWO, key -> null));
+		assertNull(m.computeIfAbsent(ONE, key -> null));
+		assertNull(m.computeIfAbsent(TWO, key -> null));
 		assertTrue(m.isEmpty());
 
 		m.put(ONE, ONE);
 		assertEquals(ONE, m.computeIfAbsent(ONE, key -> null));
-		assertSame(DEFAULT, m.computeIfAbsent(TWO, key -> null));
+		assertNull(m.computeIfAbsent(TWO, key -> null));
 
 		assertEquals(ONE, m.computeIfAbsent(ONE, key -> key));
 		assertEquals(TWO, m.computeIfAbsent(TWO, key -> key));
@@ -293,8 +293,8 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 
 		final BiFunction<Integer, Integer, Integer> add = (key, value) -> Integer.valueOf(key.intValue() + value.intValue());
 
-		assertSame(DEFAULT, m.computeIfPresent(TWO, add));
-		assertSame(DEFAULT, m.computeIfPresent(TWO, (key, value) -> null));
+		assertNull(m.computeIfPresent(TWO, add));
+		assertNull(m.computeIfPresent(TWO, (key, value) -> null));
 		assertFalse(m.containsKey(TWO));
 
 		assertEquals(TWO, m.computeIfPresent(ONE, add));
@@ -305,7 +305,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertEquals(MINUS_ONE, m.computeIfPresent(ONE, (key, value) -> MINUS_ONE));
 		assertTrue(m.containsKey(ONE));
 
-		assertSame(DEFAULT, m.computeIfPresent(ONE, (key, value) -> null));
+		assertNull(m.computeIfPresent(ONE, (key, value) -> null));
 		assertFalse(m.containsKey(ONE));
 	}
 
@@ -379,7 +379,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		}));
 		assertEquals(TWO, m.get(ONE));
 
-		assertSame(DEFAULT, m.compute(ONE, (key, value) -> {
+		assertNull(m.compute(ONE, (key, value) -> {
 			assertEquals(ONE, key);
 			assertEquals(TWO, value);
 			return null;
@@ -391,17 +391,17 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertEquals(Integer.valueOf(1000), m.get(ZERO));
 		assertEquals(Integer.valueOf(2000), m.compute(ZERO, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
 		assertEquals(Integer.valueOf(2000), m.get(ZERO));
-		assertSame(DEFAULT, m.compute(ZERO, (x, y) -> null));
+		assertNull(m.compute(ZERO, (x, y) -> null));
 		assertFalse(m.containsKey(0));
 
 		assertEquals(Integer.valueOf(1001), m.compute(ONE, (x, y) -> Integer.valueOf(x.intValue() + (y != null ? y.intValue() : 1000))));
 		assertEquals(Integer.valueOf(1001), m.get(ONE));
 		assertEquals(Integer.valueOf(2003), m.compute(ONE, (x, y) -> Integer.valueOf(x.intValue() + y.intValue() * 2)));
 		assertEquals(Integer.valueOf(2003), m.get(ONE));
-		assertSame(DEFAULT, m.compute(ONE, (x, y) -> null));
+		assertNull(m.compute(ONE, (x, y) -> null));
 		assertFalse(m.containsKey(1));
 
-		assertSame(DEFAULT, m.compute(TWO, (x, y) -> null));
+		assertNull(m.compute(TWO, (x, y) -> null));
 		assertFalse(m.containsKey(2));
 	}
 
@@ -699,8 +699,8 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 
 		assertEquals(ONE, m.put(1, THREE));
 		assertTrue(m.containsValue(THREE));
-		assertEquals(DEFAULT, m.remove(THREE));
-		assertEquals(DEFAULT, m.put(3, THREE));
+		assertNull(m.remove(THREE));
+		assertSame(DEFAULT, m.put(3, THREE));
 		assertTrue(m.containsKey(THREE));
 		assertTrue(m.containsValue(THREE));
 		assertEquals(3, m.size());
@@ -775,8 +775,8 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertEquals(ZERO, m.merge(TWO, ZERO, add));
 		assertTrue(m.containsKey(ONE));
 
-		assertSame(DEFAULT, m.merge(ONE, TWO, (key, value) -> null));
-		assertSame(DEFAULT, m.merge(TWO, TWO, (key, value) -> null));
+		assertNull(m.merge(ONE, TWO, (key, value) -> null));
+		assertNull(m.merge(TWO, TWO, (key, value) -> null));
 
 		assertTrue(m.isEmpty());
 	}
@@ -872,14 +872,14 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertEquals(ONE, m.putIfAbsent(ONE, TWO));
 		assertEquals(ONE, m.putIfAbsent(ONE, null));
 
-		assertSame(DEFAULT, m.putIfAbsent(TWO, TWO));
+		assertNull(m.putIfAbsent(TWO, TWO));
 		assertEquals(TWO, m.get(TWO));
 
 		assertEquals(TWO, m.putIfAbsent(TWO, THREE));
 		assertEquals(TWO, m.get(TWO));
 
 		m.remove(1);
-		assertSame(DEFAULT, m.putIfAbsent(ONE, null));
+		assertNull(m.putIfAbsent(ONE, null));
 		assertNull(m.get(ONE));
 	}
 
@@ -946,7 +946,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertFalse(m.remove(ONE, ONE));
 		assertFalse(m.remove(ONE, MINUS_ONE));
 
-		assertSame(DEFAULT, m.get(ONE));
+		assertNull(m.get(ONE));
 		assertFalse(m.containsKey(ONE));
 	}
 
@@ -1055,8 +1055,8 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		m.defaultReturnValue(DEFAULT);
 		m.put(1, ONE);
 
-		assertSame(DEFAULT, m.replace(TWO, ONE));
-		assertSame(DEFAULT, m.replace(TWO, TWO));
+		assertNull(m.replace(TWO, ONE));
+		assertNull(m.replace(TWO, TWO));
 		assertFalse(m.containsKey(TWO));
 
 		assertEquals(ONE, m.replace(ONE, TWO));
@@ -1082,7 +1082,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 	@Test
 	public void testReplaceBinaryObjectNullValueMissingKey() {
 		m.defaultReturnValue(DEFAULT);
-		assertSame(DEFAULT, m.replace(ONE, null));
+		assertNull(m.replace(ONE, null));
 	}
 
 	@Test

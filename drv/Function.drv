@@ -29,8 +29,7 @@ import it.unimi.dsi.fastutil.Function;
  *
  * <p>For uniformity reasons, even functions returning objects implement the default
  * return value (of course, in this case the default return value is
- * initialized to {@code null}). Note that in principle this behaviour
- * is not compatible with the Java specification of {@link java.util.Map}.
+ * initialized to {@code null}).
  *
  * <p>The default implementation of optional operations just throw an {@link
  * UnsupportedOperationException}, except for the type-specific {@code
@@ -40,15 +39,12 @@ import it.unimi.dsi.fastutil.Function;
  * <p><strong>Warning:</strong> to fall in line as much as possible with the
  * {@linkplain java.util.Map standard map interface}, it is required that
  * standard versions of {@code get()}, {@code put()} and
- * {@code remove()} for maps with primitive-type values <em>return
+ * {@code remove()} for maps with primitive-type keys or values <em>return
  * {@code null} to denote missing keys </em> rather than wrap the default
- * return value in an object. Note that <em>before fastutil 8 abstract methods
- * (now default methods of this interface) providing standard versions were
- * returning {@code null} when keys were primitive and values were not</em>.
- * While not strictly against the policy above, this has been rectified after
- * fastutil 8: all methods returning an object will return the {@linkplain
- * #defaultReturnValue() default return value} instead of {@code null} if no
- * value is associated with a key.
+ * return value in an object. In case both keys and values are reference
+ * types, the default return value must be returned instead, thus violating
+ * the {@linkplain java.util.Map standard map interface} when the default
+ * return value is not {@code null}.
  *
  * @see Function
  */
@@ -119,85 +115,41 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 
-#if VALUES_PRIMITIVE
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
-#else
-	/** Adds a pair to the map (optional operation).
-	 *
-	 * @param key the key.
-	 * @param value the value.
-	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
-	 * @see Function#put(Object,Object)
-	 * @deprecated
-	 */
-#endif
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS put(final KEY_GENERIC_CLASS key, final VALUE_GENERIC_CLASS value) {
 		final KEY_GENERIC_TYPE k = KEY_CLASS2TYPE(key);
-#if VALUES_PRIMITIVE
 		final boolean containsKey = containsKey(k);
 		final VALUE_GENERIC_TYPE v = put(k, VALUE_CLASS2TYPE(value));
 		return containsKey ? VALUE2OBJ(v) : null;
-#else
-		return put(k, value);
-#endif
 	}
 
-#if VALUES_PRIMITIVE
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
-#else
-	/** Returns the value to which the given key is mapped.
-	 *
-	 * @param key the key.
-	 * @return the corresponding value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
-	 * @see Function#get(Object)
-	 * @deprecated
-	 */
-#endif
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS get(final Object key) {
 #if KEYS_PRIMITIVE
 		if (key == null) return null;
 #endif
-#if VALUES_PRIMITIVE
 		final KEY_TYPE k = KEY_OBJ2TYPE(key);
 		final VALUE_GENERIC_TYPE v = GET_VALUE(k);
 		return (v != defaultReturnValue() || containsKey(k)) ? VALUE2OBJ(v) : null;
-#else
-		return get(KEY_OBJ2TYPE(key));
-#endif
 	}
 
-#if VALUES_PRIMITIVE
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
-#else
-	/** Removes the mapping with the given key (optional operation).
-	 * @param key the key.
-	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
-	 * @see Function#remove(Object)
-	 * @deprecated
-	 */
-#endif
 	@Deprecated
 	@Override
 	default VALUE_GENERIC_CLASS remove(final Object key) {
 #if KEYS_PRIMITIVE
 		if (key == null) return null;
 #endif
-#if VALUES_PRIMITIVE
 		final KEY_TYPE k = KEY_OBJ2TYPE(key);
 		return containsKey(k) ? VALUE2OBJ(REMOVE_VALUE(k)) : null;
-#else
-		return remove(KEY_OBJ2TYPE(key));
-#endif
 	}
-
-#endif
 
 #if KEYS_PRIMITIVE
 
@@ -223,6 +175,8 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 	default boolean containsKey(final Object key) {
 		return key == null ? false : containsKey(KEY_OBJ2TYPE(key));
 	}
+
+#endif
 
 #endif
 

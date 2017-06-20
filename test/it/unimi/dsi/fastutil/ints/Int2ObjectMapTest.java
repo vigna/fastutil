@@ -48,7 +48,7 @@ public class Int2ObjectMapTest {
 		assertEquals(TWO, m.get(2));
 
 		assertEquals(ONE, m.putIfAbsent(ONE, TWO));
-		assertEquals(DEFAULT, m.putIfAbsent(THREE, TWO));
+		assertNull(m.putIfAbsent(THREE, TWO));
 		assertEquals(TWO, m.putIfAbsent(THREE, TWO));
 		assertEquals(TWO, m.get(TWO));
 		assertEquals(TWO, m.get(THREE));
@@ -79,7 +79,7 @@ public class Int2ObjectMapTest {
 		assertTrue(m.remove(ONE, ONE));
 		assertFalse(m.remove(ONE, ONE));
 
-		assertEquals(DEFAULT, m.get(ONE));
+		assertNull(m.get(ONE));
 	}
 
 	@SuppressWarnings("deprecation")
@@ -128,8 +128,8 @@ public class Int2ObjectMapTest {
 		assertTrue(m.containsKey(1));
 		assertFalse(m.containsKey(2));
 
-		assertEquals(DEFAULT, m.replace(TWO, ONE));
-		assertEquals(DEFAULT, m.replace(TWO, TWO));
+		assertNull(m.replace(TWO, ONE));
+		assertNull(m.replace(TWO, TWO));
 		assertEquals(ONE, m.replace(ONE, TWO));
 		assertEquals(TWO, m.replace(ONE, TWO));
 		assertEquals(TWO, m.replace(ONE, ONE));
