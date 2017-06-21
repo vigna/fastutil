@@ -39,6 +39,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 
 @RunWith(Parameterized.class)
+@SuppressWarnings("deprecation")
 public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	private static final Integer MINUS_ONE = Integer.valueOf(-1);
 	private static final Integer ONE = Integer.valueOf(1);
@@ -53,7 +54,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	public Supplier<M> mapSupplier;
 	protected M m;
 
-	@SuppressWarnings("deprecation")
+
 	protected void check(final Int2IntMap m, final Map<Integer, Integer> t, final IntSupplier keyProvider, final IntSupplier valueProvider, final int size) {
 		/* First of all, we fill t with random data. */
 		for (int i = 0; i < size; i++) {
@@ -80,7 +81,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		checkEquality(m, t, genTestKeys(m.keySet(), size), "after removal");
 	}
 
-	@SuppressWarnings("deprecation")
+
 	private void checkEquality(final Int2IntMap m, final Map<Integer, Integer> t, final Iterable<Integer> keys, final String description) {
 		final int drv = m.defaultReturnValue();
 
@@ -208,7 +209,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		m.computeIfAbsentNullable(1, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testComputeIfAbsentObject() {
 		m.defaultReturnValue(-1);
@@ -235,25 +236,20 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(TWO, m.computeIfAbsent(TWO, key -> key));
 		assertEquals(TWO, m.computeIfAbsent(TWO, key -> null));
 		assertEquals(TWO, m.get(TWO));
+		assertNull(m.computeIfAbsent(null, key -> key));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentObjectNullFunction() {
 		m.put(1, 1);
 		m.computeIfAbsent(ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentObjectNullFunctionMissingKey() {
 		m.computeIfAbsent(ONE, null);
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testComputeIfAbsentObjectNullKey() {
-		m.computeIfAbsent(null, key -> key);
 	}
 
 	@Test
@@ -311,7 +307,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		m.computeIfAbsent(1, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testComputeIfPresentObject() {
 		m.defaultReturnValue(-1);
@@ -333,25 +329,20 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 
 		assertNull(m.computeIfPresent(ONE, (key, value) -> null));
 		assertFalse(m.containsKey(ONE));
+		assertNull(m.computeIfPresent(null, (key, value) -> key));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfPresentObjectNullFunction() {
 		m.put(1, 1);
 		m.computeIfPresent(ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfPresentObjectNullFunctionMissingKey() {
 		m.computeIfPresent(ONE, null);
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testComputeIfPresentObjectNullKey() {
-		m.computeIfPresent(null, (key, value) -> key);
 	}
 
 	@Test
@@ -388,7 +379,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		m.computeIfPresent(1, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testComputeObject() {
 		m.defaultReturnValue(-1);
@@ -434,14 +425,14 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.containsKey(2));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testComputeObjectNullFunction() {
 		m.put(1, 1);
 		m.compute(ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testComputeObjectNullFunctionMissingKey() {
 		m.compute(ONE, null);
@@ -503,7 +494,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		m.compute(1, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testContainsNull() {
 		assertFalse(m.containsKey(null));
@@ -644,7 +635,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(m.get(key), -1);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testGetOrDefaultObject() {
 		m.put(1, 1);
@@ -666,7 +657,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertNull(m.getOrDefault(null, null));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = ClassCastException.class)
 	public void testGetOrDefaultObjectInvalidKey() {
 		m.getOrDefault(Long.valueOf(1), ONE);
@@ -698,7 +689,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(s, m.keySet());
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testKeySetIteratorForEachObject() {
 		for (int i = 0; i < 100; i++) {
@@ -709,7 +700,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(s, m.keySet());
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testMap() {
 		assertEquals(0, m.put(1, 1));
@@ -779,7 +770,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(-1, m.get(1));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testMergeObject() {
 		m.defaultReturnValue(-1);
@@ -806,33 +797,33 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.isEmpty());
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullFunction() {
 		m.put(1, 1);
 		m.merge(ONE, ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullFunctionMissingKey() {
 		m.merge(ONE, ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullKey() {
 		m.merge(null, ONE, (key, vale) -> ONE);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullValue() {
 		m.put(1, 1);
 		m.merge(ONE, null, (key, vale) -> ONE);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergeObjectNullValueMissingKey() {
 		m.merge(ONE, null, (key, vale) -> ONE);
@@ -864,14 +855,14 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.isEmpty());
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergePrimitiveNullFunction() {
 		m.put(1, 1);
 		m.merge(1, 1, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testMergePrimitiveNullFunctionMissingKey() {
 		m.merge(1, 1, null);
@@ -888,7 +879,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(1, m.get(1));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testPutIfAbsentObject() {
 		m.defaultReturnValue(-1);
@@ -904,7 +895,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(TWO, m.get(TWO));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = NullPointerException.class)
 	public void testPutIfAbsentObjectNullValueMissingKey() {
 		m.putIfAbsent(ONE, null);
@@ -951,7 +942,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testRemoveObject() {
 		m.defaultReturnValue(-1);
@@ -974,24 +965,24 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.containsKey(ONE));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test(expected = ClassCastException.class)
 	public void testRemoveObjectInvalidKey() {
 		m.put(1, 1);
 		m.remove(Long.valueOf(1), ONE);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = ClassCastException.class)
+
+	@Test
 	public void testRemoveObjectInvalidValue() {
 		m.put(1, 1);
-		m.remove(ONE, Long.valueOf(1));
+		assertFalse(m.remove(ONE, Long.valueOf(1)));
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = ClassCastException.class)
+
+	@Test
 	public void testRemoveObjectInvalidValueMissingKey() {
-		m.remove(ONE, Long.valueOf(1));
+		assertFalse(m.remove(ONE, Long.valueOf(1)));
 	}
 
 	@Test
@@ -1086,7 +1077,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertArrayEquals(new int[] {-1, 1}, content);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testReplaceBinaryObject() {
 		m.defaultReturnValue(-1);
@@ -1101,22 +1092,17 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(TWO, m.replace(ONE, ONE));
 		assertEquals(ONE, m.get(ONE));
 		assertTrue(m.containsKey(ONE));
+		assertNull(m.replace(null, ONE));
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testReplaceBinaryObjectNullKey() {
-		m.replace(null, ONE);
-	}
 
-	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testReplaceBinaryObjectNullValue() {
 		m.put(1, 1);
 		m.replace(ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testReplaceBinaryObjectNullValueMissingKey() {
 		assertNull(m.replace(ONE, null));
@@ -1138,7 +1124,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.containsKey(1));
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testReplaceTernaryObject() {
 		m.defaultReturnValue(-1);
@@ -1156,32 +1142,18 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.replace(ONE, TWO, MINUS_ONE));
 		assertEquals(MINUS_ONE, m.get(ONE));
 		assertTrue(m.containsKey(ONE));
+		assertFalse(m.replace(ONE, ONE, null));
+		assertFalse(m.replace(ONE, null, ONE));
+		assertFalse(m.replace(null, ONE, ONE));
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryObjectNullKey() {
-		m.replace(null, ONE, ONE);
-	}
 
-	@SuppressWarnings("deprecation")
 	@Test(expected = NullPointerException.class)
 	public void testReplaceTernaryObjectNullNewValue() {
 		m.put(1, 1);
 		m.replace(ONE, ONE, null);
 	}
 
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryObjectNullNewValueMissingKey() {
-		m.replace(ONE, ONE, null);
-	}
-
-	@SuppressWarnings("deprecation")
-	@Test(expected = NullPointerException.class)
-	public void testReplaceTernaryObjectNullOldValueMissingKey() {
-		m.replace(ONE, null, ONE);
-	}
 
 	@Test
 	public void testReplaceTernaryPrimitive() {
@@ -1249,7 +1221,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.isEmpty());
 	}
 
-	@SuppressWarnings("deprecation")
+
 	@Test
 	public void testValueSetIteratorForEachObject() {
 		for (int i = 0; i < 100; i++) {
