@@ -70,21 +70,29 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	@Deprecated
 	@Override
-	boolean add(KEY_GENERIC_CLASS key);
+	default boolean add(final KEY_GENERIC_CLASS key) {
+		return add(KEY_CLASS2TYPE(key));
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
 	@Deprecated
 	@Override
-	boolean contains(Object key);
+	default boolean contains(final Object key) {
+		if (key == null) return false;
+		return contains(KEY_OBJ2TYPE(key));
+	}
 
 	/** {@inheritDoc}
 	 * @deprecated Please use (and implement) the {@code rem()} method instead.
 	 */
 	@Deprecated
 	@Override
-	boolean remove(Object key);
+	default boolean remove(final Object key) {
+		if (key == null) return false;
+		return rem(KEY_OBJ2TYPE(key));
+	}
 
 	/** Returns a primitive type array containing the items of this collection.
 	 * @return a primitive type array containing the items of this collection.
@@ -141,6 +149,38 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * @return {@code true} if this collection changed as a result of the call.
 	 */
 	boolean removeAll(COLLECTION c);
+
+#ifdef JDK_PRIMITIVE_PREDICATE
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
+		return removeIf((JDK_PRIMITIVE_PREDICATE) key -> filter.test(KEY2OBJ(KEY_NARROWING(key))));
+	}
+
+	/** Remove from this collection all elements which satisfy the given predicate.
+	 *
+	 * @param filter a predicate which returns {@code true} for elements to be
+	 *        removed.
+	 * @see Collection#removeIf(java.util.function.Predicate)
+	 * @return {@code true} if any elements were removed.
+	 */
+	@SuppressWarnings("overloads")
+	default boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
+		java.util.Objects.requireNonNull(filter);
+		boolean removed = false;
+		final KEY_ITERATOR each = iterator();
+		while (each.hasNext()) {
+			if (filter.test(each.NEXT_KEY())) {
+				each.remove();
+				removed = true;
+			}
+		}
+		return removed;
+	}
+#endif
 
 	/** Retains in this collection only elements from the given type-specific collection.
 	 *

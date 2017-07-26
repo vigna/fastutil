@@ -24,6 +24,7 @@ import VALUE_PACKAGE.VALUE_ITERATOR;
 #if KEYS_PRIMITIVE && VALUES_PRIMITIVE
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 #endif
+import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -109,17 +110,25 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 			throw new UnsupportedOperationException();
 		}
 
+		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 		@Override
 		public boolean equals(final Object o) {
 			if (!(o instanceof Map.Entry)) return false;
+			if (o instanceof MAP.Entry) {
+				final MAP.Entry KEY_VALUE_GENERIC e = (MAP.Entry KEY_VALUE_GENERIC) o;
+				return KEY_EQUALS(key, e.ENTRY_GET_KEY()) && VALUE_EQUALS(value, e.ENTRY_GET_VALUE());
+			}
+
 			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+			final Object key = e.getKey();
 #if KEYS_PRIMITIVE
-			if (e.getKey() == null || !(e.getKey() instanceof KEY_CLASS)) return false;
+			if (key == null || !(key instanceof KEY_CLASS)) return false;
 #endif
+			final Object value = e.getValue();
 #if VALUES_PRIMITIVE
-			if (e.getValue() == null || !(e.getValue() instanceof VALUE_CLASS)) return false;
+			if (value == null || !(value instanceof VALUE_CLASS)) return false;
 #endif
-			return KEY_EQUALS(key, KEY_OBJ2TYPE(e.getKey())) && VALUE_EQUALS(value, VALUE_OBJ2TYPE(e.getValue()));
+			return KEY_EQUALS(this.key, KEY_OBJ2TYPE(key)) && VALUE_EQUALS(this.value, VALUE_OBJ2TYPE(value));
 		}
 
 		@Override
@@ -132,6 +141,81 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 			return key + "->" + value;
 		}
 	}
+
+	/** This class provides a basic implementation for an Entry set which forwards some queries to the map.
+	 */
+
+	public abstract static class BasicEntrySet KEY_VALUE_GENERIC extends AbstractObjectSet<Entry KEY_VALUE_GENERIC> {
+		protected final MAP KEY_VALUE_GENERIC map;
+
+		public BasicEntrySet(final MAP KEY_VALUE_GENERIC map) {
+			this.map = map;
+		}
+
+		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+		@Override
+		public boolean contains(final Object o) {
+			if (!(o instanceof Map.Entry)) return false;
+
+			if (o instanceof MAP.Entry) {
+				final MAP.Entry KEY_VALUE_GENERIC e = (MAP.Entry KEY_VALUE_GENERIC) o;
+				final KEY_GENERIC_TYPE k = e.ENTRY_GET_KEY();
+				return map.containsKey(k) && VALUE_EQUALS(map.GET_VALUE(k), VALUE_OBJ2TYPE(e.ENTRY_GET_VALUE()));
+			}
+
+			final Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+
+#if KEYS_PRIMITIVE
+			final Object key = e.getKey();
+			if (key == null || !(key instanceof KEY_GENERIC_CLASS)) return false;
+			final KEY_TYPE k = KEY_OBJ2TYPE(key);
+#else
+			final Object k = e.getKey();
+#endif
+			final Object value = e.getValue();
+#if VALUES_PRIMITIVE
+			if (value == null || !(value instanceof VALUE_GENERIC_CLASS)) return false;
+#endif
+
+			return map.containsKey(k) && VALUE_EQUALS(map.GET_VALUE(k), VALUE_OBJ2TYPE(value));
+		}
+
+		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+		@Override
+		public boolean remove(final Object o) {
+			if (!(o instanceof Map.Entry)) return false;
+
+			if (o instanceof MAP.Entry) {
+				final MAP.Entry KEY_VALUE_GENERIC e = (MAP.Entry KEY_VALUE_GENERIC) o;
+				return map.remove(e.ENTRY_GET_KEY(), e.ENTRY_GET_VALUE());
+			}
+
+			Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+
+#if KEYS_PRIMITIVE
+			final Object key = e.getKey();
+			if (key == null || !(key instanceof KEY_GENERIC_CLASS)) return false;
+			final KEY_TYPE k = (KEY_GENERIC_TYPE) key;
+#else
+			final Object k = e.getKey();
+#endif
+#if VALUES_PRIMITIVE
+			final Object value = e.getValue();
+			if (value == null || !(value instanceof VALUE_GENERIC_CLASS)) return false;
+			final VALUE_TYPE v = (VALUE_GENERIC_TYPE) value;
+#else
+			final Object v = e.getValue();
+#endif
+
+			return map.remove(k, v);
+		}
+
+		@Override
+		public int size() {
+			return map.size();
+		}
+	}
+
 
 	/** Returns a type-specific-set view of the keys of this map.
 	 *
