@@ -239,8 +239,8 @@ public class ObjectBigArrayBigListTest {
 		}
 		if (m.size64() > n) {
 			m.size(n);
-			while (t.size() != n)
-				t.remove(t.size() - 1);
+			while (t.size64() != n)
+				t.remove(t.size64() - 1);
 		}
 		/*
 		 * Now we add random data in m and t using addAll on a type-specific collection, checking
@@ -276,8 +276,8 @@ public class ObjectBigArrayBigListTest {
 		}
 		if (m.size64() > n) {
 			m.size(n);
-			while (t.size() != n)
-				t.remove(t.size() - 1);
+			while (t.size64() != n)
+				t.remove(t.size64() - 1);
 		}
 		/*
 		 * Now we add random data in m and t using addAll on a list, checking that the result is the
@@ -431,7 +431,7 @@ public class ObjectBigArrayBigListTest {
 		}
 		{
 			Object I, J;
-			int from = r.nextInt(m.size() + 1);
+			long from = r.nextLong() % (m.size64() + 1);
 			ObjectBigListIterator i;
 			ObjectBigListIterator j;
 			i = m.listIterator(from);
@@ -487,8 +487,8 @@ public class ObjectBigArrayBigListTest {
 		assertTrue("Error (" + level + "): ! t.equals(m) after iteration", t.equals(m));
 		/* Now we select a pair of keys and create a subset. */
 		if (!m.isEmpty()) {
-			int start = r.nextInt(m.size());
-			int end = start + r.nextInt(m.size() - start);
+			long start = r.nextLong() % m.size64();
+			long end = start + r.nextLong() % m.size64();
 			// System.err.println("Checking subList from " + start + " to " + end + " (level=" +
 			// (level+1) + ")...");
 			testLists(m.subList(start, end), t.subList(start, end), n, level + 1);
