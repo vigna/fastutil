@@ -7,6 +7,8 @@ GEN_SRCDIR ?= src
 export GEN_SRCDIR
 DOCSDIR = docs
 
+SMALL_TYPES ?= $(if $(NO_SMALL_TYPES),,1)
+
 APIURL=http://java.sun.com/j2se/5.0/docs/api # External URLs in the docs will point here
 
 .SUFFIXES: .java .j
@@ -15,17 +17,22 @@ APIURL=http://java.sun.com/j2se/5.0/docs/api # External URLs in the docs will po
 
 .SECONDARY: $(JSOURCES)
 
+BYTE_NOSMALL=$(if $(SMALL_TYPES),,Byte)
+
 #  The capitalized types used to build class and method names; boolean and object types are not listed.
-TYPE_NOBOOL_NOOBJ=Byte Short Int Long Char Float Double
+TYPE_NOBOOL_NOOBJ= $(if $(SMALL_TYPES),Byte Short Char Float,) Int Long Double
 
 #  The capitalized types used to build class and method names; boolean and reference are not listed.
 TYPE_NOBOOL_NOREF=$(TYPE_NOBOOL_NOOBJ) Object
 
 #  The capitalized types used to build class and method names; object types are not listed.
-TYPE_NOOBJ=Boolean $(TYPE_NOBOOL_NOOBJ)
+TYPE_NOOBJ=$(if $(SMALL_TYPES),Boolean,) $(TYPE_NOBOOL_NOOBJ)
 
 #  The capitalized types used to build class and method names; references are not listed.
 TYPE_NOREF=$(TYPE_NOOBJ) Object
+
+#  The capitalized types used to build class and method names; references are not listed, byte is always included.
+TYPE_NOREF_B=$(BYTE_NOSMALL) $(TYPE_NOREF)
 
 #  The capitalized types used to build class and method names; boolean is not listed.
 TYPE_NOBOOL=$(TYPE_NOBOOL_NOREF) Reference
@@ -34,7 +41,7 @@ TYPE_NOBOOL=$(TYPE_NOBOOL_NOREF) Reference
 TYPE=$(TYPE_NOREF) Reference
 
 #  The capitalized types used to build class and method names; only types for which big structures are built are listed.
-TYPE_BIG=Int Long Float Double Object Reference
+TYPE_BIG=Int Long $(if $(SMALL_TYPES),Float,) Double Object Reference
 
 
 # These variables are used as an associative array (using computed names).
@@ -57,6 +64,8 @@ explain:
 	@echo "will compile behavioral and speed tests into the classes.\n"
 	@echo "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1), you"
 	@echo "will compile assertions into the classes.\n\n"
+	@echo "If you set the make variable NO_SMALL_TYPES (e.g., make sources NO_SMALL_TYPES=1), you"
+	@echo "will only generate classes involving ints, longs and doubles (and some byte utility)"
 
 source:
 	-rm -f fastutil-$(version)
@@ -113,7 +122,7 @@ dirs:
 # Interfaces
 #
 
-ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterable.c)
+ITERABLES := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterable.c)
 $(ITERABLES): drv/Iterable.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERABLES)
@@ -178,17 +187,17 @@ $(INDIRECT_PRIORITY_QUEUES): drv/IndirectPriorityQueue.drv; ./gencsource.sh $< $
 
 CSOURCES += $(INDIRECT_PRIORITY_QUEUES)
 
-COMPARATORS := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Comparator.c)
+COMPARATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Comparator.c)
 $(COMPARATORS): drv/Comparator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COMPARATORS)
 
-CONSUMERS := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Consumer.c)
+CONSUMERS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Consumer.c)
 $(CONSUMERS): drv/Consumer.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(CONSUMERS)
 
-ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterator.c)
+ITERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterator.c)
 $(ITERATORS): drv/Iterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERATORS)
@@ -386,7 +395,7 @@ $(BIG_ARRAY_BIG_LISTS): drv/BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAY_BIG_LISTS)
 
-FRONT_CODED_LISTS := $(foreach k, Byte Short Int Long Char, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
+FRONT_CODED_LISTS := $(foreach k, $(if $(SMALL_TYPES),Byte Short Char,) Int Long, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
 $(FRONT_CODED_LISTS): drv/ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(FRONT_CODED_LISTS)
@@ -468,13 +477,13 @@ $(BIG_LISTS_STATIC): drv/BigLists.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(BIG_LISTS_STATIC)
 
 
-ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Arrays.c)
+ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF_B), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Arrays.c)
 $(ARRAYS_STATIC): drv/Arrays.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAYS_STATIC)
 
 
-BIG_ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigArrays.c)
+BIG_ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF_B), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigArrays.c)
 $(BIG_ARRAYS_STATIC): drv/BigArrays.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAYS_STATIC)
@@ -531,7 +540,7 @@ CSOURCES += $(COMPARATORS_STATIC)
 # Fragmented stuff
 #
 
-BINIO_FRAGMENTS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/io/$(k)BinIOFragment.h)
+BINIO_FRAGMENTS := $(foreach k,$(TYPE_NOREF_B), $(GEN_SRCDIR)/$(PKG_PATH)/io/$(k)BinIOFragment.h)
 $(BINIO_FRAGMENTS): drv/BinIOFragment.drv; ./gencsource.sh $< $@ >$@
 
 CFRAGMENTS += $(BINIO_FRAGMENTS)
@@ -593,7 +602,7 @@ SOURCES = \
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	$(CC) -w -I. $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< \
+	$(CC) -w -I. -DSMALL_TYPES=$(if $(SMALL_TYPES),1,0) $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< \
 		| sed -e '1,/START_OF_JAVA_SOURCE/d' -e 's/^ /	/' >$@
 
 

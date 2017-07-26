@@ -20,7 +20,6 @@ package it.unimi.dsi.fastutil;
 import java.util.function.IntToLongFunction;
 import java.util.function.IntUnaryOperator;
 
-import it.unimi.dsi.fastutil.bytes.Byte2CharFunction;
 import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import it.unimi.dsi.fastutil.ints.Int2LongFunction;
 
