@@ -131,4 +131,14 @@ public interface BigList<K> extends Collection<K>, Size64 {
 	 */
 
 	BigList<K> subList(long from, long to);
+
+
+	/** {@inheritDoc}
+	 * @deprecated Use {@link #size64()} instead. */
+
+	@Override
+	@Deprecated
+	default int size() {
+		return Size64.super.size();
+	}
 }
