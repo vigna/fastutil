@@ -10,6 +10,7 @@ import org.junit.Test;
 
 public class IntArrayListTest {
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	public void testEmptyListIsDifferentFromEmptySet() {
 		assertFalse(IntLists.EMPTY_LIST.equals(IntSets.EMPTY_SET));

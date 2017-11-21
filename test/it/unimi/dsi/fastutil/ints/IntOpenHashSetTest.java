@@ -5,15 +5,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.HashCommon;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 @SuppressWarnings("rawtypes")
 public class IntOpenHashSetTest {
@@ -34,11 +35,11 @@ public class IntOpenHashSetTest {
 		assertFalse(s.contains(null));
 	}
 
-	@SuppressWarnings("boxing")
+	@SuppressWarnings({ "boxing", "unlikely-arg-type" })
 	@Test
 	public void testEquals() {
 		IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
-		assertFalse(s.equals(new ObjectOpenHashSet<Integer>(new Integer[] { 1, null })));
+		assertFalse(s.equals(new ObjectOpenHashSet<>(new Integer[] { 1, null })));
 	}
 
 	@Test

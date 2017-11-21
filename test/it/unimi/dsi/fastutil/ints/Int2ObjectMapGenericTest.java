@@ -8,12 +8,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
-import it.unimi.dsi.fastutil.io.BinIO;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,11 +28,19 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
+
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
+import it.unimi.dsi.fastutil.io.BinIO;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 @SuppressWarnings("deprecation")
 @RunWith(Parameterized.class)
@@ -490,7 +492,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertTrue(m.int2ObjectEntrySet().isEmpty());
 	}
 
-	@SuppressWarnings("SuspiciousMethodCalls")
+	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
 	@Test
 	public void testEntrySetContains() {
 		m.put(0, ZERO);
@@ -538,7 +540,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		iterator.remove();
 	}
 
-	@SuppressWarnings("SuspiciousMethodCalls")
+	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
 	@Test
 	public void testEntrySetRemove() {
 		m.put(0, ZERO);
@@ -548,6 +550,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertFalse(m.int2ObjectEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	public void testEquals() {
 		m.put(1, ONE);

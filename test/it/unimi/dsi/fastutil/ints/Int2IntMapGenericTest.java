@@ -7,11 +7,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
-import it.unimi.dsi.fastutil.io.BinIO;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,11 +27,18 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
+
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.io.BinIO;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 @RunWith(Parameterized.class)
 @SuppressWarnings("deprecation")
@@ -531,7 +533,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.int2IntEntrySet().isEmpty());
 	}
 
-	@SuppressWarnings("SuspiciousMethodCalls")
+	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
 	@Test
 	public void testEntrySetContains() {
 		m.put(0, 0);
@@ -579,7 +581,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		iterator.remove();
 	}
 
-	@SuppressWarnings("SuspiciousMethodCalls")
+	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
 	@Test
 	public void testEntrySetRemove() {
 		m.put(0, 0);
@@ -589,6 +591,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	public void testEquals() {
 		m.put(1, 1);

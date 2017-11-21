@@ -1961,31 +1961,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			OPEN_HASH_MAP.this.clear();
 		}
 
-		/** {@inheritDoc} */
-		@Override
-		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			if (containsNullKey) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[n], value[n]));
-			for(int pos = n; pos-- != 0;)
-				if (! KEY_IS_NULL(key[pos])) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[pos], value[pos]));
-		}
-
-		/** {@inheritDoc} */
-		@Override
-		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			final ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
-			if (containsNullKey) {
-				entry.key = key[n];
-				entry.value = value[n];
-				consumer.accept(entry);
-			}
-			for(int pos = n; pos-- != 0;)
-				if (! KEY_IS_NULL(key[pos])) {
-					entry.key = key[pos];
-					entry.value = value[pos];
-					consumer.accept(entry);
-				}
-		}
-
 #ifdef Linked
 		/** Returns a type-specific list iterator on the elements in this set, starting from a given element of the set.
 		 * Please see the class documentation for implementation details.
@@ -2019,6 +1994,56 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		@Override
 		public ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator(final MAP.Entry KEY_VALUE_GENERIC from) {
 			return new FastEntryIterator(from.ENTRY_GET_KEY());
+		}
+
+		/** {@inheritDoc} */
+		@Override
+		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			for(int i = size, curr, next = first; i-- != 0;) {
+				curr = next;
+				next = GET_NEXT(link[curr]);
+				consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[curr], value[curr]));
+			}
+		}
+
+		/** {@inheritDoc} */
+		@Override
+		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			final ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
+			for(int i = size, curr, next = first; i-- != 0;) {
+				curr = next;
+				next = GET_NEXT(link[curr]);
+				entry.key = key[curr];
+				entry.value = value[curr];
+				consumer.accept(entry);
+			}
+		}
+
+#else
+
+		/** {@inheritDoc} */
+		@Override
+		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			if (containsNullKey) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[n], value[n]));
+			for(int pos = n; pos-- != 0;)
+				if (! KEY_IS_NULL(key[pos])) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[pos], value[pos]));
+		}
+
+		/** {@inheritDoc} */
+		@Override
+		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			final ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
+			if (containsNullKey) {
+				entry.key = key[n];
+				entry.value = value[n];
+				consumer.accept(entry);
+			}
+			for(int pos = n; pos-- != 0;)
+				if (! KEY_IS_NULL(key[pos])) {
+					entry.key = key[pos];
+					entry.value = value[pos];
+					consumer.accept(entry);
+				}
 		}
 
 #endif

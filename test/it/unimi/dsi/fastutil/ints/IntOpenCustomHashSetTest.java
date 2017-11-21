@@ -3,7 +3,6 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -11,6 +10,8 @@ import java.util.HashSet;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.Hash;
 
 @SuppressWarnings("rawtypes")
 /** Not a particularly good test, but it will check that we use everywhere the same hashing strategy. */
@@ -126,7 +127,7 @@ public class IntOpenCustomHashSetTest {
 				) + "; actual: " + expected + "; stddev: " + Math.sqrt(totSquareProbes / m.n - expected * expected) + "; max probes: " + maxProbes);
 	}
 
-	@SuppressWarnings({ "boxing", "deprecation" })
+	@SuppressWarnings({ "boxing", "deprecation", "unlikely-arg-type" })
 	private static void test(int n, float f) throws IOException, ClassNotFoundException {
 		int c;
 		final Integer key[] = new Integer[(int)Math.ceil(n * f)];

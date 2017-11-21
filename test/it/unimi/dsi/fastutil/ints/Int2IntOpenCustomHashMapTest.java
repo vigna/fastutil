@@ -3,7 +3,6 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.Hash;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -12,6 +11,8 @@ import java.util.Map.Entry;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.Hash;
 
 @SuppressWarnings("rawtypes")
 
@@ -109,7 +110,7 @@ public class Int2IntOpenCustomHashMapTest {
 				) + "; actual: " + expected + "; stddev: " + Math.sqrt(totSquareProbes / m.n - expected * expected) + "; max probes: " + maxProbes);
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "unlikely-arg-type" })
 	private static void test(int n, float f) throws IOException, ClassNotFoundException {
 		int c;
 		final Integer key[] = new Integer[(int)Math.ceil(n * f)];

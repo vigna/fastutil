@@ -5,9 +5,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
+
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.junit.Test;
 
 public class Int2IntOpenHashMapTest {
 	@SuppressWarnings("deprecation")
@@ -18,7 +19,7 @@ public class Int2IntOpenHashMapTest {
 		assertTrue(m.get(null) == null);
 	}
 
-	@SuppressWarnings("boxing")
+	@SuppressWarnings({ "boxing", "unlikely-arg-type" })
 	@Test
 	public void testEquals() {
 		final Int2IntOpenHashMap m = new Int2IntOpenHashMap(new int[] {1, 2}, new int[] {1, 2});

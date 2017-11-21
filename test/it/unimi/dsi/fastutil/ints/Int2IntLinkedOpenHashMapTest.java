@@ -5,9 +5,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.function.Consumer;
+
+import org.junit.Test;
+
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
-import org.junit.Test;
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 
 public class Int2IntLinkedOpenHashMapTest {
 	@Test
@@ -157,5 +161,26 @@ public class Int2IntLinkedOpenHashMapTest {
 		iterator.remove();
 		assertEquals(0, m.size());
 		assertEquals(keys, t);
+	}
+
+	@Test
+	public void testEntrySetForEach() {
+		final int[] a = new int[1000];
+		for(int i = 0; i < 1000; i++) a[i] = a.length - 1 - i;
+		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(a, a);
+		m.int2IntEntrySet().forEach(new Consumer<Int2IntMap.Entry>() {
+			int i = a.length;
+			@Override
+			public void accept(Entry t) {
+				assertEquals(--i, t.getIntKey());
+			}
+		});
+		m.int2IntEntrySet().fastForEach(new Consumer<Int2IntMap.Entry>() {
+			int i = a.length;
+			@Override
+			public void accept(Entry t) {
+				assertEquals(--i, t.getIntKey());
+			}
+		});
 	}
 }
