@@ -62,10 +62,12 @@ explain:
 	@echo "file using \"ant jar\", or the documentation using \"ant javadoc\".\n"
 	@echo "If you set the make variable TEST (e.g., make sources TEST=1), you"
 	@echo "will compile behavioral and speed tests into the classes.\n"
-	@echo "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1), you"
-	@echo "will compile assertions into the classes.\n\n"
-	@echo "If you set the make variable NO_SMALL_TYPES (e.g., make sources NO_SMALL_TYPES=1), you"
-	@echo "will only generate classes involving ints, longs and doubles (and some byte utility)"
+	@echo "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1),"
+	@echo "you will compile assertions into the classes.\n"
+	@echo "If you set the make variable NO_SMALL_TYPES (e.g.,"
+	@echo "make sources NO_SMALL_TYPES=1), you will only generate classes "
+	@echo "involving ints, longs and doubles (and some byte utility)."
+	@echo "Note that in this case some tests will not compile."
 
 source:
 	-rm -f fastutil-$(version)
