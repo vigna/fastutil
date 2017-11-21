@@ -1,5 +1,21 @@
 package it.unimi.dsi.fastutil.ints;
 
+/*
+ * Copyright (C) 2017 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -7,11 +23,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
-import it.unimi.dsi.fastutil.io.BinIO;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,11 +43,18 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
+
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.io.BinIO;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 @RunWith(Parameterized.class)
 @SuppressWarnings("deprecation")
@@ -531,7 +549,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.int2IntEntrySet().isEmpty());
 	}
 
-	@SuppressWarnings("SuspiciousMethodCalls")
+	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
 	@Test
 	public void testEntrySetContains() {
 		m.put(0, 0);
@@ -579,7 +597,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		iterator.remove();
 	}
 
-	@SuppressWarnings("SuspiciousMethodCalls")
+	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
 	@Test
 	public void testEntrySetRemove() {
 		m.put(0, 0);
@@ -589,6 +607,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertFalse(m.int2IntEntrySet().remove(new AbstractMap.SimpleEntry<>(new Object(), new Object())));
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	@Test
 	public void testEquals() {
 		m.put(1, 1);
@@ -932,7 +951,6 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		for (int i = 0; i < 100; i++) {
 			assertEquals(-1, m.put(i, i));
 		}
-		System.err.println(m);
 		for (int i = 0; i < 100; i++) {
 			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i + 1, i)));
 			assertFalse(m.int2IntEntrySet().remove(new AbstractInt2IntMap.BasicEntry(i, i + 1)));

@@ -1,5 +1,22 @@
 package it.unimi.dsi.fastutil.objects;
 
+/*
+ * Copyright (C) 2017 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,20 +46,10 @@ public class ObjectArraysTest {
 		assertArrayEquals(sorted, b);
 
 		final Integer[] d = a.clone();
-		ObjectArrays.mergeSort(d, new Comparator<Integer>() {
-			@Override
-			public int compare(Integer k1, Integer k2) {
-				return k1.compareTo(k2);
-			}
-		});
+		ObjectArrays.mergeSort(d, (k1, k2) -> k1.compareTo(k2));
 		assertArrayEquals(sorted, d);
 
-		ObjectArrays.mergeSort(d, new Comparator<Integer>() {
-			@Override
-			public int compare(Integer k1, Integer k2) {
-				return k1.compareTo(k2);
-			}
-		});
+		ObjectArrays.mergeSort(d, (k1, k2) -> k1.compareTo(k2));
 		assertArrayEquals(sorted, d);
 	}
 
@@ -69,19 +76,9 @@ public class ObjectArraysTest {
 		assertArrayEquals(sorted, b);
 
 		final Integer[] d = a.clone();
-		ObjectArrays.quickSort(d, new Comparator<Integer>() {
-			@Override
-			public int compare(Integer k1, Integer k2) {
-				return k1.compareTo(k2);
-			}
-		});
+		ObjectArrays.quickSort(d, (k1, k2) -> k1.compareTo(k2));
 		assertArrayEquals(sorted, d);
-		ObjectArrays.quickSort(d, new Comparator<Integer>() {
-			@Override
-			public int compare(Integer k1, Integer k2) {
-				return k1.compareTo(k2);
-			}
-		});
+		ObjectArrays.quickSort(d, (k1, k2) -> k1.compareTo(k2));
 		assertArrayEquals(sorted, d);
 	}
 
@@ -105,11 +102,7 @@ public class ObjectArraysTest {
 		for (int i = 0; i < a.length; i++) {
 			a[i] = new Object();
 		}
-		ObjectArrays.parallelQuickSort(a, new Comparator<Object>(){
-		@Override
-		public int compare(Object o1, Object o2) {
-			return Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2));
-		}});
+		ObjectArrays.parallelQuickSort(a, (o1, o2) -> Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2)));
 	}
 
 	@Test
@@ -118,11 +111,7 @@ public class ObjectArraysTest {
 		for (int i = 0; i < a.length; i++) {
 			a[i] = new Object();
 		}
-		ObjectArrays.parallelQuickSort(a, new Comparator<Object>(){
-		@Override
-		public int compare(Object o1, Object o2) {
-			return Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2));
-		}});
+		ObjectArrays.parallelQuickSort(a, (o1, o2) -> Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2)));
 	}
 
 	@Test
@@ -161,11 +150,7 @@ public class ObjectArraysTest {
 		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
 	}
 
-	private static final Comparator<Integer> OPPOSITE_COMPARATOR = new Comparator<Integer>() {
-		@Override
-		public int compare(Integer o1, Integer o2) {
-			return o2.compareTo(o1);
-		}};
+	private static final Comparator<Integer> OPPOSITE_COMPARATOR = (o1, o2) -> o2.compareTo(o1);
 
 	@Test
 	public void testQuickSort1Comp() {

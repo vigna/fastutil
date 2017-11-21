@@ -1,13 +1,29 @@
 package it.unimi.dsi.fastutil;
 
+/*
+ * Copyright (C) 2017 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import static org.junit.Assert.assertTrue;
-import it.unimi.dsi.fastutil.ints.IntArrays;
-import it.unimi.dsi.fastutil.ints.IntArraysTest;
-import it.unimi.dsi.fastutil.ints.IntComparator;
 
 import java.util.Random;
 
 import org.junit.Test;
+
+import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.ints.IntArraysTest;
 
 public class ArraysTest {
 
@@ -17,18 +33,10 @@ public class ArraysTest {
 	}
 
 	private static void testMergeSort(final int x[], int from, int to) {
-		Arrays.mergeSort(from, to, new IntComparator() {
-			@Override
-			public int compare(int k1, int k2) {
-				return Integer.compare(x[k1], x[k2]);
-			}
-		}, new Swapper() {
-			@Override
-			public void swap(int k1, int k2) {
-				final int t = x[k1];
-				x[k1] = x[k2];
-				x[k2] = t;
-			}
+		Arrays.mergeSort(from, to, (k1, k2) -> Integer.compare(x[k1], x[k2]), (k1, k2) -> {
+			final int t = x[k1];
+			x[k1] = x[k2];
+			x[k2] = t;
 		});
 		for(int i = to - 1; i-- != from;) assertTrue(x[i] <= x[i + 1]);
 	}
@@ -63,18 +71,10 @@ public class ArraysTest {
 	}
 
 	private static void testQuickSort(final int x[], int from, int to) {
-		Arrays.quickSort(from, to, new IntComparator() {
-			@Override
-			public int compare(int k1, int k2) {
-				return Integer.compare(x[k1], x[k2]);
-			}
-		}, new Swapper() {
-			@Override
-			public void swap(int k1, int k2) {
-				final int t = x[k1];
-				x[k1] = x[k2];
-				x[k2] = t;
-			}
+		Arrays.quickSort(from, to, (k1, k2) -> Integer.compare(x[k1], x[k2]), (k1, k2) -> {
+			final int t = x[k1];
+			x[k1] = x[k2];
+			x[k2] = t;
 		});
 		for(int i = to - 1; i-- != from;) assertTrue(x[i] <= x[i + 1]);
 	}
@@ -109,18 +109,10 @@ public class ArraysTest {
 	}
 
 	private static void testParallelQuickSort(final int x[], int from, int to) {
-		Arrays.parallelQuickSort(from, to, new IntComparator() {
-			@Override
-			public int compare(int k1, int k2) {
-				return Integer.compare(x[k1], x[k2]);
-			}
-		}, new Swapper() {
-			@Override
-			public void swap(int k1, int k2) {
-				final int t = x[k1];
-				x[k1] = x[k2];
-				x[k2] = t;
-			}
+		Arrays.parallelQuickSort(from, to, (k1, k2) -> Integer.compare(x[k1], x[k2]), (k1, k2) -> {
+			final int t = x[k1];
+			x[k1] = x[k2];
+			x[k2] = t;
 		});
 		for(int i = to - 1; i-- != from;) assertTrue(x[i] <= x[i + 1]);
 	}

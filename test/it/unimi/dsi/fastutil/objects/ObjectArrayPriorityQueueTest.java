@@ -1,20 +1,38 @@
 package it.unimi.dsi.fastutil.objects;
 
+/*
+ * Copyright (C) 2017 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
 import static org.junit.Assert.assertEquals;
-import it.unimi.dsi.fastutil.io.BinIO;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.io.BinIO;
+
 @SuppressWarnings({"boxing","unchecked"})
 public class ObjectArrayPriorityQueueTest {
 
 	@Test
 	public void testEnqueueDequeue() {
-		ObjectArrayPriorityQueue<Integer> q = new ObjectArrayPriorityQueue<Integer>();
-		ObjectHeapPriorityQueue<Integer> h = new ObjectHeapPriorityQueue<Integer>();
+		ObjectArrayPriorityQueue<Integer> q = new ObjectArrayPriorityQueue<>();
+		ObjectHeapPriorityQueue<Integer> h = new ObjectHeapPriorityQueue<>();
 		for(int i = 0; i < 100; i++) {
 			q.enqueue(i);
 			h.enqueue(i);
@@ -24,7 +42,7 @@ public class ObjectArrayPriorityQueueTest {
 			assertEquals(h.dequeue(), q.dequeue());
 		}
 
-		q = new ObjectArrayPriorityQueue<Integer>(10);
+		q = new ObjectArrayPriorityQueue<>(10);
 		h.clear();
 		for(int i = 0; i < 100; i++) {
 			q.enqueue(i);
@@ -35,7 +53,7 @@ public class ObjectArrayPriorityQueueTest {
 			assertEquals(h.dequeue(), q.dequeue());
 		}
 
-		q = new ObjectArrayPriorityQueue<Integer>(200);
+		q = new ObjectArrayPriorityQueue<>(200);
 		h.clear();
 		for(int i = 0; i < 100; i++) {
 			q.enqueue(i);
@@ -86,8 +104,8 @@ public class ObjectArrayPriorityQueueTest {
 
 	@Test
 	public void testMix() {
-		ObjectArrayPriorityQueue<Integer> q = new ObjectArrayPriorityQueue<Integer>();
-		ObjectHeapPriorityQueue<Integer> h = new ObjectHeapPriorityQueue<Integer>();
+		ObjectArrayPriorityQueue<Integer> q = new ObjectArrayPriorityQueue<>();
+		ObjectHeapPriorityQueue<Integer> h = new ObjectHeapPriorityQueue<>();
 		for(int i = 0; i < 200; i++) {
 			for(int j = 0; j < 20; j++) {
 				q.enqueue(j + i * 20);
@@ -96,8 +114,8 @@ public class ObjectArrayPriorityQueueTest {
 			for(int j = 0; j < 10; j++) assertEquals(h.dequeue(), q.dequeue());
 		}
 
-		q = new ObjectArrayPriorityQueue<Integer>(10);
-		h = new ObjectHeapPriorityQueue<Integer>();
+		q = new ObjectArrayPriorityQueue<>(10);
+		h = new ObjectHeapPriorityQueue<>();
 		for(int i = 0; i < 200; i++) {
 			for(int j = 0; j < 20; j++) {
 				q.enqueue(j + i * -20);
@@ -107,8 +125,8 @@ public class ObjectArrayPriorityQueueTest {
 			for(int j = 0; j < 10; j++) assertEquals(h.dequeue(), q.dequeue());
 		}
 
-		q = new ObjectArrayPriorityQueue<Integer>(200);
-		h = new ObjectHeapPriorityQueue<Integer>();
+		q = new ObjectArrayPriorityQueue<>(200);
+		h = new ObjectHeapPriorityQueue<>();
 		for(int i = 0; i < 200; i++) {
 			for(int j = 0; j < 20; j++) {
 				q.enqueue(j + i * 20);
@@ -154,7 +172,7 @@ public class ObjectArrayPriorityQueueTest {
 
 	@Test
 	public void testSerialize() throws IOException, ClassNotFoundException {
-		ObjectArrayPriorityQueue<Integer> q = new ObjectArrayPriorityQueue<Integer>();
+		ObjectArrayPriorityQueue<Integer> q = new ObjectArrayPriorityQueue<>();
 		for(int i = 0; i < 100; i++) q.enqueue(i);
 
 		File file = File.createTempFile(getClass().getPackage().getName() + "-", "-tmp");
