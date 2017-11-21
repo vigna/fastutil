@@ -578,7 +578,6 @@ SOURCES = \
 	$(SOURCEDIR)/BigArrays.java \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
-	$(SOURCEDIR)/Maps.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/Swapper.java \
 	$(SOURCEDIR)/BigSwapper.java \
