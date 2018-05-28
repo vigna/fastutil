@@ -80,6 +80,7 @@ source:
 		fastutil-$(version)/pom.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
+		fastutil-$(version)/find-deps.sh \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README.md \
 		fastutil-$(version)/LICENSE-2.0 \

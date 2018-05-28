@@ -11,15 +11,14 @@ from a parametrized version; the classes are much more compact and much faster
 than the general ones. Please read the package documentation for more
 information.
 
-Note that the jar file is huge, due to the large number of classes: if you plan
-to ship your own jar with some fastutil classes included, you should look at
-AutoJar or similar tools to extract automatically the necessary classes.
-
-To create a small customized fastutil jar (which you can put in your repo,
-local maven, etc.), the `find-deps` shell script is provided. It has mild
-prerequisites, only the `jdeps` tool is required (bundled with JDK 8). It can
-be used to identify all fastutil classes your project uses and build a
-minimized jar only containing the necessary classes.
+Note that the jar file is huge, due to the large number of classes. To
+create a small, customized fastutil jar (which you can put in your repo,
+local maven, etc.), we provide the `find-deps.sh` shell script. It has
+mild prerequisites, as only the `jdeps` tool is required (bundled with JDK
+8). It can be used to identify all fastutil classes your project uses and
+build a minimized jar only containing the necessary classes. You can also
+have a look at AutoJar or similar tools to extract automatically the
+necessary classes.
 
 ## Building
 
