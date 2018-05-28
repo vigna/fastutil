@@ -18,6 +18,8 @@ package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -33,7 +35,7 @@ public class IntBigArrayBigListTest {
 
 	@Test
 	public void testRemoveAllModifiesCollection() {
-		IntBigList list = new IntBigArrayBigList();
+		final IntBigList list = new IntBigArrayBigList();
 		assertFalse(list.removeAll(Collections.emptySet()));
 		assertEquals(IntBigLists.EMPTY_BIG_LIST, list);
 	}
@@ -67,7 +69,7 @@ public class IntBigArrayBigListTest {
 
 	@Test
 	public void testAddWithIterator() {
-		IntBigList list = new IntBigArrayBigList();
+		final IntBigList list = new IntBigArrayBigList();
 		list.iterator().add(1);
 		assertEquals(IntBigLists.singleton(1), list);
 	}
@@ -96,7 +98,7 @@ public class IntBigArrayBigListTest {
 	private static int nkt[];
 
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	protected static void testLists(IntBigList m, IntBigList t, int n, int level) {
+	protected static void testLists(final IntBigList m, final IntBigList t, final int n, final int level) {
 		Exception mThrowsOutOfBounds, tThrowsOutOfBounds;
 		Object rt = null;
 		int rm = (0);
@@ -104,18 +106,18 @@ public class IntBigArrayBigListTest {
 		/* Now we check that both sets agree on random keys. For m we use the polymorphic method. */
 		for (int i = 0; i < n; i++) {
 			int p = r.nextInt() % (n * 2);
-			int T = genKey();
+			final int T = genKey();
 			mThrowsOutOfBounds = tThrowsOutOfBounds = null;
 			try {
 				m.set(p, T);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.set(p, (Integer.valueOf(T)));
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 
@@ -125,13 +127,13 @@ public class IntBigArrayBigListTest {
 			try {
 				m.getInt(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.get(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): get() divergence at start in IndexOutOfBoundsException for index " + p + "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -139,18 +141,18 @@ public class IntBigArrayBigListTest {
 		}
 		/* Now we check that both sets agree on random keys. For m we use the standard method. */
 		for (int i = 0; i < n; i++) {
-			int p = r.nextInt() % (n * 2);
+			final int p = r.nextInt() % (n * 2);
 			mThrowsOutOfBounds = tThrowsOutOfBounds = null;
 			try {
 				m.get(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.get(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): get() divergence at start in IndexOutOfBoundsException for index " + p+ "  (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -161,11 +163,11 @@ public class IntBigArrayBigListTest {
 		assertTrue("Error (" + level + "): ! m.equals(t) at start" ,  m.equals(t));
 		assertTrue("Error (" + level + "): ! t.equals(m) at start" ,  t.equals(m));
 		/* Now we check that m actually holds that data. */
-		for (Iterator i = t.iterator(); i.hasNext();) {
+		for (final Iterator i = t.iterator(); i.hasNext();) {
 			assertTrue("Error (" + level + "): m and t differ on an entry after insertion (iterating on t)" ,  m.contains(i.next()));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for (Iterator i = m.listIterator(); i.hasNext();) {
+		for (final Iterator i = m.listIterator(); i.hasNext();) {
 			assertTrue("Error (" + level + "): m and t differ on an entry after insertion (iterating on m)" ,  t.contains(i.next()));
 		}
 		/*
@@ -173,7 +175,7 @@ public class IntBigArrayBigListTest {
 		 * use the polymorphic method.
 		 */
 		for (int i = 0; i < n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertTrue("Error (" + level + "): divergence in content between t and m (polymorphic method)" ,  m.contains(T) == t.contains((Integer.valueOf(T))));
 		}
 		/*
@@ -181,7 +183,7 @@ public class IntBigArrayBigListTest {
 		 * m we use the standard method.
 		 */
 		for (int i = 0; i < n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertTrue("Error (" + level + "): divergence in content between t and m (polymorphic method)" ,  m.contains((Integer.valueOf(T))) == t.contains((Integer.valueOf(T))));
 		}
 		/* Now we add and remove random data in m and t, checking that the result is the same. */
@@ -190,13 +192,13 @@ public class IntBigArrayBigListTest {
 			try {
 				m.add(T);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.add((Integer.valueOf(T)));
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			T = genKey();
@@ -205,13 +207,13 @@ public class IntBigArrayBigListTest {
 			try {
 				m.add(p, T);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.add(p, (Integer.valueOf(T)));
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): add() divergence in IndexOutOfBoundsException for index " + p + " for " + T+ " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -220,13 +222,13 @@ public class IntBigArrayBigListTest {
 			try {
 				rm = m.removeInt(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				rt = t.remove(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): remove() divergence in IndexOutOfBoundsException for index " + p + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -239,22 +241,22 @@ public class IntBigArrayBigListTest {
 		 * is the same.
 		 */
 		for (int i = 0; i < n; i++) {
-			int p = r.nextInt() % (2 * n + 1);
-			java.util.Collection m1 = new java.util.ArrayList();
-			int s = r.nextInt(n / 2 + 1);
+			final int p = r.nextInt() % (2 * n + 1);
+			final java.util.Collection m1 = new java.util.ArrayList();
+			final int s = r.nextInt(n / 2 + 1);
 			for (int j = 0; j < s; j++)
 				m1.add((Integer.valueOf(genKey())));
 			mThrowsOutOfBounds = tThrowsOutOfBounds = null;
 			try {
 				m.addAll(p, m1);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.addAll(p, m1);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): addAll() divergence in IndexOutOfBoundsException for index " + p + " for "+ m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -271,12 +273,12 @@ public class IntBigArrayBigListTest {
 		 * that the result is the same.
 		 */
 		for (int i = 0; i < n; i++) {
-			int p = r.nextInt() % (2 * n + 1);
-			IntCollection m1 = new IntBigArrayBigList();
-			java.util.Collection t1 = new java.util.ArrayList();
-			int s = r.nextInt(n / 2 + 1);
+			final int p = r.nextInt() % (2 * n + 1);
+			final IntCollection m1 = new IntBigArrayBigList();
+			final java.util.Collection t1 = new java.util.ArrayList();
+			final int s = r.nextInt(n / 2 + 1);
 			for (int j = 0; j < s; j++) {
-				int x = genKey();
+				final int x = genKey();
 				m1.add(x);
 				t1.add((Integer.valueOf(x)));
 			}
@@ -284,13 +286,13 @@ public class IntBigArrayBigListTest {
 			try {
 				m.addAll(p, m1);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.addAll(p, t1);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): polymorphic addAll() divergence in IndexOutOfBoundsException for index "+ p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -307,12 +309,12 @@ public class IntBigArrayBigListTest {
 		 * same.
 		 */
 		for (int i = 0; i < n; i++) {
-			int p = r.nextInt() % (2 * n + 1);
-			IntBigList m1 = new IntBigArrayBigList();
-			java.util.Collection t1 = new java.util.ArrayList();
-			int s = r.nextInt(n / 2 + 1);
+			final int p = r.nextInt() % (2 * n + 1);
+			final IntBigList m1 = new IntBigArrayBigList();
+			final java.util.Collection t1 = new java.util.ArrayList();
+			final int s = r.nextInt(n / 2 + 1);
 			for (int j = 0; j < s; j++) {
-				int x = genKey();
+				final int x = genKey();
 				m1.add(x);
 				t1.add((Integer.valueOf(x)));
 			}
@@ -320,13 +322,13 @@ public class IntBigArrayBigListTest {
 			try {
 				m.addAll(p, m1);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.addAll(p, t1);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): list addAll() divergence in IndexOutOfBoundsException for index " + p+ " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -335,18 +337,18 @@ public class IntBigArrayBigListTest {
 		}
 		/* Now we check that both sets agree on random keys. For m we use the standard method. */
 		for (int i = 0; i < n; i++) {
-			int p = r.nextInt() % (n * 2);
+			final int p = r.nextInt() % (n * 2);
 			mThrowsOutOfBounds = tThrowsOutOfBounds = null;
 			try {
 				m.get(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
 			try {
 				t.get(p);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
 			assertTrue("Error (" + level + "): get() divergence in IndexOutOfBoundsException for index " + p + "  ("	+ mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")" ,  (mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null));
@@ -354,7 +356,7 @@ public class IntBigArrayBigListTest {
 		}
 		/* Now we inquiry about the content with indexOf()/lastIndexOf(). */
 		for (int i = 0; i < 10 * n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertTrue("Error (" + level + "): indexOf() divergence for " + T + "  (" + m.indexOf((Integer.valueOf(T))) + ", " + t.indexOf((Integer.valueOf(T))) + ")", m.indexOf((Integer.valueOf(T))) == t.indexOf((Integer.valueOf(T))));
 			assertTrue("Error (" + level + "): lastIndexOf() divergence for " + T + "  (" + m.lastIndexOf((Integer.valueOf(T))) + ", " + t.lastIndexOf((Integer.valueOf(T)))	+ ")", m.lastIndexOf((Integer.valueOf(T))) == t.lastIndexOf((Integer.valueOf(T))));
 			assertTrue("Error (" + level + "): polymorphic indexOf() divergence for " + T + "  (" + m.indexOf(T) + ", " + t.indexOf((Integer.valueOf(T))) + ")" ,  m.indexOf(T) == t.indexOf((Integer.valueOf(T))));
@@ -374,22 +376,22 @@ public class IntBigArrayBigListTest {
 		assertTrue("Error (" + level + "): new (m.listIterator()) does not equal m" ,  (new IntBigArrayBigList(m.listIterator())).equals(m));
 		assertTrue("Error (" + level + "): m does not equal new (m.type_specific_iterator())" ,  m.equals(new IntBigArrayBigList(m.iterator())));
 		assertTrue("Error (" + level + "): new (m.type_specific_iterator()) does not equal m" ,  (new IntBigArrayBigList(m.iterator())).equals(m));
-		int h = m.hashCode();
+		final int h = m.hashCode();
 		/* Now we save and read m. */
 		IntBigList m2 = null;
 		try {
-			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
-			java.io.OutputStream os = new java.io.FileOutputStream(ff);
-			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+			final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			final java.io.OutputStream os = new java.io.FileOutputStream(ff);
+			final java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 			oos.writeObject(m);
 			oos.close();
-			java.io.InputStream is = new java.io.FileInputStream(ff);
-			java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+			final java.io.InputStream is = new java.io.FileInputStream(ff);
+			final java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 			m2 = (IntBigList)ois.readObject();
 			ois.close();
 			ff.delete();
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -398,7 +400,7 @@ public class IntBigArrayBigListTest {
 		assertTrue("Error (" + level + "): ! m2.equals(t) after save/read" ,  m2.equals(t));
 		assertTrue("Error (" + level + "): ! t.equals(m2) after save/read" ,  t.equals(m2));
 		/* Now we take out of m everything, and check that it is empty. */
-		for (Iterator i = t.iterator(); i.hasNext();)
+		for (final Iterator i = t.iterator(); i.hasNext();)
 			m2.remove(i.next());
 		assertTrue("Error (" + level + "): m2 is not empty (as it should be)" ,  m2.isEmpty());
 		/* Now we play with iterators. */
@@ -417,12 +419,12 @@ public class IntBigArrayBigListTest {
 						j.remove();
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.set(T);
 						j.set((Integer.valueOf(T)));
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.add(T);
 						j.add((Integer.valueOf(T)));
 					}
@@ -434,12 +436,12 @@ public class IntBigArrayBigListTest {
 						j.remove();
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.set(T);
 						j.set((Integer.valueOf(T)));
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.add(T);
 						j.add((Integer.valueOf(T)));
 					}
@@ -450,7 +452,7 @@ public class IntBigArrayBigListTest {
 		}
 		{
 			Object I, J;
-			int from = r.nextInt(m.size() + 1);
+			final int from = r.nextInt(m.size() + 1);
 			IntBigListIterator i;
 			IntBigListIterator j;
 			i = m.listIterator(from);
@@ -469,12 +471,12 @@ public class IntBigArrayBigListTest {
 						j.remove();
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.set(T);
 						j.set((Integer.valueOf(T)));
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.add(T);
 						j.add((Integer.valueOf(T)));
 					}
@@ -489,12 +491,12 @@ public class IntBigArrayBigListTest {
 						j.remove();
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.set(T);
 						j.set((Integer.valueOf(T)));
 					}
 					else if (r.nextFloat() < 0.2) {
-						int T = genKey();
+						final int T = genKey();
 						i.add(T);
 						j.add((Integer.valueOf(T)));
 					}
@@ -506,8 +508,8 @@ public class IntBigArrayBigListTest {
 		assertTrue("Error (" + level + "): ! t.equals(m) after iteration" ,  t.equals(m));
 		/* Now we select a pair of keys and create a subset. */
 		if (!m.isEmpty()) {
-			int start = r.nextInt(m.size());
-			int end = start + r.nextInt(m.size() - start);
+			final int start = r.nextInt(m.size());
+			final int end = start + r.nextInt(m.size() - start);
 			// System.err.println("Checking subList from " + start + " to " + end + " (level=" +
 			// (level+1) + ")...");
 			testLists(m.subList(start, end), t.subList(start, end), n, level + 1);
@@ -520,9 +522,9 @@ public class IntBigArrayBigListTest {
 	}
 
 	@SuppressWarnings("deprecation")
-	protected static void test(int n) {
-		IntBigArrayBigList m = new IntBigArrayBigList();
-		IntBigList t = IntBigLists.asBigList(new IntArrayList());
+	protected static void test(final int n) {
+		final IntBigArrayBigList m = new IntBigArrayBigList();
+		final IntBigList t = IntBigLists.asBigList(new IntArrayList());
 		k = new Object[n];
 		nk = new Object[n];
 		kt = new int[n];
@@ -559,5 +561,51 @@ public class IntBigArrayBigListTest {
 	@Test
 	public void test1000() {
 		test(1000);
+	}
+
+	@Test
+	public void testDefaultConstructors() {
+		IntBigArrayBigList l;
+
+		l = new IntBigArrayBigList();
+		for(int i = 0; i < IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY + 2; i++) l.add(0);
+
+		l = new IntBigArrayBigList();
+		l.addElements(0, new int[1][IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntBigArrayBigList();
+		l.addElements(0, new int[1][2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntBigArrayBigList(0);
+		for(int i = 0; i < IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY + 2; i++) l.add(0);
+
+		l = new IntBigArrayBigList(0);
+		l.addElements(0, new int[1][IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntBigArrayBigList(0);
+		l.addElements(0, new int[1][2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntBigArrayBigList(2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY );
+		for(int i = 0; i < 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY; i++) l.add(0);
+
+		l = new IntBigArrayBigList(2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY );
+		l.addElements(0, new int[1][3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntBigArrayBigList(2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY );
+		l.addElements(0, new int[1][3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+
+		// Test lazy allocation
+		l = new IntBigArrayBigList();
+		l.ensureCapacity(1000000);
+		assertSame(IntBigArrays.DEFAULT_EMPTY_BIG_ARRAY, l.elements());
+
+		l = new IntBigArrayBigList(0);
+		l.ensureCapacity(1);
+		assertNotSame(IntBigArrays.DEFAULT_EMPTY_BIG_ARRAY, l.elements());
+
+		l = new IntBigArrayBigList(0);
+		l.ensureCapacity(1);
+		assertNotSame(IntBigArrays.DEFAULT_EMPTY_BIG_ARRAY, l.elements());
+		l.ensureCapacity(1);
 	}
 }

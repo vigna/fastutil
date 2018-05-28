@@ -1,5 +1,17 @@
 package it.unimi.dsi.fastutil.objects;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Map.Entry;
+
+import org.junit.Test;
+
 /*
  * Copyright (C) 2017 Sebastiano Vigna
  *
@@ -18,28 +30,15 @@ package it.unimi.dsi.fastutil.objects;
 
 
 import it.unimi.dsi.fastutil.io.BinIO;
-import it.unimi.dsi.fastutil.objects.AbstractReference2ReferenceMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceArrayMap;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.Map.Entry;
-
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
+@SuppressWarnings("deprecation")
 public class Reference2ReferenceArrayMapTest {
 
 	@Test
 	public void testMap() {
 		for(int i = 0; i <= 2; i++) {
-			final Reference2ReferenceArrayMap<Object,Object> m = i == 0 ? new Reference2ReferenceArrayMap<Object,Object>() : new Reference2ReferenceArrayMap<Object,Object>(i);
-			Integer one = new Integer(1), two = new Integer(2), three = new Integer(3);
+			final Reference2ReferenceArrayMap<Object,Object> m = i == 0 ? new Reference2ReferenceArrayMap<>() : new Reference2ReferenceArrayMap<>(i);
+			final Integer one = new Integer(1), two = new Integer(2), three = new Integer(3);
 			assertEquals(null, m.put(one, one));
 			assertEquals(1, m.size());
 			assertTrue(m.containsKey(one));
@@ -54,10 +53,10 @@ public class Reference2ReferenceArrayMapTest {
 			assertEquals(null, m.put(three, three));
 			assertTrue(m.containsKey(three));
 
-			assertEquals(new ReferenceOpenHashSet<Object>(new Object[] { one, two, three }), new ReferenceOpenHashSet<Object>(m.keySet().iterator()));
-			assertEquals(new ReferenceOpenHashSet<Object>(new Object[] { three, two, three }), new ReferenceOpenHashSet<Object>(m.values().iterator()));
+			assertEquals(new ReferenceOpenHashSet<>(new Object[] { one, two, three }), new ReferenceOpenHashSet<>(m.keySet().iterator()));
+			assertEquals(new ReferenceOpenHashSet<>(new Object[] { three, two, three }), new ReferenceOpenHashSet<>(m.values().iterator()));
 
-			for(Entry<Object, Object> e: m.reference2ReferenceEntrySet()) assertEquals(e.getValue(), m.get(e.getKey()));
+			for(final Entry<Object, Object> e: m.reference2ReferenceEntrySet()) assertEquals(e.getValue(), m.get(e.getKey()));
 
 			assertTrue(m.reference2ReferenceEntrySet().contains(new AbstractReference2ReferenceMap.BasicEntry<Object,Object>(one, three)));
 			assertFalse(m.reference2ReferenceEntrySet().contains(new AbstractReference2ReferenceMap.BasicEntry<Object,Object>(one, new Integer(3))));
@@ -81,7 +80,7 @@ public class Reference2ReferenceArrayMapTest {
 
 	@Test
 	public void testClone() {
-		Reference2ReferenceArrayMap<Integer, Integer> m = new Reference2ReferenceArrayMap<Integer, Integer>();
+		final Reference2ReferenceArrayMap<Integer, Integer> m = new Reference2ReferenceArrayMap<>();
 		assertEquals(m, m.clone());
 		m.put(new Integer(0), new Integer(1));
 		assertEquals(m, m.clone());
@@ -97,8 +96,8 @@ public class Reference2ReferenceArrayMapTest {
 	@Test
 	public void testSerialisation() throws IOException, ClassNotFoundException {
 		// We can't really test reference maps as equals() doesnt' work
-		Object2ObjectArrayMap<Integer, Integer> m = new Object2ObjectArrayMap<Integer, Integer>();
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final Object2ObjectArrayMap<Integer, Integer> m = new Object2ObjectArrayMap<>();
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.writeObject(m);
 		oos.close();

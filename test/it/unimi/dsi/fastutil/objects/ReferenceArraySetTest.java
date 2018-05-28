@@ -1,5 +1,16 @@
 package it.unimi.dsi.fastutil.objects;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
+import org.junit.Test;
+
 /*
  * Copyright (C) 2017 Sebastiano Vigna
  *
@@ -18,26 +29,15 @@ package it.unimi.dsi.fastutil.objects;
 
 
 import it.unimi.dsi.fastutil.io.BinIO;
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
-import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
+@SuppressWarnings("deprecation")
 public class ReferenceArraySetTest {
 
 	@Test
 	public void testSet() {
 		for(int i = 0; i <= 2; i++) {
-			final ReferenceArraySet<Object> s = i == 0 ? new ReferenceArraySet<Object>() : new ReferenceArraySet<Object>(2);
-			Integer one = new Integer(1), two = new Integer(2), three = new Integer(3);
+			final ReferenceArraySet<Object> s = i == 0 ? new ReferenceArraySet<>() : new ReferenceArraySet<>(2);
+			final Integer one = new Integer(1), two = new Integer(2), three = new Integer(3);
 			assertTrue(s.add(one));
 			assertEquals(1, s.size());
 			assertTrue(s.contains(one));
@@ -53,7 +53,7 @@ public class ReferenceArraySetTest {
 			assertTrue(s.contains(one));
 			assertTrue(s.contains(two));
 			assertTrue(s.contains(three));
-			assertEquals(new ReferenceOpenHashSet<Object>(new Object[] { one, two, three }), new ReferenceOpenHashSet<Object>(s.iterator()));
+			assertEquals(new ReferenceOpenHashSet<>(new Object[] { one, two, three }), new ReferenceOpenHashSet<>(s.iterator()));
 			assertTrue(s.remove(three));
 			assertEquals(2, s.size());
 			assertTrue(s.remove(one));
@@ -67,7 +67,7 @@ public class ReferenceArraySetTest {
 
 	@Test
 	public void testClone() {
-		ReferenceArraySet<Integer> s = new ReferenceArraySet<Integer>();
+		final ReferenceArraySet<Integer> s = new ReferenceArraySet<>();
 		assertEquals(s, s.clone());
 		Integer zero;
 		s.add(zero = new Integer(0));
@@ -85,8 +85,8 @@ public class ReferenceArraySetTest {
 	@Test
 	public void testSerialisation() throws IOException, ClassNotFoundException {
 		// We can't really test reference maps as equals() doesnt' work
-		ObjectArraySet<Integer> s = new ObjectArraySet<Integer>();
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final ObjectArraySet<Integer> s = new ObjectArraySet<>();
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.writeObject(s);
 		oos.close();

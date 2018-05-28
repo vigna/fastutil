@@ -87,7 +87,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 #endif
 
 	/** The initial default capacity of a big-array big list. */
-	public static final int DEFAULT_INITIAL_CAPACITY = 16;
+	public static final int DEFAULT_INITIAL_CAPACITY = 10;
 
 #if ! KEYS_PRIMITIVE
 	/** Whether the backing big array was passed to {@code wrap()}. In
@@ -100,8 +100,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	/** The current actual size of the big list (never greater than the backing-array length). */
 	protected long size;
-
-	private static final boolean ASSERTS = ASSERTS_VALUE;
 
 	/** Creates a new big-array big list using a given array.
 	 *
@@ -125,18 +123,21 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public BIG_ARRAY_BIG_LIST(final long capacity) {
 		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
-
-		a = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray(capacity);
+		if (capacity == 0) a = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.EMPTY_BIG_ARRAY;
+		else a = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray(capacity);
 #if ! KEYS_PRIMITIVE
 		wrapped = false;
 #endif
 	}
 
-	/** Creates a new big-array big list with {@link #DEFAULT_INITIAL_CAPACITY} capacity.
-	 */
+	/** Creates a new big-array big list with {@link #DEFAULT_INITIAL_CAPACITY} capacity. */
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public BIG_ARRAY_BIG_LIST() {
-		this(DEFAULT_INITIAL_CAPACITY);
+		a = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.DEFAULT_EMPTY_BIG_ARRAY; // We delay allocation
+#if ! KEYS_PRIMITIVE
+		wrapped = false;
+#endif
 	}
 
 	/** Creates a new big-array big list and fills it with a given type-specific collection.
@@ -266,10 +267,11 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void ensureCapacity(final long capacity) {
+		if (capacity <= a.length || a == BIG_ARRAYS.DEFAULT_EMPTY_BIG_ARRAY) return;
 #if KEYS_PRIMITIVE
-		a = BIG_ARRAYS.ensureCapacity(a, capacity, size);
+		a = BIG_ARRAYS.forceCapacity(a, capacity, size);
 #else
-		if (wrapped) a = BIG_ARRAYS.ensureCapacity(a, capacity, size);
+		if (wrapped) a = BIG_ARRAYS.forceCapacity(a, capacity, size);
 		else {
 			if (capacity > BIG_ARRAYS.length(a)) {
 				final Object t[][] = BIG_ARRAYS.newBigArray(capacity);
@@ -278,30 +280,31 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			}
 		}
 #endif
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 	}
 
 	/** Grows this big-array big list, ensuring that it can contain the given number of entries without resizing,
-	 * and in case enlarging it at least by a factor of two.
+	 * and in case increasing current capacity at least by a factor of 50%.
 	 *
 	 * @param capacity the new minimum capacity for this big-array big list.
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	private void grow(final long capacity) {
+	private void grow(long capacity) {
+		final long oldLength = BIG_ARRAYS.length(a);
+		if (capacity <= oldLength) return;
+		if (a != BIG_ARRAYS.DEFAULT_EMPTY_BIG_ARRAY) capacity = Math.max(oldLength + (oldLength >> 1), capacity);
+		else if (capacity < DEFAULT_INITIAL_CAPACITY) capacity = DEFAULT_INITIAL_CAPACITY;
 #if KEYS_PRIMITIVE
-		a = BIG_ARRAYS.grow(a, capacity, size);
+		a = BIG_ARRAYS.forceCapacity(a, capacity, size);
 #else
-		if (wrapped) a =  BIG_ARRAYS.grow(a, capacity, size);
+		if (wrapped) a =  BIG_ARRAYS.forceCapacity(a, capacity, size);
 		else {
-			if (capacity > BIG_ARRAYS.length(a)) {
-				final int newLength = (int)Math.max(Math.min(2 * BIG_ARRAYS.length(a), it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE), capacity);
-				final Object t[][] = BIG_ARRAYS.newBigArray(newLength);
-				BIG_ARRAYS.copy(a, 0, t, 0, size);
-				a = (KEY_GENERIC_TYPE[][])t;
-			}
+			final Object t[][] = BIG_ARRAYS.newBigArray(capacity);
+			BIG_ARRAYS.copy(a, 0, t, 0, size);
+			a = (KEY_GENERIC_TYPE[][])t;
 		}
 #endif
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 	}
 
 	@Override
@@ -311,14 +314,14 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if (index != size) BIG_ARRAYS.copy(a, index, a, index + 1, size - index);
 		BIG_ARRAYS.set(a, index, k);
 		size++;
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 	}
 
 	@Override
 	public boolean add(final KEY_GENERIC_TYPE k) {
 		grow(size + 1);
 		BIG_ARRAYS.set(a, size++, k);
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 		return true;
 	}
 
@@ -349,7 +352,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 #if KEYS_REFERENCE
 		BIG_ARRAYS.set(a, size, null);
 #endif
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 		return old;
 	}
 
@@ -358,7 +361,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final long index = indexOf(k);
 		if (index == -1) return false;
 		REMOVE_KEY(index);
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 		return true;
 	}
 
@@ -433,7 +436,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		BIG_ARRAYS.fill(a, 0, size, null);
 #endif
 		size = 0;
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 	}
 
 	@Override
@@ -483,7 +486,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final long arrayLength = BIG_ARRAYS.length(a);
 		if (n >= arrayLength || size == arrayLength) return;
 		a = BIG_ARRAYS.trim(a, Math.max(n, size));
-		if (ASSERTS) assert size <= BIG_ARRAYS.length(a);
+		assert size <= BIG_ARRAYS.length(a);
 	}
 
 

@@ -28,16 +28,16 @@ public class ObjectAVLTreeSetTest {
 
 	@Test
 	public void testGet() {
-		ObjectAVLTreeSet<Integer> s = new ObjectAVLTreeSet<>();
-		Integer o = new Integer(0);
+		final ObjectAVLTreeSet<Integer> s = new ObjectAVLTreeSet<>();
+		final Integer o = Integer.valueOf(0);
 		s.add(o);
-		assertSame(o,  s.get(new Integer(0)));
+		assertSame(o,  s.get(Integer.valueOf(0)));
 	}
 
 	@Test
 	public void testAddTo() {
-		Int2IntAVLTreeMap a = new Int2IntAVLTreeMap();
-		Int2IntAVLTreeMap b = new Int2IntAVLTreeMap();
+		final Int2IntAVLTreeMap a = new Int2IntAVLTreeMap();
+		final Int2IntAVLTreeMap b = new Int2IntAVLTreeMap();
 
 		// test addTo with empty map
 		a.addTo(0, 1); 			// 0 -> 1

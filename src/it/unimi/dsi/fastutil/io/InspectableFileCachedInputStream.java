@@ -1,5 +1,15 @@
 package it.unimi.dsi.fastutil.io;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
+
 /*
  * Copyright (C) 2005-2017 Sebastiano Vigna
  *
@@ -17,16 +27,6 @@ package it.unimi.dsi.fastutil.io;
  */
 
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 
 /** A {@linkplain RepositionableStream repositionable} {@link MeasurableInputStream} based on
  * cached data received by a {@link WritableByteChannel} whose first bytes can be inspected directly.
@@ -189,6 +189,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		overflowFile.delete();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void finalize() throws Throwable {
 		try {
@@ -206,7 +207,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	}
 
 	@Override
-	public int read(byte[] b, int offset, int length) throws IOException {
+	public int read(final byte[] b, int offset, int length) throws IOException {
 		ensureOpen();
 		if (length == 0) return 0;
 		if (position == length()) return -1; // Nothing to read.
@@ -237,7 +238,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	}
 
 	@Override
-	public int read(byte[] b) throws IOException {
+	public int read(final byte[] b) throws IOException {
 		return read(b, 0, b.length);
 	}
 

@@ -49,7 +49,7 @@ import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
 
 /** A class providing static methods and objects that do useful things with {@linkplain BigArrays big arrays}.
  *
- * <p>In particular, the {@code ensureCapacity()}, {@code grow()},
+ * <p>In particular, the {@code forceCapacity()}, {@code ensureCapacity()}, {@code grow()},
  * {@code trim()} and {@code setLength()} methods allow to handle
  * big arrays much like array lists.
  *
@@ -92,6 +92,15 @@ public final class BIG_ARRAYS {
 
 	/** A static, final, empty big array. */
 	public static final KEY_TYPE[][] EMPTY_BIG_ARRAY = {};
+
+	/** A static, final, empty big array to be used as default big array in allocations. An
+	  * object distinct from {@link #EMPTY_BIG_ARRAY} makes it possible to have different
+	  * behaviors depending on whether the user required an empty allocation, or we are
+	  * just lazily delaying allocation.
+	  *
+	  * @see java.util.ArrayList
+	  */
+	public static final KEY_TYPE[][] DEFAULT_EMPTY_BIG_ARRAY = {};
 
 	/** Returns the element of the given big array of specified index.
 	 *
@@ -404,6 +413,38 @@ public final class BIG_ARRAYS {
 
 #if KEY_CLASS_Object
 
+	/** Forces a big array to contain the given number of entries, preserving just a part of the big array.
+	 *
+	 * <p>This method returns a new big array of the given length whose element
+	 * are of the same class as of those of {@code array}.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return a big array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] forceCapacity(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
+		ensureLength(length);
+		final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final KEY_GENERIC_TYPE[][] base = Arrays.copyOf(array, baseLength);
+		final Class<?> componentType = array.getClass().getComponentType();
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) {
+			for(int i = valid; i < baseLength - 1; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
+			base[baseLength - 1] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), residual);
+		}
+		else for(int i = valid; i < baseLength; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
+
+		if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
+		return base;
+	}
+
 	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
 	 *
 	 * <p>This method returns a new big array of the given length whose element
@@ -421,27 +462,37 @@ public final class BIG_ARRAYS {
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
-		final long oldLength = length(array);
-		if (length > oldLength) {
-			ensureLength(length);
-			final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
-			final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
-			final KEY_GENERIC_TYPE[][] base = Arrays.copyOf(array, baseLength);
-			final Class<?> componentType = array.getClass().getComponentType();
-			final int residual = (int)(length & SEGMENT_MASK);
-			if (residual != 0) {
-				for(int i = valid; i < baseLength - 1; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
-				base[baseLength - 1] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), residual);
-			}
-			else for(int i = valid; i < baseLength; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
-
-			if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
-			return base;
-		}
-		return array;
+		return length > length(array) ? forceCapacity(array, length, preserve) : array;
 	}
 
 #else
+
+	/** Forces a big array to contain the given number of entries, preserving just a part of the big array.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return a big array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	public static KEY_TYPE[][] forceCapacity(final KEY_TYPE[][] array, final long length, final long preserve) {
+		ensureLength(length);
+		final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final KEY_TYPE[][] base = Arrays.copyOf(array, baseLength);
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) {
+			for(int i = valid; i < baseLength - 1; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
+			base[baseLength - 1] = new KEY_TYPE[residual];
+		}
+		else for(int i = valid; i < baseLength; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
+
+		if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
+		return base;
+	}
 
 	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
 	 *
@@ -456,29 +507,13 @@ public final class BIG_ARRAYS {
 	 * entries are the same as those of {@code array}.
 	 */
 	public static KEY_TYPE[][] ensureCapacity(final KEY_TYPE[][] array, final long length, final long preserve) {
-		final long oldLength = length(array);
-		if (length > oldLength) {
-			ensureLength(length);
-			final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
-			final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
-			final KEY_TYPE[][] base = Arrays.copyOf(array, baseLength);
-			final int residual = (int)(length & SEGMENT_MASK);
-			if (residual != 0) {
-				for(int i = valid; i < baseLength - 1; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
-				base[baseLength - 1] = new KEY_TYPE[residual];
-			}
-			else for(int i = valid; i < baseLength; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
-
-			if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
-			return base;
-		}
-		return array;
+		return length > length(array) ? forceCapacity(array, length, preserve) : array;
 	}
 
 #endif
 
 	/** Grows the given big array to the maximum between the given length and
-	 * the current length multiplied by two, provided that the given
+	 * the current length increased by 50%, provided that the given
 	 * length is larger than the current length.
 	 *
 	 * <p>If you want complete control on the big array growth, you
@@ -501,7 +536,7 @@ public final class BIG_ARRAYS {
 	}
 
 	/** Grows the given big array to the maximum between the given length and
-	 * the current length multiplied by two, provided that the given
+	 * the current length increased by 50%, provided that the given
 	 * length is larger than the current length, preserving just a part of the big array.
 	 *
 	 * <p>If you want complete control on the big array growth, you
@@ -521,7 +556,7 @@ public final class BIG_ARRAYS {
 
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
 		final long oldLength = length(array);
-		return length > oldLength ? ensureCapacity(array, Math.max(2 * oldLength, length), preserve) : array;
+		return length > oldLength ? ensureCapacity(array, Math.max(oldLength + (oldLength >> 1), length), preserve) : array;
 	}
 
 #if KEY_CLASS_Object
@@ -664,6 +699,7 @@ public final class BIG_ARRAYS {
 	public static KEY_GENERIC void fill(final KEY_GENERIC_TYPE[][] array, final long from, long to, final KEY_GENERIC_TYPE value) {
 		final long length = length(array);
 		BigArrays.ensureFromTo(length, from, to);
+		if (length == 0) return; // To avoid addressing array[0]
 		int fromSegment = segment(from);
 		int toSegment = segment(to);
 		int fromDispl = displacement(from);

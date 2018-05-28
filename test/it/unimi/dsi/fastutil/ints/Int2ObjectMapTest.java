@@ -30,13 +30,13 @@ import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 public class Int2ObjectMapTest {
-	private static final Integer ZERO = new Integer(0);
-	private static final Integer ONE = new Integer(1);
-	private static final Integer TWO = new Integer(2);
-	private static final Integer THREE = new Integer(3);
-	private static final Integer FOUR = new Integer(4);
-	private static final Integer SIX = new Integer(6);
-	private static final Integer DEFAULT = new Integer(-1);
+	private static final Integer ZERO = Integer.valueOf(0);
+	private static final Integer ONE = Integer.valueOf(1);
+	private static final Integer TWO = Integer.valueOf(2);
+	private static final Integer THREE = Integer.valueOf(3);
+	private static final Integer FOUR = Integer.valueOf(4);
+	private static final Integer SIX = Integer.valueOf(6);
+	private static final Integer DEFAULT = Integer.valueOf(-1);
 
 	@SuppressWarnings("deprecation")
 	@Test

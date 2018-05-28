@@ -89,7 +89,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 
 	/** The initial default capacity of an array list. */
-	public static final int DEFAULT_INITIAL_CAPACITY = 16;
+	public static final int DEFAULT_INITIAL_CAPACITY = 10;
 
 #if ! KEYS_PRIMITIVE
 	/** Whether the backing array was passed to {@code wrap()}. In
@@ -102,8 +102,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	/** The current actual size of the list (never greater than the backing-array length). */
 	protected int size;
-
-	private static final boolean ASSERTS = ASSERTS_VALUE;
 
 	/** Creates a new array list using a given array.
 	 *
@@ -127,18 +125,23 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_LIST(final int capacity) {
 		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
-
-		a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
+		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+		else a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
 #if ! KEYS_PRIMITIVE
 		wrapped = false;
 #endif
 	}
 
-	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity.
-	 */
+	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity. */
 
-	public ARRAY_LIST() { this(DEFAULT_INITIAL_CAPACITY); }
-
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public ARRAY_LIST() {
+		a = KEY_GENERIC_ARRAY_CAST ARRAYS.DEFAULT_EMPTY_ARRAY; // We delay allocation
+#if ! KEYS_PRIMITIVE
+		wrapped = false;
+#endif
+	}
+	
 	/** Creates a new array list and fills it with a given collection.
 	 *
 	 * @param c a collection that will be used to fill the array list.
@@ -283,6 +286,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void ensureCapacity(final int capacity) {
+		if (capacity <= a.length || a == ARRAYS.DEFAULT_EMPTY_ARRAY) return;
 #if KEYS_PRIMITIVE
 		a = ARRAYS.ensureCapacity(a, capacity, size);
 #else
@@ -295,30 +299,31 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			}
 		}
 #endif
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 	}
 
 	/** Grows this array list, ensuring that it can contain the given number of entries without resizing,
-	 * and in case enlarging it at least by a factor of two.
+	 * and in case increasing the current capacity at least by a factor of 50%.
 	 *
 	 * @param capacity the new minimum capacity for this array list.
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	private void grow(final int capacity) {
+	private void grow(int capacity) {
+		if (capacity <= a.length) return;
+		if (a != ARRAYS.DEFAULT_EMPTY_ARRAY) 
+			capacity = (int)Math.max(Math.min((long)a.length + (a.length >> 1), it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE), capacity);
+		else if (capacity < DEFAULT_INITIAL_CAPACITY) capacity = DEFAULT_INITIAL_CAPACITY;
 #if KEYS_PRIMITIVE
-		a = ARRAYS.grow(a, capacity, size);
+		a = ARRAYS.forceCapacity(a, capacity, size);
 #else
-		if (wrapped) a = ARRAYS.grow(a, capacity, size);
+		if (wrapped) a = ARRAYS.forceCapacity(a, capacity, size);
 		else {
-			if (capacity > a.length) {
-				final int newLength = (int)Math.max(Math.min(2L * a.length, it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE), capacity);
-				final Object t[] = new Object[newLength];
-				System.arraycopy(a, 0, t, 0, size);
-				a = (KEY_GENERIC_TYPE[])t;
-			}
+			final Object t[] = new Object[capacity];
+			System.arraycopy(a, 0, t, 0, size);
+			a = (KEY_GENERIC_TYPE[])t;
 		}
 #endif
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 	}
 
 	@Override
@@ -328,14 +333,14 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if (index != size) System.arraycopy(a, index, a, index + 1, size - index);
 		a[index] = k;
 		size++;
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 	}
 
 	@Override
 	public boolean add(final KEY_GENERIC_TYPE k) {
 		grow(size + 1);
 		a[size++] = k;
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 		return true;
 	}
 
@@ -367,7 +372,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #if KEYS_REFERENCE
 		a[size] = null;
 #endif
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 		return old;
 	}
 
@@ -376,7 +381,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		int index = indexOf(k);
 		if (index == -1) return false;
 		REMOVE_KEY(index);
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 		return true;
 	}
 
@@ -394,7 +399,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		Arrays.fill(a, 0, size, null);
 #endif
 		size = 0;
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 	}
 
 	@Override
@@ -447,7 +452,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		final KEY_GENERIC_TYPE t[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(n, size)];
 		System.arraycopy(a, 0, t, 0, size);
 		a = t;
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 	}
 
 
@@ -519,7 +524,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		final KEY_ITERATOR i = c.iterator();
 		size += n;
 		while(n-- != 0) a[index++] = i.NEXT_KEY();
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 		return true;
 	}
 
@@ -532,7 +537,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if (index != size) System.arraycopy(a, index, a, index + n, size - index);
 		l.getElements(0, a, index, n);
 		size += n;
-		if (ASSERTS) assert size <= a.length;
+		assert size <= a.length;
 		return true;
 	}
 

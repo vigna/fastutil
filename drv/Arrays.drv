@@ -52,7 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** A class providing static methods and objects that do useful things with type-specific arrays.
  *
- * <p>In particular, the {@code ensureCapacity()}, {@code grow()},
+ * <p>In particular, the {@code forceCapacity()}, {@code ensureCapacity()}, {@code grow()},
  * {@code trim()} and {@code setLength()} methods allow to handle
  * arrays much like array lists. This can be very useful when efficiency (or
  * syntactic simplicity) reasons make array lists unsuitable.
@@ -132,6 +132,15 @@ public final class ARRAYS {
 	/** A static, final, empty array. */
 	public static final KEY_TYPE[] EMPTY_ARRAY = {};
 
+	/** A static, final, empty array to be used as default array in allocations. An
+	  * object distinct from {@link #EMPTY_ARRAY} makes it possible to have different
+	  * behaviors depending on whether the user required an empty allocation, or we are
+	  * just lazily delaying allocation.
+	  *
+	  * @see java.util.ArrayList
+	  */
+	public static final KEY_TYPE[] DEFAULT_EMPTY_ARRAY = {};
+
 
 #if KEY_CLASS_Object
 	/** Creates a new array using a the given one as prototype.
@@ -153,6 +162,25 @@ public final class ARRAYS {
 	}
 #endif
 
+	/** Forces an array to contain the given number of entries, preserving just a part of the array.
+	 *
+	 * @param array an array.
+	 * @param length the new minimum length for this array.
+	 * @param preserve the number of elements of the array that must be preserved in case a new allocation is necessary.
+	 * @return an array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	public static KEY_GENERIC KEY_GENERIC_TYPE[] forceCapacity(final KEY_GENERIC_TYPE[] array, final int length, final int preserve) {
+		final KEY_GENERIC_TYPE t[] =
+#if KEY_CLASS_Object
+			newArray(array, length);
+#else
+			new KEY_TYPE[length];
+#endif
+		System.arraycopy(array, 0, t, 0, preserve);
+		return t;
+	}
+
 	/** Ensures that an array can contain the given number of entries.
 	 *
 	 * <p>If you cannot foresee whether this array will need again to be
@@ -165,17 +193,7 @@ public final class ARRAYS {
 	 * entries are the same as those of {@code array}.
 	 */
 	public static KEY_GENERIC KEY_GENERIC_TYPE[] ensureCapacity(final KEY_GENERIC_TYPE[] array, final int length) {
-		if (length > array.length) {
-			final KEY_GENERIC_TYPE t[] =
-#if KEY_CLASS_Object
-				newArray(array, length);
-#else
-				new KEY_TYPE[length];
-#endif
-			System.arraycopy(array, 0, t, 0, array.length);
-			return t;
-		}
-		return array;
+		return ensureCapacity(array, length, array.length);
 	}
 
 	/** Ensures that an array can contain the given number of entries, preserving just a part of the array.
@@ -188,21 +206,11 @@ public final class ARRAYS {
 	 * entries are the same as those of {@code array}.
 	 */
 	public static KEY_GENERIC KEY_GENERIC_TYPE[] ensureCapacity(final KEY_GENERIC_TYPE[] array, final int length, final int preserve) {
-		if (length > array.length) {
-			final KEY_GENERIC_TYPE t[] =
-#if KEY_CLASS_Object
-				newArray(array, length);
-#else
-				new KEY_TYPE[length];
-#endif
-			System.arraycopy(array, 0, t, 0, preserve);
-			return t;
-		}
-		return array;
+		return length > array.length ? forceCapacity(array, length, preserve) : array;
 	}
 
 	/** Grows the given array to the maximum between the given length and
-	 * the current length multiplied by two, provided that the given
+	 * the current length increased by 50%, provided that the given
 	 * length is larger than the current length.
 	 *
 	 * <p>If you want complete control on the array growth, you
@@ -217,22 +225,11 @@ public final class ARRAYS {
 	 * */
 
 	public static KEY_GENERIC KEY_GENERIC_TYPE[] grow(final KEY_GENERIC_TYPE[] array, final int length) {
-		if (length > array.length) {
-			final int newLength = (int)Math.max(Math.min(2L * array.length, Arrays.MAX_ARRAY_SIZE), length);
-			final KEY_GENERIC_TYPE t[] =
-#if KEY_CLASS_Object
-				newArray(array, newLength);
-#else
-				new KEY_TYPE[newLength];
-#endif
-			System.arraycopy(array, 0, t, 0, array.length);
-			return t;
-		}
-		return array;
+		return grow(array, length, array.length);
 	}
 
 	/** Grows the given array to the maximum between the given length and
-	 * the current length multiplied by two, provided that the given
+	 * the current length increased by 50%, provided that the given
 	 * length is larger than the current length, preserving just a part of the array.
 	 *
 	 * <p>If you want complete control on the array growth, you
@@ -248,9 +245,8 @@ public final class ARRAYS {
 	 * */
 
 	public static KEY_GENERIC KEY_GENERIC_TYPE[] grow(final KEY_GENERIC_TYPE[] array, final int length, final int preserve) {
-
 		if (length > array.length) {
-			final int newLength = (int)Math.max(Math.min(2L * array.length, Arrays.MAX_ARRAY_SIZE), length);
+			final int newLength = (int)Math.max(Math.min((long)array.length + (array.length >> 1), Arrays.MAX_ARRAY_SIZE), length);
 
 			final KEY_GENERIC_TYPE t[] =
 #if KEY_CLASS_Object

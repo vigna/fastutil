@@ -15,9 +15,10 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -41,9 +42,9 @@ public class IntArrayListTest {
 
 	@Test
 	public void testAddUsingIteratorToTheFirstPosition() {
-		IntArrayList list = new IntArrayList();
+		final IntArrayList list = new IntArrayList();
 		list.add(24);
-		IntListIterator it = list.listIterator();
+		final IntListIterator it = list.listIterator();
 		it.add(42);
 		assertTrue(it.hasNext());
 		assertEquals(IntArrayList.wrap(new int[] { 42, 24 }), list);
@@ -58,5 +59,51 @@ public class IntArrayListTest {
 		l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
+	}
+
+	@Test
+	public void testDefaultConstructors() {
+		IntArrayList l;
+
+		l = new IntArrayList();
+		for(int i = 0; i < IntArrayList.DEFAULT_INITIAL_CAPACITY + 2; i++) l.add(0);
+
+		l = new IntArrayList();
+		l.addElements(0, new int[IntArrayList.DEFAULT_INITIAL_CAPACITY], 0, IntArrayList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntArrayList();
+		l.addElements(0, new int[2 * IntArrayList.DEFAULT_INITIAL_CAPACITY], 0, 2 * IntArrayList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntArrayList(0);
+		for(int i = 0; i < IntArrayList.DEFAULT_INITIAL_CAPACITY + 2; i++) l.add(0);
+
+		l = new IntArrayList(0);
+		l.addElements(0, new int[IntArrayList.DEFAULT_INITIAL_CAPACITY], 0, IntArrayList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntArrayList(0);
+		l.addElements(0, new int[2 * IntArrayList.DEFAULT_INITIAL_CAPACITY], 0, 2 * IntArrayList.DEFAULT_INITIAL_CAPACITY);
+
+		l = new IntArrayList(2 * IntArrayList.DEFAULT_INITIAL_CAPACITY );
+		for(int i = 0; i < 3 * IntArrayList.DEFAULT_INITIAL_CAPACITY; i++) l.add(0);
+
+		l = new IntArrayList(2 * IntArrayList.DEFAULT_INITIAL_CAPACITY );
+		l.addElements(0, new int[3 * IntArrayList.DEFAULT_INITIAL_CAPACITY]);
+
+		l = new IntArrayList(2 * IntArrayList.DEFAULT_INITIAL_CAPACITY );
+		l.addElements(0, new int[3 * IntArrayList.DEFAULT_INITIAL_CAPACITY]);
+
+		// Test lazy allocation
+		l = new IntArrayList();
+		l.ensureCapacity(1000000);
+		assertSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+
+		l = new IntArrayList(0);
+		l.ensureCapacity(1);
+		assertNotSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+
+		l = new IntArrayList(0);
+		l.ensureCapacity(1);
+		assertNotSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+		l.ensureCapacity(1);
 	}
 }

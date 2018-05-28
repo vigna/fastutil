@@ -28,16 +28,16 @@ public class ObjectRBTreeSetTest {
 
 	@Test
 	public void testGet() {
-		ObjectRBTreeSet<Integer> s = new ObjectRBTreeSet<>();
-		Integer o = new Integer(0);
+		final ObjectRBTreeSet<Integer> s = new ObjectRBTreeSet<>();
+		final Integer o = Integer.valueOf(0);
 		s.add(o);
-		assertSame(o,  s.get(new Integer(0)));
+		assertSame(o,  s.get(Integer.valueOf(0)));
 	}
 
 	@Test
 	public void testAddTo() {
-		Int2IntRBTreeMap a = new Int2IntRBTreeMap();
-		Int2IntRBTreeMap b = new Int2IntRBTreeMap();
+		final Int2IntRBTreeMap a = new Int2IntRBTreeMap();
+		final Int2IntRBTreeMap b = new Int2IntRBTreeMap();
 
 		// test addTo with empty map
 		a.addTo(0, 1); 			// 0 -> 1
