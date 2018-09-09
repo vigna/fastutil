@@ -106,4 +106,11 @@ public class IntArrayListTest {
 		assertNotSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
 		l.ensureCapacity(1);
 	}
+
+	@Test
+	public void testSizeOnDefaultInstance() {
+		final IntArrayList l = new IntArrayList();
+		l.size(100);
+	}
+
 }

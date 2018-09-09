@@ -608,4 +608,10 @@ public class IntBigArrayBigListTest {
 		assertNotSame(IntBigArrays.DEFAULT_EMPTY_BIG_ARRAY, l.elements());
 		l.ensureCapacity(1);
 	}
+
+	@Test
+	public void testSizeOnDefaultInstance() {
+		final IntBigArrayBigList l = new IntBigArrayBigList();
+		l.size(100);
+	}
 }

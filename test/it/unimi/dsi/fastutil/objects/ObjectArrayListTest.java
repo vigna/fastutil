@@ -39,4 +39,10 @@ public class ObjectArrayListTest {
 		assertTrue(l.elements()[2] == null);
 		assertTrue(l.elements()[3] == null);
 	}
+
+	@Test
+	public void testSizeOnDefaultInstance() {
+		final ObjectArrayList<Integer> l = new ObjectArrayList<>();
+		l.size(100);
+	}
 }

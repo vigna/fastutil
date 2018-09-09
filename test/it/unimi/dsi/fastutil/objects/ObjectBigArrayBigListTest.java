@@ -566,4 +566,10 @@ public class ObjectBigArrayBigListTest {
 	public void test1000() {
 		test(1000);
 	}
+
+	@Test
+	public void testSizeOnDefaultInstance() {
+		final ObjectBigArrayBigList<Integer> l = new ObjectBigArrayBigList<>();
+		l.size(100);
+	}
 }
