@@ -69,7 +69,7 @@ explain:
 	@echo "involving ints, longs and doubles (and some byte utility)."
 	@echo "Note that in this case some tests will not compile."
 
-source:
+source: pom
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	$(TAR) zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
@@ -108,13 +108,14 @@ binary:
 
 ECLIPSE=/usr/bin/eclipse
 
+pom:
+	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
+
 format:
 	$(ECLIPSE) -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
 
-stage:
-	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
+stage: pom
 	(unset LOCAL_IVY_SETTINGS; ant stage)
-
 
 dirs:
 	mkdir -p $(GEN_SRCDIR)/$(PKG_PATH)
