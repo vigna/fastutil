@@ -22,7 +22,13 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
-
+#if KEYS_PRIMITIVE
+import java.util.PrimitiveIterator;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+#endif
+#endif
 
 /** A class providing static methods and objects that do useful things with type-specific iterators.
  *
@@ -153,6 +159,7 @@ public final class ITERATORS {
 #else // ! KEY_PRIMITIVE == KEY_REFERENCE
 		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
 #endif
+			Objects.requireNonNull(action);
 			if (curr == 0) {
 				action.accept(element);
 				curr = 1;
@@ -169,6 +176,8 @@ public final class ITERATORS {
 		public int previousIndex() {
 			return curr - 1;
 		}
+		
+		// TODO override skip and back
 	}
 
 
@@ -223,6 +232,7 @@ public final class ITERATORS {
 #else // ! KEY_PRIMITIVE == KEY_REFERENCE
 		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
 #endif
+			Objects.requireNonNull(action);
 			for (; curr < length; ++curr) {
 				action.accept(array[offset + curr]);
 			}
@@ -284,7 +294,7 @@ public final class ITERATORS {
 	 * all elements of the given array.
 	 *
 	 * @param array an array to wrap into a type-specific list iterator.
-	 * @return an iterator that will the elements of {@code array}.
+	 * @return an iterator that will return the elements of {@code array}.
 	 */
 	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array) {
 		return new ArrayIterator KEY_GENERIC_DIAMOND(array, 0, array.length);
@@ -493,17 +503,19 @@ public final class ITERATORS {
 		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_CLASS2TYPE(i.next()); }
 
-#if !defined JDK_PRIMITIVE_ITERATOR || KEY_WIDENED
+#if KEYS_PRIMITIVE
 		@Override
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
 		public void forEachRemaining(final KEY_CONSUMER action) {
-			i.forEachRemaining(action);
-		}
+#else
+ 		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 #endif
-
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
-		@Override
-		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+			Objects.requireNonNull(action);
+			i.forEachRemaining(action::accept);
+#else
 			i.forEachRemaining(action);
+#endif
 		}
 #endif
 
@@ -515,6 +527,52 @@ public final class ITERATORS {
 			i.forEachRemaining(action);
 		}
 	}
+
+#if KEYS_PRIMITIVE
+	private static class PrimitiveIteratorWrapper KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+		final JDK_PRIMITIVE_ITERATOR i;
+	
+		public PrimitiveIteratorWrapper(JDK_PRIMITIVE_ITERATOR i) {
+			this.i = i;
+		}
+
+		@Override
+		public boolean hasNext() { return i.hasNext(); }
+		@Override
+		public void remove() { i.remove(); }
+		@Override
+#if KEY_WIDENED
+		public KEY_GENERIC_TYPE NEXT_KEY() { return (KEY_GENERIC_TYPE)i.NEXT_KEY_WIDENED(); }
+#else
+		public KEY_GENERIC_TYPE NEXT_KEY() { return i.NEXT_KEY_WIDENED(); }
+#endif
+
+		@Override
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
+		public void forEachRemaining(final KEY_CONSUMER action) {
+#else
+ 		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
+#endif
+			i.forEachRemaining(action);
+		}
+	}
+#endif
+
+#if KEY_WIDENED
+	private static class CheckedPrimitiveIteratorWrapper KEY_GENERIC extends PrimitiveIteratorWrapper {
+		public CheckedPrimitiveIteratorWrapper(JDK_PRIMITIVE_ITERATOR i) {
+			super(i);
+		}
+
+		@Override
+		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_NARROWING(i.NEXT_KEY_WIDENED()); }
+		
+		@Override
+		public void forEachRemaining(final KEY_CONSUMER action) {
+			i.forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER)(KEY_GENERIC_TYPE_WIDENED value) -> { action.accept(KEY_NARROWING(value)); });
+		}
+	}
+#endif
 
 	/** Wraps a standard iterator into a type-specific iterator.
 	 *
@@ -528,16 +586,63 @@ public final class ITERATORS {
 	 * will be generated.
 	 *
 	 * @param i an iterator.
-	 * @return a type-specific iterator  backed by {@code i}.
+	 * @return a type-specific iterator backed by {@code i}.
 	 */
 #if KEYS_PRIMITIVE
 	@SuppressWarnings({"unchecked","rawtypes"})
 #endif
  	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC AS_KEY_ITERATOR(final Iterator KEY_GENERIC i) {
 		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED
+		if (i instanceof JDK_PRIMITIVE_ITERATOR) return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_ITERATOR)i);
+#endif
 		return new IteratorWrapper KEY_GENERIC_DIAMOND(i);
 	}
 
+#if KEYS_PRIMITIVE && KEY_WIDENED
+	/** Wrap a JDK primitive iterator to a type-specific iterator, making checked
+	  * narrowed casts.<p>
+	  * The {@code next} method throws {@link IllegalArgumentException} if any element would underflow or overflow.
+	  *
+	  * @param i an iterator
+	  * @return a type-specific iterator backed by {@code i}
+	  * @since 8.1
+	  */
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC narrow(final JDK_PRIMITIVE_ITERATOR i) {
+#if !KEY_WIDENED
+		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
+		return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+#endif
+		return new CheckedPrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+	}
+#endif
+
+#if KEYS_PRIMITIVE && KEY_WIDENED
+	/** Wrap a JDK primitive iterator to a type-specific iterator, making <em>unchecked</em>
+	  * narrowing casts.
+	  * <em>No</em> test is done for overflow or underflow.
+	  *
+	  * @param i an iterator
+	  * @return a type-specific iterator backed by {@code i}
+	  * @since 8.1
+	  */
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC uncheckedNarrow(final JDK_PRIMITIVE_ITERATOR i) {
+#if !KEY_WIDENED
+		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
+#endif
+		return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+	}
+#endif
+
+#if KEYS_PRIMITIVE && KEY_WIDENED
+	/** Wrap a type-specific iterator to a JDK compatible primitive iterator.
+	  *
+	  * @param i an iterator
+	  * @return a JDK compatible primitive iterator backed by {@code i}
+	  * @since 8.1
+	  */
+	public static KEY_WIDENED_ITERATOR widen(KEY_ITERATOR i) { return WIDENED_ITERATORS.wrap(i); }
+#endif
 
 	private static class ListIteratorWrapper KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
 		final ListIterator<KEY_GENERIC_CLASS> i;
@@ -574,14 +679,26 @@ public final class ITERATORS {
 		public KEY_GENERIC_TYPE PREV_KEY() { return KEY_CLASS2TYPE(i.previous()); }
 
 #if KEYS_PRIMITIVE
+		@Override
 #if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
 		public void forEachRemaining(final KEY_CONSUMER action) {
 #else
  		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 #endif
-#else // ! KEY_PRIMITIVE == KEY_REFERENCE
-		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+			Objects.requireNonNull(action);
+			i.forEachRemaining(action::accept);
+#else
+			i.forEachRemaining(action);
 #endif
+		}
+#endif
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
 			i.forEachRemaining(action);
 		}
 	}
@@ -695,6 +812,7 @@ public final class ITERATORS {
 #else // ! KEY_PRIMITIVE == KEY_REFERENCE
 		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
 #endif
+			Objects.requireNonNull(action);
 			for (; curr < to; ++curr) {
 				action.accept(curr);
 			}
@@ -1070,6 +1188,7 @@ public final class ITERATORS {
 #else
  		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 #endif
+			Objects.requireNonNull(action);
 			iterator.forEachRemaining(action::accept);
 		}
 
@@ -1116,6 +1235,7 @@ public final class ITERATORS {
 #else
  		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 #endif
+			Objects.requireNonNull(action);
 			iterator.forEachRemaining(action::accept);
 		}
 
@@ -1163,6 +1283,7 @@ public final class ITERATORS {
 #else
  		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 #endif
+			Objects.requireNonNull(action);
 			iterator.forEachRemaining(action::accept);
 		}
 
@@ -1211,6 +1332,7 @@ public final class ITERATORS {
 #else
  		public void forEachRemaining(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 #endif
+			Objects.requireNonNull(action);
 			iterator.forEachRemaining(action::accept);
 		}
 
