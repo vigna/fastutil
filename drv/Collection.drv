@@ -25,9 +25,6 @@ import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.WIDENED_ITERATORS;
 import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
 import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
-#if defined JDK_PRIMITIVE_ITERATOR
-import java.util.PrimitiveIterator;
-#endif
 #endif
 
 /** A type-specific {@link Collection}; provides some additional methods
@@ -58,7 +55,11 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 *
 	 * This method is provided for the purpose of APIs that expect only the JDK's
 	 * primitive iterators, of which there are only {@code int}, {@code long}, and {@code double}.
-	 */ 
+	 *
+	 * @return a widened primitive iterator on the elements of this collection.
+	 * @since 8.1
+	 */
+	@Override
 	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() {
 		return WIDENED_ITERATORS.wrap(iterator());
 	}
@@ -71,11 +72,13 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * that have use for widened iterators.
 	 *
 	 * @return a primitive iterator on the elements of this collection.
+	 * @since 8.1
 	 */
+	@Override
 	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterator(); }
 #endif
 
-	// If you change these default methods, you will likely need to update List, Set, and SortedSet too
+	// If you change these default spliterator methods, you will likely need to update Iterable, List, Set, and SortedSet too
 
 	/** Returns a type-specific spliterator on the elements of this collection.
 	 *
@@ -83,6 +86,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * {@link java.util.Collection#spliterator()}.
 	 * 
 	 * @return a type-specific spliterator on the elements of this collection.
+	 * @since 8.1
 	 */
 	@Override
 #if SPLITERATOR_ASSURE_OVERRIDE
@@ -110,7 +114,9 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * primitive spliterators, of which there are only {@code int}, {@code long}, and {@code double}.
 	 *
 	 * @return a widened primitive spliterator on the elements of this collection.
+	 * @since 8.1
 	 */
+	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
 		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
 				KEY_WIDENED_ITERATOR_METHOD(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS));
@@ -125,6 +131,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 *
 	 * @return a primitive spliterator on the elements of this collection.
 	 */
+	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return spliterator(); }
 #endif
 
@@ -277,6 +284,38 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * @return {@code true} if this collection changed as a result of the call.
 	 */
 	boolean retainAll(COLLECTION c);
+
+#if defined JDK_PRIMITIVE_STREAM
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default java.util.stream.Stream<KEY_GENERIC_CLASS> stream() { return Collection.super.stream(); }
+
+	/** Return a primitive stream over the elements.
+	 * @returns a primitive stream over the elements.
+	 * @see Collection#stream()
+	 */
+	default JDK_PRIMITIVE_STREAM KEY_WIDENED_STREAM_METHOD() {
+		return java.util.stream.StreamSupport.KEY_WIDENED_STREAM_METHOD(KEY_WIDENED_SPLITERATOR_METHOD(), false);
+	}
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default java.util.stream.Stream<KEY_GENERIC_CLASS> parallelStream() { return Collection.super.parallelStream(); }
+
+	/** Return a primitive stream over the elements.
+	 * @returns a primitive stream over the elements.
+	 * @see Collection#parallelStream()
+	 */
+	default JDK_PRIMITIVE_STREAM KEY_WIDENED_PARALLEL_STREAM_METHOD() {
+		return java.util.stream.StreamSupport.KEY_WIDENED_STREAM_METHOD(KEY_WIDENED_SPLITERATOR_METHOD(), true);
+	}
+#endif
 
 #endif
 
