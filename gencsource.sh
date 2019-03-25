@@ -133,6 +133,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
 			echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\\n";\
+			echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$wk]}Stream\\n";\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
@@ -141,6 +142,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
 		echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$k]}\\n";\
+		echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$k]}Stream\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
@@ -522,6 +524,8 @@ fi)\
 "#define PREV_KEY_WIDENED previous${TYPE_STD[$wk]}\n"\
 "#define KEY_WIDENED_ITERATOR_METHOD ${TYPE_LC[$wk]}Iterator\n"\
 "#define KEY_WIDENED_SPLITERATOR_METHOD ${TYPE_LC[$wk]}Spliterator\n"\
+"#define KEY_WIDENED_STREAM_METHOD ${TYPE_LC[$wk]}Stream\n"\
+"#define KEY_WIDENED_PARALLEL_STREAM_METHOD ${TYPE_LC[$wk]}ParallelStream\n"\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
