@@ -18,7 +18,6 @@
 package PACKAGE;
 
 import java.util.List;
-import java.util.Spliterator;
 import java.util.Spliterators;
 #if KEY_WIDENED
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
@@ -89,16 +88,11 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-		final int additionalCharacteristics = Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED
-#if KEYS_PRIMITIVE  // If you update this block, also update KEY_WIDENED_SPLITERATOR_METHOD
-			| Spliterator.NONNULL;
-#else
-			;
-#endif
 #if KEYS_REFERENCE
-		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(this, additionalCharacteristics));
+		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(this, SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS));
 #elif defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED
-		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(iterator(), size(), additionalCharacteristics));
+		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(
+				iterator(), size(), SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS));
 #elif KEY_CLASS_Boolean
 		// TODO See the comment in BooleanCollection about how this is ineffecient.
 		return SPLITERATORS.AS_KEY_SPLITERATOR(List.super.spliterator());
@@ -111,13 +105,8 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 #if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
 	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-		final int additionalCharacteristics = Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED
-#if KEYS_PRIMITIVE  // If you update this block, also update spliterator()
-			| Spliterator.NONNULL;
-#else
-			;
-#endif
-		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(KEY_WIDENED_ITERATOR_METHOD(), size(), additionalCharacteristics));
+		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
+				KEY_WIDENED_ITERATOR_METHOD(), size(), SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS));
 	}
 #endif
 
