@@ -20,6 +20,7 @@ package PACKAGE;
 import java.util.SortedSet;
 import java.util.Collection;
 import java.util.Spliterators;
+import static it.unimi.dsi.fastutil.Size64.getSizeOf;
 #if KEY_WIDENED
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.WIDENED_ITERATORS;
@@ -95,11 +96,9 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-#if KEYS_REFERENCE
-		return SPLITERATORS.AS_KEY_SPLITERATOR(SortedSet.super.spliterator());
-#elif defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED
+#if (defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED) || KEYS_REFERENCE
 		return SPLITERATORS.AS_KEY_SPLITERATOR(
-			Spliterators.spliterator(iterator(), size(), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS), comparator());
+			Spliterators.spliterator(iterator(), getSizeOf(this), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS), comparator());
 #elif KEY_CLASS_Boolean
 		// TODO See the comment in BooleanCollection about how this is ineffecient.
 		return SPLITERATORS.AS_KEY_SPLITERATOR(SortedSet.super.spliterator());
@@ -113,7 +112,7 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
 		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(
-			Spliterators.spliterator(KEY_WIDENED_ITERATOR_METHOD(), size(), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS),
+			Spliterators.spliterator(KEY_WIDENED_ITERATOR_METHOD(), getSizeOf(this), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS),
 			(KEY_TYPE_WIDENED left, KEY_TYPE_WIDENED right) -> comparator().compare(KEY_NARROWING(left), KEY_NARROWING(right)));
 	}
 #endif

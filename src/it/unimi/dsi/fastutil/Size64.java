@@ -49,4 +49,17 @@ public interface Size64 {
 	default int size() {
 		return (int)Math.min(Integer.MAX_VALUE, size64());
 	}
+
+	// This is here instead of in one of the Collection classes because this method does
+	// not change per type-specific, so there is no need to generate type-specific implementations
+	// of these methods that the JVM has to separately compile.
+	/** Returns the size for a given {@link Collection} as a {@code long}, using {@link #size64()}
+	 * if applicable, else using {@link Collection#size()}.
+	 *
+	 * @param the collection whose size to get
+	 * @return the size
+	 */
+	public static long getSizeOf(Collection<?> c) {
+		return c instanceof Size64 ? ((Size64)c).size64() : c.size();
+	}
 }
