@@ -1,0 +1,1138 @@
+/*
+ * Copyright (C) 2002-2017 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.Spliterator;
+import java.util.Objects;
+import java.util.function.Consumer;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
+
+/** A class providing static methods and objects that do useful things with type-specific spliterators.
+ *
+ * @see Spliterator
+ * @since 8.1
+ */
+
+public final class SPLITERATORS {
+
+	private SPLITERATORS() {}
+
+	/** A class returning no elements and a type-specific spliterator interface.
+	 *
+	 * <p>This class may be useful to implement your own in case you subclass
+	 * a type-specific spliterator.
+	 */
+
+	public static class EmptySpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC, java.io.Serializable, Cloneable {
+
+		// TODO generate
+		private static final long serialVersionUID = -7046029254386353129L;
+		private static final int CHARACTERISTICS = Spliterator.SIZED | Spliterator.SUBSIZED;
+
+		protected EmptySpliterator() {}
+
+#if KEYS_PRIMITIVE
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) { return false; }
+#endif
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean tryAdvance(final Consumer<? super KEY_GENERIC_CLASS> action) { return false; }
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() { return null; }
+		@Override
+		public long estimateSize() { return 0; }
+		@Override
+		public int characteristics() { return CHARACTERISTICS; }
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) { }
+#endif
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) { }
+
+		@Override
+		public Object clone() { return EMPTY_SPLITERATOR; }
+
+		private Object readResolve() { return EMPTY_SPLITERATOR; }
+	}
+
+	/** An empty spliterator. It is serializable and cloneable.
+	 *
+	 * <p>The class of this objects represent an abstract empty spliterator
+	 * that can iterate as a type-specific spliterator.
+	 */
+	SUPPRESS_WARNINGS_KEY_RAWTYPES
+	public static final EmptySpliterator EMPTY_SPLITERATOR = new EmptySpliterator();
+
+#if KEYS_REFERENCE
+	/** Returns an empty spliterator. It is serializable and cloneable.
+	 *
+	 * <p>The class of the object returned represent an abstract empty spliterator
+	 * that can iterate as a type-specific (list) spliterator.
+	 *
+	 * <p>This method provides a typesafe access to {@link #EMPTY_SPLITERATOR}.
+	 * @return an empty spliterator.
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC emptySpliterator() { return EMPTY_SPLITERATOR; }
+#endif
+
+
+	/** a spliterator returning a single element. */
+
+	private static class SingletonSpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+		private final KEY_GENERIC_TYPE element;
+		private boolean consumed = false;
+		private static final int CHARACTERISTICS = 
+			Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED
+			| Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.IMMUTABLE
+#if KEYS_PRIMITIVE
+			| Spliterator.NONNULL
+#endif
+		;
+
+		public SingletonSpliterator(final KEY_GENERIC_TYPE element) {
+			this.element = element;
+		}
+
+		@Override
+		public boolean tryAdvance(METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			if (consumed) return false;
+			// Existing JVM implementations advance even if the action throw.
+			consumed = true;
+			action.accept(element);
+			return true;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() { return null; }
+		@Override
+		public long estimateSize() { return consumed ? 0 : 1; }
+		@Override
+		public int characteristics() {
+#if KEYS_PRIMITIVE
+			return CHARACTERISTICS;
+#else
+			return CHARACTERISTICS | (element != null ? Spliterator.NONNULL : 0);
+#endif
+		}
+
+		@Override
+#if KEYS_PRIMITIVE
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#else // ! KEY_PRIMITIVE == KEY_REFERENCE
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+			Objects.requireNonNull(action);
+			if (!consumed) {
+				consumed = true;
+				action.accept(element);
+			}
+		}
+		
+		// TODO override skip()
+	}
+
+
+	/** Returns a spliterator that iterates just over the given element.
+	 *
+	 * @param element the only element to be returned by a type-specific spliterator.
+	 * @return a spliterator that iterates just over {@code element}.
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC singleton(final KEY_GENERIC_TYPE element) {
+		return new SingletonSpliterator KEY_GENERIC_DIAMOND(element);
+	}
+
+
+	/** A class to wrap arrays in spiterators. */
+
+	private static class ArraySpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+	
+		private static final int CHARACTERISTICS = 
+			Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED
+#if KEYS_PRIMITIVE
+			| Spliterator.NONNULL
+#endif
+		;
+
+		private final KEY_GENERIC_TYPE[] array;
+		private final int offset;
+		private int length, curr;
+
+		public ArraySpliterator(final KEY_GENERIC_TYPE[] array, final int offset, final int length) {
+			this.array = array;
+			this.offset = offset;
+			this.length = length;
+		}
+
+		@Override
+		public boolean tryAdvance(METHOD_ARG_KEY_CONSUMER action) {
+			if (curr >= length) return false;
+			Objects.requireNonNull(action);
+			action.accept(array[offset + curr++]);
+			return true;
+		}
+
+		@Override
+		public long estimateSize() { return length - curr; }
+		@Override
+		public int characteristics() { return CHARACTERISTICS; }
+		
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			int mid = (length - curr) >> 1;
+			if (mid <= 0) return null;
+			int my_new_curr = mid;
+			int ret_offset = offset + curr;
+			int my_new_length = length - mid;
+			int ret_length = mid;
+			this.curr = my_new_curr;
+			this.length = my_new_length;
+			return new ArraySpliterator(array, ret_offset, ret_length);
+		}
+
+		@Override
+#if KEYS_PRIMITIVED
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#else // ! KEY_PRIMITIVE == KEY_REFERENCE
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+			Objects.requireNonNull(action);
+			for (; curr < length; ++curr) {
+				action.accept(array[offset + curr]);
+			}
+		}
+
+		@Override
+		public int skip(int n) {
+			if (n <= length - curr) {
+				curr += n;
+				return n;
+			}
+			n = length - curr;
+			curr = length;
+			return n;
+		}
+	}
+
+
+	/** Wraps the given part of an array into a type-specific spliterator.
+	 *
+	 * <p>The type-specific spliterator returned by this method will iterate
+	 * {@code length} times, advancing over consecutive elements of the given
+	 * array starting from the one with index {@code offset}.
+	 *
+	 * @param array an array to wrap into a type-specific spliterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param length the number of elements to return.
+	 * @return a spliterator that will iterate over {@code length} elements of {@code array} starting at position {@code offset}.
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array, final int offset, final int length) {
+		ARRAYS.ensureOffsetLength(array, offset, length);
+		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, offset, length);
+	}
+
+	/** Wraps the given array into a type-specific spliterator.
+	 *
+	 * <p>The type-specific spliterator returned by this method will advance over
+	 * all elements of the given array.
+	 *
+	 * @param array an array to wrap into a type-specific spliterator.
+	 * @return a spliterator that will iterate over the elements of {@code array}.
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array) {
+		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, 0, array.length);
+	}
+
+	// wrap, unwrap, and pour are not provided because if you are using Spliterators, you typically
+	// are going to be using streams. That and Spliterator's API isn't well suited for these
+	// types of tasks.
+
+	private static class SpliteratorWrapper KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+		final Spliterator<KEY_GENERIC_CLASS> i;
+		final boolean hasComparatorOverride;
+		final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride;
+
+		private SpliteratorWrapper(
+				final Spliterator<KEY_GENERIC_CLASS> i,
+				final boolean hasComparatorOverride,
+				final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
+			this.i = i;
+			this.hasComparatorOverride = hasComparatorOverride;
+			this.comparatorOverride = comparatorOverride;
+		} 
+		
+		public SpliteratorWrapper(final Spliterator<KEY_GENERIC_CLASS> i) {
+			this(i, false, null);
+		}
+
+		public SpliteratorWrapper(final Spliterator<KEY_GENERIC_CLASS> i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
+			this(i, true, comparatorOverride);
+		}
+
+#if KEYS_PRIMITIVE
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+			Objects.requireNonNull(action);
+			return i.tryAdvance(action::accept);
+#else
+			return i.tryAdvance(action);
+#endif
+		}
+#endif
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean tryAdvance(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			return i.tryAdvance(action);
+		}
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+			Objects.requireNonNull(action);
+			i.forEachRemaining(action::accept);
+#else
+			i.forEachRemaining(action);
+#endif
+		}
+#endif
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			i.forEachRemaining(action);
+		}
+
+		@Override
+		public long estimateSize() { return i.estimateSize(); }
+		
+		@Override
+		public int characteristics() { return i.characteristics(); }
+
+		@Override
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			return hasComparatorOverride ?
+				comparatorOverride :
+				COMPARATORS.AS_KEY_COMPARATOR(i.getComparator());
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			Spliterator<KEY_GENERIC_CLASS> innerSplit = i.trySplit();
+			if (innerSplit == null) return null;
+			return new SpliteratorWrapper(innerSplit, hasComparatorOverride, comparatorOverride);
+		}
+	}
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE
+	private static class PrimitiveSpliteratorWrapper KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+		final JDK_PRIMITIVE_SPLITERATOR i;
+		final boolean hasComparatorOverride;
+		final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride;
+
+		private PrimitiveSpliteratorWrapper(
+				final JDK_PRIMITIVE_SPLITERATOR i,
+				final boolean hasComparatorOverride,
+				final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
+			this.i = i;
+			this.hasComparatorOverride = hasComparatorOverride;
+			this.comparatorOverride = comparatorOverride;
+		} 
+		
+		public PrimitiveSpliteratorWrapper(final JDK_PRIMITIVE_SPLITERATOR i) {
+			this(i, false, null);
+		}
+
+		public PrimitiveSpliteratorWrapper(final JDK_PRIMITIVE_SPLITERATOR i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
+			this(i, true, comparatorOverride);
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			return i.tryAdvance(action);
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+
+		@Override
+		public long estimateSize() { return i.estimateSize(); }
+		
+		@Override
+		public int characteristics() { return i.characteristics(); }
+
+		@Override
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			if (hasComparatorOverride) {
+				return comparatorOverride;
+			} else {
+#if KEY_WIDENED
+				// Get comparator outside of lambda to fail-fast in case inner call throws.
+				final java.util.Comparator<? super KEY_CLASS_WIDENED> comp = i.getComparator();
+				return (KEY_TYPE left, KEY_TYPE right) -> comp.compare(KEY_CLASS_WIDENED.valueOf(left), KEY_CLASS_WIDENED.valueOf(right));
+#else
+				return COMPARATORS.AS_KEY_COMPARATOR(i.getComparator());
+#endif
+			}
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			JDK_PRIMITIVE_SPLITERATOR innerSplit = i.trySplit();
+			if (innerSplit == null) return null;
+			return new PrimitiveSpliteratorWrapper(innerSplit, hasComparatorOverride, comparatorOverride);
+		}
+	}
+#endif
+
+	/** Wraps a standard spliterator into a type-specific spliterator.
+	 *
+	 * <p>This method wraps a standard spliterator into a type-specific one which will handle the
+	 * type conversions for you. Of course, any attempt to wrap a spliterator returning the
+	 * instances of the wrong class will generate a {@link ClassCastException}. The
+	 * returned spliterator is backed by {@code i}: changes to one of the spliterators
+	 * will affect the other, too.
+	 *
+	 * <p>If {@code i} is already type-specific, it will returned and no new object
+	 * will be generated.
+	 *
+	 * @param i a spliterator.
+	 * @return a type-specific spliterator backed by {@code i}.
+	 */
+#if KEYS_PRIMITIVE
+	@SuppressWarnings({"unchecked","rawtypes"})
+#endif
+ 	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC AS_KEY_SPLITERATOR(final Spliterator KEY_GENERIC i) {
+		if (i instanceof KEY_SPLITERATOR) return (KEY_SPLITERATOR KEY_GENERIC)i;
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED
+		if (i instanceof JDK_PRIMITIVE_SPLITERATOR) return new PrimitiveSpliteratorWrapper KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_SPLITERATOR)i);
+#endif
+		return new SpliteratorWrapper KEY_GENERIC_DIAMOND(i);
+	}
+
+	/** Wraps a standard spliterator into a type-specific spliterator.
+	 *
+	 * <p>This method wraps a standard spliterator into a type-specific one which will handle the
+	 * type conversions for you. Of course, any attempt to wrap a spliterator returning the
+	 * instances of the wrong class will generate a {@link ClassCastException}. The
+	 * returned spliterator is backed by {@code i}: changes to one of the spliterators
+	 * will affect the other, too.
+	 *
+	 * <p>This method will cause the returned spliterator's {@link Spliterator#getComparator()} method
+	 * to always return {@code comparatorOverride}, regardless of what the wrapped spliterator's
+	 * {@code getComparator()} method returns.
+	 *
+	 * <p><b>NOTE:</b>This is mostly intended for supporting default
+	 * implementations in interfaces that wrap JDK spliterators, and not a general purpose method.
+	 *
+	 * <p>If {@code i} is already type-specific, this method will throw, as such spliterators already
+	 * have a {@code getComparator()} that returns a properly typed comparator.
+	 *
+	 * @param i a spliterator.
+	 * @param comparatorOverride the comparator to return when {@link Spliterator#getComparator()} 
+	 * @return a type-specific spliterator backed by {@code i}.
+	 */
+#if KEYS_PRIMITIVE
+	@SuppressWarnings({"unchecked","rawtypes"})
+#endif
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC AS_KEY_SPLITERATOR(final Spliterator KEY_GENERIC i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
+		if (i instanceof KEY_SPLITERATOR) throw new AssertionError("Cannot override comparator on instance that is already a KEY_SPLITERATOR");
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED
+		if (i instanceof JDK_PRIMITIVE_SPLITERATOR) return new PrimitiveSpliteratorWrapper KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_SPLITERATOR)i, comparatorOverride);
+#endif
+		return new SpliteratorWrapper KEY_GENERIC_DIAMOND(i, comparatorOverride);
+	}
+
+#if KEYS_PRIMITIVE && KEY_WIDENED
+	/** Wrap a JDK primitive spliterator to a type-specific spliterator, making checked
+	 * narrowed casts.<p>
+	 * The {@code tryAdvance} method throws {@link IllegalArgumentException} if any element would underflow or overflow.
+	 *
+	 * @param i a spiterator
+	 * @return a type-specific spliterator backed by {@code i}
+	 * @since 8.1
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC narrow(final JDK_PRIMITIVE_SPLITERATOR i) {
+#if !KEY_WIDENED
+		if (i instanceof KEY_SPLITERATOR) return (KEY_SPLITERATOR KEY_GENERIC)i;
+#endif
+		return new PrimitiveSpliteratorWrapper KEY_GENERIC_DIAMOND(i);
+	}
+#endif
+
+#if KEYS_PRIMITIVE && KEY_WIDENED
+#if KEY_CLASS_Character
+	/** Wrap a type-specific spliterator to a JDK compatible primitive spliterator.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents.
+	 *
+	 * @param i a spliterator
+	 * @return a JDK compatible primitive spliterator backed by {@code i}
+	 * @since 8.1
+	 */
+#else
+	/** Wrap a type-specific spliterator to a JDK compatible primitive spliterator.
+	 *
+	 * @param i a spliterator
+	 * @return a JDK compatible primitive spliterator backed by {@code i}
+	 * @since 8.1
+	 */
+#endif
+	public static KEY_WIDENED_SPLITERATOR widen(KEY_SPLITERATOR i) { return WIDENED_SPLITERATORS.wrap(i); }
+#endif
+
+#ifdef JDK_PRIMITIVE_PREDICATE
+	public static void onEachMatching(final KEY_SPLITERATOR KEY_GENERIC spliterator, final JDK_PRIMITIVE_PREDICATE predicate, final METHOD_ARG_KEY_CONSUMER action) {
+#else
+	public static KEY_GENERIC void onEachMatching(final KEY_SPLITERATOR KEY_GENERIC spliterator, final java.util.function.Predicate<? super KEY_GENERIC_CLASS> predicate, final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+		Objects.requireNonNull(predicate);
+		Objects.requireNonNull(action);
+		
+		spliterator.forEachRemaining((KEY_CONSUMER)(KEY_GENERIC_TYPE value) -> {
+#if KEY_CLASS_Boolean
+			if (predicate.test(Boolean.valueOf(value))) {
+#else
+			if (predicate.test(value)) {
+#endif
+				action.accept(value);
+			}
+		});
+	}
+
+#if KEY_CLASS_Integer || KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character || KEY_CLASS_Long
+
+	private static class IntervalSpliterator implements KEY_SPLITERATOR {
+		private static final int DONT_SPLIT_THRESHOLD = 2;
+#if KEY_CLASS_Long
+		private static final long MAX_SPLIT_SIZE = 1 << 30;
+#endif
+		private static final int CHARACTERISTICS = 
+			Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED
+			| Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.IMMUTABLE
+#if KEYS_PRIMITIVE
+			| Spliterator.NONNULL
+#endif
+		;
+
+		private KEY_TYPE curr, to;
+
+		public IntervalSpliterator(final KEY_TYPE from, final KEY_TYPE to) {
+			this.curr = from;
+			this.to = to;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (curr >= to) return false;
+			action.accept(curr++);
+			return true;
+		}
+
+		@Override
+#if KEYS_PRIMITIVE
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#else // ! KEY_PRIMITIVE == KEY_REFERENCE
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+			Objects.requireNonNull(action);
+			for (; curr < to; ++curr) {
+				action.accept(curr);
+			}
+		}
+		
+		@Override
+		public long estimateSize() {
+#if KEY_CLASS_Integer
+			return (long)to - curr;
+#else
+			return to - curr;
+#endif
+		}
+
+		@Override
+		public int characteristics() {
+			return CHARACTERISTICS;
+		}
+
+		@Override
+		public KEY_COMPARATOR getComparator() {
+			// Return null to indicate natural ordering.
+			return null;
+		}
+		
+		@Override
+		public KEY_SPLITERATOR trySplit() {
+#if KEY_CLASS_Integer || KEY_CLASS_Long
+			long remaining = to - curr;
+#else
+			int remaining = to - curr;
+#endif
+			KEY_TYPE mid = curr + (KEY_TYPE)(remaining >> 1);
+#if KEY_CLASS_Long
+			// Can be less then 0 if range overflowed.
+			if (remaining > 2 * MAX_SPLIT_SIZE || remaining < 0) {
+				mid = curr + MAX_SPLIT_SIZE;
+			}
+#endif
+			if (remaining >= 0 && remaining <= DONT_SPLIT_THRESHOLD) return null;
+			KEY_TYPE old_curr = curr;
+			curr = mid;
+			return new IntervalSpliterator(old_curr, mid);
+		}
+
+		@Override
+		public int skip(int n) {
+			if (curr + n <= to) {
+				curr += n;
+				return n;
+			}
+#if ! KEY_CLASS_Long
+			n = to - curr;
+#else
+			n = (int)(to - curr);
+#endif
+			curr = to;
+			return n;
+		}
+	}
+
+
+	/** Creates a type-specific spliterator over an interval.
+	 *
+	 * <p>The type-specific spliterator returned by this method will return the
+	 * elements {@code from}, {@code from+1},&hellip;, {@code to-1}.
+	 *
+	 * @param from the starting element (inclusive).
+	 * @param to the ending element (exclusive).
+	 * @return a type-specific spliterator enumerating the elements from {@code from} to {@code to}.
+	 */
+	public static KEY_SPLITERATOR fromTo(final KEY_TYPE from, final KEY_TYPE to) {
+		return new IntervalSpliterator(from, to);
+	}
+
+#endif
+
+	private static class SpliteratorConcatenator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+		private static final int EMPTY_CHARACTERISTICS = Spliterator.SIZED | Spliterator.SUBSIZED;
+		final KEY_SPLITERATOR KEY_EXTENDS_GENERIC a[];
+		int offset, length;
+		/** The sum of estimatedRemaining <em>except</em> current offset */
+		long remainingEstimatedExceptCurrent = Long.MAX_VALUE;
+		int characteristics = 0;
+
+		public SpliteratorConcatenator(final KEY_SPLITERATOR KEY_EXTENDS_GENERIC a[], int offset, int length) {
+			this.a = a;
+			this.offset = offset;
+			this.length = length;
+			this.remainingEstimatedExceptCurrent = recomputeRemaining();
+			this.characteristics = computeCharacteristics();
+		}
+		
+		private long recomputeRemaining() {
+			int curLength = length - 1;
+			int curOffset = offset + 1;
+			long result = 0;
+			while (curLength > 0) {
+				long cur = a[curOffset++].estimateSize();
+				--curLength;
+				if (cur == Long.MAX_VALUE) return Long.MAX_VALUE;
+				result += cur;
+				// Hit max or overflow
+				if (result == Long.MAX_VALUE || result < 0) {
+					return Long.MAX_VALUE;
+				}
+			}
+			return result;
+		}
+		
+		/** Compute the union of all contained spliterators' characteristics */
+		private int computeCharacteristics() {
+			int current = ~0;
+			int curLength = length;
+			int curOffset = offset;
+			while (curLength > 0) {
+				current &= a[curOffset++].characteristics();
+				--curLength;
+			}
+			return current == ~0 ? EMPTY_CHARACTERISTICS : current;
+		}
+
+		private void advanceNextSpliterator() {
+			if (length == 0) {
+				throw new IllegalStateException("advanceNextSpliterator() called with none remaining");
+			}
+			++offset;
+			--length;
+			this.remainingEstimatedExceptCurrent = recomputeRemaining();
+			// We do NOT recompute the union of all characteristics here.
+			// Per spec, the only time characteristics() can change its
+			// return value on an instance is after a call to trySplt().  
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			boolean any = false;
+			length--;
+			
+			while(length != 0) {
+				if (a[offset].tryAdvance(action)) {
+					any = true;
+					break;
+				}
+				advanceNextSpliterator();
+			}
+			return any;
+		}
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while (length > 0) {
+				a[offset].forEachRemaining(action);
+				advanceNextSpliterator();
+			}
+		}
+#endif
+			
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			while (length > 0) {
+				a[offset].forEachRemaining(action);
+				advanceNextSpliterator();
+			}
+		}
+
+		@Override
+		public long estimateSize() {
+			if (length == 0) return 0;
+			return a[offset].estimateSize() + remainingEstimatedExceptCurrent;
+		}
+		
+		@Override
+		public int characteristics() {
+			return characteristics;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			switch(length) {
+				case 0: return null;
+				case 1: {
+#if KEYS_REFERENCE
+					SUPPRESS_WARNINGS_KEY_UNCHECKED // This is safe because spliterators only "give" K, never "take" them.
+					KEY_SPLITERATOR KEY_GENERIC split = (KEY_SPLITERATOR KEY_GENERIC)a[offset].trySplit();
+#else
+					KEY_SPLITERATOR split = a[offset].trySplit();
+#endif
+					// It is possible for a Spliterator to change characteristics after a split.
+					// e.g. a SIZED but not SUBSIZED spliterator may split into non-SIZED spliterators.
+					this.characteristics = a[offset].characteristics();
+					return split;
+				}
+				default:  // Fallthrough to below
+			}
+			int mid = length >> 1;
+			int ret_offset = offset;
+			int new_offset = offset + mid;
+			int ret_length = mid;
+			int new_length = length - mid;
+			this.offset = new_offset;
+			this.length = new_length;
+			this.remainingEstimatedExceptCurrent = recomputeRemaining();
+			this.characteristics = computeCharacteristics();
+			return new SpliteratorConcatenator KEY_GENERIC_DIAMOND(a, ret_offset, ret_length);
+		}
+
+		@Override
+		public int skip(int n) {
+			int skipped = 0;
+
+			while(skipped < n && length != 0) {
+				int curSkipped = a[offset].skip(n - skipped);
+				skipped += curSkipped;
+				// This relies on the sub spliterators implementing skip() correctly
+				// and always skipping as much as possible first call, so the next
+				// call to skip() will always return 0.
+				// If this assumption does not hold, change the condition to curSkipped == 0.
+				// That will make it work correctly in the face of non-conforming implementations,
+				// at the cost of doing at least 2 passes through this loop for each spliterator.
+				if (skipped < n) advanceNextSpliterator();
+			}
+
+			return skipped;
+		}
+	}
+
+
+	/** Concatenates all spliterators contained in an array.
+	 *
+	 * <p>This method returns a spliterator that will enumerate in order the elements returned
+	 * by all spliterators contained in the given array.
+	 *
+	 * <p> Note: Due to there being no way to ensure the {@link Comparator} is consistent
+	 * between each inner spliterator, the returned spliterator's {@link Spliterator#getComparator()}
+	 * will always throw {@link IllegalStateException}, even when if the current or even all
+	 * the inner spliterators are {@Spliterator.SORTED sorted}.
+	 *
+	 * @param a an array of spliterators.
+	 * @return a spliterator obtained by concatenation.
+	 */
+
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC concat(final KEY_SPLITERATOR KEY_EXTENDS_GENERIC... a) {
+		return concat(a, 0, a.length);
+	}
+
+
+	/** Concatenates a sequence of spliterators contained in an array.
+	 *
+	 * <p>This method returns a spliterator that will enumerate in order the elements returned
+	 * by {@code a[offset]}, then those returned
+	 * by {@code a[offset + 1]}, and so on up to
+	 * {@code a[offset + length - 1]}.
+	 *
+	 * <p> Note: Due to there being no way to ensure the {@link Comparator} is consistent
+	 * between each inner spliterator, the returned spliterator's {@link Spliterator#getComparator()}
+	 * will always throw {@link IllegalStateException}, even when if the current or even all
+	 * the inner spliterators are {@Spliterator.SORTED sorted}.
+	 *
+	 * @param a an array of spliterators.
+	 * @param offset the index of the first spliterator to concatenate.
+	 * @param length the number of spliterators to concatenate.
+	 * @return a spliterator obtained by concatenation of {@code length} elements of {@code a} starting at {@code offset}.
+	 */
+
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC concat(final KEY_SPLITERATOR KEY_EXTENDS_GENERIC a[], final int offset, final int length) {
+		return new SpliteratorConcatenator KEY_GENERIC_DIAMOND(a, offset, length);
+	}
+
+
+#if SMALL_TYPES && (KEY_CLASS_Short || KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
+
+  	/** A wrapper promoting the results of a ByteSpliterator. */
+
+	protected static class ByteSpliteratorWrapper implements KEY_SPLITERATOR {
+		final it.unimi.dsi.fastutil.bytes.ByteSpliterator spliterator;
+
+		public ByteSpliteratorWrapper(final it.unimi.dsi.fastutil.bytes.ByteSpliterator spliterator) {
+			this.spliterator = spliterator;
+		}
+		
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			return spliterator.tryAdvance(action::accept);
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			spliterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public long estimateSize() { return spliterator.estimateSize(); }
+
+		@Override
+		public int characteristics() { return spliterator.characteristics(); }
+
+		@Override
+		public int skip(final int n) { return spliterator.skip(n); }
+		
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			it.unimi.dsi.fastutil.bytes.ByteSpliterator possibleSplit = spliterator.trySplit();
+			if (possibleSplit == null) return null;
+			return new ByteSpliteratorWrapper(possibleSplit);
+		}
+	}
+
+	/** Returns a spliterator backed by the specified byte spliterator.
+	 *
+	 * <p>Note: Due to the incompatibility of primitive {@link Comparator} types,
+	 * the returned spliterator's {@link Spliterator#getComparator()} will always
+	 * throw {@link IllegalStateException}, even when the underlying spliterator is
+	 * {@Spliterator.SORTED sorted}.
+	 * 
+	 * @param spliterator a byte spliterator.
+	 * @return a spliterator backed by the specified byte spliterator.
+	 */
+	public static KEY_SPLITERATOR wrap(final it.unimi.dsi.fastutil.bytes.ByteSpliterator spliterator) {
+		return new ByteSpliteratorWrapper(spliterator);
+	}
+#endif
+
+#if SMALL_TYPES && (KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
+
+	/** A wrapper promoting the results of a ShortSpliterator. */
+
+	protected static class ShortSpliteratorWrapper implements KEY_SPLITERATOR {
+		final it.unimi.dsi.fastutil.shorts.ShortSpliterator spliterator;
+
+		public ShortSpliteratorWrapper(final it.unimi.dsi.fastutil.shorts.ShortSpliterator spliterator) {
+			this.spliterator = spliterator;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			return spliterator.tryAdvance(action::accept);
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			spliterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public long estimateSize() { return spliterator.estimateSize(); }
+
+		@Override
+		public int characteristics() { return spliterator.characteristics(); }
+
+		@Override
+		public int skip(int n) { return spliterator.skip(n); }
+
+		@Override
+		public KEY_SPLITERATOR trySplit() {
+			it.unimi.dsi.fastutil.shorts.ShortSpliterator possibleSplit = spliterator.trySplit();
+			if (possibleSplit == null) return null;
+			return new ShortSpliteratorWrapper(possibleSplit);
+		}
+	}
+
+	/** Returns a spliterator backed by the specified short spliterator.
+	 *
+	 * <p>Note: Due to the incompatibility of primitive {@link Comparator} types,
+	 * the returned spliterator's {@link Spliterator#getComparator()} will always
+	 * throw {@link IllegalStateException}, even when the underlying spliterator is
+	 * {@Spliterator.SORTED sorted}.
+	 *
+	 * @param spliterator a short spliterator.
+	 * @return a spliterator backed by the specified short spliterator.
+	 */
+	public static KEY_SPLITERATOR wrap(final it.unimi.dsi.fastutil.shorts.ShortSpliterator spliterator) {
+		return new ShortSpliteratorWrapper(spliterator);
+	}
+
+#endif
+
+#if SMALL_TYPES && (KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
+
+	/** A wrapper promoting the results of a CharSpliterator. */
+
+	protected static class CharSpliteratorWrapper implements KEY_SPLITERATOR {
+		final it.unimi.dsi.fastutil.chars.CharSpliterator spliterator;
+
+		public CharSpliteratorWrapper(final it.unimi.dsi.fastutil.chars.CharSpliterator spliterator) {
+			this.spliterator = spliterator;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			return spliterator.tryAdvance(action::accept);
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			spliterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public long estimateSize() { return spliterator.estimateSize(); }
+
+		@Override
+		public int characteristics() { return spliterator.characteristics(); }
+
+		@Override
+		public int skip(int n) { return spliterator.skip(n); }
+
+		@Override
+		public KEY_SPLITERATOR trySplit() {
+			it.unimi.dsi.fastutil.chars.CharSpliterator possibleSplit = spliterator.trySplit();
+			if (possibleSplit == null) return null;
+			return new CharSpliteratorWrapper(possibleSplit);
+		}
+	}
+
+	/** Returns a spliterator backed by the specified char spliterator.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents.
+	 *
+	 * <p>Note: Due to the incompatibility of primitive {@link Comparator} types,
+	 * the returned spliterator's {@link Spliterator#getComparator()} will always
+	 * throw {@link IllegalStateException}, even when the underlying spliterator is
+	 * {@Spliterator.SORTED sorted}.
+	 *
+	 * @param spliterator a char spliterator.
+	 * @return a spliterator backed by the specified char spliterator.
+	 */
+	public static KEY_SPLITERATOR wrap(final it.unimi.dsi.fastutil.chars.CharSpliterator spliterator) {
+		return new CharSpliteratorWrapper(spliterator);
+	}
+
+#endif
+
+#if KEY_CLASS_Long || KEY_CLASS_Double
+
+  	/** A wrapper promoting the results of an IntSpliterator. */
+
+	protected static class IntSpliteratorWrapper implements KEY_SPLITERATOR {
+		final it.unimi.dsi.fastutil.ints.IntSpliterator spliterator;
+
+		public IntSpliteratorWrapper(final it.unimi.dsi.fastutil.ints.IntSpliterator spliterator) {
+			this.spliterator = spliterator;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			return spliterator.tryAdvance(action::accept);
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			spliterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public long estimateSize() { return spliterator.estimateSize(); }
+
+		@Override
+		public int characteristics() { return spliterator.characteristics(); }
+
+		@Override
+		public int skip(int n) { return spliterator.skip(n); }
+
+		@Override
+		public KEY_SPLITERATOR trySplit() {
+			it.unimi.dsi.fastutil.ints.IntSpliterator possibleSplit = spliterator.trySplit();
+			if (possibleSplit == null) return null;
+			return new IntSpliteratorWrapper(possibleSplit);
+		}
+	}
+
+	/** Returns a spliterator backed by the specified integer spliterator.
+	 *
+	 * <p>Note: Due to the incompatibility of primitive {@link Comparator} types,
+	 * the returned spliterator's {@link Spliterator#getComparator()} will always
+	 * throw {@link IllegalStateException}, even when the underlying spliterator is
+	 * {@Spliterator.SORTED sorted}.
+	 *
+	 * @param spliterator an integer spliterator.
+	 * @return a spliterator backed by the specified integer spliterator.
+	 */
+
+	public static KEY_SPLITERATOR wrap(final it.unimi.dsi.fastutil.ints.IntSpliterator spliterator) {
+		return new IntSpliteratorWrapper(spliterator);
+	}
+
+#endif
+
+#if SMALL_TYPES && KEY_CLASS_Double
+
+  	/** A wrapper promoting the results of a FloatSpliterator. */
+
+	protected static class FloatSpliteratorWrapper implements KEY_SPLITERATOR {
+		final it.unimi.dsi.fastutil.floats.FloatSpliterator spliterator;
+
+		public FloatSpliteratorWrapper(final it.unimi.dsi.fastutil.floats.FloatSpliterator spliterator) {
+			this.spliterator = spliterator;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			return spliterator.tryAdvance(action::accept);
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			spliterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public long estimateSize() { return spliterator.estimateSize(); }
+
+		@Override
+		public int characteristics() { return spliterator.characteristics(); }
+
+		@Override
+		public int skip(int n) { return spliterator.skip(n); }
+
+		@Override
+		public KEY_SPLITERATOR trySplit() {
+			it.unimi.dsi.fastutil.floats.FloatSpliterator possibleSplit = spliterator.trySplit();
+			if (possibleSplit == null) return null;
+			return new FloatSpliteratorWrapper(possibleSplit);
+		}
+	}
+
+	/** Returns a spliterator backed by the specified float spliterator.
+	 *
+	 * <p>Note: Due to the incompatibility of primitive {@link Comparator} types,
+	 * the returned spliterator's {@link Spliterator#getComparator()} will always
+	 * throw {@link IllegalStateException}, even when the underlying spliterator is
+	 * {@Spliterator.SORTED sorted}.
+	 *
+	 * @param spliterator a float spliterator.
+	 * @return a spliterator backed by the specified float spliterator.
+	 */
+	public static KEY_SPLITERATOR wrap(final it.unimi.dsi.fastutil.floats.FloatSpliterator spliterator) {
+		return new FloatSpliteratorWrapper(spliterator);
+	}
+#endif
+}

@@ -19,6 +19,15 @@ package PACKAGE;
 
 import java.util.SortedSet;
 import java.util.Collection;
+import java.util.Spliterator;
+import java.util.Spliterators;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
+
 
 /** A type-specific {@link SortedSet}; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
@@ -73,6 +82,54 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 
 	@Override
 	KEY_BIDI_ITERATOR KEY_GENERIC iterator();
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>Note that this specification strengthens the one given in
+	 * {@link java.util.Collection#spliterator()}, which was already
+	 * strengthened in the corresponding type-specific class,
+	 * but was weakened by the fact that this interface extends {@link SortedSet}.
+	 */
+	@Override
+#if SPLITERATOR_ASSURE_OVERRIDE
+	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+#else
+	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		final int additionalCharacteristics = Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED
+#if KEYS_PRIMITIVE  // If you update this block, also update KEY_WIDENED_SPLITERATOR_METHOD
+			| Spliterator.NONNULL;
+#else
+			;
+#endif
+#if KEYS_REFERENCE
+		return SPLITERATORS.AS_KEY_SPLITERATOR(SortedSet.super.spliterator());
+#elif defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED
+		return SPLITERATORS.AS_KEY_SPLITERATOR(
+			Spliterators.spliterator(iterator(), size(), additionalCharacteristics), comparator());
+#elif KEY_CLASS_Boolean
+		// TODO See the comment in BooleanCollection about how this is ineffecient.
+		return SPLITERATORS.AS_KEY_SPLITERATOR(SortedSet.super.spliterator());
+#else
+		return SPLITERATORS.narrow(KEY_WIDENED_SPLITERATOR_METHOD());
+#endif
+	}
+#endif
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
+	@Override
+	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
+		final int additionalCharacteristics = Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.ORDERED
+#if KEYS_PRIMITIVE  // If you update this block, also update spliterator()
+			| Spliterator.NONNULL;
+#else
+			;
+#endif
+		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(
+			Spliterators.spliterator(KEY_WIDENED_ITERATOR_METHOD(), size(), additionalCharacteristics),
+			(KEY_TYPE_WIDENED left, KEY_TYPE_WIDENED right) -> comparator().compare(KEY_NARROWING(left), KEY_NARROWING(right)));
+	}
+#endif
 
 	/** Returns a view of the portion of this sorted set whose elements range from {@code fromElement}, inclusive, to {@code toElement}, exclusive.
 	 * <p>Note that this specification strengthens the one given in {@link SortedSet#subSet(Object,Object)}.

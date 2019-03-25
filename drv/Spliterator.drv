@@ -1,0 +1,129 @@
+/*
+ * Copyright (C) 2019 Sebastiano Vigna
+ * Author Christopher Sean Young
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.Spliterator;
+#ifdef KEYS_PRIMITIVE
+import java.util.function.Consumer;
+#endif
+
+/** A type-specific {@link Spliterator}; provides an additional methods to avoid (un)boxing, and
+ * the possibility to skip elements.
+ *
+ * @see Spliterator
+ * @since 8.1
+ */
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED
+public interface KEY_SPLITERATOR KEY_GENERIC extends JDK_PRIMITIVE_SPLITERATOR {
+#elif KEYS_PRIMITIVE
+public interface KEY_SPLITERATOR KEY_GENERIC extends Spliterator.OfPrimitive<KEY_GENERIC_CLASS, KEY_CONSUMER, KEY_SPLITERATOR KEY_GENERIC> {
+#else
+public interface KEY_SPLITERATOR KEY_GENERIC extends Spliterator<KEY_GENERIC_CLASS> {
+#endif
+
+#if KEYS_PRIMITIVE
+
+	// tryAdvance(KEY_CONSUMER action) declaration inherited from super interface.
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default boolean tryAdvance(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		return tryAdvance((METHOD_ARG_KEY_CONSUMER) action::accept);
+	}
+
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	// Because our primitive Consumer interface extends both the JDK's primitive
+	// and object Consumer interfaces, calling this method with it would be ambiguous. 
+	// This overload exists to pass it to the proper primitive overload.
+	/**
+	 * Attempts to perform the action on the next element, or do nothing
+	 * but return {@code false} if there are no remaining elements.
+	 * @param action the action to be performed on the next element.
+	 * @return whether there was a next element the action was performed on
+	 * @see java.util.Spliterator#tryAdvance(java.util.function.Consumer)
+	 */
+	default boolean tryAdvance(final KEY_CONSUMER action) {
+		return tryAdvance((JDK_PRIMITIVE_KEY_CONSUMER) action);
+	}
+#endif
+
+	// forEachRemaining(KEY_CONSUMER action) default impl inherited from super interface.
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		forEachRemaining((METHOD_ARG_KEY_CONSUMER) action::accept);
+	}
+
+#endif
+
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	// Because our primitive Consumer interface extends both the JDK's primitive
+	// and object Consumer interfaces, calling this method with it would be ambiguous. 
+	// This overload exists to pass it to the proper primitive overload.
+	/**
+	 * Performs the given action for each remaining element until all elements
+	 * have been processed or the action throws an exception.
+	 * @param action the action to be performed for each element.
+	 * @see java.util.Spliterator#forEachRemaining(java.util.function.Consumer)
+	 */
+	default void forEachRemaining(final KEY_CONSUMER action) {
+		forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER) action);
+	}
+#endif
+
+	/** Skips the given number of elements.
+	 *
+	 * <p>The effect of this call is exactly the same as that of calling {@link #tryAdvance()} for {@code n} times (possibly stopping if {@link #tryAdvance()} returns false).
+	 * The action called will do nothing; elements will be discarded.
+	 *
+	 * @param n the number of elements to skip.
+	 * @return the number of elements actually skipped.
+	 * @see Spliterator#tryAdvance()
+	 */
+	default int skip(final int n) {
+		if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+		int i = n;
+		while(i-- != 0 && tryAdvance((KEY_GENERIC_TYPE unused) -> {})) {}  // No loop body; logic all happens in conditional
+		return n - i - 1;
+	}
+
+	/**
+	  * {@inheritDoc}
+	  *
+	  * <p>Note that this specification strengthens the one given in {@link Spliterator#trySplit()}.
+	  */
+	@Override
+	KEY_SPLITERATOR KEY_GENERIC trySplit();
+
+	/**
+	  * {@inheritDoc}
+	  *
+	  * <p>Note that this specification strengthens the one given in {@link Spliterator#getComparator()}.
+	  */
+	@Override
+	default KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+		throw new IllegalStateException();
+	}
+}
