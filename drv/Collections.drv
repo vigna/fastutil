@@ -19,6 +19,7 @@ package PACKAGE;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 #if KEY_WIDENED
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.WIDENED_ITERATORS;
@@ -77,6 +78,12 @@ public final class COLLECTIONS {
 			return ((Collection<?>)o).isEmpty();
 		}
 
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) { }
+
 		@Override
 		public boolean addAll(final Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
 
@@ -86,15 +93,18 @@ public final class COLLECTIONS {
 		@Override
 		public boolean retainAll(final Collection<?> c) { throw new UnsupportedOperationException(); }
 
-#if KEYS_REFERENCE
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
 		@Override
 		public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
 			Objects.requireNonNull(filter);
 			return false;
 		}
-#endif
-
 #if KEYS_PRIMITIVE
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) { }
 
 		@Override
 		public boolean addAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
@@ -111,13 +121,13 @@ public final class COLLECTIONS {
 			Objects.requireNonNull(filter);
 			return false;
 		}
+#endif
 
 		@Override
 		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return WIDENED_ITERATORS.EMPTY_ITERATOR; }
 
 		@Override
 		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return WIDENED_SPLITERATORS.EMPTY_SPLITERATOR; }
-#endif
 
 #endif
 
@@ -134,14 +144,12 @@ public final class COLLECTIONS {
 		protected final Object sync;
 
 		protected SynchronizedCollection(final COLLECTION KEY_GENERIC c, final Object sync) {
-			if (c == null) throw new NullPointerException();
-			this.collection = c;
+			this.collection = Objects.requireNonNull(c);
 			this.sync = sync;
 		}
 
 		protected SynchronizedCollection(final COLLECTION KEY_GENERIC c) {
-			if (c == null) throw new NullPointerException();
-			this.collection = c;
+			this.collection = Objects.requireNonNull(c);
 			this.sync = this;
 		}
 
@@ -164,12 +172,6 @@ public final class COLLECTIONS {
 		public KEY_TYPE[] TO_KEY_ARRAY() { synchronized(sync) { return collection.TO_KEY_ARRAY(); } }
 
 #if KEYS_PRIMITIVE
-		@Deprecated
-#endif
-		@Override
-		public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) { synchronized(sync) { return collection.removeIf(filter); } }
-
-#if KEYS_PRIMITIVE
 		@Override
 		public Object[] toArray() { synchronized(sync) { return collection.toArray(); } }
 
@@ -182,6 +184,9 @@ public final class COLLECTIONS {
 
 		@Override
 		public KEY_TYPE[] toArray(final KEY_TYPE[] a) { synchronized(sync) { return collection.toArray(a); } }
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) { synchronized(sync) { collection.forEach(action); } }
 
 		@Override
 		public boolean addAll(final COLLECTION c) { synchronized(sync) { return collection.addAll(c); } }
@@ -217,6 +222,14 @@ public final class COLLECTIONS {
 		
 		@Override
 		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return collection.KEY_WIDENED_SPLITERATOR_METHOD(); }
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_STREAM_METHOD() { return collection.KEY_WIDENED_STREAM_METHOD(); }
+		
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_PARALLEL_STREAM_METHOD() { return collection.KEY_WIDENED_PARALLEL_STREAM_METHOD(); }
+#endif
 #endif
 
 		@Override
@@ -228,11 +241,23 @@ public final class COLLECTIONS {
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return collection.spliterator(); }
 
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
 		@Override
 		public java.util.stream.Stream <KEY_GENERIC_CLASS> stream() { return collection.stream(); }
 
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
 		@Override
 		public java.util.stream.Stream <KEY_GENERIC_CLASS> parallelStream() { return collection.parallelStream(); }
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) { collection.forEach(action); }
 
 		@Override
 		public boolean addAll(final Collection<? extends KEY_GENERIC_CLASS> c) { synchronized(sync) { return collection.addAll(c); } }
@@ -245,6 +270,12 @@ public final class COLLECTIONS {
 
 		@Override
 		public boolean retainAll(final Collection<?> c) { synchronized(sync) { return collection.retainAll(c); } }
+
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) { synchronized(sync) { return collection.removeIf(filter); } }
 
 		@Override
 		public void clear() { synchronized(sync) { collection.clear(); } }
@@ -292,8 +323,7 @@ public final class COLLECTIONS {
 		protected final COLLECTION KEY_GENERIC collection;
 
 		protected UnmodifiableCollection(final COLLECTION KEY_GENERIC c) {
-			if (c == null) throw new NullPointerException();
-			this.collection = c;
+			this.collection = Objects.requireNonNull(c);
 		}
 
 		@Override
@@ -317,9 +347,15 @@ public final class COLLECTIONS {
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return collection.spliterator(); }
 
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
 		@Override
 		public java.util.stream.Stream <KEY_GENERIC_CLASS> stream() { return collection.stream(); }
 
+#if KEYS_PRIMITIVE
+		@Deprecated
+#endif
 		@Override
 		public java.util.stream.Stream <KEY_GENERIC_CLASS> parallelStream() { return collection.parallelStream(); }
 
@@ -331,6 +367,9 @@ public final class COLLECTIONS {
 
 		@Override
 		public Object[] toArray() { return collection.toArray(); }
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) { collection.forEach(action); } 
 
 		@Override
 		public boolean containsAll(Collection<?> c) { return collection.containsAll(c); }
@@ -398,6 +437,14 @@ public final class COLLECTIONS {
 		
 		@Override
 		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return collection.KEY_WIDENED_SPLITERATOR_METHOD(); }
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_STREAM_METHOD() { return collection.KEY_WIDENED_STREAM_METHOD(); }
+		
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_PARALLEL_STREAM_METHOD() { return collection.KEY_WIDENED_PARALLEL_STREAM_METHOD(); }
+#endif
 #endif
 
 		@Override
@@ -428,8 +475,7 @@ public final class COLLECTIONS {
 		protected final KEY_ITERABLE KEY_GENERIC iterable;
 
 		protected IterableCollection(final KEY_ITERABLE KEY_GENERIC iterable) {
-			if (iterable == null) throw new NullPointerException();
-			this.iterable = iterable;
+			this.iterable = Objects.requireNonNull(iterable);
 		}
 
 		@Override
@@ -459,6 +505,7 @@ public final class COLLECTIONS {
 	 */
 	public static KEY_GENERIC COLLECTION KEY_GENERIC asCollection(final KEY_ITERABLE KEY_GENERIC iterable) {
 		if (iterable instanceof COLLECTION) return (COLLECTION KEY_GENERIC)iterable;
+		// TODO test for Collection but not our collection, and make a wrapper for it.
 		return new IterableCollection KEY_GENERIC_DIAMOND(iterable);
 	}
 
