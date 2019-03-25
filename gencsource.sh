@@ -349,6 +349,7 @@ fi)\
 "#define KEY_WIDENED_ITERATOR ${TYPE_CAP[$wk]}Iterator\n"\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n"\
 "#define KEY_SPLITERATOR ${TYPE_CAP2[$k]}Spliterator\n"\
+"#define KEY_WIDENED_SPLITERATOR ${TYPE_CAP[$wk]}Spliterator\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n"\
 "#define KEY_BIDI_ITERABLE ${TYPE_CAP2[$k]}BidirectionalIterable\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n"\
@@ -372,7 +373,11 @@ fi)\
 \
 \
 "#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED\n"\
+"#if KEYS_REFERENCE\n"\
+"#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\
+"#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER\n"\
+"#endif\n"\
 "#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
 "#endif\n"\
@@ -432,6 +437,7 @@ fi)\
 "#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n"\
 "#define WIDENED_ITERATORS ${TYPE_CAP[$wk]}Iterators\n"\
 "#define SPLITERATORS ${TYPE_CAP2[$k]}Spliterators\n"\
+"#define WIDENED_SPLITERATORS ${TYPE_CAP[$wk]}Spliterators\n"\
 "#define BIG_LIST_ITERATORS ${TYPE_CAP2[$k]}BigListIterators\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n"\
 \
@@ -536,6 +542,8 @@ fi)\
 "#define AS_KEY_SPLITERATOR as${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_COMPARATOR as${TYPE_CAP2[$k]}Comparator\n"\
 "#define AS_KEY_ITERABLE as${TYPE_CAP2[$k]}Iterable\n"\
+"#define AS_KEY_WIDENED_ITERATOR as${TYPE_CAP2[$wk]}Iterator\n"\
+"#define AS_KEY_WIDENED_SPLITERATOR as${TYPE_CAP2[$wk]}Spliterator\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
 "#define REMOVE_FIRST_KEY removeFirst${TYPE_STD[$k]}\n"\
