@@ -512,7 +512,7 @@ public final class ITERATORS {
 		}
 	}
 
-#if KEYS_PRIMITIVE
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE
 	private static class PrimitiveIteratorWrapper KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
 		final JDK_PRIMITIVE_ITERATOR i;
 	
@@ -538,7 +538,7 @@ public final class ITERATORS {
 	}
 #endif
 
-#if KEY_WIDENED
+#if defined JDK_PRIMITIVE_ITERATOR && KEY_WIDENED
 	private static class CheckedPrimitiveIteratorWrapper KEY_GENERIC extends PrimitiveIteratorWrapper {
 		public CheckedPrimitiveIteratorWrapper(JDK_PRIMITIVE_ITERATOR i) {
 			super(i);
@@ -579,33 +579,34 @@ public final class ITERATORS {
 		return new IteratorWrapper KEY_GENERIC_DIAMOND(i);
 	}
 
-#if KEYS_PRIMITIVE && KEY_WIDENED
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && KEY_WIDENED
 	/** Wrap a JDK primitive iterator to a type-specific iterator, making checked
-	  * narrowed casts.<p>
-	  * The {@code next} method throws {@link IllegalArgumentException} if any element would underflow or overflow.
-	  *
-	  * @param i an iterator
-	  * @return a type-specific iterator backed by {@code i}
-	  * @since 8.1
-	  */
+	 * narrowed casts.<p>
+	 *  The {@code next} method throws {@link IllegalArgumentException} if any element would underflow or overflow.
+	 *
+	 * @param i an iterator
+	 * @return a type-specific iterator backed by {@code i}
+	 * @since 8.1
+	 */
 	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC narrow(final JDK_PRIMITIVE_ITERATOR i) {
 #if !KEY_WIDENED
 		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
 		return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
-#endif
+#else
 		return new CheckedPrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+#endif
 	}
 #endif
 
 #if KEYS_PRIMITIVE && KEY_WIDENED
 	/** Wrap a JDK primitive iterator to a type-specific iterator, making <em>unchecked</em>
-	  * narrowing casts.
-	  * <em>No</em> test is done for overflow or underflow.
-	  *
-	  * @param i an iterator
-	  * @return a type-specific iterator backed by {@code i}
-	  * @since 8.1
-	  */
+	 * narrowing casts.
+	 * <em>No</em> test is done for overflow or underflow.
+	 *
+	 * @param i an iterator
+	 * @return a type-specific iterator backed by {@code i}
+	 * @since 8.1
+	 */
 	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC uncheckedNarrow(final JDK_PRIMITIVE_ITERATOR i) {
 #if !KEY_WIDENED
 		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
@@ -615,12 +616,26 @@ public final class ITERATORS {
 #endif
 
 #if KEYS_PRIMITIVE && KEY_WIDENED
+#if KEY_CLASS_Character
 	/** Wrap a type-specific iterator to a JDK compatible primitive iterator.
-	  *
-	  * @param i an iterator
-	  * @return a JDK compatible primitive iterator backed by {@code i}
-	  * @since 8.1
-	  */
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents.
+	 *
+	 * @param i an iterator
+	 * @return a JDK compatible primitive iterator backed by {@code i}
+	 * @since 8.1
+	 */
+#else
+	/** Wrap a type-specific iterator to a JDK compatible primitive iterator.
+	 *
+	 * @param i an iterator
+	 * @return a JDK compatible primitive iterator backed by {@code i}
+	 * @since 8.1
+	 */
+#endif	 
 	public static KEY_WIDENED_ITERATOR widen(KEY_ITERATOR i) { return WIDENED_ITERATORS.wrap(i); }
 #endif
 
@@ -955,7 +970,7 @@ public final class ITERATORS {
 	 * @return an iterator obtained by concatenation.
 	 */
 
-	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC concat(final KEY_ITERATOR KEY_EXTENDS_GENERIC a[]) {
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC concat(final KEY_ITERATOR KEY_EXTENDS_GENERIC... a) {
 		return concat(a, 0, a.length);
 	}
 
@@ -1200,6 +1215,56 @@ public final class ITERATORS {
 	 */
 	public static KEY_ITERATOR wrap(final it.unimi.dsi.fastutil.shorts.ShortIterator iterator) {
 		return new ShortIteratorWrapper(iterator);
+	}
+
+#endif
+
+#if SMALL_TYPES && (KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
+
+	/** A wrapper promoting the results of a CharIterator. */
+
+	protected static class CharIteratorWrapper implements KEY_ITERATOR {
+		final it.unimi.dsi.fastutil.chars.CharIterator iterator;
+
+		public CharIteratorWrapper(final it.unimi.dsi.fastutil.chars.CharIterator iterator) {
+			this.iterator = iterator;
+		}
+
+		@Override
+		public boolean hasNext() { return iterator.hasNext(); }
+
+		@Deprecated
+		@Override
+		public KEY_GENERIC_CLASS next() { return KEY_GENERIC_CLASS.valueOf(iterator.nextChar()); }
+
+		@Override
+		public KEY_TYPE NEXT_KEY() { return iterator.nextChar(); }
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			iterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public void remove() { iterator.remove(); }
+
+		@Override
+		public int skip(final int n) { return iterator.skip(n); }
+	}
+
+	/** Returns an iterator backed by the specified char iterator.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents.
+	 *
+	 * @param iterator a char iterator.
+	 * @return an iterator backed by the specified char iterator.
+	 */
+	public static KEY_ITERATOR wrap(final it.unimi.dsi.fastutil.chars.CharIterator iterator) {
+		return new CharIteratorWrapper(iterator);
 	}
 
 #endif
