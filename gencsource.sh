@@ -117,6 +117,7 @@ echo -e \
 "${Custom:+#define Custom}\n"\
 "#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$k]}s\n"\
 "#define VALUE_PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$v]}s\n"\
+"#define WIDENED_PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$wk]}s\n"\
 \
 \
 "/* Assertions (useful to generate conditional code) */\n"\
@@ -131,6 +132,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
+			echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\\n";\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
@@ -138,6 +140,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
+		echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$k]}\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
@@ -343,7 +346,9 @@ fi)\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n"\
 "#define KEY_CONSUMER ${TYPE_STD[$k]}Consumer\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n"\
+"#define KEY_WIDENED_ITERATOR ${TYPE_CAP[$wk]}Iterator\n"\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n"\
+"#define KEY_SPLITERATOR ${TYPE_CAP2[$k]}Spliterator\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n"\
 "#define KEY_BIDI_ITERABLE ${TYPE_CAP2[$k]}BidirectionalIterable\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n"\
@@ -359,7 +364,18 @@ fi)\
 "#define VALUE_ARRAY_SET ${TYPE_CAP[$v]}ArraySet\n"\
 "#define VALUE_CONSUMER ${TYPE_STD[$v]}Consumer\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP2[$v]}Iterator\n"\
+"#define VALUE_SPLITERATOR ${TYPE_CAP2[$v]}Spliterator\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
+\
+\
+"/* Types that vary based on being widened or not */\n"\
+\
+\
+"#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED\n"\
+"#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER\n"\
+"#else\n"\
+"#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
+"#endif\n"\
 \
 \
 "/* Abstract implementations (keys) */\n"\
@@ -414,6 +430,8 @@ fi)\
 "#define ARRAYS ${TYPE_CAP2[$k]}Arrays\n"\
 "#define BIG_ARRAYS ${TYPE_CAP2[$k]}BigArrays\n"\
 "#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n"\
+"#define WIDENED_ITERATORS ${TYPE_CAP[$wk]}Iterators\n"\
+"#define SPLITERATORS ${TYPE_CAP2[$k]}Spliterators\n"\
 "#define BIG_LIST_ITERATORS ${TYPE_CAP2[$k]}BigListIterators\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n"\
 \
@@ -496,6 +514,8 @@ fi)\
 "#define PREV_KEY previous${TYPE_STD[$k]}\n"\
 "#define NEXT_KEY_WIDENED next${TYPE_STD[$wk]}\n"\
 "#define PREV_KEY_WIDENED previous${TYPE_STD[$wk]}\n"\
+"#define KEY_WIDENED_ITERATOR_METHOD ${TYPE_LC[$wk]}Iterator\n"\
+"#define KEY_WIDENED_SPLITERATOR_METHOD ${TYPE_LC[$wk]}Spliterator\n"\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
@@ -511,7 +531,9 @@ fi)\
 "#define PEEK peek${TYPE_STD[$k]}\n"\
 "#define POP pop${TYPE_STD[$k]}\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n"\
+"#define KEY_EMPTY_SPLITERATOR_METHOD empty${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n"\
+"#define AS_KEY_SPLITERATOR as${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_COMPARATOR as${TYPE_CAP2[$k]}Comparator\n"\
 "#define AS_KEY_ITERABLE as${TYPE_CAP2[$k]}Iterable\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
