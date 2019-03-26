@@ -134,6 +134,8 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
 			echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\\n";\
 			echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$wk]}Stream\\n";\
+			echo "#define JDK_PRIMITIVE_UNARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}UnaryOperator\\n";\
+			echo "#define JDK_PRIMITIVE_KEY_APPLY applyAs${TYPE_CAP[$wk]}\\n";\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
@@ -226,6 +228,8 @@ fi)\
 "#define KEY_GENERIC_CAST (K)\n"\
 "#define KEY_GENERIC_ARRAY_CAST (K[])\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST (K[][])\n"\
+"#define DEPRECATED_IF_KEYS_REFERENCE @Deprecated\n"\
+"#define DEPRECATED_IF_KEYS_PRIMITIVE\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
@@ -248,6 +252,8 @@ fi)\
 "#define KEY_GENERIC_CAST\n"\
 "#define KEY_GENERIC_ARRAY_CAST\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST\n"\
+"#define DEPRECATED_IF_KEYS_REFERENCE\n"\
+"#define DEPRECATED_IF_KEYS_PRIMITIVE @Deprecated\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED\n"\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
@@ -265,6 +271,8 @@ fi)\
 "#define VALUE_SUPER_GENERIC <? super V>\n"\
 "#define VALUE_GENERIC_CAST (V)\n"\
 "#define VALUE_GENERIC_ARRAY_CAST (V[])\n"\
+"#define DEPRECATED_IF_VALUES_REFERENCE @Deprecated\n"\
+"#define DEPRECATED_IF_VALUES_PRIMITIVE\n"\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#else\n"\
@@ -278,6 +286,8 @@ fi)\
 "#define VALUE_SUPER_GENERIC\n"\
 "#define VALUE_GENERIC_CAST\n"\
 "#define VALUE_GENERIC_ARRAY_CAST\n"\
+"#define DEPRECATED_IF_VALUES_REFERENCE\n"\
+"#define DEPRECATED_IF_VALUES_PRIMITIVE @Deprecated\n"\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED\n"\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES\n"\
 "#endif\n"\
@@ -371,7 +381,7 @@ fi)\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
 \
 \
-"/* Types that vary based on being widened or not */\n"\
+"/* Types that vary based on being reference or primitve, or widened primitive or not */\n"\
 \
 \
 "#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED\n"\
@@ -382,6 +392,18 @@ fi)\
 "#endif\n"\
 "#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
+"#endif\n"\
+\
+"#if !defined JDK_PRIMITIVE_PREDICATE || KEYS_REFERENCE\n"\
+"#define METHOD_ARG_PREDICATE java.util.function.Predicate<? super KEY_CLASS>\n"\
+"#else\n"\
+"#define METHOD_ARG_PREDICATE JDK_PRIMITIVE_PREDICATE\n"\
+"#endif\n"\
+\
+"#if !defined JDK_PRIMITIVE_UNARY_OPERATOR || KEYS_REFERENCE\n"\
+"#define METHOD_ARG_UNARY_OPERATOR java.util.function.UnaryOperator<KEY_CLASS>\n"\
+"#else\n"\
+"#define METHOD_ARG_UNARY_OPERATOR JDK_PRIMITIVE_UNARY_OPERATOR\n"\
 "#endif\n"\
 \
 \
