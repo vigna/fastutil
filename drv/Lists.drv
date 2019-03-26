@@ -22,6 +22,12 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Random;
 import java.util.RandomAccess;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
 
 /** A class providing static methods and objects that do useful things with type-specific lists.
  *
@@ -367,10 +373,6 @@ public final class LISTS {
 
 		@Override
 		public boolean retainAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
-
-		@Deprecated
-		@Override
-		public Object[] toArray() { return new Object[]{ KEY2OBJ(element) }; }
 		
 #if defined JDK_PRIMITIVE_UNARY_OPERATOR
 		@Override
@@ -381,6 +383,18 @@ public final class LISTS {
 		@Override
 		public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) { throw new UnsupportedOperationException(); }
 #endif
+
+#if defined JDK_PRIMITIVE_ITERATOR && SMALL_TYPES && KEY_WIDENED
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return WIDENED_ITERATORS.singleton(element); }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return WIDENED_SPLITERATORS.singleton(element); }
+#endif
+
+		@Deprecated
+		@Override
+		public Object[] toArray() { return new Object[]{ KEY2OBJ(element) }; }
 
 		// Lists of size 1 are trivially always sorted
 		@Override
