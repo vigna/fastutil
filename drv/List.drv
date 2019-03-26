@@ -174,6 +174,65 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 */
 	void addElements(int index, KEY_GENERIC_TYPE a[], int offset, int length);
 
+	/** Set (hopefully quickly) elements to match the array given.
+	 * @param a the array containing the elements.
+	 * @since 8.1.0
+	 */
+	default int setElements(KEY_GENERIC_TYPE a[]) {
+		return setElements(0, a);
+	}
+	
+	/** Set (hopefully quickly) elements to match the array given.
+	 * @param index the index at which to start setting elements.
+	 * @param a the array containing the elements.
+	 * @since 8.1.0
+	 */
+	default int setElements(int index, KEY_GENERIC_TYPE a[]) {
+		return setElements(index, a, 0, a.length);
+	}
+
+	/** Set (hopefully quickly) elements to match the array given.
+	 *
+	 * Sets each in this list to the corresponding elements in the array, as if by
+	 * <pre><code>
+	 * for (int i = 0, max = Math.min(length, size() - index, i < max; ++i) {
+	 *	list.set(index + i, array[offset + i]);
+	 * }
+	 * </code></pre>
+	 * However, the exact implementation may be more efficient, taking into account
+	 * whether random access is faster or not, or at the discretion of subclasses,
+	 * abuse internals.
+	 *
+	 * @param index the index at which to start setting elements.
+	 * @param a the array containing the elements
+	 * @param offset the offset of the first element to add.
+	 * @param length the number of elements to add.
+	 * @return the number of elements set
+	 * @implSpec The default implementation uses a for loop similar to the one above if the
+	 *   this list implements {@link java.util.RandomAccess}, else it uses a
+	 *   {@link #listIterator(int) list-iterator} based loop calling {@link java.util.ListIterator#set}.
+	 * @since 8.1.0
+	 */
+	default int setElements(int index, KEY_GENERIC_TYPE a[], int offset, int length) {
+		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
+		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
+		if (this instanceof java.util.RandomAccess) {
+			final int max = Math.min(length, size() - index);
+			for (int i = 0; i < max; ++i) {
+				set(i + index, a[i + offset]);
+			}
+			return max;
+		} else {
+			KEY_LIST_ITERATOR KEY_GENERIC iter = listIterator(index);
+			int i = 0;
+			while (iter.hasNext() && i < length) {
+				iter.NEXT_KEY();
+				iter.set(a[offset + i++]);
+			}
+			return i;
+		}
+	}
+
 #if KEYS_PRIMITIVE
 
 	/** Appends the specified element to the end of this list (optional operation).
@@ -214,6 +273,28 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @see List#set(int,Object)
 	 */
 	KEY_TYPE set(int index, KEY_TYPE k);
+
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) {
+		replaceAll((KEY_TYPE value) -> KEY_CLASS2TYPE(operator.apply(KEY2OBJ(value))));
+	}
+
+	 /** Replaces each element of this list with the result of the given operation (which is given the corresponding element it will replace as an argument.
+	  * <p>If needed, a checked narrowing cast will be performed (aka, will throw if the value provided would overflow or underflow the current datatype).
+	  * @see List#replaceAll(java.util.function.UnaryOperator)
+	  */
+	default void replaceAll(final JDK_PRIMITIVE_UNARY_OPERATOR operator) {
+		final KEY_LIST_ITERATOR iter = listIterator();
+		while(iter.hasNext()) {
+			iter.set(KEY_NARROWING(operator.JDK_PRIMITIVE_KEY_APPLY(iter.NEXT_KEY())));
+		}
+	}
+#endif
 
 	/** Returns the element at the specified position in this list.
 	 * @see List#get(int)
@@ -305,4 +386,110 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 
 #endif
 
+#if defined KEY_COMPARATOR && KEYS_PRIMITIVE
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default void sort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
+		sort(COMPARATORS.AS_KEY_COMPARATOR(comparator));
+	}
+	
+	/** Sort a list using a type-specific comparator.
+	 *
+	 * <p>Pass {@code null} to sort using natural ordering.
+	 * @see List#sort(java.util.Comparator)
+	 * @implNote It is possible for this method to call {@link #unstableSort} if it can
+	 * determine that the results of a stable and unstable sort are completely equivalent.
+	 * This means if you override {@link #unstableSort}, it should <em>not</em> call this
+	 * method unless you override this method as well.
+	 *
+	 * @since 8.1.0 
+	 */
+	default void sort(final KEY_COMPARATOR comparator) {
+#if !(KEY_CLASS_Float || KEY_CLASS_Double)
+		if (comparator == null) {
+			// For non-floating point primitive types, when comparing naturally,
+			// it is impossible to tell the difference between a stable and not-stable sort.
+			// So just use the probably faster unstable sort.
+			unstableSort(comparator);
+			return;
+		}
+#endif
+		KEY_TYPE[] elements = TO_KEY_ARRAY();
+		if (comparator == null) {
+			ARRAYS.mergeSort(elements);
+		} else {
+			ARRAYS.mergeSort(elements, comparator);
+		}
+		setElements(elements);
+	}
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	default void unstableSort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
+		unstableSort(COMPARATORS.AS_KEY_COMPARATOR(comparator));
+	}
+	
+	/** Sorts this list using a sort not assured to be stable.
+	 * 
+	 * <p>Pass {@code null} to sort using natural ordering.
+	 *
+	 * <p>This differs from {@link List#sort(java.util.Comparator)} in that the results are
+	 * not assured to be stable, but may be a bit faster.
+	 *
+	 * <p>Unless a subclass specifies otherwise, the results of the method if the list is
+	 * concurrently modified during the sort are unspecified.
+	 *
+	 * @implSpec The default implementation dumps the elements into a list using
+	 * {@link #toArray()}, sorts the array, then replaces all elements using the
+	 * {@link ListIterator#set(Object)} method of the {@link #listIterator()} 
+	 *
+	 * @since 8.1.0
+	 */
+	default void unstableSort(final KEY_COMPARATOR comparator) {
+		KEY_TYPE[] elements = TO_KEY_ARRAY();
+		if (comparator == null) {
+#if KEY_CLASS_Byte
+			// JDK's sort for bytes uses bucket sort, can't beat that using merge or quick sort.
+			java.util.Arrays(elements);
+#else
+			ARRAYS.quickSort(elements);
+#endif
+		} else {
+			ARRAYS.quickSort(elements, comparator);
+		}
+		setElements(elements);
+	}
+#else
+#if !KEYS_REFERENCE
+#error Assertion error: No KEY_COMPARATOR defined, but not a reference type.
+#endif
+	/** Sorts this list using a sort not assured to be stable.
+	 * This differs from {@link List#sort(java.util.Comparator)} in that the results are
+	 * not assured to be stable, but may be a bit faster.
+	 *
+	 * <p>Unless a subclass specifies otherwise, the results of the method if the list is
+	 * concurrently modified during the sort are unspecified.
+	 *
+	 * @implSpec The default implementation dumps the elements into a list using
+	 * {@link #toArray()}, sorts the array, then replaces all elements using the
+	 * {@link ListIterator#set(Object)} method of the {@link #listIterator()}
+	 *
+	 * @since 8.1.0 
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	default void unstableSort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
+		Object[] elements = toArray();
+		if (comparator == null) {
+			ARRAYS.quickSort(elements);
+		} else {
+			ARRAYS.quickSort(elements, comparator);
+		}
+		setElements((KEY_GENERIC_TYPE[])elements);
+	}	
+#endif
 }
