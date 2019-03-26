@@ -281,7 +281,11 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	@Deprecated
 	@Override
 	default void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) {
+#if KEY_WIDENED
+		replaceAll((KEY_TYPE_WIDENED value) -> operator.apply(KEY_CLASS.valueOf(KEY_NARROWING(value))));
+#else
 		replaceAll((KEY_TYPE value) -> KEY_CLASS2TYPE(operator.apply(KEY2OBJ(value))));
+#endif
 	}
 
 	 /** Replaces each element of this list with the result of the given operation (which is given the corresponding element it will replace as an argument.
@@ -419,9 +423,9 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 #endif
 		KEY_TYPE[] elements = TO_KEY_ARRAY();
 		if (comparator == null) {
-			ARRAYS.mergeSort(elements);
+			ARRAYS.stableSort(elements);
 		} else {
-			ARRAYS.mergeSort(elements, comparator);
+			ARRAYS.stableSort(elements, comparator);
 		}
 		setElements(elements);
 	}
@@ -453,14 +457,9 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	default void unstableSort(final KEY_COMPARATOR comparator) {
 		KEY_TYPE[] elements = TO_KEY_ARRAY();
 		if (comparator == null) {
-#if KEY_CLASS_Byte
-			// JDK's sort for bytes uses bucket sort, can't beat that using merge or quick sort.
-			java.util.Arrays(elements);
-#else
-			ARRAYS.quickSort(elements);
-#endif
+			ARRAYS.unstableSort(elements, comparator);
 		} else {
-			ARRAYS.quickSort(elements, comparator);
+			ARRAYS.unstableSort(elements, comparator);
 		}
 		setElements(elements);
 	}
@@ -483,13 +482,13 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	default void unstableSort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
-		Object[] elements = toArray();
+		KEY_GENERIC_TYPE[] elements = (KEY_GENERIC_TYPE[])toArray();
 		if (comparator == null) {
-			ARRAYS.quickSort(elements);
+			ARRAYS.unstableSort(elements);
 		} else {
-			ARRAYS.quickSort(elements, comparator);
+			ARRAYS.unstableSort(elements, comparator);
 		}
-		setElements((KEY_GENERIC_TYPE[])elements);
+		setElements(elements);
 	}	
 #endif
 }
