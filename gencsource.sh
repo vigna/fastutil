@@ -394,14 +394,24 @@ fi)\
 "#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
 "#endif\n"\
 \
+"#if !defined JDK_PRIMITIVE_VALUE_CONSUMER || VALUE_WIDENED\n"\
+"#if VALUES_REFERENCE\n"\
+"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
+"#else\n"\
+"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER\n"\
+"#endif\n"\
+"#else\n"\
+"#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
+"#endif\n"\
+\
 "#if !defined JDK_PRIMITIVE_PREDICATE || KEYS_REFERENCE\n"\
-"#define METHOD_ARG_PREDICATE java.util.function.Predicate<? super KEY_CLASS>\n"\
+"#define METHOD_ARG_PREDICATE java.util.function.Predicate<? super KEY_GENERIC_CLASS>\n"\
 "#else\n"\
 "#define METHOD_ARG_PREDICATE JDK_PRIMITIVE_PREDICATE\n"\
 "#endif\n"\
 \
 "#if !defined JDK_PRIMITIVE_UNARY_OPERATOR || KEYS_REFERENCE\n"\
-"#define METHOD_ARG_UNARY_OPERATOR java.util.function.UnaryOperator<KEY_CLASS>\n"\
+"#define METHOD_ARG_UNARY_OPERATOR java.util.function.UnaryOperator<KEY_GENERIC_CLASS>\n"\
 "#else\n"\
 "#define METHOD_ARG_UNARY_OPERATOR JDK_PRIMITIVE_UNARY_OPERATOR\n"\
 "#endif\n"\

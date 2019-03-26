@@ -165,14 +165,14 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 			action.accept(iterator.NEXT_KEY());
 	}
 
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+#if defined JDK_PRIMITIVE_KEY_CONSUMER
+#if !KEY_WIDENED
 	// Because our primitive Consumer interface extends both the JDK's primitive
 	// and object Consumer interfaces, calling this method with it would be ambiguous. 
 	// This overload exists to pass it to the proper primitive overload.
 	/**
 	 * Performs the given action for each element of this type-specific {@link java.lang.Iterable}
-	 * until all elements have been processed or the action throws an
-	 * exception.
+	 * until all elements have been processed or the action throws an exception.
 	 *
 	 * <p><b>WARNING:</b> Overriding this overload is almost always a mistake, as this overload only exists to disambiguate.
 	 * Instead override the {@code forEach()} overload that uses the JDK's primitive consumer type.
@@ -182,29 +182,40 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
 	 * @since 8.1.0
 	 */
-	default void forEach(final KEY_CONSUMER action) {
+ 	default void forEach(final KEY_CONSUMER action) {
 		forEach((JDK_PRIMITIVE_KEY_CONSUMER) action);
 	}
+#else
+	/**
+	 * Performs the given action for each element of this type-specific {@link java.lang.Iterable},
+	 * performing widening primitive casts, until all elements have been processed or the action
+	 * throws an exception.
+	 *
+	 * @param action the action to be performed for each element.
+	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
+	 * @since 8.0.0
+	 * @deprecated This method performs a widening primitive cast for each element, when a type-specific
+	 *   consumer could avoid this. This is inconsistent with how the primitive {@code Iterator} class is defined.
+	 *   This method has been redefined to be implemented in terms of the type-specific overload
+	 *   (e.g. {@code forEach(ShortConsumer)} for {@code short}s) and now that method should be used or overridden
+	 *   instead of this one. This method now only remains for backwards compatibility purposes.
+	 */
+	@Deprecated
+	default void forEach(final JDK_PRIMITIVE_KEY_CONSUMER action) {
+		Objects.requireNonNull(action);
+		forEach((KEY_CONSUMER)action::accept);
+	}
 #endif
+#endif
+
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
 	default void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) {
-#ifdef JDK_PRIMITIVE_KEY_CONSUMER
-#ifdef KEY_WIDENED
-		forEach(new JDK_PRIMITIVE_KEY_CONSUMER() {
-			public void accept(final KEY_TYPE_WIDENED key) {
-				action.accept(KEY2OBJ((KEY_TYPE)key));
-			}
-		});
-#else
-		forEach((JDK_PRIMITIVE_KEY_CONSUMER) action::accept);
-#endif
-#else
+		Objects.requireNonNull(action);
 		forEach((KEY_CONSUMER) action::accept);
-#endif
 	}
 #endif
 
