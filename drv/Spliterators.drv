@@ -127,6 +127,7 @@ public final class SPLITERATORS {
 
 	private static class SingletonSpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
 		private final KEY_GENERIC_TYPE element;
+		private final KEY_COMPARATOR KEY_SUPER_GENERIC comparator;
 		private boolean consumed = false;
 		private static final int CHARACTERISTICS = 
 			Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED
@@ -137,7 +138,12 @@ public final class SPLITERATORS {
 		;
 
 		public SingletonSpliterator(final KEY_GENERIC_TYPE element) {
+			this(element, null);
+		}
+
+		public SingletonSpliterator(final KEY_GENERIC_TYPE element, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
 			this.element = element;
+			this.comparator = comparator;
 		}
 
 		@Override
@@ -176,6 +182,15 @@ public final class SPLITERATORS {
 			}
 		}
 		
+		/** {@inheritDoc}
+		 *
+		 * Due to sequences of size 1 always being trivially sorted no matter the order,
+		 * this method will always return {@code null} representing "natural" ordering.
+		 */
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			return null;
+		}	
+		
 		// TODO override skip()
 	}
 
@@ -189,6 +204,19 @@ public final class SPLITERATORS {
 		return new SingletonSpliterator KEY_GENERIC_DIAMOND(element);
 	}
 
+	/** Returns a spliterator that iterates just over the given element.
+	 *
+	 * <p>The {@link Spliterator#getComparator()} method will return the given comparator.
+	 * This is within spec because sequences of size 1 are trivially sorted for any
+	 * comparison function.
+	 *
+	 * @param element the only element to be returned by a type-specific spliterator.
+	 * @param comparator the comparator to return when {@link Spliterator#getComparator()} is called. 
+	 * @return a spliterator that iterates just over {@code element}.
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC singleton(final KEY_GENERIC_TYPE element, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+		return new SingletonSpliterator KEY_GENERIC_DIAMOND(element, comparator);
+	}
 
 	/** A class to wrap arrays in spiterators. */
 
@@ -296,24 +324,9 @@ public final class SPLITERATORS {
 
 	private static class SpliteratorWrapper KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
 		final Spliterator<KEY_GENERIC_CLASS> i;
-		final boolean hasComparatorOverride;
-		final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride;
-
-		private SpliteratorWrapper(
-				final Spliterator<KEY_GENERIC_CLASS> i,
-				final boolean hasComparatorOverride,
-				final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
-			this.i = i;
-			this.hasComparatorOverride = hasComparatorOverride;
-			this.comparatorOverride = comparatorOverride;
-		} 
 		
 		public SpliteratorWrapper(final Spliterator<KEY_GENERIC_CLASS> i) {
-			this(i, false, null);
-		}
-
-		public SpliteratorWrapper(final Spliterator<KEY_GENERIC_CLASS> i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
-			this(i, true, comparatorOverride);
+			this.i = i;
 		}
 
 #if KEYS_PRIMITIVE
@@ -364,40 +377,44 @@ public final class SPLITERATORS {
 
 		@Override
 		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
-			return hasComparatorOverride ?
-				comparatorOverride :
-				COMPARATORS.AS_KEY_COMPARATOR(i.getComparator());
+			return COMPARATORS.AS_KEY_COMPARATOR(i.getComparator());
 		}
 
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
 			Spliterator<KEY_GENERIC_CLASS> innerSplit = i.trySplit();
 			if (innerSplit == null) return null;
-			return new SpliteratorWrapper KEY_GENERIC_DIAMOND(innerSplit, hasComparatorOverride, comparatorOverride);
+			return new SpliteratorWrapper KEY_GENERIC_DIAMOND(innerSplit);
+		}
+	}
+
+	private static class SpliteratorWrapperWithComparator KEY_GENERIC extends SpliteratorWrapper KEY_GENERIC {
+		final KEY_COMPARATOR KEY_SUPER_GENERIC comparator;
+
+		public SpliteratorWrapperWithComparator(final Spliterator<KEY_GENERIC_CLASS> i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+			super(i);
+			this.comparator = comparator;
+		}
+
+		@Override
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			return comparator;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			Spliterator<KEY_GENERIC_CLASS> innerSplit = i.trySplit();
+			if (innerSplit == null) return null;
+			return new SpliteratorWrapperWithComparator KEY_GENERIC_DIAMOND(innerSplit, comparator);
 		}
 	}
 
 #if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE
 	private static class PrimitiveSpliteratorWrapper KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
 		final JDK_PRIMITIVE_SPLITERATOR i;
-		final boolean hasComparatorOverride;
-		final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride;
 
-		private PrimitiveSpliteratorWrapper(
-				final JDK_PRIMITIVE_SPLITERATOR i,
-				final boolean hasComparatorOverride,
-				final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
-			this.i = i;
-			this.hasComparatorOverride = hasComparatorOverride;
-			this.comparatorOverride = comparatorOverride;
-		} 
-		
 		public PrimitiveSpliteratorWrapper(final JDK_PRIMITIVE_SPLITERATOR i) {
-			this(i, false, null);
-		}
-
-		public PrimitiveSpliteratorWrapper(final JDK_PRIMITIVE_SPLITERATOR i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
-			this(i, true, comparatorOverride);
+			this.i = i;
 		}
 
 		@Override
@@ -418,9 +435,6 @@ public final class SPLITERATORS {
 
 		@Override
 		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
-			if (hasComparatorOverride) {
-				return comparatorOverride;
-			} else {
 #if KEY_WIDENED
 				// Get comparator outside of lambda to fail-fast in case inner call throws.
 				final java.util.Comparator<? super KEY_CLASS_WIDENED> comp = i.getComparator();
@@ -428,17 +442,38 @@ public final class SPLITERATORS {
 #else
 				return COMPARATORS.AS_KEY_COMPARATOR(i.getComparator());
 #endif
-			}
 		}
 
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
 			JDK_PRIMITIVE_SPLITERATOR innerSplit = i.trySplit();
 			if (innerSplit == null) return null;
-			return new PrimitiveSpliteratorWrapper(innerSplit, hasComparatorOverride, comparatorOverride);
+			return new PrimitiveSpliteratorWrapper(innerSplit);
 		}
 	}
 #endif
+
+	private static class PrimitiveSpliteratorWrapperWithComparator KEY_GENERIC extends PrimitiveSpliteratorWrapper KEY_GENERIC {
+		final KEY_COMPARATOR KEY_SUPER_GENERIC comparator;
+	
+		public PrimitiveSpliteratorWrapperWithComparator(final JDK_PRIMITIVE_SPLITERATOR i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+			super(i);
+			this.comparator = comparator;
+		}
+
+		@Override
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			return comparator;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			JDK_PRIMITIVE_SPLITERATOR innerSplit = i.trySplit();
+			if (innerSplit == null) return null;
+			return new PrimitiveSpliteratorWrapperWithComparator(innerSplit, comparator);
+		}
+	}
+			
 
 	/** Wraps a standard spliterator into a type-specific spliterator.
 	 *
@@ -493,9 +528,9 @@ public final class SPLITERATORS {
 	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC AS_KEY_SPLITERATOR(final Spliterator KEY_GENERIC i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
 		if (i instanceof KEY_SPLITERATOR) throw new AssertionError("Cannot override comparator on instance that is already a KEY_SPLITERATOR");
 #if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED
-		if (i instanceof JDK_PRIMITIVE_SPLITERATOR) return new PrimitiveSpliteratorWrapper KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_SPLITERATOR)i, comparatorOverride);
+		if (i instanceof JDK_PRIMITIVE_SPLITERATOR) return new PrimitiveSpliteratorWrapperWithComparator KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_SPLITERATOR)i, comparatorOverride);
 #endif
-		return new SpliteratorWrapper KEY_GENERIC_DIAMOND(i, comparatorOverride);
+		return new SpliteratorWrapperWithComparator KEY_GENERIC_DIAMOND(i, comparatorOverride);
 	}
 
 #if KEYS_PRIMITIVE && KEY_WIDENED
