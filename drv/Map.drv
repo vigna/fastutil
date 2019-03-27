@@ -292,6 +292,25 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 #endif
 
 	// Defaultable methods
+	
+	@Override
+	default void forEach(final java.util.function.BiConsumer<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS> consumer) {
+		final ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entrySet = ENTRYSET();
+		final Consumer<MAP.Entry KEY_VALUE_GENERIC> wrappingConsumer = (entry) -> consumer.accept(entry.ENTRY_GET_KEY(), entry.ENTRY_GET_VALUE()); 
+		if (entrySet instanceof FastEntrySet) {
+			((FastEntrySet KEY_VALUE_GENERIC)entrySet).fastForEach(wrappingConsumer);
+		} else {
+			entrySet.forEach(wrappingConsumer);
+		}
+	}
+
+#if KEYS_REFERENCE && VALUES_REFERENCE
+	@Override
+	default VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE key, final VALUE_GENERIC_TYPE defaultValue) {
+		return Map.super.getOrDefault(key, defaultValue);
+	}
+#endif
+
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 
@@ -306,7 +325,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @see java.util.Map#getOrDefault(Object, Object)
 	 * @since 8.0.0
 	 */
-
+	@Override
 	default VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE key, final VALUE_GENERIC_TYPE defaultValue) {
 		final VALUE_GENERIC_TYPE v;
 		return ((v = GET_VALUE(key)) != defaultReturnValue() || containsKey(key)) ? v : defaultValue;

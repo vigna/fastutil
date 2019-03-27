@@ -103,12 +103,25 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 
 	VALUE_GENERIC_TYPE GET_VALUE(KEY_TYPE key);
 
+	/** Returns the value associated by this function to the specified key, or give the specified
+	 *  value if not present.
+	 *
+	 * @param key the key.
+	 * @param defaultValue the value to return if not present.
+	 * @return the corresponding value, or {@code defaultValue} if no value was present for the given key.
+	 * @see Function#getOrDefault(Object, Object)
+	 * @since 8.1.0
+	 */
+	default VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE key, final VALUE_GENERIC_TYPE defaultValue) {
+		final VALUE_GENERIC_TYPE v;
+		return ((v = GET_VALUE(key)) != defaultReturnValue() || containsKey(key)) ? VALUE2OBJ(v) : null;
+	}
+
 	/** Removes the mapping with the given key (optional operation).
 	 * @param key the key.
 	 * @return the old value, or the {@linkplain #defaultReturnValue() default return value} if no value was present for the given key.
 	 * @see Function#remove(Object)
 	 */
-
 	default VALUE_GENERIC_TYPE REMOVE_VALUE(final KEY_TYPE key) {
 		throw new UnsupportedOperationException();
 	}
@@ -135,8 +148,21 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 		if (key == null) return null;
 #endif
 		final KEY_TYPE k = KEY_OBJ2TYPE(key);
+		final VALUE_GENERIC_TYPE v;
+		return ((v = GET_VALUE(k)) != defaultReturnValue() || containsKey(k)) ? VALUE2OBJ(v) : null;
+	}
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default VALUE_GENERIC_CLASS getOrDefault(final Object key, VALUE_GENERIC_CLASS defaultValue) {
+#if KEYS_PRIMITIVE
+		if (key == null) return defaultValue;
+#endif
+		final KEY_TYPE k = KEY_OBJ2TYPE(key);
 		final VALUE_GENERIC_TYPE v = GET_VALUE(k);
-		return (v != defaultReturnValue() || containsKey(k)) ? VALUE2OBJ(v) : null;
+		return (v != defaultReturnValue() || containsKey(k)) ? VALUE2OBJ(v) : defaultValue;
 	}
 
 	/** {@inheritDoc}
