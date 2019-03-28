@@ -430,6 +430,7 @@ fi)\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n"\
 "#define ABSTRACT_BIG_LIST Abstract${TYPE_CAP[$k]}BigList\n"\
 "#define SUBLIST ${TYPE_CAP[$k]}SubList\n"\
+"#define SUBLIST_RANDOM_ACCESS ${TYPE_CAP[$k]}RandomAccessSubList\n"\
 "#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_STD[$k]}PriorityQueue\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_STD[$k]}Stack\n"\
 "#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP2[$k]}Iterator\n"\
