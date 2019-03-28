@@ -544,56 +544,38 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			return new SubListIterator(index);
 		}
 
-		private final class SubListSpliterator extends SPLITERATORS.AbstractIndexBasedSpliterator KEY_GENERIC {
-			// Until we split, we will track the end of the sub-list.
-			// Once we split, then we stop updating on structural modifications.
-			// Aka, size is late-binding.
-			boolean hasSplit;
-			int maxPos;
+		private final class SubListSpliterator extends SPLITERATORS.LateBindingSizeIndexSpliterator KEY_GENERIC {
 			
 			// We are using pos == 0 to be 0 relative to real array 0
 			SubListSpliterator() {
-				this(from, to, false);
+				super(from);
 			}
 
-			private SubListSpliterator(int pos, int maxPos, boolean hasSplit) {
-				super(pos);
-				this.maxPos = maxPos;
-				this.hasSplit = hasSplit;
+			private SubListSpliterator(int pos, int maxPos) {
+				super(pos, maxPos);
 			}
 
-			private int getWorkingMax() {
-				return hasSplit ? maxPos : to;
-			}
+			@Override
+			protected final int getMaxPosFromBackingStore() { return to; }
 
 	 		@Override
 			protected final KEY_GENERIC_TYPE get(int i) { return a[i]; }
 			@Override
-			protected final int getMaxPos() { return getWorkingMax(); }
-			@Override
 			protected final SubListSpliterator makeForSplit(int pos, int maxPos) {
-				return new SubListSpliterator(pos, maxPos, true);
+				return new SubListSpliterator(pos, maxPos);
 			}
 			@Override
 			public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
-				if (pos >= getWorkingMax()) return false;
+				if (pos >= getMaxPos()) return false;
 				action.accept(a[pos++]);
 				return true;
 			}
 			@Override
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-				while(pos < getWorkingMax()) {
+				final int max = getMaxPos();
+				while(pos < max) {
 					action.accept(a[pos++]);
 				}
-			}
-			@Override
-			public KEY_SPLITERATOR KEY_GENERIC trySplit() {
-				KEY_SPLITERATOR KEY_GENERIC maybeSplit = super.trySplit();
-				if (maybeSplit != null && !hasSplit) {
-					maxPos = getWorkingMax();
-					hasSplit = true;
-				}
-				return maybeSplit;
 			}
 		}
 
@@ -863,14 +845,19 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 		
 		@Override
-		public int skip(int n) {
-			int newPos = pos + n;
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			final int max = getWorkingMax();
+			if (pos >= max) return 0;
+			long newPos = pos + n;
 			// Can be less then 0 if overflow
-			if (newPos > max || newPos < 0) newPos = max;
-			int skipped = newPos - pos;
-			pos = newPos;
-			return skipped;
+			if (newPos <= max && newPos >= 0) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(newPos);
+				return n;
+			}
+			n = max - pos;
+			pos = max;
+			return n;
 		}
 
 		@Override

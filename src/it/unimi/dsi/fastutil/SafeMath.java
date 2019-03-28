@@ -34,6 +34,21 @@ public final class SafeMath {
 		return (short) value;
 	}
 
+	public static char safeLongToChar(final long value) {
+		if (value < Integer.MIN_VALUE || Integer.MAX_VALUE < value ) throw new IllegalArgumentException(value + " can't be represented as int (out of range)");
+		return (char) value;
+	}
+
+	public static byte safeLongToByte(final long value) {
+		if (value < Byte.MIN_VALUE || Byte.MAX_VALUE < value ) throw new IllegalArgumentException(value + " can't be represented as int (out of range)");
+		return (byte) value;
+	}
+
+	public static short safeLongToShort(final long value) {
+		if (value < Short.MIN_VALUE || Short.MAX_VALUE < value ) throw new IllegalArgumentException(value + " can't be represented as int (out of range)");
+		return (short) value;
+	}
+
 	public static int safeLongToInt(final long value) {
 		if (value < Integer.MIN_VALUE || Integer.MAX_VALUE < value ) throw new IllegalArgumentException(value + " can't be represented as int (out of range)");
 		return (int) value;

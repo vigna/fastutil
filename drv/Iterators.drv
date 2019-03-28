@@ -769,15 +769,35 @@ public final class ITERATORS {
 	}
 
 	/**
-	 * A skeletal implementation of an index based iterator. High performance concrete collection implementations
-	 * generally should avoid using this and just implement the interface directly. This is primarily
-	 * for the benefit of "sensible default" implementations.
+	 * A skeletal implementation for an iterator backed by an index based data store. High performance
+	 * concrete implementations (like the main Iterator of ArrayList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
+	 * as {@code final} as to encourage the JVM to inline them.
 	 */
-	static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
-		// We currently have no use for making minPos dynamic like we do with maxPos.
-		// If this class is made public, this should probably be replaced with getMinPos()
+	public static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+		/** The minimum pos can be, and is the logical start of the "range".
+		 * Usually set to the initialPos unless it is a ListIterator, in which case it can vary.
+		 *
+		 * There isn't any way for a range to shift its beginning like the end can (through {@link #remove},
+		 * so this is final.
+		 */
 		protected final int minPos;
+		/** The current position index, the index of the item to be returned after the next call to {@link #next()}.
+		 *
+		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (on a best effort, so concurrent
+		 * structural modifications outside this iterator may cause this to be violated, but that usually invalidates
+		 * iterators anyways). Thus {@code pos} being {@code minPos + 2} would mean {@link #next()}
+		 * was called twice and the next call will return the third element of this iterator.
+		 */
 		protected int pos;
+		/** The last returned index by a call to {@link #next} or, if a list-iterator, {@link java.util.ListIterator#previous().
+		 *
+		 * Is {@code -1} if no such call has occurred or a mutation has occured through this iterator and no
+		 * advancement has been done.
+		 */
 		protected int lastReturned;
 		
 		protected AbstractIndexBasedIterator(int minPos, int initialPos) {
@@ -786,10 +806,32 @@ public final class ITERATORS {
 		}
 		
 		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+		
+		/** Get the item corresponding to the given index location.
+		 *
+		 * <p>Do <em>not</em> advance {@link #pos} in this method; the default {@code next} method takes care of this.
+		 *
+		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()}.
+		 * Thus, a {@code location} of {@code minPos + 2} would mean {@link #next()} was called twice
+		 * and this method should return what the next call to {@link #next()} should return.
+		 */
 		protected abstract KEY_GENERIC_TYPE get(int location);
 		
+		/** Remove the item at the given index.
+		 *
+		 * <p>Do <em>not</em> modify {@link #pos} in this method; the default {@code #remove()} method takes care of this.
+		 *
+		 * <p>This method should also do what is needed to track the change to the {@link #getMaxPos}.
+		 * Usually this is accomplished by having this method call the parent {@link Collection}'s appropriate remove
+		 * method, and having {@link #getMaxPos} track the parent {@linkplain Collection#size() collection's size}.
+		 */
 		protected abstract void remove(int location);
 
+		/** The maximum pos can be, and is the logical end of the "range".
+		 * 
+		 * <p>Usually set return the parent {@linkplain Collection#size() collection's size}, but does not have to be
+		 * (for example, sublists and subranges).
+		 */
 		protected abstract int getMaxPos();
 
 		@Override
@@ -804,7 +846,7 @@ public final class ITERATORS {
 			if (lastReturned < pos) pos--;
 			lastReturned = -1;
 		}
-		
+
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 			while(pos < getMaxPos()) {
@@ -812,6 +854,8 @@ public final class ITERATORS {
 			}
 		}
 		
+		// TODO since this method doesn't depend on the type at all, should it be "hoisted" into a
+		// non type-specific superclass in it.unimi.dsi.fastutil? 
 		@Override
 		public int skip(int n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
@@ -827,9 +871,13 @@ public final class ITERATORS {
 	}
 
 	/**
-	 * A skeletal implementation of an index based list-iterator. High performance concrete implementations
-	 * generally should avoid using this and just implement the interface directly. This is primarily
-	 * for the benefit of "sensible default" implementations.
+	 * A skeletal implementation for a list-iterator backed by an index based data store. High performance
+	 * concrete implementations (like the main ListIterator of ArrayList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
+	 * as {@code final} as to encourage the JVM to inline them.
 	 */
 	static abstract class AbstractIndexBasedListIterator KEY_GENERIC extends AbstractIndexBasedIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
 	
@@ -838,8 +886,23 @@ public final class ITERATORS {
 		}
 
 		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+
+		/** Add the given item at the given index.
+		 *
+		 * <p>This method should also do what is needed to track the change to the {@link #getMaxPos}.
+		 * Usually this is accomplished by having this method call the parent {@link Collection}'s appropriate add
+		 * method, and having {@link #getMaxPos} track the parent {@linkplain Collection#size() collection's size}.
+		 *
+		 * <p>Do <em>not</em> modify {@link #pos} in this method; the default {@code #add()} method takes care of this.
+		 *
+		 * <p>See {@link #pos} and {@link #get(int)} for discussion on what the location means.
+		 */
 		protected abstract void add(int location, KEY_GENERIC_TYPE k);
 		
+		/** Sets the given item at the given index.
+		 *
+		 * <p>See {@link #pos} and {@link #get(int)} for discussion on what the location means.
+		 */
 		protected abstract void set(int location, KEY_GENERIC_TYPE k);
 
 		@Override
@@ -860,6 +923,8 @@ public final class ITERATORS {
 			if (lastReturned == -1) throw new IllegalStateException();
 			set(lastReturned, k);
 		}
+		// TODO since this method doesn't depend on the type at all, should it be "hoisted" into a
+		// non type-specific superclass in it.unimi.dsi.fastutil? 
 		@Override
 		public int back(int n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);

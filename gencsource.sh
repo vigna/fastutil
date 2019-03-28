@@ -191,6 +191,13 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 		echo "#define KEY_WIDENED 1\\n";\
 	fi;\
 fi)\
+$(if [[ "${CLASS[$k]}" != "" ]]; then\
+	if [[ "${TYPE_CAP[$k]}" == "Long" ]]; then\
+		echo "#define KEY_LONG_NARROWING(x) x\\n";\
+	elif [[ "${TYPE_CAP[$k]}" != "Double" && "${TYPE_CAP[$k]}" != "Float" ]]; then\
+		echo "#define KEY_LONG_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safeLongTo${TYPE_CAP[$k]}(x)\\n";\
+	fi;\
+fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	if [[ "${TYPE[$wv]}" == "${TYPE[$v]}" ]]; then\
 		echo "#define VALUE_NARROWING(x) x\\n";\
@@ -483,6 +490,8 @@ fi)\
 "#define VALUE_COLLECTIONS ${TYPE_CAP[$v]}Collections\n"\
 "#define VALUE_SETS ${TYPE_CAP[$v]}Sets\n"\
 "#define VALUE_ARRAYS ${TYPE_CAP2[$v]}Arrays\n"\
+"#define VALUE_ITERATORS ${TYPE_CAP2[$v]}Iterators\n"\
+"#define VALUE_SPLITERATORS ${TYPE_CAP2[$v]}Spliterators\n"\
 \
 \
 "/* Implementations */\n"\

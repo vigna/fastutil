@@ -166,14 +166,19 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 		}
 		
 		@Override
-		public int skip(int n) {
-			int newPos = pos + n;
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			final int max = getWorkingMax();
+			if (pos >= max) return 0;
+			long newPos = pos + n;
 			// Can be less then 0 if overflow
-			if (newPos > max || newPos < 0) newPos = max;
-			int skipped = newPos - pos;
-			pos = newPos;
-			return skipped;
+			if (newPos <= max && newPos >= 0) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(newPos);
+				return n;
+			}
+			n = max - pos;
+			pos = max;
+			return n;
 		}
 
 		@Override
