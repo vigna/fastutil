@@ -19,12 +19,18 @@ package PACKAGE;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
+import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
 
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ARRAYS;
+#if VALUE_WIDENED || VALUE_CLASS_Boolean
+import VALUE_PACKAGE.METHOD_ARG_VALUE_CONSUMER;
+#endif
 
 /** A simple, brute-force implementation of a map based on two parallel backing arrays.
  *
@@ -138,6 +144,14 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 					value[size] = null;
 #endif
 				}
+
+				@Override
+				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+				public void forEachRemaining(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
+					while (next < size) {
+						action.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[curr = next], VALUE_GENERIC_CAST value[next++]));
+					}
+				}
 			};
 		}
 
@@ -173,7 +187,48 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 					value[size] = null;
 #endif
 				}
+
+				@Override
+				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+				public void forEachRemaining(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
+					while (next < size) {
+						entry.key = KEY_GENERIC_CAST key[curr = next];
+						entry.value = VALUE_GENERIC_CAST value[next++];
+						action.accept(entry);
+					}
+				}
 			};
+		}
+
+		// We already have to create an Entry object for each iteration, so the overhead from having
+		// skeletal implementations isn't significant.
+		final class EntrySetSpliterator extends ObjectSpliterators.EarlyBindingSizeIndexSpliterator<MAP.Entry KEY_VALUE_GENERIC>
+				implements ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> {
+
+			EntrySetSpliterator(int pos, int maxPos) {
+				super(pos, maxPos);
+			}
+			
+			@Override
+			public int characteristics() {
+				return ObjectSpliterators.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
+			}
+			
+			@Override
+			SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+			protected final MAP.Entry KEY_VALUE_GENERIC get(int location) {
+				return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[location], VALUE_GENERIC_CAST value[location]);
+			}
+		
+			@Override
+			protected final EntrySetSpliterator makeForSplit(int pos, int maxPos) {
+				return new EntrySetSpliterator(pos, maxPos);
+			}
+		}
+		
+		@Override
+		public ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> spliterator() {
+			return new EntrySetSpliterator(0, size);
 		}
 
 		@Override
@@ -358,7 +413,52 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 						System.arraycopy(value, pos, value, pos - 1, tail);
 						size--;
 					}
+
+					@Override
+					SUPPRESS_WARNINGS_KEY_UNCHECKED
+					public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+						while (pos < size) {
+							action.accept(KEY_GENERIC_CAST key[pos++]);
+						}
+					}
+
+					// TODO either override skip or extend from AbstractIndexBasedIterator.
 				};
+			}
+			
+			final class KeySetSpliterator extends SPLITERATORS.EarlyBindingSizeIndexSpliterator KEY_GENERIC
+					implements KEY_SPLITERATOR KEY_GENERIC {
+
+				KeySetSpliterator(int pos, int maxPos) {
+					super(pos, maxPos);
+				} 
+
+				@Override
+				public int characteristics() {
+					return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
+				}
+
+				@Override
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				protected final KEY_GENERIC_TYPE get(int location) { return KEY_GENERIC_CAST key[location]; }
+
+				@Override
+				protected final KeySetSpliterator makeForSplit(int pos, int maxPos) {
+					return new KeySetSpliterator(pos, maxPos);
+				}
+
+				@Override
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+					while (pos < size) {
+						action.accept(KEY_GENERIC_CAST key[pos++]);
+					}
+				}
+			}
+			
+			@Override
+			public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+				return new KeySetSpliterator(0, size);
 			}
 
 			@Override
@@ -406,7 +506,53 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 						System.arraycopy(value, pos, value, pos - 1, tail);
 						size--;
 					}
+
+					@Override
+					SUPPRESS_WARNINGS_VALUE_UNCHECKED
+					public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
+						while (pos < size) {
+							action.accept(VALUE_GENERIC_CAST value[pos++]);
+						}
+					}
+	
+					// TODO either override skip or extend from AbstractIndexBasedIterator.
 				};
+			}
+			
+			final class ValuesSpliterator extends VALUE_PACKAGE.VALUE_SPLITERATORS.EarlyBindingSizeIndexSpliterator VALUE_GENERIC
+					implements VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC {
+
+				ValuesSpliterator(int pos, int maxPos) {
+					super(pos, maxPos);
+				} 
+
+				@Override
+				public int characteristics() {
+					return VALUE_PACKAGE.VALUE_SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS
+						| java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
+				}
+
+				@Override
+				SUPPRESS_WARNINGS_VALUE_UNCHECKED
+				protected final VALUE_GENERIC_TYPE get(int location) { return VALUE_GENERIC_CAST value[location]; }
+
+				@Override
+				protected final ValuesSpliterator makeForSplit(int pos, int maxPos) {
+					return new ValuesSpliterator(pos, maxPos);
+				}
+
+				@Override
+				SUPPRESS_WARNINGS_VALUE_UNCHECKED
+				public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
+					while (pos < size) {
+						action.accept(VALUE_GENERIC_CAST value[pos++]);
+					}
+				}
+			}
+			
+			@Override
+			public VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC spliterator() {
+				return new ValuesSpliterator(0, size);
 			}
 
 			@Override
