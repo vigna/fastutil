@@ -116,6 +116,86 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 			}
 		};
 	}
+	
+	// If you update this, you will probably want to update ArrayList as well
+	private class Spliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		// Until we split, we will track the size of the set
+		// Once we split, then we stop updating on structural modifications.
+		// Aka, size is late-binding.
+		boolean hasSplit = false;
+		int pos, max;
+
+#ifdef TEST
+		// Sentinal to make sure we don't accidentally use size when we mean max
+		@Deprecated
+		private final Object size = null;
+#endif
+
+		public Spliterator() {
+			this(0, ARRAY_SET.this.size, false);
+		}
+
+		private Spliterator(int pos, int max, boolean hasSplit) {
+			this.pos = pos;
+			this.max = max;
+			this.hasSplit = hasSplit;
+		}
+
+		private int getWorkingMax() {
+			return hasSplit ? max : ARRAY_SET.this.size;
+		}
+
+		@Override
+		public int characteristics() { return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED; }
+
+		@Override
+		public long estimateSize() { return getWorkingMax() - pos; }
+		
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= getWorkingMax()) return false;
+			action.accept(a[pos++]);
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (final int max = getWorkingMax(); pos < max; ++pos) {
+				action.accept(a[pos]);
+			}
+		}
+		
+		@Override
+		public int skip(int n) {
+			int newPos = pos + n;
+			final int max = getWorkingMax();
+			// Can be less then 0 if overflow
+			if (newPos > max || newPos < 0) newPos = max;
+			int skipped = newPos - pos;
+			pos = newPos;
+			return skipped;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			final int max = getWorkingMax();
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 0) return null;
+			// Update instance max with the last seen list size (if needed) before continuing 
+			this.max = max;
+			int retMax = max - retLen;
+			int myNewPos = pos + retMax;
+			int oldPos = pos;
+			this.pos = myNewPos;
+			this.hasSplit = true;
+			return new Spliterator(oldPos, retMax, true); 
+		}
+	}
+
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return new Spliterator();
+	}
 
 	@Override
 	public boolean contains(final KEY_TYPE k) { return findKey(k) != -1; }
