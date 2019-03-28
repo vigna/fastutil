@@ -38,80 +38,6 @@ import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
 public final class SPLITERATORS {
 
 	private SPLITERATORS() {}
-
-	/**
-	 * A skeletal implementation of an index based spliterator. High performance concrete collection implementations
-	 * generally should avoid using this and just implement the interface directly. This is primarily
-	 * for the benefit of "sensible default" implementations.
-	 */
-	static abstract class AbstractIndexBasedSpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
-
-		protected int pos;
-		
-		protected AbstractIndexBasedSpliterator(int pos) {
-			this.pos = pos;
-		}
-
-		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
-		protected abstract KEY_GENERIC_TYPE get(int location);
-
-		protected abstract int getMaxPos();
-		
-		protected abstract KEY_SPLITERATOR KEY_GENERIC makeForSplit(int pos, int maxPos);
-
-		// Since this is an index based spliterator, list characteristics make sense.
-		@Override
-		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS; }
-
-		@Override
-		public long estimateSize() { return (long)getMaxPos() - pos; }
-
-		@Override
-		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
-			if (pos >= getMaxPos()) return false;
-			action.accept(get(pos++));
-			return true;
-		}
-
-		@Override
-		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-			for (final int max = getMaxPos(); pos < max; ++pos) {
-				action.accept(get(pos));
-			}
-		}
-
-		@Override
-		public int skip(int n) {
-			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-			int newPos = pos + n;
-			final int max = getMaxPos();
-			// Can be less then 0 if overflow
-			if (newPos > max || newPos < 0) newPos = max;
-			int skipped = newPos - pos;
-			pos = newPos;
-			return skipped;
-		}
-
-		@Override
-		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
-			final int max = getMaxPos();
-			int retLen = (max - pos) >> 1;
-			if (retLen <= 0) return null;
-			int retMax = max - retLen;
-			int myNewPos = pos + retMax;
-			int oldPos = pos;
-			this.pos = myNewPos;
-			return makeForSplit(oldPos, retMax); 
-		}
-	}
-	
-	// Default characteristics for various Collection implementations
-	static final int COLLECTION_SPLITERATOR_CHARACTERISTICS = Spliterator.SIZED
-#if KEYS_PRIMITIVE
-			| Spliterator.NONNULL;
-#else
-			;
-#endif
 	
 	static final int LIST_SPLITERATOR_CHARACTERISTICS = COLLECTION_SPLITERATOR_CHARACTERISTICS | Spliterator.ORDERED | Spliterator.SUBSIZED;
 	
@@ -652,6 +578,86 @@ public final class SPLITERATORS {
 			}
 		});
 	}
+
+	/**
+	 * A skeletal implementation of an index based spliterator. High performance concrete collection implementations
+	 * generally should avoid using this and just implement the interface directly. This is primarily
+	 * for the benefit of "sensible default" implementations.
+	 */
+	static abstract class AbstractIndexBasedSpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+
+		protected int pos;
+		
+		protected AbstractIndexBasedSpliterator(int pos) {
+			this.pos = pos;
+		}
+
+		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+		protected abstract KEY_GENERIC_TYPE get(int location);
+
+		protected abstract int getMaxPos();
+		
+		protected abstract KEY_SPLITERATOR KEY_GENERIC makeForSplit(int pos, int maxPos);
+
+		// Since this is an index based spliterator, list characteristics make sense.
+		@Override
+		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS; }
+
+		@Override
+		public long estimateSize() { return (long)getMaxPos() - pos; }
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= getMaxPos()) return false;
+			action.accept(get(pos++));
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (final int max = getMaxPos(); pos < max; ++pos) {
+				action.accept(get(pos));
+			}
+		}
+
+		@Override
+		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			int newPos = pos + n;
+			final int max = getMaxPos();
+			// Can be less then 0 if overflow
+			if (newPos > max || newPos < 0) newPos = max;
+			int skipped = newPos - pos;
+			pos = newPos;
+			return skipped;
+		}
+
+		/** {@inheritDoc}
+		 *
+		 * This implementation always returns a prefix of the elements, in order to comply with
+		 * the {@Spliterator#ORDERED} property. This means this current iterator never needs
+		 * to update its maxPos in response to this method.
+		 */
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			final int max = getMaxPos();
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 0) return null;
+			int retMax = max - retLen;
+			int myNewPos = pos + retMax;
+			int oldPos = pos;
+			this.pos = myNewPos;
+			return makeForSplit(oldPos, retMax); 
+		}
+	}
+	
+	// Default characteristics for various Collection implementations
+	static final int COLLECTION_SPLITERATOR_CHARACTERISTICS = Spliterator.SIZED
+#if KEYS_PRIMITIVE
+			| Spliterator.NONNULL;
+#else
+			;
+#endif
 
 #if KEY_CLASS_Integer || KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character || KEY_CLASS_Long
 

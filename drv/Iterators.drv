@@ -39,111 +39,6 @@ public final class ITERATORS {
 
 	private ITERATORS() {}
 
-	/**
-	 * A skeletal implementation of an index based iterator. High performance concrete collection implementations
-	 * generally should avoid using this and just implement the interface directly. This is primarily
-	 * for the benefit of "sensible default" implementations.
-	 */
-	static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
-		// We currently have no use for making minPos dynamic like we do with maxPos.
-		// If this class is made public, this should probably be replaced with getMinPos()
-		protected final int minPos;
-		protected int pos;
-		protected int lastReturned;
-		
-		protected AbstractIndexBasedIterator(int minPos, int initialPos) {
-			this.minPos = minPos;
-			this.pos = initialPos;
-		}
-		
-		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
-		protected abstract KEY_GENERIC_TYPE get(int location);
-		
-		protected abstract void remove(int location);
-
-		protected abstract int getMaxPos();
-
-		@Override
-		public boolean hasNext() { return pos < getMaxPos(); }
-		@Override
-		public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return get(lastReturned = pos++); }
-		@Override
-		public void remove() {
-			if (lastReturned == -1) throw new IllegalStateException();
-			remove(lastReturned);
-			/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-			if (lastReturned < pos) pos--;
-			lastReturned = -1;
-		}
-		
-		@Override
-		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-			while(pos < getMaxPos()) {
-				action.accept(get(lastReturned = pos++));
-			}
-		}
-		
-		@Override
-		public int skip(int n) {
-			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-			int newPos = pos + n;
-			int maxPos = getMaxPos();
-			// Can be less then minPos on overflow
-			if (newPos > maxPos || newPos < minPos) newPos = maxPos;
-			int skipped = newPos - pos;
-			pos = newPos;
-			lastReturned = newPos - 1;
-			return skipped; 
-		}
-	}
-
-	/**
-	 * A skeletal implementation of an index based list-iterator. High performance concrete implementations
-	 * generally should avoid using this and just implement the interface directly. This is primarily
-	 * for the benefit of "sensible default" implementations.
-	 */
-	static abstract class AbstractIndexBasedListIterator KEY_GENERIC extends AbstractIndexBasedIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
-	
-		protected AbstractIndexBasedListIterator(int minPos, int initialPos) {
-			super(minPos, initialPos);
-		}
-
-		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
-		protected abstract void add(int location, KEY_GENERIC_TYPE k);
-		
-		protected abstract void set(int location, KEY_GENERIC_TYPE k);
-
-		@Override
-		public boolean hasPrevious() { return pos > minPos; }
-		@Override
-		public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return get(lastReturned = --pos); }
-		@Override
-		public int nextIndex() { return pos; }
-		@Override
-		public int previousIndex() { return pos - 1; }
-		@Override
-		public void add(final KEY_GENERIC_TYPE k) {
-			add(pos++, k);
-			lastReturned = -1;
-		}
-		@Override
-		public void set(final KEY_GENERIC_TYPE k) {
-			if (lastReturned == -1) throw new IllegalStateException();
-			set(lastReturned, k);
-		}
-		@Override
-		public int back(int n) {
-			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-			int newPos = pos - n;
-			// Can be greater then maxPos if underflow
-			if (newPos < minPos || newPos > getMaxPos()) newPos = minPos;
-			int skipped = pos - newPos;
-			pos = newPos;
-			lastReturned = newPos;
-			return skipped;
-		}
-	}
-
 	/** A class returning no elements and a type-specific iterator interface.
 	 *
 	 * <p>This class may be useful to implement your own in case you subclass
@@ -871,6 +766,111 @@ public final class ITERATORS {
 		}
 
 		return -1;
+	}
+
+	/**
+	 * A skeletal implementation of an index based iterator. High performance concrete collection implementations
+	 * generally should avoid using this and just implement the interface directly. This is primarily
+	 * for the benefit of "sensible default" implementations.
+	 */
+	static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+		// We currently have no use for making minPos dynamic like we do with maxPos.
+		// If this class is made public, this should probably be replaced with getMinPos()
+		protected final int minPos;
+		protected int pos;
+		protected int lastReturned;
+		
+		protected AbstractIndexBasedIterator(int minPos, int initialPos) {
+			this.minPos = minPos;
+			this.pos = initialPos;
+		}
+		
+		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+		protected abstract KEY_GENERIC_TYPE get(int location);
+		
+		protected abstract void remove(int location);
+
+		protected abstract int getMaxPos();
+
+		@Override
+		public boolean hasNext() { return pos < getMaxPos(); }
+		@Override
+		public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return get(lastReturned = pos++); }
+		@Override
+		public void remove() {
+			if (lastReturned == -1) throw new IllegalStateException();
+			remove(lastReturned);
+			/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+			if (lastReturned < pos) pos--;
+			lastReturned = -1;
+		}
+		
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while(pos < getMaxPos()) {
+				action.accept(get(lastReturned = pos++));
+			}
+		}
+		
+		@Override
+		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			int newPos = pos + n;
+			int maxPos = getMaxPos();
+			// Can be less then minPos on overflow
+			if (newPos > maxPos || newPos < minPos) newPos = maxPos;
+			int skipped = newPos - pos;
+			pos = newPos;
+			lastReturned = newPos - 1;
+			return skipped; 
+		}
+	}
+
+	/**
+	 * A skeletal implementation of an index based list-iterator. High performance concrete implementations
+	 * generally should avoid using this and just implement the interface directly. This is primarily
+	 * for the benefit of "sensible default" implementations.
+	 */
+	static abstract class AbstractIndexBasedListIterator KEY_GENERIC extends AbstractIndexBasedIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
+	
+		protected AbstractIndexBasedListIterator(int minPos, int initialPos) {
+			super(minPos, initialPos);
+		}
+
+		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+		protected abstract void add(int location, KEY_GENERIC_TYPE k);
+		
+		protected abstract void set(int location, KEY_GENERIC_TYPE k);
+
+		@Override
+		public boolean hasPrevious() { return pos > minPos; }
+		@Override
+		public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return get(lastReturned = --pos); }
+		@Override
+		public int nextIndex() { return pos; }
+		@Override
+		public int previousIndex() { return pos - 1; }
+		@Override
+		public void add(final KEY_GENERIC_TYPE k) {
+			add(pos++, k);
+			lastReturned = -1;
+		}
+		@Override
+		public void set(final KEY_GENERIC_TYPE k) {
+			if (lastReturned == -1) throw new IllegalStateException();
+			set(lastReturned, k);
+		}
+		@Override
+		public int back(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			int newPos = pos - n;
+			// Can be greater then maxPos if underflow
+			if (newPos < minPos || newPos > getMaxPos()) newPos = minPos;
+			int skipped = pos - newPos;
+			pos = newPos;
+			lastReturned = newPos;
+			return skipped;
+		}
 	}
 
 #if KEY_CLASS_Integer || KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character || KEY_CLASS_Long
