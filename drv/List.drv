@@ -19,6 +19,7 @@ package PACKAGE;
 
 import java.util.List;
 import java.util.Spliterators;
+import java.util.function.Consumer;
 import static it.unimi.dsi.fastutil.Size64.getSizeOf;
 #if KEY_WIDENED
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
@@ -142,6 +143,23 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 
 	void size(int size);
 
+	/** {@inheritDoc}
+	 *
+	 * @implSpec If this list is {@link java.util.RandomAccess}, will iterate using a for
+	 * loop and the type-specific {@link List#get(int)} method. Otherwise it will fallback
+	 * to using the iterator based loop implementation from the superinterface.
+	 */
+	 @Override
+	 default void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+	 	if (this instanceof java.util.RandomAccess) {
+	 		for (int i = 0, max = size(); i < max; ++i) {
+	 			action.accept(GET_KEY(i));
+ 			}
+		} else {
+			COLLECTION.super.forEach(action);
+		}
+	}
+
 	/** Copies (hopefully quickly) elements of this type-specific list into the given array.
 	 *
 	 * @param from the start index (inclusive).
@@ -179,7 +197,7 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @since 8.1.0
 	 */
 	default void setElements(KEY_GENERIC_TYPE a[]) {
-		return setElements(0, a);
+		setElements(0, a);
 	}
 	
 	/** Set (hopefully quickly) elements to match the array given.
@@ -188,7 +206,7 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @since 8.1.0
 	 */
 	default void setElements(int index, KEY_GENERIC_TYPE a[]) {
-		return setElements(index, a, 0, a.length);
+		setElements(index, a, 0, a.length);
 	}
 
 	/** Set (hopefully quickly) elements to match the array given.
@@ -216,7 +234,7 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	default void setElements(int index, KEY_GENERIC_TYPE a[], int offset, int length) {
 		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
 		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
-		if (from + length > size()) throw new IndexOutOfBoundsException("End index (" + (from + length) + ") is greater than list size (" + size() + ")");
+		if (index + length > size()) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size() + ")");
 		if (this instanceof java.util.RandomAccess) {
 			for (int i = 0,  max = Math.min(length, size() - index); i < max; ++i) {
 				set(i + index, a[i + offset]);
