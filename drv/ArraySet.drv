@@ -19,6 +19,9 @@ package PACKAGE;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER 
+import java.util.function.Consumer;
+#endif
 
 /** A simple, brute-force implementation of a set based on a backing array.
  *
@@ -114,6 +117,19 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 				a[size] = null;
 #endif
 			}
+
+			@Override
+			public int skip(int n) {
+				int newPos = next + n;
+				// newPos can be less then 0 on overflow.
+				if (newPos < size && newPos > 0) {
+					next = newPos;
+					return n;
+				}
+				n = size - next;
+				next = size;
+				return n;
+			}
 		};
 	}
 	
@@ -151,17 +167,19 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 		@Override
 		public long estimateSize() { return getWorkingMax() - pos; }
 		
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		@Override
 		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
 			if (pos >= getWorkingMax()) return false;
-			action.accept(a[pos++]);
+			action.accept(KEY_GENERIC_CAST a[pos++]);
 			return true;
 		}
 
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 			for (final int max = getWorkingMax(); pos < max; ++pos) {
-				action.accept(a[pos]);
+				action.accept(KEY_GENERIC_CAST a[pos]);
 			}
 		}
 		
