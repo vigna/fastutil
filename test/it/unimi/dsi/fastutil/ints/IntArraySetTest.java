@@ -130,22 +130,22 @@ public class IntArraySetTest {
 	
 	@Test
     public void testRemoveAll() {
-	    IntSet l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+	    IntSet l = new IntArraySet(new int[] { 0, 1, 2 });
         l.removeAll(IntSets.singleton(1));
         assertEquals(new IntArraySet(new int[] { 0, 2 }), l);
 
-        l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        l = new IntArraySet(new int[] { 0, 1, 2 });
         l.removeAll(Collections.singleton(Integer.valueOf(1)));
         assertEquals(new IntArraySet(new int[] { 0, 2 }), l);
     }
     
     @Test
     public void testRetainAll() {
-        IntSet l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        IntSet l = new IntArraySet(new int[] { 0, 1, 2 });
         l.retainAll(IntSets.singleton(1));
         assertEquals(new IntArraySet(new int[] { 1 }), l);
 
-        l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        l = new IntArraySet(new int[] { 0, 1, 2 });
         l.retainAll(Collections.singleton(Integer.valueOf(1)));
         assertEquals(new IntArraySet(new int[] { 1 }), l);
     }
@@ -168,9 +168,10 @@ public class IntArraySetTest {
         l.forEach((int i) -> adder.add(i));
         assertEquals(adder.intValue(), 25);
         
+        //use of IntArrayList to ensure unicity is kept
         l = new IntArraySet(new IntArrayList(new int[]{ 3, 4, 5, 5, 6, 6, 7 }));
-        adder = new LongAdder();
-        l.forEach((int i) -> adder.add(i));
-        assertEquals(adder.intValue(), 25);
+        LongAdder adderRepeated = new LongAdder();
+        l.forEach((int i) -> adderRepeated.add(i));
+        assertEquals(adderRepeated.intValue(), 25);
     }
 }
