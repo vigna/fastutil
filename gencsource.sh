@@ -131,6 +131,8 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
+		else\
+			echo "#define JDK_PRIMITIVE_KEY_CONSUMER BooleanConsumer\\n";\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\

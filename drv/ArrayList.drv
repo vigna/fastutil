@@ -541,36 +541,66 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return true;
 	}
 
+#ifdef JDK_PRIMITIVE_PREDICATE
 	@Override
-	public boolean removeAll(final COLLECTION c) {
-		final KEY_TYPE[] a = this.a;
-		int j = 0;
-		for(int i = 0; i < size; i++)
-			if (! c.contains(a[i])) a[j++] = a[i];
-#if KEYS_REFERENCE
-		Arrays.fill(a, j, size, null);
-#endif
-		final boolean modified = size != j;
-		size = j;
-		return modified;
+	public boolean removeAll(final COLLECTION c) { 		return removeIf((JDK_PRIMITIVE_PREDICATE) v->!c.contains(v));
 	}
-
-#endif
+	
+	@Override
+	public boolean retainAll(final COLLECTION c) {		return removeIf((JDK_PRIMITIVE_PREDICATE) v->c.contains(v));
+	}
+#endif JDK_PRIMITIVE_PREDICATE
+	
+#endif KEYS_PRIMITIVE
 
 	@Override
-	public boolean removeAll(final Collection<?> c) {
-		final KEY_TYPE[] a = this.a;
+#ifdef JDK_PRIMITIVE_KEY_CONSUMER
+	public void forEach(final JDK_PRIMITIVE_KEY_CONSUMER action) {
+#else
+	public void forEach(final java.util.function.Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif JDK_PRIMITIVE_KEY_CONSUMER
+		java.util.Objects.requireNonNull(action);
+		final KEY_GENERIC_TYPE[] a = this.a;
+		for(int i = 0; i < size; i++)
+			action.accept(a[i]);
+	}
+	
+	@Override
+#ifdef JDK_PRIMITIVE_PREDICATE
+	public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {#else
+	public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
+#endif JDK_PRIMITIVE_PREDICATE
+		java.util.Objects.requireNonNull(filter);
+		final KEY_GENERIC_TYPE[] a = this.a;
 		int j = 0;
 		for(int i = 0; i < size; i++)
-			if (! c.contains(KEY2OBJ(a[i]))) a[j++] = a[i];
-#if KEYS_REFERENCE
+			if (!filter.test(a[i])) a[j++] = a[i];
+#if KEYS_REFERENCE 
 		Arrays.fill(a, j, size, null);
-#endif
-		final boolean modified = size != j;
+#endif KEYS_REFERENCE 
+		final boolean removed = size != j;
 		size = j;
-		return modified;
+		return removed;
 	}
 
+
+	@Override
+	public boolean removeAll(final Collection<?> c) {#ifdef JDK_PRIMITIVE_PREDICATE
+		return removeIf((JDK_PRIMITIVE_PREDICATE) v->!c.contains(v));
+#else
+		return removeIf(v->!c.contains(v));
+#endif JDK_PRIMITIVE_PREDICATE
+	}
+	
+	@Override
+	public boolean retainAll(final Collection<?> c) {
+#ifdef JDK_PRIMITIVE_PREDICATE
+		return removeIf((JDK_PRIMITIVE_PREDICATE) c::contains);
+#else
+		return removeIf(c::contains);
+#endif JDK_PRIMITIVE_PREDICATE
+	}
+	
 	@Override
 	public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
 		ensureIndex(index);
@@ -862,7 +892,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			catch (IndexOutOfBoundsException e) { mThrowsOutOfBounds = e; }
 
 			try {
-				t.add(p, KEY2OBJ(T));
+				t.add(p, KEY2OBJ(T)"""""");
 			}
 			catch (IndexOutOfBoundsException e) { tThrowsOutOfBounds = e; }
 

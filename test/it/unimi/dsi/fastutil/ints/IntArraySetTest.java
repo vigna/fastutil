@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.IntPredicate;
 
 import org.junit.Test;
 
@@ -125,4 +127,50 @@ public class IntArraySetTest {
 		assertFalse(iterator.hasNext());
 		assertEquals(new IntArraySet(new int[] { 42, 44 }), set);
 	}
+	
+	@Test
+    public void testRemoveAll() {
+	    IntSet l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        l.removeAll(IntSets.singleton(1));
+        assertEquals(new IntArraySet(new int[] { 0, 2 }), l);
+
+        l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        l.removeAll(Collections.singleton(Integer.valueOf(1)));
+        assertEquals(new IntArraySet(new int[] { 0, 2 }), l);
+    }
+    
+    @Test
+    public void testRetainAll() {
+        IntSet l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        l.retainAll(IntSets.singleton(1));
+        assertEquals(new IntArraySet(new int[] { 1 }), l);
+
+        l = new IntArraySet(new int[] { 0, 1, 1, 2 });
+        l.retainAll(Collections.singleton(Integer.valueOf(1)));
+        assertEquals(new IntArraySet(new int[] { 1 }), l);
+    }
+    
+    @Test
+    public void testRemoveIf() {
+        IntSet l = new IntArraySet(new int[] { 0, 1, 2, 3, 4, 5 });
+        l.removeIf((int v) -> v % 2 == 0);
+        assertEquals(new IntArraySet(new int[] { 1, 3, 5 }), l);
+
+        l = new IntArraySet(new int[] { 0, 1, 2, 3, 4, 5 });
+        l.removeIf((int v) -> v % 2 == 1);
+        assertEquals(new IntArraySet(new int[] { 0, 2, 4 }), l);
+    }
+    
+    @Test
+    public void testForEach() {
+        IntSet l = new IntArraySet(new int[] { 3, 4, 5, 6, 7 });
+        LongAdder adder = new LongAdder();
+        l.forEach((int i) -> adder.add(i));
+        assertEquals(adder.intValue(), 25);
+        
+        l = new IntArraySet(new IntArrayList(new int[]{ 3, 4, 5, 5, 6, 6, 7 }));
+        adder = new LongAdder();
+        l.forEach((int i) -> adder.add(i));
+        assertEquals(adder.intValue(), 25);
+    }
 }

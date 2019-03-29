@@ -91,6 +91,76 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 		return -1;
 	}
 
+
+#if KEYS_PRIMITIVE
+
+	@Override
+	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+		if (a == null || a.length < size) a = new KEY_TYPE[size];
+		System.arraycopy(this.a, 0, a, 0, size);
+		return a;
+	}
+
+#ifdef JDK_PRIMITIVE_PREDICATE
+	@Override
+	public boolean removeAll(final COLLECTION c) { 		return removeIf((JDK_PRIMITIVE_PREDICATE) v->!c.contains(v));
+	}
+	
+	@Override
+	public boolean retainAll(final COLLECTION c) {		return removeIf((JDK_PRIMITIVE_PREDICATE) v->c.contains(v));
+	}
+#endif JDK_PRIMITIVE_PREDICATE
+	
+#endif KEYS_PRIMITIVE
+
+	@Override
+#ifdef JDK_PRIMITIVE_KEY_CONSUMER
+	public void forEach(final JDK_PRIMITIVE_KEY_CONSUMER action) {
+#else
+	public void forEach(final java.util.function.Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif JDK_PRIMITIVE_KEY_CONSUMER
+		java.util.Objects.requireNonNull(action);
+		final KEY_GENERIC_TYPE[] a = this.a;
+		for(int i = 0; i < size; i++)
+			action.accept(a[i]);
+	}
+	
+	@Override
+#ifdef JDK_PRIMITIVE_PREDICATE
+	public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {#else
+	public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
+#endif JDK_PRIMITIVE_PREDICATE
+		java.util.Objects.requireNonNull(filter);
+		final KEY_GENERIC_TYPE[] a = this.a;
+		int j = 0;
+		for(int i = 0; i < size; i++)
+			if (!filter.test(a[i])) a[j++] = a[i];
+#if KEYS_REFERENCE 
+		Arrays.fill(a, j, size, null);
+#endif KEYS_REFERENCE 
+		final boolean removed = size != j;
+		size = j;
+		return removed;
+	}
+
+
+	@Override
+	public boolean removeAll(final Collection<?> c) {#ifdef JDK_PRIMITIVE_PREDICATE
+		return removeIf((JDK_PRIMITIVE_PREDICATE) v->!c.contains(v));
+#else
+		return removeIf(v->!c.contains(v));
+#endif JDK_PRIMITIVE_PREDICATE
+	}
+	
+	@Override
+	public boolean retainAll(final Collection<?> c) {
+#ifdef JDK_PRIMITIVE_PREDICATE
+		return removeIf((JDK_PRIMITIVE_PREDICATE) c::contains);
+#else
+		return removeIf(c::contains);
+#endif JDK_PRIMITIVE_PREDICATE
+	}
+
 	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public KEY_ITERATOR KEY_GENERIC iterator() {

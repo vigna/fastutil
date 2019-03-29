@@ -22,6 +22,9 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
+import java.util.concurrent.atomic.LongAdder;
+import java.util.function.IntConsumer;
+import java.util.function.IntPredicate;
 
 import org.junit.Test;
 
@@ -60,6 +63,36 @@ public class IntArrayListTest {
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
+	
+	@Test
+    public void testRetainAll() {
+        IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+        l.retainAll(IntSets.singleton(1));
+        assertEquals(IntArrayList.wrap(new int[] { 1, 1 }), l);
+
+        l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+        l.retainAll(Collections.singleton(Integer.valueOf(1)));
+        assertEquals(IntArrayList.wrap(new int[] { 1, 1 }), l);
+    }
+	
+	@Test
+    public void testRemoveIf() {
+        IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 2, 3, 4, 5 });
+        l.removeIf((int v) -> v % 2 == 0);
+        assertEquals(IntArrayList.wrap(new int[] { 1, 3, 5 }), l);
+
+        l = IntArrayList.wrap(new int[] { 0, 1, 2, 3, 4, 5 });
+        l.removeIf((int v) -> v % 2 == 1);
+        assertEquals(IntArrayList.wrap(new int[] { 0, 2, 4 }), l);
+    }
+	
+	@Test
+    public void testForEach() {
+        IntArrayList l = IntArrayList.wrap(new int[] { 3, 4, 5, 6, 7 });
+        LongAdder adder = new LongAdder();
+        l.forEach((int v) -> adder.add(v));
+        assertEquals(adder.intValue(), 25);
+    }
 
 	@Test
 	public void testDefaultConstructors() {
