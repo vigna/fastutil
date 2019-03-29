@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER 
 import java.util.function.Consumer;
 #endif
 
@@ -651,6 +651,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public void setElements(final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length) {
 		ensureIndex(index);
 		ARRAYS.ensureOffsetLength(a, offset, length);
+		if (index + length > size) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size + ")");
 		System.arraycopy(a, offset, this.a, index, length);
 	}
 
@@ -938,6 +939,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final ARRAY_LIST KEY_EXTENDS_GENERIC l) {
+		// TODO When minimum version of JDK becomes JDK 9, use Arrays.compare, which vectorizes.
 		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
 		KEY_GENERIC_TYPE e1, e2;
@@ -950,6 +952,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 
 		return i < s2 ? -1 : (i < s1 ? 1 : 0);
+	}
+
+	@Override
+	public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
+		return l instanceof ARRAY_LIST ? compareTo((ARRAY_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
 	}
 #endif
 

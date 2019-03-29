@@ -46,6 +46,7 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	 * @throws IndexOutOfBoundsException if the given index is negative or greater than the list size.
 	 */
 	protected void ensureIndex(final int index) {
+		// TODO When Java 9 becomes the minimum java, use Objects#checkIndex(index, size() + 1) (as can be an intrinsic)
 		if (index < 0)  throw new IndexOutOfBoundsException("Index (" + index + ") is negative");
 		if (index > size()) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than list size (" + (size()) + ")");
 	}
@@ -56,6 +57,7 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	 * @throws IndexOutOfBoundsException if the given index is negative or not smaller than the list size.
 	 */
 	protected void ensureRestrictedIndex(final int index) {
+		// TODO When Java 9 becomes the minimum java, use Objects#checkIndex (as can be an intrinsic)
 		if (index < 0)  throw new IndexOutOfBoundsException("Index (" + index + ") is negative");
 		if (index >= size()) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + (size()) + ")");
 	}
@@ -100,6 +102,9 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	/** Adds all of the elements in the specified collection to this list (optional operation). */
 	@Override
 	public boolean addAll(int index, final Collection<? extends KEY_GENERIC_CLASS> c) {
+		if (c instanceof COLLECTION) {
+			return addAll(index, (COLLECTION KEY_EXTENDS_GENERIC)c);
+		}
 		ensureIndex(index);
 		final Iterator<? extends KEY_GENERIC_CLASS> i = c.iterator();
 		final boolean retVal = i.hasNext();
@@ -253,8 +258,7 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	@Override
 	public void addElements(int index, final KEY_GENERIC_TYPE a[], int offset, int length) {
 		ensureIndex(index);
-		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
-		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
+		ARRAYS.ensureOffsetLength(a, offset, length);
 		if (this instanceof java.util.RandomAccess) {
 			while(length-- != 0) add(index++, a[offset++]);
 		} else {
@@ -279,8 +283,8 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	 */
 	@Override
 	public void getElements(final int from, final KEY_TYPE a[], int offset, int length) {
-		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
-		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
+		ensureIndex(from);
+		ARRAYS.ensureOffsetLength(a, offset, length);
 		if (from + length > size()) throw new IndexOutOfBoundsException("End index (" + (from + length) + ") is greater than list size (" + size() + ")");
 		if (this instanceof java.util.RandomAccess) {
 			int current = from;
@@ -629,7 +633,7 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 			
 			// We don't set the startPos to be "to" because we need to call our containing class'
 			// add, set, and remove methods with 0 relative to the start of the sublist, not the
-			// start of the original list. 
+			// start of the original list.
 			RandomAccessIter(int pos) {
 				super(0, pos);
 			}

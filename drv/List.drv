@@ -233,8 +233,10 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @since 8.3.0
 	 */
 	default void setElements(int index, KEY_GENERIC_TYPE a[], int offset, int length) {
-		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
-		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
+		// We can't use AbstractList#ensureIndex, sadly.
+		if (index < 0)  throw new IndexOutOfBoundsException("Index (" + index + ") is negative");
+		if (index > size()) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than list size (" + (size()) + ")");
+		ARRAYS.ensureOffsetLength(a, offset, length);
 		if (index + length > size()) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size() + ")");
 		if (this instanceof java.util.RandomAccess) {
 			for (int i = 0,  max = Math.min(length, size() - index); i < max; ++i) {
