@@ -389,6 +389,9 @@ public final class ARRAYS {
 	 *
 	 * <p>This method may be used whenever an array range check is needed.
 	 *
+	 * <p>In Java 9 and up, this method should be considered deprecated in favor of the
+	 * {@link java.util.Objects#checkFromToIndex(int, int, int) method, which may be intrinsified in recent JVMs.
+	 *
 	 * @param a an array.
 	 * @param from a start index (inclusive).
 	 * @param to an end index (exclusive).
@@ -402,6 +405,9 @@ public final class ARRAYS {
 	/** Ensures that a range given by an offset and a length fits an array.
 	 *
 	 * <p>This method may be used whenever an array range check is needed.
+	 *
+	 * <p>In Java 9 and up, this method should be considered deprecated in favor of the
+	 * {@link java.util.Objects#checkFromIndexSize(int, int, int) method, which may be intrinsified in recent JVMs.
 	 *
 	 * @param a an array.
 	 * @param offset a start index.
@@ -1631,12 +1637,17 @@ public final class ARRAYS {
 	 * @since 8.3.0
 	 */
  	public static KEY_GENERIC void stableSort(final KEY_GENERIC_TYPE a[], final int from, final int to) {
-#if KEYS_PRIMITIVE && !(KEY_CLASS_Float || KEY_CLASS_Double)
+#if KEYS_REFERENCE
+		// Use JDK's sort, which is likely to be adaptive and still be stable.
+		return java.util.Arrays.sort(a, from, to);
+#elif KEYS_PRIMITIVE && !(KEY_CLASS_Float || KEY_CLASS_Double)
 		// For non-floating point primitive types, when comparing naturally,
 		// it is impossible to tell the difference between a stable and not-stable sort.
 		// So just use the probably faster unstable sort.
 		unstableSort(a, from, to);
 #else
+		// Due to subtle differences between Float/Double.compare and operator compare, it is
+		// not safe to delegate this to java.util.Arrays.sort(double[], int, int)
 		mergeSort(a, from, to);
 #endif
 	}
@@ -1672,7 +1683,12 @@ public final class ARRAYS {
 	 * @since 8.3.0
 	 */
  	public static KEY_GENERIC void stableSort(final KEY_GENERIC_TYPE a[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp) {
+#if KEYS_REFERENCE
+		// Use JDK's sort, which is likely to be adaptive and still be stable.
+		return java.util.Arrays.sort(a, from, to, comp);
+#else
  		mergeSort(a, from, to, comp);
+#endif
 	}
  	
 
