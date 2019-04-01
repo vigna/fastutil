@@ -226,6 +226,23 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 
 	/** {@inheritDoc}
 	 *
+	 * @implSpec If this list is {@link java.util.RandomAccess}, will iterate using a for
+	 * loop and the type-specific {@link List#get(int)} method. Otherwise it will fallback
+	 * to using the iterator based loop implementation from the superinterface.
+	 */
+	 @Override
+	 public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+	 	if (this instanceof java.util.RandomAccess) {
+	 		for (long i = 0, max = size64(); i < max; ++i) {
+	 			action.accept(GET_KEY(i));
+ 			}
+		} else {
+			super.forEach(action);
+		}
+	}
+
+	/** {@inheritDoc}
+	 *
 	 * <p>This is a trivial iterator-based implementation. It is expected that
 	 * implementations will override this method with a more optimized version.
 	 */
@@ -250,7 +267,12 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 	public void addElements(long index, final KEY_GENERIC_TYPE a[][], long offset, long length) {
 		ensureIndex(index);
 		BIG_ARRAYS.ensureOffsetLength(a, offset, length);
-		while(length-- != 0) add(index++, BIG_ARRAYS.get(a, offset++));
+		if (this instanceof java.util.RandomAccess) {
+			while(length-- != 0) add(index++, BIG_ARRAYS.get(a, offset++));
+		} else {
+			KEY_BIG_LIST_ITERATOR KEY_GENERIC iter = listIterator(index);
+			while(length-- != 0) iter.add(BIG_ARRAYS.get(a, offset++));
+		}
 	}
 
 	/** {@inheritDoc}
@@ -269,10 +291,35 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 	 */
 	@Override
 	public void getElements(final long from, final KEY_TYPE a[][], long offset, long length) {
-		KEY_BIG_LIST_ITERATOR KEY_GENERIC i = listIterator(from);
+		ensureIndex(from);
 		BIG_ARRAYS.ensureOffsetLength(a, offset, length);
 		if (from + length > size64()) throw new IndexOutOfBoundsException("End index (" + (from + length) + ") is greater than list size (" + size64() + ")");
-		while(length-- != 0) BIG_ARRAYS.set(a, offset++, i.NEXT_KEY());
+		if (this instanceof java.util.RandomAccess) {	
+			long current = from;
+			while(length-- != 0) BIG_ARRAYS.set(a, offset++, GET_KEY(current++));
+		} else {
+			KEY_BIG_LIST_ITERATOR KEY_GENERIC i = listIterator(from);
+			while(length-- != 0) BIG_ARRAYS.set(a, offset++, i.NEXT_KEY());
+		}
+	}
+
+	@Override
+	public void setElements(long index, KEY_GENERIC_TYPE a[][], long offset, long length) {
+		ensureIndex(from);
+		BIG_ARRAYS.ensureOffsetLength(a, offset, length);
+		if (index + length > size64()) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size64() + ")");
+		if (this instanceof java.util.RandomAccess) {
+			for (long i = 0,  max = length; i < max; ++i) {
+				set(i + index, BIG_ARRAYS.get(a, i + offset));
+			}
+		} else {
+			KEY_BIG_LIST_ITERATOR KEY_GENERIC iter = listIterator(index);
+			int i = 0;
+			while (i < length) {
+				iter.NEXT_KEY();
+				iter.set(BIG_ARRAYS.get(a, offset + i++));
+			}
+		}
 	}
 
 	/** {@inheritDoc}
@@ -727,5 +774,20 @@ public abstract class ABSTRACT_BIG_LIST KEY_GENERIC extends ABSTRACT_COLLECTION 
 			return super.addAll(index, l);
 		}
 #endif
+	}
+
+	public static class SUBLIST_RANDOM_ACCESS KEY_GENERIC extends SUBLIST KEY_GENERIC implements java.util.RandomAccess {
+		private static final long serialVersionUID = -107070782945191929L;
+		public SUBLIST_RANDOM_ACCESS(final BIG_LIST KEY_GENERIC l, final long from, final long to) {
+			super(l, from, to);
+		}
+
+		@Override
+		public BIG_LIST KEY_GENERIC subList(final long from, final long to) {
+			ensureIndex(from);
+			ensureIndex(to);
+			if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
+			return new SUBLIST_RANDOM_ACCESS KEY_GENERIC_DIAMOND(l, from + this.from, to + this.from);
+		}
 	}
 }
