@@ -279,13 +279,12 @@ public final class SPLITERATORS {
 		public long skip(long n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			if (curr >= length) return 0;
-			long newCurr = curr + n;
-			// Can be less then 0 if overflow
-			if (newCurr <= length && newCurr >= 0) {
-				curr = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(newCurr);
+			final int remaining = length - curr;
+			if (n < remaining) {
+				curr = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(curr + n);
 				return n;
 			}
-			n = length - curr;
+			n = remaining;
 			curr = length;
 			return n;
 		}
@@ -689,13 +688,12 @@ public final class SPLITERATORS {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			final int max = getMaxPos();
 			if (pos >= max) return 0;
-			long newPos = pos + n;
-			// Can be less then 0 if overflow
-			if (newPos <= max && newPos >= 0) {
-				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(newPos);
+			final int remaining = max - pos;
+			if (n < remaining)
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
 				return n;
 			}
-			n = max - pos;
+			n = remaining;
 			pos = max;
 			return n;
 		}
@@ -887,6 +885,8 @@ public final class SPLITERATORS {
 		public long skip(long n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			if (curr >= to) return 0;
+			// Can't do the traditional int remaining = to - curr
+			// because that could overflow, due to signed from and to (and thus curr).
 			long newCurr = curr + n;
 			// Can be less then "curr" if overflow
 			if (newCurr <= to && newCurr >= curr) {

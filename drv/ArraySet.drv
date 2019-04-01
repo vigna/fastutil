@@ -120,13 +120,13 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 
 			@Override
 			public int skip(int n) {
-				int newPos = next + n;
-				// newPos can be less then 0 on overflow.
-				if (newPos < size && newPos > 0) {
-					next = newPos;
+				if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+				final int remaining = size - next;
+				if (n < remaining) {
+					next += n;
 					return n;
 				}
-				n = size - next;
+				n = remaining;
 				next = size;
 				return n;
 			}
@@ -188,13 +188,12 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			final int max = getWorkingMax();
 			if (pos >= max) return 0;
-			long newPos = pos + n;
-			// Can be less then 0 if overflow
-			if (newPos <= max && newPos >= 0) {
-				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(newPos);
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
 				return n;
 			}
-			n = max - pos;
+			n = remaining;
 			pos = max;
 			return n;
 		}

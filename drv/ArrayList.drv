@@ -776,23 +776,29 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 				}
 				@Override
 				public int back(int n) {
-					int newPos = pos - n;
-					// Can be greater then size if underflow
-					if (newPos < 0 || newPos > size) newPos = 0;
-					int skipped = pos - newPos;
-					pos = newPos;
-					last = newPos;
-					return skipped;
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = size - pos;
+					if (n < remaining) {
+						pos -= n;
+					} else {
+						n = remaining;
+						pos = 0;
+					}
+					last = pos;
+					return n;
 				}
 				@Override
 				public int skip(int n) {
-					int newPos = pos + n;
-					// Can be less then 0 if overflow
-					if (newPos > size || newPos < 0) newPos = size;
-					int skipped = newPos - pos;
-					pos = newPos;
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = size - pos;
+					if (n < remaining) {
+						pos += n;
+					} else {
+						n = remaining;
+						pos = size;
+					}
 					last = pos - 1;
-					return skipped;
+					return n;
 				}
 			};
 	}
@@ -850,13 +856,12 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			final int max = getWorkingMax();
 			if (pos >= max) return 0;
-			long newPos = pos + n;
-			// Can be less then 0 if overflow
-			if (newPos <= max && newPos >= 0) {
-				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(newPos);
+			final int remaining = max - pos;
+			if (n < remaining)
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
 				return n;
 			}
-			n = max - pos;
+			n = remaining;
 			pos = max;
 			return n;
 		}

@@ -779,7 +779,7 @@ public final class ITERATORS {
 	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
 	 * as {@code final} as to encourage the JVM to inline them.
 	 */
-	public static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+	static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
 		/** The minimum pos can be, and is the logical start of the "range".
 		 * Usually set to the initialPos unless it is a ListIterator, in which case it can vary.
 		 *
@@ -861,14 +861,16 @@ public final class ITERATORS {
 		@Override
 		public int skip(int n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-			int newPos = pos + n;
-			int maxPos = getMaxPos();
-			// Can be less then minPos on overflow
-			if (newPos > maxPos || newPos < minPos) newPos = maxPos;
-			int skipped = newPos - pos;
-			pos = newPos;
-			lastReturned = newPos - 1;
-			return skipped; 
+			final int max = getMaxPos();
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos += n;
+			} else {
+				n = remaining;
+				pos = max;
+			}
+			lastReturned = pos - 1;
+			return n;
 		}
 	}
 
@@ -930,13 +932,16 @@ public final class ITERATORS {
 		@Override
 		public int back(int n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-			int newPos = pos - n;
-			// Can be greater then maxPos if underflow
-			if (newPos < minPos || newPos > getMaxPos()) newPos = minPos;
-			int skipped = pos - newPos;
-			pos = newPos;
-			lastReturned = newPos;
-			return skipped;
+			final int max = getMaxPos();
+			final int remaining = pos - minPos;
+			if (n < remaining) {
+				pos -= n;
+			} else {
+				n = remaining;
+				pos = minPos;
+			}
+			lastReturned = pos;
+			return n;
 		}
 	}
 
