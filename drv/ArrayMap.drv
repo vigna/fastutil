@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
@@ -113,7 +114,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		if (size > key.length) throw new IllegalArgumentException("The provided size (" + size + ") is larger than or equal to the backing-arrays size (" + key.length + ")");
 	}
 
-	private final class EntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC {
+	private final class EntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC, ObjectSet.ImplementsSpliterator <MAP.Entry KEY_VALUE_GENERIC> {
 
 		@Override
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
@@ -370,81 +371,46 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		return oldValue;
 	}
 
-	@Override
-	public SET KEY_GENERIC keySet() {
-		return new ABSTRACT_SET KEY_GENERIC() {
-			@Override
-			public boolean contains(final KEY_TYPE k) {
-				return findKey(k) != -1;
-			}
+	private final class KeySet extends ABSTRACT_SET KEY_GENERIC implements SET.ImplementsSpliterator {
+		@Override
+		public boolean contains(final KEY_TYPE k) {
+			return findKey(k) != -1;
+		}
 
-			@Override
-			public boolean remove(final KEY_TYPE k) {
-				 final int oldPos = findKey(k);
-				 if (oldPos == -1) return false;
-				 final int tail = size - oldPos - 1;
-				 System.arraycopy(key, oldPos + 1, key, oldPos, tail);
-				 System.arraycopy(value, oldPos + 1, value, oldPos, tail);
-				 size--;
-				 return true;
-			}
+		@Override
+		public boolean remove(final KEY_TYPE k) {
+			 final int oldPos = findKey(k);
+			 if (oldPos == -1) return false;
+			 final int tail = size - oldPos - 1;
+			 System.arraycopy(key, oldPos + 1, key, oldPos, tail);
+			 System.arraycopy(value, oldPos + 1, value, oldPos, tail);
+			 size--;
+			 return true;
+		}
 
-			@Override
-			public KEY_ITERATOR KEY_GENERIC iterator() {
-				return new KEY_ITERATOR KEY_GENERIC() {
-					int pos = 0;
-					@Override
-					public boolean hasNext() {
-						return pos < size;
-					}
-
-					@Override
-					SUPPRESS_WARNINGS_KEY_UNCHECKED
-					public KEY_GENERIC_TYPE NEXT_KEY() {
-						if (! hasNext()) throw new NoSuchElementException();
-						return KEY_GENERIC_CAST key[pos++];
-					}
-
-					@Override
-					public void remove() {
-						if (pos == 0) throw new IllegalStateException();
-						final int tail = size - pos;
-						System.arraycopy(key, pos, key, pos - 1, tail);
-						System.arraycopy(value, pos, value, pos - 1, tail);
-						size--;
-					}
-
-					@Override
-					SUPPRESS_WARNINGS_KEY_UNCHECKED
-					public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-						while (pos < size) {
-							action.accept(KEY_GENERIC_CAST key[pos++]);
-						}
-					}
-
-					// TODO either override skip or extend from AbstractIndexBasedIterator.
-				};
-			}
-			
-			final class KeySetSpliterator extends SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator KEY_GENERIC
-					implements KEY_SPLITERATOR KEY_GENERIC {
-
-				KeySetSpliterator(int pos, int maxPos) {
-					super(pos, maxPos);
-				} 
-
+		@Override
+		public KEY_ITERATOR KEY_GENERIC iterator() {
+			return new KEY_ITERATOR KEY_GENERIC() {
+				int pos = 0;
 				@Override
-				public int characteristics() {
-					return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
+				public boolean hasNext() {
+					return pos < size;
 				}
 
 				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
-				protected final KEY_GENERIC_TYPE get(int location) { return KEY_GENERIC_CAST key[location]; }
+				public KEY_GENERIC_TYPE NEXT_KEY() {
+					if (! hasNext()) throw new NoSuchElementException();
+					return KEY_GENERIC_CAST key[pos++];
+				}
 
 				@Override
-				protected final KeySetSpliterator makeForSplit(int pos, int maxPos) {
-					return new KeySetSpliterator(pos, maxPos);
+				public void remove() {
+					if (pos == 0) throw new IllegalStateException();
+					final int tail = size - pos;
+					System.arraycopy(key, pos, key, pos - 1, tail);
+					System.arraycopy(value, pos, value, pos - 1, tail);
+					size--;
 				}
 
 				@Override
@@ -454,91 +420,91 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 						action.accept(KEY_GENERIC_CAST key[pos++]);
 					}
 				}
-			}
-			
+
+				// TODO either override skip or extend from AbstractIndexBasedIterator.
+			};
+		}
+		
+		final class KeySetSpliterator extends SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator KEY_GENERIC
+				implements KEY_SPLITERATOR KEY_GENERIC {
+
+			KeySetSpliterator(int pos, int maxPos) {
+				super(pos, maxPos);
+			} 
+
 			@Override
-			public KEY_SPLITERATOR KEY_GENERIC spliterator() {
-				return new KeySetSpliterator(0, size);
+			public int characteristics() {
+				return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
 			}
 
 			@Override
-			public int size() {
-				return size;
+			SUPPRESS_WARNINGS_KEY_UNCHECKED
+			protected final KEY_GENERIC_TYPE get(int location) { return KEY_GENERIC_CAST key[location]; }
+
+			@Override
+			protected final KeySetSpliterator makeForSplit(int pos, int maxPos) {
+				return new KeySetSpliterator(pos, maxPos);
 			}
 
 			@Override
-			public void clear() {
-				ARRAY_MAP.this.clear();
+			SUPPRESS_WARNINGS_KEY_UNCHECKED
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				while (pos < size) {
+					action.accept(KEY_GENERIC_CAST key[pos++]);
+				}
 			}
-		};
+		}
+		
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+			return new KeySetSpliterator(0, size);
+		}
+
+		@Override
+		public int size() {
+			return size;
+		}
+
+		@Override
+		public void clear() {
+			ARRAY_MAP.this.clear();
+		}
 	}
 
 	@Override
-	public VALUE_COLLECTION VALUE_GENERIC values() {
-		return new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
-
-			@Override
-			public boolean contains(final VALUE_TYPE v) {
-				return containsValue(v);
-			}
-
-			@Override
-			public VALUE_PACKAGE.VALUE_ITERATOR VALUE_GENERIC iterator() {
-				return new VALUE_PACKAGE.VALUE_ITERATOR VALUE_GENERIC() {
-					int pos = 0;
-					@Override
-					public boolean hasNext() {
-						return pos < size;
-					}
-
-					@Override
-					SUPPRESS_WARNINGS_VALUE_UNCHECKED
-					public VALUE_GENERIC_TYPE NEXT_VALUE() {
-						if (! hasNext()) throw new NoSuchElementException();
-						return VALUE_GENERIC_CAST value[pos++];
-					}
-
-					@Override
-					public void remove() {
-						if (pos == 0) throw new IllegalStateException();
-						final int tail = size - pos;
-						System.arraycopy(key, pos, key, pos - 1, tail);
-						System.arraycopy(value, pos, value, pos - 1, tail);
-						size--;
-					}
-
-					@Override
-					SUPPRESS_WARNINGS_VALUE_UNCHECKED
-					public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
-						while (pos < size) {
-							action.accept(VALUE_GENERIC_CAST value[pos++]);
-						}
-					}
+	public SET KEY_GENERIC keySet() {
+		return new KeySet();	
+	}
 	
-					// TODO either override skip or extend from AbstractIndexBasedIterator.
-				};
-			}
-			
-			final class ValuesSpliterator extends VALUE_PACKAGE.VALUE_SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator VALUE_GENERIC
-					implements VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC {
+	private final class ValuesCollection extends VALUE_ABSTRACT_COLLECTION VALUE_GENERIC implements VALUE_COLLECTION.ImplementsSpliterator VALUE_GENERIC { 
+		@Override
+		public boolean contains(final VALUE_TYPE v) {
+			return containsValue(v);
+		}
 
-				ValuesSpliterator(int pos, int maxPos) {
-					super(pos, maxPos);
-				} 
-
+		@Override
+		public VALUE_PACKAGE.VALUE_ITERATOR VALUE_GENERIC iterator() {
+			return new VALUE_PACKAGE.VALUE_ITERATOR VALUE_GENERIC() {
+				int pos = 0;
 				@Override
-				public int characteristics() {
-					return VALUE_PACKAGE.VALUE_SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS
-						| java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
+				public boolean hasNext() {
+					return pos < size;
 				}
 
 				@Override
 				SUPPRESS_WARNINGS_VALUE_UNCHECKED
-				protected final VALUE_GENERIC_TYPE get(int location) { return VALUE_GENERIC_CAST value[location]; }
+				public VALUE_GENERIC_TYPE NEXT_VALUE() {
+					if (! hasNext()) throw new NoSuchElementException();
+					return VALUE_GENERIC_CAST value[pos++];
+				}
 
 				@Override
-				protected final ValuesSpliterator makeForSplit(int pos, int maxPos) {
-					return new ValuesSpliterator(pos, maxPos);
+				public void remove() {
+					if (pos == 0) throw new IllegalStateException();
+					final int tail = size - pos;
+					System.arraycopy(key, pos, key, pos - 1, tail);
+					System.arraycopy(value, pos, value, pos - 1, tail);
+					size--;
 				}
 
 				@Override
@@ -548,23 +514,61 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 						action.accept(VALUE_GENERIC_CAST value[pos++]);
 					}
 				}
-			}
-			
+
+				// TODO either override skip or extend from AbstractIndexBasedIterator.
+			};
+		}
+		
+		final class ValuesSpliterator extends VALUE_PACKAGE.VALUE_SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator VALUE_GENERIC
+				implements VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC {
+
+			ValuesSpliterator(int pos, int maxPos) {
+				super(pos, maxPos);
+			} 
+
 			@Override
-			public VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC spliterator() {
-				return new ValuesSpliterator(0, size);
+			public int characteristics() {
+				return VALUE_PACKAGE.VALUE_SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS
+					| java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED;
 			}
 
 			@Override
-			public int size() {
-				return size;
+			SUPPRESS_WARNINGS_VALUE_UNCHECKED
+			protected final VALUE_GENERIC_TYPE get(int location) { return VALUE_GENERIC_CAST value[location]; }
+
+			@Override
+			protected final ValuesSpliterator makeForSplit(int pos, int maxPos) {
+				return new ValuesSpliterator(pos, maxPos);
 			}
 
 			@Override
-			public void clear() {
-				ARRAY_MAP.this.clear();
+			SUPPRESS_WARNINGS_VALUE_UNCHECKED
+			public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
+				while (pos < size) {
+					action.accept(VALUE_GENERIC_CAST value[pos++]);
+				}
 			}
-		};
+		}
+		
+		@Override
+		public VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC spliterator() {
+			return new ValuesSpliterator(0, size);
+		}
+
+		@Override
+		public int size() {
+			return size;
+		}
+
+		@Override
+		public void clear() {
+			ARRAY_MAP.this.clear();
+		}
+	}
+
+	@Override
+	public VALUE_COLLECTION VALUE_GENERIC values() {
+		return new ValuesCollection();
 	}
 
 	/** Returns a deep copy of this map.

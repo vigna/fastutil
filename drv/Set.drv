@@ -54,6 +54,12 @@ public interface SET KEY_GENERIC extends COLLECTION KEY_GENERIC, Set<KEY_GENERIC
 	 * {@link java.util.Collection#spliterator()}, which was already
 	 * strengthened in the corresponding type-specific class,
 	 * but was weakened by the fact that this interface extends {@link Set}.
+	 *
+	 * @implNote If this method has a widened spliterator method (e.g.
+	 * {@code intSpliterator} on {@code ShortCollection}), this default implementation will
+	 * delegate to that method. This means if you override this method, you should override
+	 * the widened spliterator method to return a {@code widen()} wrapping the return of
+	 * this method.  
 	 */
 	@Override
 #if SPLITERATOR_ASSURE_OVERRIDE
@@ -75,8 +81,12 @@ public interface SET KEY_GENERIC extends COLLECTION KEY_GENERIC, Set<KEY_GENERIC
 #if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
 	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
-				KEY_WIDENED_ITERATOR_METHOD(), getSizeOf(this), SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS));
+		if (this instanceof ImplementsSpliterator) {
+			return SPLITERATORS.widen(spliterator());
+		} else {
+			return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
+					KEY_WIDENED_ITERATOR_METHOD(), getSizeOf(this), SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS));
+		}
 	}
 #endif
 
@@ -136,4 +146,16 @@ public interface SET KEY_GENERIC extends COLLECTION KEY_GENERIC, Set<KEY_GENERIC
 	}
 
 #endif
+
+	/** Reabstracts the inappropriate {@code spliterator} method from the type-specific set interface. */
+	public static interface ImplementsSpliterator KEY_GENERIC extends SET KEY_GENERIC, COLLECTION.ImplementsSpliterator KEY_GENERIC {
+		// Reabstract the inappropriate default from Collection
+		abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
+		default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
+			return COLLECTION.ImplementsSpliterator.super.KEY_WIDENED_SPLITERATOR_METHOD();
+		}
+#endif
+	}
 }

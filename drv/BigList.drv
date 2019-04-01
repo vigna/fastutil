@@ -103,8 +103,12 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 #if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
 	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
-				KEY_WIDENED_ITERATOR_METHOD(), size64(), SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS));
+		if (this instanceof ImplementsTypeSpecificSpliterator) {
+			return SPLITERATORS.widen(spliterator());
+		} else {
+			return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
+					KEY_WIDENED_ITERATOR_METHOD(), size64(), SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS));
+		}
 	}
 #endif
 
@@ -286,5 +290,17 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 #endif
 
 	// Without any toBigArray methods, there is no sensible default sort methods we can have.
+
+	/** Reabstracts the inappropriate {@code spliterator} method from the type-specific big list interface. */
+	public static interface ImplementsSpliterator KEY_GENERIC extends BIG_LIST KEY_GENERIC, COLLECTION.ImplementsSpliterator KEY_GENERIC {
+		// Reabstract the inappropriate default from Collection
+		abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
+		default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
+			return COLLECTION.ImplementsSpliterator.super.KEY_WIDENED_SPLITERATOR_METHOD();
+		}
+#endif
+	}
 
 }
