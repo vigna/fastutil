@@ -49,6 +49,15 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	/** The number of valid entries in {@link #key} and {@link #value}. */
 	private int size;
 
+	/** Cached set of entries. */
+	private transient FastEntrySet KEY_VALUE_GENERIC entries;
+
+	/** Cached set of keys. */
+	private transient SET KEY_GENERIC keys;
+
+	/** Cached collection of values. */
+	private transient VALUE_COLLECTION VALUE_GENERIC values;
+
 	/** Creates a new empty array map with given key and value backing arrays. The resulting map will have as many entries as the given arrays.
 	 *
 	 * <p>It is responsibility of the caller that the elements of {@code key} are distinct.
@@ -280,7 +289,10 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	}
 
 	@Override
-	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() { return new EntrySet(); }
+	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() { 
+		if (entries == null) entries = new EntrySet();
+		return entries;
+	}
 
 	private int findKey(final KEY_TYPE k) {
 		final KEY_TYPE[] key = this.key;
@@ -372,7 +384,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	@Override
 	public SET KEY_GENERIC keySet() {
-		return new ABSTRACT_SET KEY_GENERIC() {
+		if (keys == null) keys = new ABSTRACT_SET KEY_GENERIC() {
 			@Override
 			public boolean contains(final KEY_TYPE k) {
 				return findKey(k) != -1;
@@ -471,11 +483,12 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				ARRAY_MAP.this.clear();
 			}
 		};
+		return keys;
 	}
 
 	@Override
 	public VALUE_COLLECTION VALUE_GENERIC values() {
-		return new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
+		if (values == null) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
 
 			@Override
 			public boolean contains(final VALUE_TYPE v) {
@@ -565,6 +578,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				ARRAY_MAP.this.clear();
 			}
 		};
+		return values;
 	}
 
 	/** Returns a deep copy of this map.
@@ -586,6 +600,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		}
 		c.key = key.clone();
 		c.value = value.clone();
+		c.entries = null;
+		c.keys = null;
+		c.values = null;
 		return c;
 	}
 
