@@ -1329,7 +1329,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 	}
 
-
 	/** Returns a type-specific list iterator on the elements in this set, starting from a given element of the set.
 	 * Please see the class documentation for implementation details.
 	 *
@@ -1350,6 +1349,24 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	@Override
 	public KEY_LIST_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
+	}
+
+	private static final int SPLITERATOR_CHARACTERISTICS = SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.ORDERED;
+
+	/** {@inheritDoc}
+	 *
+	 * <p>There isn't a way to split efficiently while still preserving order for a linked data structure,
+	 * so this implementation is just backed by the iterator. Thus, this spliterator is not well optimized
+	 * for parallel streams.
+	 *
+	 * <p>Note, contrary to the specification of {@link java.util.SortedSet}, this spliterator does not,
+	 * report {@link java.util.Spliterators.SORTED}. This is because iteration order is based on insertion
+	 * order, not natural ordering.
+	 */
+	@Override
+	public KEY_SPLITERATOR spliterator() {
+		return SPLITERATORS.AS_KEY_SPLITERATOR(java.util.Spliterators.spliterator(
+			iterator(), it.unimi.dsi.fastutil.Size64.getSizeOf(this), SPLITERATOR_CHARACTERISTICS));
 	}
 
 #else
@@ -1453,11 +1470,135 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			last = -1; // You can no longer remove this entry.
 			if (ASSERTS) checkTable();
 		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while(hasNext()) {
+				c--;
+				if (mustReturnNull) {
+					mustReturnNull = false;
+					last = n;
+					action.accept(key[n]);
+					continue;
+				}
+				final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+				for(;;) {
+					if (--pos < 0) {
+						// We are just enumerating elements from the wrapped list.
+						last = Integer.MIN_VALUE;
+						action.accept(wrapped.GET_KEY(- pos - 1));
+						break;
+					} else if (! KEY_IS_NULL(key[pos])) {
+						action.accept(key[last = pos]);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	@Override
 	public KEY_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
+	}
+
+	private class SetSpliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		/** The index (which bucket) of the next item to give to the action.
+		 * Unlike {@link SetIterator}, this counts up instead of down.
+		 */
+		int pos = 0;
+		/** The maximum bucket (exclusive) to iterate to */
+		int max = n;
+		/** An upwards counter counting how many we have given */
+		int c = 0;
+		/** A boolean telling us whether we should return the null key. */
+		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
+		boolean hasSplit = false;
+
+		SetSpliterator() {}
+
+		SetSpliterator(int pos, int max, boolean mustReturnNull, boolean hasSplit) {
+			this.pos = pos;
+			this.max = max;
+			this.mustReturnNull = mustReturnNull;
+			this.hasSplit = hasSplit;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				action.accept(key[n]);
+				++c;
+				return true;
+			}
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+			while (pos < max) {
+				if (! KEY_IS_NULL(key[pos])) {
+					action.accept(key[pos++]);
+					++c;
+					return true;
+				}
+				++pos;
+			}
+			return false;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				action.accept(key[n]);
+				++c;
+			}
+			while (pos < max) {
+				final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+				if (! KEY_IS_NULL(key[pos])) {
+					action.accept(key[pos]);
+					++c;
+				}
+				++pos;
+			}
+		}
+
+		@Override
+		public int characteristics() {
+			return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
+		}
+
+		@Override
+		public long estimateSize() {
+			if (!hasSplit) {
+				// Root spliterator; we know how many are remaining.
+				return size - c;
+			} else {
+				// After we split, we have no idea how many there are.
+				// loadFactor * (max - pos) aka loadFactor * numberOfBucketsLeft seems like a good estimate.
+				return (long)(f * (max - pos)) + (mustReturnNull ? 1 : 0);
+			}
+		}
+
+		@Override
+		public SetSpliterator trySplit() {
+			if (pos >= max - 1) return null;
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 0) return null;
+			int myNewPos = pos + retLen;
+			int retPos = pos;
+			int retMax = pos + retLen;
+			// Since null is returned first, and the convention is that the returned split is the prefix of elements,
+			// the split will take care of returning null (if needed), and we won't return it anymore.
+			SetSpliterator split = new SetSpliterator(retPos, retMax, mustReturnNull, true);
+			this.pos = myNewPos;
+			this.mustReturnNull = false;
+			this.hasSplit = true;
+			return split;
+		}
+	}
+
+	@Override
+	public KEY_SPLITERATOR spliterator() {
+		return new SetSpliterator();
 	}
 
 #endif

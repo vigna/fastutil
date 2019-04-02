@@ -93,14 +93,14 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-#if (defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED) || KEYS_REFERENCE
-		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(
-				iterator(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS));
-#elif KEY_CLASS_Boolean
+#if (defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED) || KEYS_REFERENCE || KEY_CLASS_Boolean
+#if KEY_CLASS_Boolean
 		// TODO this default implementation boxes and unboxes, which is not ideal.
 		// But to fix that would require either reimplementing Spliterators.spliterator(Iterable) for BooleanIterable.
 		// Or provide a view to expose BooleanCollection as ints C style and then wrap Spliterators.spliterator(Spliterator.OfInt).
-		return SPLITERATORS.AS_KEY_SPLITERATOR(Collection.super.spliterator());
+#endif
+		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(
+				iterator(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS));
 #else
 		return SPLITERATORS.narrow(KEY_WIDENED_SPLITERATOR_METHOD());
 #endif

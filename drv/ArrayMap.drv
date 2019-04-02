@@ -50,6 +50,15 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	/** The number of valid entries in {@link #key} and {@link #value}. */
 	private int size;
 
+	/** Cached set of entries. */
+	private transient FastEntrySet KEY_VALUE_GENERIC entries;
+
+	/** Cached set of keys. */
+	private transient SET KEY_GENERIC keys;
+
+	/** Cached collection of values. */
+	private transient VALUE_COLLECTION VALUE_GENERIC values;
+
 	/** Creates a new empty array map with given key and value backing arrays. The resulting map will have as many entries as the given arrays.
 	 *
 	 * <p>It is responsibility of the caller that the elements of {@code key} are distinct.
@@ -149,7 +158,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public void forEachRemaining(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
-					while (next < size) {
+					// Hoist containing class field ref into local
+					final int max = size;
+					while (next < max) {
 						action.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[curr = next], VALUE_GENERIC_CAST value[next++]));
 					}
 				}
@@ -192,7 +203,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public void forEachRemaining(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
-					while (next < size) {
+					// Hoist containing class field ref into local
+					final int max = size;
+					while (next < max) {
 						entry.key = KEY_GENERIC_CAST key[curr = next];
 						entry.value = VALUE_GENERIC_CAST value[next++];
 						action.accept(entry);
@@ -230,6 +243,27 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		public ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> spliterator() {
 			return new EntrySetSpliterator(0, size);
+		}
+
+		/** {@inheritDoc} */
+		@Override
+		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
+			// Hoist containing class field ref into local
+			for (int i = 0, max = size; i < max; ++i) {
+				action.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[i], VALUE_GENERIC_CAST value[i]));
+			}
+		}
+
+		/** {@inheritDoc} */
+		@Override
+		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
+			final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC_DIAMOND ();
+			// Hoist containing class field ref into local
+			for (int i = 0, max = size; i < max; ++i) {
+				entry.key = KEY_GENERIC_CAST key[i];
+				entry.value = VALUE_GENERIC_CAST value[i];
+				action.accept(entry);
+			}
 		}
 
 		@Override
@@ -281,7 +315,10 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	}
 
 	@Override
-	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() { return new EntrySet(); }
+	public FastEntrySet KEY_VALUE_GENERIC ENTRYSET() { 
+		if (entries == null) entries = new EntrySet();
+		return entries;
+	}
 
 	private int findKey(final KEY_TYPE k) {
 		final KEY_TYPE[] key = this.key;
@@ -416,7 +453,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
 				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-					while (pos < size) {
+					// Hoist containing class field ref into local
+					final int max = size;
+					while (pos < max) {
 						action.accept(KEY_GENERIC_CAST key[pos++]);
 					}
 				}
@@ -449,7 +488,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			@Override
 			SUPPRESS_WARNINGS_KEY_UNCHECKED
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-				while (pos < size) {
+				// Hoist containing class field ref into local
+				final int max = size;
+				while (pos < max) {
 					action.accept(KEY_GENERIC_CAST key[pos++]);
 				}
 			}
@@ -458,6 +499,14 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 			return new KeySetSpliterator(0, size);
+		}
+
+		@Override
+		public void forEach(METHOD_ARG_KEY_CONSUMER action) {
+			// Hoist containing class field ref into local
+			for (int i = 0, max = size; i < size; ++i) {
+				action.accept(KEY_GENERIC_CAST key[i]);
+			}
 		}
 
 		@Override
@@ -473,7 +522,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	@Override
 	public SET KEY_GENERIC keySet() {
-		return new KeySet();	
+		if (keys == null) keys = new KeySet();
+		return keys;
 	}
 	
 	private final class ValuesCollection extends VALUE_ABSTRACT_COLLECTION VALUE_GENERIC implements VALUE_COLLECTION.ImplementsSpliterator VALUE_GENERIC { 
@@ -510,7 +560,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_VALUE_UNCHECKED
 				public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
-					while (pos < size) {
+					// Hoist containing class field ref into local
+					final int max = size;
+					while (pos < max) {
 						action.accept(VALUE_GENERIC_CAST value[pos++]);
 					}
 				}
@@ -544,7 +596,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			@Override
 			SUPPRESS_WARNINGS_VALUE_UNCHECKED
 			public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
-				while (pos < size) {
+				// Hoist containing class field ref into local
+				final int max = size;
+				while (pos < max) {
 					action.accept(VALUE_GENERIC_CAST value[pos++]);
 				}
 			}
@@ -553,6 +607,14 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		public VALUE_PACKAGE.VALUE_SPLITERATOR VALUE_GENERIC spliterator() {
 			return new ValuesSpliterator(0, size);
+		}
+
+		@Override
+		public void forEach(METHOD_ARG_VALUE_CONSUMER action) {
+			// Hoist containing class field ref into local
+			for (int i = 0, max = size; i < max; ++i) {
+				action.accept(VALUE_GENERIC_CAST value[i]);
+			}
 		}
 
 		@Override
@@ -568,7 +630,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	@Override
 	public VALUE_COLLECTION VALUE_GENERIC values() {
-		return new ValuesCollection();
+		if (values == null) values = new ValuesCollection();
+		return values;
 	}
 
 	/** Returns a deep copy of this map.
@@ -590,6 +653,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		}
 		c.key = key.clone();
 		c.value = value.clone();
+		c.entries = null;
+		c.keys = null;
+		c.values = null;
 		return c;
 	}
 

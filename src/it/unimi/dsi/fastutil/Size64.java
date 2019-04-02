@@ -62,4 +62,14 @@ public interface Size64 {
 	public static long getSizeOf(Collection<?> c) {
 		return c instanceof Size64 ? ((Size64)c).size64() : c.size();
 	}
+
+	/** Returns the size for a given {@link java.util.Map} as a {@code long}, using {@link #size64()}
+	 * if applicable, else using {@link java.util.Map#size()}.
+	 *
+	 * @param the map whose size to get
+	 * @return the size
+	 */
+	public static long getSizeOf(java.util.Map<?, ?> m) {
+		return m instanceof Size64 ? ((Size64)m).size64() : m.size();
+	}
 }
