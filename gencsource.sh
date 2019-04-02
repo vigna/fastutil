@@ -610,6 +610,8 @@ fi)\
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
 "#define REMOVE_FIRST_VALUE removeFirst${TYPE_STD[$v]}\n"\
 "#define REMOVE_LAST_VALUE removeLast${TYPE_STD[$v]}\n"\
+"#define AS_VALUE_ITERATOR as${TYPE_CAP2[$v]}Iterator\n"\
+"#define AS_VALUE_SPLITERATOR as${TYPE_CAP2[$v]}Spliterator\n"\
 \
 \
 "/* Methods (keys/values) */\n"\
