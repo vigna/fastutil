@@ -139,6 +139,15 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 	}
 
+	private void initArrayFromCapacity(final int capacity) {
+		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
+		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+		else a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
+#if ! KEYS_PRIMITIVE
+		wrapped = false;
+#endif
+	}
+
 	/** Creates a new array list with given capacity.
 	 *
 	 * @param capacity the initial capacity of the array list (may be 0).
@@ -146,12 +155,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_LIST(final int capacity) {
-		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
-		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
-		else a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
-#if ! KEYS_PRIMITIVE
-		wrapped = false;
-#endif
+		initArrayFromCapacity(capacity);
 	}
 
 	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity. */
@@ -170,17 +174,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 
 	public ARRAY_LIST(final Collection<? extends KEY_GENERIC_CLASS> c) {
-		this(c.size());
 		if (c instanceof ARRAY_LIST) {
 			a = copyArrayFromSafe((ARRAY_LIST KEY_EXTENDS_GENERIC)c);
-		} else if (c instanceof LIST) {
-			((LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = c.size());
+			size = a.length;
 		} else {
+			initArrayFromCapacity(c.size());
+			if (c instanceof LIST) {
+				((LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = c.size());
+			} else {
 #if KEYS_PRIMITIVE
-			size = ITERATORS.unwrap(ITERATORS.AS_KEY_ITERATOR(c.iterator()), a);
+				size = ITERATORS.unwrap(ITERATORS.AS_KEY_ITERATOR(c.iterator()), a);
 #else
-			size = ITERATORS.unwrap(c.iterator(), a);
+				size = ITERATORS.unwrap(c.iterator(), a);
 #endif
+			}
 		}
 	}
 
@@ -190,13 +197,16 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 
 	public ARRAY_LIST(final COLLECTION KEY_EXTENDS_GENERIC c) {
-		this(c.size());
 		if (c instanceof ARRAY_LIST) {
 			a = copyArrayFromSafe((ARRAY_LIST KEY_EXTENDS_GENERIC)c);
-		} else if (c instanceof LIST) {
-			((LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = c.size());
+			size = a.length;
 		} else {
-			size = ITERATORS.unwrap(c.iterator(), a);
+			initArrayFromCapacity(c.size());
+			if (c instanceof LIST) {
+				((LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = c.size());
+			} else {
+				size = ITERATORS.unwrap(c.iterator(), a);
+			}
 		}
 	}
 
@@ -206,10 +216,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 
 	public ARRAY_LIST(final LIST KEY_EXTENDS_GENERIC l) {
-		this(l.size());
 		if (l instanceof ARRAY_LIST) {
 			a = copyArrayFromSafe((ARRAY_LIST KEY_EXTENDS_GENERIC)l);
+			size = a.length;
 		} else {
+			initArrayFromCapacity(l.size());
 			l.getElements(0, a, 0, size = l.size());
 		}
 	}
@@ -524,17 +535,18 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			@Override
 			protected final void remove(int i) { SubList.this.REMOVE_KEY(i); }
 			@Override
-			protected final int getMaxPos() { return to; }
+			protected final int getMaxPos() { return to - from; }
 
 			@Override
-			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[lastReturned = pos++]; }
+			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[from + (lastReturned = pos++)]; }
 			@Override
-			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[lastReturned = --pos]; }
+			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[from + (lastReturned = --pos)]; }
 
 			@Override
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-				while(pos < to) {
-					action.accept(a[from + (lastReturned = ++pos)]);
+				final int max = to - from;
+				while(pos < max) {
+					action.accept(a[from + (lastReturned = pos++)]);
 				}
 			}
 		}
@@ -1011,7 +1023,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	private static void fatal(String msg) {
 		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
@@ -1371,6 +1383,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		/* Now we play with constructors. */
 		ensure(m.equals(new ARRAY_LIST((Collection)m)), "Error (" + level + ", " + seed + "): m does not equal new (Collection m)");
 		ensure((new ARRAY_LIST((Collection)m)).equals(m), "Error (" + level + ", " + seed + "): new (Collection m)does not equal m");
+		ensure(m.equals(new ARRAY_LIST(new java.util.ArrayList(m))), "Error (" + level + ", " + seed + "): m does not equal new (Collection m)");
+		ensure((new ARRAY_LIST(new java.util.ArrayList(m)).equals(m)), "Error (" + level + ", " + seed + "): new (Collection m)does not equal m");
 		ensure(m.equals(new ARRAY_LIST((COLLECTION)m)), "Error (" + level + ", " + seed + "): m does not equal new (type-specific Collection m)");
 		ensure((new ARRAY_LIST((COLLECTION)m)).equals(m), "Error (" + level + ", " + seed + "): new (type-specific Collection m) does not equal m");
 		ensure(m.equals(new ARRAY_LIST((LIST)m)), "Error (" + level + ", " + seed + "): m does not equal new (type-specific List m)");
@@ -1482,6 +1496,31 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 			}
 
+		}
+		
+		/* Now we play with spliterators.
+		 *
+		 * Or rather we would, except comparing results of spliterators directly is a bit painful.
+		 * However, there is an easy workaround; use streams, which are built on Spliterators.
+		 */
+		{
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD(); 
+			java.util.stream.Stream<KEY_GENERIC_CLASS> j = t.stream();
+
+#if KEY_CLASS_Long
+			long[] iArray = i.toArray();
+			long[] jArray = j.mapToLong(Number::longValue).toArray();
+#elif KEY_CLASS_Float || KEY_CLASS_Double
+			double[] iArray = i.toArray();
+			double[] jArray = j.mapToDouble(Number::doubleValue).toArray();
+#elif KEYS_REFERENCE || KEY_CLASS_Boolean
+			Object[] iArray = i.toArray();
+			Object[] jArray = j.toArray();
+#else
+			int[] iArray = i.toArray();
+			int[] jArray = j.mapToInt(Number::intValue).toArray();
+#endif
+			ensure(java.util.Arrays.equals(iArray, jArray), "Error (" + level + ", " + seed + "): divergence in toArray() from streams (" + java.util.Arrays.toString(iArray) + " != " + java.util.Arrays.toString(jArray) + ")");
 		}
 
 		{

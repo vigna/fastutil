@@ -789,7 +789,7 @@ public final class ITERATORS {
 		protected final int minPos;
 		/** The current position index, the index of the item to be returned after the next call to {@link #next()}.
 		 *
-		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (on a best effort, so concurrent
+		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (exclusive) (on a best effort, so concurrent
 		 * structural modifications outside this iterator may cause this to be violated, but that usually invalidates
 		 * iterators anyways). Thus {@code pos} being {@code minPos + 2} would mean {@link #next()}
 		 * was called twice and the next call will return the third element of this iterator.
@@ -813,7 +813,7 @@ public final class ITERATORS {
 		 *
 		 * <p>Do <em>not</em> advance {@link #pos} in this method; the default {@code next} method takes care of this.
 		 *
-		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()}.
+		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()} (exclusive).
 		 * Thus, a {@code location} of {@code minPos + 2} would mean {@link #next()} was called twice
 		 * and this method should return what the next call to {@link #next()} should return.
 		 */
@@ -829,7 +829,9 @@ public final class ITERATORS {
 		 */
 		protected abstract void remove(int location);
 
-		/** The maximum pos can be, and is the logical end of the "range".
+		/** The maximum pos can be, and is the logical end (exclusive) of the "range".
+		 *
+		 * <p>If pos is equal to the return of this method, this means the last element has been returned and the next call to {@link #next()} will throw.
 		 * 
 		 * <p>Usually set return the parent {@linkplain Collection#size() collection's size}, but does not have to be
 		 * (for example, sublists and subranges).
