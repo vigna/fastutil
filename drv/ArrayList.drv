@@ -114,6 +114,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private static final KEY_GENERIC KEY_GENERIC_TYPE[] copyArraySafe(KEY_GENERIC_TYPE[] a, int length) {
+		if (length == 0) return KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
 #if KEYS_PRIMITIVE
 		return java.util.Arrays.copyOf(a, length);
 #else
@@ -132,10 +133,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @param a the array that will be used to back this array list.
 	 */
 
-	protected ARRAY_LIST(final KEY_GENERIC_TYPE a[], @SuppressWarnings("unused") boolean dummy) {
+	protected ARRAY_LIST(final KEY_GENERIC_TYPE a[], @SuppressWarnings("unused") boolean wrapped) {
 		this.a = a;
 #if ! KEYS_PRIMITIVE
-		this.wrapped = true;
+		this.wrapped = wrapped;
 #endif
 	}
 
@@ -318,7 +319,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC wrap(final KEY_GENERIC_TYPE a[], final int length) {
 		if (length > a.length) throw new IllegalArgumentException("The specified length (" + length + ") is greater than the array size (" + a.length + ")");
-		final ARRAY_LIST KEY_GENERIC l = new ARRAY_LIST KEY_GENERIC_DIAMOND(a, false);
+		final ARRAY_LIST KEY_GENERIC l = new ARRAY_LIST KEY_GENERIC_DIAMOND(a, true);
 		l.size = length;
 		return l;
 	}
@@ -917,8 +918,26 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public ARRAY_LIST KEY_GENERIC clone() {
-		// Preserve backwards compatibility and make new list have Object[] even if it was wrapped from some subclass.
-		return wrap(copyArraySafe(a, size));
+		ARRAY_LIST KEY_GENERIC cloned = null;
+		// Test for shortcut we can do if exactly an ArrayList
+		if (getClass() == ARRAY_LIST.class) {
+			// Preserve backwards compatibility and make new list have Object[] even if it was wrapped from some subclass.
+			cloned = new ARRAY_LIST KEY_GENERIC_DIAMOND(copyArraySafe(a, size), false);
+			cloned.size = size;
+		} else {
+			try {
+				cloned = (ARRAY_LIST KEY_GENERIC)super.clone();
+			} catch (CloneNotSupportedException err) {
+				// Can't happen
+				throw new InternalError(err);
+			}
+			// Preserve backwards compatibility and make new list have Object[] even if it was wrapped from some subclass.
+			cloned.a = copyArraySafe(a, size);
+#if ! KEYS_PRIMITIVE
+			// We can't clear cloned.wrapped because it is final.
+#endif
+		}
+		return cloned;
 	}
 
 #if KEY_CLASS_Object
