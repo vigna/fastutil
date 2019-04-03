@@ -513,7 +513,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		assert size <= a.length;
 	}
 
-	private class SubList extends ABSTRACT_LIST.SUBLIST_RANDOM_ACCESS KEY_GENERIC {
+	private class SubList extends ABSTRACT_LIST.SUBLIST_RANDOM_ACCESS KEY_GENERIC implements LIST.ImplementsSpliterator KEY_GENERIC {
 		private static final long serialVersionUID = -3185226345314976296L;
 
 		protected SubList(int from, int to) {
@@ -838,7 +838,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		int pos, max;
 
 #ifdef TEST
-		// Sentinal to make sure we don't accidentally use size when we mean max
+		// Sentinel to make sure we don't accidentally use size when we mean max
 		@Deprecated
 		private final Object size = null;
 #endif
@@ -934,6 +934,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @return true if the argument contains the same elements of this type-specific array list.
 	 */
 	public boolean equals(final ARRAY_LIST KEY_GENERIC l) {
+		// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized. 
 		if (l == this) return true;
 		int s = size();
 		if (s != l.size()) return false;
@@ -953,8 +954,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public boolean equals(Object o) {
 		return o instanceof ARRAY_LIST ? equals((ARRAY_LIST KEY_GENERIC)o) : super.equals(o);
 	}
-		
-
 
 #if ! KEY_CLASS_Reference
 
@@ -970,7 +969,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final ARRAY_LIST KEY_EXTENDS_GENERIC l) {
-		// TODO When minimum version of JDK becomes JDK 9, use Arrays.compare, which vectorizes.
+		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
 		KEY_GENERIC_TYPE e1, e2;
@@ -1205,6 +1204,14 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 		ensure(m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals(t) after add/remove");
 		ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after add/remove");
+
+#if KEYS_PRIMITIVE
+		/* Now we sort the data and make sure the results is the same. */
+		m.sort(null);
+		t.sort(null);
+		ensure(m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals(t) after sort");
+		ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after sort");
+#endif
 
 		/* Now we add random data in m and t using addAll on a collection, checking that the result is the same. */
 
