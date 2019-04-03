@@ -51,6 +51,98 @@ public class IntArrayListTest {
 	}
 
 	@Test
+	public void testAddUsingIterator() {
+		final IntArrayList list = new IntArrayList();
+		list.add(24);
+		list.add(42);
+		final IntListIterator it = list.listIterator(1);
+		it.add(86);
+		assertTrue(it.hasNext());
+		assertEquals(IntArrayList.wrap(new int[] { 24, 86, 42}), list);
+	}
+
+	@Test
+	public void testAddUsingSublistIterator() {
+		final IntArrayList list = new IntArrayList();
+		list.add(24);
+		list.add(42);
+		final IntList sublist = list.subList(1,2);
+		final IntListIterator it = sublist.listIterator();
+		it.add(86);
+		assertTrue(it.hasNext());
+		assertEquals(IntArrayList.wrap(new int[] { 86, 42 }), sublist);
+		assertEquals(IntArrayList.wrap(new int[] { 24, 86, 42 }), list);
+	}
+
+	@Test
+	public void testAddUsingSubSublistIterator() {
+		final IntArrayList list = new IntArrayList();
+		list.add(24);
+		list.add(86);
+		list.add(42);
+		final IntList sublist = list.subList(1,3);
+		assertEquals(IntArrayList.wrap(new int[] { 86, 42 }), sublist);
+		final IntList subsublist = sublist.subList(0,1);
+		assertEquals(IntArrayList.wrap(new int[] { 86 }), subsublist);
+		final IntListIterator it = subsublist.listIterator();
+		assertTrue(it.hasNext());
+		it.add(126);
+		assertTrue(it.hasNext());
+		assertEquals(IntArrayList.wrap(new int[] { 126, 86 }), subsublist);
+		assertEquals(IntArrayList.wrap(new int[] { 126, 86, 42 }), sublist);
+		assertEquals(IntArrayList.wrap(new int[] { 24, 126, 86, 42 }), list);
+	}
+
+	@Test
+	public void testRemoveUsingIterator() {
+		final IntArrayList list = new IntArrayList();
+		list.add(24);
+		list.add(42);
+		final IntListIterator it = list.listIterator(1);
+		assertEquals(42, it.nextInt());
+		it.remove();
+		assertFalse(it.hasNext());
+		assertEquals(IntArrayList.wrap(new int[] { 24 }), list);
+	}
+
+	@Test
+	public void testRemoveUsingSublistIterator() {
+		final IntArrayList list = new IntArrayList();
+		list.add(24);
+		list.add(86);
+		list.add(42);
+		final IntList sublist = list.subList(1,3);
+		final IntListIterator it = sublist.listIterator();
+		assertEquals(86, it.nextInt());
+		it.remove();
+		assertTrue(it.hasNext());
+		assertEquals(IntArrayList.wrap(new int[] { 42 }), sublist);
+		assertEquals(IntArrayList.wrap(new int[] { 24, 42 }), list);
+	}
+
+
+	@Test
+	public void testRemoveUsingSubSublistIterator() {
+		final IntArrayList list = new IntArrayList();
+		list.add(24);
+		list.add(126);
+		list.add(86);
+		list.add(42);
+		final IntList sublist = list.subList(1,3);
+		assertEquals(IntArrayList.wrap(new int[] { 126, 86 }), sublist);
+		final IntList subsublist = sublist.subList(0,1);
+		assertEquals(IntArrayList.wrap(new int[] { 126 }), subsublist);
+		final IntListIterator it = subsublist.listIterator();
+		assertTrue(it.hasNext());
+		assertEquals(126, it.nextInt());
+		it.remove();
+		assertFalse(it.hasNext());
+		assertEquals(IntArrayList.wrap(new int[] { }), subsublist);
+		assertEquals(IntArrayList.wrap(new int[] { 86 }), sublist);
+		assertEquals(IntArrayList.wrap(new int[] { 24, 86, 42 }), list);
+	}
+
+	@Test
 	public void testRemoveAll() {
 		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
 		l.removeAll(IntSets.singleton(1));
@@ -58,6 +150,15 @@ public class IntArrayListTest {
 
 		l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
+	}
+
+	@Test
+	public void testClearSublist() {
+		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+		IntList sublist = l.subList(1,3);
+		sublist.clear();
+		assertEquals(IntArrayList.wrap(new int[] { }), sublist);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
 
