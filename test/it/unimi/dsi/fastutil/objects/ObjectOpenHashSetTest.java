@@ -211,6 +211,9 @@ public class ObjectOpenHashSetTest {
 		/* Now we make m into an array, make it again a set and check it is OK. */
 		Object a[] = m.toArray();
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
+		/* As above, but using streams */
+		a = m.stream().toArray();
+		assertTrue("Error: stream().toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
 		/* Now we check cloning. */
 		assertTrue("Error: m does not equal m.clone()", m.equals(m.clone()));
 		assertTrue("Error: m.clone() does not equal m", m.clone().equals(m));

@@ -405,6 +405,11 @@ public class IntOpenHashSetTest {
 		int a[] = m.toIntArray();
 
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
+		
+		/* Same, but with streams */
+		a = m.intStream().toArray();
+
+		assertTrue("Error: intStream().toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
 
 		/* Now we check cloning. */
 

@@ -18,6 +18,9 @@ package it.unimi.dsi.fastutil.objects;
 
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.io.BinIO;
 
 import java.io.ByteArrayInputStream;
@@ -58,7 +61,11 @@ public class ObjectArraySetTest {
 			assertTrue(s.contains(1));
 			assertTrue(s.contains(2));
 			assertTrue(s.contains(2));
-			assertEquals(new ObjectOpenHashSet<Integer>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 }), new ObjectOpenHashSet<Integer>(s.iterator()));
+			ObjectSet<Integer> expected = new ObjectOpenHashSet<Integer>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 });
+			assertEquals(expected, s);
+			assertEquals(s, expected); 
+			assertEquals(expected, new ObjectArrayList<>(s.iterator()));
+			assertEquals(s, new ObjectArrayList<>(s.stream().toArray()));
 			assertTrue(s.remove(3));
 			assertEquals(2 + i, s.size());
 			assertTrue(s.remove(1));

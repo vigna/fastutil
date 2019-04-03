@@ -56,7 +56,11 @@ public class IntArraySetTest {
 			assertTrue(s.contains(1));
 			assertTrue(s.contains(2));
 			assertTrue(s.contains(2));
-			assertEquals(new IntOpenHashSet(i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 }), new IntOpenHashSet(s.iterator()));
+			IntSet expected = new IntOpenHashSet(i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 });
+			assertEquals(expected, s);
+			assertEquals(s, expected); 
+			assertEquals(expected, new IntOpenHashSet(s.iterator()));
+			assertEquals(s, new IntArraySet(s.intStream().toArray()));
 			assertTrue(s.remove(3));
 			assertEquals(2 + i, s.size());
 			assertTrue(s.remove(1));
