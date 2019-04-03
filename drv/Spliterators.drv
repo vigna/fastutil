@@ -607,7 +607,7 @@ public final class SPLITERATORS {
 
 		/** The current position index, the index of the item to be given after the next call to {@link #tryAdvance}.
 		 *
-		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (on a best effort, so concurrent
+		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (exclusive) (on a best effort, so concurrent
 		 * structural modifications may cause this to be violated, but that usually invalidates spliterators anyways).
 		 * Thus {@code pos} being {@code minPos + 2} would mean {@link #tryAdvance}
 		 * was called twice and the next call will give the third element of this spliterator.
@@ -625,13 +625,15 @@ public final class SPLITERATORS {
 		 * <p>Do <em>not</em> advance {@link #pos} in this method; the default {@link #tryAdvance} and
 		 * {@link #forEachRemaining} methods takes care of this.
 		 *
-		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()}.
+		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()} (exclusive).
 		 * Thus, a {@code location} of {@code minPos + 2} would mean {@link #tryAdvance} was called twice
 		 * and this method should return what the next call to {@link #tryAdvance()} should give.
 		 */
 		protected abstract KEY_GENERIC_TYPE get(int location);
 
-		/** The maximum pos can be, and is the logical end of the "range".
+		/** The maximum pos can be, and is the logical end (exclusive) of the "range".
+		 *
+		 * <p>If pos is equal to the return of this method, this means the last element has been returned and the next call to {@link #tryAdvance} will return {@code false}.
 		 * 
 		 * <p>Usually set return the parent {@linkplain Collection#size() collection's size}, but does not have to be
 		 * (for example, sublists and subranges).
