@@ -143,9 +143,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
 		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
 		else a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
-#if ! KEYS_PRIMITIVE
-		wrapped = false;
-#endif
 	}
 
 	/** Creates a new array list with given capacity.
@@ -156,6 +153,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_LIST(final int capacity) {
 		initArrayFromCapacity(capacity);
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list with {@link #DEFAULT_INITIAL_CAPACITY} capacity. */
@@ -189,6 +189,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 			}
 		}
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list and fills it with a given type-specific collection.
@@ -208,6 +211,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 				size = ITERATORS.unwrap(c.iterator(), a);
 			}
 		}
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list and fills it with a given type-specific list.
@@ -223,6 +229,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			initArrayFromCapacity(l.size());
 			l.getElements(0, a, 0, size = l.size());
 		}
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list and fills it with the elements of a given array.
@@ -595,6 +604,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 			return new SubListSpliterator();
 		}
+
+		// We don't override subList as we want AbstractList's "sub-sublist" nesting handling,
+		// which would be tricky to do here.
+		// TODO Do override it so array access isn't sent through N indirections.
+		// This will likely mean making this class static.
 	}
 
 	@Override
@@ -1504,8 +1518,12 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		 * However, there is an easy workaround; use streams, which are built on Spliterators.
 		 */
 		{
-			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD(); 
-			java.util.stream.Stream<KEY_GENERIC_CLASS> j = t.stream();
+#if KEYS_REFERENCE || KEY_CLASS_Boolean
+			java.util.stream.Stream<KEY_CLASS> i = m.stream();
+#else
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
+#endif 
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
 
 #if KEY_CLASS_Long
 			long[] iArray = i.toArray();
@@ -1516,6 +1534,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #elif KEYS_REFERENCE || KEY_CLASS_Boolean
 			Object[] iArray = i.toArray();
 			Object[] jArray = j.toArray();
+#elif KEY_CLASS_Character
+			int[] iArray = i.toArray();
+			int[] jArray = j.mapToInt(c -> (int)c.charValue()).toArray();
 #else
 			int[] iArray = i.toArray();
 			int[] jArray = j.mapToInt(Number::intValue).toArray();
