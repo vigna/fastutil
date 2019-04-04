@@ -1,0 +1,239 @@
+/*
+ * Copyright (C) 2019 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.function.Consumer;
+
+/** A class providing static methods and objects that do useful things with type-specific spliterators on
+ * big (potentially greater then {@link Integer#MAX_VALUE} items long).
+ *
+ * Since the {@link java.util.Spliterator} interface already natively works in long indexes, most of the
+ * utility methods reside in the regular {@code Spliterators} class.
+ *
+ * @author C. Sean Young
+ * @see Spliterator
+ *
+ * @since 8.3.0
+ */
+public final class BIG_SPLITERATORS {
+
+	/**
+	 * A skeletal implementation for a spliterator backed by an index based data store. High performance
+	 * concrete implementations (like the main Spliterator of BitArrayBitList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
+	 * as {@code final} as to encourage the JVM to inline them.
+	 */
+	public static abstract class AbstractIndexBasedSpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+
+		/** The current position index, the index of the item to be given after the next call to {@link #tryAdvance}.
+		 *
+		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (exclusive) (on a best effort, so concurrent
+		 * structural modifications may cause this to be violated, but that usually invalidates spliterators anyways).
+		 * Thus {@code pos} being {@code minPos + 2} would mean {@link #tryAdvance}
+		 * was called twice and the next call will give the third element of this spliterator.
+		 */
+		protected long pos;
+		
+		protected AbstractIndexBasedSpliterator(long initialPos) {
+			this.pos = initialPos;
+		}
+
+		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+
+		/** Get the item corresponding to the given index location.
+		 *
+		 * <p>Do <em>not</em> advance {@link #pos} in this method; the default {@link #tryAdvance} and
+		 * {@link #forEachRemaining} methods takes care of this.
+		 *
+		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()} (exclusive).
+		 * Thus, a {@code location} of {@code minPos + 2} would mean {@link #tryAdvance} was called twice
+		 * and this method should return what the next call to {@link #tryAdvance()} should give.
+		 */
+		protected abstract KEY_GENERIC_TYPE get(long location);
+
+		/** The maximum pos can be, and is the logical end (exclusive) of the "range".
+		 *
+		 * <p>If pos is equal to the return of this method, this means the last element has been returned and the next call to {@link #tryAdvance} will return {@code false}.
+		 * 
+		 * <p>Usually set return the parent {@linkplain Collection#size() collection's size}, but does not have to be
+		 * (for example, sublists and subranges).
+		 *
+		 * <p>This method allows the implementation to decide how it binds on the size (late or early).
+		 * However, {@link EarlyBindingSizeIndexBasedSpliterator} and {@link LateBindingSizeIndexBasedSpliterator} give
+		 * an implementation of this method for the two most common strategies.
+		 */
+		protected abstract long getMaxPos();
+		
+		/** Make a new spliterator to {@link #trySplit()} starting with the given {@code pos}
+		 * and ending at the given {@code maxPos}.
+		 *
+		 * <p>An implementation is free to look at the range given, and if it deems it too small
+		 * to split futher, return {@code null}. In which case, {@link #trySplit()} will not
+		 * modify the state of this spliterator.
+		 *
+		 * <p>Do <em>not</em> modify {@link #pos} in this method; the default {@link #trySplit()}
+		 * method takes care of this.
+		 *
+		 * <p>To comply with the spec of {@link java.util.Spliterator#ORDERED}, this will
+		 * only be called to create prefixes of the current sequence this spliterator is over,
+		 * and this instance will start at the end of the returned sequence and have the same
+		 * end point.
+		 * As such, this method should also not change what {@link #getMaxPos()} returns.
+		 */
+		protected abstract KEY_SPLITERATOR KEY_GENERIC makeForSplit(long pos, long maxPos);
+
+		// Since this is an index based spliterator, list characteristics make sense.
+		@Override
+		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS; }
+
+		@Override
+		public long estimateSize() { return getMaxPos() - pos; }
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= getMaxPos()) return false;
+			action.accept(get(pos++));
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (final long max = getMaxPos(); pos < max; ++pos) {
+				action.accept(get(pos));
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			final long max = getMaxPos();
+			if (pos >= max) return 0;
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos += n;
+				return n;
+			}
+			n = remaining;
+			pos = max;
+			return n;
+		}
+ 
+		/** {@inheritDoc}
+		 *
+		 * This implementation always returns a prefix of the elements, in order to comply with
+		 * the {@Spliterator#ORDERED} property. This means this current iterator does not need to
+		 * to update what {@link #getMaxPos()} returns in response to this method (but it may do
+		 * "book-keeping" on it based on binding strategy). 
+		 */
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			final long max = getMaxPos();
+			long retLen = (max - pos) >> 1;
+			if (retLen <= 0) return null;
+			long mid = pos + retLen;
+			long oldPos = pos;
+			KEY_SPLITERATOR KEY_GENERIC maybeSplit = makeForSplit(oldPos, mid);
+			if (maybeSplit != null) this.pos = mid;
+			return maybeSplit; 
+		}
+	}
+
+	/**
+	 * A skeletal implementation for a spliterator backed by an index based data store. High performance
+	 * concrete implementations (like the main Spliterator of ArrayList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>This class implements an early binding strategy for {@link #getMaxPos()}. The last index
+	 * this spliterator covers is fixed at construction time and does not vary on changes to the
+	 * backing data store. This should usually be the {@linkplain Collection#size() size} of the
+	 * backing data store (until a split at least), hence the class' name, but this is not required.
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
+	 * as {@code final} as to encourage the JVM to inline them.
+	 */
+	 public static abstract class EarlyBindingSizeIndexBasedSpliterator KEY_GENERIC extends AbstractIndexBasedSpliterator KEY_GENERIC {
+	 	/** The maximum {@link #pos} can be */
+	 	protected final long maxPos; 
+	 	
+		protected EarlyBindingSizeIndexBasedSpliterator(long initialPos, long maxPos) {
+			super(initialPos);
+			this.maxPos = maxPos;
+		}
+
+		@Override
+		protected final long getMaxPos() { return maxPos; }
+	}
+
+	/**
+	 * A skeletal implementation for a spliterator backed by an index based data store. High performance
+	 * concrete implementations (like the main Spliterator of ArrayList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>This class implements a late binding strategy. On a new, non-split instance, the
+	 * {@link #getMaxPos() max pos} will track the given data store (usually it's
+	 * {@linkplain Collection#size() size}, hence the class' name). On the first
+	 * {@linkplain #trySplit() split}, the last index will be read from the backing data store one
+	 * last time and then be fixed for the remaining duration of this instance.<br>
+	 * The returned split <em>should</em> should also be have a constant {@code maxPos}. 
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
+	 * as {@code final} as to encourage the JVM to inline them.
+	 */
+	 public static abstract class LateBindingSizeIndexBasedSpliterator KEY_GENERIC extends AbstractIndexBasedSpliterator KEY_GENERIC {
+	 	/** The maximum {@link #pos} can be */
+	 	protected long maxPos = -1;
+	 	private boolean maxPosFixed;
+	 	
+		protected LateBindingSizeIndexBasedSpliterator(long initialPos) {
+			super(initialPos);
+			this.maxPosFixed = false;
+		}
+
+		protected LateBindingSizeIndexBasedSpliterator(long initialPos, long fixedMaxPos) {
+			super(initialPos);
+			this.maxPos = fixedMaxPos;
+			this.maxPosFixed = true;
+		}
+		
+		/** Return the maximum pos can be dynamically tracking the backing data store.
+		 *
+		 * <p>This method will be the return value of {@link #getMaxPos()} until this spliterator
+		 * is {@linkplain #trySplit()} split, in which case its final return value will be saved
+		 * and remain constant for the rest of the duration of this instance.
+		 */
+		protected abstract long getMaxPosFromBackingStore();
+
+		@Override
+		protected final long getMaxPos() { return maxPosFixed ? maxPos : getMaxPosFromBackingStore(); }
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			KEY_SPLITERATOR KEY_GENERIC maybeSplit = super.trySplit();
+			if (!maxPosFixed && maybeSplit != null) {
+				maxPos = getMaxPosFromBackingStore();
+				maxPosFixed = true;
+			}
+			return maybeSplit;
+		}
+	}
+}
