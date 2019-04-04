@@ -336,7 +336,9 @@ fi)\
 \
 \
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
+"#define KEY_WIDENED_VALUE ${TYPE[$wk]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
+"#define VALUE_WIDENED_VALUE ${TYPE[$wv]}Value\n"\
 \
 \
 "/* Interfaces (keys) */\n"\
@@ -598,6 +600,13 @@ fi)\
 "#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
 "#define LOAD_KEYS_BIG load${TYPE_STD[$k]}sBig\n"\
 "#define STORE_KEYS store${TYPE_STD[$k]}s\n"\
+"#if KEYS_REFERENCE\n"\
+"#define MAP_TO_KEY map\n"\
+"#define MAP_TO_KEY_WIDENED map\n"\
+"#else\n"\
+"#define MAP_TO_KEY mapTo${TYPE_CAP2[$k]}\n"\
+"#define MAP_TO_KEY_WIDENED mapTo${TYPE_CAP2[$wk]}\n"\
+"#endif\n"\
 \
 \
 "/* Methods (values) */\n"\
