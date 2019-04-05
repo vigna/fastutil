@@ -662,6 +662,40 @@ public final class SPLITERATORS {
 		 */
 		protected abstract KEY_SPLITERATOR KEY_GENERIC makeForSplit(int pos, int maxPos);
 
+		/** Compute where to split on the next {@link #trySplit()}, given the current pos and
+		 * {@link #getMaxPos()} (or any other metric the implementation wishes to use).
+		 *
+		 * <p>If a value {@code == pos} or {@code == getMaxPos()} is returned, the
+		 * {@link #trySplit()} method will assume a split of size 0 was computed,
+		 * and thus won't split or change state. If a value outside that range is
+		 * returned, then {@link #trySplit()} will throw {@link IndexOutOfBoundsException}.
+		 * In particular, this means that no handling of overflow or underflow
+		 * is performed.
+		 *
+		 * @apiNote The reasoning behind the throwing if out of range behavior is that, even
+		 * though it can significantly slow the process of splitting, it is much better then
+		 * risking a buggy implementation causing splits to stop happening much earlier then
+		 * intended. Also, splitting is not usually in the "inner loop" of stream operations,
+		 * so this slowness isn't in the bottleneck. That and we have already warned that
+		 * high performance spliterators should prefer implementing all the methods themselves
+		 * instead of through this interface.
+		 *
+		 * @implSpec This default implementation is a simple split-by-2 strategy, dividing
+		 * in the middle of pos and {@link #getMaxPos()}. It is unspecified whether
+		 * the first range or the second range will be larger in the case of an odd length range. 
+		 */
+		protected int computeSplitPoint() {
+			// Overflow safe midpoint computation.
+			return pos + ((getMaxPos() - pos) / 2);
+		}
+
+		private void splitPointCheck(final int splitPoint, final int observedMax) {
+			// TODO When minimum Java version becomes Java 9, use Objects.checkFromToIndex​ (after first letting == max case pass through)
+			if (splitPoint < pos || splitPoint > observedMax) {
+				throw new IndexOutOfBoundsException("splitPoint " + splitPoint + " outside of range of current position " + pos + " and range end " + observedMax);
+			}
+		}
+
 		// Since this is an index based spliterator, list characteristics make sense.
 		@Override
 		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS; }
@@ -704,20 +738,25 @@ public final class SPLITERATORS {
 		// non type-specific superclass in it.unimi.dsi.fastutil? 
 		/** {@inheritDoc}
 		 *
-		 * This implementation always returns a prefix of the elements, in order to comply with
+		 * <p>This implementation always returns a prefix of the elements, in order to comply with
 		 * the {@Spliterator#ORDERED} property. This means this current iterator does not need to
 		 * to update what {@link #getMaxPos()} returns in response to this method (but it may do
-		 * "book-keeping" on it based on binding strategy). 
+		 * "book-keeping" on it based on binding strategy).
+		 *
+		 * <p>The split point is computed by {@link #computeSplitPoint()}; see that method for details.
+		 *
+		 * @throws IndexOutOfBoundsException if the return of {@link #computeSplitPoint()} was
+		 *  {@code < pos} or {@code > {@link #getMaxPos()}}.
 		 */
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
 			final int max = getMaxPos();
-			int retLen = (max - pos) >> 1;
-			if (retLen <= 0) return null;
-			int mid = pos + retLen;
+			final int splitPoint = computeSplitPoint();
+			if (splitPoint == pos || splitPoint == max) return null;
+			splitPointCheck(splitPoint, max);
 			int oldPos = pos;
-			KEY_SPLITERATOR KEY_GENERIC maybeSplit = makeForSplit(oldPos, mid);
-			if (maybeSplit != null) this.pos = mid;
+			KEY_SPLITERATOR KEY_GENERIC maybeSplit = makeForSplit(oldPos, splitPoint);
+			if (maybeSplit != null) this.pos = splitPoint;
 			return maybeSplit; 
 		}
 	}
