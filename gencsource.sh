@@ -483,6 +483,7 @@ fi)\
 "#define SPLITERATORS ${TYPE_CAP2[$k]}Spliterators\n"\
 "#define WIDENED_SPLITERATORS ${TYPE_CAP[$wk]}Spliterators\n"\
 "#define BIG_LIST_ITERATORS ${TYPE_CAP2[$k]}BigListIterators\n"\
+"#define BIG_SPLITERATORS ${TYPE_CAP2[$k]}BigSpliterators\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n"\
 \
 \
