@@ -1506,6 +1506,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	}
 
 	private final class SetSpliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		private static final int POST_SPLIT_CHARACTERISTICS = SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS & ~java.util.Spliterator.SIZED;
+		
 		/** The index (which bucket) of the next item to give to the action.
 		 * Unlike {@link SetIterator}, this counts up instead of down.
 		 */
@@ -1517,6 +1519,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		/** A boolean telling us whether we should return the null key. */
 		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
 		boolean hasSplit = false;
+
 
 		SetSpliterator() {}
 
@@ -1566,7 +1569,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		@Override
 		public int characteristics() {
-			return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
+			return hasSplit? POST_SPLIT_CHARACTERISTICS : SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
 		}
 
 		@Override
@@ -1588,7 +1591,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if (retLen <= 0) return null;
 			int myNewPos = pos + retLen;
 			int retPos = pos;
-			int retMax = pos + retLen;
+			int retMax = myNewPos;
 			// Since null is returned first, and the convention is that the returned split is the prefix of elements,
 			// the split will take care of returning null (if needed), and we won't return it anymore.
 			SetSpliterator split = new SetSpliterator(retPos, retMax, mustReturnNull, true);

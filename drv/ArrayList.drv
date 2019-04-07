@@ -534,7 +534,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 		private final class SubListIterator extends ITERATORS.AbstractIndexBasedListIterator KEY_GENERIC {
 			
-			// We are using pos == 0 to be 0 relative to from (meaning you need to do a[from + i] when accessing array).
+			// We are using pos == 0 to be 0 relative to SubList.from (meaning you need to do a[from + i] when accessing array).
 			SubListIterator(int index) {
 				super(0, index);
 			}
@@ -852,6 +852,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 
 		private Spliterator(int pos, int max, boolean hasSplit) {
+			assert pos <= max : "pos " + pos + " must be <= max " + max; 
 			this.pos = pos;
 			this.max = max;
 			this.hasSplit = hasSplit;
@@ -900,11 +901,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
 			final int max = getWorkingMax();
 			int retLen = (max - pos) >> 1;
-			if (retLen <= 0) return null;
+			if (retLen <= 1) return null;
 			// Update instance max with the last seen list size (if needed) before continuing 
 			this.max = max;
-			int retMax = max - retLen;
-			int myNewPos = pos + retMax;
+			int myNewPos = pos + retLen;
+			int retMax = myNewPos;
 			int oldPos = pos;
 			this.pos = myNewPos;
 			this.hasSplit = true;
@@ -1062,6 +1063,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 	}
 
+	private static int genIndex(int size) {
+		return size == 0 ? 0 : r.nextInt(size);
+	}
+
 	private static java.text.NumberFormat format = new java.text.DecimalFormat("#,###.00");
 	private static java.text.FieldPosition p = new java.text.FieldPosition(0);
 
@@ -1070,8 +1075,193 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return format.format(d, s, p).toString();
 	}
 
-	private static void speedTest(int n, boolean comp) {
-		System.out.println("There are presently no speed tests for this class.");
+	private static final int WARMUP_CYCLES = 12;
+	private static final int NUM_RUNS = 25;
+	private static final int GC_EVERY = 5;
+
+	private static final int intDivRoundUp(int numerator, int denominator) {
+		return (numerator + denominator - 1) / denominator;
+	}
+
+	// WARNING: This benchmark runs in amortized time O(n^(3/2)). Don't choose huge n values for this test (about 10,000,000 starts showing significant slowdown)
+	private static void speedTest(final int n, boolean comp) {
+		if (n < 0) throw new IllegalArgumentException("n: " + n + " must be >0 (overflow?)");
+		java.util.ArrayList t;
+		ARRAY_LIST m;
+
+		int i;
+		int j;
+		KEY_TYPE k[] = new KEY_TYPE[n];
+		KEY_TYPE nk[] = new KEY_TYPE[n];
+		int randIndexes[] = new int[n];
+		long ns;
+
+		for(i = 0; i < n; i++) {
+			k[i] = genKey();
+			nk[i] = genKey();
+			randIndexes[i] = genIndex(i);
+		}
+
+		final int nRandom = (int)Math.sqrt(n);
+		final int nSequential = n - nRandom;
+
+		double totAddEnd = 0, totAddRandom = 0, totYes = 0, totNo = 0, totIter = 0, totRemEnd = 0, totRemRandom = 0, toStreamSum = 0, d;
+
+		if (comp) { for(j = 0; j < NUM_RUNS; j++) {
+			
+			if ((j + 1) % GC_EVERY == 0) System.gc();
+
+			t = new java.util.ArrayList(16);
+
+			/* We add to t at a random position. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom; i++) t.add(randIndexes[i], KEY2OBJ(k[i]));
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totAddRandom += d;
+			System.out.print("AddToRandom: " + format(d) + "ns ");
+
+			/* We add to t at end. */
+			ns = System.nanoTime();
+			for(; i < n; i++) t.add(KEY2OBJ(k[i]));
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totAddEnd += d;
+			System.out.print("AddToEnd: " + format(d) + "ns ");
+
+			/* We check things in t. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) t.contains(KEY2OBJ(k[i]));
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totYes += d;
+			System.out.print("Yes: " + format(d) + "ns ");
+
+			/* We check for things likely not in t. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) t.contains(KEY2OBJ(nk[i]));
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totNo += d;
+			System.out.print("No: " + format(d) + "ns ");
+
+			/* We iterate on t. */
+			ns = System.nanoTime();
+			for(java.util.Iterator it = t.iterator(); it.hasNext(); it.next());
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) totIter += d;
+			System.out.print("Iter: " + format(d) + "ns ");
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+			/* We sum on t. */
+			ns = System.nanoTime();
+#if KEY_WIDENED
+			// Since the primitive stream has to upcast to a widened primitive, for fairness we will upcast here too
+#endif
+#if KEY_CLASS_Character
+			((java.util.List<KEY_CLASS>)t).parallelStream().MAP_TO_KEY_WIDENED((int)Character::charValue()).reduce(0, KEY_CLASS_WIDENED::sum);
+#else
+			((java.util.List<KEY_CLASS>)t).parallelStream().MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).reduce(0, KEY_CLASS_WIDENED::sum);
+#endif
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) toStreamSum += d;
+			System.out.print("Stream sum: " + format(d) + "ns ");
+#endif
+
+			// Don't bother with remove(KEY); that is just going to be a contains + remove random.
+			/* We remove from end */
+			ns = System.nanoTime();
+			for(i = 0; i < nSequential;  i++) t.remove(t.size() - 1);
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totRemEnd += d;
+			System.out.print("RemEnd: " + format(d) + "ns ");
+
+			/* We remove randomly */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) t.remove(randIndexes[t.size() - 1]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totRemRandom += d;
+			System.out.print("RemRandom: " + format(d) + "ns ");
+
+			System.out.println();
+		}
+
+		System.out.println();
+		System.out.println("java.util AddToRandom: " + format(totAddRandom/(j-WARMUP_CYCLES)) + " AddToEnd: " + format(totAddEnd/(j-WARMUP_CYCLES)) + "ns Yes: " + format(totYes/(j-WARMUP_CYCLES)) + "ns No: " + format(totNo/(j-WARMUP_CYCLES)) + "ns Iter: " + format(totIter/(j-WARMUP_CYCLES)) + "ns StreamSum: " + format(toStreamSum/(j-WARMUP_CYCLES)) + "ns RemEnd: " + format(totRemEnd/(j-WARMUP_CYCLES)) + "ns RemRandom: " + format(totRemRandom/(j-WARMUP_CYCLES)) + "ns");
+
+		System.out.println();
+
+		totAddEnd = totAddRandom = totYes = totNo = totIter = totRemEnd = totRemRandom = toStreamSum = 0;
+		}
+
+		for(j = 0; j < NUM_RUNS; j++) {
+		
+			if ((j + 1) % GC_EVERY == 0) System.gc();
+
+			m = new ARRAY_LIST(16);
+
+			/* We add to m at a random position. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom; i++) m.add(randIndexes[i], k[i]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totAddRandom += d;
+			System.out.print("AddToRandom: " + format(d) + "ns ");
+
+			/* We add to m at end. */
+			ns = System.nanoTime();
+			for(; i < n;  i++) m.add(k[i]);
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totAddEnd += d;
+			System.out.print("AddToEnd: " + format(d) + "ns ");
+
+			/* We check things in m. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) m.contains(k[i]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totYes += d;
+			System.out.print("Yes: " + format(d) + "ns ");
+
+			/* We check for things likely not in m. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) m.contains(nk[i]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totNo += d;
+			System.out.print("No: " + format(d) + "ns ");
+
+			/* We iterate on m. */
+			ns = System.nanoTime();
+			for(KEY_ITERATOR it = (KEY_ITERATOR)m.iterator(); it.hasNext(); it.NEXT_KEY());
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) totIter += d;
+			System.out.print("Iter: " + format(d) + "ns ");
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+			/* We sum on m. */
+			ns = System.nanoTime();
+			m.KEY_WIDENED_PARALLEL_STREAM_METHOD().reduce(0, KEY_CLASS_WIDENED::sum);
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) toStreamSum += d;
+			System.out.print("Stream sum: " + format(d) + "ns ");
+#endif
+
+			// Don't bother with rem(KEY); that is just going to be a contains + remove random.
+			/* We remove from end */
+			ns = System.nanoTime();
+			for(i = 0; i < nSequential;  i++) m.REMOVE_KEY(m.size() - 1);
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totRemEnd += d;
+			System.out.print("RemEnd: " + format(d) + "ns ");
+
+			/* We remove randomly */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) m.REMOVE_KEY(randIndexes[m.size() - 1]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totRemRandom += d;
+			System.out.print("RemRandom: " + format(d) + "ns ");
+
+			System.out.println();
+		}
+
+		System.out.println();
+		System.out.println("fastutil AddToRandom: " + format(totAddRandom/(j-WARMUP_CYCLES)) + " AddToEnd: " + format(totAddEnd/(j-WARMUP_CYCLES)) +  "ns Yes: " + format(totYes/(j-WARMUP_CYCLES)) + "ns No: " + format(totNo/(j-WARMUP_CYCLES)) + "ns Iter: " + format(totIter/(j-WARMUP_CYCLES)) + "ns StreamSum: " + format(toStreamSum/(j-WARMUP_CYCLES)) + "ns RemEnd: " + format(totRemEnd/(j-WARMUP_CYCLES)) + "ns RemRandom: " + format(totRemRandom/(j-WARMUP_CYCLES)) + "ns");
+
+		System.out.println();
 	}
 
 
@@ -1567,14 +1757,14 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		 */
 		{
 #if KEYS_REFERENCE
-			java.util.stream.Stream<KEY_TYPE> i = m.stream();
-			java.util.stream.Stream<KEY_TYPE> j = t.stream();
+			java.util.stream.Stream<KEY_TYPE> i = m.parallelStream();
+			java.util.stream.Stream<KEY_TYPE> j = t.parallelStream();
 #elif KEY_CLASS_Boolean
-			java.util.stream.Stream<KEY_CLASS> i = m.stream();
-			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+			java.util.stream.Stream<KEY_CLASS> i = m.parallelStream();
+			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
 #else
-			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
-			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_PARALLEL_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
 #endif 
 
 #if KEYS_REFERENCE || KEY_CLASS_Boolean

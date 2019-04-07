@@ -214,6 +214,41 @@ public class BigArrays {
 	}
 
 	/**
+	 * Computes the nearest segment starting index of a given index.
+	 *
+	 * <p>This will either be {@code start(segment(index)} or {@code start(segment(index) + 1)},
+	 * whichever is closer, given the bounds can be respected.
+	 *
+	 * <p>This method can be useful for operations that seek to align on the outer array's boundaries.
+	 *
+	 * @param index
+	 *            an index into a big array.
+	 * @param min
+	 *            the minimum (inclusive) valid index of the big array in question
+	 * @return the closest segment starting index to {@code index}
+	 * @param max
+	 *            the maximum (exclusive) valid index of the big array in question
+	 * @return the closest segment starting index to {@code index}
+	 * @since 8.3.0 
+	 */
+	public static long nearestStart(final long index, final long min, final long max) {
+		// There probably is a less branchy, bit twiddly way to do this, but this is fine for now.
+	    // This isn't going to be used in inner loops, only the recursive call.
+		final long lower = start(segment(index));
+		final long upper = start(segment(index) + 1);
+		if (upper >= max) {
+		    if (lower < min) {
+	        	return index;
+		    }
+		    return lower;
+		}
+		if (lower < min) return upper;
+		// Overflow avoiding midpoint computation
+		final long mid = lower + ((upper - lower) >> 1);
+		return index <= mid ? lower : upper;
+	}
+
+	/**
 	 * Computes the index associated with given segment and displacement.
 	 *
 	 * @param segment
