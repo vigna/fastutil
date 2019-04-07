@@ -770,6 +770,16 @@ public final class ITERATORS {
 		return -1;
 	}
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	/** Shim to make final the methods that only exist to disambiguate. */
+	static abstract class IteratorDisambiguationMethodFinalShim KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+		@Override
+		public final void forEachRemaining(final KEY_CONSUMER action) {
+			KEY_ITERATOR.super.forEachRemaining(action);
+		}
+	}
+#endif
+
 	/**
 	 * A skeletal implementation for an iterator backed by an index based data store. High performance
 	 * concrete implementations (like the main Iterator of ArrayList) generally should avoid using this
@@ -783,7 +793,11 @@ public final class ITERATORS {
 	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
 	 * as {@code final} as to encourage the JVM to inline them.
 	 */
-	static abstract class AbstractIndexBasedIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+	public static abstract class AbstractIndexBasedIterator KEY_GENERIC
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+			extends IteratorDisambiguationMethodFinalShim KEY_GENERIC
+#endif
+		 	implements KEY_ITERATOR KEY_GENERIC {
 		/** The minimum pos can be, and is the logical start of the "range".
 		 * Usually set to the initialPos unless it is a ListIterator, in which case it can vary.
 		 *
@@ -893,7 +907,7 @@ public final class ITERATORS {
 	 * <p>As the abstract methods in this class are used in inner loops, it is generally a good idea to override them
 	 * as {@code final} as to encourage the JVM to inline them.
 	 */
-	static abstract class AbstractIndexBasedListIterator KEY_GENERIC extends AbstractIndexBasedIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
+	public static abstract class AbstractIndexBasedListIterator KEY_GENERIC extends AbstractIndexBasedIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
 	
 		protected AbstractIndexBasedListIterator(int minPos, int initialPos) {
 			super(minPos, initialPos);
