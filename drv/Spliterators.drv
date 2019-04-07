@@ -254,12 +254,12 @@ public final class SPLITERATORS {
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
 			int retLength = (length - curr) >> 1;
-			if (retLength <= 0) return null;
+			if (retLength <= 1) return null;
 			int myNewCurr = curr + retLength;
 			int retOffset = offset + curr;
-			int myNewLength = length - retLength;
+			// int myNewLength = length - retLength;
 			this.curr = myNewCurr;
-			this.length = myNewLength;
+			// this.length = myNewLength;
 			return new ArraySpliterator KEY_GENERIC_DIAMOND(array, retOffset, retLength);
 		}
 
@@ -980,6 +980,7 @@ public final class SPLITERATORS {
 	private static class SpliteratorConcatenator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
 		private static final int EMPTY_CHARACTERISTICS = Spliterator.SIZED | Spliterator.SUBSIZED;
 		final KEY_SPLITERATOR KEY_EXTENDS_GENERIC a[];
+		// Unlike the other classes in this file, length represents remaining, NOT the high mark for offset.
 		int offset, length;
 		/** The sum of estimatedRemaining <em>except</em> current offset */
 		long remainingEstimatedExceptCurrent = Long.MAX_VALUE;
@@ -1081,6 +1082,10 @@ public final class SPLITERATORS {
 
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			/* First we split on the spliterators array, with new concating spliterators for those array slices.
+			 * Then if we can't split anymore due to only 1 spliterator we are "concating", return the splits
+			 * of that single spliterator.
+			 */
 			switch(length) {
 				case 0: return null;
 				case 1: {
