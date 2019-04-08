@@ -48,7 +48,7 @@ import it.unimi.dsi.fastutil.Size64;
  * @see java.util.ArrayList
  */
 
-public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
+public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERIC implements BIG_LIST.ImplementsSpliterator, RandomAccess, Cloneable, java.io.Serializable {
 	private static final long serialVersionUID = -7046029254386353130L;
 
 
@@ -570,7 +570,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			protected final long computeSplitPoint() {
 				long defaultSplit = super.computeSplitPoint();
 				// Align to outer array starting point if possible.
-				return BigArrays.nearestStart(pos, pos, getMaxPos());
+				// We add/subtract one to the bounds to ensure the new pos will always shrink the range
+				return BigArrays.nearestSegmentStart(pos, pos + 1, getMaxPos() - 1);
 			}
 			@Override
 			public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
@@ -815,6 +816,9 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			// Update instance max with the last seen list size (if needed) before continuing 
 			this.max = max;
 			long myNewPos = pos + retLen;
+			// Align to an outer array boundary if possible
+			// We add/subtract one to the bounds to ensure the new pos will always shrink the range
+			myNewPos = BigArrays.nearestSegmentStart(myNewPos, pos + 1, max - 1);
 			long retMax = myNewPos;
 			long oldPos = pos;
 			this.pos = myNewPos;
