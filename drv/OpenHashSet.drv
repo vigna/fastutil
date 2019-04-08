@@ -1372,6 +1372,18 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			iterator(), it.unimi.dsi.fastutil.Size64.getSizeOf(this), SPLITERATOR_CHARACTERISTICS));
 	}
 
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		int curr;
+		int next = first;
+		while (next != -1) {
+			curr = next;
+			next = GET_NEXT(link[curr]);
+			if (ASSERTS) assert curr == n || ! KEY_IS_NULL(key[curr]) : "Position " + curr + " is not used";
+			action.accept(key[curr]);
+		}
+	}
+
 #else
 
 	/** An iterator over a hash set. */
@@ -1570,7 +1582,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		@Override
 		public int characteristics() {
-			return hasSplit? POST_SPLIT_CHARACTERISTICS : SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
+			return hasSplit ? POST_SPLIT_CHARACTERISTICS : SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
 		}
 
 		@Override
@@ -1579,9 +1591,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				// Root spliterator; we know how many are remaining.
 				return size - c;
 			} else {
-				// After we split, we have no idea how many there are.
-				// (size / key.length) * (max - pos) aka currentTableDensity * numberOfBucketsLeft seems like a good estimate.
-				return Math.min(size - c, (long)(((double)size / key.length) * (max - pos)) + (mustReturnNull ? 1 : 0));
+				// After we split, we can no longer know exactly how many we have (or at least not efficiently).
+				// (size / n) * (max - pos) aka currentTableDensity * numberOfBucketsLeft seems like a good estimate.
+				return Math.min(size - c, (long)(((double)realSize() / n) * (max - pos)) + (mustReturnNull ? 1 : 0));
 			}
 		}
 
@@ -1625,6 +1637,22 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	@Override
 	public KEY_SPLITERATOR spliterator() {
 		return new SetSpliterator();
+	}
+
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		if (containsNull) {
+			action.accept(key[n]);
+		}
+		int pos = 0;
+		final int max = n;
+		final KEY_GENERIC_TYPE key[] = this.key;
+		while (pos < max) {
+			if (! KEY_IS_NULL(key[pos])) {
+				action.accept(key[pos]);
+			}
+			++pos;
+		}
 	}
 
 #endif
