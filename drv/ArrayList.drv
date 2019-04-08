@@ -1078,6 +1078,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	private static final int WARMUP_CYCLES = 12;
 	private static final int NUM_RUNS = 25;
 	private static final int GC_EVERY = 5;
+	// TODO Use a ASSERTS like preprocessor variable?
+	private static final boolean PARALLEL_STREAMS = Boolean.getBoolean("useParallelStreams");
 
 	private static final int intDivRoundUp(int numerator, int denominator) {
 		return (numerator + denominator - 1) / denominator;
@@ -1154,10 +1156,12 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #if KEY_WIDENED
 			// Since the primitive stream has to upcast to a widened primitive, for fairness we will upcast here too
 #endif
+			java.util.stream.Stream<KEY_CLASS> tStream = ((java.util.List<KEY_CLASS>)t).stream();
+			if (PARALLEL_STREAMS) tStream = tStream.parallel();
 #if KEY_CLASS_Character
-			((java.util.List<KEY_CLASS>)t).parallelStream().MAP_TO_KEY_WIDENED((int)Character::charValue()).reduce(0, KEY_CLASS_WIDENED::sum);
+			tStream.MAP_TO_KEY_WIDENED((int)Character::charValue()).reduce(0, KEY_CLASS_WIDENED::sum);
 #else
-			((java.util.List<KEY_CLASS>)t).parallelStream().MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).reduce(0, KEY_CLASS_WIDENED::sum);
+			tStream.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).reduce(0, KEY_CLASS_WIDENED::sum);
 #endif
 			d = (System.nanoTime() - ns) / (double)n;
 			if (j >= WARMUP_CYCLES) toStreamSum += d;
@@ -1234,7 +1238,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
 			/* We sum on m. */
 			ns = System.nanoTime();
-			m.KEY_WIDENED_PARALLEL_STREAM_METHOD().reduce(0, KEY_CLASS_WIDENED::sum);
+			JDK_PRIMITIVE_STREAM mStream = m.KEY_WIDENED_STREAM_METHOD();
+			if (PARALLEL_STREAMS) mStream = mStream.parallel();
+			mStream.reduce(0, KEY_CLASS_WIDENED::sum);
 			d = (System.nanoTime() - ns) / (double)n;
 			if (j >= WARMUP_CYCLES) toStreamSum += d;
 			System.out.print("Stream sum: " + format(d) + "ns ");
@@ -1757,15 +1763,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		 */
 		{
 #if KEYS_REFERENCE
-			java.util.stream.Stream<KEY_TYPE> i = m.parallelStream();
-			java.util.stream.Stream<KEY_TYPE> j = t.parallelStream();
+			java.util.stream.Stream<KEY_TYPE> i = m.stream();
+			java.util.stream.Stream<KEY_TYPE> j = t.stream();
 #elif KEY_CLASS_Boolean
-			java.util.stream.Stream<KEY_CLASS> i = m.parallelStream();
-			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+			java.util.stream.Stream<KEY_CLASS> i = m.stream();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
 #else
-			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_PARALLEL_STREAM_METHOD();
-			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
-#endif 
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#endif
+
+			if (PARALLEL_STREAMS) {
+				i = i.parallel();
+				j = j.parallel();
+			}
 
 #if KEYS_REFERENCE || KEY_CLASS_Boolean
 			Object[] iArray = i.toArray();

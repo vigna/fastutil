@@ -1064,6 +1064,9 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		return format.format(d, s, fp).toString();
 	}
 
+	// TODO Use a ASSERTS like preprocessor variable?
+	private static final boolean PARALLEL_STREAMS = Boolean.getBoolean("useParallelStreams");
+
 	private static void speedTest(int n, float f, boolean comp) {
 		int i, j;
 		OPEN_HASH_BIG_SET m;
@@ -1411,15 +1414,20 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 /* Now test that the sets hold the same data using streams */
 		{
 #if KEYS_REFERENCE
-			java.util.stream.Stream<KEY_TYPE> i = m.parallelStream();
-			java.util.stream.Stream<KEY_TYPE> j = t.parallelStream();
+			java.util.stream.Stream<KEY_TYPE> i = m.stream();
+			java.util.stream.Stream<KEY_TYPE> j = t.stream();
 #elif KEY_CLASS_Boolean
-			java.util.stream.Stream<KEY_CLASS> i = m.parallelStream();
-			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+			java.util.stream.Stream<KEY_CLASS> i = m.stream();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
 #else
-			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_PARALLEL_STREAM_METHOD();
-			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
 #endif
+
+			if (PARALLEL_STREAMS) {
+				i = i.parallel();
+				j = j.parallel();
+			}
 
 			i = i.sorted();
 			j = j.sorted();
