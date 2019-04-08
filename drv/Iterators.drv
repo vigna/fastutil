@@ -505,12 +505,21 @@ public final class ITERATORS {
 		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_CLASS2TYPE(i.next()); }
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		// This is pretty much the only time overriding this overload is correct; we want to
+		// delegate as an Object consumer, not wrap it as a primitive one.
+		@Override
+		public void forEachRemaining(final KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
 #if KEYS_PRIMITIVE
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 #if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
 			Objects.requireNonNull(action);
-			i.forEachRemaining(action::accept);
+			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			i.forEachRemaining(action);
 #endif
@@ -685,12 +694,21 @@ public final class ITERATORS {
 		@Override
 		public KEY_GENERIC_TYPE PREV_KEY() { return KEY_CLASS2TYPE(i.previous()); }
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		// This is pretty much the only time overriding this overload is correct; we want to
+		// delegate as an Object consumer, not wrap it as a primitive one.
+		@Override
+		public void forEachRemaining(final KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
 #if KEYS_PRIMITIVE
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 #if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
 			Objects.requireNonNull(action);
-			i.forEachRemaining(action::accept);
+			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			i.forEachRemaining(action);
 #endif
