@@ -54,7 +54,7 @@ import java.util.NoSuchElementException;
  * @see HashCommon
  */
 
-public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements java.io.Serializable, Cloneable, Hash, Size64 {
+public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements SET.ImplementsSpliterator KEY_GENERIC, java.io.Serializable, Cloneable, Hash, Size64 {
 
 	private static final long serialVersionUID = 0L;
 	private static final boolean ASSERTS = ASSERTS_VALUE;
@@ -597,7 +597,158 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 	public KEY_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
 	}
+	
 
+	private class SetSpliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		/* For the sake of keeping things at least somewhat simple
+		 * (aka. my sanity), the spliterator will NOT handle the indexing
+		 * of the subarrays directly, like iterator does. Instead, it will
+		 * delegate to BigArrays and have only a single, unified index it
+		 * will fence on. This is probably less effecient, but it avoids having
+		 * to track what it means to split on two sets of indexes.
+		 * This may change in the future if the performance hit high.
+		 */
+
+		private static final int POST_SPLIT_CHARACTERISTICS = SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS & ~java.util.Spliterator.SIZED;
+		
+		/** The index (which bucket) of the next item to give to the action. */
+		long pos = 0;
+		/** The maximum bucket (exclusive) to iterate to */
+		long max = n;
+		/** An upwards counter counting how many we have given */
+		long c = 0;
+		/** A boolean telling us whether we should return the null key. */
+		boolean mustReturnNull = OPEN_HASH_BIG_SET.this.containsNull;
+		boolean hasSplit = false;
+
+
+		SetSpliterator() {}
+
+		SetSpliterator(long pos, long max, boolean mustReturnNull, boolean hasSplit) {
+			this.pos = pos;
+			this.max = max;
+			this.mustReturnNull = mustReturnNull;
+			this.hasSplit = hasSplit;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				++c;
+				action.accept(KEY_NULL);
+				return true;
+			}
+			final KEY_GENERIC_TYPE key[][] = OPEN_HASH_BIG_SET.this.key;
+			while (pos < max) {
+				KEY_TYPE gotten = BIG_ARRAYS.get(key, pos);
+				if (! KEY_IS_NULL(gotten)) {
+					++c;
+					++pos;
+					action.accept(gotten);
+					return true;
+				} else {
+					++pos;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				action.accept(KEY_NULL);
+				++c;
+			}
+			final KEY_GENERIC_TYPE key[][] = OPEN_HASH_BIG_SET.this.key;
+			while (pos < max) {
+				KEY_TYPE gotten = BIG_ARRAYS.get(key, pos);
+				if (! KEY_IS_NULL(gotten)) {
+					action.accept(gotten);
+					++c;
+				}
+				++pos;
+			}
+		}
+
+		@Override
+		public int characteristics() {
+			return hasSplit ? POST_SPLIT_CHARACTERISTICS : SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
+		}
+
+		@Override
+		public long estimateSize() {
+			if (!hasSplit) {
+				// Root spliterator; we know how many are remaining.
+				return size - c;
+			} else {
+				// After we split, we can no longer know exactly how many we have (or at least not efficiently).
+				// (size / n) * (max - pos) aka currentTableDensity * numberOfBucketsLeft seems like a good estimate.
+				return Math.min(size - c, (long)(((double)realSize() / n) * (max - pos)) + (mustReturnNull ? 1 : 0));
+			}
+		}
+
+		@Override
+		public SetSpliterator trySplit() {
+			if (pos >= max - 1) return null;
+			long retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			long myNewPos = pos + retLen;
+			// Align to an outer array boundary if possible
+			// We add/subtract one to the bounds to ensure the new pos will always shrink the range
+			myNewPos = BigArrays.nearestSegmentStart(myNewPos, pos + 1, max - 1);
+			long retPos = pos;
+			long retMax = myNewPos;
+			// Since null is returned first, and the convention is that the returned split is the prefix of elements,
+			// the split will take care of returning null (if needed), and we won't return it anymore.
+			SetSpliterator split = new SetSpliterator(retPos, retMax, mustReturnNull, true);
+			this.pos = myNewPos;
+			this.mustReturnNull = false;
+			this.hasSplit = true;
+			return split;
+		}
+
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (n == 0) return 0;
+			long skipped = 0;
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				++skipped;
+				--n;
+			}
+			final KEY_GENERIC_TYPE key[][] = OPEN_HASH_BIG_SET.this.key;
+			while (pos < max && n > 0) {
+				if (! KEY_IS_NULL(BIG_ARRAYS.get(key, pos++))) {
+					++skipped;
+					--n;
+				}
+			}
+			return skipped;
+		}	
+	}
+
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return new SetSpliterator();
+	}
+
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		if (containsNull) {
+			action.accept(KEY_NULL);
+		}
+		long pos = 0;
+		final long max = n;
+		final KEY_GENERIC_TYPE key[][] = this.key;
+		while (pos < max) {
+			KEY_TYPE gotten = BIG_ARRAYS.get(key, pos++);
+			if (! KEY_IS_NULL(gotten)) {
+				action.accept(gotten);
+			}
+		}
+	}
 
 	/** Rehashes this set, making the table as small as possible.
 	 *
@@ -1256,6 +1407,35 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after post-save/read removal");
 		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after post-save/read removal");
+
+/* Now test that the sets hold the same data using streams */
+		{
+#if KEYS_REFERENCE
+			java.util.stream.Stream<KEY_TYPE> i = m.parallelStream();
+			java.util.stream.Stream<KEY_TYPE> j = t.parallelStream();
+#elif KEY_CLASS_Boolean
+			java.util.stream.Stream<KEY_CLASS> i = m.parallelStream();
+			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+#else
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_PARALLEL_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+#endif
+
+			i = i.sorted();
+			j = j.sorted();
+
+#if KEYS_REFERENCE || KEY_CLASS_Boolean
+			Object[] iArray = i.toArray();
+			Object[] jArray = j.toArray();
+#elif KEY_CLASS_Character
+			int[] iArray = i.toArray();
+			int[] jArray = j.mapToInt(c -> (int)c.charValue()).toArray();
+#else
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).toArray();
+#endif
+			ensure(java.util.Arrays.equals(iArray, jArray), "! sorted arrays equal");
+		}
 
 
 		/* Now we take out of m everything, and check that it is empty. */
