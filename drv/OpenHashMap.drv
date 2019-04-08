@@ -1944,8 +1944,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				return size - c;
 			} else {
 				// After we split, we have no idea how many there are.
-				// loadFactor * (max - pos) aka loadFactor * numberOfBucketsLeft seems like a good estimate.
-				return Math.min(size - c, (long)(f * (max - pos)) + (mustReturnNull ? 1 : 0));
+				// (size / key.length) * (max - pos) aka currentTableDensity * numberOfBucketsLeft seems like a good estimate.
+				return Math.min(size - c, (long)(((double)size / key.length) * (max - pos)) + (mustReturnNull ? 1 : 0));
 			}
 		}
 
@@ -1964,6 +1964,24 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			this.hasSplit = true;
 			return split;
 		}
+
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (n == 0) return 0;
+			long skipped = 0;
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				++skipped;
+				--n;
+			}
+			while (pos < max && n > 0) {
+				if (! KEY_IS_NULL(key[pos++])) {
+					++skipped;
+					--n;
+				}
+			}
+			return skipped;
+		}				
 	}
 
 	private class EntrySpliterator extends MapSpliterator<java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC>, EntrySpliterator> implements ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> {
