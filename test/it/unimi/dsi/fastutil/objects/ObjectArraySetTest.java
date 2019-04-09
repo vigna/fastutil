@@ -60,12 +60,17 @@ public class ObjectArraySetTest {
 			assertEquals(3 + i, s.size());
 			assertTrue(s.contains(1));
 			assertTrue(s.contains(2));
-			assertTrue(s.contains(2));
-			ObjectSet<Integer> expected = new ObjectOpenHashSet<Integer>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 });
+			assertTrue(s.contains(3));
+			Integer[] expectedArray = i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 };
+			ObjectSet<Integer> expected = new ObjectOpenHashSet<Integer>(expectedArray);
 			assertEquals(expected, s);
-			assertEquals(s, expected); 
-			assertEquals(expected, new ObjectArrayList<>(s.iterator()));
-			assertEquals(s, new ObjectArrayList<>(s.stream().toArray()));
+			assertEquals(s, expected);
+			assertEquals(s, new ObjectOpenHashSet<>(s.iterator()));
+			assertEquals(s, new ObjectArraySet<>(s.stream().toArray()));
+			// Test iterator and spliterator (through stream) preserve order.
+			assertArrayEquals(expectedArray, s.toArray());
+			assertArrayEquals(expectedArray, new ObjectArrayList<>(s.iterator()).toArray());
+			assertArrayEquals(expectedArray, s.stream().toArray());
 			assertTrue(s.remove(3));
 			assertEquals(2 + i, s.size());
 			assertTrue(s.remove(1));
