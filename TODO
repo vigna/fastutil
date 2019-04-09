@@ -18,19 +18,31 @@
 - Eliminate ping-pong implementations (look for "delegates to the corresponding generic method")
 - Fix comparator() in SortedSet not being specified in the same way as in SortedMap
 - Document the return value of map generic methods (null? default return value?).
-- Spliterator implementations for RBTreeSet/Map
-- Find a cleaner way to handle "intSpliterator wraps shortSpliterator only if safe" idea (maybe make the primitive spliterator() method fully abstract, and accept the API breaking change?)
+- Spliterator implementations for RBTreeSet/Map, AVLTreeSet/Map, and ArrayFrontCodedLists
+- Find a cleaner way to handle "intSpliterator wraps shortSpliterator only if safe" idea
   Aka, find a way to get rid of Collection.ImplementsSpliterator
-- Find a way to reduce or eliminate the overhead of the upcasting spliterators, which causes intStream on them to be slower (maybe make ShortSpliterator work in terms of native IntConsumers?)
+  If we can accept breaking backwards compatibilty, an easy way to fix this is to just make spliterator() abstract
+  A less easy way is to reimplement Spliterators.spliterator(XIterator) (aka, add type-specific Spliterator views of Iterators)
+- Implement type-specific Iterator views of Spliterator (aka, Spliterators.iterator(Spliterator))
 - Find a cleaner way to deal with the disambiguation overloads
   aka. get rid of the forEachRemaining(it.unimi.dsi.fastutil.ints.IntConsumer) style methods and the SpliteratorDisambiguationMethodsFinalShim style classes
 - Have the parallel algorithms use the Java standard of using the current pool if in one, and ForkJoinPool.commonPool() if not
-  This is usually accomplished by calling fork() on the root ForkJoinTask
-  Alternatively, accept a ForkJoinPool as a method argument, and have the existing overload call that one using ForkJoinPool.commonPool() as the default argument 
+  This is traditionally accomplished by calling fork() on the root ForkJoinTask
+  Alternatively, accept a ForkJoinPool as a method argument, and have the existing overload call that one using ForkJoinPool.commonPool() as the default argument
 - Primitive collector helper methods, collecting a primitive stream into list or set without boxing/unboxing
+- Don't have a N-nested sublist of ArrayList.get go through N layers of get methods
+  remove and add will have to continue to do this so all parent sublists can adjust their bounds,
+  but get can just short circuit to the parent list's array if we track bounds correctly
 - toBigArray for BigList (or maybe a new BigCollection)
-- XBigArrays.unstableSort for automatic algorithm selection like Arrays.unstableSort
+- XBigArrays.unstableSort for automatic algorithm selection like XArrays.unstableSort
 - BigList.unstableSort method
 - Make the recursive algorithms of BigArrays and the type specific BigArrays prefer aligning to segment boundaries
   This should improve cache locality
+- Make constructors consistent across types (make it so all Collection types can accept a Collection, an array, an Iterable, and an Iterator)
+- Find a way to reduce or eliminate the overhead of the upcasting spliterators, which causes intStream on them to be slower (maybe make ShortSpliterator work in terms of native IntConsumers?)
+  The performance loss is trivial, so this may not be worth chasing
+- Add array copying constructors (or perhaps static factories) for ArraySet
+  The current one just uses the array exactly, when in some cases a copy of that array may be desired
+  We can't change the current one without breaking compatibility
+- Update all benchmarks with the framework ArraySet and ArrayList have
 - Cleanup trailing whitespace
