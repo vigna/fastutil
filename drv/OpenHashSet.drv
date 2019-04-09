@@ -2410,6 +2410,46 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		ensure(m.equals(((OPEN_HASH_SET)m).clone()), "Error (" + seed + "): m does not equal m.clone()");
 		ensure(((OPEN_HASH_SET)m).clone().equals(m), "Error (" + seed + "): m.clone() does not equal m");
 
+		/* Now test that the sets hold the same data using streams */
+		{
+#if KEYS_REFERENCE
+			java.util.stream.Stream<KEY_TYPE> i = m.stream();
+			java.util.stream.Stream<KEY_TYPE> j = t.stream();
+#elif KEY_CLASS_Boolean
+			java.util.stream.Stream<KEY_CLASS> i = m.stream();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#else
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#endif
+
+#if (!defined Linked || defined Custom) && KEYS_REFERENCE 
+			// There is no good way to order arbitrary, non-Comparable objects in a consistent way.
+			// Ordering by Object.hashCode is tempting, but can conflict (two difference objects can have the same hashCode)
+			// Thus, we will dump into a JDK set, whose equals method will make sure they have the same in any order.
+			java.util.Set iSet = i.collect(java.util.stream.Collectors.toSet());
+			java.util.Set jSet = j.collect(java.util.stream.Collectors.toSet());
+			ensure(iSet.equals(jSet), "! same contents in stream");
+#else
+#if !defined Linked && !KEYS_REFERENCE
+			// Impose ordering to make arrays consistent even though backing data is not ordered.
+			i = i.sorted();
+			j = j.sorted();
+#endif
+#if KEYS_REFERENCE || KEY_CLASS_Boolean
+			Object[] iArray = i.toArray();
+			Object[] jArray = j.toArray();
+#elif KEY_CLASS_Character
+			int[] iArray = i.toArray();
+			int[] jArray = j.mapToInt(Character::charValue).toArray();
+#else
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).toArray();
+#endif
+			ensure(java.util.Arrays.equals(iArray, jArray), "! sorted arrays equal");
+#endif
+		}
+
 		int h = m.hashCode();
 
 		/* Now we save and read m. */
@@ -2575,37 +2615,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 
 #endif
-
-		/* Now test that the sets hold the same data using streams */
-		{
-#if KEYS_REFERENCE
-			java.util.stream.Stream<KEY_TYPE> i = m.stream();
-			java.util.stream.Stream<KEY_TYPE> j = t.stream();
-#elif KEY_CLASS_Boolean
-			java.util.stream.Stream<KEY_CLASS> i = m.stream();
-			java.util.stream.Stream<KEY_CLASS> j = t.stream();
-#else
-			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
-			java.util.stream.Stream<KEY_CLASS> j = t.stream();
-#endif
-
-#ifndef Linked
-			i = i.sorted();
-			j = j.sorted();
-#endif
-
-#if KEYS_REFERENCE || KEY_CLASS_Boolean
-			Object[] iArray = i.toArray();
-			Object[] jArray = j.toArray();
-#elif KEY_CLASS_Character
-			int[] iArray = i.toArray();
-			int[] jArray = j.mapToInt(Character::charValue).toArray();
-#else
-			KEY_TYPE_WIDENED[] iArray = i.toArray();
-			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).toArray();
-#endif
-			ensure(java.util.Arrays.equals(iArray, jArray), "! sorted arrays equal");
-		}
 
 		/* Now we take out of m everything, and check that it is empty. */
 
