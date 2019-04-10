@@ -223,6 +223,10 @@ public class BigArrays {
 	 * <p>This method can be useful for operations that seek to align on the outer array's boundaries
 	 * when possible.
 	 *
+	 * @implNote The current implementation is branch heavy and is thus not suitable for use in
+	 * inner loops. However, it should be fine for the recursive step, where split points are
+	 * computed. 
+	 *
 	 * @param index
 	 *            an index into a big array.
 	 * @param min
