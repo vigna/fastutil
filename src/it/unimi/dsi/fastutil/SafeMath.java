@@ -35,7 +35,7 @@ public final class SafeMath {
 	}
 
 	public static char safeLongToChar(final long value) {
-		if (value < Integer.MIN_VALUE || Integer.MAX_VALUE < value ) throw new IllegalArgumentException(value + " can't be represented as int (out of range)");
+		if (value < Character.MIN_VALUE || Character.MAX_VALUE < value ) throw new IllegalArgumentException(value + " can't be represented as int (out of range)");
 		return (char) value;
 	}
 
