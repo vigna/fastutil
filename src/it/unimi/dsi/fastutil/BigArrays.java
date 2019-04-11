@@ -239,7 +239,7 @@ public class BigArrays {
 	 */
 	public static long nearestSegmentStart(final long index, final long min, final long max) {
 		// There probably is a less branchy, bit twiddly way to do this, but this is fine for now.
-	    // This isn't going to be used in inner loops, only the recursive call.
+		// This isn't going to be used in inner loops, only the recursive call.
 		final long lower = start(segment(index));
 		final long upper = start(segment(index) + 1);
 		if (upper >= max) {
