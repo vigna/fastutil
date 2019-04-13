@@ -376,7 +376,7 @@ public class ObjectBigArrayBigListTest {
 		/* Now we save and read m. */
 		ObjectBigList m2 = null;
 		try {
-			final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + m.getClass().getSimpleName() + "." + n);
 			final java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			final java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 			oos.writeObject(m);
