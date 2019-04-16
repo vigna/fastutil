@@ -18,7 +18,6 @@
 package PACKAGE;
 
 import java.lang.Iterable;
-import java.util.Spliterators;
 #if KEYS_PRIMITIVE
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -111,16 +110,7 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-#if (defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED) || KEYS_REFERENCE || KEY_CLASS_Boolean
-#if KEY_CLASS_Boolean
-		// TODO this default implementation boxes and unboxes, which is not ideal.
-		// But to fix that would require either reimplementing Spliterators.spliterator(Iterable) for BooleanIterable.
-		// Or provide a view to expose BooleanIterable as ints C style and then wrap Spliterators.spliterator(Spliterator.OfInt).
-#endif
-		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliteratorUnknownSize(iterator(), 0));
-#else
-		return SPLITERATORS.narrow(KEY_WIDENED_SPLITERATOR_METHOD());
-#endif
+		return SPLITERATORS.asSpliteratorUnknownSize(iterator(), 0); 
 	}
 #endif
 
@@ -130,15 +120,12 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * This method is provided for the purpose of APIs that expect only the JDK's
 	 * primitive spliterators, of which there are only {@code int}, {@code long}, and {@code double}.
 	 *
+	 * @implSpec The default implementation widens the spliterator from {@link #spliterator()}.
 	 * @return a widened primitive spliterator on the elements of this iterable.
 	 * @since 8.3.0
 	 */
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-		if (this instanceof ImplementsSpliterator) {
-			return SPLITERATORS.widen(spliterator());
-		} else {
-			return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliteratorUnknownSize(KEY_WIDENED_ITERATOR_METHOD(), 0));
-		}
+		return WIDENED_SPLITERATORS.wrap(spliterator());
 	}
 #elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
 	/** Returns a primitive spliterator on the elements of this iterable.<p>
@@ -225,36 +212,5 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 		forEach(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (KEY_CONSUMER) action::accept);
 	}
 #endif
-
-	/** An interface indicating the Iterable has an explicit implementation of
-	 * {@link java.lang.Iterable#spliterator()}, and not a default one. This is accomplished
-	 * by reabstracting the default {@code spliterator} method this type specific collection defines.
-	 *
-	 * <p>This interface is primarily used to signal to a primitive widened spliterator method (e.g
-	 * {@link it.unimi.dsi.fastutil.shorts.ShortIterable#intSpliterator())}
-	 * that it should wrap the result of {@link java.util.Iterable#spliterator()}, instead
-	 * of avoiding that because {@code spliterator} could call the widened method.
-	 *
-	 * <p>This interface extends the type-specific Iterable interface so that if both appear in
-	 * the list of implemented interfaces, the abstract {@code spliterator()} will take priority
-	 * over the default method. It doesn't logically represent a new kind of Iterable. This
-	 * interface should be treated like the abstract classes, used only as an implementation
-	 * aid and not as a variable type.
-	 *
-	 * <p>You generally don't need to worry about this interface unless you are implementing
-	 * your own type-specific Iterable class.
-	 */
-	public static interface ImplementsSpliterator KEY_GENERIC extends KEY_ITERABLE KEY_GENERIC {
-		// Reabstract the inappropriate default from Iterable
-		@Override
-		abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
-
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
-		@Override
-		default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-			return SPLITERATORS.widen(spliterator());
-		}
-#endif
-	}
 
 }

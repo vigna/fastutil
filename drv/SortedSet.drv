@@ -19,14 +19,7 @@ package PACKAGE;
 
 import java.util.SortedSet;
 import java.util.Collection;
-import java.util.Spliterators;
 import static it.unimi.dsi.fastutil.Size64.getSizeOf;
-#if KEY_WIDENED
-import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
-import WIDENED_PACKAGE.WIDENED_ITERATORS;
-import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
-import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
-#endif
 
 
 /** A type-specific {@link SortedSet}; provides some additional methods that use polymorphism to avoid (un)boxing.
@@ -86,13 +79,6 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @implSpec If you are implementing your own primitive collection type and override this method,
-	 * you will likely want have your class additionally implement the
-	 * {@link ImplementsSpliterator} interface. That will signal to the default methods that
-	 * this type has an explicit spliterator overriden implementation, and thus shouldn't assume
-	 * this this method could call other default methods (allowing other default methods to use
-	 * your spliterator, instead of a default one).
-	 *
 	 * @apiNote This specification strengthens the one given in
 	 * {@link java.util.Collection#spliterator()}, which was already
 	 * strengthened in the corresponding type-specific class,
@@ -103,28 +89,7 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-#if (defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED) || KEYS_REFERENCE || KEY_CLASS_Boolean
-#if KEY_CLASS_Boolean
-		// TODO See the comment in BooleanCollection about how this is inefficient.
-#endif
-		return SPLITERATORS.AS_KEY_SPLITERATOR(
-			Spliterators.spliterator(iterator(), getSizeOf(this), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS), comparator());
-#else
-		return SPLITERATORS.narrow(KEY_WIDENED_SPLITERATOR_METHOD());
-#endif
-	}
-#endif
-
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
-	@Override
-	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-		if (this instanceof KEY_ITERABLE.ImplementsSpliterator) {
-			return SPLITERATORS.widen(spliterator());
-		} else {
-		return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(
-			Spliterators.spliterator(KEY_WIDENED_ITERATOR_METHOD(), getSizeOf(this), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS),
-			(KEY_TYPE_WIDENED left, KEY_TYPE_WIDENED right) -> comparator().compare(KEY_NARROWING(left), KEY_NARROWING(right)));
-		}
+		return SPLITERATORS.asSpliteratorFromSorted(iterator(), getSizeOf(this), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS, comparator());
 	}
 #endif
 
@@ -221,18 +186,4 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	}
 
 #endif
-
-	/** Reabstracts the inappropriate {@code spliterator} method from the type-specific sorted set interface. */
-	public static interface ImplementsSpliterator KEY_GENERIC extends SORTED_SET KEY_GENERIC, SET.ImplementsSpliterator KEY_GENERIC {
-		// Reabstract the inappropriate default from Collection
-		@Override
-		abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
-
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
-		@Override
-		default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-			return SET.ImplementsSpliterator.super.KEY_WIDENED_SPLITERATOR_METHOD();
-		}
-#endif
-	}
 }
