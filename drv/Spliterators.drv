@@ -20,6 +20,7 @@ package PACKAGE;
 import java.util.Spliterator;
 import java.util.Objects;
 import java.util.function.Consumer;
+import it.unimi.dsi.fastutil.SafeMath;
 #if KEYS_REFERENCE
 import java.util.Comparator;
 #endif
@@ -39,19 +40,22 @@ public final class SPLITERATORS {
 
 	private SPLITERATORS() {}
 
-	// Default characteristics for various Collection implementations
-	public static final int COLLECTION_SPLITERATOR_CHARACTERISTICS = Spliterator.SIZED
 #if KEYS_PRIMITIVE
-			| Spliterator.NONNULL;
+	static final int BASE_SPLITERATOR_CHARACTERISTICS = Spliterator.NONNULL;
 #else
-			;
+	static final int BASE_SPLITERATOR_CHARACTERISTICS = 0;
 #endif
+
+	// Default characteristics for various Collection implementations
+	public static final int COLLECTION_SPLITERATOR_CHARACTERISTICS = BASE_SPLITERATOR_CHARACTERISTICS | Spliterator.SIZED;
 
 	public static final int LIST_SPLITERATOR_CHARACTERISTICS = COLLECTION_SPLITERATOR_CHARACTERISTICS | Spliterator.ORDERED | Spliterator.SUBSIZED;
 
 	public static final int SET_SPLITERATOR_CHARACTERISTICS = COLLECTION_SPLITERATOR_CHARACTERISTICS | Spliterator.DISTINCT;
 
-	public static final int SORTED_SET_SPLITERATOR_CHARACTERISTICS = SET_SPLITERATOR_CHARACTERISTICS | Spliterator.SORTED | Spliterator.ORDERED;
+	private static final int SORTED_CHARACTERISTICS = Spliterator.ORDERED | Spliterator.SORTED;
+
+	public static final int SORTED_SET_SPLITERATOR_CHARACTERISTICS = SET_SPLITERATOR_CHARACTERISTICS | SORTED_CHARACTERISTICS;	
 
 	/** A class returning no elements and a type-specific spliterator interface.
 	 *
@@ -221,21 +225,23 @@ public final class SPLITERATORS {
 
 	private static class ArraySpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
 
-		private static final int CHARACTERISTICS =
+		private static final int BASE_CHARACTERISTICS =
 			Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED
 #if KEYS_PRIMITIVE
 			| Spliterator.NONNULL
 #endif
 		;
 
-		private final KEY_GENERIC_TYPE[] array;
+		final KEY_GENERIC_TYPE[] array;
 		private final int offset;
 		private int length, curr;
+		final int characteristics;
 
-		public ArraySpliterator(final KEY_GENERIC_TYPE[] array, final int offset, final int length) {
+		public ArraySpliterator(final KEY_GENERIC_TYPE[] array, final int offset, final int length, int additionalCharacteristics) {
 			this.array = array;
 			this.offset = offset;
 			this.length = length;
+			characteristics = BASE_CHARACTERISTICS | additionalCharacteristics;
 		}
 
 		@Override
@@ -249,7 +255,11 @@ public final class SPLITERATORS {
 		@Override
 		public long estimateSize() { return length - curr; }
 		@Override
-		public int characteristics() { return CHARACTERISTICS; }
+		public int characteristics() { return characteristics; }
+		
+		protected ArraySpliterator KEY_GENERIC makeForSplit(int newOffset, int newLength) {
+			return new ArraySpliterator KEY_GENERIC_DIAMOND(array, newOffset, newLength, characteristics);
+		}
 
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
@@ -260,15 +270,11 @@ public final class SPLITERATORS {
 			// int myNewLength = length - retLength;
 			this.curr = myNewCurr;
 			// this.length = myNewLength;
-			return new ArraySpliterator KEY_GENERIC_DIAMOND(array, retOffset, retLength);
+			return makeForSplit(retOffset, retLength);
 		}
 
 		@Override
-#if KEYS_PRIMITIVED
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-#else // ! KEY_PRIMITIVE == KEY_REFERENCE
-		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
-#endif
 			Objects.requireNonNull(action);
 			for (; curr < length; ++curr) {
 				action.accept(array[offset + curr]);
@@ -281,7 +287,7 @@ public final class SPLITERATORS {
 			if (curr >= length) return 0;
 			final int remaining = length - curr;
 			if (n < remaining) {
-				curr = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(curr + n);
+				curr = SafeMath.safeLongToInt(curr + n);
 				return n;
 			}
 			n = remaining;
@@ -290,12 +296,29 @@ public final class SPLITERATORS {
 		}
 	}
 
+	private static class ArraySpliteratorWithComparator KEY_GENERIC extends ArraySpliterator KEY_GENERIC {
+		private final KEY_COMPARATOR KEY_SUPER_GENERIC comparator;
+	
+		public ArraySpliteratorWithComparator(final KEY_GENERIC_TYPE[] array, final int offset, final int length, int additionalCharacteristics, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+			super(array, offset, length, additionalCharacteristics | SORTED_CHARACTERISTICS);
+			this.comparator = comparator;
+		}
+
+		@Override
+		protected ArraySpliteratorWithComparator KEY_GENERIC makeForSplit(int newOffset, int newLength) {
+			return new ArraySpliteratorWithComparator KEY_GENERIC_DIAMOND(array, newOffset, newLength, characteristics, comparator);
+		}
+	}
 
 	/** Wraps the given part of an array into a type-specific spliterator.
 	 *
 	 * <p>The type-specific spliterator returned by this method will iterate
 	 * {@code length} times, advancing over consecutive elements of the given
 	 * array starting from the one with index {@code offset}.
+	 *
+	 * <p>The returned spliterator will report {@link Spliterator.characteristics() characteristics}
+	 * {@link Spliterator.SIZED}, {@link Spliterator.SUBSIZED},
+	 * {@link Spliterator.ORDERED}, and for primitive arrays, {@link Spliterator.NONNULL}.
 	 *
 	 * @param array an array to wrap into a type-specific spliterator.
 	 * @param offset the first element of the array to be returned.
@@ -304,7 +327,7 @@ public final class SPLITERATORS {
 	 */
 	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array, final int offset, final int length) {
 		ARRAYS.ensureOffsetLength(array, offset, length);
-		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, offset, length);
+		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, offset, length, 0);
 	}
 
 	/** Wraps the given array into a type-specific spliterator.
@@ -312,12 +335,122 @@ public final class SPLITERATORS {
 	 * <p>The type-specific spliterator returned by this method will advance over
 	 * all elements of the given array.
 	 *
+	 * <p>The returned spliterator will report {@link Spliterator.characteristics() characteristics}
+	 * {@link Spliterator.SIZED}, {@link Spliterator.SUBSIZED},
+	 * {@link Spliterator.ORDERED}, and for primitive arrays, {@link Spliterator.NONNULL}.
+	 *
 	 * @param array an array to wrap into a type-specific spliterator.
 	 * @return a spliterator that will iterate over the elements of {@code array}.
 	 */
 	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array) {
-		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, 0, array.length);
+		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, 0, array.length, 0);
 	}
+	
+	/** Wraps the given part of an array into a type-specific spliterator.
+	 *
+	 * <p>The type-specific spliterator returned by this method will iterate
+	 * {@code length} times, advancing over consecutive elements of the given
+	 * array starting from the one with index {@code offset}.
+	 *
+	 * <p>The returned spliterator will report {@link Spliterator.characteristics() characteristics}
+	 * {@link Spliterator.SIZED}, {@link Spliterator.SUBSIZED},
+	 * {@link Spliterator.ORDERED}, and for primitive arrays, {@link Spliterator.NONNULL},
+	 * on top of any additional characteristics given in {@code additionalCharacteristics} (for example, if
+	 * the caller knows the backing array is sorted, they can pass {@link Spliterator.SORTED}). 
+	 *
+	 * @param array an array to wrap into a type-specific spliterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param length the number of elements to return.
+	 * @param additionalCharacteristics any additional characteristics to report.
+	 * @return a spliterator that will iterate over {@code length} elements of {@code array} starting at position {@code offset}.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array, final int offset, final int length, final int additionalCharacteristics) {
+		ARRAYS.ensureOffsetLength(array, offset, length);
+		return new ArraySpliterator KEY_GENERIC_DIAMOND(array, offset, length, additionalCharacteristics);
+	}
+
+	/** Wraps the given part of a sorted array into a type-specific spliterator.
+	 *
+	 * <p>It is the caller's responsibility to ensure the array is actually sorted using
+	 * the comparator given.
+	 *
+	 * <p>The type-specific spliterator returned by this method will iterate
+	 * {@code length} times, advancing over consecutive elements of the given
+	 * array starting from the one with index {@code offset}.
+	 *
+	 * <p>The returned spliterator will report {@link Spliterator.characteristics() characteristics}
+	 * {@link Spliterator.SIZED}, {@link Spliterator.SUBSIZED},
+	 * {@link Spliterator.ORDERED}, {@link Spliterator.SORTED}, and for primitive arrays,
+	 * {@link Spliterator.NONNULL},
+	 * on top of any additional characteristics given in {@code additionalCharacteristics} (for example, if
+	 * the caller knows the backing array has distinct elements, they can pass {@link Spliterator.DISTINCT}). 
+	 *
+	 * @param array an array to wrap into a type-specific spliterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param length the number of elements to return.
+	 * @param additionalCharacteristics any additional characteristics to report.
+	 * @param comparator the comparator the array was sorted with (or {@code null} for natural ordering)
+	 * @return a spliterator that will iterate over {@code length} elements of {@code array} starting at position {@code offset}.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrapPreSorted(
+			final KEY_GENERIC_TYPE[] array, final int offset, final int length, final int additionalCharacteristics, KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+		ARRAYS.ensureOffsetLength(array, offset, length);
+		return new ArraySpliteratorWithComparator KEY_GENERIC_DIAMOND(array, offset, length, additionalCharacteristics, comparator);
+	}
+
+	/** Wraps the given part of a sorted array into a type-specific spliterator.
+	 *
+	 * <p>It is the caller's responsibility to ensure the array is actually sorted using
+	 * the comparator given.
+	 *
+	 * <p>The type-specific spliterator returned by this method will iterate
+	 * {@code length} times, advancing over consecutive elements of the given
+	 * array starting from the one with index {@code offset}.
+	 *
+	 * <p>The returned spliterator will report {@link Spliterator.characteristics() characteristics}
+	 * {@link Spliterator.SIZED}, {@link Spliterator.SUBSIZED},
+	 * {@link Spliterator.ORDERED}, {@link Spliterator.SORTED}, and for primitive arrays,
+	 * {@link Spliterator.NONNULL}.
+	 *
+	 * @param array an array to wrap into a type-specific spliterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param length the number of elements to return.
+	 * @param comparator the comparator the array was sorted with (or {@code null} for natural ordering)
+	 * @return a spliterator that will iterate over {@code length} elements of {@code array} starting at position {@code offset}.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrapPreSorted(
+			final KEY_GENERIC_TYPE[] array, final int offset, final int length, KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+		return wrapPreSorted(array, offset, length, 0, comparator);
+	}
+
+	/** Wraps the given sorted array into a type-specific spliterator.
+	 *
+	 * <p>It is the caller's responsibility to ensure the array is actually sorted using
+	 * the comparator given.
+	 *
+	 * <p>The type-specific spliterator returned by this method will advance over
+	 * all elements of the given array.
+	 *
+	 * <p>The returned spliterator will report {@link Spliterator.characteristics() characteristics}
+	 * {@link Spliterator.SIZED}, {@link Spliterator.SUBSIZED},
+	 * {@link Spliterator.ORDERED}, {@link Spliterator.SORTED}, and for primitive arrays,
+	 * {@link Spliterator.NONNULL}.
+	 *
+	 * @param array an array to wrap into a type-specific spliterator.
+	 * @param comparator the comparator the array was sorted with (or {@code null} for natural ordering)
+	 * @return a spliterator that will iterate over {@code length} elements of {@code array} starting at position {@code offset}.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC wrapPreSorted(
+			final KEY_GENERIC_TYPE[] array, KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+		return wrapPreSorted(array, 0, array.length, comparator);
+	}
+
+	// There is no non-comparator version of wrapPreSorted; because Spliterator has to return the Comparator
+	// it is ordered with respect to, the caller should think about the Spliterator they use.
 
 	// wrap, unwrap, and pour are not provided because if you are using Spliterators, you typically
 	// are going to be using streams. That and Spliterator's API isn't well suited for these
@@ -690,7 +823,7 @@ public final class SPLITERATORS {
 		 * <p>Do <em>not</em> modify {@link #pos} in this method; the default {@link #trySplit()}
 		 * method takes care of this.
 		 *
-		 * <p>To comply with the spec of {@link java.util.Spliterator#ORDERED}, this will
+		 * <p>To comply with the spec of {@link Spliterator#ORDERED}, this will
 		 * only be called to create prefixes of the current sequence this spliterator is over,
 		 * and this instance will start at the end of the returned sequence and have the same
 		 * end point.
@@ -762,7 +895,7 @@ public final class SPLITERATORS {
 			if (pos >= max) return 0;
 			final int remaining = max - pos;
 			if (n < remaining) {
-				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
+				pos = SafeMath.safeLongToInt(pos + n);
 				return n;
 			}
 			n = remaining;
@@ -1196,6 +1329,325 @@ public final class SPLITERATORS {
 		return new SpliteratorConcatenator KEY_GENERIC_DIAMOND(a, offset, length);
 	}
 
+	private static class SpliteratorFromIterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
+		// TODO Expose this arithmetically incrementing split size logic as an abstract class.
+		// Like java.util.Spliterators.AbstractSpliterator?
+		private static final int BATCH_INCREMENT_SIZE = 1024;
+		private static final int BATCH_MAX_SIZE = 1 << 25;
+
+		private final KEY_ITERATOR KEY_EXTENDS_GENERIC iter;
+		final int characteristics;
+		private final boolean knownSize;
+		/** If {@code knownSize}, then has the remaining size left.
+		 * Otherwise the value of this variable has no meaning.
+		 */
+		private long size = Long.MAX_VALUE;
+		private int nextBatchSize = BATCH_INCREMENT_SIZE;
+
+		/** Used to "finish off" elements once we hit the end while splitting. */
+		private KEY_SPLITERATOR KEY_GENERIC delegate = null;
+
+		SpliteratorFromIterator(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, int characteristics) {
+			this.iter = iter;
+			this.characteristics = BASE_SPLITERATOR_CHARACTERISTICS | characteristics;
+			knownSize = false;
+		}
+
+		SpliteratorFromIterator(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, long size, int additionalCharacteristics) {
+			this.iter = iter;
+			knownSize = true;
+			this.size = size;
+			if ((additionalCharacteristics & Spliterator.CONCURRENT) != 0) {
+				this.characteristics = BASE_SPLITERATOR_CHARACTERISTICS | additionalCharacteristics;
+			} else {
+				this.characteristics = Spliterator.SIZED | Spliterator.SUBSIZED | BASE_SPLITERATOR_CHARACTERISTICS | additionalCharacteristics;
+			}
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (delegate != null){
+				boolean hadRemaining = delegate.tryAdvance(action);
+				if (!hadRemaining) delegate = null;
+				return hadRemaining;
+			}
+			if (!iter.hasNext()) return false;
+			--size;
+			action.accept(iter.NEXT_KEY());
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			if (delegate != null) {
+				delegate.forEachRemaining(action);
+				delegate = null;
+			} else {
+				iter.forEachRemaining(action);
+				size = 0;
+			}
+		}
+
+		@Override
+		public long estimateSize() {
+			if (delegate != null) return delegate.estimateSize();
+			if (!iter.hasNext()) return 0;
+			// Size can be less then or equal to zero yet still have next if the iterator
+			// was concurrently modified, in which case we don't know anymore.
+			return knownSize && size >= 0 ? size : Long.MAX_VALUE;
+		}
+
+		@Override
+		public int characteristics() {
+			return characteristics;
+		}
+		
+		protected KEY_SPLITERATOR KEY_GENERIC makeForSplit(KEY_GENERIC_TYPE[] batch, int len) {
+			return wrap(batch, 0, len, characteristics);
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			if (!iter.hasNext()) return null;
+			int batchSizeEst = knownSize && size > 0 ? (int)Math.min(nextBatchSize, size) : nextBatchSize;
+			SUPPRESS_WARNINGS_KEY_UNCHECKED
+			KEY_GENERIC_TYPE[] batch = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[batchSizeEst];
+			int actualSeen = 0;
+			while (actualSeen < batchSizeEst && iter.hasNext()) {
+				batch[actualSeen++] = iter.NEXT_KEY();
+				--size;
+			}
+			// Check if the local size variable fell behind the backing source, and if so, fill up remaining of batch
+			if (batchSizeEst < nextBatchSize && iter.hasNext()) {
+				batch = java.util.Arrays.copyOf(batch, nextBatchSize);
+				while (iter.hasNext() && actualSeen < nextBatchSize) {
+					batch[actualSeen++] = iter.NEXT_KEY();
+					--size;
+				}
+			}
+			nextBatchSize = Math.min(BATCH_MAX_SIZE, nextBatchSize + BATCH_INCREMENT_SIZE);
+			
+			// If we have none remaining, then set our delegate to "finish off" the batch we just made.
+			KEY_SPLITERATOR KEY_GENERIC split = makeForSplit(batch, actualSeen); 
+			if (!iter.hasNext()) {
+				delegate = split;
+				return split.trySplit();
+			} else {
+				return split;
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (iter instanceof KEY_BIG_LIST_ITERATOR) {
+				long skipped = ((KEY_BIG_LIST_ITERATOR KEY_EXTENDS_GENERIC)iter).skip(n);
+				size -= skipped;
+				return skipped;
+			} else {
+				long skippedSoFar = 0;
+				while (skippedSoFar < n && iter.hasNext()) {
+					int skipped = iter.skip(SafeMath.safeLongToInt(Math.min(n, Integer.MAX_VALUE)));
+					size -= skipped;
+					skippedSoFar += skipped;
+				}
+				return skippedSoFar;
+			}
+		}
+	}
+
+	private static class SpliteratorFromIteratorWithComparator KEY_GENERIC extends SpliteratorFromIterator KEY_GENERIC { 
+	
+		private final KEY_COMPARATOR KEY_SUPER_GENERIC comparator;
+		
+		SpliteratorFromIteratorWithComparator(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, int additionalCharacteristics, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+			super(iter, additionalCharacteristics | SORTED_CHARACTERISTICS);
+			this.comparator = comparator;
+		}
+
+		SpliteratorFromIteratorWithComparator(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, long size, int additionalCharacteristics, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+			super(iter, size, additionalCharacteristics | SORTED_CHARACTERISTICS);
+			this.comparator = comparator;
+		}
+		
+		@Override
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			return comparator;
+		}
+
+		@Override
+		protected KEY_SPLITERATOR KEY_GENERIC makeForSplit(KEY_GENERIC_TYPE[] array, int len) {
+			return wrapPreSorted(array, 0, len, characteristics, comparator);
+		}
+	}
+
+	/** Wrap a type-specific {@link java.util.Iterator} of a known size as a type-specific {@link java.util.Spliterator}
+	 *
+	 * <p>The returned spliterator will report
+	 * {@link java.util.Spliterator.characteristics() characteristics} {@code additionalCharacterisitcs},
+	 * and for primitive types, {@link Spliterator.NONNULL}.
+	 * It will also report {@link java.util.Spliterator.SIZED}, {@link java.util.Spliterator.SUBSIZED},
+	 * unless {@link java.util.Spliterator.CONCURRENT} is to be reported, in which case these two
+	 * are not implicitly reported.
+	 *
+	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
+	 * yeild limited performance gains when run in parallel contexts, as {@link java.util.Spliterator#trySplit()}
+	 * is linear runtime. 
+	 *
+	 * @param iter the type-specific {@code Iterator} to wrap
+	 * @param size the number of elements the iterator will return
+	 * @param additionalCharacterisitcs any additional characteristics to report
+	 * @return a type-specific {@code Spliterator} that will give the same elements the iterator will return.
+	 * @see java.util.Spliterators.spliterator(java.util.Iterator, long, int)
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC asSpliterator(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, final long size, final int additionalCharacterisitcs) {
+		return new SpliteratorFromIterator KEY_GENERIC_DIAMOND(iter, size, additionalCharacterisitcs);
+	}
+
+	/** Wrap a type-specific, sorted {@link java.util.Iterator} of a known size as a type-specific {@link java.util.Spliterator}
+	 *
+	 * <p>It is the caller's responsibility to ensure the iterator's order
+	 * is actually sorted according to the comparator given.
+	 *
+	 * <p>The returned spliterator will report
+	 * {@link java.util.Spliterator.characteristics() characteristics} {@code additionalCharacterisitcs},
+	 * {@link java.util.Spliterator.ORDERED}, {@link java.util.Spliterator.SORTED}, and for primitive types,
+	 * {@link Spliterator.NONNULL}.
+	 * It will also report {@link java.util.Spliterator.SIZED}, {@link java.util.Spliterator.SUBSIZED},
+	 * unless {@link java.util.Spliterator.CONCURRENT} is to be reported, in which case these two
+	 * are not implicitly reported.
+	 *
+	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
+	 * yeild limited performance gains when run in parallel contexts, as {@link java.util.Spliterator#trySplit()}
+	 * is linear runtime.
+	 *
+	 * @param iter the type-specific {@code Iterator} to wrap
+	 * @param size the number of elements the iterator will return
+	 * @param additionalCharacterisitcs any additional characteristics to report
+	 * @param comparator the comparator the iterator is ordered on (or {@code null} for natural ordering)
+	 * @return a type-specific {@code Spliterator} that will give the same elements the iterator will return.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC asSpliteratorFromSorted(
+			final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, final long size, final int additionalCharacterisitcs, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+		return new SpliteratorFromIteratorWithComparator KEY_GENERIC_DIAMOND(iter, size, additionalCharacterisitcs, comparator);
+	}
+
+	/** Wrap a type-specific {@link java.util.Iterator} of an unknown size as a type-specific {@link java.util.Spliterator}
+	 *
+	 * <p>The returned spliterator will report{@code additionalCharacterisitcs},
+	 * and for primitive types, {@link Spliterator.NONNULL}.
+	 * 
+	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
+	 * yeild limited performance gains when run in parallel contexts, as {@link java.util.Spliterator#trySplit()}
+	 * is linear runtime.
+	 *
+	 * @param iter the type-specific {@code Iterator} to wrap
+	 * @param characterisitcs the characteristics to report
+	 * @return a type-specific {@code Spliterator} that will give the same elements the iterator will return.
+	 * @see java.util.Spliterators.spliteratorUnknownSize(java.util.Iterator, int)
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC asSpliteratorUnknownSize(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, final int additionalCharacterisitcs) {
+		return new SpliteratorFromIterator KEY_GENERIC_DIAMOND(iter, additionalCharacterisitcs);
+	}
+
+	/** Wrap a type-specific, sorted {@link java.util.Iterator} of an unknown size as a type-specific {@link java.util.Spliterator}
+	 *
+	 * <p>It is the caller's responsibility to ensure the iterator's order
+	 * is actually sorted according to the comparator given.
+	 *
+	 * <p>The returned spliterator will report
+	 * {@link java.util.Spliterator.characteristics() characteristics} {@code additionalCharacterisitcs},
+	 * {@link java.util.Spliterator.ORDERED}, {@link java.util.Spliterator.SORTED}, and for primitive types,
+	 * {@link Spliterator.NONNULL}.
+	 *
+	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
+	 * yeild limited performance gains when run in parallel contexts, as {@link java.util.Spliterator#trySplit()}
+	 * is linear runtime.
+	 *
+	 * @param iter the type-specific {@code Iterator} to wrap
+	 * @param additionalCharacterisitcs the characteristics to report
+	 * @param comparator the comparator the iterator is ordered on (or {@code null} for natural ordering)
+	 * @return a type-specific {@code Spliterator} that will give the same elements the iterator will return.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC asSpliteratorFromSortedUnknownSize(final KEY_ITERATOR KEY_EXTENDS_GENERIC iter, final int additionalCharacterisitcs, final KEY_COMPARATOR KEY_SUPER_GENERIC comparator) {
+		return new SpliteratorFromIteratorWithComparator KEY_GENERIC_DIAMOND(iter, additionalCharacterisitcs, comparator);
+	}
+
+	private static final class IteratorFromSpliterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC, KEY_CONSUMER KEY_GENERIC {
+		private final KEY_SPLITERATOR KEY_EXTENDS_GENERIC spliterator;
+		private KEY_GENERIC_TYPE holder = KEY_NULL;
+		/** Whether we have an element "peeked" from a hasNext that we have yet to return */
+		private boolean hasPeeked = false;
+
+		IteratorFromSpliterator(final KEY_SPLITERATOR KEY_EXTENDS_GENERIC spliterator) {
+			this.spliterator = spliterator;
+		}
+
+		@Override
+		public void accept(final KEY_GENERIC_TYPE item) {
+			holder = item;
+		}
+
+		@Override
+		public boolean hasNext() {
+			if (hasPeeked) return true;
+			boolean hadElement = spliterator.tryAdvance(this);
+			if (!hadElement) return false;
+			hasPeeked = true; 
+			return true;
+		}
+
+		@Override
+		public KEY_GENERIC_TYPE NEXT_KEY() {
+			if (hasPeeked) {
+				hasPeeked = false;
+				return holder;
+			}
+			boolean hadElement = spliterator.tryAdvance(this);
+			if (!hadElement) throw new java.util.NoSuchElementException();
+			return holder;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			if (hasPeeked) {
+				hasPeeked = false;
+				action.accept(holder);
+			}
+			spliterator.forEachRemaining(action);
+		}
+
+		@Override
+		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			int skipped = 0;
+			if (hasPeeked) {
+				hasPeeked = false;
+				spliterator.skip(1);
+				++skipped;
+				--n;
+			}
+			if (n > 0) {
+				skipped += SafeMath.safeLongToInt(spliterator.skip(n));
+			}
+			return skipped;
+		}
+	}
+
+	/** Wrap a type-specific {@link java.util.Spliterator} as a type-specific {@link java.util.Iterator}
+	 *
+	 * @param spliterator the type-specific {@code Spliterator} to wrap
+	 * @return a type-specific {@code Iterator} that will return the same elements the spliterator will give.
+	 * @see java.util.Spliterators.iterator(java.util.Spliterator)
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC asIterator(final KEY_SPLITERATOR KEY_EXTENDS_GENERIC spliterator) {
+		return new IteratorFromSpliterator KEY_GENERIC_DIAMOND(spliterator);
+	}
 
 #if SMALL_TYPES && (KEY_CLASS_Short || KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
 

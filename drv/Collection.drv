@@ -18,7 +18,6 @@
 package PACKAGE;
 
 import java.util.Collection;
-import java.util.Spliterators;
 import static it.unimi.dsi.fastutil.Size64.getSizeOf;
 #if KEY_WIDENED
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
@@ -61,7 +60,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	@Override
 	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() {
-		return WIDENED_ITERATORS.wrap(iterator());
+		return super.KEY_WIDENED_ITERATOR_METHOD();
 	}
 #elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
 	/** Returns a primitive iterator on the elements of this collection.<p>
@@ -82,13 +81,6 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 
 	/** Returns a type-specific spliterator on the elements of this collection.
 	 *
-	 * @implSpec If you are implementing your own primitive collection type and override this method,
-	 * you will likely want have your class additionally implement your specific types'
-	 * {@link ImplementsSpliterator} interface. That will signal to the default methods that
-	 * this type has an explicit spliterator overriden implementation, and thus shouldn't assume
-	 * this this method could call other default methods (allowing other default methods to use
-	 * your spliterator, instead of a default one).
-	 *
 	 * @apiNote This specification strengthens the one given in
 	 * {@link java.util.Collection#spliterator()}.
 	 *
@@ -100,17 +92,8 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-#if (defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED) || KEYS_REFERENCE || KEY_CLASS_Boolean
-#if KEY_CLASS_Boolean
-		// TODO this default implementation boxes and unboxes, which is not ideal.
-		// But to fix that would require either reimplementing Spliterators.spliterator(Iterable) for BooleanIterable.
-		// Or provide a view to expose BooleanCollection as ints C style and then wrap Spliterators.spliterator(Spliterator.OfInt).
-#endif
-		return SPLITERATORS.AS_KEY_SPLITERATOR(Spliterators.spliterator(
-				iterator(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS));
-#else
-		return SPLITERATORS.narrow(KEY_WIDENED_SPLITERATOR_METHOD());
-#endif
+		return SPLITERATORS.asSpliterator(
+				iterator(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS);
 	}
 #endif
 
@@ -125,12 +108,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	@Override
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-		if (this instanceof KEY_ITERABLE.ImplementsSpliterator) {
-			return SPLITERATORS.widen(spliterator());
-		} else {
-			return WIDENED_SPLITERATORS.AS_KEY_WIDENED_SPLITERATOR(Spliterators.spliterator(
-					KEY_WIDENED_ITERATOR_METHOD(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS));
-		}
+		return super.KEY_WIDENED_SPLITERATOR_METHOD();
 	}
 #elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
 	/** Returns a primitive spliterator on the elements of this collection.<p>
@@ -332,35 +310,4 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 #endif
 
 #endif
-
-	/** An interface indicating the Collection has an explicit implementation of
-	 * {@link java.util.Collection#spliterator()}, and not a default one. This is accomplished
-	 * by reabstracting the default {@code spliterator} method this type specific collection defines.
-	 *
-	 * <p>This interface is primarily used to signal to a primitive widened spliterator method (e.g
-	 * {@link it.unimi.dsi.fastutil.shorts.ShortCollection#intSpliterator())}
-	 * that it should wrap the result of {@link java.util.Collection#spliterator()}, instead
-	 * of avoiding that because {@code spliterator} could call the widened method.
-	 *
-	 * <p>This interface extends the type-specific Collection interface so that if both appear in
-	 * the list of implemented interfaces, the abstract {@code spliterator()} will take priority
-	 * over the default method. It doesn't logically represent a new kind of Collection. This
-	 * interface should be treated like the abstract classes, used only as an implementation
-	 * aid and not as a variable type.
-	 *
-	 * <p>You generally don't need to worry about this interface unless you are implementing
-	 * your own type-specific Collection class.
-	 */
-	public static interface ImplementsSpliterator KEY_GENERIC extends COLLECTION KEY_GENERIC, KEY_ITERABLE.ImplementsSpliterator KEY_GENERIC {
-		// Reabstract the inappropriate default from Collection
-		@Override
-		abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
-
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
-		@Override
-		default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
-			return SPLITERATORS.widen(spliterator());
-		}
-#endif
-	}
 }
