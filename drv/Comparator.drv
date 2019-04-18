@@ -43,6 +43,11 @@ public interface KEY_COMPARATOR KEY_GENERIC extends Comparator<KEY_GENERIC_CLASS
 
 	int compare(KEY_TYPE k1, KEY_TYPE k2);
 
+	@Override
+	default KEY_COMPARATOR KEY_GENERIC reversed() {
+		return COMPARATORS.oppositeComparator(this);
+	}
+
 #if KEYS_PRIMITIVE
 	/** {@inheritDoc}
 	 * <p>This implementation delegates to the corresponding type-specific method.
@@ -52,6 +57,18 @@ public interface KEY_COMPARATOR KEY_GENERIC extends Comparator<KEY_GENERIC_CLASS
 	default int compare(KEY_GENERIC_CLASS ok1, KEY_GENERIC_CLASS ok2) {
 		return compare(ok1.KEY_VALUE(), ok2.KEY_VALUE());
 	}
-#endif
 
+	default KEY_COMPARATOR KEY_GENERIC thenComparing(KEY_COMPARATOR KEY_SUPER_GENERIC second) {
+		return (KEY_COMPARATOR KEY_SUPER_GENERIC & java.io.Serializable) (k1, k2) -> {
+			int comp = compare(k1, k2);
+			return comp == 0 ? second.compare(k1, k2) : comp;
+		};
+	}
+
+	@Override
+	default Comparator<KEY_GENERIC_CLASS> KEY_GENERIC thenComparing(Comparator<? super KEY_CLASS> second) {
+		if (second instanceof KEY_COMPARATOR) return thenComparing((KEY_COMPARATOR KEY_SUPER_GENERIC)second);
+		return Comparator.super.thenComparing(second);
+	}
+#endif
 }
