@@ -56,7 +56,7 @@ public interface Size64 {
 	/** Returns the size for a given {@link Collection} as a {@code long}, using {@link #size64()}
 	 * if applicable, else using {@link Collection#size()}.
 	 *
-	 * @param the collection whose size to get
+	 * @param c the collection whose size to get
 	 * @return the size
 	 */
 	public static long getSizeOf(Collection<?> c) {
@@ -66,7 +66,7 @@ public interface Size64 {
 	/** Returns the size for a given {@link java.util.Map} as a {@code long}, using {@link #size64()}
 	 * if applicable, else using {@link java.util.Map#size()}.
 	 *
-	 * @param the map whose size to get
+	 * @param m the map whose size to get
 	 * @return the size
 	 */
 	public static long getSizeOf(java.util.Map<?, ?> m) {
