@@ -34,7 +34,7 @@ s */
 public class FastMultiByteArrayInputStream extends MeasurableInputStream implements RepositionableStream {
 
 	/** The number of bits of an array slice index. */
-	public static final int SLICE_BITS = 10;
+	public static final int SLICE_BITS = 30;
 
 	/** The maximum length of an array slice. */
 	public static final int SLICE_SIZE = 1 << SLICE_BITS;
