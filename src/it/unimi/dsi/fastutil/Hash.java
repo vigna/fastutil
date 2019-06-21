@@ -105,6 +105,36 @@ public interface Hash {
 		 * @return true if the two specified objects are equal with respect to this hash strategy.
 		 */
 		boolean equals(K a, K b);
+
+		/**
+		 * Returns an identity-based hash strategy.
+		 *
+		 * @param <K> the type to be used in the strategy
+		 * @return an identity-based hash strategy
+		 */
+		@SuppressWarnings("unchecked")
+		static <K> Strategy<K> identity() {
+			return (Strategy<K>) Identity.INSTANCE;
+		}
+
+		/**
+		 * An identity-based hash strategy.
+		 *
+		 * @param <K> the type to be used in the strategy
+		 */
+		final class Identity<K> implements Strategy<K> {
+			static final Identity<?> INSTANCE = new Identity<>();
+
+			@Override
+			public int hashCode(final K o) {
+				return System.identityHashCode(o);
+			}
+
+			@Override
+			public boolean equals(final K a, final K b) {
+				return a == b;
+			}
+		}
 	}
 
 	/** The default growth factor of a hash table. */
