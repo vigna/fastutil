@@ -1416,13 +1416,78 @@ public final class ARRAYS {
 		parallelQuickSort(x, y, 0, x.length);
 	}
 
+	/** Sorts an array according to the natural ascending order,
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array. The
+	 * sort will be stable unless it is provable that it would be impossible for there to be any difference
+	 * between a stable and unstable sort for the given type, in which case stability is meaningless and thus
+	 * unspecified.
+	 *
+	 * @param a the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void unstableSort(final KEY_GENERIC_TYPE a[], final int from, final int to) {
+#if KEYS_PRIMITIVE && !KEY_CLASS_Boolean
+#if KEY_CLASS_Byte
+			// JDK's sort for bytes uses bucket sort; not even radix sort can beat that.
+			java.util.Arrays.sort(a, from, to);
+#else
+			if (to - from >= RADIX_SORT_MIN_THRESHOLD) {
+				radixSort(a, from, to);
+			} else {
+				quickSort(a, from, to);
+			}
+#endif
+#else
+			quickSort(a, from, to);
+#endif
+	}
 
+	/** Sorts the specified range of elements according to the natural ascending order
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array.
+	 * No assurance is made of the stability of the sort.
+	 *
+	 * @param a the array to be sorted.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void unstableSort(final KEY_GENERIC_TYPE a[]) {
+		unstableSort(a, 0, a.length);
+	}
+
+
+	/** Sorts the specified range of elements according to the order induced by the specified comparator,
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array.
+	 * No assurance is made of the stability of the sort.
+	 *
+	 * @param a the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 * @param comp the comparator to determine the sorting order.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void unstableSort(final KEY_GENERIC_TYPE a[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp) {
+		quickSort(a, from, to, comp);
+	}
+
+
+	/** Sorts an array according to the order induced by the specified comparator,
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array.
+	 * No assurance is made of the stability of the sort.
+	 *
+	 * @param a the array to be sorted.
+	 * @param comp the comparator to determine the sorting order.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void unstableSort(final KEY_GENERIC_TYPE a[], KEY_COMPARATOR KEY_GENERIC comp) {
+		unstableSort(a, 0, a.length, comp);
+	}
 
 	/** Sorts the specified range of elements according to the natural ascending order using mergesort, using a given pre-filled support array.
 	 *
 	 * <p>This sort is guaranteed to be <i>stable</i>: equal elements will not be reordered as a result
 	 * of the sort. Moreover, no support arrays will be allocated.
-
+	 *
 	 * @param a the array to be sorted.
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
@@ -1550,6 +1615,91 @@ public final class ARRAYS {
 	 */
 	public static KEY_GENERIC void mergeSort(final KEY_GENERIC_TYPE a[], KEY_COMPARATOR KEY_GENERIC comp) {
 		mergeSort(a, 0, a.length, comp);
+	}
+
+	/** Sorts an array according to the natural ascending order,
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array. The
+	 * sort will be stable unless it is provable that it would be impossible for there to be any difference
+	 * between a stable and unstable sort for the given type, in which case stability is meaningless and thus
+	 * unspecified.
+	 *
+	 * <p>An array as large as {@code a} may be allocated by this method.
+	 *
+	 * @param a the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void stableSort(final KEY_GENERIC_TYPE a[], final int from, final int to) {
+#if KEYS_REFERENCE
+		// Use JDK's sort, which is likely to be adaptive and still be stable.
+		java.util.Arrays.sort(a, from, to);
+#elif KEYS_PRIMITIVE && !(KEY_CLASS_Float || KEY_CLASS_Double)
+		// For non-floating point primitive types, when comparing naturally,
+		// it is impossible to tell the difference between a stable and not-stable sort.
+		// So just use the probably faster unstable sort.
+		unstableSort(a, from, to);
+#else
+		// Due to subtle differences between Float/Double.compare and operator compare, it is
+		// not safe to delegate this to java.util.Arrays.sort(double[], int, int)
+		mergeSort(a, from, to);
+#endif
+	}
+
+	/** Sorts the specified range of elements according to the natural ascending order
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array. The
+	 * sort will be stable unless it is provable that it would be impossible for there to be any difference
+	 * between a stable and unstable sort for the given type, in which case stability is meaningless and thus
+	 * unspecified.
+	 *
+	 * <p>An array as large as {@code a} may be allocated by this method.
+	 *
+	 * @param a the array to be sorted.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void stableSort(final KEY_GENERIC_TYPE a[]) {
+		stableSort(a, 0, a.length);
+	}
+
+
+	/** Sorts the specified range of elements according to the order induced by the specified comparator,
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array. The
+	 * sort will be stable unless it is provable that it would be impossible for there to be any difference
+	 * between a stable and unstable sort for the given type, in which case stability is meaningless and thus
+	 * unspecified.
+	 *
+	 * <p>An array as large as {@code a} may be allocated by this method.
+	 *
+	 * @param a the array to be sorted.
+	 * @param from the index of the first element (inclusive) to be sorted.
+	 * @param to the index of the last element (exclusive) to be sorted.
+	 * @param comp the comparator to determine the sorting order.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void stableSort(final KEY_GENERIC_TYPE a[], final int from, final int to, KEY_COMPARATOR KEY_GENERIC comp) {
+#if KEYS_REFERENCE
+		// Use JDK's sort, which is likely to be adaptive and still be stable.
+		java.util.Arrays.sort(a, from, to, comp);
+#else
+		mergeSort(a, from, to, comp);
+#endif
+	}
+
+
+	/** Sorts an array according to the order induced by the specified comparator,
+	 * potentially dynamically choosing an appropriate algorithm given the type and size of the array. The
+	 * sort will be stable unless it is provable that it would be impossible for there to be any difference
+	 * between a stable and unstable sort for the given type, in which case stability is meaningless and thus
+	 * unspecified.
+	 *
+	 * <p>An array as large as {@code a} may be allocated by this method.
+	 *
+	 * @param a the array to be sorted.
+	 * @param comp the comparator to determine the sorting order.
+	 * @since 8.3.0
+	 */
+	public static KEY_GENERIC void stableSort(final KEY_GENERIC_TYPE a[], KEY_COMPARATOR KEY_GENERIC comp) {
+		stableSort(a, 0, a.length, comp);
 	}
 
 #if ! KEY_CLASS_Boolean
@@ -1685,6 +1835,16 @@ public final class ARRAYS {
 	private static final int DIGITS_PER_ELEMENT = KEY_CLASS.SIZE / DIGIT_BITS;
 	private static final int RADIXSORT_NO_REC = 1024;
 	private static final int PARALLEL_RADIXSORT_NO_FORK = 1024;
+
+	/** Threshold <em>hint</em> for using a radix sort vs a comparison based sort. */
+	// TODO experimentally determine best thresholds.
+#if KEY_CLASS_Byte || KEY_CLASS_Short
+	static final int RADIX_SORT_MIN_THRESHOLD = 5000;
+#elif KEY_CLASS_Long || KEY_CLASS_Double
+	static final int RADIX_SORT_MIN_THRESHOLD = 20000;
+#else
+	static final int RADIX_SORT_MIN_THRESHOLD = 10000;
+#endif
 
 	/** This method fixes negative numbers so that the combination exponent/significand is lexicographically sorted. */
 #if KEY_CLASS_Double
