@@ -535,7 +535,7 @@ $(SORTED_MAPS_STATIC): drv/SortedMaps.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(SORTED_MAPS_STATIC)
 
 
-COMPARATORS_STATIC := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Comparators.c)
+COMPARATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Comparators.c)
 $(COMPARATORS_STATIC): drv/Comparators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COMPARATORS_STATIC)
