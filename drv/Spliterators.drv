@@ -496,6 +496,8 @@ public final class SPLITERATORS {
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 #if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
 			Objects.requireNonNull(action);
+			// This will cause an unchecked cast warning, but the code gen conditionals for this method are already
+			// too complicated to justify adding the @SuppressWarnings conditionally.
 			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			i.forEachRemaining(action);
@@ -1150,7 +1152,7 @@ public final class SPLITERATORS {
 			return result;
 		}
 
-		/** Compute the union of all contained spliterators' characteristics */
+		/** Compute the intersection of all contained spliterators' characteristics */
 		private int computeCharacteristics() {
 			int current = ~0;
 			int curLength = length;
@@ -1211,7 +1213,12 @@ public final class SPLITERATORS {
 		@Override
 		public long estimateSize() {
 			if (length <= 0) return 0;
-			return a[offset].estimateSize() + remainingEstimatedExceptCurrent;
+			long est = a[offset].estimateSize() + remainingEstimatedExceptCurrent;
+			if (est < 0) {
+				// Overflow
+				return Long.MAX_VALUE;
+			}
+			return est;
 		}
 
 		@Override
@@ -1479,8 +1486,8 @@ public final class SPLITERATORS {
 	 * are not implicitly reported.
 	 *
 	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
-	 * yeild limited performance gains when run in parallel contexts, as {@link Spliterator#trySplit()}
-	 * is linear runtime.
+	 * yeild limited performance gains when run in parallel contexts, as the returned spliterator's
+	 * {@link Spliterator#trySplit()} will have linear runtime.
 	 *
 	 * @param iter the type-specific {@code Iterator} to wrap
 	 * @param size the number of elements the iterator will return
@@ -1507,8 +1514,8 @@ public final class SPLITERATORS {
 	 * are not implicitly reported.
 	 *
 	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
-	 * yeild limited performance gains when run in parallel contexts, as {@link Spliterator#trySplit()}
-	 * is linear runtime.
+	 * yeild limited performance gains when run in parallel contexts, as the returned spliterator's
+	 * {@link Spliterator#trySplit()} will have linear runtime.
 	 *
 	 * @param iter the type-specific {@code Iterator} to wrap
 	 * @param size the number of elements the iterator will return
@@ -1528,8 +1535,8 @@ public final class SPLITERATORS {
 	 * and for primitive types, {@link Spliterator#NONNULL}.
 	 *
 	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
-	 * yeild limited performance gains when run in parallel contexts, as {@link Spliterator#trySplit()}
-	 * is linear runtime.
+	 * yeild limited performance gains when run in parallel contexts, as the returned spliterator's
+	 * {@link Spliterator#trySplit()} will have linear runtime.
 	 *
 	 * @param iter the type-specific {@code Iterator} to wrap
 	 * @param characterisitcs the characteristics to report
@@ -1552,8 +1559,8 @@ public final class SPLITERATORS {
 	 * {@link Spliterator#NONNULL}.
 	 *
 	 * <p>Because {@link java.util.Iterator} is an inherently linear API, the returned spliterator will
-	 * yeild limited performance gains when run in parallel contexts, as {@link Spliterator#trySplit()}
-	 * is linear runtime.
+	 * yeild limited performance gains when run in parallel contexts, as the returned spliterator's
+	 * {@link Spliterator#trySplit()} will have linear runtime.
 	 *
 	 * @param iter the type-specific {@code Iterator} to wrap
 	 * @param additionalCharacterisitcs the characteristics to report
