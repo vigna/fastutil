@@ -456,6 +456,7 @@ public final class SPLITERATORS {
 #if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
 		// This is pretty much the only time overriding this overload is correct; we want to
 		// delegate as an Object consumer, not wrap it as a primitive one.
+		@Override
 		public boolean tryAdvance(final KEY_CONSUMER action) {
 			return i.tryAdvance(action);
 		}
@@ -466,6 +467,8 @@ public final class SPLITERATORS {
 		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
 #if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
 			Objects.requireNonNull(action);
+			// This will cause an unchecked cast warning, but the code gen conditionals for this method are already
+			// too complicated to justify adding the @SuppressWarnings conditionally.
 			return i.tryAdvance(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			return i.tryAdvance(action);
