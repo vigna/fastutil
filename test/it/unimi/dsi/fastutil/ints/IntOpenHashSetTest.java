@@ -38,7 +38,7 @@ public class IntOpenHashSetTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testToArrayNullAtEnd() {
-		IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
 		assertEquals(3, s.toArray(new Object[0]).length);
 		assertEquals(3, s.toArray(new Integer[0]).length);
 		assertTrue(s.toArray(new Integer[] { -1, -1, -1, -1 })[3] == null);
@@ -47,20 +47,20 @@ public class IntOpenHashSetTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testContainsNull() {
-		IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
 		assertFalse(s.contains(null));
 	}
 
 	@SuppressWarnings({ "boxing", "unlikely-arg-type" })
 	@Test
 	public void testEquals() {
-		IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
 		assertFalse(s.equals(new ObjectOpenHashSet<>(new Integer[] { 1, null })));
 	}
 
 	@Test
 	public void testInfiniteLoop0() {
-		IntOpenHashSet set = new IntOpenHashSet(4, 1.0f);
+		final IntOpenHashSet set = new IntOpenHashSet(4, 1.0f);
 		set.add(1);
 		set.add(2);
 		set.add(3);
@@ -71,7 +71,7 @@ public class IntOpenHashSetTest {
 
 	@Test
 	public void testInfiniteLoop1() {
-		IntOpenHashSet set = new IntOpenHashSet();
+		final IntOpenHashSet set = new IntOpenHashSet();
 		set.add(1);
 		set.add(2);
 		set.add(3);
@@ -81,7 +81,7 @@ public class IntOpenHashSetTest {
 	@Test
 	public void testStrangeRetainAllCase() {
 
-		IntArrayList initialElements = IntArrayList.wrap(new int[] { 586, 940,
+		final IntArrayList initialElements = IntArrayList.wrap(new int[] { 586, 940,
 				1086, 1110, 1168, 1184, 1185, 1191, 1196, 1229, 1237, 1241,
 				1277, 1282, 1284, 1299, 1308, 1309, 1310, 1314, 1328, 1360,
 				1366, 1370, 1378, 1388, 1392, 1402, 1406, 1411, 1426, 1437,
@@ -103,11 +103,11 @@ public class IntOpenHashSetTest {
 				7094, 7379, 7384, 7388, 7394, 7414, 7419, 7458, 7459, 7466,
 				7467 });
 
-		IntArrayList retainElements = IntArrayList.wrap(new int[] { 586 });
+		final IntArrayList retainElements = IntArrayList.wrap(new int[] { 586 });
 
 		// Initialize both implementations with the same data
-		IntOpenHashSet instance = new IntOpenHashSet(initialElements);
-		IntRBTreeSet referenceInstance = new IntRBTreeSet(initialElements);
+		final IntOpenHashSet instance = new IntOpenHashSet(initialElements);
+		final IntRBTreeSet referenceInstance = new IntRBTreeSet(initialElements);
 
 		instance.retainAll(retainElements);
 		referenceInstance.retainAll(retainElements);
@@ -131,8 +131,8 @@ public class IntOpenHashSetTest {
 	@Test
 	public void testSmallExpectedValuesWeirdLoadFactors() {
 		for(int expected = 0; expected < 5; expected ++)
-			for(float loadFactor: new float[] { Float.MIN_VALUE, .25f, .5f, .75f, 1 - Float.MIN_VALUE }) {
-				IntOpenHashSet s = new IntOpenHashSet(0, loadFactor);
+			for(final float loadFactor: new float[] { Float.MIN_VALUE, .25f, .5f, .75f, 1 - Float.MIN_VALUE }) {
+				final IntOpenHashSet s = new IntOpenHashSet(0, loadFactor);
 				assertTrue(s.add(2));
 				assertTrue(s.add(3));
 				assertFalse(s.add(2));
@@ -142,7 +142,7 @@ public class IntOpenHashSetTest {
 
 	@Test
 	public void testRemove() {
-		IntOpenHashSet s = new IntOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntOpenHashSet s = new IntOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		for(int i = 0; i < 100; i++) assertTrue(s.add(i));
 		for(int i = 0; i < 100; i++) assertFalse(s.remove(100 + i));
 		for(int i = 50; i < 150; i++) assertTrue(Integer.toString(i % 100), s.remove(i % 100));
@@ -154,7 +154,7 @@ public class IntOpenHashSetTest {
 		for(int i = -1; i <= 1; i++) assertTrue(s.add(i));
 		assertTrue(s.remove(0));
 		IntIterator iterator = s.iterator();
-		IntOpenHashSet z = new IntOpenHashSet();
+		final IntOpenHashSet z = new IntOpenHashSet();
 		z.add(iterator.nextInt());
 		z.add(iterator.nextInt());
 		assertFalse(iterator.hasNext());
@@ -168,7 +168,7 @@ public class IntOpenHashSetTest {
 		assertFalse(s.contains(0));
 
 		iterator = s.iterator();
-		int[] content = new int[2];
+		final int[] content = new int[2];
 		content[0] = iterator.nextInt();
 		content[1] = iterator.nextInt();
 		assertFalse(iterator.hasNext());
@@ -178,7 +178,7 @@ public class IntOpenHashSetTest {
 
 	@Test
 	public void testWrapAround() {
-		IntOpenHashSet s = new IntOpenHashSet(4, .5f);
+		final IntOpenHashSet s = new IntOpenHashSet(4, .5f);
 		assertEquals(8, s.n);
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
 		s.add(HashCommon.invMix(6));
@@ -187,9 +187,9 @@ public class IntOpenHashSetTest {
 		assertNotEquals(0, s.key[0]);
 		assertNotEquals(0, s.key[6]);
 		assertNotEquals(0, s.key[7]);
-		IntOpenHashSet keys = s.clone();
-		IntIterator iterator = s.iterator();
-		IntOpenHashSet t = new IntOpenHashSet();
+		final IntOpenHashSet keys = s.clone();
+		final IntIterator iterator = s.iterator();
+		final IntOpenHashSet t = new IntOpenHashSet();
 		t.add(iterator.nextInt());
 		t.add(iterator.nextInt());
 		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
@@ -200,7 +200,7 @@ public class IntOpenHashSetTest {
 
 	@Test
 	public void testWrapAround2() {
-		IntOpenHashSet s = new IntOpenHashSet(4, .75f);
+		final IntOpenHashSet s = new IntOpenHashSet(4, .75f);
 		assertEquals(8, s.n);
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
 		s.add(HashCommon.invMix(4));
@@ -214,9 +214,9 @@ public class IntOpenHashSetTest {
 		assertNotEquals(0, s.key[6]);
 		assertNotEquals(0, s.key[7]);
 		//System.err.println(Arrays.toString(s.key));
-		IntOpenHashSet keys = s.clone();
-		IntIterator iterator = s.iterator();
-		IntOpenHashSet t = new IntOpenHashSet();
+		final IntOpenHashSet keys = s.clone();
+		final IntIterator iterator = s.iterator();
+		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
 		//System.err.println(Arrays.toString(s.key));
@@ -235,7 +235,7 @@ public class IntOpenHashSetTest {
 
 	@Test
 	public void testWrapAround3() {
-		IntOpenHashSet s = new IntOpenHashSet(4, .75f);
+		final IntOpenHashSet s = new IntOpenHashSet(4, .75f);
 		assertEquals(8, s.n);
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
 		s.add(HashCommon.invMix(5));
@@ -249,9 +249,9 @@ public class IntOpenHashSetTest {
 		assertNotEquals(0, s.key[0]);
 		assertNotEquals(0, s.key[1]);
 		//System.err.println(Arrays.toString(s.key));
-		IntOpenHashSet keys = s.clone();
-		IntIterator iterator = s.iterator();
-		IntOpenHashSet t = new IntOpenHashSet();
+		final IntOpenHashSet keys = s.clone();
+		final IntIterator iterator = s.iterator();
+		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
 		//System.err.println(Arrays.toString(s.key));
@@ -271,8 +271,29 @@ public class IntOpenHashSetTest {
 		assertEquals(keys, t);
 	}
 
+	@Test
+	public void testTrim() {
+		IntOpenHashSet s = new IntOpenHashSet(100, .75f);
+		s.trim(0);
+		assertEquals(1, s.n);
+
+		s = new IntOpenHashSet(100, .75f);
+		s.trim(10);
+		assertEquals(16, s.n);
+		s.trim(20);
+		assertEquals(16, s.n);
+
+		s = new IntOpenHashSet(6, .75f);
+		assertEquals(8, s.n);
+		for(int i = 0; i < 6; i++) s.add(i);
+		assertEquals(8, s.n);
+		s.trim(2);
+		assertEquals(8, s.n);
+	}
+
+
 	@SuppressWarnings("boxing")
-	private static void checkTable(IntOpenHashSet s) {
+	private static void checkTable(final IntOpenHashSet s) {
 		final int[] key = s.key;
 		assert (s.n & -s.n) == s.n : "Table length is not a power of two: " + s.n;
 		assert s.n == s.key.length - 1;
@@ -284,13 +305,13 @@ public class IntOpenHashSetTest {
 		if (s.containsNull && ! s.contains(0)) throw new AssertionError("Hash table should contain zero by internal state, but it doesn't when queried");
 		if (! s.containsNull && s.contains(0)) throw new AssertionError("Hash table should not contain zero by internal state, but it does when queried");
 
-		java.util.HashSet<Integer> t = new java.util.HashSet<>();
+		final java.util.HashSet<Integer> t = new java.util.HashSet<>();
 		for (int i = s.size(); i-- != 0;)
 			if (key[i] != 0 && !t.add(key[i])) throw new AssertionError("Key " + key[i] + " appears twice");
 
 	}
 
-	private static void printProbes(IntOpenHashSet m) {
+	private static void printProbes(final IntOpenHashSet m) {
 		long totProbes = 0;
 		double totSquareProbes = 0;
 		int maxProbes = 0;
@@ -318,10 +339,10 @@ public class IntOpenHashSetTest {
 	}
 
 	@SuppressWarnings({ "unchecked", "boxing", "deprecation" })
-	private static void test(int n, float f) throws IOException, ClassNotFoundException {
+	private static void test(final int n, final float f) throws IOException, ClassNotFoundException {
 		int c;
 		IntOpenHashSet m = new IntOpenHashSet(Hash.DEFAULT_INITIAL_SIZE, f);
-		java.util.Set t = new java.util.HashSet();
+		final java.util.Set t = new java.util.HashSet();
 
 		/* First of all, we fill t with random data. */
 
@@ -339,16 +360,16 @@ public class IntOpenHashSetTest {
 
 		/* Now we check that m actually holds that data. */
 
-		for (java.util.Iterator i = t.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", m.contains(e));
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 
 		c = 0;
-		for (java.util.Iterator i = m.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = m.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			c++;
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on m)", t.contains(e));
 		}
@@ -360,7 +381,7 @@ public class IntOpenHashSetTest {
 		 */
 
 		for (int i = 0; i < n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertEquals("Error: divergence in keys between t and m (polymorphic method)", m.contains(T), t.contains((Integer.valueOf(T))));
 		}
 
@@ -370,7 +391,7 @@ public class IntOpenHashSetTest {
 		 */
 
 		for (int i = 0; i < n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertFalse("Error: divergence between t and m (standard method)", m.contains((Integer.valueOf(T))) != t.contains((Integer.valueOf(T))));
 		}
 
@@ -389,20 +410,20 @@ public class IntOpenHashSetTest {
 		assertTrue("Error: !t.equals(m) after removal", t.equals(m));
 		/* Now we check that m actually holds that data. */
 
-		for (java.util.Iterator i = t.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			assertFalse("Error: m and t differ on a key (" + e + ") after removal (iterating on t)", !m.contains(e));
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 
-		for (java.util.Iterator i = m.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = m.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			assertFalse("Error: m and t differ on a key (" + e + ") after removal (iterating on m)", !t.contains(e));
 		}
 
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		int a[] = m.toIntArray();
+		final int a[] = m.toIntArray();
 
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
 
@@ -411,19 +432,19 @@ public class IntOpenHashSetTest {
 		assertTrue("Error: m does not equal m.clone()", m.equals(m.clone()));
 		assertTrue("Error: m.clone() does not equal m", m.clone().equals(m));
 
-		int h = m.hashCode();
+		final int h = m.hashCode();
 
 		/* Now we save and read m. */
 
-		java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
-		java.io.OutputStream os = new java.io.FileOutputStream(ff);
-		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+		final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+		final java.io.OutputStream os = new java.io.FileOutputStream(ff);
+		final java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 
 		oos.writeObject(m);
 		oos.close();
 
-		java.io.InputStream is = new java.io.FileInputStream(ff);
-		java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+		final java.io.InputStream is = new java.io.FileInputStream(ff);
+		final java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 
 		m = (IntOpenHashSet)ois.readObject();
 		ois.close();
@@ -436,8 +457,8 @@ public class IntOpenHashSetTest {
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 
-		for (java.util.Iterator i = m.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = m.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			assertFalse("Error: m and t differ on a key (" + e + ") after save/read", !t.contains(e));
 		}
 
@@ -456,7 +477,7 @@ public class IntOpenHashSetTest {
 
 		/* Now we take out of m everything, and check that it is empty. */
 
-		for (java.util.Iterator i = m.iterator(); i.hasNext();) {
+		for (final java.util.Iterator i = m.iterator(); i.hasNext();) {
 			i.next();
 			i.remove();
 		}

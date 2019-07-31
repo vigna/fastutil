@@ -165,4 +165,24 @@ public class Int2IntOpenHashMapTest {
 		assertEquals(0, m.size());
 		assertEquals(keys, t);
 	}
+
+	@Test
+	public void testTrim() {
+		Int2IntOpenHashMap s = new Int2IntOpenHashMap(100, .75f);
+		s.trim(0);
+		assertEquals(1, s.n);
+
+		s = new Int2IntOpenHashMap(100, .75f);
+		s.trim(10);
+		assertEquals(16, s.n);
+		s.trim(20);
+		assertEquals(16, s.n);
+
+		s = new Int2IntOpenHashMap(6, .75f);
+		assertEquals(8, s.n);
+		for(int i = 0; i < 6; i++) s.put(i, i);
+		assertEquals(8, s.n);
+		s.trim(2);
+		assertEquals(8, s.n);
+	}
 }
