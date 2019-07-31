@@ -102,8 +102,15 @@ public class IntArrayListTest {
 
 		// Test lazy allocation
 		l = new IntArrayList();
-		l.ensureCapacity(1000000);
+		l.ensureCapacity(1);
 		assertSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+		l.ensureCapacity(4);
+		assertSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+
+		l = new IntArrayList();
+		l.ensureCapacity(1000000);
+		assertNotSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+		assertEquals(1000000, l.elements().length);
 
 		l = new IntArrayList(0);
 		l.ensureCapacity(1);
