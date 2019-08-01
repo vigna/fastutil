@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
+#if KEYS_REFERENCE
+import java.util.Comparator;
+#endif
 
 #if KEYS_PRIMITIVE
 
@@ -503,7 +506,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		size += length;
 	}
 
-
+	/** Sets elements to this type-specific list using optimized system calls.
+	 *
+	 * @param index the index at which to start setting elements.
+	 * @param a the array containing the elements.
+	 * @param offset the offset of the first element to add.
+	 * @param length the number of elements to add.
+	 */
+	@Override
+	public void setElements(final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length) {
+		ensureIndex(index);
+		ARRAYS.ensureOffsetLength(a, offset, length);
+		if (index + length > size) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size + ")");
+		System.arraycopy(a, offset, this.a, index, length);
+	}
 
 #if KEYS_PRIMITIVE
 
@@ -609,6 +625,24 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 					last = -1;
 				}
 			};
+	}
+
+	@Override
+	public void sort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
+		if (comp == null) {
+			ARRAYS.stableSort(a, 0, size);
+		} else {
+			ARRAYS.stableSort(a, 0, size, comp);
+		}
+	}
+
+	@Override
+	public void unstableSort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
+		if (comp == null) {
+			ARRAYS.unstableSort(a, 0, size);
+		} else {
+			ARRAYS.unstableSort(a, 0, size, comp);
+		}
 	}
 
 	@Override
