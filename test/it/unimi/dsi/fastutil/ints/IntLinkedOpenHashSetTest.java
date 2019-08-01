@@ -149,7 +149,7 @@ public class IntLinkedOpenHashSetTest {
 		assertTrue("Error: m.clone() does not equal m", s.clone().equals(s));
 		int h = s.hashCode();
 		/* Now we save and read m. */
-		java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+		java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + s.getClass().getSimpleName() + "." + n);
 		java.io.OutputStream os = new java.io.FileOutputStream(ff);
 		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 		oos.writeObject(s);
