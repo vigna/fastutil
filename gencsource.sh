@@ -221,6 +221,8 @@ fi)\
 "#define KEY_GENERIC_CAST (K)\n"\
 "#define KEY_GENERIC_ARRAY_CAST (K[])\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST (K[][])\n"\
+"#define DEPRECATED_IF_KEYS_REFERENCE @Deprecated\n"\
+"#define DEPRECATED_IF_KEYS_PRIMITIVE\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
@@ -243,6 +245,8 @@ fi)\
 "#define KEY_GENERIC_CAST\n"\
 "#define KEY_GENERIC_ARRAY_CAST\n"\
 "#define KEY_GENERIC_BIG_ARRAY_CAST\n"\
+"#define DEPRECATED_IF_KEYS_REFERENCE\n"\
+"#define DEPRECATED_IF_KEYS_PRIMITIVE @Deprecated\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED\n"\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
@@ -260,6 +264,8 @@ fi)\
 "#define VALUE_SUPER_GENERIC <? super V>\n"\
 "#define VALUE_GENERIC_CAST (V)\n"\
 "#define VALUE_GENERIC_ARRAY_CAST (V[])\n"\
+"#define DEPRECATED_IF_VALUES_REFERENCE @Deprecated\n"\
+"#define DEPRECATED_IF_VALUES_PRIMITIVE\n"\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#else\n"\
@@ -273,6 +279,8 @@ fi)\
 "#define VALUE_SUPER_GENERIC\n"\
 "#define VALUE_GENERIC_CAST\n"\
 "#define VALUE_GENERIC_ARRAY_CAST\n"\
+"#define DEPRECATED_IF_VALUES_REFERENCE\n"\
+"#define DEPRECATED_IF_VALUES_PRIMITIVE @Deprecated\n"\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED\n"\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES\n"\
 "#endif\n"\
