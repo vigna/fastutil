@@ -590,7 +590,6 @@ SOURCES = \
 	$(SOURCEDIR)/Stack.java \
 	$(SOURCEDIR)/BigList.java \
 	$(SOURCEDIR)/BigListIterator.java \
-	$(SOURCEDIR)/BigArrays.java \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/Arrays.java \

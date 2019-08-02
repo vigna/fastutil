@@ -240,7 +240,7 @@ public class IntBigArraysTest {
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, t, true);
 		for(long i = length(t) - 1; i-- != 0;) assertEquals(i, get(perm, i));
@@ -260,23 +260,23 @@ public class IntBigArraysTest {
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) < get(t, get(perm, i + 1)) || get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
-		u = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
+		u = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
 		for(long i = length(t) - 1; i-- != 0;) assertEquals(i, get(perm, i));
 
-		for(int i = 0; i < u.length; i++) set(t, i, random.nextInt(4));
-		for(int i = 0; i < u.length; i++) set(u, i, random.nextInt(4));
+		for(long i = 0; i < length(t); i++) set(t, i, random.nextInt(4));
+		for(long i = 0; i < length(t); i++) set(u, i, random.nextInt(4));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
-		for(long i = length(t) - 1; i-- != 0;) if (get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) == get(u, get(perm, i + 1))) assertTrue(get(perm, i) < get(perm, i));
+		for(long i = length(t) - 1; i-- != 0;) if (get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) == get(u, get(perm, i + 1))) assertTrue(get(perm, i) < get(perm, i + 1));
 
 		t = IntBigArrays.newBigArray(100);
 		u = IntBigArrays.newBigArray(100);
 		perm = identity(length(t));
 		random = new Random(0);
-		for(int i = u.length; i-- != 0;) set(u, i, random.nextInt());
+		for(long i = length(t); i-- != 0;) set(u, i, random.nextInt());
 		IntBigArrays.radixSortIndirect(perm, t, u, 10, 90, true);
 		for(int i = 10; i < 89; i++) assertTrue(Integer.toString(i), get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 		for(int i = 0; i < 10; i++) assertEquals(i, get(perm, i));
@@ -307,18 +307,18 @@ public class IntBigArraysTest {
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) < get(t, get(perm, i + 1)) || get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
-		u = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
+		u = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
 		for(long i = length(t) - 1; i-- != 0;) assertEquals(i, get(perm, i));
 
-		t = IntBigArrays.newBigArray(t.length);
-		for(int i = 0; i < length(t); i++) set(t, i, random.nextInt(8));
-		for(int i = 0; i < length(t); i++) set(u, i, random.nextInt(8));
+		t = IntBigArrays.newBigArray(length(t));
+		for(long i = 0; i < length(t); i++) set(t, i, random.nextInt(8));
+		for(long i = 0; i < length(t); i++) set(u, i, random.nextInt(8));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, true);
-		for(long i = length(t) - 1; i-- != 0;) if (get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) == get(u, get(perm, i + 1))) assertTrue(get(perm, i) < get(perm, i));
+		for(long i = length(t) - 1; i-- != 0;) if (get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) == get(u, get(perm, i + 1))) assertTrue(get(perm, i) < get(perm, i + 1));
 	}
 
 	@Test
@@ -330,12 +330,12 @@ public class IntBigArraysTest {
 		System.err.println(BigArrays.toString(perm));
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) <= get(t, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, t, false);
 		for(long i = length(t) - 1; i-- != 0;) assertEquals(i, get(perm, i));
@@ -355,14 +355,14 @@ public class IntBigArraysTest {
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) < get(t, get(perm, i + 1)) || get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
-		u = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
+		u = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertEquals(i, get(perm, i));
 
-		for(int i = 0; i < u.length; i++) set(t, i, random.nextInt(4));
-		for(int i = 0; i < u.length; i++) set(u, i, random.nextInt(4));
+		for(long i = 0; i < length(t); i++) set(t, i, random.nextInt(4));
+		for(long i = 0; i < length(t); i++) set(u, i, random.nextInt(4));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) < get(t, get(perm, i + 1)) ||  get(t, get(perm, i)) == get(t, get(perm, i + 1))&& get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
@@ -371,7 +371,7 @@ public class IntBigArraysTest {
 		u = IntBigArrays.newBigArray(100);
 		perm = identity(length(t));
 		random = new Random(0);
-		for(int i = u.length; i-- != 0;) set(u, i, random.nextInt());
+		for(long i = length(t); i-- != 0;) set(u, i, random.nextInt());
 		IntBigArrays.radixSortIndirect(perm, t, u, 10, 90, false);
 		for(int i = 10; i < 89; i++) assertTrue(Integer.toString(i), get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 		for(int i = 0; i < 10; i++) assertEquals(i, get(perm, i));
@@ -402,15 +402,15 @@ public class IntBigArraysTest {
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) < get(t, get(perm, i + 1)) || get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
 
-		t = IntBigArrays.newBigArray(t.length);
-		u = IntBigArrays.newBigArray(t.length);
+		t = IntBigArrays.newBigArray(length(t));
+		u = IntBigArrays.newBigArray(length(t));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertEquals(i, get(perm, i));
 
-		t = IntBigArrays.newBigArray(t.length);
-		for(int i = 0; i < length(t); i++) set(t, i, random.nextInt(8));
-		for(int i = 0; i < length(t); i++) set(u, i, random.nextInt(8));
+		t = IntBigArrays.newBigArray(length(t));
+		for(long i = 0; i < length(t); i++) set(t, i, random.nextInt(8));
+		for(long i = 0; i < length(t); i++) set(u, i, random.nextInt(8));
 		perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(i + " " +  get(t, get(perm, i))+ " "+ get(t, get(perm, i + 1)) + " " + get(u, get(perm, i)) + " " + get(u, get(perm, i + 1)) + "  " + get(perm, i)+ " " +get(perm, i + 1), get(t, get(perm, i)) < get(t, get(perm, i + 1)) || get(t, get(perm, i)) == get(t, get(perm, i + 1)) && get(u, get(perm, i)) <= get(u, get(perm, i + 1)));
