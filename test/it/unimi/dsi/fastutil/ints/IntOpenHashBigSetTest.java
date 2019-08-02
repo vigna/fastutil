@@ -1,21 +1,7 @@
 package it.unimi.dsi.fastutil.ints;
 
-/*
- * Copyright (C) 2017 Sebastiano Vigna
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+import static it.unimi.dsi.fastutil.BigArrays.get;
+import static it.unimi.dsi.fastutil.BigArrays.length;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -138,15 +124,15 @@ public class IntOpenHashBigSetTest {
 	private static void checkTable(final IntOpenHashBigSet s) {
 		final int[][] key = s.key;
 		assert (s.n & -s.n) == s.n : "Table length is not a power of two: " + s.n;
-		assert s.n == IntBigArrays.length(key);
+		assert s.n == length(key);
 		long n = s.n;
 		while (n-- != 0)
-			if (IntBigArrays.get(key, n) != 0 && !s.contains(IntBigArrays.get(key, n))) throw new AssertionError("Hash table has key " + IntBigArrays.get(key, n)
+			if (get(key, n) != 0 && !s.contains(get(key, n))) throw new AssertionError("Hash table has key " + get(key, n)
 					+ " marked as occupied, but the key does not belong to the table");
 
 		final java.util.HashSet<Integer> t = new java.util.HashSet<>();
 		for (long i = s.size64(); i-- != 0;)
-			if (IntBigArrays.get(key, i) != 0 && !t.add(IntBigArrays.get(key, i))) throw new AssertionError("Key " + IntBigArrays.get(key, i) + " appears twice");
+			if (get(key, i) != 0 && !t.add(get(key, i))) throw new AssertionError("Key " + get(key, i) + " appears twice");
 
 	}
 
@@ -156,7 +142,7 @@ public class IntOpenHashBigSetTest {
 		long maxProbes = 0;
 		final double f = (double)m.size / m.n;
 		for (long i = 0, c = 0; i < m.n; i++) {
-			if (IntBigArrays.get(m.key, i) != 0) c++;
+			if (get(m.key, i) != 0) c++;
 			else {
 				if (c != 0) {
 					final long p = (c + 1) * (c + 2) / 2;

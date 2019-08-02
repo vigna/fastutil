@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2017 Sebastiano Vigna
+ * Copyright (C) 2002-2019 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,13 @@
 
 package PACKAGE;
 
+import static it.unimi.dsi.fastutil.BigArrays.copyFromBig;
+import static it.unimi.dsi.fastutil.BigArrays.copyToBig;
+import static it.unimi.dsi.fastutil.BigArrays.grow;
+import static it.unimi.dsi.fastutil.BigArrays.trim;
+
+
+import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.objects.AbstractObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import it.unimi.dsi.fastutil.longs.LongArrays;
@@ -121,9 +128,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				p = LongArrays.grow(p, n / ratio + 1);
 				p[n / ratio] = curSize;
 
-				array = BIG_ARRAYS.grow(array, curSize + count(length) + length, curSize);
+				array = grow(array, curSize + count(length) + length, curSize);
 				curSize += writeInt(array, length, curSize);
-				BIG_ARRAYS.copyToBig(a[b], 0, array, curSize, length);
+				copyToBig(a[b], 0, array, curSize, length);
 				curSize += length;
 			}
 			else {
@@ -132,10 +139,10 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				for(common = 0; common < minLength; common++) if (a[0][common] != a[1][common]) break;
 				length -= common;
 
-				array = BIG_ARRAYS.grow(array, curSize + count(length) + count(common) + length, curSize);
+				array = grow(array, curSize + count(length) + count(common) + length, curSize);
 				curSize += writeInt(array, length, curSize);
 				curSize += writeInt(array, common, curSize);
-				BIG_ARRAYS.copyToBig(a[b], common, array, curSize, length);
+				copyToBig(a[b], common, array, curSize, length);
 				curSize += length;
 			}
 
@@ -145,7 +152,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 		this.n = n;
 		this.ratio = ratio;
-		this.array = BIG_ARRAYS.trim(array, curSize);
+		this.array = trim(array, curSize);
 		this.p = LongArrays.trim(p, (n + ratio - 1) / ratio);
 
 	}
@@ -172,25 +179,25 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 */
 	private static int readInt(final KEY_TYPE a[][], long pos) {
 #if KEY_CLASS_Integer
-		return IntBigArrays.get(a, pos);
+		return BigArrays.get(a, pos);
 #elif KEY_CLASS_Long
-		return (int)LongBigArrays.get(a, pos);
+		return (int)BigArrays.get(a, pos);
 #elif KEY_CLASS_Character
-		final char c0 = CharBigArrays.get(a, pos);
-		return c0  < 0x8000 ? c0 : (c0 & 0x7FFF) << 16 | CharBigArrays.get(a, pos + 1);
+		final char c0 = BigArrays.get(a, pos);
+		return c0  < 0x8000 ? c0 : (c0 & 0x7FFF) << 16 | BigArrays.get(a, pos + 1);
 #elif KEY_CLASS_Short
-		final short s0 = ShortBigArrays.get(a, pos);
-		return s0 >= 0 ? s0 : s0 << 16 | (ShortBigArrays.get(a, pos + 1) & 0xFFFF);
+		final short s0 = BigArrays.get(a, pos);
+		return s0 >= 0 ? s0 : s0 << 16 | (BigArrays.get(a, pos + 1) & 0xFFFF);
 #else
-		final byte b0 = ByteBigArrays.get(a, pos);
+		final byte b0 = BigArrays.get(a, pos);
 		if (b0  >= 0) return b0;
-		final byte b1 = ByteBigArrays.get(a, pos + 1);
+		final byte b1 = BigArrays.get(a, pos + 1);
 		if (b1 >= 0) return (- b0 - 1) << 7 | b1;
-		final byte b2 = ByteBigArrays.get(a, pos + 2);
+		final byte b2 = BigArrays.get(a, pos + 2);
 		if (b2 >= 0) return (- b0 - 1) << 14 | (- b1 - 1) << 7 | b2;
-		final byte b3 = ByteBigArrays.get(a, pos + 3);
+		final byte b3 = BigArrays.get(a, pos + 3);
 		if (b3 >= 0) return (- b0 - 1) << 21 | (- b1 - 1) << 14 | (- b2 - 1) << 7 | b3;
-		return (- b0 - 1) << 28 | (- b1 - 1) << 21 | (- b2 - 1) << 14 | (- b3 - 1) << 7 | ByteBigArrays.get(a, pos + 4);
+		return (- b0 - 1) << 28 | (- b1 - 1) << 21 | (- b2 - 1) << 14 | (- b3 - 1) << 7 | BigArrays.get(a, pos + 4);
 #endif
 	}
 
@@ -220,36 +227,36 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 */
 	private static int writeInt(final KEY_TYPE a[][], int length, long pos) {
 #if KEY_CLASS_Long
-		LongBigArrays.set(a, pos, length);
+		BigArrays.set(a, pos, length);
 		return 1;
 #elif KEY_CLASS_Integer
-		IntBigArrays.set(a, pos, length);
+		BigArrays.set(a, pos, length);
 		return 1;
 #elif KEY_CLASS_Character
 		if (length < (1 << 15)) {
-			CharBigArrays.set(a, pos, (char)length);
+			BigArrays.set(a, pos, (char)length);
 			return 1;
 		}
-		CharBigArrays.set(a, pos++, (char)(length >>> 16 | 0x8000));
-		CharBigArrays.set(a, pos, (char)(length & 0xFFFF));
+		BigArrays.set(a, pos++, (char)(length >>> 16 | 0x8000));
+		BigArrays.set(a, pos, (char)(length & 0xFFFF));
 		return 2;
 #elif KEY_CLASS_Short
 		if (length < (1 << 15)) {
-			ShortBigArrays.set(a, pos, (short)length);
+			BigArrays.set(a, pos, (short)length);
 			return 1;
 		}
-		ShortBigArrays.set(a, pos++, (short)(- (length >>> 16) - 1));
-		ShortBigArrays.set(a, pos, (short)(length & 0xFFFF));
+		BigArrays.set(a, pos++, (short)(- (length >>> 16) - 1));
+		BigArrays.set(a, pos, (short)(length & 0xFFFF));
 		return 2;
 #else
 		final int count = count(length);
-		ByteBigArrays.set(a, pos + count - 1, (byte)(length & 0x7F));
+		BigArrays.set(a, pos + count - 1, (byte)(length & 0x7F));
 
 		if (count != 1) {
 			int i = count - 1;
 			while(i-- != 0) {
 				length >>>= 7;
-				ByteBigArrays.set(a, pos + i, (byte)(- (length  & 0x7F) - 1));
+				BigArrays.set(a, pos + i, (byte)(- (length  & 0x7F) - 1));
 			}
 		}
 
@@ -327,7 +334,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 		if (delta == 0) {
 			pos = p[index / ratio] + count(arrayLength);
-			BIG_ARRAYS.copyFromBig(array, pos, a, offset, Math.min(length, arrayLength));
+			copyFromBig(array, pos, a, offset, Math.min(length, arrayLength));
 			return arrayLength;
 		}
 
@@ -343,12 +350,12 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 			actualCommon = Math.min(common, length);
 			if (actualCommon <= currLen) currLen = actualCommon;
 			else {
-				BIG_ARRAYS.copyFromBig(array, prevArrayPos, a, currLen + offset, actualCommon - currLen);
+				copyFromBig(array, prevArrayPos, a, currLen + offset, actualCommon - currLen);
 				currLen = actualCommon;
 			}
 		}
 
-		if (currLen < length) BIG_ARRAYS.copyFromBig(array, pos + count(arrayLength) + count(common), a, currLen + offset, Math.min(arrayLength, length - currLen));
+		if (currLen < length) copyFromBig(array, pos + count(arrayLength) + count(common), a, currLen + offset, Math.min(arrayLength, length - currLen));
 
 		return arrayLength + common;
 	}
@@ -459,7 +466,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 						pos = p[i / ratio];
 						length = readInt(array, pos);
 						s = ARRAYS.ensureCapacity(s, length, 0);
-						BIG_ARRAYS.copyFromBig(array, pos + count(length), s, 0, length);
+						copyFromBig(array, pos + count(length), s, 0, length);
 						pos += length + count(length);
 						inSync = true;
 					}
@@ -468,7 +475,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 							length = readInt(array, pos);
 							common = readInt(array, pos + count(length));
 							s = ARRAYS.ensureCapacity(s, length + common, common);
-							BIG_ARRAYS.copyFromBig(array, pos + count(length) + count (common), s, common, length);
+							copyFromBig(array, pos + count(length) + count (common), s, common, length);
 							pos += count(length) + count(common) + length;
 							length += common;
 						}

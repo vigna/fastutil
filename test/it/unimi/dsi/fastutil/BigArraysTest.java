@@ -16,43 +16,45 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+import static it.unimi.dsi.fastutil.BigArrays.get;
+import static it.unimi.dsi.fastutil.BigArrays.length;
+import static it.unimi.dsi.fastutil.BigArrays.swap;
+import static it.unimi.dsi.fastutil.BigArrays.wrap;
 import static org.junit.Assert.assertArrayEquals;
 
 import java.util.Arrays;
 
 import org.junit.Test;
 
-import it.unimi.dsi.fastutil.ints.IntBigArrays;
-
 public class BigArraysTest {
 
 	@Test
 	public void testMergeSort() {
-		int[] s = new int[] { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
-		final int[][] a = IntBigArrays.wrap(s.clone());
+		final int[] s = new int[] { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		final int[][] a = wrap(s.clone());
 
 		Arrays.sort(s);
-		int[][] sorted = IntBigArrays.wrap(s.clone());
-		BigArrays.mergeSort(0, IntBigArrays.length(a), (k1, k2) -> IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2), (k1, k2) -> IntBigArrays.swap(a, k1, k2));
+		final int[][] sorted = wrap(s.clone());
+		BigArrays.mergeSort(0, length(a), (k1, k2) -> get(a, k1) - get(a, k2), (k1, k2) -> swap(a, k1, k2));
 		assertArrayEquals(sorted, a);
 
-		BigArrays.mergeSort(0, IntBigArrays.length(a), (k1, k2) -> IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2), (k1, k2) -> IntBigArrays.swap(a, k1, k2));
+		BigArrays.mergeSort(0, length(a), (k1, k2) -> get(a, k1) - get(a, k2), (k1, k2) -> swap(a, k1, k2));
 		assertArrayEquals(sorted, a);
 
 	}
 
 	@Test
 	public void testQuickSort() {
-		int[] s = new int[] { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		final int[] s = new int[] { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
 
 		Arrays.sort(s);
-		int[][] sorted = IntBigArrays.wrap(s.clone());
+		final int[][] sorted = wrap(s.clone());
 
-		final int[][] a = IntBigArrays.wrap(s.clone());
-		BigArrays.quickSort(0, IntBigArrays.length(a), (k1, k2) -> IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2), (k1, k2) -> IntBigArrays.swap(a, k1, k2));
+		final int[][] a = wrap(s.clone());
+		BigArrays.quickSort(0, length(a), (k1, k2) -> get(a, k1) - get(a, k2), (k1, k2) -> swap(a, k1, k2));
 		assertArrayEquals(sorted, a);
 
-		BigArrays.quickSort(0, IntBigArrays.length(a), (k1, k2) -> IntBigArrays.get(a, k1) - IntBigArrays.get(a, k2), (k1, k2) -> IntBigArrays.swap(a, k1, k2));
+		BigArrays.quickSort(0, length(a), (k1, k2) -> get(a, k1) - get(a, k2), (k1, k2) -> swap(a, k1, k2));
 		assertArrayEquals(sorted, a);
 	}
 }

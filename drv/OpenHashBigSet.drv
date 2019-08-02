@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2017 Sebastiano Vigna
+ * Copyright (C) 2002-2019 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 
 
 package PACKAGE;
+
+import static it.unimi.dsi.fastutil.BigArrays.copy;
+import static it.unimi.dsi.fastutil.BigArrays.fill;
+import static it.unimi.dsi.fastutil.BigArrays.set;
 
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.Hash;
@@ -379,16 +383,16 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 			pos = ((last = pos) + 1) & mask;
 
 			for(;;) {
-				if (KEY_IS_NULL(BIG_ARRAYS.get(key, pos))) {
-					BIG_ARRAYS.set(key, last, KEY_NULL);
+				if (KEY_IS_NULL(BigArrays.get(key, pos))) {
+					set(key, last, KEY_NULL);
 					return;
 				}
-				slot = KEY2LONGHASH(BIG_ARRAYS.get(key, pos)) & mask;
+				slot = KEY2LONGHASH(BigArrays.get(key, pos)) & mask;
 				if (last <= pos ? last >= slot || slot > pos : last >= slot && slot > pos) break;
 				pos = (pos + 1) & mask;
 			}
 
-			BIG_ARRAYS.set(key, last, BIG_ARRAYS.get(key, pos));
+			set(key, last, BigArrays.get(key, pos));
 		}
 	}
 
@@ -481,7 +485,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		if (size == 0) return;
 		size = 0;
 		containsNull = false;
-		BIG_ARRAYS.fill(key, KEY_NULL);
+		fill(key, KEY_NULL);
 	}
 
 
@@ -553,8 +557,8 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 				pos = ((last = pos) + 1) & mask;
 
 				for(;;) {
-					if(KEY_IS_NULL(curr = BIG_ARRAYS.get(key, pos))) {
-						BIG_ARRAYS.set(key, last, KEY_NULL);
+					if(KEY_IS_NULL(curr = BigArrays.get(key, pos))) {
+						set(key, last, KEY_NULL);
 						return;
 					}
 					slot = KEY2LONGHASH(curr) & mask;
@@ -564,10 +568,10 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 
 				if (pos < last) {	// Wrapped entry.
 					if (wrapped == null) wrapped = new ARRAY_LIST KEY_GENERIC_DIAMOND();
-					wrapped.add(BIG_ARRAYS.get(key, pos));
+					wrapped.add(BigArrays.get(key, pos));
 				}
 
-				BIG_ARRAYS.set(key, last, curr);
+				set(key, last, curr);
 			}
 		}
 
@@ -724,7 +728,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		catch(CloneNotSupportedException cantHappen) {
 			throw new InternalError();
 		}
-		c.key = BIG_ARRAYS.copy(key);
+		c.key = copy(key);
 		c.containsNull = containsNull;
 		return c;
 	}
@@ -797,11 +801,11 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #ifdef ASSERTS_CODE
 	private void checkTable() {
 		assert (n & -n) == n : "Table length is not a power of two: " + n;
-		assert n == BIG_ARRAYS.length(key);
+		assert n == BigArrays.length(key);
 		long n = this.n;
 		while(n-- != 0)
-			if (! KEY_IS_NULL(BIG_ARRAYS.get(key, n)) && ! contains(BIG_ARRAYS.get(key, n)))
-				throw new AssertionError("Hash table has key " + BIG_ARRAYS.get(key, n) + " marked as occupied, but the key does not belong to the table");
+			if (! KEY_IS_NULL(BigArrays.get(key, n)) && ! contains(BigArrays.get(key, n)))
+				throw new AssertionError("Hash table has key " + BigArrays.get(key, n) + " marked as occupied, but the key does not belong to the table");
 
 #if KEYS_PRIMITIVE
 		java.util.HashSet<KEY_GENERIC_CLASS> s = new java.util.HashSet<KEY_GENERIC_CLASS> ();
@@ -810,7 +814,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 #endif
 
 		for(long i = size(); i-- != 0;)
-			if (! KEY_IS_NULL(BIG_ARRAYS.get(key, i)) && ! s.add(BIG_ARRAYS.get(key, i))) throw new AssertionError("Key " + BIG_ARRAYS.get(key, i) + " appears twice");
+			if (! KEY_IS_NULL(BigArrays.get(key, i)) && ! s.add(BigArrays.get(key, i))) throw new AssertionError("Key " + BigArrays.get(key, i) + " appears twice");
 
 	}
 #else
@@ -1054,7 +1058,7 @@ public class OPEN_HASH_BIG_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC impl
 		int maxProbes = 0;
 		final double f = (double)m.size / m.n;
 		for(int i = 0, c = 0; i < m.n; i++) {
-			if (! KEY_IS_NULL(BIG_ARRAYS.get(m.key, i))) c++;
+			if (! KEY_IS_NULL(BigArrays.get(m.key, i))) c++;
 			else {
 				if (c != 0) {
 					final long p = (c + 1) * (c + 2) / 2;
