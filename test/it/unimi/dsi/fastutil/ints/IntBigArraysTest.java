@@ -327,7 +327,6 @@ public class IntBigArraysTest {
 		int[][] u = wrap(new int[] { 3, 2, 1, 0 });
 		long[][] perm = identity(length(t));
 		IntBigArrays.radixSortIndirect(perm, t, u, false);
-		System.err.println(BigArrays.toString(perm));
 		for(long i = length(t) - 1; i-- != 0;) assertTrue(get(t, get(perm, i)) <= get(t, get(perm, i + 1)));
 
 		t = IntBigArrays.newBigArray(length(t));

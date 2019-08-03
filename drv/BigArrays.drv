@@ -49,9 +49,8 @@ import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
 
 /** A class providing static methods and objects that do useful things with {@linkplain BigArrays big arrays}.
  *
- * <p>In particular, the {@code forceCapacity()}, {@code ensureCapacity()}, {@code grow()},
- * {@code trim()} and {@code setLength()} methods allow to handle
- * big arrays much like array lists.
+ * <p><strong>WARNING</strong>: as of 8.3.0, many methods such as {@link #length()} have been moved to
+ * {@link BigArrays}, as they can be imported statically in a more convenient way.
  *
  * <p>Note that {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO}
  * contain several methods that make it possible to load and save big arrays of primitive types as sequences
@@ -214,48 +213,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC void copy(final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length) {
-		if (destPos <= srcPos) {
-			int srcSegment = segment(srcPos);
-			int destSegment = segment(destPos);
-			int srcDispl = displacement(srcPos);
-			int destDispl = displacement(destPos);
-			int l;
-			while(length > 0) {
-				l = (int)Math.min(length, Math.min(srcArray[srcSegment].length - srcDispl, destArray[destSegment].length - destDispl));
-				System.arraycopy(srcArray[srcSegment], srcDispl, destArray[destSegment], destDispl, l);
-				if ((srcDispl += l) == SEGMENT_SIZE) {
-					srcDispl = 0;
-					srcSegment++;
-				}
-				if ((destDispl += l) == SEGMENT_SIZE) {
-					destDispl = 0;
-					destSegment++;
-				}
-				length -= l;
-			}
-		}
-		else {
-			int srcSegment = segment(srcPos + length);
-			int destSegment = segment(destPos + length);
-			int srcDispl = displacement(srcPos + length);
-			int destDispl = displacement(destPos + length);
-			int l;
-			while(length > 0) {
-				if (srcDispl == 0) {
-					srcDispl = SEGMENT_SIZE;
-					srcSegment--;
-				}
-				if (destDispl == 0) {
-					destDispl = SEGMENT_SIZE;
-					destSegment--;
-				}
-				l = (int)Math.min(length, Math.min(srcDispl, destDispl));
-				System.arraycopy(srcArray[srcSegment], srcDispl - l, destArray[destSegment], destDispl - l, l);
-				srcDispl -= l;
-				destDispl -= l;
-				length -= l;
-			}
-		}
+		BigArrays.copy(srcArray, srcPos, destArray, destPos, length);
 	}
 
 	/** Copies a big array from the specified source big array, beginning at the specified position, to the specified position of the destination array.
@@ -269,19 +227,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC void copyFromBig(final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[] destArray, int destPos, int length) {
-		int srcSegment = segment(srcPos);
-		int srcDispl = displacement(srcPos);
-		int l;
-		while(length > 0) {
-			l = Math.min(srcArray[srcSegment].length - srcDispl, length);
-			System.arraycopy(srcArray[srcSegment], srcDispl, destArray, destPos, l);
-			if ((srcDispl += l) == SEGMENT_SIZE) {
-				srcDispl = 0;
-				srcSegment++;
-			}
-			destPos += l;
-			length -= l;
-		}
+		BigArrays.copyFromBig(srcArray, srcPos, destArray, destPos, length);
 	}
 
 	/** Copies an array from the specified source array, beginning at the specified position, to the specified position of the destination big array.
@@ -295,19 +241,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC void copyToBig(final KEY_GENERIC_TYPE[] srcArray, int srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length) {
-		int destSegment = segment(destPos);
-		int destDispl = displacement(destPos);
-		int l;
-		while(length > 0) {
-			l = (int)Math.min(destArray[destSegment].length - destDispl, length);
-			System.arraycopy(srcArray, srcPos, destArray[destSegment], destDispl, l);
-			if ((destDispl += l) == SEGMENT_SIZE) {
-				destDispl = 0;
-				destSegment++;
-			}
-			srcPos += l;
-			length -= l;
-		}
+		BigArrays.copyToBig(srcArray, srcPos, destArray, destPos, length);
 	}
 
 #if KEY_CLASS_Object
@@ -387,15 +321,7 @@ public final class BIG_ARRAYS {
 	@Deprecated
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static <K> K[][] wrap(final K[] array) {
-		if (array.length == 0 && array.getClass() == Object[].class) return KEY_GENERIC_BIG_ARRAY_CAST EMPTY_BIG_ARRAY;
-		if (array.length <= SEGMENT_SIZE) {
-			final K[][] bigArray = (K[][])java.lang.reflect.Array.newInstance(array.getClass(), 1);
-			bigArray[0] = array;
-			return bigArray;
-		}
-		final K[][] bigArray = (K[][])newBigArray(array.getClass(), array.length);
-		for(int i = 0; i < bigArray.length; i++) System.arraycopy(array, (int)start(i), bigArray[i], 0, bigArray[i].length);
-		return bigArray;
+		return BigArrays.wrap(array);
 	}
 
 #else
@@ -409,11 +335,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_TYPE[][] wrap(final KEY_TYPE[] array) {
-		if (array.length == 0) return EMPTY_BIG_ARRAY;
-		if (array.length <= SEGMENT_SIZE) return new KEY_TYPE[][] { array };
-		final KEY_TYPE[][] bigArray = newBigArray(array.length);
-		for(int i = 0; i < bigArray.length; i++) System.arraycopy(array, (int)start(i), bigArray[i], 0, bigArray[i].length);
-		return bigArray;
+		return BigArrays.wrap(array);
 	}
 #endif
 	/** Ensures that a big array can contain the given number of entries.
@@ -456,20 +378,7 @@ public final class BIG_ARRAYS {
 	@Deprecated
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] forceCapacity(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
-		ensureLength(length);
-		final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
-		final KEY_GENERIC_TYPE[][] base = Arrays.copyOf(array, baseLength);
-		final Class<?> componentType = array.getClass().getComponentType();
-		final int residual = (int)(length & SEGMENT_MASK);
-		if (residual != 0) {
-			for(int i = valid; i < baseLength - 1; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
-			base[baseLength - 1] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), residual);
-		}
-		else for(int i = valid; i < baseLength; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
-
-		if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
-		return base;
+		return BigArrays.forceCapacity(array, length, preserve);
 	}
 
 	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
@@ -510,19 +419,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_TYPE[][] forceCapacity(final KEY_TYPE[][] array, final long length, final long preserve) {
-		ensureLength(length);
-		final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
-		final KEY_TYPE[][] base = Arrays.copyOf(array, baseLength);
-		final int residual = (int)(length & SEGMENT_MASK);
-		if (residual != 0) {
-			for(int i = valid; i < baseLength - 1; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
-			base[baseLength - 1] = new KEY_TYPE[residual];
-		}
-		else for(int i = valid; i < baseLength; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
-
-		if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
-		return base;
+		return BigArrays.forceCapacity(array, length, preserve);
 	}
 
 	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
@@ -611,14 +508,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim(final KEY_GENERIC_TYPE[][] array, final long length) {
-		ensureLength(length);
-		final long oldLength = length(array);
-		if (length >= oldLength) return array;
-		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
-		final KEY_GENERIC_TYPE[][] base = Arrays.copyOf(array, baseLength);
-		final int residual = (int)(length & SEGMENT_MASK);
-		if (residual != 0) base[baseLength - 1] = ARRAYS.trim(base[baseLength - 1], residual);
-		return base;
+		return BigArrays.trim(array, length);
 	}
 
 #else
@@ -668,10 +558,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] setLength(final KEY_GENERIC_TYPE[][] array, final long length) {
-		final long oldLength = length(array);
-		if (length == oldLength) return array;
-		if (length < oldLength) return trim(array, length);
-		return ensureCapacity(array, length);
+		return BigArrays.setLength(array, length);
 	}
 
 	/** Returns a copy of a portion of a big array.
@@ -684,15 +571,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy(final KEY_GENERIC_TYPE[][] array, final long offset, final long length) {
-		ensureOffsetLength(array, offset, length);
-		final KEY_GENERIC_TYPE[][] a =
-#if KEY_CLASS_Object
-			newBigArray(array, length);
-#else
-			newBigArray(length);
-#endif
-		copy(array, offset, a, 0, length);
-		return a;
+		return BigArrays.copy(array, offset, length);
 	}
 
 	/** Returns a copy of a big array.
@@ -703,9 +582,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy(final KEY_GENERIC_TYPE[][] array) {
-		final KEY_GENERIC_TYPE[][] base = array.clone();
-		for(int i = base.length; i-- != 0;) base[i] = array[i].clone();
-		return base;
+		return BigArrays.copy(array);
 	}
 
 	/** Fills the given big array with the given value.
@@ -736,21 +613,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC void fill(final KEY_GENERIC_TYPE[][] array, final long from, long to, final KEY_GENERIC_TYPE value) {
-		final long length = length(array);
-		BigArrays.ensureFromTo(length, from, to);
-		if (length == 0) return; // To avoid addressing array[0]
-		int fromSegment = segment(from);
-		int toSegment = segment(to);
-		int fromDispl = displacement(from);
-		int toDispl = displacement(to);
-		if (fromSegment == toSegment) {
-			Arrays.fill(array[fromSegment], fromDispl, toDispl, value);
-			return;
-		}
-
-		if (toDispl != 0) Arrays.fill(array[toSegment], 0, toDispl, value);
-		while(--toSegment > fromSegment) Arrays.fill(array[toSegment], value);
-		Arrays.fill(array[fromSegment], fromDispl, SEGMENT_SIZE, value);
+		BigArrays.fill(array, from, to, value);
 	}
 
 
@@ -766,16 +629,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC boolean equals(final KEY_GENERIC_TYPE[][] a1, final KEY_GENERIC_TYPE a2[][]) {
-		if (length(a1) != length(a2)) return false;
-		int i = a1.length, j;
-		KEY_GENERIC_TYPE[] t, u;
-		while(i-- != 0) {
-			t = a1[i];
-			u = a2[i];
-			j = t.length;
-			while(j-- != 0) if (! KEY_EQUALS(t[j], u[j])) return false;
-		}
-		return true;
+		return BigArrays.equals(a1, a2);
 	}
 
 	/* Returns a string representation of the contents of the specified big array.
@@ -787,16 +641,7 @@ public final class BIG_ARRAYS {
 	 */
 	@Deprecated
 	public static KEY_GENERIC String toString(final KEY_GENERIC_TYPE[][] a) {
-		if (a == null) return "null";
-		final long last = length(a) - 1;
-		if (last == - 1) return "[]";
-		final StringBuilder b = new StringBuilder();
-		b.append('[');
-		for (long i = 0; ; i++) {
-			b.append(String.valueOf(BigArrays.get(a, i)));
-			if (i == last) return b.append(']').toString();
-			b.append(", ");
-		}
+		return BigArrays.toString(a);
 	}
 
 
@@ -1660,13 +1505,7 @@ public final class BIG_ARRAYS {
 	 * @return {@code a}.
 	 */
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] shuffle(final KEY_GENERIC_TYPE[][] a, final long from, final long to, final Random random) {
-		for(long i = to - from; i-- != 0;) {
-			final long p = (random.nextLong() & 0x7FFFFFFFFFFFFFFFL) % (i + 1);
-			final KEY_GENERIC_TYPE t = BigArrays.get(a, from + i);
-			BigArrays.set(a, from + i, BigArrays.get(a, from + p));
-			BigArrays.set(a, from + p, t);
-		}
-		return a;
+		return BigArrays.shuffle(a, from, to, random);
 	}
 
 	/** Shuffles the specified big array using the specified pseudorandom number generator.
@@ -1676,13 +1515,7 @@ public final class BIG_ARRAYS {
 	 * @return {@code a}.
 	 */
 	public static KEY_GENERIC KEY_GENERIC_TYPE[][] shuffle(final KEY_GENERIC_TYPE[][] a, final Random random) {
-		for(long i = length(a); i-- != 0;) {
-			final long p = (random.nextLong() & 0x7FFFFFFFFFFFFFFFL) % (i + 1);
-			final KEY_GENERIC_TYPE t = BigArrays.get(a, i);
-			BigArrays.set(a, i, BigArrays.get(a, p));
-			BigArrays.set(a, p, t);
-		}
-		return a;
+		return BigArrays.shuffle(a, random);
 	}
 
 
