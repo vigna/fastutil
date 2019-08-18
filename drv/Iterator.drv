@@ -109,11 +109,9 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	@Deprecated
 	@Override
 	default void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
-#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
-		forEachRemaining(action instanceof JDK_PRIMITIVE_KEY_CONSUMER ? (JDK_PRIMITIVE_KEY_CONSUMER)action : (JDK_PRIMITIVE_KEY_CONSUMER) action::accept);
-#else
-		forEachRemaining(action instanceof KEY_CONSUMER ? (KEY_CONSUMER)action : (KEY_CONSUMER) action::accept);
-#endif
+		// The instanceof and cast is required for performance. Without it, calls routed through this
+		// overload using a primitive consumer would go through the slow lambda.
+		forEachRemaining(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (KEY_CONSUMER) action::accept);
 	}
 
 #endif
