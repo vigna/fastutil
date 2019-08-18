@@ -47,6 +47,8 @@ public interface KEY_SPLITERATOR KEY_GENERIC extends Spliterator<KEY_GENERIC_CLA
 	@Deprecated
 	@Override
 	default boolean tryAdvance(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		// The instanceof and cast is required for performance. Without it, calls routed from this
+		// method using a primitive consumer would go through the slow lambda.
 		return tryAdvance(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (METHOD_ARG_KEY_CONSUMER) action::accept);
 	}
 
@@ -82,6 +84,10 @@ public interface KEY_SPLITERATOR KEY_GENERIC extends Spliterator<KEY_GENERIC_CLA
 	@Deprecated
 	@Override
 	default void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		// The instanceof and cast is required for performance. Without it, calls routed from this
+		// method using a primitive consumer would go through the slow lambda.
+		// This is not just theoretical; Oracle's Stream implementation (Pipeline) routes primitive
+		// consumer calls through this overload.
 		forEachRemaining(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (METHOD_ARG_KEY_CONSUMER) action::accept);
 	}
 
