@@ -448,6 +448,32 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 #if !KEYS_REFERENCE
 #error Assertion error: No KEY_COMPARATOR defined, but not a reference type.
 #endif
+
+	/** Sorts this list using a sort assured to be stable.
+	 *
+	 * <p>Unless a subclass specifies otherwise, the results of the method if the list is
+	 * concurrently modified during the sort are unspecified.
+	 *
+	 * @implSpec The default implementation dumps the elements into an array using
+	 * {@link #toArray()}, sorts the array, then replaces all elements using the
+	 * {@link #setElements} function.
+	 *
+	 * @since <SPLITERATORS VERSION>
+	 */
+	@Override
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	default void sort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
+		KEY_GENERIC_TYPE[] elements = (KEY_GENERIC_TYPE[])toArray();
+		// Current stableSort implementation delegates to java.util.Arrays.sort for reference types,
+		// so we aren't losing out on JDK's optimized Timsort.
+		if (comparator == null) {
+			ARRAYS.stableSort(elements);
+		} else {
+			ARRAYS.stableSort(elements, comparator);
+		}
+		setElements(elements);
+	}
+
 	/** Sorts this list using a sort not assured to be stable.
 	 * This differs from {@link List#sort(java.util.Comparator)} in that the results are
 	 * not assured to be stable, but may be a bit faster.
