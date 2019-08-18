@@ -423,7 +423,7 @@ public class IntOpenHashSetTest {
 		}
 
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		final int a[] = m.toIntArray();
+		int a[] = m.toIntArray();
 
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
 		
