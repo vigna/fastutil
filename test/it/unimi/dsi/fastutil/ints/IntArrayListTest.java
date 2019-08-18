@@ -162,6 +162,12 @@ public class IntArrayListTest {
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
 
+	public void testSort() {
+		IntArrayList l = IntArrayList.wrap(new int[] { 4, 2, 1, 3 });
+		l.sort(null);
+		assertEquals(IntArrayList.wrap(new int[] { 1, 2, 3, 4 }), l);
+	}
+
 	@Test
 	public void testDefaultConstructors() {
 		IntArrayList l;
@@ -195,8 +201,15 @@ public class IntArrayListTest {
 
 		// Test lazy allocation
 		l = new IntArrayList();
-		l.ensureCapacity(1000000);
+		l.ensureCapacity(1);
 		assertSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+		l.ensureCapacity(4);
+		assertSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+
+		l = new IntArrayList();
+		l.ensureCapacity(1000000);
+		assertNotSame(IntArrays.DEFAULT_EMPTY_ARRAY, l.elements());
+		assertEquals(1000000, l.elements().length);
 
 		l = new IntArrayList(0);
 		l.ensureCapacity(1);

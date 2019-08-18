@@ -1,0 +1,693 @@
+/*
+ * Copyright (C) 2004-2019 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+
+	/** Returns the element of the given big array of specified index.
+	 *
+	 * @param array a big array.
+	 * @param index a position in the big array.
+	 * @return the element of the big array at the specified position.
+	 */
+	public static KEY_GENERIC KEY_GENERIC_TYPE get(final KEY_GENERIC_TYPE[][] array, final long index) {
+		return array[segment(index)][displacement(index)];
+	}
+
+	/** Sets the element of the given big array of specified index.
+	 *
+	 * @param array a big array.
+	 * @param index a position in the big array.
+	 * @param value the new value for the array element at the specified position.
+	 */
+	public static KEY_GENERIC void set(final KEY_GENERIC_TYPE[][] array, final long index, KEY_GENERIC_TYPE value) {
+		array[segment(index)][displacement(index)] = value;
+	}
+
+	/** Swaps the element of the given big array of specified indices.
+	 *
+	 * @param array a big array.
+	 * @param first a position in the big array.
+	 * @param second a position in the big array.
+	 */
+	public static KEY_GENERIC void swap(final KEY_GENERIC_TYPE[][] array, final long first, final long second) {
+		final KEY_GENERIC_TYPE t = array[segment(first)][displacement(first)];
+		array[segment(first)][displacement(first)] = array[segment(second)][displacement(second)];
+		array[segment(second)][displacement(second)] = t;
+	}
+
+	/** Reverses the order of the elements in the specified big array.
+	 *
+	 * @param a the big array to be reversed.
+	 * @return {@code a}.
+	 */
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] reverse(final KEY_GENERIC_TYPE[][] a) {
+		final long length = length(a);
+		for(long i = length / 2; i-- != 0;) swap(a, i, length - i- 1);
+		return a;
+	}
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+	/** Adds the specified increment the element of the given big array of specified index.
+	 *
+	 * @param array a big array.
+	 * @param index a position in the big array.
+	 * @param incr the increment
+	 */
+	public static void add(final KEY_GENERIC_TYPE[][] array, final long index, KEY_GENERIC_TYPE incr) {
+		array[segment(index)][displacement(index)] += incr;
+	}
+
+	/** Multiplies by the specified factor the element of the given big array of specified index.
+	 *
+	 * @param array a big array.
+	 * @param index a position in the big array.
+	 * @param factor the factor
+	 */
+	public static void mul(final KEY_GENERIC_TYPE[][] array, final long index, KEY_GENERIC_TYPE factor) {
+		array[segment(index)][displacement(index)] *= factor;
+	}
+
+	/** Increments the element of the given big array of specified index.
+	 *
+	 * @param array a big array.
+	 * @param index a position in the big array.
+	 */
+	public static void incr(final KEY_GENERIC_TYPE[][] array, final long index) {
+		array[segment(index)][displacement(index)]++;
+	}
+
+	/** Decrements the element of the given big array of specified index.
+	 *
+	 * @param array a big array.
+	 * @param index a position in the big array.
+	 */
+	public static void decr(final KEY_GENERIC_TYPE[][] array, final long index) {
+		array[segment(index)][displacement(index)]--;
+	}
+
+
+#endif
+
+
+	/** Returns the length of the given big array.
+	 *
+	 * @param array a big array.
+	 * @return the length of the given big array.
+	 */
+	public static KEY_GENERIC long length(final KEY_GENERIC_TYPE[][] array) {
+		final int length = array.length;
+		return length == 0 ? 0 : start(length - 1) + array[length - 1].length;
+	}
+
+	/** Copies a big array from the specified source big array, beginning at the specified position, to the specified position of the destination big array.
+	 * Handles correctly overlapping regions of the same big array.
+	 *
+	 * @param srcArray the source big array.
+	 * @param srcPos the starting position in the source big array.
+	 * @param destArray the destination big array.
+	 * @param destPos the starting position in the destination data.
+	 * @param length the number of elements to be copied.
+	 */
+	public static KEY_GENERIC void copy(final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length) {
+		if (destPos <= srcPos) {
+			int srcSegment = segment(srcPos);
+			int destSegment = segment(destPos);
+			int srcDispl = displacement(srcPos);
+			int destDispl = displacement(destPos);
+			int l;
+			while(length > 0) {
+				l = (int)Math.min(length, Math.min(srcArray[srcSegment].length - srcDispl, destArray[destSegment].length - destDispl));
+				System.arraycopy(srcArray[srcSegment], srcDispl, destArray[destSegment], destDispl, l);
+				if ((srcDispl += l) == SEGMENT_SIZE) {
+					srcDispl = 0;
+					srcSegment++;
+				}
+				if ((destDispl += l) == SEGMENT_SIZE) {
+					destDispl = 0;
+					destSegment++;
+				}
+				length -= l;
+			}
+		}
+		else {
+			int srcSegment = segment(srcPos + length);
+			int destSegment = segment(destPos + length);
+			int srcDispl = displacement(srcPos + length);
+			int destDispl = displacement(destPos + length);
+			int l;
+			while(length > 0) {
+				if (srcDispl == 0) {
+					srcDispl = SEGMENT_SIZE;
+					srcSegment--;
+				}
+				if (destDispl == 0) {
+					destDispl = SEGMENT_SIZE;
+					destSegment--;
+				}
+				l = (int)Math.min(length, Math.min(srcDispl, destDispl));
+				System.arraycopy(srcArray[srcSegment], srcDispl - l, destArray[destSegment], destDispl - l, l);
+				srcDispl -= l;
+				destDispl -= l;
+				length -= l;
+			}
+		}
+	}
+
+	/** Copies a big array from the specified source big array, beginning at the specified position, to the specified position of the destination array.
+	 *
+	 * @param srcArray the source big array.
+	 * @param srcPos the starting position in the source big array.
+	 * @param destArray the destination array.
+	 * @param destPos the starting position in the destination data.
+	 * @param length the number of elements to be copied.
+	 */
+	public static KEY_GENERIC void copyFromBig(final KEY_GENERIC_TYPE[][] srcArray, final long srcPos, final KEY_GENERIC_TYPE[] destArray, int destPos, int length) {
+		int srcSegment = segment(srcPos);
+		int srcDispl = displacement(srcPos);
+		int l;
+		while(length > 0) {
+			l = Math.min(srcArray[srcSegment].length - srcDispl, length);
+			System.arraycopy(srcArray[srcSegment], srcDispl, destArray, destPos, l);
+			if ((srcDispl += l) == SEGMENT_SIZE) {
+				srcDispl = 0;
+				srcSegment++;
+			}
+			destPos += l;
+			length -= l;
+		}
+	}
+
+	/** Copies an array from the specified source array, beginning at the specified position, to the specified position of the destination big array.
+	 *
+	 * @param srcArray the source array.
+	 * @param srcPos the starting position in the source array.
+	 * @param destArray the destination big array.
+	 * @param destPos the starting position in the destination data.
+	 * @param length the number of elements to be copied.
+	 */
+	public static KEY_GENERIC void copyToBig(final KEY_GENERIC_TYPE[] srcArray, int srcPos, final KEY_GENERIC_TYPE[][] destArray, final long destPos, long length) {
+		int destSegment = segment(destPos);
+		int destDispl = displacement(destPos);
+		int l;
+		while(length > 0) {
+			l = (int)Math.min(destArray[destSegment].length - destDispl, length);
+			System.arraycopy(srcArray, srcPos, destArray[destSegment], destDispl, l);
+			if ((destDispl += l) == SEGMENT_SIZE) {
+				destDispl = 0;
+				destSegment++;
+			}
+			srcPos += l;
+			length -= l;
+		}
+	}
+
+#if KEY_CLASS_Object
+	/** Turns a standard array into a big array.
+	 *
+	 * <p>Note that the returned big array might contain as a segment the original array.
+	 *
+	 * @param array an array.
+	 * @return a new big array with the same length and content of {@code array}.
+	 */
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static <K> K[][] wrap(final K[] array) {
+		if (array.length == 0 && array.getClass() == Object[].class) return KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.EMPTY_BIG_ARRAY;
+		if (array.length <= SEGMENT_SIZE) {
+			final K[][] bigArray = (K[][])java.lang.reflect.Array.newInstance(array.getClass(), 1);
+			bigArray[0] = array;
+			return bigArray;
+		}
+		final K[][] bigArray = (K[][])BIG_ARRAYS.newBigArray(array.getClass(), array.length);
+		for(int i = 0; i < bigArray.length; i++) System.arraycopy(array, (int)start(i), bigArray[i], 0, bigArray[i].length);
+		return bigArray;
+	}
+
+#else
+	/** Turns a standard array into a big array.
+	 *
+	 * <p>Note that the returned big array might contain as a segment the original array.
+	 *
+	 * @param array an array.
+	 * @return a new big array with the same length and content of {@code array}.
+	 */
+
+	public static KEY_TYPE[][] wrap(final KEY_TYPE[] array) {
+		if (array.length == 0) return BIG_ARRAYS.EMPTY_BIG_ARRAY;
+		if (array.length <= SEGMENT_SIZE) return new KEY_TYPE[][] { array };
+		final KEY_TYPE[][] bigArray = BIG_ARRAYS.newBigArray(array.length);
+		for(int i = 0; i < bigArray.length; i++) System.arraycopy(array, (int)start(i), bigArray[i], 0, bigArray[i].length);
+		return bigArray;
+	}
+#endif
+	/** Ensures that a big array can contain the given number of entries.
+	 *
+	 * <p>If you cannot foresee whether this big array will need again to be
+	 * enlarged, you should probably use {@code grow()} instead.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @return {@code array}, if it contains {@code length} entries or more; otherwise,
+	 * a big array with {@code length} entries whose first {@code length(array)}
+	 * entries are the same as those of {@code array}.
+	 */
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity(final KEY_GENERIC_TYPE[][] array, final long length) {
+		return ensureCapacity(array, length, length(array));
+	}
+
+#if KEY_CLASS_Object
+
+	/** Forces a big array to contain the given number of entries, preserving just a part of the big array.
+	 *
+	 * <p>This method returns a new big array of the given length whose element
+	 * are of the same class as of those of {@code array}.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return a big array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] forceCapacity(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
+		ensureLength(length);
+		final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final KEY_GENERIC_TYPE[][] base = java.util.Arrays.copyOf(array, baseLength);
+		final Class<?> componentType = array.getClass().getComponentType();
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) {
+			for(int i = valid; i < baseLength - 1; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
+			base[baseLength - 1] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), residual);
+		}
+		else for(int i = valid; i < baseLength; i++) base[i] = (KEY_GENERIC_TYPE[])java.lang.reflect.Array.newInstance(componentType.getComponentType(), SEGMENT_SIZE);
+
+		if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
+		return base;
+	}
+
+	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
+	 *
+	 * <p>This method returns a new big array of the given length whose element
+	 * are of the same class as of those of {@code array}.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return {@code array}, if it can contain {@code length} entries or more; otherwise,
+	 * a big array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] ensureCapacity(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
+		return length > length(array) ? forceCapacity(array, length, preserve) : array;
+	}
+
+#else
+
+	/** Forces a big array to contain the given number of entries, preserving just a part of the big array.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return a big array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	public static KEY_TYPE[][] forceCapacity(final KEY_TYPE[][] array, final long length, final long preserve) {
+		ensureLength(length);
+		final int valid = array.length - (array.length == 0 || array.length > 0 && array[array.length - 1].length == SEGMENT_SIZE ? 0 : 1);
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final KEY_TYPE[][] base = java.util.Arrays.copyOf(array, baseLength);
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) {
+			for(int i = valid; i < baseLength - 1; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
+			base[baseLength - 1] = new KEY_TYPE[residual];
+		}
+		else for(int i = valid; i < baseLength; i++) base[i] = new KEY_TYPE[SEGMENT_SIZE];
+
+		if (preserve - (valid * (long)SEGMENT_SIZE) > 0) copy(array, valid * (long)SEGMENT_SIZE, base, valid * (long)SEGMENT_SIZE, preserve - (valid * (long)SEGMENT_SIZE));
+		return base;
+	}
+
+	/** Ensures that a big array can contain the given number of entries, preserving just a part of the big array.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return {@code array}, if it can contain {@code length} entries or more; otherwise,
+	 * a big array with {@code length} entries whose first {@code preserve}
+	 * entries are the same as those of {@code array}.
+	 */
+	public static KEY_TYPE[][] ensureCapacity(final KEY_TYPE[][] array, final long length, final long preserve) {
+		return length > length(array) ? forceCapacity(array, length, preserve) : array;
+	}
+
+#endif
+
+	/** Grows the given big array to the maximum between the given length and
+	 * the current length increased by 50%, provided that the given
+	 * length is larger than the current length.
+	 *
+	 * <p>If you want complete control on the big array growth, you
+	 * should probably use {@code ensureCapacity()} instead.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @return {@code array}, if it can contain {@code length}
+	 * entries; otherwise, a big array with
+	 * max({@code length},{@code length(array)}/&phi;) entries whose first
+	 * {@code length(array)} entries are the same as those of {@code array}.
+	 * */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow(final KEY_GENERIC_TYPE[][] array, final long length) {
+		final long oldLength = length(array);
+		return length > oldLength ? grow(array, length, oldLength) : array;
+	}
+
+	/** Grows the given big array to the maximum between the given length and
+	 * the current length increased by 50%, provided that the given
+	 * length is larger than the current length, preserving just a part of the big array.
+	 *
+	 * <p>If you want complete control on the big array growth, you
+	 * should probably use {@code ensureCapacity()} instead.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new minimum length for this big array.
+	 * @param preserve the number of elements of the big array that must be preserved in case a new allocation is necessary.
+	 * @return {@code array}, if it can contain {@code length}
+	 * entries; otherwise, a big array with
+	 * max({@code length},{@code length(array)}/&phi;) entries whose first
+	 * {@code preserve} entries are the same as those of {@code array}.
+	 * */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] grow(final KEY_GENERIC_TYPE[][] array, final long length, final long preserve) {
+		final long oldLength = length(array);
+		return length > oldLength ? ensureCapacity(array, Math.max(oldLength + (oldLength >> 1), length), preserve) : array;
+	}
+
+#if KEY_CLASS_Object
+
+	/** Trims the given big array to the given length.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new maximum length for the big array.
+	 * @return {@code array}, if it contains {@code length}
+	 * entries or less; otherwise, a big array with
+	 * {@code length} entries whose entries are the same as
+	 * the first {@code length} entries of {@code array}.
+	 *
+	 */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim(final KEY_GENERIC_TYPE[][] array, final long length) {
+		ensureLength(length);
+		final long oldLength = length(array);
+		if (length >= oldLength) return array;
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final KEY_GENERIC_TYPE[][] base = java.util.Arrays.copyOf(array, baseLength);
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) base[baseLength - 1] = ARRAYS.trim(base[baseLength - 1], residual);
+		return base;
+	}
+
+#else
+
+	/** Trims the given big array to the given length.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new maximum length for the big array.
+	 * @return {@code array}, if it contains {@code length}
+	 * entries or less; otherwise, a big array with
+	 * {@code length} entries whose entries are the same as
+	 * the first {@code length} entries of {@code array}.
+	 *
+	 */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] trim(final KEY_GENERIC_TYPE[][] array, final long length) {
+		ensureLength(length);
+		final long oldLength = length(array);
+		if (length >= oldLength) return array;
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		final KEY_TYPE[][] base = java.util.Arrays.copyOf(array, baseLength);
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) base[baseLength - 1] = ARRAYS.trim(base[baseLength - 1], residual);
+		return base;
+	}
+
+#endif
+
+	/** Sets the length of the given big array.
+	 *
+	 * <p><strong>Warning:</strong> the returned array might use part of the segments of the original
+	 * array, which must be considered read-only after calling this method.
+	 *
+	 * @param array a big array.
+	 * @param length the new length for the big array.
+	 * @return {@code array}, if it contains exactly {@code length}
+	 * entries; otherwise, if it contains <em>more</em> than
+	 * {@code length} entries, a big array with {@code length} entries
+	 * whose entries are the same as the first {@code length} entries of
+	 * {@code array}; otherwise, a big array with {@code length} entries
+	 * whose first {@code length(array)} entries are the same as those of
+	 * {@code array}.
+	 *
+	 */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] setLength(final KEY_GENERIC_TYPE[][] array, final long length) {
+		final long oldLength = length(array);
+		if (length == oldLength) return array;
+		if (length < oldLength) return trim(array, length);
+		return ensureCapacity(array, length);
+	}
+
+	/** Returns a copy of a portion of a big array.
+	 *
+	 * @param array a big array.
+	 * @param offset the first element to copy.
+	 * @param length the number of elements to copy.
+	 * @return a new big array containing {@code length} elements of {@code array} starting at {@code offset}.
+	 */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy(final KEY_GENERIC_TYPE[][] array, final long offset, final long length) {
+		ensureOffsetLength(array, offset, length);
+		final KEY_GENERIC_TYPE[][] a =
+#if KEY_CLASS_Object
+			BIG_ARRAYS.newBigArray(array, length);
+#else
+			BIG_ARRAYS.newBigArray(length);
+#endif
+		copy(array, offset, a, 0, length);
+		return a;
+	}
+
+	/** Returns a copy of a big array.
+	 *
+	 * @param array a big array.
+	 * @return a copy of {@code array}.
+	 */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] copy(final KEY_GENERIC_TYPE[][] array) {
+		final KEY_GENERIC_TYPE[][] base = array.clone();
+		for(int i = base.length; i-- != 0;) base[i] = array[i].clone();
+		return base;
+	}
+
+	/** Fills the given big array with the given value.
+	 *
+	 * <p>This method uses a backward loop. It is significantly faster than the corresponding
+	 * method in {@link java.util.Arrays}.
+	 *
+	 * @param array a big array.
+	 * @param value the new value for all elements of the big array.
+	 */
+
+	public static KEY_GENERIC void fill(final KEY_GENERIC_TYPE[][] array, final KEY_GENERIC_TYPE value) {
+		for(int i = array.length; i-- != 0;) java.util.Arrays.fill(array[i], value);
+	}
+
+	/** Fills a portion of the given big array with the given value.
+	 *
+	 * <p>If possible (i.e., {@code from} is 0) this method uses a
+	 * backward loop. In this case, it is significantly faster than the
+	 * corresponding method in {@link java.util.Arrays}.
+	 *
+	 * @param array a big array.
+	 * @param from the starting index of the portion to fill.
+	 * @param to the end index of the portion to fill.
+	 * @param value the new value for all elements of the specified portion of the big array.
+	 */
+
+	public static KEY_GENERIC void fill(final KEY_GENERIC_TYPE[][] array, final long from, long to, final KEY_GENERIC_TYPE value) {
+		final long length = length(array);
+		BigArrays.ensureFromTo(length, from, to);
+		if (length == 0) return; // To avoid addressing array[0]
+		int fromSegment = segment(from);
+		int toSegment = segment(to);
+		int fromDispl = displacement(from);
+		int toDispl = displacement(to);
+		if (fromSegment == toSegment) {
+			java.util.Arrays.fill(array[fromSegment], fromDispl, toDispl, value);
+			return;
+		}
+
+		if (toDispl != 0) java.util.Arrays.fill(array[toSegment], 0, toDispl, value);
+		while(--toSegment > fromSegment) java.util.Arrays.fill(array[toSegment], value);
+		java.util.Arrays.fill(array[fromSegment], fromDispl, SEGMENT_SIZE, value);
+	}
+
+
+	/** Returns true if the two big arrays are elementwise equal.
+	 *
+	 * <p>This method uses a backward loop. It is significantly faster than the corresponding
+	 * method in {@link java.util.Arrays}.
+	 *
+	 * @param a1 a big array.
+	 * @param a2 another big array.
+	 * @return true if the two big arrays are of the same length, and their elements are equal.
+	 */
+
+	public static KEY_GENERIC boolean equals(final KEY_GENERIC_TYPE[][] a1, final KEY_GENERIC_TYPE a2[][]) {
+		if (length(a1) != length(a2)) return false;
+		int i = a1.length, j;
+		KEY_GENERIC_TYPE[] t, u;
+		while(i-- != 0) {
+			t = a1[i];
+			u = a2[i];
+			j = t.length;
+			while(j-- != 0) if (! KEY_EQUALS(t[j], u[j])) return false;
+		}
+		return true;
+	}
+
+	/* Returns a string representation of the contents of the specified big array.
+	 *
+	 * The string representation consists of a list of the big array's elements, enclosed in square brackets ("[]"). Adjacent elements are separated by the characters ", " (a comma followed by a space). Returns "null" if {@code a} is null.
+	 * @param a the big array whose string representation to return.
+	 * @return the string representation of {@code a}.
+	 */
+
+	public static KEY_GENERIC String toString(final KEY_GENERIC_TYPE[][] a) {
+		if (a == null) return "null";
+		final long last = length(a) - 1;
+		if (last == - 1) return "[]";
+		final StringBuilder b = new StringBuilder();
+		b.append('[');
+		for (long i = 0; ; i++) {
+			b.append(String.valueOf(get(a, i)));
+			if (i == last) return b.append(']').toString();
+			b.append(", ");
+		}
+	}
+
+
+	/** Ensures that a range given by its first (inclusive) and last (exclusive) elements fits a big array.
+	 *
+	 * <p>This method may be used whenever a big array range check is needed.
+	 *
+	 * @param a a big array.
+	 * @param from a start index (inclusive).
+	 * @param to an end index (inclusive).
+	 * @throws IllegalArgumentException if {@code from} is greater than {@code to}.
+	 * @throws ArrayIndexOutOfBoundsException if {@code from} or {@code to} are greater than the big array length or negative.
+	 */
+	public static KEY_GENERIC void ensureFromTo(final KEY_GENERIC_TYPE[][] a, final long from, final long to) {
+		BigArrays.ensureFromTo(length(a), from, to);
+	}
+
+	/** Ensures that a range given by an offset and a length fits a big array.
+	 *
+	 * <p>This method may be used whenever a big array range check is needed.
+	 *
+	 * @param a a big array.
+	 * @param offset a start index.
+	 * @param length a length (the number of elements in the range).
+	 * @throws IllegalArgumentException if {@code length} is negative.
+	 * @throws ArrayIndexOutOfBoundsException if {@code offset} is negative or {@code offset}+{@code length} is greater than the big array length.
+	 */
+	public static KEY_GENERIC void ensureOffsetLength(final KEY_GENERIC_TYPE[][] a, final long offset, final long length) {
+		BigArrays.ensureOffsetLength(length(a), offset, length);
+	}
+
+	/** Ensures that two big arrays are of the same length.
+	 *
+	 * @param a a big array.
+	 * @param b another big array.
+	 * @throws IllegalArgumentException if the two argument arrays are not of the same length.
+	 */
+	public static KEY_GENERIC void ensureSameLength(final KEY_GENERIC_TYPE[][] a, final KEY_GENERIC_TYPE[][] b) {
+		if (length(a) != length(b)) throw new IllegalArgumentException("Array size mismatch: " + length(a) + " != " + length(b));
+	}
+
+	/** Shuffles the specified big array fragment using the specified pseudorandom number generator.
+	 *
+	 * @param a the big array to be shuffled.
+	 * @param from the index of the first element (inclusive) to be shuffled.
+	 * @param to the index of the last element (exclusive) to be shuffled.
+	 * @param random a pseudorandom number generator.
+	 * @return {@code a}.
+	 */
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] shuffle(final KEY_GENERIC_TYPE[][] a, final long from, final long to, final Random random) {
+		for(long i = to - from; i-- != 0;) {
+			final long p = (random.nextLong() & 0x7FFFFFFFFFFFFFFFL) % (i + 1);
+			final KEY_GENERIC_TYPE t = BigArrays.get(a, from + i);
+			BigArrays.set(a, from + i, BigArrays.get(a, from + p));
+			BigArrays.set(a, from + p, t);
+		}
+		return a;
+	}
+
+	/** Shuffles the specified big array using the specified pseudorandom number generator.
+	 *
+	 * @param a the big array to be shuffled.
+	 * @param random a pseudorandom number generator.
+	 * @return {@code a}.
+	 */
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] shuffle(final KEY_GENERIC_TYPE[][] a, final Random random) {
+		for(long i = length(a); i-- != 0;) {
+			final long p = (random.nextLong() & 0x7FFFFFFFFFFFFFFFL) % (i + 1);
+			final KEY_GENERIC_TYPE t = BigArrays.get(a, i);
+			BigArrays.set(a, i, BigArrays.get(a, p));
+			BigArrays.set(a, p, t);
+		}
+		return a;
+	}

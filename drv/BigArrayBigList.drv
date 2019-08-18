@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2017 Sebastiano Vigna
+ * Copyright (C) 2002-2019 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -180,7 +180,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 
 	public BIG_ARRAY_BIG_LIST(final KEY_GENERIC_TYPE a[][]) {
-		this(a, 0, BIG_ARRAYS.length(a));
+		this(a, 0, BigArrays.length(a));
 	}
 
 	/** Creates a new big-array big list and fills it with the elements of a given big array.
@@ -197,7 +197,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	public BIG_ARRAY_BIG_LIST(final KEY_GENERIC_TYPE a[][], final long offset, final long length) {
 		this(length);
-		BIG_ARRAYS.copy(a, offset, this.a, 0, length);
+		BigArrays.copy(a, offset, this.a, 0, length);
 		size = length;
 	}
 
@@ -253,7 +253,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC wrap(final KEY_GENERIC_TYPE a[][], final long length) {
-		if (length > BIG_ARRAYS.length(a)) throw new IllegalArgumentException("The specified length (" + length + ") is greater than the array size (" + BIG_ARRAYS.length(a) + ")");
+		if (length > BigArrays.length(a)) throw new IllegalArgumentException("The specified length (" + length + ") is greater than the array size (" + BigArrays.length(a) + ")");
 		final BIG_ARRAY_BIG_LIST KEY_GENERIC l = new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND(a, false);
 		l.size = length;
 		return l;
@@ -266,7 +266,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC wrap(final KEY_GENERIC_TYPE a[][]) {
-		return wrap(a, BIG_ARRAYS.length(a));
+		return wrap(a, BigArrays.length(a));
 	}
 
 
@@ -278,18 +278,18 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	public void ensureCapacity(final long capacity) {
 		if (capacity <= a.length || a == BIG_ARRAYS.DEFAULT_EMPTY_BIG_ARRAY) return;
 #if KEYS_PRIMITIVE
-		a = BIG_ARRAYS.forceCapacity(a, capacity, size);
+		a = BigArrays.forceCapacity(a, capacity, size);
 #else
-		if (wrapped) a = BIG_ARRAYS.forceCapacity(a, capacity, size);
+		if (wrapped) a = BigArrays.forceCapacity(a, capacity, size);
 		else {
-			if (capacity > BIG_ARRAYS.length(a)) {
+			if (capacity > BigArrays.length(a)) {
 				final Object t[][] = BIG_ARRAYS.newBigArray(capacity);
-				BIG_ARRAYS.copy(a, 0, t, 0, size);
+				BigArrays.copy(a, 0, t, 0, size);
 				a = (KEY_GENERIC_TYPE[][])t;
 			}
 		}
 #endif
-		assert size <= BIG_ARRAYS.length(a);
+		assert size <= BigArrays.length(a);
 	}
 
 	/** Grows this big-array big list, ensuring that it can contain the given number of entries without resizing,
@@ -299,69 +299,69 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private void grow(long capacity) {
-		final long oldLength = BIG_ARRAYS.length(a);
+		final long oldLength = BigArrays.length(a);
 		if (capacity <= oldLength) return;
 		if (a != BIG_ARRAYS.DEFAULT_EMPTY_BIG_ARRAY) capacity = Math.max(oldLength + (oldLength >> 1), capacity);
 		else if (capacity < DEFAULT_INITIAL_CAPACITY) capacity = DEFAULT_INITIAL_CAPACITY;
 #if KEYS_PRIMITIVE
-		a = BIG_ARRAYS.forceCapacity(a, capacity, size);
+		a = BigArrays.forceCapacity(a, capacity, size);
 #else
-		if (wrapped) a =  BIG_ARRAYS.forceCapacity(a, capacity, size);
+		if (wrapped) a =  BigArrays.forceCapacity(a, capacity, size);
 		else {
 			final Object t[][] = BIG_ARRAYS.newBigArray(capacity);
-			BIG_ARRAYS.copy(a, 0, t, 0, size);
+			BigArrays.copy(a, 0, t, 0, size);
 			a = (KEY_GENERIC_TYPE[][])t;
 		}
 #endif
-		assert size <= BIG_ARRAYS.length(a);
+		assert size <= BigArrays.length(a);
 	}
 
 	@Override
 	public void add(final long index, final KEY_GENERIC_TYPE k) {
 		ensureIndex(index);
 		grow(size + 1);
-		if (index != size) BIG_ARRAYS.copy(a, index, a, index + 1, size - index);
-		BIG_ARRAYS.set(a, index, k);
+		if (index != size) BigArrays.copy(a, index, a, index + 1, size - index);
+		BigArrays.set(a, index, k);
 		size++;
-		assert size <= BIG_ARRAYS.length(a);
+		assert size <= BigArrays.length(a);
 	}
 
 	@Override
 	public boolean add(final KEY_GENERIC_TYPE k) {
 		grow(size + 1);
-		BIG_ARRAYS.set(a, size++, k);
-		assert size <= BIG_ARRAYS.length(a);
+		BigArrays.set(a, size++, k);
+		assert size <= BigArrays.length(a);
 		return true;
 	}
 
 	@Override
 	public KEY_GENERIC_TYPE GET_KEY(final long index) {
 		if (index >= size) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + size + ")");
-		return BIG_ARRAYS.get(a, index);
+		return BigArrays.get(a, index);
 	}
 
 	@Override
 	public long indexOf(final KEY_TYPE k) {
-		for(long i = 0; i < size; i++) if (KEY_EQUALS(k, BIG_ARRAYS.get(a, i))) return i;
+		for(long i = 0; i < size; i++) if (KEY_EQUALS(k, BigArrays.get(a, i))) return i;
 		return -1;
 	}
 
 	@Override
 	public long lastIndexOf(final KEY_TYPE k) {
-		for(long i = size; i-- != 0;) if (KEY_EQUALS(k, BIG_ARRAYS.get(a, i))) return i;
+		for(long i = size; i-- != 0;) if (KEY_EQUALS(k, BigArrays.get(a, i))) return i;
 		return -1;
 	}
 
 	@Override
 	public KEY_GENERIC_TYPE REMOVE_KEY(final long index) {
 		if (index >= size) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + size + ")");
-		final KEY_GENERIC_TYPE old = BIG_ARRAYS.get(a, index);
+		final KEY_GENERIC_TYPE old = BigArrays.get(a, index);
 		size--;
-		if (index != size) BIG_ARRAYS.copy(a, index + 1, a, index, size - index);
+		if (index != size) BigArrays.copy(a, index + 1, a, index, size - index);
 #if KEYS_REFERENCE
-		BIG_ARRAYS.set(a, size, null);
+		BigArrays.set(a, size, null);
 #endif
-		assert size <= BIG_ARRAYS.length(a);
+		assert size <= BigArrays.length(a);
 		return old;
 	}
 
@@ -370,15 +370,15 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final long index = indexOf(k);
 		if (index == -1) return false;
 		REMOVE_KEY(index);
-		assert size <= BIG_ARRAYS.length(a);
+		assert size <= BigArrays.length(a);
 		return true;
 	}
 
 	@Override
 	public KEY_GENERIC_TYPE set(final long index, final KEY_GENERIC_TYPE k) {
 		if (index >= size) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + size + ")");
-		KEY_GENERIC_TYPE old = BIG_ARRAYS.get(a, index);
-		BIG_ARRAYS.set(a, index, k);
+		KEY_GENERIC_TYPE old = BigArrays.get(a, index);
+		BigArrays.set(a, index, k);
 		return old;
 	}
 
@@ -403,7 +403,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		}
 		final long j = BigArrays.index(ds, dd);
 #if KEYS_REFERENCE
-		BIG_ARRAYS.fill(a, j, size, null);
+		BigArrays.fill(a, j, size, null);
 #endif
 		final boolean modified = size != j;
 		size = j;
@@ -432,7 +432,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		}
 		final long j = BigArrays.index(ds, dd);
 #if KEYS_REFERENCE
-		BIG_ARRAYS.fill(a, j, size, null);
+		BigArrays.fill(a, j, size, null);
 #endif
 		final boolean modified = size != j;
 		size = j;
@@ -442,10 +442,10 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	@Override
 	public void clear() {
 #if KEYS_REFERENCE
-		BIG_ARRAYS.fill(a, 0, size, null);
+		BigArrays.fill(a, 0, size, null);
 #endif
 		size = 0;
-		assert size <= BIG_ARRAYS.length(a);
+		assert size <= BigArrays.length(a);
 	}
 
 	@Override
@@ -455,10 +455,10 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	@Override
 	public void size(final long size) {
-		if (size > BIG_ARRAYS.length(a)) a = BIG_ARRAYS.forceCapacity(a, size, this.size);
-		if (size > this.size) BIG_ARRAYS.fill(a, this.size, size, KEY_NULL);
+		if (size > BigArrays.length(a)) a = BigArrays.forceCapacity(a, size, this.size);
+		if (size > this.size) BigArrays.fill(a, this.size, size, KEY_NULL);
 #if KEYS_REFERENCE
-		else BIG_ARRAYS.fill(a, size, this.size, KEY_NULL);
+		else BigArrays.fill(a, size, this.size, KEY_NULL);
 #endif
 		this.size = size;
 	}
@@ -492,10 +492,10 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 
 	public void trim(final long n) {
-		final long arrayLength = BIG_ARRAYS.length(a);
+		final long arrayLength = BigArrays.length(a);
 		if (n >= arrayLength || size == arrayLength) return;
-		a = BIG_ARRAYS.trim(a, Math.max(n, size));
-		assert size <= BIG_ARRAYS.length(a);
+		a = BigArrays.trim(a, Math.max(n, size));
+		assert size <= BigArrays.length(a);
 	}
 
 	private class SubList extends ABSTRACT_BIG_LIST.SUBLIST_RANDOM_ACCESS KEY_GENERIC {
@@ -622,7 +622,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	@Override
 	public void getElements(final long from, final KEY_TYPE[][] a, final long offset, final long length) {
-		BIG_ARRAYS.copy(this.a, from, a, offset, length);
+		BigArrays.copy(this.a, from, a, offset, length);
 	}
 
 	/** Removes elements of this type-specific list using optimized system calls.
@@ -633,10 +633,10 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	@Override
 	public void removeElements(final long from, final long to) {
 		BigArrays.ensureFromTo(size, from, to);
-		BIG_ARRAYS.copy(a, to, a, from, size - to);
+		BigArrays.copy(a, to, a, from, size - to);
 		size -= (to - from);
 #if KEYS_REFERENCE
-		BIG_ARRAYS.fill(a, size, size + to - from, null);
+		BigArrays.fill(a, size, size + to - from, null);
 #endif
 	}
 
@@ -651,10 +651,10 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	@Override
 	public void addElements(final long index, final KEY_GENERIC_TYPE a[][], final long offset, final long length) {
 		ensureIndex(index);
-		BIG_ARRAYS.ensureOffsetLength(a, offset, length);
+		BigArrays.ensureOffsetLength(a, offset, length);
 		grow(size + length);
-		BIG_ARRAYS.copy(this.a, index, this.a, index + length, size - index);
-		BIG_ARRAYS.copy(a, offset, this.a, index, length);
+		BigArrays.copy(this.a, index, this.a, index + length, size - index);
+		BigArrays.copy(a, offset, this.a, index, length);
 		size += length;
 	}
 
@@ -689,9 +689,9 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 				@Override
 				public boolean hasPrevious() { return pos > 0; }
 				@Override
-				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return BIG_ARRAYS.get(a, last = pos++); }
+				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return BigArrays.get(a, last = pos++); }
 				@Override
-				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return BIG_ARRAYS.get(a, last = --pos); }
+				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return BigArrays.get(a, last = --pos); }
 				@Override
 				public long nextIndex() { return pos; }
 				@Override
@@ -839,7 +839,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	@Override
 	public BIG_ARRAY_BIG_LIST KEY_GENERIC clone() {
 		BIG_ARRAY_BIG_LIST KEY_GENERIC c = new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND(size);
-		BIG_ARRAYS.copy(a, 0, c.a, 0, size);
+		BigArrays.copy(a, 0, c.a, 0, size);
 		c.size = size;
 		return c;
 	}
@@ -866,9 +866,9 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final KEY_GENERIC_TYPE[][] a2 = l.a;
 
 #if KEY_CLASS_Object
-		while(s-- !=  0) if (! valEquals(BIG_ARRAYS.get(a1, s), BIG_ARRAYS.get(a2, s))) return false;
+		while(s-- !=  0) if (! valEquals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
 #else
-		while(s-- !=  0) if (BIG_ARRAYS.get(a1, s) != BIG_ARRAYS.get(a2, s)) return false;
+		while(s-- !=  0) if (BigArrays.get(a1, s) != BigArrays.get(a2, s)) return false;
 #endif
 		return true;
 	}
@@ -897,8 +897,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		int r, i;
 
 		for(i = 0; i < s1 && i < s2; i++) {
-			e1 = BIG_ARRAYS.get(a1, i);
-			e2 = BIG_ARRAYS.get(a2, i);
+			e1 = BigArrays.get(a1, i);
+			e2 = BigArrays.get(a2, i);
 			if ((r = KEY_CMP(e1, e2)) != 0) return r;
 		}
 
@@ -914,14 +914,14 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
-		for(int i = 0; i < size; i++) s.WRITE_KEY(BIG_ARRAYS.get(a, i));
+		for(int i = 0; i < size; i++) s.WRITE_KEY(BigArrays.get(a, i));
 	}
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		a = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray(size);
-		for(int i = 0; i < size; i++) BIG_ARRAYS.set(a, i, KEY_GENERIC_CAST s.READ_KEY());
+		for(int i = 0; i < size; i++) BigArrays.set(a, i, KEY_GENERIC_CAST s.READ_KEY());
 	}
 
 
@@ -1284,7 +1284,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		BIG_LIST m2 = null;
 
 		try {
-			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
+			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 

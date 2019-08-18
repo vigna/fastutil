@@ -16,6 +16,11 @@ package it.unimi.dsi.fastutil.io;
  * limitations under the License.
  */
 
+import static it.unimi.dsi.fastutil.BigArrays.copy;
+import static it.unimi.dsi.fastutil.BigArrays.get;
+import static it.unimi.dsi.fastutil.BigArrays.length;
+import static it.unimi.dsi.fastutil.BigArrays.set;
+import static it.unimi.dsi.fastutil.BigArrays.wrap;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,7 +50,7 @@ public class BinIOTest {
 		for(int i = LARGE.length; i-- != 0;) LARGE[i] = (byte)i;
 	}
 
-	public void testBytes(byte[] a) throws IOException {
+	public void testBytes(final byte[] a) throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
 		final byte[] aShifted = new byte[a.length + 1];
@@ -63,7 +68,7 @@ public class BinIOTest {
 			}
 			assertArrayEquals(a, BinIO.loadBytes(file));
 
-			byte[] b = new byte[a.length];
+			final byte[] b = new byte[a.length];
 			assertEquals(a.length, BinIO.loadBytes(file, b));
 			assertArrayEquals(a, b);
 			assertEquals(a.length, BinIO.loadBytes(file, b, 0, a.length));
@@ -74,7 +79,7 @@ public class BinIOTest {
 			assertEquals(a.length, BinIO.loadBytes(new FileInputStream(file), b, 0, a.length));
 			assertArrayEquals(a, b);
 
-			byte[] c = new byte[a.length + 1];
+			final byte[] c = new byte[a.length + 1];
 			assertEquals(a.length, BinIO.loadBytes(new FileInputStream(file), c));
 			assertEquals(0, c[a.length]);
 			System.arraycopy(c, 0, b, 0, b.length);
@@ -103,12 +108,12 @@ public class BinIOTest {
 		testBytes(LARGE);
 	}
 
-	public void testBigBytes(byte[][] a) throws IOException {
+	public void testBigBytes(final byte[][] a) throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
-		final long length = ByteBigArrays.length(a);
+		final long length = length(a);
 		final byte[][] aShifted = ByteBigArrays.newBigArray(length + 1);
-		ByteBigArrays.copy(a, 0, aShifted, 1, length);
+		copy(a, 0, aShifted, 1, length);
 
 		for(int i = 0; i < 6; i++) {
 			file.delete();
@@ -122,7 +127,7 @@ public class BinIOTest {
 			}
 			assertArrayEquals(a, BinIO.loadBytesBig(file));
 
-			byte[][] b = ByteBigArrays.newBigArray(length);
+			final byte[][] b = ByteBigArrays.newBigArray(length);
 			assertEquals(length, BinIO.loadBytes(file, b));
 			assertArrayEquals(a, b);
 			assertEquals(length, BinIO.loadBytes(file, b, 0, length));
@@ -133,25 +138,25 @@ public class BinIOTest {
 			assertEquals(length, BinIO.loadBytes(new FileInputStream(file), b, 0, length));
 			assertArrayEquals(a, b);
 
-			byte[][] c = ByteBigArrays.newBigArray(length + 1);
+			final byte[][] c = ByteBigArrays.newBigArray(length + 1);
 			assertEquals(length, BinIO.loadBytes(new FileInputStream(file), c));
-			assertEquals(0, ByteBigArrays.get(c, length));
-			ByteBigArrays.copy(c, 0, b, 0, b.length);
+			assertEquals(0, get(c, length));
+			copy(c, 0, b, 0, b.length);
 			assertArrayEquals(a, b);
 			assertEquals(length, BinIO.loadBytes(new FileInputStream(file), c, 1, length));
-			assertEquals(0, ByteBigArrays.get(c, 0));
-			ByteBigArrays.copy(c, 1, b, 0, b.length);
+			assertEquals(0, get(c, 0));
+			copy(c, 1, b, 0, b.length);
 			assertArrayEquals(a, b);
 
-			ByteBigArrays.set(c, length, (byte)0);
+			set(c, length, (byte)0);
 			assertEquals(length, BinIO.loadBytes((DataInput)new DataInputStream(new FileInputStream(file)), c));
-			assertEquals(0, ByteBigArrays.get(c, length));
-			ByteBigArrays.copy(c, 0, b, 0, b.length);
+			assertEquals(0, get(c, length));
+			copy(c, 0, b, 0, b.length);
 			assertArrayEquals(a, b);
 
 			assertEquals(length, BinIO.loadBytes((DataInput)new DataInputStream(new FileInputStream(file)), c, 1, length));
-			assertEquals(0, ByteBigArrays.get(c, 0));
-			ByteBigArrays.copy(c, 1, b, 0, b.length);
+			assertEquals(0, get(c, 0));
+			copy(c, 1, b, 0, b.length);
 			assertArrayEquals(a, b);
 		}
 
@@ -159,8 +164,8 @@ public class BinIOTest {
 
 	@Test
 	public void testBigBytes() throws IOException {
-		testBigBytes(ByteBigArrays.wrap(SMALL));
-		testBigBytes(ByteBigArrays.wrap(LARGE));
+		testBigBytes(wrap(SMALL));
+		testBigBytes(wrap(LARGE));
 	}
 
 	public void testFileDataWrappers() throws IOException {
@@ -209,7 +214,7 @@ public class BinIOTest {
 
 	}
 
-	public void testInts(int[] a) throws IOException {
+	public void testInts(final int[] a) throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
 		for(int i = 0; i < a.length; i++) a[i] = i;

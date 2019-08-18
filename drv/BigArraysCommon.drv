@@ -1,7 +1,7 @@
 package it.unimi.dsi.fastutil;
 
 /*
- * Copyright (C) 2010-2017 Sebastiano Vigna
+ * Copyright (C) 2010-2019 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,27 @@ package it.unimi.dsi.fastutil;
 
 
 import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
-import it.unimi.dsi.fastutil.ints.IntBigArrays;
 import it.unimi.dsi.fastutil.longs.LongComparator;
+import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
+import it.unimi.dsi.fastutil.booleans.BooleanBigArrays;
+import it.unimi.dsi.fastutil.chars.CharBigArrays;
+import it.unimi.dsi.fastutil.shorts.ShortBigArrays;
+import it.unimi.dsi.fastutil.ints.IntBigArrays;
+import it.unimi.dsi.fastutil.longs.LongBigArrays;
+import it.unimi.dsi.fastutil.floats.FloatBigArrays;
+import it.unimi.dsi.fastutil.doubles.DoubleBigArrays;
+import it.unimi.dsi.fastutil.objects.ObjectBigArrays;
+import it.unimi.dsi.fastutil.booleans.BooleanArrays;
+import it.unimi.dsi.fastutil.bytes.ByteArrays;
+import it.unimi.dsi.fastutil.chars.CharArrays;
+import it.unimi.dsi.fastutil.shorts.ShortArrays;
+import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.longs.LongArrays;
+import it.unimi.dsi.fastutil.floats.FloatArrays;
+import it.unimi.dsi.fastutil.doubles.DoubleArrays;
+import it.unimi.dsi.fastutil.objects.ObjectArrays;
+
+import java.util.Random;
 
 /**
  * A class providing static methods and objects that do useful things with big
@@ -58,10 +77,22 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * <em>{@linkplain #displacement(long)
  * displacement}</em> into that segment. Access to single members happens by
  * means of accessors defined in the type-specific versions (see, e.g.,
- * {@link IntBigArrays#get(int[][], long)} and
- * {@link IntBigArrays#set(int[][], long, int)}), but you can also use the
+ * {@link #get(int[][], long)} and
+ * {@link #set(int[][], long, int)}), but you can also use the
  * methods {@link #segment(long)}/{@link #displacement(long)} to access entries
  * manually.
+ *
+ * <p>The intended usage of most of the methods of this class is that they
+ * will be imported statically: for example,
+ * <pre>
+ * import static it.unimi.dsi.fastutil.BigArrays.copy;
+ * import static it.unimi.dsi.fastutil.BigArrays.get;
+ * import static it.unimi.dsi.fastutil.BigArrays.length;
+ * import static it.unimi.dsi.fastutil.BigArrays.set;
+ * </pre>
+ *
+ * <p>Dynamic binding will take care of selecting the right method depending
+ * on the array type.
  *
  * <h2>Scanning big arrays</h2>
  *
@@ -78,7 +109,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * }
  * </pre>
  *
- * or using the (simpler and usually faster) reversed version:
+ * or using the simpler reversed version:
  *
  * <pre>
  * for(int s = a.length; s-- != 0;) {
@@ -149,9 +180,13 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  *
  * <h2>Additional methods</h2>
  *
+ * <p>In particular, the {@code ensureCapacity()}, {@code grow()},
+ * {@code trim()} and {@code setLength()} methods allow to handle
+ * arrays much like array lists.
+ *
  * <p>
- * In addition to commodity methods, this class contains {@link BigSwapper}
- * -based implementations of
+ * In addition to commodity methods, this class contains {@link BigSwapper}-based 
+ * implementations of
  * {@linkplain #quickSort(long, long, LongComparator, BigSwapper) quicksort} and
  * of a stable, in-place
  * {@linkplain #mergeSort(long, long, LongComparator, BigSwapper) mergesort}.
@@ -600,6 +635,27 @@ public class BigArrays {
 			swapper.swap(from, l);
 	}
 
+#include "src/it/unimi/dsi/fastutil/ByteBigArraysFragment.h"
+#undef KEY_CLASS_Byte
+#include "src/it/unimi/dsi/fastutil/IntBigArraysFragment.h"
+#undef KEY_CLASS_Integer
+#include "src/it/unimi/dsi/fastutil/LongBigArraysFragment.h"
+#undef KEY_CLASS_Long
+#include "src/it/unimi/dsi/fastutil/DoubleBigArraysFragment.h"
+#undef KEY_CLASS_Double
+#if SMALL_TYPES
+#include "src/it/unimi/dsi/fastutil/BooleanBigArraysFragment.h"
+#undef KEY_CLASS_Boolean
+#include "src/it/unimi/dsi/fastutil/ShortBigArraysFragment.h"
+#undef KEY_CLASS_Short
+#include "src/it/unimi/dsi/fastutil/CharBigArraysFragment.h"
+#undef KEY_CLASS_Character
+#include "src/it/unimi/dsi/fastutil/FloatBigArraysFragment.h"
+#undef KEY_CLASS_Float
+#endif
+#undef KEYS_PRIMITIVE
+#include "src/it/unimi/dsi/fastutil/ObjectBigArraysFragment.h"
+
 	public static void main(final String arg[]) {
 		int[][] a = IntBigArrays.newBigArray(1L << Integer.parseInt(arg[0]));
 		long x, y, z, start;
@@ -609,8 +665,8 @@ public class BigArrays {
 			start = -System.currentTimeMillis();
 
 			x = 0;
-			for (long i = IntBigArrays.length(a); i-- != 0;)
-				x ^= i ^ IntBigArrays.get(a, i);
+			for (long i = length(a); i-- != 0;)
+				x ^= i ^ get(a, i);
 			if (x == 0) System.err.println();
 
 			System.out.println("Single loop: " + (start + System.currentTimeMillis()) + "ms");
@@ -629,7 +685,7 @@ public class BigArrays {
 			System.out.println("Double loop: " + (start + System.currentTimeMillis()) + "ms");
 
 			z = 0;
-			long j = IntBigArrays.length(a);
+			long j = length(a);
 			for (int i = a.length; i-- != 0;) {
 				final int[] t = a[i];
 				for (int d = t.length; d-- != 0;)

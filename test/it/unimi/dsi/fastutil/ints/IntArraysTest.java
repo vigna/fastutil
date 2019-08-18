@@ -65,6 +65,23 @@ public class IntArraysTest {
 	}
 
 	@Test
+	public void testStableSort() {
+		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
+		Arrays.sort(sorted);
+		IntArrays.stableSort(b);
+		assertArrayEquals(sorted, b);
+		IntArrays.stableSort(b);
+		assertArrayEquals(sorted, b);
+
+		final int[] d = a.clone();
+		IntArrays.stableSort(d, (k1, k2) -> k1 - k2);
+		assertArrayEquals(sorted, d);
+
+		IntArrays.stableSort(d, (k1, k2) -> k1 - k2);
+		assertArrayEquals(sorted, d);
+	}
+
+	@Test
 	public void testQuickSort() {
 		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
 		Arrays.sort(sorted);
@@ -370,6 +387,41 @@ public class IntArraysTest {
 		for(int i = t.length - 1; i-- != 0;) assertEquals(i, perm[i]);
 	}
 
+	@Test
+	public void testUnstableSort1() {
+		int[] t = { 2, 1, 0, 4 };
+		IntArrays.unstableSort(t);
+		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
+
+		t = new int[] { 2, -1, 0, -4 };
+		IntArrays.unstableSort(t);
+		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
+
+		t = IntArrays.shuffle(identity(100), new Random(0));
+		IntArrays.unstableSort(t);
+		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
+
+		t = new int[100];
+		Random random = new Random(0);
+		for(int i = t.length; i-- != 0;) t[i] = random.nextInt();
+		IntArrays.unstableSort(t);
+		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
+
+		t = new int[100000];
+		random = new Random(0);
+		for(int i = t.length; i-- != 0;) t[i] = random.nextInt();
+		IntArrays.unstableSort(t);
+		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
+		for(int i = 100; i-- != 10;) t[i] = random.nextInt();
+		IntArrays.unstableSort(t, 10, 100);
+		for(int i = 99; i-- != 10;) assertTrue(t[i] <= t[i + 1]);
+
+		t = new int[10000000];
+		random = new Random(0);
+		for(int i = t.length; i-- != 0;) t[i] = random.nextInt();
+		IntArrays.unstableSort(t);
+		for(int i = t.length - 1; i-- != 0;) assertTrue(t[i] <= t[i + 1]);
+	}
 
 	@Test
 	public void testQuickSort2() {

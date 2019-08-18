@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2017 Sebastiano Vigna
+ * Copyright (C) 2002-2019 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,11 @@
 
 
 package PACKAGE;
+
+import static it.unimi.dsi.fastutil.BigArrays.grow;
+import static it.unimi.dsi.fastutil.BigArrays.length;
+import static it.unimi.dsi.fastutil.BigArrays.set;
+import static it.unimi.dsi.fastutil.BigArrays.trim;
 
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -377,6 +382,41 @@ public final class ITERATORS {
 	}
 
 
+	/** Unwraps an iterator into a big array starting at a given offset for a given number of elements.
+	 *
+	 * <p>This method iterates over the given type-specific iterator and stores the elements
+	 * returned, up to a maximum of {@code length}, in the given big array starting at {@code offset}.
+	 * The number of actually unwrapped elements is returned (it may be less than {@code max} if
+	 * the iterator emits less than {@code max} elements).
+	 *
+	 * @param i a type-specific iterator.
+	 * @param array a big array to contain the output of the iterator.
+	 * @param offset the first element of the array to be returned.
+	 * @param max the maximum number of elements to unwrap.
+	 * @return the number of elements unwrapped.
+	 */
+	public static KEY_GENERIC long unwrap(final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i, final KEY_GENERIC_TYPE array[][], long offset, final long max) {
+		if (max < 0) throw new IllegalArgumentException("The maximum number of elements (" + max + ") is negative");
+		if (offset < 0 || offset + max > length(array)) throw new IllegalArgumentException();
+		long j = max;
+		while(j-- != 0 && i.hasNext()) set(array, offset++, i.NEXT_KEY());
+		return max - j - 1;
+	}
+
+	/** Unwraps an iterator into a big array.
+	 *
+	 * <p>This method iterates over the given type-specific iterator and stores the
+	 * elements returned in the given big array. The iteration will stop when the
+	 * iterator has no more elements or when the end of the array has been reached.
+	 *
+	 * @param i a type-specific iterator.
+	 * @param array a big array to contain the output of the iterator.
+	 * @return the number of elements unwrapped.
+	 */
+	public static KEY_GENERIC long unwrap(final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i, final KEY_GENERIC_TYPE array[][]) {
+		return unwrap(i, array, 0, length(array));
+	}
+
 	/** Unwraps an iterator into a type-specific collection, with a limit on the number of elements.
 	 *
 	 * <p>This method iterates over the given type-specific iterator and stores the elements
@@ -396,6 +436,44 @@ public final class ITERATORS {
 		int j = max;
 		while(j-- != 0 && i.hasNext()) c.add(i.NEXT_KEY());
 		return max - j - 1;
+	}
+
+	/** Unwraps an iterator, returning a big array, with a limit on the number of elements.
+	 *
+	 * <p>This method iterates over the given type-specific iterator and returns a big array
+	 * containing the elements returned by the iterator. At most {@code max} elements
+	 * will be returned.
+	 *
+	 * @param i a type-specific iterator.
+	 * @param max the maximum number of elements to be unwrapped.
+	 * @return a big array containing the elements returned by the iterator (at most {@code max}).
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] unwrapBig(final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i, long max) {
+		if (max < 0) throw new IllegalArgumentException("The maximum number of elements (" + max + ") is negative");
+		KEY_GENERIC_TYPE array[][] = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray(16);
+		long j = 0;
+
+		while(max-- != 0 && i.hasNext()) {
+			if (j == length(array)) array = grow(array, j + 1);
+			set(array, j++, i.NEXT_KEY());
+		}
+
+		return trim(array, j);
+	}
+
+
+	/** Unwraps an iterator, returning a big array.
+	 *
+	 * <p>This method iterates over the given type-specific iterator and returns a big array
+	 * containing the elements returned by the iterator.
+	 *
+	 * @param i a type-specific iterator.
+	 * @return a big array containing the elements returned by the iterator.
+	 */
+
+	public static KEY_GENERIC KEY_GENERIC_TYPE[][] unwrapBig(final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i) {
+		return unwrapBig(i, Long.MAX_VALUE);
 	}
 
 	/** Unwraps an iterator into a type-specific collection.

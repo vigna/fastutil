@@ -582,7 +582,20 @@ $(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c: drv/TextIO.drv $(TEXTIO_FRAGMENTS)
 CSOURCES += $(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c
 
 
+BIG_ARRAYS_FRAGMENTS := $(foreach k,$(TYPE_NOREF_B), $(GEN_SRCDIR)/$(PKG_PATH)/$(k)BigArraysFragment.h)
+$(BIG_ARRAYS_FRAGMENTS): drv/BigArraysFragment.drv; ./gencsource.sh $< $@ >$@
+
+CFRAGMENTS += $(BIG_ARRAYS_FRAGMENTS)
+
+$(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.c: drv/BigArraysCommon.drv $(BIG_ARRAYS_FRAGMENTS)
+	./gencsource.sh drv/BigArraysCommon.drv $@ >$@
+
+CSOURCES += $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.c
+
+
+
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
+
 
 
 SOURCES = \
@@ -593,7 +606,6 @@ SOURCES = \
 	$(SOURCEDIR)/Stack.java \
 	$(SOURCEDIR)/BigList.java \
 	$(SOURCEDIR)/BigListIterator.java \
-	$(SOURCEDIR)/BigArrays.java \
 	$(SOURCEDIR)/PriorityQueue.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/Arrays.java \
@@ -631,6 +643,7 @@ clean:
 	-@find . -name \*.html~ -exec rm {} \;
 	-@rm -f $(foreach k, $(sort $(TYPE)), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/*.java)
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
+	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.[chj] $(GEN_SRCDIR)/$(PKG_PATH)/*/*.[chj]
 	-@rm -fr $(DOCSDIR)/*
 
