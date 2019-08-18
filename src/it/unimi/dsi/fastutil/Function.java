@@ -122,7 +122,7 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	 * @param defaultValue the default value to return if not present.
 	 * @return the corresponding value, or {@code defaultValue} if no value was present for the given key.
 	 * @see java.util.Map#getOrDefault(Object, Object)
-	 * @since 8.3.0
+	 * @since <SPLITERATORS VERSION>
 	 */
 	default V getOrDefault(Object key, V defaultValue) {
 		V value = get(key);
