@@ -63,8 +63,7 @@ public final class SPLITERATORS {
 
 	public static class EmptySpliterator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC, java.io.Serializable, Cloneable {
 
-		// TODO generate
-		private static final long serialVersionUID = -7046029254386353129L;
+		private static final long serialVersionUID = 8379247926738230492L;
 		private static final int CHARACTERISTICS = Spliterator.SIZED | Spliterator.SUBSIZED;
 
 		protected EmptySpliterator() {}
@@ -963,7 +962,7 @@ public final class SPLITERATORS {
 	 * as {@code final} as to encourage the JVM to inline them.
 	 */
 	 public static abstract class LateBindingSizeIndexBasedSpliterator KEY_GENERIC extends AbstractIndexBasedSpliterator KEY_GENERIC {
-	 	/** The maximum {@link #pos} can be */
+	 	/** The maximum {@link #pos} can be, or -1 if it hasn't been fixed yet. */
 	 	protected int maxPos = -1;
 	 	private boolean maxPosFixed;
 
@@ -1159,7 +1158,7 @@ public final class SPLITERATORS {
 
 		private void advanceNextSpliterator() {
 			if (length == 0) {
-				throw new IllegalStateException("advanceNextSpliterator() called with none remaining");
+				throw new AssertionError("advanceNextSpliterator() called with none remaining");
 			}
 			++offset;
 			--length;
@@ -1228,6 +1227,7 @@ public final class SPLITERATORS {
 			switch(length) {
 				case 0: return null;
 				case 1: {
+					// We are on the last spliterator. So now we ask it to split.
 #if KEYS_REFERENCE
 					SUPPRESS_WARNINGS_KEY_UNCHECKED // This is safe because spliterators only "give" K, never "take" them.
 					KEY_SPLITERATOR KEY_GENERIC split = (KEY_SPLITERATOR KEY_GENERIC)a[offset].trySplit();
@@ -1236,6 +1236,16 @@ public final class SPLITERATORS {
 #endif
 					// It is possible for a Spliterator to change characteristics after a split.
 					// e.g. a SIZED but not SUBSIZED spliterator may split into non-SIZED spliterators.
+					this.characteristics = a[offset].characteristics();
+					return split;
+				}
+				case 2: {
+					// Per spec, this instance becomes suffix, and we return prefix.
+					// Fetch first to return
+					KEY_SPLITERATOR KEY_GENERIC split = a[offset++];
+					// We become the second
+					advanceNextSpliterator();
+					// assert length == 1;
 					this.characteristics = a[offset].characteristics();
 					return split;
 				}
