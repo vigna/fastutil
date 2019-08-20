@@ -53,6 +53,24 @@ public class IntSpliteratorsTest {
 	}
 
 	@Test
+	public void testArraySpliteratorWithComparator() {
+		int[] a = { 10239, 42, 10, 5, 4, 3, 2 };
+		IntComparator comparator = IntComparators.OPPOSITE_COMPARATOR;
+		IntSpliterator m = IntSpliterators.wrapPreSorted(a, comparator);
+		java.util.Spliterator.OfInt t = java.util.Spliterators.spliterator(a, Spliterator.SORTED);
+		assertEquals(a.length, m.estimateSize());
+		assertEquals(a.length, m.getExactSizeIfKnown());
+		assertEquals(m.estimateSize(), t.estimateSize());
+		assertEquals(Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.SORTED, m.characteristics());
+		assertEquals(m.getComparator(), comparator);
+		IntStream mStream = StreamSupport.intStream(m, useSplits);
+		IntStream tStream = StreamSupport.intStream(t, useSplits);
+		int[] mArray = mStream.toArray();
+		int[] tArray = tStream.toArray();
+		assertArrayEquals(mArray, tArray);
+	}
+
+	@Test
 	public void testFromToSpliterator() {
 		final int from = -5;
 		final int to = 17;
