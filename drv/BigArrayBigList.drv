@@ -838,9 +838,21 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	@Override
 	public BIG_ARRAY_BIG_LIST KEY_GENERIC clone() {
-		BIG_ARRAY_BIG_LIST KEY_GENERIC c = new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND(size);
+		BIG_ARRAY_BIG_LIST KEY_GENERIC c;
+		// Test for fastpath we can do if exactly an BigArrayBigList
+		if (getClass() == BIG_ARRAY_BIG_LIST.class) {
+			c = new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND(size);
+			c.size = size;
+		} else {
+			try {
+				c = (BIG_ARRAY_BIG_LIST KEY_GENERIC)super.clone();
+			} catch (CloneNotSupportedException e) {
+				// Can't happen
+				throw new InternalError(e);
+			}
+			c.a = BIG_ARRAYS.newBigArray(size);
+		}
 		BigArrays.copy(a, 0, c.a, 0, size);
-		c.size = size;
 		return c;
 	}
 
