@@ -26,6 +26,8 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.longs.LongBigArrayBigList;
+
 public class BigArraysTest {
 
 	@Test
@@ -56,5 +58,13 @@ public class BigArraysTest {
 
 		BigArrays.quickSort(0, length(a), (k1, k2) -> get(a, k1) - get(a, k2), (k1, k2) -> swap(a, k1, k2));
 		assertArrayEquals(sorted, a);
+	}
+
+	@Test
+	public void testEnsureCapacity() {
+		final LongBigArrayBigList longList = new LongBigArrayBigList();
+		longList.size(4096);
+		// Never completes!
+		longList.ensureCapacity(2);
 	}
 }
