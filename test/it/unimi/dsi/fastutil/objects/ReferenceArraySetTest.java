@@ -12,7 +12,7 @@ import java.io.ObjectOutputStream;
 import org.junit.Test;
 
 /*
- * Copyright (C) 2017 Sebastiano Vigna
+ * Copyright (C) 2017-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

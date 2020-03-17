@@ -1,7 +1,7 @@
-package it.unimi.dsi.fastutil.ints;
+package it.unimi.dsi.fastutil.objects;
 
 /*
- * Copyright (C) 2017-2020 Sebastiano Vigna
+ * Copyright (C) 2019-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,23 @@ package it.unimi.dsi.fastutil.ints;
  * limitations under the License.
  */
 
-import static org.junit.Assert.assertNull;
+
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class IntSetsTest {
+public class Object2IntArrayMapTest {
+
 	@Test
-	public void testToArrayShouldNullElementAfterLastEntry() {
-		IntSet set = IntSets.EMPTY_SET;
-		Object[] values = new Object[] { "test" };
-		set.toArray(values);
-		assertNull(values[0]);
+	public void testIterator() {
+		final Object2IntArrayMap<String> testMap = new Object2IntArrayMap<>();
+
+		testMap.put("A", 10);
+		testMap.put("B", 10);
+		final ObjectIterator<String> iterator = testMap.keySet().iterator();
+		iterator.next();
+		iterator.remove();
+		assertTrue(iterator.hasNext());
 	}
 }
+
