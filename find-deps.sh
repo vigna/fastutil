@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #TODO Probably awk or perl can be used in a lot of places
 set -euo pipefail
@@ -117,7 +117,7 @@ case "$command" in
 
   if ! dependencies=$(jdeps -recursive -verbose:class \
     "${classpath_argument[@]+"${classpath_argument[@]}"}" "${analyse_paths[@]}" |\
-    grep '^      -> it\.unimi\.dsi\.fastutil\..*not found$' | sed 's!      -> \(\S*\) \+not found$!\1!' | sort | uniq) \
+    awk '/it\.unimi\.dsi\.fastutil\..*not found$/ { print $2 }' | sort | uniq) \
     || [ -z "$dependencies" ]
   then
     >&2 echo "No unresolved references found - is fastutil on the classpath?"
@@ -158,7 +158,7 @@ case "$command" in
 
   jar_name="$(basename ${dest_path})"
 
-  tmp_dir=$(mktemp -t -d "fastutil-min.XXXX")
+  tmp_dir=$(mktemp -d -t "fastutil-min.XXXX")
   trap "{ rm -rf \"${tmp_dir}\"; exit 255; }" EXIT
 
   ( >&2 echo "Resolving transitive dependencies" )
@@ -173,16 +173,16 @@ case "$command" in
   class_list=${class_list//\//.}
 
   if ! transitive_dependencies=$(cd ${tmp_dir} && jdeps -recursive -regex "$fastutil_regex" \
-    -verbose:class -cp "$jar_path" ${class_list} | grep '      -> ' |\
-    sed 's!      -> \(\S*\) \+\S*!\1!' | sort | uniq | sed 's!\.!/!g' | sed 's!$!.class!')\
+    -verbose:class -cp "$jar_path" ${class_list} | awk '/      -> / { gsub(/\./, "/", $2) ".class"; print $2 ".class" }')\
     || [ -z "$transitive_dependencies" ]
   then
     >&2 echo "Could not resolve dependencies with $jar_path - probably not a complete fastutil jar."
     exit 1
   fi
 
+  dependencies=( ${class_paths[@]} ${transitive_dependencies[@]} )
   ( >&2 echo "Unpacking jar from $jar_path" )
-  if ! output=$(unzip -q "$jar_path" "META-INF/*" $(printf '%s\n' $class_paths $transitive_dependencies | sort | uniq) -d "$tmp_dir" 2>&1); then
+  if ! output=$(unzip -q "$jar_path" "META-INF/*" $(printf '%s\n' "${dependencies[@]}" | sort | uniq) -d "$tmp_dir" 2>&1); then
     >&2 echo "Error: $output"; exit 1
   fi
 
