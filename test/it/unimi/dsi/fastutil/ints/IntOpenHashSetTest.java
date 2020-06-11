@@ -59,17 +59,6 @@ public class IntOpenHashSetTest {
 	}
 
 	@Test
-	public void testInfiniteLoop0() {
-		final IntOpenHashSet set = new IntOpenHashSet(4, 1.0f);
-		set.add(1);
-		set.add(2);
-		set.add(3);
-		set.remove(2);
-		set.trim();
-		set.remove(1); // Will hang inside this call
-	}
-
-	@Test
 	public void testInfiniteLoop1() {
 		final IntOpenHashSet set = new IntOpenHashSet();
 		set.add(1);
@@ -131,7 +120,7 @@ public class IntOpenHashSetTest {
 	@Test
 	public void testSmallExpectedValuesWeirdLoadFactors() {
 		for(int expected = 0; expected < 5; expected ++)
-			for(final float loadFactor: new float[] { Float.MIN_VALUE, .25f, .5f, .75f, 1 - Float.MIN_VALUE }) {
+			for(final float loadFactor: new float[] { Float.MIN_VALUE, .25f, .5f, .75f, 0.9999999f }) {
 				final IntOpenHashSet s = new IntOpenHashSet(0, loadFactor);
 				assertTrue(s.add(2));
 				assertTrue(s.add(3));
@@ -317,7 +306,7 @@ public class IntOpenHashSetTest {
 		int maxProbes = 0;
 		final int[] key = m.key;
 		final double f = (double)m.size / m.n;
-		for (int i = 0, c = 0; i < m.n; i++) {
+		for (int i = 0, c = 0; i < m.n; i++)
 			if (key[i] != 0) c++;
 			else {
 				if (c != 0) {
@@ -330,7 +319,6 @@ public class IntOpenHashSetTest {
 				totProbes++;
 				totSquareProbes++;
 			}
-		}
 
 		final double expected = (double)totProbes / m.n;
 		System.err.println("Expected probes: " + (
