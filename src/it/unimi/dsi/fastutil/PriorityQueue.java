@@ -92,7 +92,18 @@ public interface PriorityQueue<K> {
 	 */
 
 	default K last() { throw new UnsupportedOperationException(); }
-
+	
+	/** Returns the index element of the queue.
+	 * 
+ 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 * @param index of the element.
+	 * @return the indexed element.
+	 * @throws NoSuchElementException if the index is not in the range
+	 */
+	
+	default K peek(int index){ throw new UnsupportedOperationException(); }
+	
+	
 	/** Notifies the queue that the {@linkplain #first() first} element has changed (optional operation).
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}. 
 	 */

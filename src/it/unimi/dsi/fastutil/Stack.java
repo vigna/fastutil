@@ -52,7 +52,12 @@ public interface Stack<K> {
 	 */
 
 	boolean isEmpty();
-
+	
+	/**
+	 * Clears the Contents of the stack
+	 */
+	void clear();
+	
 	/** Peeks at the top of the stack (optional operation).
 	 *
 	 * <p>This default implementation returns {@link #peek(int) peek(0)}.

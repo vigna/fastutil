@@ -60,6 +60,14 @@ public class IntArrayListTest {
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
+	
+	@Test
+	public void testClear()
+	{
+		IntStack l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+		l.clear();
+		assertEquals(l, new IntArrayList());
+	}
 
 	@Test
 	public void testSort() {

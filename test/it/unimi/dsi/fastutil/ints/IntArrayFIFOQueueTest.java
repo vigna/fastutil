@@ -62,7 +62,21 @@ public class IntArrayFIFOQueueTest {
 			if (i != 99) assertEquals(99, q.lastInt());
 		}
 	}
-
+	
+	@Test
+	public void testPeek()
+	{
+		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		for(int i = 0; i < 100; i++) {
+			q.enqueue(i);
+			assertEquals(i, q.lastInt());
+		}
+		for(int i = 0;i<100;i++)
+		{
+			assertEquals(i, q.peekInt(i));
+		}
+	}
+	
 	@Test
 	public void testMix() {
 		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
@@ -158,7 +172,7 @@ public class IntArrayFIFOQueueTest {
 		assertEquals(1, q.dequeueInt());
 		assertEquals(0, q.dequeueInt());
 	}
-
+	
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testImmediateReduce() {
