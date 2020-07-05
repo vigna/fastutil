@@ -16,11 +16,7 @@
 
 package it.unimi.dsi.fastutil.ints;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.ByteArrayInputStream;
@@ -1035,7 +1031,11 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		m.defaultReturnValue(-1);
 
 		assertEquals(0, m.merge(1, 0, (oldVal, newVal) -> {
-			assertNull(oldVal);
+			fail();
+			return Integer.valueOf(0);
+		}));
+		assertEquals(0, m.merge(1, 0, (oldVal, newVal) -> {
+			assertEquals(0, oldVal.intValue());
 			assertEquals(0, newVal.intValue());
 			return Integer.valueOf(0);
 		}));

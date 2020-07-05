@@ -1260,6 +1260,74 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		return value[pos] = VALUE_CLASS2TYPE(newValue);
 	}
 
+#if VALUES_INT_LONG_DOUBLE
+
+#if KEYS_PRIMITIVE && KEYS_AND_VALUES_WIDENED_ARE_SAME
+	public VALUE_GENERIC_TYPE COMPUTE_IF_PRESENT_PRIMITIVE(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_VALUE_BINARY_OPERATOR remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		final int pos = find(k);
+		if (pos < 0) return defRetValue;
+		final VALUE_GENERIC_TYPE newValue = VALUE_NARROWING(remappingFunction.JDK_PRIMITIVE_VALUE_OPERATOR_APPLY(k, value[pos]));
+		if (newValue == defRetValue) {
+			if (KEY_EQUALS_NULL(k)) removeNullEntry();
+			else removeEntry(pos);
+			return defRetValue;
+		}
+
+		return value[pos] = newValue;
+	}
+
+	public VALUE_GENERIC_TYPE COMPUTE_PRIMITIVE(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_VALUE_BINARY_OPERATOR remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		final int pos = find(k);
+		VALUE_GENERIC_TYPE newVal = VALUE_NARROWING(remappingFunction.JDK_PRIMITIVE_VALUE_OPERATOR_APPLY(k, pos >= 0 ? value[pos] : defRetValue));
+		if (newVal == defRetValue) {
+			if (pos >= 0) {
+				if (KEY_EQUALS_NULL(k)) removeNullEntry();
+				else removeEntry(pos);
+			}
+			return defRetValue;
+		}
+
+		if (pos < 0) {
+			insert(-pos - 1, k, newVal);
+			return newVal;
+		}
+
+		return value[pos] = newVal;
+	}
+#endif
+
+	public VALUE_GENERIC_TYPE MERGE_PRIMITIVE(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v, final JDK_PRIMITIVE_VALUE_BINARY_OPERATOR remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+
+		final int pos = find(k);
+		if (pos < 0 || value[pos] == defRetValue) {
+			if (v == defRetValue) return defRetValue;
+
+			insert(-pos - 1, k, v);
+			return v;
+		}
+		VALUE_GENERIC_TYPE newVal = VALUE_NARROWING(remappingFunction.JDK_PRIMITIVE_VALUE_OPERATOR_APPLY(value[pos], v));
+		if (newVal == defRetValue) {
+			if (pos >= 0) {
+				if (KEY_EQUALS_NULL(k)) removeNullEntry();
+				else removeEntry(pos);
+			}
+			return defRetValue;
+		}
+
+		return value[pos] = newVal;
+	}
+
+#if KEYS_REFERENCE
+	public VALUE_GENERIC_TYPE MERGE_TYPE_SPECIFIC(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v, final VALUE_PACKAGE.VALUE_BINARY_OPERATOR remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		return MERGE_PRIMITIVE(k, v, (JDK_PRIMITIVE_VALUE_BINARY_OPERATOR)remappingFunction);
+	}
+#endif
+
+#endif
 
 #endif
 
