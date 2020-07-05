@@ -1263,6 +1263,108 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #endif
 
+
+	/** {@inheritDoc} */
+	@Override
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public VALUE_GENERIC_CLASS getOrDefault(final Object k, final VALUE_GENERIC_CLASS defaultValue) {
+		if (k == null) return defaultValue;
+		if (KEY_EQUALS_NULL(KEY_CLASS_CAST k)) return containsNullKey ? value[n] : defaultValue;
+
+		KEY_GENERIC_CLASS curr;
+		final KEY_GENERIC_TYPE[] key = this.key;
+		int pos;
+
+		// The starting point.
+		if (KEY_IS_NULL(curr = key[pos = KEY2INTHASH_CAST(KEY_CLASS_CAST k) & mask])) return defaultValue;
+		if (KEY_EQUALS_NOT_NULL_CAST(KEY_CLASS_CAST k, curr)) return value[pos];
+		// There's always an unused entry.
+		while(true) {
+			if (KEY_IS_NULL(curr = key[pos = (pos + 1) & mask])) return defaultValue;
+			if (KEY_EQUALS_NOT_NULL_CAST(KEY_CLASS_CAST k, curr)) return value[pos];
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_CLASS computeIfAbsent(final KEY_GENERIC_CLASS k, final java.util.function.Function<? super KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> mappingFunction) {
+		java.util.Objects.requireNonNull(mappingFunction);
+		if (k == null) return null;
+		final int pos = find(k);
+		if (pos >= 0) return value[pos];
+		final VALUE_GENERIC_CLASS newValue = mappingFunction.apply(k);
+		if (newValue == null) return null;
+		final VALUE_GENERIC_CLASS v = VALUE_CLASS2TYPE(newValue);
+		insert(-pos - 1, k, v);
+		return v;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_CLASS computeIfPresent(final KEY_GENERIC_CLASS k, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		if (k == null) return null;
+		final int pos = find(k);
+		if (pos < 0) return null;
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), VALUE2OBJ(value[pos]));
+		if (newValue == null) {
+			if (KEY_EQUALS_NULL(KEY_CLASS_CAST k)) removeNullEntry();
+			else removeEntry(pos);
+			return null;
+		}
+		return value[pos] = VALUE_CLASS2TYPE(newValue);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_CLASS compute(final KEY_GENERIC_CLASS k, final java.util.function.BiFunction<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		final int pos = find(k);
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), pos >= 0 ? VALUE2OBJ(value[pos]) : null);
+		if (newValue == null) {
+			if (pos >= 0) {
+				if (KEY_EQUALS_NULL(KEY_CLASS_CAST k)) removeNullEntry();
+				else removeEntry(pos);
+			}
+			return null;
+		}
+
+		VALUE_GENERIC_CLASS newVal = VALUE_CLASS2TYPE(newValue);
+		if (pos < 0) {
+			insert(-pos - 1, k, newVal);
+			return newVal;
+		}
+
+		return value[pos] = newVal;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_CLASS merge(final KEY_GENERIC_CLASS k, final VALUE_GENERIC_CLASS v, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		java.util.Objects.requireNonNull(v);
+
+		final int pos = find(k);
+#if VALUES_PRIMITIVE
+		if (pos < 0) {
+#else
+		if (pos < 0 || value[pos] == null) {
+			if (v == null) return null;
+#endif
+			insert(-pos - 1, k, v);
+			return v;
+		}
+
+		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(VALUE2OBJ(value[pos]), VALUE2OBJ(v));
+		if (newValue == null) {
+			if (KEY_EQUALS_NULL(KEY_CLASS_CAST k)) removeNullEntry();
+			else removeEntry(pos);
+			return null;
+		}
+
+		return value[pos] = VALUE_CLASS2TYPE(newValue);
+	}
+
 	/* Removes all elements from this map.
 	 *
 	 * <p>To increase object reuse, this method does not change the table size.
