@@ -42,6 +42,12 @@ import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SHIFT;
 import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SIZE;
 
 #if KEYS_PRIMITIVE
+#if KEY_CLASS_Integer
+import java.util.concurrent.atomic.AtomicIntegerArray;
+#endif
+#if KEY_CLASS_Long 
+import java.util.concurrent.atomic.AtomicLongArray;
+#endif
 
 #if ! KEY_CLASS_Byte && ! KEY_CLASS_Boolean
 import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
@@ -308,6 +314,32 @@ public final class BIG_ARRAYS {
 
 		return base;
 	}
+
+#if KEY_CLASS_Long || KEY_CLASS_Integer
+	/** A static, final, empty big atomic array array. */
+	public static final ATOMIC_ARRAY[] EMPTY_BIG_ATOMIC_ARRAY = {};
+
+	/** Creates a new big atomic array.
+	 *
+	 * @param length the length of the new big array.
+	 * @return a new big array of given length.
+	 */
+
+	public static ATOMIC_ARRAY[] newBigAtomicArray(final long length) {
+		if (length == 0) return EMPTY_BIG_ATOMIC_ARRAY;
+		ensureLength(length);
+		final int baseLength = (int)((length + SEGMENT_MASK) >>> SEGMENT_SHIFT);
+		ATOMIC_ARRAY[] base = new ATOMIC_ARRAY[baseLength];
+		final int residual = (int)(length & SEGMENT_MASK);
+		if (residual != 0) {
+			for(int i = 0; i < baseLength - 1; i++) base[i] = new ATOMIC_ARRAY(SEGMENT_SIZE);
+			base[baseLength - 1] = new ATOMIC_ARRAY(residual);
+		}
+		else for(int i = 0; i < baseLength; i++) base[i] = new ATOMIC_ARRAY(SEGMENT_SIZE);
+
+		return base;
+	}
+#endif
 
 #if KEY_CLASS_Object
 	/** Turns a standard array into a big array.
