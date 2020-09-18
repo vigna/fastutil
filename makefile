@@ -404,6 +404,11 @@ $(FRONT_CODED_LISTS): drv/ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(FRONT_CODED_LISTS)
 
+FRONT_CODED_BIG_LISTS := $(foreach k, $(if $(SMALL_TYPES),Byte Short Char,) Int Long, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedBigList.c)
+$(FRONT_CODED_BIG_LISTS): drv/ArrayFrontCodedBigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(FRONT_CODED_BIG_LISTS)
+
 HEAP_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)HeapPriorityQueue.c)
 $(HEAP_PRIORITY_QUEUES): drv/HeapPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 

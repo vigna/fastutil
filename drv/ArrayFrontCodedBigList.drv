@@ -22,11 +22,14 @@ import static it.unimi.dsi.fastutil.BigArrays.copyToBig;
 import static it.unimi.dsi.fastutil.BigArrays.grow;
 import static it.unimi.dsi.fastutil.BigArrays.trim;
 
+import static PACKAGE.ARRAY_FRONT_CODED_LIST.count;
+import static PACKAGE.ARRAY_FRONT_CODED_LIST.readInt;
+import static PACKAGE.ARRAY_FRONT_CODED_LIST.writeInt;
 
 import it.unimi.dsi.fastutil.BigArrays;
-import it.unimi.dsi.fastutil.objects.AbstractObjectList;
-import it.unimi.dsi.fastutil.objects.ObjectListIterator;
-import it.unimi.dsi.fastutil.longs.LongArrays;
+import it.unimi.dsi.fastutil.objects.AbstractObjectBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigListIterator;
+import it.unimi.dsi.fastutil.longs.LongBigArrays;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -34,13 +37,13 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
 
-/** Compact storage of lists of arrays using front coding.
+/** Compact storage of big lists of arrays using front coding.
  *
- * <p>This class stores immutably a list of arrays in a single {@linkplain it.unimi.dsi.fastutil.BigArrays big array}
+ * <p>This class stores immutably a big list of arrays in a single {@linkplain it.unimi.dsi.fastutil.BigArrays big array}
  * using front coding (of course, the compression will be reasonable only if
  * the list is sorted lexicographically&mdash;see below). It implements an
  * immutable type-specific list that returns the <var>i</var>-th array when
- * calling {@link #get(int) get(<var>i</var>)}. The returned array may be
+ * calling {@link #get(long) get(<var>i</var>)}. The returned array may be
  * freely modified.
  *
  * <p>Front coding is based on the idea that if the <var>i</var>-th and the
@@ -52,7 +55,7 @@ import java.util.RandomAccess;
  * often this happens (once every {@link #ratio()} arrays). A higher ratio
  * means more compression, but means also a longer access time, as more arrays
  * have to be probed to build the result. Note that we must build an array
- * every time {@link #get(int)} is called, but this class provides also methods
+ * every time {@link #get(long)} is called, but this class provides also methods
  * that extract one of the stored arrays in a given array, reducing garbage
  * collection. See the documentation of the family of {@code get()}
  * methods.
@@ -90,18 +93,18 @@ import java.util.RandomAccess;
  * </pre>
  */
 
-public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> implements Serializable, Cloneable, RandomAccess {
+public class ARRAY_FRONT_CODED_BIG_LIST extends AbstractObjectBigList<KEY_TYPE[]> implements Serializable, Cloneable, RandomAccess {
 
 	private static final long serialVersionUID = 1L;
 
 	/** The number of arrays in the list. */
-	protected final int n;
+	protected final long n;
 	/** The ratio of this front-coded list. */
 	protected final int ratio;
 	/** The big array containing the compressed arrays. */
 	protected final KEY_TYPE[][] array;
 	/** The pointers to entire arrays in the list. */
-	protected transient long[] p;
+	protected transient long[][] p;
 
 	/** Creates a new front-coded list containing the arrays returned by the given iterator.
 	 *
@@ -109,24 +112,25 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param ratio the desired ratio.
 	 */
 
-	public ARRAY_FRONT_CODED_LIST(final Iterator<KEY_TYPE[]> arrays, final int ratio) {
+	public ARRAY_FRONT_CODED_BIG_LIST(final Iterator<KEY_TYPE[]> arrays, final int ratio) {
 
 		if (ratio < 1) throw new IllegalArgumentException("Illegal ratio (" + ratio + ")");
 
 		KEY_TYPE[][] array = BIG_ARRAYS.EMPTY_BIG_ARRAY;
-		long[] p = LongArrays.EMPTY_ARRAY;
+		long[][] p = LongBigArrays.EMPTY_BIG_ARRAY;
 
 		KEY_TYPE[][] a = new KEY_TYPE[2][];
 		long curSize = 0;
-		int n = 0, b = 0, common, length, minLength;
+		long n = 0;
+		int b = 0, common, length, minLength;
 
 		while(arrays.hasNext()) {
 			a[b] = arrays.next();
 			length = a[b].length;
 
 			if (n % ratio == 0) {
-				p = LongArrays.grow(p, n / ratio + 1);
-				p[n / ratio] = curSize;
+				p = grow(p, n / ratio + 1);
+				BigArrays.set(p, n / ratio, curSize);
 
 				array = grow(array, curSize + count(length) + length, curSize);
 				curSize += writeInt(array, length, curSize);
@@ -153,7 +157,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 		this.n = n;
 		this.ratio = ratio;
 		this.array = trim(array, curSize);
-		this.p = LongArrays.trim(p, (n + ratio - 1) / ratio);
+		this.p = trim(p, (n + ratio - 1) / ratio);
 
 	}
 
@@ -163,113 +167,11 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param ratio the desired ratio.
 	 */
 
-	public ARRAY_FRONT_CODED_LIST(final Collection<KEY_TYPE[]> c, final int ratio) {
+	public ARRAY_FRONT_CODED_BIG_LIST(final Collection<KEY_TYPE[]> c, final int ratio) {
 		this(c.iterator(), ratio);
 	}
 
 
-
-	/* The following (rather messy) methods implements the encoding of arbitrary integers inside a big array.
-	 * Unfortunately, we have to specify different codes for almost every type. */
-
-	/** Reads a coded length.
-	 * @param a the data big array.
-	 * @param pos the starting position.
-	 * @return the length coded at {@code pos}.
-	 */
-	static int readInt(final KEY_TYPE a[][], long pos) {
-#if KEY_CLASS_Integer
-		return BigArrays.get(a, pos);
-#elif KEY_CLASS_Long
-		return (int)BigArrays.get(a, pos);
-#elif KEY_CLASS_Character
-		final char c0 = BigArrays.get(a, pos);
-		return c0  < 0x8000 ? c0 : (c0 & 0x7FFF) << 16 | BigArrays.get(a, pos + 1);
-#elif KEY_CLASS_Short
-		final short s0 = BigArrays.get(a, pos);
-		return s0 >= 0 ? s0 : s0 << 16 | (BigArrays.get(a, pos + 1) & 0xFFFF);
-#else
-		final byte b0 = BigArrays.get(a, pos);
-		if (b0  >= 0) return b0;
-		final byte b1 = BigArrays.get(a, pos + 1);
-		if (b1 >= 0) return (- b0 - 1) << 7 | b1;
-		final byte b2 = BigArrays.get(a, pos + 2);
-		if (b2 >= 0) return (- b0 - 1) << 14 | (- b1 - 1) << 7 | b2;
-		final byte b3 = BigArrays.get(a, pos + 3);
-		if (b3 >= 0) return (- b0 - 1) << 21 | (- b1 - 1) << 14 | (- b2 - 1) << 7 | b3;
-		return (- b0 - 1) << 28 | (- b1 - 1) << 21 | (- b2 - 1) << 14 | (- b3 - 1) << 7 | BigArrays.get(a, pos + 4);
-#endif
-	}
-
-	/** Computes the number of elements coding a given length.
-	 * @param length the length to be coded.
-	 * @return the number of elements coding {@code length}.
-	 */
-	static int count(final int length) {
-#if KEY_CLASS_Integer || KEY_CLASS_Long
-		return 1;
-#elif KEY_CLASS_Character || KEY_CLASS_Short
-		return length < (1 << 15) ? 1 : 2;
-#else
-		if (length < (1 << 7)) return 1;
-		if (length < (1 << 14)) return 2;
-		if (length < (1 << 21)) return 3;
-		if (length < (1 << 28)) return 4;
-		return 5;
-#endif
-	}
-
-	/** Writes a length.
-	 * @param a the data array.
-	 * @param length the length to be written.
-	 * @param pos the starting position.
-	 * @return the number of elements coding {@code length}.
-	 */
-	static int writeInt(final KEY_TYPE a[][], int length, long pos) {
-#if KEY_CLASS_Long
-		BigArrays.set(a, pos, length);
-		return 1;
-#elif KEY_CLASS_Integer
-		BigArrays.set(a, pos, length);
-		return 1;
-#elif KEY_CLASS_Character
-		if (length < (1 << 15)) {
-			BigArrays.set(a, pos, (char)length);
-			return 1;
-		}
-		BigArrays.set(a, pos++, (char)(length >>> 16 | 0x8000));
-		BigArrays.set(a, pos, (char)(length & 0xFFFF));
-		return 2;
-#elif KEY_CLASS_Short
-		if (length < (1 << 15)) {
-			BigArrays.set(a, pos, (short)length);
-			return 1;
-		}
-		BigArrays.set(a, pos++, (short)(- (length >>> 16) - 1));
-		BigArrays.set(a, pos, (short)(length & 0xFFFF));
-		return 2;
-#else
-		final int count = count(length);
-		BigArrays.set(a, pos + count - 1, (byte)(length & 0x7F));
-
-		if (count != 1) {
-			int i = count - 1;
-			while(i-- != 0) {
-				length >>>= 7;
-				BigArrays.set(a, pos + i, (byte)(- (length  & 0x7F) - 1));
-			}
-		}
-
-		return count;
-#endif
-	}
-
-
-
-	/** Returns the ratio of this list.
-	 *
-	 * @return the ratio of this list.
-	 */
 
 	public int ratio() {
 		return ratio;
@@ -278,17 +180,16 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 	/** Computes the length of the array at the given index.
 	 *
-	 * <p>This private version of {@link #arrayLength(int)} does not check its argument.
+	 * <p>This private version of {@link #arrayLength(long)} does not check its argument.
 	 *
-	 * @param array the data array.
 	 * @param index an index.
 	 * @return the length of the {@code index}-th array.
 	 */
-	private int length(final int index) {
+	private int length(final long index) {
 		final KEY_TYPE[][] array = this.array;
-		final int delta = index % ratio; // The index into the p array, and the delta inside the block.
+		final int delta = (int)(index % ratio); // The index into the p array, and the delta inside the block.
 
-		long pos = p[index / ratio]; // The position into the array of the first entire word before the index-th.
+		long pos = BigArrays.get(p, index / ratio); // The position into the array of the first entire word before the index-th.
 		int length = readInt(array, pos);
 
 		if (delta == 0) return length;
@@ -314,7 +215,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param index an index.
 	 * @return the length of the {@code index}-th array.
 	 */
-	public int arrayLength(final int index) {
+	public int arrayLength(final long index) {
 		ensureRestrictedIndex(index);
 		return length(index);
 	}
@@ -327,14 +228,14 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param length a maximum number of elements to store in {@code a}.
 	 * @return the length of the extracted array.
 	 */
-	private int extract(final int index, final KEY_TYPE a[], final int offset, final int length) {
-		final int delta = index % ratio; // The delta inside the block.
-		final long startPos = p[index / ratio]; // The position into the array of the first entire word before the index-th.
+	private int extract(final long index, final KEY_TYPE a[], final int offset, final int length) {
+		final int delta = (int)(index % ratio); // The delta inside the block.
+		final long startPos = BigArrays.get(p, index / ratio); // The position into the array of the first entire word before the index-th.
 		long pos, prevArrayPos;
 		int arrayLength = readInt(array, pos = startPos), currLen = 0, actualCommon;
 
 		if (delta == 0) {
-			pos = p[index / ratio] + count(arrayLength);
+			pos = BigArrays.get(p, index / ratio) + count(arrayLength);
 			copyFromBig(array, pos, a, offset, Math.min(length, arrayLength));
 			return arrayLength;
 		}
@@ -362,9 +263,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	}
 
 	/** {@inheritDoc}
-	 * <p>This implementation delegates to {@link #getArray(int)}. */
+	 * <p>This implementation delegates to {@link #getArray(long)}. */
 	@Override
-	public KEY_TYPE[] get(final int index) {
+	public KEY_TYPE[] get(final long index) {
 		return getArray(index);
 	}
 
@@ -373,7 +274,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @param index an index.
 	 * @return the corresponding array stored in this front-coded list.
 	 */
-	public KEY_TYPE[] getArray(final int index) {
+	public KEY_TYPE[] getArray(final long index) {
 		ensureRestrictedIndex(index);
 		final int length = length(index);
 		final KEY_TYPE a[] = new KEY_TYPE[length];
@@ -390,7 +291,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return if {@code a} can hold the extracted elements, the number of extracted elements;
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
-	public int get(final int index, final KEY_TYPE[] a, final int offset, final int length) {
+	public int get(final long index, final KEY_TYPE[] a, final int offset, final int length) {
 		ensureRestrictedIndex(index);
 		ARRAYS.ensureOffsetLength(a, offset, length);
 
@@ -406,22 +307,22 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 * @return if {@code a} can hold the extracted elements, the number of extracted elements;
 	 * otherwise, the number of remaining elements with the sign changed.
 	 */
-	public int get(final int index, final KEY_TYPE[] a) {
+	public int get(final long index, final KEY_TYPE[] a) {
 		return get(index, a, 0, a.length);
 	}
 
 	@Override
-	public int size() {
+	public long size64() {
 		return n;
 	}
 
 	@Override
-	public ObjectListIterator<KEY_TYPE[]> listIterator(final int start) {
+	public ObjectBigListIterator<KEY_TYPE[]> listIterator(final long start) {
 		ensureIndex(start);
 
-		return new ObjectListIterator<KEY_TYPE[]>() {
+		return new ObjectBigListIterator<KEY_TYPE[]>() {
 				KEY_TYPE s[] = ARRAYS.EMPTY_ARRAY;
-				int i = 0;
+				long i = 0;
 				long pos = 0;
 				boolean inSync; // Whether the current value in a is the string just before the next to be produced.
 
@@ -429,8 +330,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 					if (start != 0) {
 						if (start == n) i = start; // If we start at the end, we do nothing.
 						else {
-							pos = p[start / ratio];
-							int j = start % ratio;
+							pos = BigArrays.get(p, start / ratio);
+							int j = (int)(start % ratio);
 							i = start - j;
 							while(j-- != 0) next();
 						}
@@ -448,12 +349,12 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				}
 
 				@Override
-				public int previousIndex() {
+				public long previousIndex() {
 					return i - 1;
 				}
 
 				@Override
-				public int nextIndex() {
+				public long nextIndex() {
 					return i;
 				}
 
@@ -464,7 +365,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 					if (! hasNext()) throw new NoSuchElementException();
 
 					if (i % ratio == 0) {
-						pos = p[i / ratio];
+						pos = BigArrays.get(p, i / ratio);
 						length = readInt(array, pos);
 						s = ARRAYS.ensureCapacity(s, length, 0);
 						copyFromBig(array, pos + count(length), s, 0, length);
@@ -504,7 +405,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	 *  @return a copy of this list.
 	 */
 	@Override
-	public ARRAY_FRONT_CODED_LIST clone() {
+	public ARRAY_FRONT_CODED_BIG_LIST clone() {
 		return this;
 	}
 
@@ -512,7 +413,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 	public String toString() {
 		final StringBuffer s = new StringBuffer();
 		s.append("[");
-		for(int i = 0; i < n; i++) {
+		for(long i = 0; i < n; i++) {
 			if (i != 0) s.append(", ");
 			s.append(ARRAY_LIST.wrap(getArray(i)).toString());
 		}
@@ -520,13 +421,13 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 		return s.toString();
 	}
 
-	/** Computes the pointer array using the currently set ratio, number of elements and underlying array.
+	/** Computes the pointer big array using the currently set ratio, number of elements and underlying array.
 	 *
-	 * @return the computed pointer array.
+	 * @return the computed pointer big array.
 	 */
 
-	protected long[] rebuildPointerArray() {
-		final long[] p = new long[(n + ratio - 1) / ratio];
+	protected long[][] rebuildPointerArray() {
+		final long[][] p = LongBigArrays.newBigArray((n + ratio - 1) / ratio);
 		final KEY_TYPE a[][] = array;
 		int length, count;
 		long pos = 0;
@@ -536,7 +437,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 			count = count(length);
 			if (++skip == ratio) {
 				skip = 0;
-				p[j++] = pos;
+				BigArrays.set(p, j++, pos);
 				pos += count + length;
 			}
 			else pos += count + count(readInt(a, pos + count)) + length;
