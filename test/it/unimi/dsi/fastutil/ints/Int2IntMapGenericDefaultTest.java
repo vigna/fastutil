@@ -1,5 +1,12 @@
 package it.unimi.dsi.fastutil.ints;
 
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.function.Supplier;
+
+import org.junit.runners.Parameterized.Parameters;
+
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -18,11 +25,6 @@ package it.unimi.dsi.fastutil.ints;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMapGenericDefaultTest.SimpleInt2IntMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.function.Supplier;
-import org.junit.runners.Parameterized.Parameters;
 
 public class Int2IntMapGenericDefaultTest extends Int2IntMapGenericTest<SimpleInt2IntMap> {
 	@Parameters
@@ -56,7 +58,13 @@ public class Int2IntMapGenericDefaultTest extends Int2IntMapGenericTest<SimpleIn
 		public boolean containsValue(final int value) {
 			return delegate.containsValue(value);
 		}
-
+		
+		@Override
+		public int addTo(int k, int incr)
+		{
+			return delegate.addTo(k, incr);
+		}
+		
 		@Override
 		public void defaultReturnValue(final int rv) {
 			delegate.defaultReturnValue(rv);
