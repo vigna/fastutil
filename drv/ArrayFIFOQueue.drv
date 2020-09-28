@@ -56,6 +56,13 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	 *  Might be actually smaller than {@link #start} because {@link #array} is used cyclically. */
 	protected transient int end;
 
+	public ARRAY_FIFO_QUEUE(final KEY_GENERIC_TYPE[] values) {
+		if (values.length < 0) throw new IllegalArgumentException("Initial array (" + values.length + ") is negative");
+		array = values;
+		length = values.length;
+		end = length - 1;
+	}
+	
 	/** Creates a new empty queue with given capacity.
 	 *
 	 * @param capacity the initial capacity of this queue.
@@ -123,11 +130,11 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		length = newLength;
 	}
 
-	private final void expand() {
+	protected void expand() {
 		resize(length, (int)Math.min(it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE, 2L * length));
 	}
 
-	private final void reduce() {
+	protected void reduce() {
 		final int size = size();
 		if (length > INITIAL_CAPACITY && size <= length / 4) resize(size, length / 2);
 	}
@@ -168,7 +175,7 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		}
 		return array[(start + index) % length];
 	}
-
+	
 	@Override
 	public void clear() {
 #if KEYS_REFERENCE
@@ -180,18 +187,21 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 #endif
 		start = end = 0;
 	}
-
+	
+	
 	/** Trims the queue to the smallest possible size. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void trim() {
 		final int size = size();
-		final KEY_GENERIC_TYPE[] newArray =
 #if KEYS_PRIMITIVE
-											new KEY_GENERIC_TYPE[size + 1];
+		final KEY_GENERIC_TYPE[] newArray =	new KEY_GENERIC_TYPE[size + 1];
 #else
-											(KEY_GENERIC_TYPE[])new Object[size + 1];
+		final KEY_GENERIC_TYPE[] newArray =(KEY_GENERIC_TYPE[])new Object[size + 1];
 #endif
-		if (start <= end) System.arraycopy(array, start, newArray, 0, end - start);
+
+		if (start <= end)  {
+			System.arraycopy(array, start, newArray, 0, end - start);
+		}
 		else {
 			System.arraycopy(array, start, newArray, 0, length - start);
 			System.arraycopy(array, 0, newArray, length - start, end);
@@ -200,13 +210,32 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		length = (end = size) + 1;
 		array = newArray;
 	}
-
+	
 	@Override
 	public int size() {
 		final int apparentLength = end - start;
 		return apparentLength >= 0 ? apparentLength : length + apparentLength;
 	}
+	
+	public KEY_GENERIC_TYPE[] TO_KEY_ARRAY()
+	{
+		final int length = size();
+#if KEYS_PRIMITIVE
+		final KEY_GENERIC_TYPE[] newArray =	new KEY_GENERIC_TYPE[length];
+#else
+		final KEY_GENERIC_TYPE[] newArray =(KEY_GENERIC_TYPE[])new Object[length];
+#endif
 
+		if (start <= end) {
+			System.arraycopy(array, start, newArray, 0, end - start);
+		}
+		else {
+			System.arraycopy(array, start, newArray, 0, length - start);
+			System.arraycopy(array, 0, newArray, length - start, end);
+		}
+		return newArray;
+	}
+	
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
 		int size = size();
