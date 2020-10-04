@@ -75,6 +75,9 @@ public interface PriorityQueue<K> {
 	 */
 
 	void clear();
+	
+	/** Trims the underlying array so that it has exactly {@link #size()} elements. */
+	void trim();
 
 	/** Returns the first element of the queue.
 	 *
@@ -116,4 +119,8 @@ public interface PriorityQueue<K> {
 	 * @return the comparator associated with this sorted set, or {@code null} if it uses its elements' natural ordering.
 	 */
 	Comparator<? super K> comparator();
+	
+	K[] toArray();
+	
+	K[] toArray(K[] input);
 }

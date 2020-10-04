@@ -57,10 +57,20 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	protected transient int end;
 
 	public ARRAY_FIFO_QUEUE(final KEY_GENERIC_TYPE[] values) {
+		this(values, 0, values.length);
+	}
+	
+	public ARRAY_FIFO_QUEUE(final KEY_GENERIC_TYPE[] values, int size) {
+		this(values, 0, size);
+	}
+
+	public ARRAY_FIFO_QUEUE(final KEY_GENERIC_TYPE[] values, int offset, int size) {
 		if (values.length < 0) throw new IllegalArgumentException("Initial array (" + values.length + ") is negative");
 		array = values;
 		length = values.length;
-		end = length - 1;
+		start = offset;
+		end = (offset + size) % length;
+		if(length == size) expand();
 	}
 	
 	/** Creates a new empty queue with given capacity.
@@ -191,6 +201,7 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	
 	/** Trims the queue to the smallest possible size. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	@Override
 	public void trim() {
 		final int size = size();
 #if KEYS_PRIMITIVE
@@ -217,13 +228,14 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		return apparentLength >= 0 ? apparentLength : length + apparentLength;
 	}
 	
+	@Override
 	public KEY_GENERIC_TYPE[] TO_KEY_ARRAY()
 	{
 		final int length = size();
 #if KEYS_PRIMITIVE
-		final KEY_GENERIC_TYPE[] newArray =	new KEY_GENERIC_TYPE[length];
+		final KEY_GENERIC_TYPE[] newArray = new KEY_GENERIC_TYPE[length];
 #else
-		final KEY_GENERIC_TYPE[] newArray =(KEY_GENERIC_TYPE[])new Object[length];
+		final KEY_GENERIC_TYPE[] newArray = (KEY_GENERIC_TYPE[])new Object[length];
 #endif
 
 		if (start <= end) {
@@ -234,6 +246,28 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 			System.arraycopy(array, 0, newArray, length - start, end);
 		}
 		return newArray;
+	}
+	
+	@Override
+	public KEY_GENERIC_TYPE[] TO_KEY_ARRAY(KEY_GENERIC_TYPE[] input)
+	{
+		final int length = size();
+		if(input == null || input.length < length)
+		{
+#if KEYS_PRIMITIVE
+			input = new KEY_GENERIC_TYPE[length];
+#else
+			input = (KEY_GENERIC_TYPE[])new Object[length];
+#endif
+		}
+		if (start <= end) {
+			System.arraycopy(array, start, input, 0, end - start);
+		}
+		else {
+			System.arraycopy(array, start, input, 0, length - start);
+			System.arraycopy(array, 0, input, length - start, end);
+		}
+		return input;
 	}
 	
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {

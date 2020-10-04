@@ -17,7 +17,6 @@ package it.unimi.dsi.fastutil;
  */
 
 import java.io.Serializable;
-
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
@@ -56,7 +55,10 @@ public class PriorityQueues {
 
 		@Override
 		public void clear() {}
-
+		
+		@Override
+		public void trim() {}
+		
 		@Override
 		public Object first() { throw new NoSuchElementException(); }
 
@@ -79,6 +81,12 @@ public class PriorityQueues {
 		public boolean equals(final Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
 
 		private Object readResolve() { return EMPTY_QUEUE; }
+		
+		@Override
+		public Object[] toArray() { throw new UnsupportedOperationException(); }
+		
+		@Override
+		public Object[] toArray(Object[] input) { throw new UnsupportedOperationException(); }
 	}
 
 	/** An empty indirect priority queue (immutable). */
@@ -134,12 +142,24 @@ public class PriorityQueues {
 
 		@Override
 		public void clear() { synchronized(sync) { q.clear(); } }
-
+		
+		@Override
+		public void trim() { synchronized(sync) { q.trim(); } }
+		
 		@Override
 		public void changed() { synchronized(sync) { q.changed(); } }
 
 		@Override
 		public Comparator <? super K> comparator() { synchronized(sync) { return q.comparator(); } }
+		
+		@Override
+		public K peek(int index) { synchronized(sync) { return q.peek(index); } }
+		
+		@Override
+		public K[] toArray() { synchronized(sync) { return q.toArray(); } }
+
+		@Override
+		public K[] toArray(K[] input) { synchronized(sync) { return q.toArray(input); } }
 
 		@Override
 		public String toString() { synchronized(sync) { return q.toString(); } }
