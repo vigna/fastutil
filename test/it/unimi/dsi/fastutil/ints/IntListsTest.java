@@ -1,5 +1,7 @@
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertEquals;
+
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -44,5 +46,20 @@ public class IntListsTest {
 		assertTrue(IntLists.unmodifiable(new IntArrayList()) instanceof RandomAccess);
 		assertTrue(IntLists.synchronize(new IntArrayList()) instanceof RandomAccess);
 		assertTrue(IntLists.synchronize(new IntArrayList(), new Object()) instanceof RandomAccess);
+	}
+	
+	@Test
+	public void testReverse()
+	{
+		IntList list = new IntArrayList();
+		for(int i = 0;i<100;i++)
+		{
+			list.add(i);
+		}
+		IntLists.reverse(list);
+		for(int i = 0;i<100;i++)
+		{
+			assertEquals(list.getInt(i), 99 - i);
+		}
 	}
 }

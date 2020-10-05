@@ -39,7 +39,7 @@ public class IntArrayListTest {
 	public void testNullInContains() {
 		assertFalse(new IntArrayList().contains(null));
 	}
-
+	
 	@Test
 	public void testAddUsingIteratorToTheFirstPosition() {
 		final IntArrayList list = new IntArrayList();
@@ -58,6 +58,17 @@ public class IntArrayListTest {
 
 		l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
+	}
+	
+	@Test
+	public void testRemoveIf()
+	{
+		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+		l.remIf(T -> T == 1);
+		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
+		l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
+		l.removeIf(T -> T == 1);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
 	
