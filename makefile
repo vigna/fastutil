@@ -156,7 +156,7 @@ $(SORTED_SETS): drv/SortedSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SORTED_SETS)
 
-FUNCTIONS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)Function.c))
+FUNCTIONS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)Function.c))
 $(FUNCTIONS): drv/Function.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(FUNCTIONS)
@@ -245,7 +245,7 @@ $(ABSTRACT_SORTED_SETS): drv/AbstractSortedSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_SORTED_SETS)
 
-ABSTRACT_FUNCTIONS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Function.c))
+ABSTRACT_FUNCTIONS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Function.c))
 $(ABSTRACT_FUNCTIONS): drv/AbstractFunction.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_FUNCTIONS)

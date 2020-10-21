@@ -198,11 +198,15 @@ fi)\
 \
 \
 "#define KEY_TYPE ${TYPE[$k]}\n"\
+"#define KEY_TYPE_CAP ${TYPE_CAP[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
+"#define VALUE_TYPE_CAP ${TYPE_CAP[$v]}\n"\
+"#define KEY_INDEX $k\n"\
 "#define KEY_TYPE_WIDENED ${TYPE[$wk]}\n"\
 "#define VALUE_TYPE_WIDENED ${TYPE[$wv]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_CLASS ${CLASS[$v]}\n"\
+"#define VALUE_INDEX $v\n"\
 "#define KEY_CLASS_WIDENED ${CLASS[$wk]}\n"\
 "#define VALUE_CLASS_WIDENED ${CLASS[$wv]}\n"\
 \

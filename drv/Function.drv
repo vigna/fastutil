@@ -19,6 +19,7 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.Function;
 
+
 /** A type-specific {@link Function}; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
  * <p>Type-specific versions of {@code get()}, {@code put()} and
@@ -207,4 +208,69 @@ public interface FUNCTION KEY_VALUE_GENERIC extends Function<KEY_GENERIC_CLASS, 
 	default VALUE_GENERIC_TYPE defaultReturnValue() {
 		return VALUE_NULL;
 	}
+
+#if KEYS_PRIMITIVE && (KEY_INDEX == VALUE_INDEX)
+	static KEY_VALUE_GENERIC FUNCTION identity() {
+		return k -> k;
+	}
+#endif
+
+#define FUNCTION_NAME(K, V) K ## 2 ## V ## Function
+
+#if KEYS_REFERENCE && VALUES_REFERENCE
+#define K_T_G <K, T>
+#define T_K_G <T, K>
+#define V_T_G <V, T>
+#define T_V_G <T, V>
+#else
+
+#if KEYS_PRIMITIVE
+#define K_T_G <T>
+#define T_K_G <T>
+#else
+#define K_T_G <K, T>
+#define T_K_G <T, K>
+#endif
+
+#if VALUES_PRIMITIVE
+#define V_T_G <T>
+#define T_V_G <T>
+#else
+#define V_T_G <V, T>
+#define T_V_G <T, V>
+#endif
+
+#endif
+
+#if KEYS_PRIMITIVE
+#define GET_BEFORE GET_KEY
+#else
+#define GET_BEFORE get
+#endif
+
+#if VALUES_PRIMITIVE
+#define GET_AFTER(T_C) get
+#else
+#define GET_AFTER(T_C) get ## T_C
+#endif
+
+
+#define COMPOSITION(K_C, V_C, T_C, T_P, G_A, G_B, T_G, K_T_G, V_T_G, T_V_G, T_K_G) \
+	default T_G PACKAGE.FUNCTION_NAME(K_C, T_C) K_T_G andThen(VALUE_PACKAGE.FUNCTION_NAME(V_C, T_C) V_T_G after) { \
+		return k -> after.G_A(GET_VALUE(k)); \
+	} \
+	default T_G it.unimi.dsi.fastutil.T_P.FUNCTION_NAME(T_C, V_C) T_V_G compose(it.unimi.dsi.fastutil.T_P.FUNCTION_NAME(T_C, K_C) T_K_G before) { \
+		return k -> GET_VALUE(before.G_B(k)); \
+	}
+
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Byte, bytes, GET_AFTER(Byte), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Short, shorts, GET_AFTER(Short), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Int, ints, GET_AFTER(Int), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Long, longs, GET_AFTER(Long), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Char, chars, GET_AFTER(Char), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Float, floats, GET_AFTER(Float), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Double, doubles, GET_AFTER(Double), get, , KEY_GENERIC, VALUE_GENERIC, VALUE_GENERIC, KEY_GENERIC)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Object, objects, get, GET_BEFORE, <T>, K_T_G, V_T_G, T_V_G, T_K_G)
+COMPOSITION(KEY_TYPE_CAP, VALUE_TYPE_CAP, Reference, objects, get, GET_BEFORE, <T>, K_T_G, V_T_G, T_V_G, T_K_G)
+
 }
