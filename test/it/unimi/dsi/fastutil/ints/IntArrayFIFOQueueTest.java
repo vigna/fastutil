@@ -62,7 +62,7 @@ public class IntArrayFIFOQueueTest {
 			if (i != 99) assertEquals(99, q.lastInt());
 		}
 	}
-	
+
 	@Test
 	public void testPeek()
 	{
@@ -76,7 +76,7 @@ public class IntArrayFIFOQueueTest {
 			assertEquals(i, q.peekInt(i));
 		}
 	}
-	
+
 	@Test
 	public void testArray()
 	{
@@ -98,7 +98,7 @@ public class IntArrayFIFOQueueTest {
 			assertEquals(other.peekInt(i), q.peekInt(i));
 		}
 	}
-	
+
 	@Test
 	public void testMix() {
 		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
