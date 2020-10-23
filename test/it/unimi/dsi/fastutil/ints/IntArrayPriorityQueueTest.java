@@ -29,6 +29,29 @@ import it.unimi.dsi.fastutil.io.BinIO;
 public class IntArrayPriorityQueueTest {
 
 	@Test
+	public void removeTest() {
+		IntArrayPriorityQueue q = new IntArrayPriorityQueue();
+		IntHeapPriorityQueue h = new IntHeapPriorityQueue();
+		for(int i = 0; i < 100; i++) {
+			q.enqueue(i);
+			h.enqueue(i);
+		}
+		q.removeInt(50);
+		h.removeInt(50);
+		assertEquals(q.size(), 99);
+		for(int i = 0;i<99;i++) {
+			if(i >= 50){
+				assertEquals(i + 1, q.dequeueInt());
+				assertEquals(i + 1, h.dequeueInt());
+			}
+			else {
+				assertEquals(i, q.dequeueInt());
+				assertEquals(i, h.dequeueInt());
+			}
+		}
+	}
+
+	@Test
 	public void testEnqueueDequeue() {
 		IntArrayPriorityQueue q = new IntArrayPriorityQueue();
 		IntHeapPriorityQueue h = new IntHeapPriorityQueue();

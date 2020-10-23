@@ -64,6 +64,57 @@ public class IntArrayFIFOQueueTest {
 	}
 
 	@Test
+	public void testPeek()
+	{
+		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		for(int i = 0; i < 100; i++) {
+			q.enqueue(i);
+			assertEquals(i, q.lastInt());
+		}
+		for(int i = 0;i<100;i++)
+		{
+			assertEquals(i, q.peekInt(i));
+		}
+	}
+
+	@Test
+	public void removeTest() {
+		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		for(int i = 0; i < 100; i++) {
+			q.enqueue(i);
+			assertEquals(i, q.lastInt());
+		}
+		q.removeInt(50);
+		assertEquals(q.size(), 99);
+		for(int i = 0;i<99;i++) {
+			if(i >= 50) assertEquals(i + 1, q.dequeueInt());
+			else assertEquals(i, q.dequeueInt());
+		}
+	}
+
+	@Test
+	public void testArray()
+	{
+		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		for(int i = 0; i < 100; i++) {
+			q.enqueue(i);
+			assertEquals(i, q.lastInt());
+		}
+		int[] array = q.toIntArray();
+		int[] otherArray = q.toIntArray(new int[100]);
+		for(int i = 0;i<100;i++)
+		{
+			assertEquals(array[i], otherArray[i]);
+			assertEquals(array[i], q.peekInt(i));
+		}
+		IntArrayFIFOQueue other = new IntArrayFIFOQueue(array);
+		for(int i = 0;i<100;i++)
+		{
+			assertEquals(other.peekInt(i), q.peekInt(i));
+		}
+	}
+
+	@Test
 	public void testMix() {
 		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
 		for(int i = 0, p = 0; i < 200; i++) {
@@ -158,7 +209,7 @@ public class IntArrayFIFOQueueTest {
 		assertEquals(1, q.dequeueInt());
 		assertEquals(0, q.dequeueInt());
 	}
-
+	
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testImmediateReduce() {

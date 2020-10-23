@@ -75,6 +75,9 @@ public interface PriorityQueue<K> {
 	 */
 
 	void clear();
+	
+	/** Trims the underlying array so that it has exactly {@link #size()} elements. */
+	void trim();
 
 	/** Returns the first element of the queue.
 	 *
@@ -92,7 +95,20 @@ public interface PriorityQueue<K> {
 	 */
 
 	default K last() { throw new UnsupportedOperationException(); }
-
+	
+	/** Returns the index element of the queue.
+	 * 
+ 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 * @param index of the element.
+	 * @return the indexed element.
+	 * @throws NoSuchElementException if the index is not in the range
+	 */
+	
+	default K peek(int index){ throw new UnsupportedOperationException(); }
+	
+	boolean remove(K value);
+	
+	
 	/** Notifies the queue that the {@linkplain #first() first} element has changed (optional operation).
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}. 
 	 */
@@ -105,4 +121,8 @@ public interface PriorityQueue<K> {
 	 * @return the comparator associated with this sorted set, or {@code null} if it uses its elements' natural ordering.
 	 */
 	Comparator<? super K> comparator();
+	
+	K[] toArray();
+	
+	K[] toArray(K[] input);
 }
