@@ -87,7 +87,6 @@ public class IntArrayPriorityQueueTest {
 		}
 	}
 
-
 	@Test
 	public void testEnqueueDequeueComp() {
 		IntArrayPriorityQueue q = new IntArrayPriorityQueue(IntComparators.OPPOSITE_COMPARATOR);

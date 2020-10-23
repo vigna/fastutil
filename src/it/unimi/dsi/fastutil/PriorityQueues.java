@@ -61,7 +61,7 @@ public class PriorityQueues {
 
 		@Override
 		public Object last() { throw new NoSuchElementException(); }
-		
+
 		@Override
 		public boolean remove(Object value) { return false; }
 
@@ -70,7 +70,7 @@ public class PriorityQueues {
 
 		@Override
 		public Comparator<?> comparator() { return null; }
-		
+
 		@Override
 		public void trim() { throw new NoSuchElementException(); }
 
@@ -139,7 +139,7 @@ public class PriorityQueues {
 
 		@Override
 		public K last() { synchronized(sync) { return q.last(); } }
-		
+
 		@Override
 		public K peek(int index) { synchronized(sync) { return q.peek(index); } }
 
@@ -154,6 +154,7 @@ public class PriorityQueues {
 
 		@Override
 		public void changed() { synchronized(sync) { q.changed(); } }
+
 		@Override
 		public void trim() { synchronized(sync) { q.trim(); } }
 
@@ -182,7 +183,6 @@ public class PriorityQueues {
 			synchronized(sync) { s.defaultWriteObject(); }
 		}
 	}
-
 
 	/** Returns a synchronized priority queue backed by the specified priority queue.
 	 *
