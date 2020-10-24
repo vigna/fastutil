@@ -570,6 +570,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		size = j;
 		return modified;
 	}
+	
+	@Override
+	public boolean retainAll(final COLLECTION c) {
+		final KEY_TYPE[] a = this.a;
+		int j = 0;
+		for(int i = 0; i < size; i++)
+			if (c.contains(a[i])) a[j++] = a[i];
+#if KEYS_REFERENCE
+		Arrays.fill(a, j, size, null);
+#endif
+		final boolean modified = size != j;
+		size = j;
+		return modified;
+	}
 
 #endif
 
@@ -586,6 +600,59 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		size = j;
 		return modified;
 	}
+
+	@Override
+	public boolean retainAll(final Collection<?> c) {
+		final KEY_TYPE[] a = this.a;
+		int j = 0;
+		for(int i = 0; i < size; i++)
+			if (c.contains(KEY2OBJ(a[i]))) a[j++] = a[i];
+#if KEYS_REFERENCE
+		Arrays.fill(a, j, size, null);
+#endif
+		final boolean modified = size != j;
+		size = j;
+		return modified;
+	}
+
+#if KEYS_REFERENCE
+	@Override
+	public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
+		java.util.Objects.requireNonNull(filter);
+		final KEY_GENERIC_TYPE[] a = this.a;
+		int j = 0;
+		for(int i = 0; i < size; i++)
+			if (!filter.test(a[i])) a[j++] = a[i];
+		Arrays.fill(a, j, size, null);
+		final boolean modified = size != j;
+		size = j;
+		return modified;
+	}
+#elif KEYS_PRIMITIVE
+#ifdef JDK_PRIMITIVE_PREDICATE
+	/** Remove from this collection all elements which satisfy the given predicate.
+	 *
+	 * @param filter a predicate which returns {@code true} for elements to be
+	 *        removed.
+	 * @see Collection#removeIf(java.util.function.Predicate)
+	 * @return {@code true} if any elements were removed.
+	 */
+	@Override
+	public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
+		java.util.Objects.requireNonNull(filter);
+		final KEY_TYPE[] a = this.a;
+		int j = 0;
+		for(int i = 0; i < size; i++)
+			if (!filter.test(a[i])) a[j++] = a[i];
+		final boolean modified = size != j;
+		size = j;
+		return modified;
+	}
+	
+	@Override
+	public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {return removeIf((JDK_PRIMITIVE_PREDICATE) key -> filter.test(KEY2OBJ(KEY_NARROWING(key))));}
+#endif
+#endif
 
 	@Override
 	public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
