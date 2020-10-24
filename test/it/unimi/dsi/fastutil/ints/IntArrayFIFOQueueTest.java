@@ -143,22 +143,35 @@ public class IntArrayFIFOQueueTest {
 	public void testArray()
 	{
 		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		Integer[] ref = new Integer[100];
+		Integer[] shiftArray = new Integer[100];
+		int[] primRef = new int[100];
+		int[] shiftPrimArray = new int[100];
 		for(int i = 0; i < 100; i++) {
 			q.enqueue(i);
 			assertEquals(i, q.lastInt());
+			ref[i] = Integer.valueOf(i);
+			primRef[i] = i;
+			shiftPrimArray[(i+80) % 100] = i;
+			shiftArray[(i+80) % 100] = Integer.valueOf(i);
 		}
-		int[] array = q.toIntArray();
-		int[] otherArray = q.toIntArray(new int[100]);
-		for(int i = 0;i<100;i++)
-		{
-			assertEquals(array[i], otherArray[i]);
-			assertEquals(array[i], q.peekInt(i));
+		assertArrayEquals(q.toArray(), ref);
+		assertArrayEquals(q.toArray(new Integer[100]), ref);
+		assertArrayEquals(q.toArray(null), ref);
+		assertArrayEquals(q.toIntArray(), primRef);
+		assertArrayEquals(q.toIntArray(new int[100]), primRef);
+		assertArrayEquals(q.toIntArray(null), primRef);
+		IntArrayFIFOQueue other = new IntArrayFIFOQueue(q.toIntArray());
+		for(int i = 0;i<100;i++) {
+			assertEquals(other.peekInt(i), primRef[i]);
 		}
-		IntArrayFIFOQueue other = new IntArrayFIFOQueue(array);
-		for(int i = 0;i<100;i++)
-		{
-			assertEquals(other.peekInt(i), q.peekInt(i));
+		for(int i = 0;i<20;i++) {
+			other.dequeueInt();
+			other.enqueue(i);
 		}
+		assertArrayEquals(other.toIntArray(), shiftPrimArray);
+		assertArrayEquals(other.toIntArray(new int[100]), shiftPrimArray);
+		assertArrayEquals(other.toArray(), shiftArray);
 	}
 
 	@Test

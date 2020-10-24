@@ -305,16 +305,21 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 
 #if KEYS_PRIMITIVE
 	/** Returns an array containing all of the elements in this PriorityQueue. */
+	@Deprecated
 	@Override
 	public KEY_GENERIC_CLASS[] toArray(KEY_GENERIC_CLASS[] input) {
-		if(input == null || input.length < length)
-		{
-			input = new KEY_GENERIC_CLASS[length];
+	final int length = size();
+		if(input == null || input.length < length) input = new KEY_GENERIC_CLASS[length];
+		if (start <= end) {
+			for(int i = 0,m=end-start;i<m;i++)
+				input[i] = KEY2OBJ(array[start + i]);
 		}
-		if (start <= end) System.arraycopy(array, start, input, 0, end - start);
 		else {
-			System.arraycopy(array, start, input, 0, length - start);
-			System.arraycopy(array, 0, input, length - start, end);
+			int offset = 0;
+			for(int i = 0,m=length-start;i<m;i++,offset++)
+				input[i] = KEY2OBJ(array[start + i]);
+			for(int i = 0;i<end;i++)
+				input[offset+i] = KEY2OBJ(array[i]);
 		}
 		return input;
 	}

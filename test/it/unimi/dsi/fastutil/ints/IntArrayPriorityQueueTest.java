@@ -1,5 +1,6 @@
 package it.unimi.dsi.fastutil.ints;
 
+
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,6 +17,7 @@ package it.unimi.dsi.fastutil.ints;
  * limitations under the License.
  */
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -49,6 +51,35 @@ public class IntArrayPriorityQueueTest {
 				assertEquals(i, h.dequeueInt());
 			}
 		}
+	}
+
+	@Test
+	public void testToArray()
+	{
+		IntArrayPriorityQueue q = new IntArrayPriorityQueue();
+		IntHeapPriorityQueue h = new IntHeapPriorityQueue();
+		Integer[] ref = new Integer[100];
+		int[] primRef = new int[100];
+		for(int i = 0; i < 100; i++) {
+			q.enqueue(i);
+			h.enqueue(i);
+			ref[i] = Integer.valueOf(i);
+			primRef[i] = i;
+		}
+		Integer[] qArray = q.toArray();
+		assertArrayEquals(qArray, ref);
+		assertArrayEquals(qArray, q.toArray(new Integer[100]));
+		assertArrayEquals(qArray, q.toArray(null));
+		assertArrayEquals(qArray, h.toArray());
+		assertArrayEquals(qArray, h.toArray(new Integer[100]));
+		assertArrayEquals(qArray, h.toArray(null));
+		int[] qPrimArray = q.toIntArray();
+		assertArrayEquals(qPrimArray, primRef);
+		assertArrayEquals(qPrimArray, h.toIntArray(new int[100]));
+		assertArrayEquals(qPrimArray, h.toIntArray(null));
+		assertArrayEquals(qPrimArray, h.toIntArray());
+		assertArrayEquals(qPrimArray, h.toIntArray(new int[100]));
+		assertArrayEquals(qPrimArray, h.toIntArray(null));
 	}
 
 	@Test
