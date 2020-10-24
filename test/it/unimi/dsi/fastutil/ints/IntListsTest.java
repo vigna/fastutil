@@ -1,6 +1,5 @@
 package it.unimi.dsi.fastutil.ints;
 
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
