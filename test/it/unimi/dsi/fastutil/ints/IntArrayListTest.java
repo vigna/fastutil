@@ -62,8 +62,7 @@ public class IntArrayListTest {
 	}
 
 	@Test
-	public void testRetainAll()
-	{
+	public void testRetainAll() {
 		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
 		l.retainAll(IntSets.singleton(1));
 		assertEquals(IntArrayList.wrap(new int[] { 1, 1 }), l);
