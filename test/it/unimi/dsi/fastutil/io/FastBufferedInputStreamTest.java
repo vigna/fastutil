@@ -16,8 +16,8 @@ package it.unimi.dsi.fastutil.io;
  * limitations under the License.
  */
 
-import it.unimi.dsi.fastutil.io.FastBufferedInputStream;
-import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -32,7 +32,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import it.unimi.dsi.fastutil.io.FastBufferedInputStream.LineTerminator;
 
 public class FastBufferedInputStreamTest {
 	private static final boolean DEBUG = false;
@@ -48,25 +48,26 @@ public class FastBufferedInputStreamTest {
 			System.err.println("Seed: " + seed);
 		}
 
-		public BastardByteArrayInputStream(byte[] array) {
+		public BastardByteArrayInputStream(final byte[] array) {
 			super(array);
 		}
 
 		@Override
-		public int read(byte[] buffer, int offset, int length) {
-			int k = r.nextInt(2) + 1;
+		public int read(final byte[] buffer, final int offset, final int length) {
+			final int k = r.nextInt(2) + 1;
 			return super.read(buffer, offset, length < k ? length : k);
 		}
 
-		public long skip(long n) {
-			int k = r.nextInt(2);
+		@Override
+		public long skip(final long n) {
+			final int k = r.nextInt(2);
 			return super.skip(n < k ? n : k);
 		}
 
 	}
 
 	@SuppressWarnings("resource")
-	public void testReadline(int bufferSize) throws IOException {
+	public void testReadline(final int bufferSize) throws IOException {
 		FastBufferedInputStream stream;
 		byte[] b;
 
@@ -168,7 +169,7 @@ public class FastBufferedInputStreamTest {
 	}
 
 	@SuppressWarnings("resource")
-	public void testSkip(int bufferSize) throws IOException {
+	public void testSkip(final int bufferSize) throws IOException {
 		FastBufferedInputStream stream;
 
 		stream = new FastBufferedInputStream(new BastardByteArrayInputStream(new byte[] { 'A', 'B', 'C', '\r', '\n', 'D' }), bufferSize);
@@ -196,9 +197,9 @@ public class FastBufferedInputStreamTest {
 
 	@Test
 	public void testPosition() throws IOException {
-		File temp = File.createTempFile(this.getClass().getSimpleName(), ".tmp");
+		final File temp = File.createTempFile(this.getClass().getSimpleName(), ".tmp");
 		temp.deleteOnExit();
-		FileOutputStream fos = new FileOutputStream(temp);
+		final FileOutputStream fos = new FileOutputStream(temp);
 		fos.write(new byte[] { 0, 1, 2, 3, 4 });
 		fos.close();
 
@@ -279,23 +280,23 @@ public class FastBufferedInputStreamTest {
 	}
 
 	@SuppressWarnings("resource")
-	public void testRandom(int bufferSize) throws IOException {
-		File temp = File.createTempFile(this.getClass().getSimpleName(), "tmp");
+	public void testRandom(final int bufferSize) throws IOException {
+		final File temp = File.createTempFile(this.getClass().getSimpleName(), "tmp");
 		temp.deleteOnExit();
 
 		// Create temp random file
-		FileOutputStream out = new FileOutputStream(temp);
-		Random random = new Random();
-		int length = 100000 + random.nextInt(10000);
+		final FileOutputStream out = new FileOutputStream(temp);
+		final Random random = new Random();
+		final int length = 100000 + random.nextInt(10000);
 		for(int i = 0; i < length; i++) out.write(random.nextInt());
 		out.close();
 
-		FastBufferedInputStream bis = new FastBufferedInputStream(new FileInputStream(temp), bufferSize);
+		final FastBufferedInputStream bis = new FastBufferedInputStream(new FileInputStream(temp), bufferSize);
 		FileInputStream test = new FileInputStream(temp);
 		FileChannel fc = test.getChannel();
 		int a1, a2, off, len, pos;
-		byte b1[] = new byte[32768];
-		byte b2[] = new byte[32768];
+		final byte b1[] = new byte[32768];
+		final byte b2[] = new byte[32768];
 
 		while(true) {
 
