@@ -78,10 +78,10 @@ public class PriorityQueues {
 		public Object peek(int index) { throw new NoSuchElementException(); }
 
 		@Override
-		public Object[] toArray() { throw new NoSuchElementException(); }
+		public Object[] toArray() { return new Object[0]; }
 
 		@Override
-		public Object[] toArray(Object[] input) { throw new NoSuchElementException(); }
+		public Object[] toArray(Object[] input) { return new Object[0]; }
 
 		@Override
 		public Object clone() { return EMPTY_QUEUE; }
