@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2003-2020 Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
 
 import java.util.Comparator;
 import java.util.NoSuchElementException;
@@ -49,7 +48,7 @@ public class IndirectPriorityQueues {
 		@Override
 		public int size() { return 0; }
 		@Override
-		public boolean contains(int index) { return false; }
+		public boolean contains(final int index) { return false; }
 		@Override
 		public void clear() {}
 		@Override
@@ -67,7 +66,7 @@ public class IndirectPriorityQueues {
 		@Override
 		public boolean remove(final int i) { return false; }
 		@Override
-		public int front(int[] a) { return 0; }
+		public int front(final int[] a) { return 0; }
 
 	}
 
@@ -97,7 +96,7 @@ public class IndirectPriorityQueues {
 		}
 
 		@Override
-		public void enqueue(int x) { synchronized(sync) { q.enqueue(x); } }
+		public void enqueue(final int x) { synchronized(sync) { q.enqueue(x); } }
 		@Override
 		public int dequeue() { synchronized(sync) { return q.dequeue(); } }
 		@Override
@@ -117,13 +116,13 @@ public class IndirectPriorityQueues {
 		@Override
 		public void allChanged() { synchronized(sync) { q.allChanged(); } }
 		@Override
-		public void changed(int i) { synchronized(sync) { q.changed(i); } }
+		public void changed(final int i) { synchronized(sync) { q.changed(i); } }
 		@Override
-		public boolean remove(int i) { synchronized(sync) { return q.remove(i); } }
+		public boolean remove(final int i) { synchronized(sync) { return q.remove(i); } }
 		@Override
 		public Comparator<? super K> comparator() { synchronized(sync) { return q.comparator(); } }
 		@Override
-		public int front(int[] a) { return q.front(a); }
+		public int front(final int[] a) { return q.front(a); }
 	}
 
 	/** Returns a synchronized type-specific indirect priority queue backed by the specified type-specific indirect priority queue.

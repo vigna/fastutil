@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.io;
-
 /*
  * Copyright (C) 2005-2020 Sebastiano Vigna
  *
@@ -16,11 +14,14 @@ package it.unimi.dsi.fastutil.io;
  * limitations under the License.
  */
 
-import it.unimi.dsi.fastutil.bytes.ByteArrays;
+package it.unimi.dsi.fastutil.io;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.util.EnumSet;
+
+import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 /** Lightweight, unsynchronized, aligned input stream buffering class with
  *  {@linkplain #skip(long) true skipping},
@@ -142,11 +143,11 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 			try {
 				fileChannel = (FileChannel)(is.getClass().getMethod("getChannel", new Class<?>[] {})).invoke(is);
 			}
-			catch(IllegalAccessException e) {}
-			catch(IllegalArgumentException e) {}
-			catch(NoSuchMethodException e) {}
-			catch(java.lang.reflect.InvocationTargetException e) {}
-			catch(ClassCastException e) {}
+			catch(final IllegalAccessException e) {}
+			catch(final IllegalArgumentException e) {}
+			catch(final NoSuchMethodException e) {}
+			catch(final java.lang.reflect.InvocationTargetException e) {}
+			catch(final ClassCastException e) {}
 		}
 	}
 
@@ -396,7 +397,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	}
 
 	@Override
-	public void position(long newPosition) throws IOException {
+	public void position(final long newPosition) throws IOException {
 
 		final long position = readBytes;
 

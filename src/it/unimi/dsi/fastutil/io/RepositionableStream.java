@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.io;
-
 /*
  * Copyright (C) 2005-2020 Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil.io;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.io;
 
 /** A basic interface specifying positioning methods for a byte stream.
  *

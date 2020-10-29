@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2003-2020 Paolo Boldi and Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
 
 import java.util.Comparator;
 import java.util.NoSuchElementException;
@@ -133,7 +132,7 @@ public interface IndirectPriorityQueue<K> {
 	 * @throws NoSuchElementException if the specified element is not in this queue.
 	 */
 
-	default void changed(int index) { throw new UnsupportedOperationException(); }
+	default void changed(final int index) { throw new UnsupportedOperationException(); }
 
 
 	/** Notifies this queue that the all elements have changed (optional operation).
@@ -149,7 +148,7 @@ public interface IndirectPriorityQueue<K> {
 	 * @param index an index possibly in the queue.
 	 * @return true if the specified index belongs to this queue.
 	 */
-	default boolean contains(int index) { throw new UnsupportedOperationException(); }
+	default boolean contains(final int index) { throw new UnsupportedOperationException(); }
 
 	/** Removes the specified element from this queue (optional operation).
 	 *
@@ -158,7 +157,7 @@ public interface IndirectPriorityQueue<K> {
 	 * @return true if the index was in the queue.
 	 */
 
-	default boolean remove(int index) { throw new UnsupportedOperationException(); }
+	default boolean remove(final int index) { throw new UnsupportedOperationException(); }
 
 	/** Retrieves the front of this queue in a given array (optional operation).
 	 *

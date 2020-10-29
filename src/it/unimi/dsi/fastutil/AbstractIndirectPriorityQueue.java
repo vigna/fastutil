@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2003-2020 Paolo Boldi and Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil;
 
 /** An abstract class providing basic methods for implementing the {@link IndirectPriorityQueue} interface.
  *

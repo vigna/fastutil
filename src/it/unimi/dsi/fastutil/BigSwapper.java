@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2010-2020 Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
 
 /** An object that can swap elements whose positions are specified by longs.
  *

@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2010-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil;
 
 import java.util.Collection;
 
@@ -37,7 +37,7 @@ public interface Size64 {
 	long size64();
 
 	/** Returns the size of this data structure, minimized with {@link Integer#MAX_VALUE}.
-	 * 
+	 *
 	 * <p>This default implementation follows the definition above, which is compatible
 	 * with {@link Collection#size()}.
 	 *

@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2002-2020 Sebastiano Vigna
  *
@@ -16,11 +14,13 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
-import it.unimi.dsi.fastutil.ints.IntComparator;
+package it.unimi.dsi.fastutil;
 
 import java.util.ArrayList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
+
+import it.unimi.dsi.fastutil.ints.IntComparator;
 
 /** A class providing static methods and objects that do useful things with arrays.
  *
@@ -98,9 +98,9 @@ public class Arrays {
 			firstCut = upperBound(from, mid, secondCut, comp);
 		}
 
-		int first2 = firstCut;
-		int middle2 = mid;
-		int last2 = secondCut;
+		final int first2 = firstCut;
+		final int middle2 = mid;
+		final int last2 = secondCut;
 		if (middle2 != first2 && middle2 != last2) {
 			int first1 = first2;
 			int last1 = middle2;
@@ -137,8 +137,8 @@ public class Arrays {
 		// if (comp==null) throw new NullPointerException();
 		int len = to - from;
 		while (len > 0) {
-			int half = len / 2;
-			int middle = from + half;
+			final int half = len / 2;
+			final int middle = from + half;
 			if (comp.compare(middle, pos) < 0) {
 				from = middle + 1;
 				len -= half + 1;
@@ -167,8 +167,8 @@ public class Arrays {
 		// if (comp==null) throw new NullPointerException();
 		int len = mid - from;
 		while (len > 0) {
-			int half = len / 2;
-			int middle = from + half;
+			final int half = len / 2;
+			final int middle = from + half;
 			if (comp.compare(pos, middle) < 0) {
 				len = half;
 			}
@@ -184,9 +184,9 @@ public class Arrays {
 	 * Returns the index of the median of the three indexed chars.
 	 */
 	private static int med3(final int a, final int b, final int c, final IntComparator comp) {
-		int ab = comp.compare(a, b);
-		int ac = comp.compare(a, c);
-		int bc = comp.compare(b, c);
+		final int ab = comp.compare(a, b);
+		final int ac = comp.compare(a, c);
+		final int bc = comp.compare(b, c);
 		return (ab < 0 ?
 				(bc < 0 ? b : ac < 0 ? c : a) :
 				(bc > 0 ? b : ac > 0 ? c : a));
@@ -228,7 +228,7 @@ public class Arrays {
 		}
 
 		// Recursively sort halves
-		int mid = (from + to) >>> 1;
+		final int mid = (from + to) >>> 1;
 		mergeSort(from, mid, c, swapper);
 		mergeSort(mid, to, c, swapper);
 
@@ -383,7 +383,7 @@ public class Arrays {
 		int l = from;
 		int n = to - 1;
 		if (len > QUICKSORT_MEDIAN_OF_9) { // Big arrays, pseudomedian of 9
-			int s = len / 8;
+			final int s = len / 8;
 			l = med3(l, l + s, l + 2 * s, comp);
 			m = med3(m - s, m, m + s, comp);
 			n = med3(n - 2 * s, n - s, n, comp);

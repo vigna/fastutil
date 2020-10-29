@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2003-2020 Paolo Boldi and Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
 
 import java.util.Comparator;
 import java.util.NoSuchElementException;
@@ -94,7 +93,7 @@ public interface PriorityQueue<K> {
 	default K last() { throw new UnsupportedOperationException(); }
 
 	/** Notifies the queue that the {@linkplain #first() first} element has changed (optional operation).
-	 * <p>This default implementation just throws an {@link UnsupportedOperationException}. 
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
 	 */
 
 	default void changed() { throw new UnsupportedOperationException(); }

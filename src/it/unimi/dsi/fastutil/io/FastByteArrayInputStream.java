@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.io;
-
 /*
  * Copyright (C) 2005-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.io;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.io;
 
 /** Simple, fast and repositionable byte-array input stream.
  *

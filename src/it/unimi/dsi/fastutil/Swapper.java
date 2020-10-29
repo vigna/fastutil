@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil;
-
 /*
  * Copyright (C) 2010-2020 Sebastiano Vigna
  *
@@ -16,8 +14,10 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
+
 /** An object that can swap elements whose position is specified by integers.
- * 
+ *
  * @see Arrays#quickSort(int, int, it.unimi.dsi.fastutil.ints.IntComparator, Swapper)
  */
 @FunctionalInterface

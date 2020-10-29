@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.io;
-
 /*
  * Copyright (C) 2005-2020 Sebastiano Vigna
  *
@@ -16,9 +14,11 @@ package it.unimi.dsi.fastutil.io;
  * limitations under the License.
  */
 
-import it.unimi.dsi.fastutil.bytes.ByteArrays;
+package it.unimi.dsi.fastutil.io;
 
 import java.io.IOException;
+
+import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 /** Simple, fast byte-array output stream that exposes the backing array.
  *
@@ -95,7 +95,7 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 	}
 
 	@Override
-	public void position(long newPosition) {
+	public void position(final long newPosition) {
 		if (position > Integer.MAX_VALUE) throw new IllegalArgumentException("Position too large: " + newPosition);
 		position = (int)newPosition;
 	}
