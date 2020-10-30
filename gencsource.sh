@@ -427,6 +427,7 @@ fi)\
 "#define ARRAYS ${TYPE_CAP2[$k]}Arrays\n"\
 "#define BIG_ARRAYS ${TYPE_CAP2[$k]}BigArrays\n"\
 "#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n"\
+"#define ITERABLES ${TYPE_CAP2[$k]}Iterables\n"\
 "#define BIG_LIST_ITERATORS ${TYPE_CAP2[$k]}BigListIterators\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n"\
 \

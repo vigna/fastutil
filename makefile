@@ -456,6 +456,12 @@ $(BIG_LIST_ITERATORS_STATIC): drv/BigListIterators.drv; ./gencsource.sh $< $@ >$
 CSOURCES += $(BIG_LIST_ITERATORS_STATIC)
 
 
+ITERABLES_STATIC := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterables.c)
+$(ITERABLES_STATIC): drv/Iterables.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ITERABLES_STATIC)
+
+
 COLLECTIONS_STATIC := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Collections.c)
 $(COLLECTIONS_STATIC): drv/Collections.drv; ./gencsource.sh $< $@ >$@
 
