@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007-2019 Sebastiano Vigna
+ * Copyright (C) 2007-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,21 @@ package PACKAGE;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
+
+
+#if ! KEYS_REFERENCE
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
+#endif
 
+#if KEY_INDEX != VALUE_INDEX && !(KEYS_REFERENCE && VALUES_REFERENCE)
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ARRAYS;
+#endif
 #if VALUE_WIDENED || VALUE_CLASS_Boolean
 import VALUE_PACKAGE.METHOD_ARG_VALUE_CONSUMER;
 #endif
@@ -95,7 +101,13 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	 */
 	public ARRAY_MAP(final MAP KEY_VALUE_GENERIC m) {
 		this(m.size());
-		putAll(m);
+		int i = 0;
+		for(MAP.Entry KEY_VALUE_GENERIC e : m.ENTRYSET()) {
+			key[i] = e.ENTRY_GET_KEY();
+			value[i] = e.ENTRY_GET_VALUE();
+			i++;
+		}
+		size = i;
 	}
 
 	/** Creates a new empty array map copying the entries of a given map.
@@ -104,7 +116,13 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	 */
 	public ARRAY_MAP(final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m) {
 		this(m.size());
-		putAll(m);
+		int i = 0;
+		for(Map.Entry<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> e : m.entrySet()) {
+			key[i] = KEY_CLASS2TYPE(e.getKey());
+			value[i] = VALUE_CLASS2TYPE(e.getValue());
+			i++;
+		}
+		size = i;
 	}
 
 	/** Creates a new array map with given key and value backing arrays, using the given number of elements.
@@ -456,6 +474,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 					System.arraycopy(key, pos, key, pos - 1, tail);
 					System.arraycopy(value, pos, value, pos - 1, tail);
 					size--;
+					pos--;
 #if KEYS_REFERENCE
 					ARRAY_MAP.this.key[size] = null;
 #endif
@@ -569,6 +588,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 					System.arraycopy(key, pos, key, pos - 1, tail);
 					System.arraycopy(value, pos, value, pos - 1, tail);
 					size--;
+					pos--;
 #if KEYS_REFERENCE
 					ARRAY_MAP.this.key[size] = null;
 #endif

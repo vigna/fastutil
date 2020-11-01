@@ -156,7 +156,7 @@ $(SORTED_SETS): drv/SortedSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SORTED_SETS)
 
-FUNCTIONS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)Function.c))
+FUNCTIONS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)2$(v)Function.c))
 $(FUNCTIONS): drv/Function.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(FUNCTIONS)
@@ -250,7 +250,7 @@ $(ABSTRACT_SORTED_SETS): drv/AbstractSortedSet.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_SORTED_SETS)
 
-ABSTRACT_FUNCTIONS := $(foreach k,$(TYPE_NOBOOL), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Function.c))
+ABSTRACT_FUNCTIONS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)2$(v)Function.c))
 $(ABSTRACT_FUNCTIONS): drv/AbstractFunction.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_FUNCTIONS)
@@ -409,6 +409,11 @@ $(FRONT_CODED_LISTS): drv/ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(FRONT_CODED_LISTS)
 
+FRONT_CODED_BIG_LISTS := $(foreach k, $(if $(SMALL_TYPES),Byte Short Char,) Int Long, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedBigList.c)
+$(FRONT_CODED_BIG_LISTS): drv/ArrayFrontCodedBigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(FRONT_CODED_BIG_LISTS)
+
 HEAP_PRIORITY_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)HeapPriorityQueue.c)
 $(HEAP_PRIORITY_QUEUES): drv/HeapPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
@@ -465,6 +470,12 @@ BIG_SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/
 $(BIG_SPLITERATORS_STATIC): drv/BigSpliterators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_SPLITERATORS_STATIC)
+
+
+ITERABLES_STATIC := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterables.c)
+$(ITERABLES_STATIC): drv/Iterables.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ITERABLES_STATIC)
 
 
 COLLECTIONS_STATIC := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Collections.c)

@@ -1,7 +1,5 @@
-package it.unimi.dsi.fastutil;
-
 /*
- * Copyright (C) 2003-2019 Sebastiano Vigna
+ * Copyright (C) 2003-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +14,9 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
-import java.io.Serializable;
+package it.unimi.dsi.fastutil;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
@@ -43,7 +42,7 @@ public class PriorityQueues {
 		protected EmptyPriorityQueue() {}
 
 		@Override
-		public void enqueue(Object o) { throw new UnsupportedOperationException(); }
+		public void enqueue(final Object o) { throw new UnsupportedOperationException(); }
 
 		@Override
 		public Object dequeue() { throw new NoSuchElementException(); }
@@ -115,7 +114,7 @@ public class PriorityQueues {
 		}
 
 		@Override
-		public void enqueue(K x) { synchronized(sync) { q.enqueue(x); } }
+		public void enqueue(final K x) { synchronized(sync) { q.enqueue(x); } }
 
 		@Override
 		public K dequeue() { synchronized(sync) { return q.dequeue(); } }
@@ -150,7 +149,7 @@ public class PriorityQueues {
 		@Override
 		public boolean equals(final Object o) { if (o == this) return true; synchronized(sync) { return q.equals(o); } }
 
-		private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
+		private void writeObject(final java.io.ObjectOutputStream s) throws java.io.IOException {
 			synchronized(sync) { s.defaultWriteObject(); }
 		}
 	}

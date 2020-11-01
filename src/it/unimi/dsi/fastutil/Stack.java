@@ -1,7 +1,5 @@
-package it.unimi.dsi.fastutil;
-
 /*
- * Copyright (C) 2002-2019 Sebastiano Vigna
+ * Copyright (C) 2002-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
 
 import java.util.NoSuchElementException;
 
@@ -74,7 +73,7 @@ public interface Stack<K> {
 	 * @throws IndexOutOfBoundsException if the designated element does not exist..
 	 */
 
-	default K peek(int i) {
+	default K peek(final int i) {
 		throw new UnsupportedOperationException();
 	}
 }

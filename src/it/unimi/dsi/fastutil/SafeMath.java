@@ -1,7 +1,5 @@
-package it.unimi.dsi.fastutil;
-
 /*
- * Copyright (C) 2017 Sebastiano Vigna
+ * Copyright (C) 2017-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil;
 
 public final class SafeMath {
 	private SafeMath() {}
@@ -57,7 +57,7 @@ public final class SafeMath {
 	public static float safeDoubleToFloat(final double value) {
 		if (Double.isNaN(value)) return Float.NaN;
 		if (Double.isInfinite(value)) return value < 0.0d ? Float.NEGATIVE_INFINITY : Float.POSITIVE_INFINITY;
-		if (value < Float.MIN_VALUE || Float.MAX_VALUE < value) throw new IllegalArgumentException(value + " can't be represented as float (out of range)");
+		if (value < -Float.MAX_VALUE || Float.MAX_VALUE < value) throw new IllegalArgumentException(value + " can't be represented as float (out of range)");
 		final float floatValue = (float) value;
 		if (floatValue != value) throw new IllegalArgumentException(value + " can't be represented as float (imprecise)");
 		return floatValue;

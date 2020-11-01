@@ -212,11 +212,15 @@ fi)\
 \
 \
 "#define KEY_TYPE ${TYPE[$k]}\n"\
+"#define KEY_TYPE_CAP ${TYPE_CAP[$k]}\n"\
 "#define VALUE_TYPE ${TYPE[$v]}\n"\
+"#define VALUE_TYPE_CAP ${TYPE_CAP[$v]}\n"\
+"#define KEY_INDEX $k\n"\
 "#define KEY_TYPE_WIDENED ${TYPE[$wk]}\n"\
 "#define VALUE_TYPE_WIDENED ${TYPE[$wv]}\n"\
 "#define KEY_CLASS ${CLASS[$k]}\n"\
 "#define VALUE_CLASS ${CLASS[$v]}\n"\
+"#define VALUE_INDEX $v\n"\
 "#define KEY_CLASS_WIDENED ${CLASS[$wk]}\n"\
 "#define VALUE_CLASS_WIDENED ${CLASS[$wv]}\n"\
 \
@@ -362,6 +366,7 @@ fi)\
 "#define LIST ${TYPE_CAP[$k]}List\n"\
 "#define BIG_LIST ${TYPE_CAP[$k]}BigList\n"\
 "#define STACK ${TYPE_STD[$k]}Stack\n"\
+"#define ATOMIC_ARRAY Atomic${CLASS[$k]}Array\n"\
 "#define PRIORITY_QUEUE ${TYPE_STD[$k]}PriorityQueue\n"\
 "#define INDIRECT_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectPriorityQueue\n"\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n"\
@@ -478,6 +483,7 @@ fi)\
 "#define INDIRECT_HEAPS ${TYPE_CAP2[$k]}IndirectHeaps\n"\
 "#define ARRAYS ${TYPE_CAP2[$k]}Arrays\n"\
 "#define BIG_ARRAYS ${TYPE_CAP2[$k]}BigArrays\n"\
+"#define ITERABLES ${TYPE_CAP2[$k]}Iterables\n"\
 "#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n"\
 "#define WIDENED_ITERATORS ${TYPE_CAP[$wk]}Iterators\n"\
 "#define SPLITERATORS ${TYPE_CAP2[$k]}Spliterators\n"\
@@ -517,6 +523,7 @@ fi)\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n"\
 "#define BIG_ARRAY_BIG_LIST ${TYPE_CAP[$k]}BigArrayBigList\n"\
 "#define ARRAY_FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n"\
+"#define ARRAY_FRONT_CODED_BIG_LIST ${TYPE_CAP[$k]}ArrayFrontCodedBigList\n"\
 "#define HEAP_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapPriorityQueue\n"\
 "#define HEAP_SEMI_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapSemiIndirectPriorityQueue\n"\
 "#define HEAP_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapIndirectPriorityQueue\n"\

@@ -1,7 +1,7 @@
 package it.unimi.dsi.fastutil.ints;
 
 /*
- * Copyright (C) 2017 Sebastiano Vigna
+ * Copyright (C) 2017-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +21,31 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.io.BinIO;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import it.unimi.dsi.fastutil.io.BinIO;
 
 public class IntArraySetTest {
+
+	@Test
+	public void testCopyConstructor() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2 });
+		assertEquals(new IntArraySet(s), s);
+		assertEquals(new HashSet<>(s), s);
+	}
 
 	@SuppressWarnings("boxing")
 	@Test
@@ -80,7 +93,7 @@ public class IntArraySetTest {
 
 	@Test
 	public void testClone() {
-		IntArraySet s = new IntArraySet();
+		final IntArraySet s = new IntArraySet();
 		assertEquals(s, s.clone());
 		s.add(0);
 		assertEquals(s, s.clone());
@@ -96,8 +109,8 @@ public class IntArraySetTest {
 
 	@Test
 	public void testSerialisation() throws IOException, ClassNotFoundException {
-		IntArraySet s = new IntArraySet();
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final IntArraySet s = new IntArraySet();
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.writeObject(s);
 		oos.close();

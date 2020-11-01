@@ -1,7 +1,5 @@
-package it.unimi.dsi.fastutil.io;
-
 /*
- * Copyright (C) 2005-2019 Sebastiano Vigna
+ * Copyright (C) 2005-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.io;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -98,11 +98,11 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 			try {
 				fileChannel = (FileChannel)(os.getClass().getMethod("getChannel", new Class<?>[] {})).invoke(os);
 			}
-			catch(IllegalAccessException e) {}
-			catch(IllegalArgumentException e) {}
-			catch(NoSuchMethodException e) {}
-			catch(java.lang.reflect.InvocationTargetException e) {}
-			catch(ClassCastException e) {}
+			catch(final IllegalAccessException e) {}
+			catch(final IllegalArgumentException e) {}
+			catch(final NoSuchMethodException e) {}
+			catch(final java.lang.reflect.InvocationTargetException e) {}
+			catch(final ClassCastException e) {}
 		}
 
 	}

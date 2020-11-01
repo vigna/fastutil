@@ -1,7 +1,5 @@
-package it.unimi.dsi.fastutil;
-
 /*
- * Copyright (C) 2010-2019 Sebastiano Vigna
+ * Copyright (C) 2010-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil;
 
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -59,7 +58,7 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	 * @param e an element.
 	 * @see ListIterator#set(Object)
 	 */
-	default void set(K e) {
+	default void set(final K e) {
 			throw new UnsupportedOperationException();
 	}
 
@@ -71,7 +70,7 @@ public interface BigListIterator<K> extends BidirectionalIterator<K> {
 	 * @param e an element.
 	 * @see ListIterator#add(Object)
 	 */
-	default void add(K e) {
+	default void add(final K e) {
 		throw new UnsupportedOperationException();
 	}
 }

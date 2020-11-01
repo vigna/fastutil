@@ -32,4 +32,4 @@ preprocessor-defined symbols and some conditional compilation, and produces a
 customize the environment.
 
 * seba (<mailto:sebastiano.vigna@unimi.it>)
-* <mailto:fastutil@googlegroups.com>
+* https://groups.google.com/g/fastutil

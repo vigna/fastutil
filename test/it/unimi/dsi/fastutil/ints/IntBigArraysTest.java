@@ -1,7 +1,7 @@
 package it.unimi.dsi.fastutil.ints;
 
 /*
- * Copyright (C) 2017 Sebastiano Vigna
+ * Copyright (C) 2017-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,6 +73,78 @@ public class IntBigArraysTest {
 		IntBigArrays.quickSort(a, IntComparators.NATURAL_COMPARATOR);
 		assertArrayEquals(sorted, a);
 
+	}
+
+	@Test
+	public void testParallelQuickSort1Comp() {
+		int[][] t = {{ 2, 1, 0, 4 }};
+		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
+
+		t = new int[][] {{ 2, -1, 0, -4 }};
+		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
+
+		t = IntBigArrays.shuffle(identity(100), new Random(0));
+		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
+
+		t = new int[1][100];
+		Random random = new Random(0);
+		for (long i = length(t) - 1; i-- != 0;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
+
+		t = new int[1][100000];
+		random = new Random(0);
+		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
+		for(int i = 100; i-- != 10;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t, 10, 100, IntComparators.OPPOSITE_COMPARATOR);
+		for (int i = 99; i-- != 10;) assertTrue(get(t, i) >= get(t, i + 1));
+
+		t = new int[1][10000000];
+		random = new Random(0);
+		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
+	}
+
+	@Test
+	public void testParallelQuickSort1() {
+		int[][] t = { { 2, 1, 0, 4 } };
+		IntBigArrays.parallelQuickSort(t);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
+
+		t = new int[][] { { 2, -1, 0, -4 } };
+		IntBigArrays.parallelQuickSort(t);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
+
+		t = IntBigArrays.shuffle(identity(100), new Random(0));
+		IntBigArrays.parallelQuickSort(t);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
+
+		t = new int[1][100];
+		Random random = new Random(0);
+		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
+
+		t = new int[1][100000];
+		random = new Random(0);
+		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
+		for (int i = 100; i-- != 10;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t, 10, 100);
+		for (int i = 99; i-- != 10;) assertTrue(get(t, i) <= get(t, i + 1));
+
+		t = new int[1][10000000];
+		random = new Random(0);
+		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
+		IntBigArrays.parallelQuickSort(t);
+		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
 	}
 
 	private void testCopy(final int n) {

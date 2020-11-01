@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2019 Sebastiano Vigna
+ * Copyright (C) 2002-2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import java.util.function.Consumer;
 #if VALUE_WIDENED
 import VALUE_PACKAGE.VALUE_CONSUMER;
 #endif
+
+#if KEY_INDEX != VALUE_INDEX && !(KEYS_REFERENCE && VALUES_REFERENCE)
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 
@@ -42,24 +44,28 @@ import VALUE_PACKAGE.VALUE_SPLITERATORS;
 #if VALUE_CLASS_Boolean
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 #endif
-
+#endif
 
 #ifdef Linked
 
 import java.util.Comparator;
 
+#if KEY_INDEX != VALUE_INDEX && !(KEYS_REFERENCE && VALUES_REFERENCE)
 #if VALUES_PRIMITIVE
 import VALUE_PACKAGE.VALUE_LIST_ITERATOR;
 #else
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 #endif
+#endif
 
+#if ! KEYS_REFERENCE
 import it.unimi.dsi.fastutil.objects.AbstractObjectSortedSet;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
 import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
+#endif
 
 /**  A type-specific linked hash map with with a fast, small-footprint implementation.
  *
@@ -112,10 +118,12 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VAL
 
 #else
 
+#if ! KEYS_REFERENCE
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
+#endif
 
 #ifdef Custom
 
@@ -260,7 +268,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 	public OPEN_HASH_MAP(final int expected, final float f) {
 #endif
-		if (f <= 0 || f > 1) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than or equal to 1");
+		if (f <= 0 || f >= 1) throw new IllegalArgumentException("Load factor must be greater than 0 and smaller than 1");
 		if (expected < 0) throw new IllegalArgumentException("The expected number of elements must be nonnegative");
 
 		this.f = f;
@@ -587,11 +595,11 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		return oldValue;
 	}
 
-#if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Char || VALUE_CLASS_Integer || VALUE_CLASS_Long || VALUE_CLASS_Float || VALUE_CLASS_Double
+#if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Character || VALUE_CLASS_Integer || VALUE_CLASS_Long || VALUE_CLASS_Float || VALUE_CLASS_Double
 
 	private VALUE_GENERIC_TYPE addToValue(final int pos, final VALUE_GENERIC_TYPE incr) {
 		final VALUE_GENERIC_TYPE oldValue = value[pos];
-#if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Char
+#if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Character
 		value[pos] = (VALUE_TYPE)(oldValue + incr);
 #else
 		value[pos] = oldValue + incr;
@@ -632,7 +640,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		key[pos] = k;
 
-#if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Char
+#if VALUE_CLASS_Byte || VALUE_CLASS_Short || VALUE_CLASS_Character
 		value[pos] = (VALUE_TYPE)(defRetValue + incr);
 #else
 		value[pos] = defRetValue + incr;
