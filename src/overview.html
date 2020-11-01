@@ -48,14 +48,12 @@
     <li>Structures based on hash tables never rehash below the size specified at construction time.
     </ul>
 
-    <p>Furthermore, the following features were added in version 8.3
+    <p>Furthermore, the following features were added in version <SPLITERATOR VERSION>
 
 	<p>
 	<ul>
 	<li>Type-specific spliterators
 	<li>Primitive stream methods
-	<li>type-specific List.sort() now uses a primitive array sorting algorithm (when relevant)
-	<li>New unstableSort() method for <code>fastutil</code> Lists
 	<li>Even more default methods overridden for performance or avoiding boxing/unboxing
 	</ul>
 
@@ -647,6 +645,42 @@
     concatenate them} or {@linkplain
     it.unimi.dsi.fastutil.objects.ObjectIterators#pour(Iterator,ObjectCollection)
     pour them} into a set.
+    
+    <h3>Spliterators and Streams</h3>
+    <p><code>fastutil</code> provides type-specific {@link java.util.Spliterator spliterators}. These are
+    used to implement fast streams.
+    
+    <p>Due to Java only supporting primitive Streams of <code>int</code>, <code>long</code>,
+    and <code>double</code>,
+    types for primitives narrower then that (such as {@linkplain
+    it.unimi.dsi.fastutil.bytes.ByteCollection ByteCollection}) have methods
+    that expose a spliterator widening them to the type supported by the
+    Stream API. For example, {@linkplain it.unimi.dsi.fastutil.bytes.ByteCollection ByteCollection}
+    will have an {@link it.unimi.dsi.fastutil.bytes.ByteCollection#intSpliterator intSpliterator}
+    method in addition to a <code>spliterator</code> method that works in terms of
+    bytes.
+    
+    Due to the incompatibility of object based {@link java.util.stream.Stream}</code> and the
+    primitive Streams (such as {@link java.util.stream.IntStream}), the <code>stream</code>
+    methods of the primitive containers could not be updated to return their
+    primitive equivalents. So instead, for primitive collections, a new method is
+    provided that exposes a primitive stream, and the object based stream method
+    is marked deprecated like the other boxing methods do.
+    For example, {@linkplain it.unimi.dsi.fastutil.bytes.ByteCollection},
+    {@linkplain it.unimi.dsi.fastutil.shorts.ShortCollection}, and
+    {@linkplain it.unimi.dsi.fastutil.ints.IntCollection expose an
+    {@link it.unimi.dsi.fastutil.Ints.IntCollection#intStream intStream} method, which should
+    be used in preference to
+    <code>stream</code> as it will not box and unbox.
+    
+    <p>Similar to iterators, a raft of utility methods for type specific spliterators are provided
+    (e.g. {@link it.unimi.dsi.fastutil.ints.IntSpliterators}).  Most of them are analogues of the
+    utilities in the type specific <code>Iterators</code> class.
+    
+    <p>Currently no utility methods are provided for type specific <code>Stream</code>s, as the
+    Java library's API already has good coverage for that (e.g. the static methods of
+    {@link java.util.stream.Stream} and their primitive equivalents, or classes such as
+    {@link java.util.stream.StreamSupport}).
 
 
     <h3>Queues</h3>
