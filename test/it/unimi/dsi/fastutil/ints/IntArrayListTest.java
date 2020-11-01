@@ -25,6 +25,8 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntArrayListTest {
 
 	@SuppressWarnings("unlikely-arg-type")
@@ -126,6 +128,11 @@ public class IntArrayListTest {
 	public void testSizeOnDefaultInstance() {
 		final IntArrayList l = new IntArrayList();
 		l.size(100);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntArrayList.class, "test", "500", "939384");
 	}
 
 }

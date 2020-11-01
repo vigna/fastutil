@@ -26,6 +26,7 @@ import java.util.function.BiFunction;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -304,5 +305,10 @@ public class Int2ObjectMapTest {
 		public ObjectCollection<Object> values() {
 			return delegate.values();
 		}
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(Int2ObjectOpenHashMap.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3832454");
 	}
 }

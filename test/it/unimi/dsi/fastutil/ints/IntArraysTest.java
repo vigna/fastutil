@@ -26,6 +26,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntArraysTest {
 
 	public static int[] identity(final int n) {
@@ -1289,5 +1291,10 @@ public class IntArraysTest {
 
 		IntArrays.stabilize(perm, val, 1, 3);
 		assertArrayEquals(new int[] { 4, 2, 3, 1, 0 }, perm);
+	}
+	
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntArrays.class, new String[0]);
 	}
 }

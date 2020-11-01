@@ -20,11 +20,19 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 
+import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
+
+import it.unimi.dsi.fastutil.MainRunner;
 
 public class Int2IntMapGenericAVLTest extends Int2IntMapGenericTest<Int2IntAVLTreeMap> {
 	@Parameters
 	public static Iterable<Object[]> data() {
 		return Collections.singletonList(new Object[] { (Supplier<Int2IntMap>) Int2IntAVLTreeMap::new, EnumSet.allOf(Capability.class) });
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(Int2IntAVLTreeMap.class, "test", /*num=*/"20", /*seed=*/"42342");
 	}
 }

@@ -20,6 +20,8 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntSetsTest {
 	@Test
 	public void testToArrayShouldNullElementAfterLastEntry() {
@@ -27,5 +29,10 @@ public class IntSetsTest {
 		Object[] values = new Object[] { "test" };
 		set.toArray(values);
 		assertNull(values[0]);
+	}
+	
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntSets.class, "int", "928374");
 	}
 }
