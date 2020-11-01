@@ -236,6 +236,97 @@ public final class SETS {
 	public static KEY_GENERIC SET KEY_GENERIC unmodifiable(final SET KEY_GENERIC s) {	return new UnmodifiableSet KEY_GENERIC_DIAMOND(s); }
 
 
+#if KEY_CLASS_Byte || KEY_CLASS_Character || KEY_CLASS_Short || KEY_CLASS_Integer || KEY_CLASS_Long
+
+	/** Returns an unmodifiable type-specific set containing elements in the given range.
+	 *
+	 * @param from the starting element (lower bound) of the set (inclusive).
+	 * @param to the ending element (upper bound) of the set (exclusive).
+	 * @return an unmodifiable set containing the elements in the given range.
+	 */
+	public static SET fromTo(final KEY_TYPE from, final KEY_TYPE to) {
+		return new ABSTRACT_SET() {
+			@Override
+			public boolean contains(final KEY_TYPE x) {
+				return x >= from && x < to;
+			}
+		
+			@Override
+			public KEY_ITERATOR iterator() {
+				return ITERATORS.fromTo(from, to);
+			}
+		
+			@Override
+			public int size() {
+#if KEY_CLASS_Long
+				final long size = to - from;
+#else
+				final long size = (long)to - (long)from;
+#endif
+				return size >= 0 && size <= Integer.MAX_VALUE ? (int)size : Integer.MAX_VALUE;
+			}
+		};
+	}
+
+	/** Returns an unmodifiable type-specific set containing elements greater than or equal to a given element.
+	 *
+	 * @param from the starting element (lower bound) of the set (inclusive).
+	 * @return an unmodifiable set containing the elements greater than or equal to {@code from}.
+	 */
+	public static SET from(final KEY_TYPE from) {
+		return new ABSTRACT_SET() {
+			@Override
+			public boolean contains(final KEY_TYPE x) {
+				return x >= from;
+			}
+		
+			@Override
+			public KEY_ITERATOR iterator() {
+				return ITERATORS.concat(new KEY_ITERATOR[] { ITERATORS.fromTo(from, KEY_CLASS.MAX_VALUE), SETS.singleton(KEY_CLASS.MAX_VALUE).iterator() });
+			}
+		
+			@Override
+			public int size() {
+#if KEY_CLASS_Long
+				final long size = Long.MAX_VALUE - from + 1;
+#else
+				final long size = KEY_CLASS.MAX_VALUE - (long)from + 1;
+#endif
+				return size >= 0 && size <= Integer.MAX_VALUE ? (int)size : Integer.MAX_VALUE;
+			}
+		};
+	}
+
+	/** Returns an unmodifiable type-specific set containing elements smaller than a given element.
+	 *
+	 * @param to the ending element (upper bound) of the set (exclusive).
+	 * @return an unmodifiable set containing the elements smaller than {@code to}.
+	 */
+	public static SET to(final KEY_TYPE to) {
+		return new ABSTRACT_SET() {
+			@Override
+			public boolean contains(final KEY_TYPE x) {
+				return x < to;
+			}
+		
+			@Override
+			public KEY_ITERATOR iterator() {
+				return ITERATORS.fromTo(KEY_CLASS.MIN_VALUE, to);
+			}
+		
+			@Override
+			public int size() {
+#if KEY_CLASS_Long
+				final long size = to - Long.MIN_VALUE;
+#else
+				final long size = (long)to - KEY_CLASS.MIN_VALUE;
+#endif
+				return size >= 0 && size <= Integer.MAX_VALUE ? (int)size : Integer.MAX_VALUE;
+			}
+		};
+	}
+
+#endif
 
 #ifdef TEST
 
