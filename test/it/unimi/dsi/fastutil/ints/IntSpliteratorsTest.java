@@ -320,6 +320,7 @@ public class IntSpliteratorsTest {
 				| Spliterator.SIZED
 				| Spliterator.SUBSIZED
 				| Spliterator.DISTINCT
+				| Spliterator.ORDERED
 				| Spliterator.SORTED,
 				singleton.characteristics());
 		org.junit.Assert.assertNull(singleton.trySplit());
