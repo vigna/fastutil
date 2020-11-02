@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntLinkedOpenCustomHashSetTest {
 
 	@Test
@@ -60,5 +62,10 @@ public class IntLinkedOpenCustomHashSetTest {
 		assertEquals(10, i.nextInt());
 		assertFalse(i.hasNext());
 
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntLinkedOpenCustomHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383474");
 	}
 }

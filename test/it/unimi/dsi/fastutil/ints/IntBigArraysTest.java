@@ -523,6 +523,6 @@ public class IntBigArraysTest {
 
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(IntBigArrays.class, "test", "10000", "293843");
+		MainRunner.callMainIfExists(IntBigArrays.class, "test", /*num=*/"10000", /*seed=*/"293843");
 	}
 }

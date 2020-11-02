@@ -22,6 +22,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
 import junit.framework.TestCase;
 
 public class IntHeapSemiIndirectPriorityQueueTest extends TestCase {
@@ -81,4 +82,8 @@ public class IntHeapSemiIndirectPriorityQueueTest extends TestCase {
 		assertArrayEquals(new int[] { 0, 1 }, front);
 	}
 
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntHeapSemiIndirectPriorityQueue.class, "test", /*num=*/"500", /*seed=*/"39384");
+	}
 }

@@ -132,7 +132,7 @@ public class IntArrayListTest {
 
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(IntArrayList.class, "test", "500", "939384");
+		MainRunner.callMainIfExists(IntArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
 	}
 
 }

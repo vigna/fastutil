@@ -27,6 +27,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.MainRunner;
 
 @SuppressWarnings("rawtypes")
 public class IntLinkedOpenHashSetTest {
@@ -473,5 +474,10 @@ public class IntLinkedOpenHashSetTest {
 	@Test(expected=NoSuchElementException.class)
 	public void testRemoveLastEmpty() {
 		new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE).lastInt();
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntLinkedOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3832474");
 	}
 }

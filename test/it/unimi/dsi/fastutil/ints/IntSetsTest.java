@@ -33,6 +33,6 @@ public class IntSetsTest {
 	
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(IntSets.class, "int", "928374");
+		MainRunner.callMainIfExists(IntSets.class, "int", /*seed=*/"928374");
 	}
 }

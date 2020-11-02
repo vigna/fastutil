@@ -50,6 +50,6 @@ public class IntListsTest {
 	
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(IntLists.class, "int", "9389487");
+		MainRunner.callMainIfExists(IntLists.class, "int", /*seed=*/"9389487");
 	}
 }

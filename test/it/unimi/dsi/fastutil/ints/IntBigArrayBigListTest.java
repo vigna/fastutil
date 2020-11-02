@@ -618,6 +618,6 @@ public class IntBigArrayBigListTest {
 	
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(IntBigArrayBigList.class, "test", "200", "90293");
+		MainRunner.callMainIfExists(IntBigArrayBigList.class, "test", /*num=*/"200", /*seed=*/"90293");
 	}
 }
