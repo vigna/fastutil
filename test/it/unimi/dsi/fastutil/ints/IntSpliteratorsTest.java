@@ -307,4 +307,32 @@ public class IntSpliteratorsTest {
 		int[] mArray = IntIterators.unwrap(m);
 		assertArrayEquals(expected, mArray);
 	}
+	
+	@SuppressWarnings("static-method")
+	@Test
+	public void testSingletonSpliterator() {
+		final int data = 42;
+		IntSpliterator singleton = IntSpliterators.singleton(data);
+		assertEquals(1, singleton.getExactSizeIfKnown());
+		assertEquals(
+				Spliterator.NONNULL
+				| Spliterator.IMMUTABLE
+				| Spliterator.SIZED
+				| Spliterator.SUBSIZED
+				| Spliterator.DISTINCT
+				| Spliterator.SORTED,
+				singleton.characteristics());
+		org.junit.Assert.assertNull(singleton.trySplit());
+		singleton.forEachRemaining((int actual) -> assertEquals(data, actual));
+	}
+	
+	@SuppressWarnings("static-method")
+	@Test
+	public void testSingletonSpliteratorSkip() {
+		final int data = 42;
+		IntSpliterator singleton = IntSpliterators.singleton(data);
+		assertEquals(1, singleton.skip(5));
+		assertEquals(0, singleton.getExactSizeIfKnown());
+		singleton.forEachRemaining(unused -> org.junit.Assert.fail("Expected no elements left"));
+	}
 }
