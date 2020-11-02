@@ -2022,7 +2022,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	}
 
 
-	private static void runTest(int n, float f) {
+	private static void runTest(int n, float f) throws Exception {
 #if !defined(Custom) || KEYS_REFERENCE
 
 		int c;
@@ -2053,18 +2053,15 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		m.addAll(t);
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after insertion");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after insertion");;
 		printProbes(m);
 
 		/* Now we check that m actually holds that data. */
 
 		for(java.util.Iterator i=t.iterator(); i.hasNext();) {
 			Object e = i.next();
-			if (!m.contains(e)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on t)");
-				System.exit(1);
-			}
+			ensure(m.contains(e), "Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
@@ -2073,25 +2070,16 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		for(java.util.Iterator i=m.iterator(); i.hasNext();) {
 			Object e = i.next();
 			c++;
-			if (!t.contains(e)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on m)");
-				System.exit(1);
-			}
+			ensure(t.contains(e), "Error (" + seed + "): m and t differ on a key ("+e+") after insertion (iterating on m)");
 		}
 
-		if (c != t.size()) {
-			System.out.println("Error (" + seed + "): m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)");
-			System.exit(1);
-		}
+		ensure(c == t.size(), "Error (" + seed + "): m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)");
 		/* Now we check that inquiries about random data give the same answer in m and t. For
 		   m we use the polymorphic method. */
 
 		for(int i=0; i<n;  i++) {
 			KEY_TYPE T = genKey();
-			if (m.contains(T) != t.contains(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
-				System.exit(1);
-			}
+			ensure(m.contains(T) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
 		}
 
 		/* Again, we check that inquiries about random data give the same answer in m and t, but
@@ -2099,10 +2087,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		for(int i=0; i<n;  i++) {
 			KEY_TYPE T = genKey();
-			if (m.contains(KEY2OBJ(T)) != t.contains(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
-				System.exit(1);
-			}
+			ensure(m.contains(KEY2OBJ(T)) == t.contains(KEY2OBJ(T)), "Error (" + seed + "): divergence between t and m (standard method)");
 		}
 
 
@@ -2110,38 +2095,26 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		for(int i=0; i<20*n;  i++) {
 			KEY_TYPE T = genKey();
-			if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence in add() between t and m");
-				System.exit(1);
-			}
+			ensure(m.add(KEY2OBJ(T)) == t.add(KEY2OBJ(T)), "Error (" + seed + "): divergence in add() between t and m");
 			T = genKey();
-			if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence in remove() between t and m");
-				System.exit(1);
-			}
+			ensure(m.remove(KEY2OBJ(T)) == t.remove(KEY2OBJ(T)), "Error (" + seed + "): divergence in remove() between t and m");
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after removal");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after removal");;
 
 		/* Now we check that m actually holds that data. */
 
 		for(java.util.Iterator i=t.iterator(); i.hasNext();) {
 			Object e = i.next();
-			if (!m.contains(e)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on t)");
-				System.exit(1);
-			}
+			ensure(m.contains(e), "Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 
 		for(java.util.Iterator i=m.iterator(); i.hasNext();) {
 			Object e = i.next();
-			if (!t.contains(e)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on m)");
-				System.exit(1);
-			}
+			ensure(t.contains(e), "Error (" + seed + "): m and t differ on a key ("+e+") after removal (iterating on m)");
 		}
 
 		printProbes(m);
@@ -2150,11 +2123,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		KEY_TYPE a[] = m.TO_KEY_ARRAY();
 
 #ifdef Custom
-		if (!new OPEN_HASH_SET(a, m.strategy()).equals(m))
-			System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
+		ensure(new OPEN_HASH_SET(a, m.strategy()).equals(m), "Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
 #else
-		if (!new OPEN_HASH_SET(a).equals(m))
-			System.out.println("Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
+		ensure(new OPEN_HASH_SET(a).equals(m), "Error (" + seed + "): toArray() output (or array-based constructor) is not OK");
 #endif
 
 		/* Now we check cloning. */
@@ -2166,7 +2137,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		/* Now we save and read m. */
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -2181,13 +2152,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			ois.close();
 			ff.delete();
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
 
 #if !KEY_CLASS_Reference
-		if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read");
+		ensure(m.hashCode() == h, "Error (" + seed + "): hashCode() changed after save/read");;
 
 		printProbes(m);
 
@@ -2195,10 +2162,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		for(java.util.Iterator i=m.iterator(); i.hasNext();) {
 			Object e = i.next();
-			if (!t.contains(e)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+e+") after save/read");
-				System.exit(1);
-			}
+			ensure(t.contains(e), "Error (" + seed + "): m and t differ on a key ("+e+") after save/read");
 		}
 #else
 		m.clear();
@@ -2209,19 +2173,13 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		for(int i=0; i<20*n;  i++) {
 			KEY_TYPE T = genKey();
-			if (m.add(KEY2OBJ(T)) != t.add(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence in add() between t and m after save/read");
-				System.exit(1);
-			}
+			ensure(m.add(KEY2OBJ(T)) == t.add(KEY2OBJ(T)), "Error (" + seed + "): divergence in add() between t and m after save/read");
 			T = genKey();
-			if (m.remove(KEY2OBJ(T)) != t.remove(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence in remove() between t and m after save/read");
-				System.exit(1);
-			}
+			ensure(m.remove(KEY2OBJ(T)) == t.remove(KEY2OBJ(T)), "Error (" + seed + "): divergence in remove() between t and m after save/read");
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after post-save/read removal");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after post-save/read removal");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after post-save/read removal");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after post-save/read removal");;
 
 
 #ifdef Linked
@@ -2332,10 +2290,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		for(java.util.Iterator i=m.iterator(); i.hasNext();) { i.next(); i.remove();}
 
-		if (!m.isEmpty())  {
-			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
-			System.exit(1);
-		}
+		ensure(m.isEmpty(), "Error (" + seed + "): m is not empty (as it should be)");
 
 #if KEY_CLASS_Integer || KEY_CLASS_Long
 		m = new OPEN_HASH_SET(n, f);
@@ -2364,32 +2319,30 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			for (int j=0; j<10; j++) {
 				k++;
 				x = i+(r.nextInt() % 10)*p;
-				if (m.add(x) != t.add(KEY2OBJ(x)))
-					System.out.println("Error (" + seed + "): m and t differ on a key during torture-test insertion.");
+				ensure(m.add(x) == t.add(KEY2OBJ(x)), "Error (" + seed + "): m and t differ on a key during torture-test insertion.");
 			}
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after torture-test insertion");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after torture-test insertion");;
 
 		for(int i=0; i<(p*f)/10; i++) {
 			for (int j=0; j<10; j++) {
 				x = i+(r.nextInt() % 10)*p;
-				if (m.remove(x) != t.remove(KEY2OBJ(x)))
-					System.out.println("Error (" + seed + "): m and t differ on a key during torture-test removal.");
+				ensure(m.remove(x) == t.remove(KEY2OBJ(x)), "Error (" + seed + "): m and t differ on a key during torture-test removal.");
 			}
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after torture-test removal");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after torture-test removal");;
 
-		if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
-		if (!((OPEN_HASH_SET)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
+		ensure(m.equals(m.clone()), "Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");;
+		ensure(((OPEN_HASH_SET)m.clone()).equals(m), "Error (" + seed + "): !m.clone().equals(m) after torture-test removal");;
 
 		m.trim();
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after trim()");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after trim()");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after trim()");;
 #endif
 
 		System.out.println("Test OK");
@@ -2410,6 +2363,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			throw e;
 		}
 	}
 
