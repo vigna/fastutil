@@ -2960,8 +2960,7 @@ public final class ARRAYS {
 	private static final int WARMUP_RUNS = 100;
 	private static final int GC_EVERY = 100;
 	private static final int DEFAULT_MAX = 1000;
-	private static final int UNIQUE_VALUES = 2 * N / 3; 
-	private static final int RUNS = 1000;
+	private static final int RUNS = 30;
 	public static final void main(String... args) {
 		int max = DEFAULT_MAX;
 		if (args.length > 1) max = Integer.parseInt(args[1]);
@@ -2969,11 +2968,12 @@ public final class ARRAYS {
 			seed = Integer.parseInt(args[2]);
 			r = new java.util.Random(seed);
 		}
+		final int uniqueValues = 2 * max / 3;
 		KEY_TYPE[] a = new KEY_TYPE[max];
 		KEY_TYPE[] b = new KEY_TYPE[max];
 		KEY_TYPE[] c = new KEY_TYPE[max];
 		for (int n = 0; n < WARMUP_RUNS; ++n) {
-			a = fillArrayForBenchmark(a, UNIQUE_VALUES);
+			a = fillArrayForBenchmark(a, uniqueValues);
 			System.arraycopy(a, 0, b, 0, max);
 			System.arraycopy(a, 0, c, 0, max);
 			java.util.Arrays.sort(a);
@@ -2985,7 +2985,7 @@ public final class ARRAYS {
 		long radixSortSum = 0;
 		System.gc();
 		for (int n = 0; n < RUNS; ++n) {
-			a = fillArrayForBenchmark(a, UNIQUE_VALUES);
+			a = fillArrayForBenchmark(a, uniqueValues);
 			System.arraycopy(a, 0, b, 0, max);
 			System.arraycopy(a, 0, c, 0, max);
 
@@ -3007,7 +3007,7 @@ public final class ARRAYS {
 			end = System.nanoTime();
 			radixSortSum += end - start;
 		}
-	 	System.out.println(String.format("Quicksort vs radix sort for arrays of length %d with %d unique values", N, UNIQUE_VALUES));
+	 	System.out.println(String.format("Quicksort vs radix sort for arrays of length %d with %d unique values", max, uniqueValues));
 		double averageArraysSort = (double)arraysSortSum / RUNS;
 		System.out.println("java.util.Arrays.sort() average time " + averageArraysSort);
 		double averageQuickSort = (double)quickSortSum / RUNS;
