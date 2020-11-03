@@ -1,4 +1,4 @@
-package it.unimi.dsi.fastutil.objects;
+package it.unimi.dsi.fastutil.ints;
 
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
@@ -26,22 +26,21 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.MainRunner;
 
-public class ObjectAVLTreeSetTest {
+public class IntAVLTreeSetTest {
 
 	@Test
 	public void testGet() {
-		final ObjectAVLTreeSet<Integer> s = new ObjectAVLTreeSet<>();
-		final Integer o = Integer.valueOf(0);
+		final IntAVLTreeSet s = new IntAVLTreeSet();
+		final int i = 0;
 		assertTrue(s.isEmpty());
 		assertEquals(0, s.size());
-		s.add(o);
-		assertSame(o,  s.get(Integer.valueOf(0)));
-		assertFalse(s.add(o));
+		s.add(i);
+		assertTrue(s.contains(i));
+		assertFalse(s.add(i));
 		assertEquals(1, s.size());
 	}
-	
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(ObjectAVLTreeSet.class, "test", /*num=*/"20", /*seed=*/"423429");
+		MainRunner.callMainIfExists(IntAVLTreeSet.class, "test", /*num=*/"20", /*seed=*/"423429");
 	}
 }

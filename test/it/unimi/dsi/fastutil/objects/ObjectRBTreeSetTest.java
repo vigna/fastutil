@@ -19,56 +19,29 @@ package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import it.unimi.dsi.fastutil.ints.Int2IntRBTreeMap;
+import it.unimi.dsi.fastutil.MainRunner;
 
 public class ObjectRBTreeSetTest {
 
 	@Test
-	public void testGet() {
+	public void testAddAndGet() {
 		final ObjectRBTreeSet<Integer> s = new ObjectRBTreeSet<>();
 		final Integer o = Integer.valueOf(0);
+		assertTrue(s.isEmpty());
+		assertEquals(0, s.size());
 		s.add(o);
 		assertSame(o,  s.get(Integer.valueOf(0)));
+		assertFalse(s.add(o));
+		assertEquals(1, s.size());
 	}
 
 	@Test
-	public void testAddTo() {
-		final Int2IntRBTreeMap a = new Int2IntRBTreeMap();
-		final Int2IntRBTreeMap b = new Int2IntRBTreeMap();
-
-		// test addTo with empty map
-		a.addTo(0, 1); 			// 0 -> 1
-		assertEquals(1, a.get(0));
-
-		// test addTo with empty map and weird defaultReturnValue
-		b.defaultReturnValue(100);
-		a.addTo(0, 0); 			// 0 -> 100
-		assertEquals(100, b.get(0));
-
-		// test addTo with existing values
-		a.addTo(0, 1); 	 	  // 0 -> 2
-		b.addTo(0, -100); 	// 0 -> 0
-		assertEquals(2, a.get(0));
-		assertEquals(0, b.get(0));
-
-		// test addTo with overflow values
-		a.put(0, Integer.MAX_VALUE);
-		a.addTo(0, 1);			// 0 -> MIN_VALUE
-		assertEquals(Integer.MIN_VALUE, a.get(0));
-
-		// test various addTo operations
-		a.put(0, 0);
-		a.put(1, 1);
-		a.put(2, 2);
-
-		a.addTo(0, 10);			// 0 -> 10
-		a.addTo(1, 9);			// 1 -> 10
-		a.addTo(2, 8);			// 2 -> 10
-		assertEquals(10, a.get(0));
-		assertEquals(10, a.get(1));
-		assertEquals(10, a.get(2));
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectRBTreeSet.class, "test", /*num=*/"20", /*seed=*/"423429");
 	}
 }
