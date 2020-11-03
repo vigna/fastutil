@@ -18,6 +18,11 @@ public final class MainRunner {
 	private static final Class<?>[] MAIN_PARAM_TYPES = {String[].class};
 	
 	public static void callMainIfExists(Class<?> clazz, String... args) throws ReflectiveOperationException {
+		if (clazz.getSimpleName().endsWith("Test")) {
+			throw new IllegalArgumentException(
+					"Trying to run the main method of a test class " + clazz.getSimpleName()
+					+ ". This isn't what you want. Instead, run the main method of the class under test.");
+		}
 		Method mainMethod = null;
 		try {
 			mainMethod = clazz.getDeclaredMethod("main", MAIN_PARAM_TYPES);

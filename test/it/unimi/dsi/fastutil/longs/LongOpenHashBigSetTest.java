@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.MainRunner;
 
 public class LongOpenHashBigSetTest {
 
@@ -153,5 +154,10 @@ public class LongOpenHashBigSetTest {
 		iterator.remove();
 		assertEquals(0, s.size64());
 		assertEquals(keys, t);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(LongOpenHashBigSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383474");
 	}
 }

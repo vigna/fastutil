@@ -26,6 +26,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.MainRunner;
 
 @SuppressWarnings("rawtypes")
 public class ObjectOpenHashSetTest {
@@ -296,5 +297,10 @@ public class ObjectOpenHashSetTest {
 		assertTrue(s.add(a));
 		assertSame(a, s.get("a"));
 		assertNull(s.get("b"));
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3838474");
 	}
 }

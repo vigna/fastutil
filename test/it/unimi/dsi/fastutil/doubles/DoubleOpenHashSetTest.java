@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class DoubleOpenHashSetTest {
 
 	@Test
@@ -39,4 +41,8 @@ public class DoubleOpenHashSetTest {
 		assertEquals(2, s.size());
 	}
 
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(DoubleOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3838474");
+	}
 }

@@ -25,6 +25,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 public class ObjectOpenCustomHashSetTest {
@@ -61,4 +62,8 @@ public class ObjectOpenCustomHashSetTest {
 		}
 	}
 
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectOpenCustomHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3834745");
+	}
 }

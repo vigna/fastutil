@@ -186,7 +186,6 @@ public class Int2IntOpenHashMapTest {
 		s.trim(2);
 		assertEquals(8, s.n);
 	}
-	
 
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {

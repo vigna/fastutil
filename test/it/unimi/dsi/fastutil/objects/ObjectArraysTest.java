@@ -27,6 +27,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 @SuppressWarnings("boxing")
 public class ObjectArraysTest {
 
@@ -390,5 +392,10 @@ public class ObjectArraysTest {
 
 		ObjectArrays.stabilize(perm, val, 1, 3);
 		assertArrayEquals(new int[] { 4, 2, 3, 1, 0 }, perm);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
 	}
 }

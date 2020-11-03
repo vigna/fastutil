@@ -22,6 +22,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class ByteArraysTest {
 
 	private static byte[] castIdentity(int n) {
@@ -154,5 +156,11 @@ public class ByteArraysTest {
 		for(int i = d.length; i-- != 0;) d[1][i] = (byte)random.nextInt();
 		ByteArrays.radixSort(d);
 		for(int i = d[0].length - 1; i-- != 0;) assertTrue(Integer.toString(i) + ": <" + d[0][i] + ", " + d[1][i] + ">, <" + d[0][i + 1] + ", " +  d[1][i + 1] + ">", d[0][i] < d[0][i + 1] || d[0][i] == d[0][i + 1] && d[1][i] <= d[1][i + 1]);
+	}
+
+	
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ByteArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
 	}
 }

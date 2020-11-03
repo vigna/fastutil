@@ -182,6 +182,6 @@ public class LongArraysTest {
 
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(LongArrays.class, new String[0]);
+		MainRunner.callMainIfExists(LongArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
 	}
 }

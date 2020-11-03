@@ -18,6 +18,7 @@ package it.unimi.dsi.fastutil.objects;
 
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.MainRunner;
 
 import java.io.IOException;
 import java.util.Map;
@@ -213,6 +214,11 @@ public class Object2IntOpenHashMapTest {
 		test(1000, Hash.DEFAULT_LOAD_FACTOR);
 		test(1000, Hash.FAST_LOAD_FACTOR);
 		test(1000, Hash.VERY_FAST_LOAD_FACTOR);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(Object2IntOpenHashMap.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383454");
 	}
 }
 

@@ -33,6 +33,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.BigArrays;
+import it.unimi.dsi.fastutil.MainRunner;
 
 public class DoubleBigArraysTest {
 
@@ -307,5 +308,8 @@ public class DoubleBigArraysTest {
 
 	}
 
-
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(DoubleBigArrays.class, "test", /*num=*/"10000", /*seed=*/"293843");
+	}
 }

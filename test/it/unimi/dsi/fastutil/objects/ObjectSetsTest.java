@@ -21,6 +21,8 @@ import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class ObjectSetsTest {
 	@Test
 	public void testToArrayShouldNullElementAfterLastEntry() {
@@ -28,5 +30,10 @@ public class ObjectSetsTest {
 		Object[] values = new Object[] { "test" };
 		set.toArray(values);
 		assertNull(values[0]);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectSets.class, "Object", /*seed=*/"928374");
 	}
 }

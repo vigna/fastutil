@@ -1295,6 +1295,6 @@ public class IntArraysTest {
 	
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
-		MainRunner.callMainIfExists(IntArrays.class, new String[0]);
+		MainRunner.callMainIfExists(IntArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
 	}
 }

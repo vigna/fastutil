@@ -23,6 +23,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 
 public class DoubleArraysTest {
@@ -552,5 +553,8 @@ public class DoubleArraysTest {
 
 	}
 
-
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(DoubleArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
+	}
 }
