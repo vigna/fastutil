@@ -7,7 +7,12 @@ import java.lang.reflect.Modifier;
  * Contains utility methods for running the {@code public static void main(String[]} method of a class if it has one.
  * 
  * <p>Several classes in fastutils have legacy tests in {@code main} methods that may or may not
- * be generated based on code generation flags. This will query whether the main method ex
+ * be generated based on code generation flags. This class will query whether the class given has a
+ * {@code main} method, and if so, calls it with the parameters given. The idea being to ensure
+ * that these legacy tests get called by the unit tests.
+ *
+ * <p>To jave these {@code main} method tests included in the code generation (as well as to generate
+ * some micro-benchmarks), pass {@code TEST=1} to the {@code make} command.
  *
  * @author C. Sean Young (csyoung@google.com)
  *
@@ -36,6 +41,7 @@ public final class MainRunner {
 			// Not a static method, so don't try to call it.
 			return;
 		}
+		// The array itself is the argument, so we need to wrap it in another array first.
 		mainMethod.invoke(null, new Object[] {args});
 	}
 }
