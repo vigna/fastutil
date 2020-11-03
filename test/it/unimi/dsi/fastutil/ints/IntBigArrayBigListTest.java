@@ -615,9 +615,16 @@ public class IntBigArrayBigListTest {
 		final IntBigArrayBigList l = new IntBigArrayBigList();
 		l.size(100);
 	}
+
+	@Test
+	public void testOf() {
+		final IntBigArrayBigList l = IntBigArrayBigList.of(0, 1, 2);
+		assertEquals(IntBigArrayBigList.wrap(BigArrays.wrap(new int[] { 0, 1, 2 })), l);
+	}
 	
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntBigArrayBigList.class, "test", /*num=*/"200", /*seed=*/"90293");
 	}
+	
 }

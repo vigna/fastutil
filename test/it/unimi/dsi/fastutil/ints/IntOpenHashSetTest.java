@@ -281,6 +281,11 @@ public class IntOpenHashSetTest {
 		assertEquals(8, s.n);
 	}
 
+	@Test
+	public void testOf() {
+		final IntOpenHashSet s = IntOpenHashSet.of(0, 1, 2);
+		assertEquals(new IntOpenHashSet(new int[] { 0, 1, 2 }), s);
+	}
 
 	@SuppressWarnings("boxing")
 	private static void checkTable(final IntOpenHashSet s) {
@@ -349,8 +354,7 @@ public class IntOpenHashSetTest {
 
 		/* Now we check that m actually holds that data. */
 
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (final Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", m.contains(e));
 		}
 
@@ -399,8 +403,7 @@ public class IntOpenHashSetTest {
 		assertTrue("Error: !t.equals(m) after removal", t.equals(m));
 		/* Now we check that m actually holds that data. */
 
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (final Object e : t) {
 			assertFalse("Error: m and t differ on a key (" + e + ") after removal (iterating on t)", !m.contains(e));
 		}
 
