@@ -537,4 +537,11 @@ public class IntOpenHashSetTest {
 		test(1000, Hash.FAST_LOAD_FACTOR);
 		test(1000, Hash.VERY_FAST_LOAD_FACTOR);
 	}
+
+	@Test
+	public void testToSet() {
+		final IntOpenHashSet baseList = IntOpenHashSet.of(2, 380, 1297);
+		IntOpenHashSet  transformed = IntOpenHashSet.toSet(baseList.intStream().map(i -> i + 40));
+		assertEquals(IntOpenHashSet .of(42, 420, 1337), transformed);
+	}
 }

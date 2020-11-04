@@ -305,4 +305,11 @@ public class ObjectOpenHashSetTest {
 		assertSame(a, s.get("a"));
 		assertNull(s.get("b"));
 	}
+
+	@Test
+	public void testToSet() {
+		final ObjectOpenHashSet<String> baseList = ObjectOpenHashSet.of("wood", "board", "glass", "metal");
+		ObjectOpenHashSet<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toList());
+		assertEquals(ObjectOpenHashSet.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
 }

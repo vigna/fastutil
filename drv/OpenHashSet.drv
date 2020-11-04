@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 #if KEYS_REFERENCE
 import java.util.function.Consumer;
+import java.util.stream.Collector;
 #endif
 
 #ifdef Linked
@@ -582,6 +583,66 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of(final KEY_GENERIC_TYPE... a) {
 		return new OPEN_HASH_SET KEY_GENERIC(a, DEFAULT_LOAD_FACTOR);
 	}
+#endif
+
+#ifndef Custom
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+	/** Collects the result of a primitive {@code Stream} into a new hash set.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	 public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSet(JDK_PRIMITIVE_STREAM stream) {
+	 	return stream.collect(
+	 		OPEN_HASH_SET::new,
+	 		OPEN_HASH_SET::add,
+	 		OPEN_HASH_SET::addAll);
+	 }
+	 
+	/** Collects the result of a primitive {@code Stream} into a new hash set.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSetWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+		return stream.collect(
+			() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+			OPEN_HASH_SET::add,
+			OPEN_HASH_SET::addAll);
+	}
+#elif KEYS_REFERENCE
+	// Collector wants a function that returns the collection being added to.
+	private OPEN_HASH_SET KEY_GENERIC combine(OPEN_HASH_SET KEY_EXTENDS_GENERIC toAddFrom) {
+		addAll(toAddFrom);
+		return this;
+	}
+
+	private static final Collector<KEY_TYPE, ?, OPEN_HASH_SET<KEY_TYPE>> TO_SET_COLLECTOR =
+		Collector.of(
+			OPEN_HASH_SET::new,
+			OPEN_HASH_SET::add,
+			OPEN_HASH_SET::combine); 
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toList() {
+		return (Collector) TO_SET_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toListWithExpectedSize(int expectedSize) {
+ 		return Collector.of(
+		() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+		OPEN_HASH_SET::add,
+		OPEN_HASH_SET::combine);
+	}
+#endif
 #endif
 
 

@@ -54,8 +54,8 @@ public class ObjectArrayListTest {
 	
 	@Test
 	public void testToList() {
-		final ObjectArrayList<String> baseList = ObjectArrayList.of("appear", "agree", "appoint");
-		ObjectArrayList<String> transformed = baseList.stream().map(s -> "dis" + s).collect(ObjectArrayList.toList());
-		assertEquals(ObjectArrayList.of("disappear", "disagree", "disappoint"), transformed);
+		final ObjectArrayList<String> baseList = ObjectArrayList.of("wood", "board", "glass", "metal");
+		ObjectArrayList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toList());
+		assertEquals(ObjectArrayList.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
 	}
 }
