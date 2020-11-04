@@ -381,6 +381,7 @@ fi)\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n"\
 "#define KEY_BIG_LIST_ITERATOR ${TYPE_CAP2[$k]}BigListIterator\n"\
 "#define STD_KEY_ITERATOR ${TYPE_STD[$k]}Iterator\n"\
+"#define STD_KEY_ITERABLE ${TYPE_STD[$k]}Iterable\n"\
 "#define KEY_COMPARATOR ${TYPE_STD[$k]}Comparator\n"\
 \
 \

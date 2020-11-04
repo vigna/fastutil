@@ -94,7 +94,7 @@ source: pom
 
 binary:
 	make -s clean sources format
-	ant clean osgi javadoc
+	ant clean osgi jar javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	cp dist/lib/fastutil-$(version).jar .

@@ -163,7 +163,7 @@ public class IntArrayListTest {
 	}
 
 	public void testSort() {
-		IntArrayList l = IntArrayList.wrap(new int[] { 4, 2, 1, 3 });
+		final IntArrayList l = IntArrayList.wrap(new int[] { 4, 2, 1, 3 });
 		l.sort(null);
 		assertEquals(IntArrayList.wrap(new int[] { 1, 2, 3, 4 }), l);
 	}
@@ -227,4 +227,9 @@ public class IntArrayListTest {
 		l.size(100);
 	}
 
+	@Test
+	public void testOf() {
+		final IntArrayList l = IntArrayList.of(0, 1, 2);
+		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);
+	}
 }
