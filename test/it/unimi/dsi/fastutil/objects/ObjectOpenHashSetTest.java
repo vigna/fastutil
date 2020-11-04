@@ -214,7 +214,7 @@ public class ObjectOpenHashSetTest {
 			assertTrue("Error: m and t differ on a key (" + e + ") after removal (iterating on m)", t.contains(e));
 		}
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		final Object a[] = m.toArray();
+		Object a[] = m.toArray();
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
 		/* As above, but using streams */
 		a = m.stream().toArray();

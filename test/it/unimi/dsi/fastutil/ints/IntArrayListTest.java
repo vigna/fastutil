@@ -232,4 +232,11 @@ public class IntArrayListTest {
 		final IntArrayList l = IntArrayList.of(0, 1, 2);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);
 	}
+	
+	@Test
+	public void testToList() {
+		final IntArrayList baseList = IntArrayList.of(2, 380, 1297);
+		IntArrayList transformed = IntArrayList.toList(baseList.intStream().map(i -> i + 40));
+		assertEquals(IntArrayList.of(42, 420, 1337), transformed);
+	}
 }

@@ -45,4 +45,17 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<Integer> l = new ObjectArrayList<>();
 		l.size(100);
 	}
+
+	@Test
+	public void testOf() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		assertEquals(ObjectArrayList.wrap(new String[] { "0", "1", "2" }), l);
+	}
+	
+	@Test
+	public void testToList() {
+		final ObjectArrayList<String> baseList = ObjectArrayList.of("appear", "agree", "appoint");
+		ObjectArrayList<String> transformed = baseList.stream().map(s -> "dis" + s).collect(ObjectArrayList.toList());
+		assertEquals(ObjectArrayList.of("disappear", "disagree", "disappoint"), transformed);
+	}
 }
