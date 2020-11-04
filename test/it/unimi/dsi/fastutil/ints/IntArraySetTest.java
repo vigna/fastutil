@@ -133,4 +133,10 @@ public class IntArraySetTest {
 		assertFalse(iterator.hasNext());
 		assertEquals(new IntArraySet(new int[] { 42, 44 }), set);
 	}
+
+	@Test
+	public void testOf() {
+		final IntArraySet l = IntArraySet.of(0, 1, 2);
+		assertEquals(new IntArraySet(new int[] { 0, 1, 2 }), l);
+	}
 }

@@ -130,4 +130,10 @@ public class ObjectArraySetTest {
 		assertFalse(iterator.hasNext());
 		assertEquals(new ObjectArraySet<Integer>(new Integer[] { 42, 44 }), set);
 	}
+
+	@Test
+	public void testOf() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		assertEquals(new ObjectArraySet<>(new String[] { "0", "1", "2" }), l);
+	}
 }

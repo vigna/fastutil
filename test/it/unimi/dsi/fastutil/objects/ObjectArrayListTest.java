@@ -45,4 +45,10 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<Integer> l = new ObjectArrayList<>();
 		l.size(100);
 	}
+
+	@Test
+	public void testOf() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		assertEquals(ObjectArrayList.wrap(new String[] { "0", "1", "2" }), l);
+	}
 }
