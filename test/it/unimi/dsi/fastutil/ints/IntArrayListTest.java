@@ -133,4 +133,16 @@ public class IntArrayListTest {
 		final IntArrayList l = IntArrayList.of(0, 1, 2);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);
 	}
+
+	@Test
+	public void testOfEmpty() {
+		final IntArrayList l = IntArrayList.of();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntArrayList l = IntArrayList.of(0);
+		assertEquals(IntArrayList.wrap(new int[] { 0 }), l);
+	}
 }

@@ -83,6 +83,23 @@ public class ObjectOpenHashSetTest {
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2 }), s);
 	}
 
+	@Test
+	public void testOfEmpty() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0));
+		assertEquals(new LongOpenHashSet(new long[] { 0 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(0));
+	}
+
 	private static java.util.Random r = new java.util.Random(0);
 
 	private static Object genKey() {
