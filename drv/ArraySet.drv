@@ -137,10 +137,17 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 	 * @param a the backing array of the returned array set.
 	 * @throws IllegalArgumentException if a duplicate entry was encountered.
 	 */
-	@SafeVarargs
+	// NOT @SafeVarargs. Since we are taking the array as our backing array, then passing
+	// an Integer[] when the generic is inferred Object (and thus Object[]) will not be safe.
 	public static KEY_GENERIC ARRAY_SET KEY_GENERIC of(final KEY_GENERIC_TYPE... a) {
-		// Will throw on duplicate entry for us.
-		OPEN_HASH_SET.of(a);
+		if (a.length == 2) {
+			if (KEY_EQUALS(a[0], a[1])) {
+				throw new IllegalArgumentException("Duplicate element: " + a[1]);
+			}
+		} else {
+			// Will throw on duplicate entry for us.
+			OPEN_HASH_SET.of(a);
+		}
 		return ofUnchecked(a);
 	}
 
@@ -157,7 +164,8 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 	 *
 	 * @param a the backing array of the returned array set.
 	 */
-	@SafeVarargs
+	// NOT @SafeVarargs. Since we are taking the array as our backing array, then passing
+	// an Integer[] when the generic is inferred Object (and thus Object[]) will not be safe.
 	public static KEY_GENERIC ARRAY_SET KEY_GENERIC ofUnchecked(final KEY_GENERIC_TYPE... a) {
 		return new ARRAY_SET KEY_GENERIC(a);
 	}
