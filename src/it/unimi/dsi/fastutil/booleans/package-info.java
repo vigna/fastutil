@@ -1,15 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-  <head>
-    <title>fastutil</title>
-  </head>
-
-  <body>
-    <p>Provides type-specific classes for boolean elements or keys.
-
-    <p>Not all classes are provided in a boolean-specific version: sorted
-    sets and maps not generated (as they are completely
-    useless). Unsorted sets and maps are kept for orthogonality, whereas
-    {@link it.unimi.dsi.fastutil.booleans.BooleanCollection} is used by maps with boolean values.
-  </body>
-</html>
+/**
+ * Type-specific classes for boolean elements or keys.
+ *
+ * <p>
+ * Not all classes are provided in a boolean-specific version: sorted sets and maps not generated,
+ * as they are useless. Unsorted sets and maps are kept around for orthogonality, whereas
+ * {@link it.unimi.dsi.fastutil.booleans.BooleanCollection} is used by maps with boolean values.
+ */
+package it.unimi.dsi.fastutil.booleans;

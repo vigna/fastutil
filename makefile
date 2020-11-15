@@ -86,8 +86,8 @@ source: pom
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/makefile \
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
-		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
-		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
+		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package-info.java \
+		fastutil-$(version)/$(SOURCEDIR)/io/package-info.java \
 		fastutil-$(version)/src/overview.html \
 		$$(find fastutil-$(version)/test -iname \*.java)
 	rm fastutil-$(version)
