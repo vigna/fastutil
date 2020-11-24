@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.BigList;
 import it.unimi.dsi.fastutil.Size64;
 #if KEYS_REFERENCE
 import java.util.function.Consumer;
+import java.util.stream.Collector;
 #endif
 
 #if KEYS_PRIMITIVE
@@ -281,6 +282,64 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
 		return wrap(BigArrays.wrap(init));
 	}
+
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+	/** Collects the result of a primitive {@code Stream} into a new BigArrayBigList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	 public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC toBigList(JDK_PRIMITIVE_STREAM stream) {
+	 	return stream.collect(
+	 		BIG_ARRAY_BIG_LIST::new,
+	 		BIG_ARRAY_BIG_LIST::add,
+	 		BIG_ARRAY_BIG_LIST::addAll);
+	 }
+	 
+	/** Collects the result of a primitive {@code Stream} into a new BigArrayBigList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC toBigListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, long expectedSize) {
+		return stream.collect(
+			() -> new BIG_ARRAY_BIG_LIST KEY_GENERIC(expectedSize),
+			BIG_ARRAY_BIG_LIST::add,
+			BIG_ARRAY_BIG_LIST::addAll);
+	}
+#elif KEYS_REFERENCE
+	// Collector wants a function that returns the collection being added to.
+	private BIG_ARRAY_BIG_LIST KEY_GENERIC combine(BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC toAddFrom) {
+		addAll(toAddFrom);
+		return this;
+	}
+
+	private static final Collector<KEY_TYPE, ?, BIG_ARRAY_BIG_LIST<KEY_TYPE>> TO_LIST_COLLECTOR =
+		Collector.of(
+			BIG_ARRAY_BIG_LIST::new,
+			BIG_ARRAY_BIG_LIST::add,
+			BIG_ARRAY_BIG_LIST::combine); 
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, BIG_ARRAY_BIG_LIST KEY_GENERIC> toBigList() {
+		return (Collector) TO_LIST_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, BIG_ARRAY_BIG_LIST KEY_GENERIC> toBigListWithExpectedSize(long expectedSize) {
+ 		return Collector.of(
+		() -> new BIG_ARRAY_BIG_LIST KEY_GENERIC(expectedSize),
+		BIG_ARRAY_BIG_LIST::add,
+		BIG_ARRAY_BIG_LIST::combine);
+	}
+#endif
 
 
 	/** Ensures that this big-array big list can contain the given number of entries without resizing.
