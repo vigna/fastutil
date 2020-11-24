@@ -22,8 +22,9 @@ necessary classes.
 
 ## Building
 
-You have to "make sources" to get the actual Java sources; finally, "ant jar"
-and "ant javadoc" will generate the jar file and the API documentation.
+You have to "make sources" to get the actual Java sources; finally, "ant
+jar" will generate the jar file; "ant javadoc" will generate the API
+documentation; "ant junit" will run the unit tests.
 
 The Java sources are generated using a C preprocessor. The `gencsource.sh`
 script reads in a driver file, that is, a Java source that uses some
