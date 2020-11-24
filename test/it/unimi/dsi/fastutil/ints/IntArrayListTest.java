@@ -251,11 +251,44 @@ public class IntArrayListTest {
 		final IntArrayList l = IntArrayList.of(0, 1, 2);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);
 	}
-	
+
 	@Test
 	public void testToList() {
 		final IntArrayList baseList = IntArrayList.of(2, 380, 1297);
+		// Also conveniently serves as a test of the intStream and spliterator.
 		IntArrayList transformed = IntArrayList.toList(baseList.intStream().map(i -> i + 40));
 		assertEquals(IntArrayList.of(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntArrayList baseList = IntArrayList.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator willBeSuffix = baseList.spliterator();
+		assertEquals(baseList.size(), willBeSuffix.getExactSizeIfKnown());
+		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
+		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
+		IntSpliterator prefix = willBeSuffix.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
+		java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
+		java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
+
+		final IntArrayList prefixList = IntArrayList.toList(prefixStream);
+		final IntArrayList suffixList = IntArrayList.toList(suffixStream);
+		assertEquals(baseList.size(), prefixList.size() + suffixList.size());
+		assertEquals(baseList.subList(0, prefixList.size()), prefixList);
+		assertEquals(baseList.subList(prefixList.size(), baseList.size()), suffixList);
+		final IntArrayList recombinedList = new IntArrayList(baseList.size());
+		recombinedList.addAll(prefixList);
+		recombinedList.addAll(suffixList);
+		assertEquals(baseList, recombinedList);
+	}
+
+	@Test
+	public void testSpliteratorSkip() {
+		final IntArrayList baseList = IntArrayList.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator spliterator = baseList.spliterator();
+		assertEquals(1, spliterator.skip(1));
+		java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
+		assertEquals(baseList.subList(1, baseList.size()), IntArrayList.toList(stream));
 	}
 }

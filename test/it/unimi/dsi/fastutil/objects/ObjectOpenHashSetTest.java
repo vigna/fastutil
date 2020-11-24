@@ -83,6 +83,33 @@ public class ObjectOpenHashSetTest {
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2 }), s);
 	}
 
+	@Test
+	public void testToSet() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet.of("wood", "board", "glass", "metal");
+		ObjectOpenHashSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSet());
+		assertEquals(ObjectOpenHashSet.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet.of("0", "1", "2", "3", "4", "5", "bird");
+		ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport.stream(spliterator1, false);
+		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport.stream(spliterator2, false);
+
+		final ObjectOpenHashSet<String> subSet1 = stream1.collect(ObjectOpenHashSet.toSet());
+		// Intentionally collecting to a list for this second one.
+		final ObjectArrayList<String> subSet2 = stream2.collect(ObjectArrayList.toList());
+		assertEquals(baseSet.size(), subSet1.size() + subSet2.size());
+		final ObjectOpenHashSet<String> recombinedSet = new ObjectOpenHashSet<>(baseSet.size());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
+	}
+
 	private static java.util.Random r = new java.util.Random(0);
 
 	private static Object genKey() {
@@ -304,12 +331,5 @@ public class ObjectOpenHashSetTest {
 		assertTrue(s.add(a));
 		assertSame(a, s.get("a"));
 		assertNull(s.get("b"));
-	}
-
-	@Test
-	public void testToSet() {
-		final ObjectOpenHashSet<String> baseList = ObjectOpenHashSet.of("wood", "board", "glass", "metal");
-		ObjectOpenHashSet<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toList());
-		assertEquals(ObjectOpenHashSet.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
 	}
 }
