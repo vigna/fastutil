@@ -45,6 +45,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,6 +57,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
+@Ignore
 @RunWith(Parameterized.class)
 @SuppressWarnings("deprecation")
 public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {

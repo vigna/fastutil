@@ -86,8 +86,8 @@ source: pom
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/makefile \
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
-		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
-		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
+		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package-info.java \
+		fastutil-$(version)/$(SOURCEDIR)/io/package-info.java \
 		fastutil-$(version)/src/overview.html \
 		$$(find fastutil-$(version)/test -iname \*.java)
 	rm fastutil-$(version)
@@ -652,7 +652,7 @@ clean:
 	-@find build -name \*.class -exec rm {} \;
 	-@find . -name \*.java~ -exec rm {} \;
 	-@find . -name \*.html~ -exec rm {} \;
-	-@rm -f $(foreach k, $(sort $(TYPE)), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/*.java)
+	-@$(foreach k, $(sort $(TYPE)), find $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k)) -iname \*.java -and -not -iname \*-info.java -delete &&) true
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.[chj] $(GEN_SRCDIR)/$(PKG_PATH)/*/*.[chj]

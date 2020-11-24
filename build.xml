@@ -4,7 +4,6 @@
 
 	<property file="build.properties"/>
 	<property environment="env"/>
-	<property name="env.JAVA_HOME" value="/usr/java/latest"/>
 
 	<!-- ************************************** WARNING: MAVEN SH*T ************************************** -->
 
@@ -13,10 +12,8 @@
 	<property name="artifactId" value="fastutil" />
 	<property name="version" value="${version}" />
 
-	<property name="maven-jar" value="${dist}/lib/${artifactId}-${version}.jar" />
-
 	<!-- define artifacts' name, which follows the convention of Maven -->
-
+	<property name="maven-jar" value="${dist}/lib/${artifactId}-${version}.jar" />
 	<property name="maven-javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
 	<property name="maven-sources-jar" value="${dist}/lib/${artifactId}-${version}-sources.jar" />
 
@@ -34,7 +31,6 @@
 	</target>
 
 	<target name="osgi" depends="resolve,compile">
-		<delete dir="${build}/*.class"/>
 		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
 		<bnd
 			classpath="${build}"
@@ -120,6 +116,7 @@
 	<target name="init">
 		<mkdir dir="${build}"/>
 		<mkdir dir="${dist}/lib"/>
+		<mkdir dir="${reports}"/>
 		<symlink link="${dist}/javadoc" resource="../${docs}" overwrite="true"/>
 	</target>
 
@@ -129,8 +126,7 @@
 			deprecation="on"
 			optimize="on"
 			destdir="${build}"
-			memoryInitialSize="800M"
-			memoryMaximumSize="800M"
+			memoryMaximumSize="2G"
 			fork="yes"
 			source="1.8"
 			target="1.8">
@@ -143,9 +139,9 @@
 			debug="on"
 			deprecation="on"
 			optimize="on"
+			classpath="lib/junit-4.13.jar:lib"
 			destdir="${build}"
-			memoryInitialSize="800M"
-			memoryMaximumSize="800M"
+			memoryMaximumSize="2G"
 			fork="yes"
 			source="1.8"
 			target="1.8"
@@ -183,7 +179,7 @@
 			 source="1.8"
 			 windowtitle="fastutil ${version}"
 			 additionalparam="-breakiterator -Xmaxwarns 10000 -tag &quot;apiNote:a:API Note:&quot; -tag &quot;implSpec:a:Implementation Requirements:&quot; -tag &quot;implNote:a:Implementation Note:\&quot;"
-			 maxmemory="800M"
+			 maxmemory="2G"
 		>
 	<link href="${j2se.apiurl}"/>
 		</javadoc>
@@ -193,7 +189,9 @@
 		<junit printsummary="yes" fork="yes" haltonfailure="off"  haltonerror="off">
 			<classpath location="${build}"/>
 			<classpath location="${src}"/>
-			<jvmarg value="-Xmx1G" />
+			<classpath location="lib/junit-4.13.jar"/>
+			<classpath location="lib/hamcrest-all-1.3.jar"/>
+			<jvmarg value="-Xmx3G" />
 
 			<assertions><enable/></assertions>
 

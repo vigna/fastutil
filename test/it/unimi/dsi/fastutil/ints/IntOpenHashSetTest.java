@@ -59,6 +59,26 @@ public class IntOpenHashSetTest {
 	}
 
 	@Test
+	public void testEqualsSameType() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		assertTrue(s.equals(new IntOpenHashSet(new int[] { 1, 2, 3 })));
+	}
+
+	@SuppressWarnings("unlikely-arg-type")
+	@Test
+	public void testEqualsIntSetType() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		assertTrue(s.equals(new IntArraySet(new int[] { 1, 2, 3 })));
+	}
+
+	@SuppressWarnings({ "boxing", "unlikely-arg-type" })
+	@Test
+	public void testEqualsObjectSet() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		assertTrue(s.equals(new ObjectOpenHashSet<>(new Integer[] { 1, 2, 3 })));
+	}
+
+	@Test
 	public void testInfiniteLoop1() {
 		final IntOpenHashSet set = new IntOpenHashSet();
 		set.add(1);

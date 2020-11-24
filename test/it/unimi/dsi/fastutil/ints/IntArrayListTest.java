@@ -142,6 +142,25 @@ public class IntArrayListTest {
 		assertEquals(IntArrayList.wrap(new int[] { 24, 86, 42 }), list);
 	}
 
+	public void testAddAll() {
+		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1 });
+		l.addAll(IntArrayList.wrap(new int[] { 2, 3 } ));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2, 3 }), l);
+		// Test object based lists still work too.
+		l.addAll(java.util.Arrays.asList(4, 5));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2, 3, 4, 5 }), l);
+	}
+
+	@Test
+	public void testAddAllAtIndex() {
+		IntArrayList l = IntArrayList.wrap(new int[] { 0, 3 });
+		l.addAll(1, IntArrayList.wrap(new int[] { 1, 2 } ));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2, 3 }), l);
+		// Test object based lists still work too.
+		l.addAll(2, java.util.Arrays.asList(4, 5));
+		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 4, 5, 2, 3 }), l);
+	}
+
 	@Test
 	public void testRemoveAll() {
 		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
