@@ -231,6 +231,12 @@ $(PAIRS): drv/Pair.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(PAIRS)
 
+SORTED_PAIRS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(k)SortedPair.c)
+$(SORTED_PAIRS): drv/SortedPair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SORTED_PAIRS)
+
+
 #
 # Abstract implementations
 #
@@ -453,6 +459,11 @@ IMMUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG
 $(IMMUTABLE_PAIRS): drv/ImmutablePair.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(IMMUTABLE_PAIRS)
+
+IMMUTABLE_SORTED_PAIRS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(k)ImmutableSortedPair.c)
+$(IMMUTABLE_SORTED_PAIRS): drv/ImmutableSortedPair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_SORTED_PAIRS)
 
 
 #

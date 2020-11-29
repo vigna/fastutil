@@ -345,11 +345,14 @@ fi)\
 "#define SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
 "#if KEY_CLASS_Object && VALUE_CLASS_Object\n"\
 "#define PAIR it.unimi.dsi.fastutil.Pair\n"\
+"#define SORTED_PAIR it.unimi.dsi.fastutil.SortedPair\n"\
 "#else\n"\
 "#define PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}Pair\n"\
+"#define SORTED_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}SortedPair\n"\
 "#endif\n"\
 "#define MUTABLE_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}MutablePair\n"\
 "#define IMMUTABLE_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}ImmutablePair\n"\
+"#define IMMUTABLE_SORTED_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$k]}ImmutableSortedPair\n"\
 "#if KEYS_REFERENCE\n"\
 "#define STD_SORTED_MAP SortedMap\n"\
 "#define STRATEGY Strategy\n"\

@@ -22,12 +22,12 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
  * A pair of elements.
  *
  * <p>
- * An instance of this class stores a pair of elements &lt;<var>l</var>, <var>r</var>&gt;, where
+ * This inferface gives access to a pair of elements &lt;<var>l</var>, <var>r</var>&gt;, where
  * <var>l</var> is the {@linkplain #left() <em>left element</em>} and <var>r</var> is the
  * {@linkplain #right() <em>right element</em>}. Mutability is optional.
  *
  * <p>
- * Since pairs have many different interpretation depending on the context, this class offers
+ * Since pairs have many different interpretation depending on the context, this interface offers
  * alternative but equivalent access methods based on {@linkplain #first()
  * first}/{@linkplain #second() second} and {@linkplain #key() key}/{@linkplain #value() value}. All
  * such methods have default implementations that delegates to the standard methods. Implementations
