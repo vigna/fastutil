@@ -226,6 +226,11 @@ $(BIG_LIST_ITERATORS): drv/BigListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS)
 
+PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)Pair.c))
+$(PAIRS): drv/Pair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(PAIRS)
+
 #
 # Abstract implementations
 #
@@ -439,6 +444,16 @@ $(ARRAY_INDIRECT_PRIORITY_QUEUES): drv/ArrayIndirectPriorityQueue.drv; ./gencsou
 
 CSOURCES += $(ARRAY_INDIRECT_PRIORITY_QUEUES)
 
+MUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)MutablePair.c))
+$(MUTABLE_PAIRS): drv/MutablePair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(MUTABLE_PAIRS)
+
+IMMUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)ImmutablePair.c))
+$(IMMUTABLE_PAIRS): drv/ImmutablePair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_PAIRS)
+
 
 #
 # Static containers
@@ -644,5 +659,6 @@ clean:
 	-@rm -fr $(DOCSDIR)/*
 
 sources: $(JSOURCES)
+	rm $(GEN_SRCDIR)/it/unimi/dsi/fastutil/objects/ObjectObjectPair.java
 
 csources: $(CSOURCES)

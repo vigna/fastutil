@@ -56,14 +56,17 @@ KEY_TYPE_CAP=${class:0:$keylen}
 VALUE_TYPE_CAP=Object # Just for filling holes
 
 if [[ "${rem:0:1}" == "2" ]]; then
-    isFunction=true
     rem=${rem:1}
     rem2=${rem##[A-Z]+([a-z])}
     valuelen=$(( ${#rem} - ${#rem2} ))
     VALUE_TYPE_CAP=${rem:0:$valuelen}
     root=$rem2
-else
-    isFunction=false
+fi
+
+if [[ "$class" == *Pair ]]; then
+    rem2=${rem##[A-Z]+([a-z])}
+    valuelen=$(( ${#rem} - ${#rem2} ))
+    VALUE_TYPE_CAP=${rem:0:$valuelen}
 fi
 
 for((k=0; k<${#TYPE_CAP[*]}; k++)); do
@@ -340,6 +343,13 @@ fi)\
 "#define FUNCTION ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 "#define SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
+"#if KEY_CLASS_Object && VALUE_CLASS_Object\n"\
+"#define PAIR it.unimi.dsi.fastutil.Pair\n"\
+"#else\n"\
+"#define PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}Pair\n"\
+"#endif\n"\
+"#define MUTABLE_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}MutablePair\n"\
+"#define IMMUTABLE_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}ImmutablePair\n"\
 "#if KEYS_REFERENCE\n"\
 "#define STD_SORTED_MAP SortedMap\n"\
 "#define STRATEGY Strategy\n"\
@@ -515,6 +525,9 @@ fi)\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
+"#define PAIR_LEFT left${TYPE_STD[$k]}\n"\
+"#define PAIR_FIRST first${TYPE_STD[$k]}\n"\
+"#define PAIR_KEY key${TYPE_STD[$k]}\n"\
 "#define REMOVE_KEY remove${TYPE_STD[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP2[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP2[$k]}\n"\
@@ -550,6 +563,9 @@ fi)\
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
 "#define REMOVE_FIRST_VALUE removeFirst${TYPE_STD[$v]}\n"\
 "#define REMOVE_LAST_VALUE removeLast${TYPE_STD[$v]}\n"\
+"#define PAIR_RIGHT right${TYPE_STD[$v]}\n"\
+"#define PAIR_SECOND second${TYPE_STD[$v]}\n"\
+"#define PAIR_VALUE value${TYPE_STD[$v]}\n"\
 \
 \
 "/* Methods (keys/values) */\n"\
