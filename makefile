@@ -628,6 +628,8 @@ SOURCES = \
 	$(SOURCEDIR)/BigList.java \
 	$(SOURCEDIR)/BigListIterator.java \
 	$(SOURCEDIR)/PriorityQueue.java \
+	$(SOURCEDIR)/Pair.java \
+	$(SOURCEDIR)/SortedPair.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/Swapper.java \
