@@ -45,10 +45,10 @@ public interface SortedPair<K extends Comparable<K>> extends Pair<K, K> {
 	 * <p>
 	 * Note that if {@code left} and {@code right} are in the wrong order, they will be exchanged.
 	 *
-	 * @param left the left value.
-	 * @param right the right value.
+	 * @param l the left value.
+	 * @param r the right value.
 	 *
-	 * @implSpec This factory method delegates to
+	 * @implNote This factory method delegates to
 	 *           {@link ObjectObjectImmutablePair#of(Object, Object)}.
 	 */
 	public static <K extends Comparable<K>> SortedPair<K> of(final K l, final K r) {

@@ -68,7 +68,7 @@ public interface Pair<L, R> {
 	 *
 	 * @param l a new value for the left element.
 	 *
-	 * @implSpec This implementation throws an {@link UnsupportedOperationException}.
+	 * @implNote This implementation throws an {@link UnsupportedOperationException}.
 	 */
 	public default Pair<L, R> left(final L l) {
 		throw new UnsupportedOperationException();
@@ -79,7 +79,7 @@ public interface Pair<L, R> {
 	 *
 	 * @param r a new value for the right element.
 	 *
-	 * @implSpec This implementation throws an {@link UnsupportedOperationException}.
+	 * @implNote This implementation throws an {@link UnsupportedOperationException}.
 	 */
 	public default Pair<L, R> right(final R r) {
 		throw new UnsupportedOperationException();
@@ -90,7 +90,7 @@ public interface Pair<L, R> {
 	 *
 	 * @return the left element of this pair.
 	 *
-	 * @implSpec This implementation delegates to {@link #left()}.
+	 * @implNote This implementation delegates to {@link #left()}.
 	 *
 	 */
 	public default L first() {
@@ -102,7 +102,7 @@ public interface Pair<L, R> {
 	 *
 	 * @return the right element of this pair.
 	 *
-	 * @implSpec This implementation delegates to {@link #right()}.
+	 * @implNote This implementation delegates to {@link #right()}.
 	 *
 	 */
 	public default R second() {
@@ -114,7 +114,7 @@ public interface Pair<L, R> {
 	 *
 	 * @param l a new value for the left element.
 	 *
-	 * @implSpec This implementation delegates to {@link #left(Object)}.
+	 * @implNote This implementation delegates to {@link #left(Object)}.
 	 */
 	public default Pair<L, R> first(final L l) {
 		return left(l);
@@ -123,9 +123,9 @@ public interface Pair<L, R> {
 	/**
 	 * Sets the right element of this pair (optional operation).
 	 *
-	 * @param l a new value for the right element.
+	 * @param r a new value for the right element.
 	 *
-	 * @implSpec This implementation delegates to {@link #right(Object)}.
+	 * @implNote This implementation delegates to {@link #right(Object)}.
 	 */
 	public default Pair<L, R> second(final R r) {
 		return right(r);
@@ -136,7 +136,7 @@ public interface Pair<L, R> {
 	 *
 	 * @param l a new value for the left element.
 	 *
-	 * @implSpec This implementation delegates to {@link #left(Object)}.
+	 * @implNote This implementation delegates to {@link #left(Object)}.
 	 */
 	public default Pair<L, R> key(final L l) {
 		return left(l);
@@ -145,9 +145,9 @@ public interface Pair<L, R> {
 	/**
 	 * Sets the right element of this pair (optional operation).
 	 *
-	 * @param l a new value for the right element.
+	 * @param r a new value for the right element.
 	 *
-	 * @implSpec This implementation delegates to {@link #right(Object)}.
+	 * @implNote This implementation delegates to {@link #right(Object)}.
 	 */
 	public default Pair<L, R> value(final R r) {
 		return right(r);
@@ -158,7 +158,7 @@ public interface Pair<L, R> {
 	 *
 	 * @return the left element of this pair.
 	 *
-	 * @implSpec This implementation delegates to {@link #left()}.
+	 * @implNote This implementation delegates to {@link #left()}.
 	 *
 	 */
 	public default L key() {
@@ -170,7 +170,7 @@ public interface Pair<L, R> {
 	 *
 	 * @return the right element of this pair.
 	 *
-	 * @implSpec This implementation delegates to {@link #right()}.
+	 * @implNote This implementation delegates to {@link #right()}.
 	 *
 	 */
 	public default R value() {
@@ -181,10 +181,10 @@ public interface Pair<L, R> {
 	 * Returns a new immutable {@link it.unimi.dsi.fastutil.Pair Pair} with given left and right
 	 * value.
 	 *
-	 * @param left the left value.
-	 * @param right the right value.
+	 * @param l the left value.
+	 * @param r the right value.
 	 *
-	 * @implSpec This factory method returns an instance of {@link ObjectObjectImmutablePair}.
+	 * @implNote This factory method returns an instance of {@link ObjectObjectImmutablePair}.
 	 */
 	public static <L, R> Pair<L, R> of(final L l, final R r) {
 		return new ObjectObjectImmutablePair<>(l, r);
