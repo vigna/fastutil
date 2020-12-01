@@ -33,7 +33,7 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutableSortedPair;
  * canonicalization. Note that, in particular, if you build a sorted pair using a left and right
  * element in the wrong order they will be exchanged.
  *
- * @param K the type of the elements.
+ * @param <K> the type of the elements.
  */
 
 public interface SortedPair<K extends Comparable<K>> extends Pair<K, K> {

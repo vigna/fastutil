@@ -43,8 +43,8 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
  *
  * and, if necessary, pass this value to a method.
  *
- * @param L the type of the left element.
- * @param R the type of the right element.
+ * @param <L> the type of the left element.
+ * @param <R> the type of the right element.
  */
 
 public interface Pair<L, R> {
