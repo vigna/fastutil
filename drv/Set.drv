@@ -96,14 +96,84 @@ public interface SET KEY_GENERIC extends COLLECTION KEY_GENERIC, Set<KEY_GENERIC
 
 #endif
 
-	/** Creates a new set using a list of elements.
-	 *
-	 * @param a a list of elements that will be used to initialize the new set.
-	 */
 
+	/** Returns an immutable empty set. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public static KEY_GENERIC SET KEY_GENERIC of() {
+		return SETS.EMPTY_SET;
+	}
+
+	/** Returns an immutable set with the element given. */
+	public static KEY_GENERIC SET KEY_GENERIC of(KEY_GENERIC_TYPE e) {
+		return SETS.singleton(e);
+	}
+
+	/**
+	 * Returns an immutable set with the elements given.
+	 *
+	 * @param e1 the first element
+	 * @param e2 the second element
+	 * @throws IllegalArgumentException if there were duplicate entries.
+	 */
+	public static KEY_GENERIC SET KEY_GENERIC of(KEY_GENERIC_TYPE e1, KEY_GENERIC_TYPE e2) {
+		ARRAY_SET KEY_GENERIC innerSet = new ARRAY_SET KEY_GENERIC_DIAMOND(2);
+		innerSet.add(e1);
+		if (!innerSet.add(e2)) {
+			throw new IllegalArgumentException("Duplicate element: " + e2);
+		}
+		return SETS.unmodifiable(innerSet);
+	}
+
+	/**
+	 * Returns an immutable set with the elements given.
+	 *
+	 * @param e1 the first element
+	 * @param e2 the second element
+	 * @param e3 the third element
+	 * @throws IllegalArgumentException if there were duplicate entries.
+	 */
+	public static KEY_GENERIC SET KEY_GENERIC of(KEY_GENERIC_TYPE e1, KEY_GENERIC_TYPE e2, KEY_GENERIC_TYPE e3) {
+		ARRAY_SET KEY_GENERIC innerSet = new ARRAY_SET KEY_GENERIC_DIAMOND(3);
+		innerSet.add(e1);
+		if (!innerSet.add(e2)) {
+			throw new IllegalArgumentException("Duplicate element: " + e2);
+		}
+		if (!innerSet.add(e3)) {
+			throw new IllegalArgumentException("Duplicate element: " + e3);
+		}
+		return SETS.unmodifiable(innerSet);
+	}
+
+	/**
+	 * Returns an immutable list with the elements given.
+	 *
+	 * @param elements the list of elements that will be in the final set
+	 * @throws IllegalArgumentException if there are any duplicate entries
+	 */
 	@SafeVarargs
-	public static KEY_GENERIC SET KEY_GENERIC of(final KEY_GENERIC_TYPE... a) {
-		return new OPEN_HASH_SET KEY_GENERIC(a);
+	public static KEY_GENERIC SET KEY_GENERIC of(KEY_GENERIC_TYPE... elements) {
+		switch(elements.length) {
+			case 0:
+				return of();
+			case 1:
+				return of(elements[0]);
+			case 2:
+				return of(elements[0], elements[1]);
+			case 3:
+				return of(elements[0], elements[1], elements[2]);
+			default:
+				// fall through
+		}
+		// Will copy, but that is the only way we assure immutability.
+		SET KEY_GENERIC innerSet = elements.length <= SETS.ARRAY_SET_CUTOFF ?
+			new ARRAY_SET KEY_GENERIC_DIAMOND(elements.length) :
+			new OPEN_HASH_SET KEY_GENERIC_DIAMOND(elements.length, 1.0f);
+		for (KEY_GENERIC_TYPE element : elements) {
+			if (!innerSet.add(element)) {
+				throw new IllegalArgumentException("Duplicate element: " + element);
+			}
+		}
+		return SETS.unmodifiable(innerSet);
 	}
 
 }

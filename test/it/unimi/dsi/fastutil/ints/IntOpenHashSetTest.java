@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 @SuppressWarnings("rawtypes")
@@ -304,6 +305,23 @@ public class IntOpenHashSetTest {
 	public void testOf() {
 		final IntOpenHashSet s = IntOpenHashSet.of(0, 1, 2);
 		assertEquals(new IntOpenHashSet(new int[] { 0, 1, 2 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final IntOpenHashSet s = IntOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntOpenHashSet s = IntOpenHashSet.of(0);
+		assertEquals(new IntOpenHashSet(new int[] { 0 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		IntOpenHashSet.of(0, 0);
 	}
 
 	@SuppressWarnings("boxing")

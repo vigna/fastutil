@@ -79,8 +79,37 @@ public class ObjectOpenHashSetTest {
 
 	@Test
 	public void testOf() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(1), Long.valueOf(2));
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l, 1l, 2l, 3l);
+		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2, 3 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l);
+		assertEquals(new LongOpenHashSet(new long[] { 0 }), s);
+	}
+
+	@Test
+	public void testOfPair() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l, 1l);
+		assertEquals(new LongOpenHashSet(new long[] { 0, 1 }), s);
+	}
+
+	@Test
+	public void testOfTriplet() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l, 1l, 2l);
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(0));
 	}
 
 	private static java.util.Random r = new java.util.Random(0);

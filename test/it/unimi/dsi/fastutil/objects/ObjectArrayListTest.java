@@ -45,4 +45,22 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<Integer> l = new ObjectArrayList<>();
 		l.size(100);
 	}
+
+	@Test
+	public void testOf() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		assertEquals(ObjectArrayList.wrap(new String[] { "0", "1", "2" }), l);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectArrayList<String> l = ObjectArrayList.of();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0");
+		assertEquals(ObjectArrayList.wrap(new String[] { "0" }), l);
+	}
 }

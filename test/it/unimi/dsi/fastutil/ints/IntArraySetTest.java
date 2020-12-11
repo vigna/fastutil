@@ -133,4 +133,52 @@ public class IntArraySetTest {
 		assertFalse(iterator.hasNext());
 		assertEquals(new IntArraySet(new int[] { 42, 44 }), set);
 	}
+
+	@Test
+	public void testOf() {
+		final IntArraySet s = IntArraySet.of(0, 1, 2);
+		assertEquals(new IntArraySet(new int[] { 0, 1, 2 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final IntArraySet s = IntArraySet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntArraySet s = IntArraySet.of(0);
+		assertEquals(new IntArraySet(new int[] { 0 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		IntArraySet.of(0, 0);
+	}
+
+	@Test
+	public void testOfUnchecked() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 1, 2);
+		assertEquals(new IntArraySet(new int[] { 0, 1, 2 }), s);
+	}
+
+	@Test
+	public void testOfUncheckedEmpty() {
+		final IntArraySet s = IntArraySet.ofUnchecked();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfUnchekedSingleton() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0);
+		assertEquals(new IntArraySet(new int[] { 0 }), s);
+	}
+
+	@Test
+	public void testOfUnchekedDuplicatesNotDetected() {
+		// A IntArraySet in an invalid state that by spec we aren't checking for in this method.
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 0);
+		assertEquals(new IntArraySet(new int[] { 0 , 0 }), s);
+	}
 }

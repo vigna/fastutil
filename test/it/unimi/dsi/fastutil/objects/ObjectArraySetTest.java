@@ -130,4 +130,52 @@ public class ObjectArraySetTest {
 		assertFalse(iterator.hasNext());
 		assertEquals(new ObjectArraySet<Integer>(new Integer[] { 42, 44 }), set);
 	}
+
+	@Test
+	public void testOf() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		assertEquals(new ObjectArraySet<>(new String[] { "0", "1", "2" }), l);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectArraySet<String> l = ObjectArraySet.of();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0");
+		assertEquals(new ObjectArraySet<>(new String[] { "0" }), l);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		ObjectArraySet.of("0", "0");
+	}
+
+	@Test
+	public void testOfUnchecked() {
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0", "1", "2");
+		assertEquals(new ObjectArraySet<>(new String[] { "0", "1", "2" }), l);
+	}
+
+	@Test
+	public void testOfUncheckedEmpty() {
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfUnchekedSingleton() {
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0");
+		assertEquals(new ObjectArraySet<>(new String[] { "0" }), l);
+	}
+
+	@Test
+	public void testOfUnchekedDuplicatesNotDetected() {
+		// A ObjectArraySet in an invalid state that by spec we aren't checking for in this method.
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0", "0");
+		assertEquals(new ObjectArraySet<>(new String[] { "0" , "0" }), l);
+	}
 }
