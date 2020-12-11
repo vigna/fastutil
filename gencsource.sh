@@ -472,6 +472,7 @@ fi)\
 "#define AVL_TREE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AVLTreeMap\n"\
 "#define RB_TREE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}RBTreeMap\n"\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n"\
+"#define IMMUTABLE_LIST ${TYPE_CAP[$k]}ImmutableList\n"\
 "#define BIG_ARRAY_BIG_LIST ${TYPE_CAP[$k]}BigArrayBigList\n"\
 "#define ARRAY_FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n"\
 "#define ARRAY_FRONT_CODED_BIG_LIST ${TYPE_CAP[$k]}ArrayFrontCodedBigList\n"\

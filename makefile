@@ -410,6 +410,11 @@ $(BIG_ARRAY_BIG_LISTS): drv/BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAY_BIG_LISTS)
 
+IMMUTABLE_LISTS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ImmutableList.c)
+$(IMMUTABLE_LISTS): drv/ImmutableList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_LISTS)
+
 FRONT_CODED_LISTS := $(foreach k, $(if $(SMALL_TYPES),Byte Short Char,) Int Long, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
 $(FRONT_CODED_LISTS): drv/ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
