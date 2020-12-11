@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.floats;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.floats;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.floats;
 
 import static org.junit.Assert.assertTrue;
 
@@ -65,7 +65,7 @@ public class FloatArraysTest {
 
 	@Test
 	public void testRadixSort2() {
-		float[][] d = new float[2][];
+		final float[][] d = new float[2][];
 
 		d[0] = new float[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;
@@ -106,7 +106,7 @@ public class FloatArraysTest {
 
 	@Test
 	public void testRadixSort() {
-		float[][] t = { { 2, 1, 0, 4 } };
+		final float[][] t = { { 2, 1, 0, 4 } };
 		FloatArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
@@ -114,7 +114,7 @@ public class FloatArraysTest {
 		FloatArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
-		float[][] d = new float[2][];
+		final float[][] d = new float[2][];
 
 		d[0] = new float[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;

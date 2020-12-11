@@ -1,7 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
-import static org.junit.Assert.assertEquals;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -18,10 +14,10 @@ import static org.junit.Assert.assertEquals;
  * limitations under the License.
  */
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+package it.unimi.dsi.fastutil.ints;
 
-import java.util.RandomAccess;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -49,7 +45,7 @@ public class IntListTest {
 		final IntList l = IntList.of(0, 1);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1 }), l);
 	}
-	
+
 	@Test
 	public void testOfTriplet() {
 		final IntList l = IntList.of(0, 1, 2);

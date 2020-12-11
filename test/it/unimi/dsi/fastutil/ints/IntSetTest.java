@@ -1,8 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -19,7 +14,9 @@ import static org.junit.Assert.assertFalse;
  * limitations under the License.
  */
 
-import static org.junit.Assert.assertNull;
+package it.unimi.dsi.fastutil.ints;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -35,6 +32,7 @@ public class IntSetTest {
 	public void testOfEmpty() {
 		final IntSet s = IntSet.of();
 		assertTrue(s.isEmpty());
+
 	}
 
 	@Test
@@ -53,7 +51,7 @@ public class IntSetTest {
 	public void testOfTriplet() {
 		final IntSet s = IntSet.of(0, 1, 2);
 		assertEquals(new IntOpenHashSet(new int[] { 0, 1, 2 }), s);
-	}	
+	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOfDuplicateThrows() {

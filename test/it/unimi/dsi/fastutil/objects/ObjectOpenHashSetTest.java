@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.objects;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.objects;
 
 
 import static org.junit.Assert.assertEquals;
@@ -79,7 +79,7 @@ public class ObjectOpenHashSetTest {
 
 	@Test
 	public void testOf() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l, 1l, 2l, 3l);
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l), Long.valueOf(2l), Long.valueOf(3l));
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2, 3 }), s);
 	}
 
@@ -91,19 +91,19 @@ public class ObjectOpenHashSetTest {
 
 	@Test
 	public void testOfSingleton() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l);
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l));
 		assertEquals(new LongOpenHashSet(new long[] { 0 }), s);
 	}
 
 	@Test
 	public void testOfPair() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l, 1l);
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l));
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1 }), s);
 	}
 
 	@Test
 	public void testOfTriplet() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(0l, 1l, 2l);
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l), Long.valueOf(2l));
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2 }), s);
 	}
 

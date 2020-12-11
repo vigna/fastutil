@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,15 +14,18 @@ package it.unimi.dsi.fastutil.objects;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.objects;
 
-import it.unimi.dsi.fastutil.Hash;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Map;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import it.unimi.dsi.fastutil.Hash;
 
 @SuppressWarnings({"rawtypes","deprecation"})
 public class Object2IntOpenHashMapTest {
@@ -39,14 +40,14 @@ public class Object2IntOpenHashMapTest {
 		return r.nextInt();
 	}
 
-	private static boolean valEquals(Object o1, Object o2) {
+	private static boolean valEquals(final Object o1, final Object o2) {
 		return o1 == null ? o2 == null : o1.equals(o2);
 	}
 
 	@SuppressWarnings("unchecked")
-	protected static void test(int n, float f) throws IOException, ClassNotFoundException {
+	protected static void test(final int n, final float f) throws IOException, ClassNotFoundException {
 		Object2IntOpenHashMap m = new Object2IntOpenHashMap(Hash.DEFAULT_INITIAL_SIZE, f);
-		Map t = new java.util.HashMap();
+		final Map t = new java.util.HashMap();
 		/* First of all, we fill t with random data. */
 		for (int i = 0; i < n; i++)
 			t.put((genKey()), (Integer.valueOf(genValue())));
@@ -55,36 +56,34 @@ public class Object2IntOpenHashMapTest {
 		assertTrue("Error: !m.equals(t) after insertion", m.equals(t));
 		assertTrue("Error: !t.equals(m) after insertion", t.equals(m));
 		/* Now we check that m actually holds that data. */
-		for (java.util.Iterator i = t.entrySet().iterator(); i.hasNext();) {
-			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		for (final Object element : t.entrySet()) {
+			final java.util.Map.Entry e = (java.util.Map.Entry)element;
 			assertTrue("Error: m and t differ on an entry (" + e + ") after insertion (iterating on t)", valEquals(e.getValue(), m.get(e.getKey())));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for (java.util.Iterator i = m.entrySet().iterator(); i.hasNext();) {
-			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		for (final java.util.Iterator i = m.entrySet().iterator(); i.hasNext();) {
+			final java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			assertTrue("Error: m and t differ on an entry (" + e + ") after insertion (iterating on m)", valEquals(e.getValue(), t.get(e.getKey())));
 		}
 		/* Now we check that m actually holds the same keys. */
-		for (java.util.Iterator i = t.keySet().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final Object o : t.keySet()) {
 			assertTrue("Error: m and t differ on a key (" + o + ") after insertion (iterating on t)", m.containsKey(o));
 			assertTrue("Error: m and t differ on a key (" + o + ", in keySet()) after insertion (iterating on t)", m.keySet().contains(o));
 		}
 		/* Now we check that m actually holds the same keys, but iterating on m. */
-		for (java.util.Iterator i = m.keySet().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final java.util.Iterator i = m.keySet().iterator(); i.hasNext();) {
+			final Object o = i.next();
 			assertTrue("Error: m and t differ on a key after insertion (iterating on m)", t.containsKey(o));
 			assertTrue("Error: m and t differ on a key (in keySet()) after insertion (iterating on m)", t.keySet().contains(o));
 		}
 		/* Now we check that m actually hold the same values. */
- 		for (java.util.Iterator i = t.values().iterator(); i.hasNext();) {
-			Object o = i.next();
+ 		for (final Object o : t.values()) {
 			assertTrue("Error: m and t differ on a value after insertion (iterating on t)", m.containsValue(o));
 			assertTrue("Error: m and t differ on a value (in values()) after insertion (iterating on t)", m.values().contains(o));
 		}
 		/* Now we check that m actually hold the same values, but iterating on m. */
-		for (java.util.Iterator i = m.values().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final java.util.Iterator i = m.values().iterator(); i.hasNext();) {
+			final Object o = i.next();
 			assertTrue("Error: m and t differ on a value after insertion (iterating on m)", t.containsValue(o));
 			assertTrue("Error: m and t differ on a value (in values()) after insertion (iterating on m)", t.values().contains(o));
 		}
@@ -93,7 +92,7 @@ public class Object2IntOpenHashMapTest {
 		 * use the polymorphic method.
 		 */
 		for (int i = 0; i < n; i++) {
-			Object T = genKey();
+			final Object T = genKey();
 			assertFalse("Error: divergence in keys between t and m (polymorphic method)", m.containsKey((T)) != t.containsKey((T)));
 			assertFalse("Error: divergence between t and m (polymorphic method)", (m.getInt(T) != (0)) != ((t.get((T)) == null ? (0) : ((((Integer)(t.get((T)))).intValue()))) != (0)) ||
 					t.get((T)) != null &&
@@ -104,13 +103,13 @@ public class Object2IntOpenHashMapTest {
 		 * m we use the standard method.
 		 */
 		for (int i = 0; i < n; i++) {
-			Object T = genKey();
+			final Object T = genKey();
 			assertTrue("Error: divergence between t and m (standard method)", valEquals(m.get((T)), t.get((T))));
 		}
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
 		for (int i = 0; i < 20 * n; i++) {
 			Object T = genKey();
-			int U = genValue();
+			final int U = genValue();
 			assertTrue("Error: divergence in put() between t and m", valEquals(m.put((T), (Integer.valueOf(U))), t.put((T), (Integer.valueOf(U)))));
 			T = genKey();
 			assertTrue("Error: divergence in remove() between t and m", valEquals(m.remove((T)), t.remove((T))));
@@ -118,61 +117,58 @@ public class Object2IntOpenHashMapTest {
 		assertTrue("Error: !m.equals(t) after removal", m.equals(t));
 		assertTrue("Error: !t.equals(m) after removal", t.equals(m));
 		/* Now we check that m actually holds the same data. */
-		for (java.util.Iterator i = t.entrySet().iterator(); i.hasNext();) {
-			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		for (final Object element : t.entrySet()) {
+			final java.util.Map.Entry e = (java.util.Map.Entry)element;
 			assertTrue("Error: m and t differ on an entry (" + e + ") after removal (iterating on t)", valEquals(e.getValue(), m.get(e.getKey())));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for (java.util.Iterator i = m.entrySet().iterator(); i.hasNext();) {
-			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+		for (final java.util.Iterator i = m.entrySet().iterator(); i.hasNext();) {
+			final java.util.Map.Entry e = (java.util.Map.Entry)i.next();
 			assertTrue("Error: m and t differ on an entry (" + e + ") after removal (iterating on m)", valEquals(e.getValue(), t.get(e.getKey())));
 		}
 		/* Now we check that m actually holds the same keys. */
-		for (java.util.Iterator i = t.keySet().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final Object o : t.keySet()) {
 			assertTrue("Error: m and t differ on a key (" + o + ") after removal (iterating on t)", m.containsKey(o));
 			assertTrue("Error: m and t differ on a key (" + o + ", in keySet()) after removal (iterating on t)", m.keySet().contains(o));
 		}
 		/* Now we check that m actually holds the same keys, but iterating on m. */
-		for (java.util.Iterator i = m.keySet().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final java.util.Iterator i = m.keySet().iterator(); i.hasNext();) {
+			final Object o = i.next();
 			assertTrue("Error: m and t differ on a key after removal (iterating on m)", t.containsKey(o));
 			assertTrue("Error: m and t differ on a key (in keySet()) after removal (iterating on m)", t.keySet().contains(o));
 		}
 		/* Now we check that m actually hold the same values. */
-		for (java.util.Iterator i = t.values().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final Object o : t.values()) {
 			assertTrue("Error: m and t differ on a value after removal (iterating on t)", m.containsValue(o));
 			assertTrue("Error: m and t differ on a value (in values()) after removal (iterating on t)", m.values().contains(o));
 		}
 		/* Now we check that m actually hold the same values, but iterating on m. */
-		for (java.util.Iterator i = m.values().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final java.util.Iterator i = m.values().iterator(); i.hasNext();) {
+			final Object o = i.next();
 			assertTrue("Error: m and t differ on a value after removal (iterating on m)", t.containsValue(o));
 			assertTrue("Error: m and t differ on a value (in values()) after removal (iterating on m)", t.values().contains(o));
 		}
-		int h = m.hashCode();
+		final int h = m.hashCode();
 		/* Now we save and read m. */
-		java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + m.getClass().getSimpleName() + "." + n);
-		java.io.OutputStream os = new java.io.FileOutputStream(ff);
-		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+		final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + m.getClass().getSimpleName() + "." + n);
+		final java.io.OutputStream os = new java.io.FileOutputStream(ff);
+		final java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 		oos.writeObject(m);
 		oos.close();
-		java.io.InputStream is = new java.io.FileInputStream(ff);
-		java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+		final java.io.InputStream is = new java.io.FileInputStream(ff);
+		final java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 		m = (Object2IntOpenHashMap)ois.readObject();
 		ois.close();
 		ff.delete();
 		assertTrue("Error: hashCode() changed after save/read", m.hashCode() == h);
 		/* Now we check that m actually holds that data. */
-		for (java.util.Iterator i = t.keySet().iterator(); i.hasNext();) {
-			Object o = i.next();
+		for (final Object o : t.keySet()) {
 			assertTrue("Error: m and t differ on an entry after save/read", valEquals(m.get(o), t.get(o)));
 		}
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
 		for (int i = 0; i < 20 * n; i++) {
 			Object T = genKey();
-			int U = genValue();
+			final int U = genValue();
 			assertTrue("Error: divergence in put() between t and m after save/read", valEquals(m.put((T), (Integer.valueOf(U))), t.put((T), (Integer.valueOf(U)))));
 			T = genKey();
 			assertTrue("Error: divergence in remove() between t and m after save/read", valEquals(m.remove((T)), t.remove((T))));
@@ -180,8 +176,7 @@ public class Object2IntOpenHashMapTest {
 		assertTrue("Error: !m.equals(t) after post-save/read removal", m.equals(t));
 		assertTrue("Error: !t.equals(m) after post-save/read removal", t.equals(m));
 		/* Now we take out of m everything, and check that it is empty. */
-		for (java.util.Iterator i = t.keySet().iterator(); i.hasNext();)
-			m.remove(i.next());
+		for (final Object element : t.keySet()) m.remove(element);
 		assertTrue("Error: m is not empty (as it should be)", m.isEmpty());
 		return;
 	}

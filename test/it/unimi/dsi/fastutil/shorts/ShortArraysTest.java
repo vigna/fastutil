@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.shorts;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil.shorts;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.shorts;
 
 import static org.junit.Assert.assertTrue;
 
@@ -67,7 +66,7 @@ public class ShortArraysTest {
 
 	@Test
 	public void testRadixSort2() {
-		short[][] d = new short[2][];
+		final short[][] d = new short[2][];
 
 		d[0] = new short[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = (short)(3 - i % 3);
@@ -108,7 +107,7 @@ public class ShortArraysTest {
 
 	@Test
 	public void testRadixSort() {
-		short[][] t = { { 2, 1, 0, 4 } };
+		final short[][] t = { { 2, 1, 0, 4 } };
 		ShortArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
@@ -116,7 +115,7 @@ public class ShortArraysTest {
 		ShortArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
-		short[][] d = new short[2][];
+		final short[][] d = new short[2][];
 
 		d[0] = new short[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = (short)(3 - i % 3);

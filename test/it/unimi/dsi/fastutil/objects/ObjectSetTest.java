@@ -1,8 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -19,7 +14,9 @@ import static org.junit.Assert.assertFalse;
  * limitations under the License.
  */
 
-import static org.junit.Assert.assertNull;
+package it.unimi.dsi.fastutil.objects;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -28,7 +25,7 @@ public class ObjectSetTest {
 	@Test
 	public void testOf() {
 		final ObjectSet<String> s = ObjectSet.of("0", "1", "2", "3");
-		assertEquals(new ObjectOpenHashSet<String>(new String[] { "0", "1", "2", "3" }), s);
+		assertEquals(new ObjectOpenHashSet<>(new String[] { "0", "1", "2", "3" }), s);
 	}
 
 	@Test
@@ -40,20 +37,20 @@ public class ObjectSetTest {
 	@Test
 	public void testOfSingleton() {
 		final ObjectSet<String> s = ObjectSet.of("0");
-		assertEquals(new ObjectOpenHashSet<String>(new String[] { "0" }), s);
+		assertEquals(new ObjectOpenHashSet<>(new String[] { "0" }), s);
 	}
 
 	@Test
 	public void testOfPair() {
 		final ObjectSet<String> s = ObjectSet.of("0", "1");
-		assertEquals(new ObjectOpenHashSet<String>(new String[] { "0", "1" }), s);
+		assertEquals(new ObjectOpenHashSet<>(new String[] { "0", "1" }), s);
 	}
 
 	@Test
 	public void testOfTriplet() {
 		final ObjectSet<String> s = ObjectSet.of("0", "1", "2");
-		assertEquals(new ObjectOpenHashSet<String>(new String[] { "0", "1", "2" }), s);
-	}	
+		assertEquals(new ObjectOpenHashSet<>(new String[] { "0", "1", "2" }), s);
+	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOfDuplicateThrows() {

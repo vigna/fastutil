@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.bytes;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.bytes;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.bytes;
 
 import static org.junit.Assert.assertTrue;
 
@@ -34,7 +34,7 @@ public class ByteArrayFrontCodedListTest {
 		return (byte)(r.nextInt());
 	}
 
-	private static boolean contentEquals(java.util.List x, java.util.List y) {
+	private static boolean contentEquals(final java.util.List x, final java.util.List y) {
 		if (x.size() != y.size()) return false;
 		for (int i = 0; i < x.size(); i++)
 			if (!java.util.Arrays.equals((byte[])x.get(i), (byte[])y.get(i))) return false;
@@ -45,7 +45,7 @@ public class ByteArrayFrontCodedListTest {
 
 	private static byte[][] a;
 
-	private static void test(int n) throws IOException, ClassNotFoundException {
+	private static void test(final int n) throws IOException, ClassNotFoundException {
 		l = new int[n];
 		a = new byte[n][];
 		for (int i = 0; i < n; i++)
@@ -56,7 +56,7 @@ public class ByteArrayFrontCodedListTest {
 			for (int j = 0; j < l[i]; j++)
 				a[i][j] = genKey();
 		ByteArrayFrontCodedList m = new ByteArrayFrontCodedList(it.unimi.dsi.fastutil.objects.ObjectIterators.wrap(a), r.nextInt(4) + 1);
-		it.unimi.dsi.fastutil.objects.ObjectArrayList t = new it.unimi.dsi.fastutil.objects.ObjectArrayList(a);
+		final it.unimi.dsi.fastutil.objects.ObjectArrayList t = new it.unimi.dsi.fastutil.objects.ObjectArrayList(a);
 		// System.out.println(m);
 		// for(i = 0; i < t.size(); i++)
 		// System.out.println(ARRAY_LIST.wrap((KEY_TYPE[])t.get(i)));
@@ -84,7 +84,7 @@ public class ByteArrayFrontCodedListTest {
 			}
 		}
 		{
-			int from = r.nextInt(m.size() + 1);
+			final int from = r.nextInt(m.size() + 1);
 			ObjectListIterator i;
 			java.util.ListIterator j;
 			i = m.listIterator(from);
@@ -101,13 +101,13 @@ public class ByteArrayFrontCodedListTest {
 				}
 			}
 		}
-		java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + m.getClass().getSimpleName() + "." + n);
-		java.io.OutputStream os = new java.io.FileOutputStream(ff);
-		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+		final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + m.getClass().getSimpleName() + "." + n);
+		final java.io.OutputStream os = new java.io.FileOutputStream(ff);
+		final java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 		oos.writeObject(m);
 		oos.close();
-		java.io.InputStream is = new java.io.FileInputStream(ff);
-		java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+		final java.io.InputStream is = new java.io.FileInputStream(ff);
+		final java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 		m = (ByteArrayFrontCodedList)ois.readObject();
 		ois.close();
 		ff.delete();
