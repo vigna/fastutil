@@ -233,6 +233,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
+"#define SAFE_VARARGS @SafeVarargs\n"\
 "#if defined(Custom)\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#else\n"\
@@ -258,6 +259,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
+"#define SAFE_VARARGS\n"\
 "#endif\n"\
 \
 "#if VALUES_REFERENCE\n"\
