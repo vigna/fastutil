@@ -17,9 +17,16 @@
 
 package PACKAGE;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER
+import java.util.function.Consumer;
+#endif
+#if KEYS_REFERENCE
+import java.util.stream.Collector;
+#endif
 
 /** A type-specific array-based immutable list; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
@@ -117,6 +124,63 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		return new IMMUTABLE_LIST KEY_GENERIC(init);
 	}
 
+	private static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC convertTrustedToImmutableList(ARRAY_LIST KEY_GENERIC arrayList) {
+		KEY_GENERIC_TYPE backingArray[] = arrayList.elements();
+		if (arrayList.size() != backingArray.length) {
+			backingArray = Arrays.copyOf(backingArray, arrayList.size());
+		}
+		return new IMMUTABLE_LIST KEY_GENERIC_DIAMOND (backingArray);
+  }
+
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+
+	/** Collects the result of a primitive {@code Stream} into a new ImmutableList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC toList(JDK_PRIMITIVE_STREAM stream) {
+		return convertTrustedToImmutableList(ARRAY_LIST.toList(stream));
+	}
+
+	/** Collects the result of a primitive {@code Stream} into a new ImmutableList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC toListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+		return convertTrustedToImmutableList(ARRAY_LIST.toListWithExpectedSize(stream, expectedSize));
+	}
+#elif KEYS_REFERENCE
+	private static final Collector<KEY_TYPE, ?, IMMUTABLE_LIST<KEY_TYPE>> TO_LIST_COLLECTOR =
+		Collector.of(
+			ARRAY_LIST::new,
+			ARRAY_LIST::add,
+			ARRAY_LIST::combine,
+			IMMUTABLE_LIST::convertTrustedToImmutableList);
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ImmutableList. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, IMMUTABLE_LIST KEY_GENERIC> toList() {
+		return (Collector) TO_LIST_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ImmutableList. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, IMMUTABLE_LIST KEY_GENERIC> toListWithExpectedSize(int expectedSize) {
+ 		return Collector.<KEY_GENERIC_TYPE, ARRAY_LIST KEY_GENERIC, IMMUTABLE_LIST KEY_GENERIC>of(
+			() -> new ARRAY_LIST KEY_GENERIC_DIAMOND(expectedSize),
+			ARRAY_LIST::add,
+			ARRAY_LIST::combine,
+			IMMUTABLE_LIST::convertTrustedToImmutableList);
+	}
+#endif
+
 	@Override
 	public KEY_GENERIC_TYPE GET_KEY(final int index) {
 		if (index >= a.length) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + a.length + ")");
@@ -159,6 +223,13 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		System.arraycopy(this.a, from, a, offset, length);
 	}
 
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		for (int i = 0; i < a.length; ++i) {
+			action.accept(a[i]);
+		}
+	}
+
 #if KEYS_PRIMITIVE
 
 	@Override
@@ -190,6 +261,12 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 				@Override
 				public int previousIndex() { return pos - 1; }
 				@Override
+				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+					while (pos < a.length) {
+						action.accept(a[last = pos++]);
+					}
+				}
+				@Override
 				public void add(KEY_GENERIC_TYPE k) {
 					IMMUTABLE_LIST.this.add(pos++, k);
 					last = -1;
@@ -207,7 +284,98 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 					if (last < pos) pos--;
 					last = -1;
 				}
+				@Override
+				public int back(int n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = a.length - pos;
+					if (n < remaining) {
+						pos -= n;
+					} else {
+						n = remaining;
+						pos = 0;
+					}
+					last = pos;
+					return n;
+				}
+				@Override
+				public int skip(int n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = a.length - pos;
+					if (n < remaining) {
+						pos += n;
+					} else {
+						n = remaining;
+						pos = a.length;
+					}
+					last = pos - 1;
+					return n;
+				}
 			};
+	}
+
+  private final class Spliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		int pos, max;
+
+#ifdef TEST
+		// Sentinel to make sure we don't accidentally use size when we mean max
+		@Deprecated
+		private final Object size = null;
+#endif
+
+		public Spliterator() {
+			this(0, a.length);
+		}
+
+		private Spliterator(int pos, int max) {
+			assert pos <= max : "pos " + pos + " must be <= max " + max;
+			this.pos = pos;
+			this.max = max;
+		}
+
+		@Override
+		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.IMMUTABLE; }
+
+		@Override
+		public long estimateSize() { return max - pos; }
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= max) return false;
+			action.accept(a[pos++]);
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (; pos < max; ++pos) {
+				action.accept(a[pos]);
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (pos >= max) return 0;
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
+				return n;
+			}
+			n = remaining;
+			pos = max;
+			return n;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			int myNewPos = pos + retLen;
+			int retMax = myNewPos;
+			int oldPos = pos;
+			this.pos = myNewPos;
+			return new Spliterator(oldPos, retMax);
+		}
 	}
 
 	@Override

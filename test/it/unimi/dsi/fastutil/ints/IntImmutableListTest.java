@@ -58,4 +58,36 @@ public class IntImmutableListTest {
 		final IntImmutableList l = IntImmutableList.of(0);
 		assertEquals(IntArrayList.wrap(new int[] { 0 }), l);
 	}
+
+
+	@Test
+	public void testToList() {
+		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
+		// Also conveniently serves as a test of the intStream and spliterator.
+		IntImmutableList transformed = IntImmutableList.toList(baseList.intStream().map(i -> i + 40));
+		assertEquals(IntImmutableList.of(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntImmutableList baseList = IntImmutableList.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator willBeSuffix = baseList.spliterator();
+		assertEquals(baseList.size(), willBeSuffix.getExactSizeIfKnown());
+		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
+		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
+		IntSpliterator prefix = willBeSuffix.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
+		java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
+		java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
+
+		final IntImmutableList prefixList = IntImmutableList.toList(prefixStream);
+		final IntImmutableList suffixList = IntImmutableList.toList(suffixStream);
+		assertEquals(baseList.size(), prefixList.size() + suffixList.size());
+		assertEquals(baseList.subList(0, prefixList.size()), prefixList);
+		assertEquals(baseList.subList(prefixList.size(), baseList.size()), suffixList);
+		final IntArrayList recombinedList = new IntArrayList(baseList.size());
+		recombinedList.addAll(prefixList);
+		recombinedList.addAll(suffixList);
+		assertEquals(baseList, recombinedList);
+	}
 }
