@@ -15,6 +15,7 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class Int2ObjectFunctionTest {
 		@SuppressWarnings("serial")
 		final Int2ObjectFunction<Object> f = new AbstractInt2ObjectFunction<Object>() {
 			@Override
-			public Object get(int key) {
+			public Object get(final int key) {
 				return key == 0 ? zero : defRetValue;
 			}
 		};

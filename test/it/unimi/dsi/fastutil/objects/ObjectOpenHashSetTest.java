@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.objects;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.objects;
 
 
 import static org.junit.Assert.assertEquals;
@@ -79,8 +79,37 @@ public class ObjectOpenHashSetTest {
 
 	@Test
 	public void testOf() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(1), Long.valueOf(2));
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l), Long.valueOf(2l), Long.valueOf(3l));
+		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2, 3 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l));
+		assertEquals(new LongOpenHashSet(new long[] { 0 }), s);
+	}
+
+	@Test
+	public void testOfPair() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l));
+		assertEquals(new LongOpenHashSet(new long[] { 0, 1 }), s);
+	}
+
+	@Test
+	public void testOfTriplet() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l), Long.valueOf(2l));
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(0));
 	}
 
 	@Test
@@ -92,13 +121,16 @@ public class ObjectOpenHashSetTest {
 
 	@Test
 	public void testSpliteratorTrySplit() {
-		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet.of("0", "1", "2", "3", "4", "5", "bird");
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet
+				.of("0", "1", "2", "3", "4", "5", "bird");
 		ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
 		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
 		ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split.
-		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport.stream(spliterator1, false);
-		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport.stream(spliterator2, false);
+		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport
+				.stream(spliterator1, false);
+		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport
+				.stream(spliterator2, false);
 
 		final ObjectOpenHashSet<String> subSet1 = stream1.collect(ObjectOpenHashSet.toSet());
 		// Intentionally collecting to a list for this second one.

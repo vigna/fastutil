@@ -112,7 +112,7 @@ pom:
 	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
 
 format:
-	$(ECLIPSE) -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
+	$(ECLIPSE) -data workspace -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
 
 stage: pom
 	(unset LOCAL_IVY_SETTINGS; ant stage)
@@ -230,6 +230,17 @@ BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PAC
 $(BIG_LIST_ITERATORS): drv/BigListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS)
+
+PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)Pair.c))
+$(PAIRS): drv/Pair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(PAIRS)
+
+SORTED_PAIRS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(k)SortedPair.c)
+$(SORTED_PAIRS): drv/SortedPair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SORTED_PAIRS)
+
 
 #
 # Abstract implementations
@@ -404,6 +415,11 @@ $(BIG_ARRAY_BIG_LISTS): drv/BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAY_BIG_LISTS)
 
+IMMUTABLE_LISTS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ImmutableList.c)
+$(IMMUTABLE_LISTS): drv/ImmutableList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_LISTS)
+
 FRONT_CODED_LISTS := $(foreach k, $(if $(SMALL_TYPES),Byte Short Char,) Int Long, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
 $(FRONT_CODED_LISTS): drv/ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
@@ -443,6 +459,21 @@ ARRAY_INDIRECT_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(GEN_SRCDI
 $(ARRAY_INDIRECT_PRIORITY_QUEUES): drv/ArrayIndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAY_INDIRECT_PRIORITY_QUEUES)
+
+MUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)MutablePair.c))
+$(MUTABLE_PAIRS): drv/MutablePair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(MUTABLE_PAIRS)
+
+IMMUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)ImmutablePair.c))
+$(IMMUTABLE_PAIRS): drv/ImmutablePair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_PAIRS)
+
+IMMUTABLE_SORTED_PAIRS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(k)ImmutableSortedPair.c)
+$(IMMUTABLE_SORTED_PAIRS): drv/ImmutableSortedPair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_SORTED_PAIRS)
 
 
 #
@@ -618,6 +649,8 @@ SOURCES = \
 	$(SOURCEDIR)/BigList.java \
 	$(SOURCEDIR)/BigListIterator.java \
 	$(SOURCEDIR)/PriorityQueue.java \
+	$(SOURCEDIR)/Pair.java \
+	$(SOURCEDIR)/SortedPair.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/Swapper.java \
@@ -659,5 +692,6 @@ clean:
 	-@rm -fr $(DOCSDIR)/*
 
 sources: $(JSOURCES)
+	rm $(GEN_SRCDIR)/it/unimi/dsi/fastutil/objects/ObjectObjectPair.java
 
 csources: $(CSOURCES)

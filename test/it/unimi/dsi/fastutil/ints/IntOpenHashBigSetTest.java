@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017-2020 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unimi.dsi.fastutil.ints;
 
 import static it.unimi.dsi.fastutil.BigArrays.get;
@@ -220,8 +236,7 @@ public class IntOpenHashBigSetTest {
 
 		/* Now we check that m actually holds that data. */
 
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", m.contains(e));
 		}
 
@@ -270,8 +285,7 @@ public class IntOpenHashBigSetTest {
 		assertTrue("Error: !t.equals(m) after removal", t.equals(m));
 		/* Now we check that m actually holds that data. */
 
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (Object e : t) {
 			assertFalse("Error: m and t differ on a key (" + e + ") after removal (iterating on t)", !m.contains(e));
 		}
 

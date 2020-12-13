@@ -15,6 +15,7 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -143,21 +144,21 @@ public class IntArrayListTest {
 	}
 
 	public void testAddAll() {
-		IntArrayList l = IntArrayList.wrap(new int[] { 0, 1 });
+		final IntArrayList l = IntArrayList.wrap(new int[] { 0, 1 });
 		l.addAll(IntArrayList.wrap(new int[] { 2, 3 } ));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2, 3 }), l);
 		// Test object based lists still work too.
-		l.addAll(java.util.Arrays.asList(4, 5));
+		l.addAll(java.util.Arrays.asList(Integer.valueOf(4), Integer.valueOf(5)));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2, 3, 4, 5 }), l);
 	}
 
 	@Test
 	public void testAddAllAtIndex() {
-		IntArrayList l = IntArrayList.wrap(new int[] { 0, 3 });
+		final IntArrayList l = IntArrayList.wrap(new int[] { 0, 3 });
 		l.addAll(1, IntArrayList.wrap(new int[] { 1, 2 } ));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2, 3 }), l);
 		// Test object based lists still work too.
-		l.addAll(2, java.util.Arrays.asList(4, 5));
+		l.addAll(2, java.util.Arrays.asList(Integer.valueOf(4), Integer.valueOf(5)));
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 4, 5, 2, 3 }), l);
 	}
 
@@ -250,6 +251,18 @@ public class IntArrayListTest {
 	public void testOf() {
 		final IntArrayList l = IntArrayList.of(0, 1, 2);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final IntArrayList l = IntArrayList.of();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntArrayList l = IntArrayList.of(0);
+		assertEquals(IntArrayList.wrap(new int[]{0}), l);
 	}
 
 	@Test

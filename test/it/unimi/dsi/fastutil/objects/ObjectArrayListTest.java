@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil.objects;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -51,6 +50,18 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
 		assertEquals(ObjectArrayList.wrap(new String[] { "0", "1", "2" }), l);
 	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectArrayList<String> l = ObjectArrayList.of();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0");
+		assertEquals(ObjectArrayList.wrap(new String[] { "0" }), l);
+	}
 	
 	@Test
 	public void testToList() {
@@ -61,15 +72,18 @@ public class ObjectArrayListTest {
 
 	@Test
 	public void testSpliteratorTrySplit() {
-		final ObjectArrayList<String> baseList = ObjectArrayList.of("0", "1", "2", "3", "4", "5", "bird");
+		final ObjectArrayList<String> baseList = ObjectArrayList
+				.of("0", "1", "2", "3", "4", "5", "bird");
 		ObjectSpliterator<String> willBeSuffix = baseList.spliterator();
 		assertEquals(baseList.size(), willBeSuffix.getExactSizeIfKnown());
 		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
 		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
 		ObjectSpliterator<String> prefix = willBeSuffix.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
-		java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport.stream(willBeSuffix, false);
-		java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport.stream(prefix, false);
+		java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport
+				.stream(willBeSuffix, false);
+		java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport
+				.stream(prefix, false);
 
 		final ObjectArrayList<String> prefixList = prefixStream.collect(ObjectArrayList.toList());
 		final ObjectArrayList<String> suffixList = suffixStream.collect(ObjectArrayList.toList());

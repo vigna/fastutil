@@ -37,7 +37,7 @@ import java.util.stream.Collector;
  * <p>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of array-based lists. Instances of this class
  * represent a list with an array that is enlarged as needed when new entries
- * are created (by doubling its current length), but is
+ * are created (by increasing its current length by 50%), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing array; this is particularly useful if you reuse instances of this class.
@@ -48,7 +48,7 @@ import java.util.stream.Collector;
  * <p>This class implements the bulk methods {@code removeElements()},
  * {@code addElements()} and {@code getElements()} using
  * high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
  * expensive loops.
  *
  * @see java.util.ArrayList
@@ -65,7 +65,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
  * <p>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of array-based lists. Instances of this class
  * represent a list with an array that is enlarged as needed when new entries
- * are created (by doubling the current length), but is
+ * are created (by increasing its current length by 50%), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing array; this is particularly useful if you reuse instances of this class.
@@ -83,7 +83,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
  * <p>This class implements the bulk methods {@code removeElements()},
  * {@code addElements()} and {@code getElements()} using
  * high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
  * expensive loops.
  *
  * @see java.util.ArrayList
@@ -341,15 +341,22 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC wrap(final KEY_GENERIC_TYPE a[]) {
 		return wrap(a, a.length);
 	}
-
-
-	/** Creates an array list using a list of elements.
+	
+	/** Creates a new empty array list. 
 	 *
-	 * @param init a list of elements that will be used to initialize the list.
-	 * @return a new array list containing the given elements.
+	 * @return a new empty array list.
 	 */
+	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC of() {
+		return new ARRAY_LIST KEY_GENERIC_DIAMOND();
+	}
 
-	@SafeVarargs
+	/** Creates an array list using an array of elements.
+	 *
+	 * @param init a the array the will become the new backing array of the array list.
+	 * @return a new array list backed by the given array.
+	 * @see #wrap
+	 */
+	SAFE_VARARGS
 	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
 		return wrap(init);
 	}
@@ -411,7 +418,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		ARRAY_LIST::combine);
 	}
 #endif
-
 
 	/** Ensures that this array list can contain the given number of entries without resizing.
 	 *
@@ -1042,10 +1048,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return cloned;
 	}
 
-#if KEY_CLASS_Object
-	private static boolean valEquals(final Object a, final Object b) { return a == null ? b == null : a.equals(b); }
-#endif
-
 	/** Compares this type-specific array list to another one.
 	 *
 	 * <p>This method exists only for sake of efficiency. The implementation
@@ -1063,7 +1065,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		final KEY_GENERIC_TYPE[] a2 = l.a;
 
 #if KEY_CLASS_Object
-		while(s-- !=  0) if (! valEquals(a1[s], a2[s])) return false;
+		while(s-- !=  0) if (! java.util.Objects.equals(a1[s], a2[s])) return false;
 #else
 		while(s-- !=  0) if (a1[s] != a2[s]) return false;
 #endif

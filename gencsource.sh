@@ -56,14 +56,17 @@ KEY_TYPE_CAP=${class:0:$keylen}
 VALUE_TYPE_CAP=Object # Just for filling holes
 
 if [[ "${rem:0:1}" == "2" ]]; then
-    isFunction=true
     rem=${rem:1}
     rem2=${rem##[A-Z]+([a-z])}
     valuelen=$(( ${#rem} - ${#rem2} ))
     VALUE_TYPE_CAP=${rem:0:$valuelen}
     root=$rem2
-else
-    isFunction=false
+fi
+
+if [[ "$class" == *Pair ]]; then
+    rem2=${rem##[A-Z]+([a-z])}
+    valuelen=$(( ${#rem} - ${#rem2} ))
+    VALUE_TYPE_CAP=${rem:0:$valuelen}
 fi
 
 for((k=0; k<${#TYPE_CAP[*]}; k++)); do
@@ -244,6 +247,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
+"#define SAFE_VARARGS @SafeVarargs\n"\
 "#if defined(Custom)\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#else\n"\
@@ -269,6 +273,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
+"#define SAFE_VARARGS\n"\
 "#endif\n"\
 \
 "#if VALUES_REFERENCE\n"\
@@ -356,6 +361,16 @@ fi)\
 "#define FUNCTION ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Function\n"\
 "#define MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Map\n"\
 "#define SORTED_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMap\n"\
+"#if KEY_CLASS_Object && VALUE_CLASS_Object\n"\
+"#define PAIR it.unimi.dsi.fastutil.Pair\n"\
+"#define SORTED_PAIR it.unimi.dsi.fastutil.SortedPair\n"\
+"#else\n"\
+"#define PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}Pair\n"\
+"#define SORTED_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}SortedPair\n"\
+"#endif\n"\
+"#define MUTABLE_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}MutablePair\n"\
+"#define IMMUTABLE_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$v]}ImmutablePair\n"\
+"#define IMMUTABLE_SORTED_PAIR ${TYPE_CAP[$k]}${TYPE_CAP[$k]}ImmutableSortedPair\n"\
 "#if KEYS_REFERENCE\n"\
 "#define STD_SORTED_MAP SortedMap\n"\
 "#define STRATEGY Strategy\n"\
@@ -522,6 +537,7 @@ fi)\
 "#define AVL_TREE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}AVLTreeMap\n"\
 "#define RB_TREE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}RBTreeMap\n"\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n"\
+"#define IMMUTABLE_LIST ${TYPE_CAP[$k]}ImmutableList\n"\
 "#define BIG_ARRAY_BIG_LIST ${TYPE_CAP[$k]}BigArrayBigList\n"\
 "#define ARRAY_FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n"\
 "#define ARRAY_FRONT_CODED_BIG_LIST ${TYPE_CAP[$k]}ArrayFrontCodedBigList\n"\
@@ -582,6 +598,9 @@ fi)\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
+"#define PAIR_LEFT left${TYPE_STD[$k]}\n"\
+"#define PAIR_FIRST first${TYPE_STD[$k]}\n"\
+"#define PAIR_KEY key${TYPE_STD[$k]}\n"\
 "#define REMOVE_KEY remove${TYPE_STD[$k]}\n"\
 "#define READ_KEY read${TYPE_CAP2[$k]}\n"\
 "#define WRITE_KEY write${TYPE_CAP2[$k]}\n"\
@@ -630,6 +649,9 @@ fi)\
 "#define REMOVE_LAST_VALUE removeLast${TYPE_STD[$v]}\n"\
 "#define AS_VALUE_ITERATOR as${TYPE_CAP2[$v]}Iterator\n"\
 "#define AS_VALUE_SPLITERATOR as${TYPE_CAP2[$v]}Spliterator\n"\
+"#define PAIR_RIGHT right${TYPE_STD[$v]}\n"\
+"#define PAIR_SECOND second${TYPE_STD[$v]}\n"\
+"#define PAIR_VALUE value${TYPE_STD[$v]}\n"\
 \
 \
 "/* Methods (keys/values) */\n"\

@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -304,6 +304,23 @@ public class IntOpenHashSetTest {
 	public void testOf() {
 		final IntOpenHashSet s = IntOpenHashSet.of(0, 1, 2);
 		assertEquals(new IntOpenHashSet(new int[] { 0, 1, 2 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final IntOpenHashSet s = IntOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntOpenHashSet s = IntOpenHashSet.of(0);
+		assertEquals(new IntOpenHashSet(new int[] { 0 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		IntOpenHashSet.of(0, 0);
 	}
 
 	@Test

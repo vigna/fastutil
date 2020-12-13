@@ -37,7 +37,7 @@ import java.util.stream.Collector;
  * <p>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of big-array-based big lists. Instances of this class
  * represent a big list with a big array that is enlarged as needed when new entries
- * are created (by doubling the current length), but is
+ * are created (by increasing its current length by 50%), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing big array; this is particularly useful if you reuse instances of this class.
@@ -48,7 +48,7 @@ import java.util.stream.Collector;
  * <p>This class implements the bulk methods {@code removeElements()},
  * {@code addElements()} and {@code getElements()} using
  * high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
  * expensive loops.
  *
  * @see java.util.ArrayList
@@ -65,7 +65,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
  * <p>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of big-array-based big lists. Instances of this class
  * represent a big list with a big array that is enlarged as needed when new entries
- * are created (by doubling the current length), but is
+ * are created (by increasing its current length to 50%), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing big array; this is particularly useful if you reuse instances of this class.
@@ -81,7 +81,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
  * <p>This class implements the bulk methods {@code removeElements()},
  * {@code addElements()} and {@code getElements()} using
  * high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
  * expensive loops.
  *
  * @see java.util.ArrayList
@@ -277,8 +277,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 * @param init a list of elements that will be used to initialize the big list.
 	 * @return a new big-array big list containing the given elements.
 	 */
-
-	@SafeVarargs
+	SAFE_VARARGS
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
 		return wrap(BigArrays.wrap(init));
 	}
@@ -928,12 +927,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return c;
 	}
 
-#if KEY_CLASS_Object
-	private static boolean valEquals(final Object a, final Object b) {
-		return a == null ? b == null : a.equals(b);
-	}
-#endif
-
 	/** Compares this type-specific big-array list to another one.
 	 *
 	 * <p>This method exists only for sake of efficiency. The implementation
@@ -950,7 +943,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final KEY_GENERIC_TYPE[][] a2 = l.a;
 
 #if KEY_CLASS_Object
-		while(s-- !=  0) if (! valEquals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
+		while(s-- !=  0) if (! java.util.Objects.equals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
 #else
 		while(s-- !=  0) if (BigArrays.get(a1, s) != BigArrays.get(a2, s)) return false;
 #endif

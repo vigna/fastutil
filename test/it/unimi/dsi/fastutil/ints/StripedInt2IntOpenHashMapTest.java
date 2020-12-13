@@ -1,7 +1,5 @@
 package it.unimi.dsi.fastutil.ints;
 
-import org.junit.Ignore;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -18,6 +16,7 @@ import org.junit.Ignore;
  * limitations under the License.
  */
 
+import org.junit.Ignore;
 
 @Ignore
 public class StripedInt2IntOpenHashMapTest {

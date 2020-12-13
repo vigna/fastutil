@@ -1,17 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.Map.Entry;
-
-import org.junit.Test;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -28,6 +14,20 @@ import org.junit.Test;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.objects;
+
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Map.Entry;
+
+import org.junit.Test;
 
 import it.unimi.dsi.fastutil.io.BinIO;
 
