@@ -20,6 +20,10 @@ package PACKAGE;
 import java.util.Collection;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
+#if KEYS_REFERENCE
+import java.lang.reflect.Array;
+import java.util.Arrays;
+#endif
 
 /** A type-specific array-based immutable list; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
@@ -160,14 +164,39 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	}
 
 #if KEYS_PRIMITIVE
+	@Override
+	public KEY_TYPE[] TO_KEY_ARRAY() {
+		return a.clone();
+	}
 
 	@Override
 	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		if (a == null) a = new KEY_TYPE[this.a.length];
+		if (a == null || a.length < size()) a = new KEY_TYPE[this.a.length];
 		System.arraycopy(this.a, 0, a, 0, a.length);
 		return a;
 	}
+#else // KEYS_REFERENCE
+	@Override
+	public Object[] toArray() {
+		// A subtle part of the spec says the returned array must be Object[] exactly.
+		if (a.getClass().equals(Object[].class)) {
+			return a.clone();
+		}
+		return Arrays.copyOf(a, a.length, Object[].class);
+	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	@Override
+	public KEY_GENERIC KEY_GENERIC_TYPE[] toArray(KEY_GENERIC_TYPE a[]) {
+		if (a == null || a.length < size()) {
+			a = KEY_GENERIC_ARRAY_CAST Array.newInstance(a.getClass().getComponentType(), size());
+		}
+		System.arraycopy(this.a, 0, a, 0, size());
+		if (a.length > size()) {
+			a[size()] = null;
+		}
+		return a;
+	}
 #endif
 
 	@Override
@@ -191,13 +220,11 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 				public int previousIndex() { return pos - 1; }
 				@Override
 				public void add(KEY_GENERIC_TYPE k) {
-					IMMUTABLE_LIST.this.add(pos++, k);
-					last = -1;
+					throw new UnsupportedOperationException();
 				}
 				@Override
 				public void set(KEY_GENERIC_TYPE k) {
-					if (last == -1) throw new IllegalStateException();
-					IMMUTABLE_LIST.this.set(last, k);
+					throw new UnsupportedOperationException();
 				}
 				@Override
 				public void remove() {
@@ -268,5 +295,161 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	}
 #endif
 
+	// Overridden mutation methods to make unsupported.
 
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void add(final int index, final KEY_GENERIC_TYPE k) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public boolean add(final KEY_GENERIC_TYPE k) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public KEY_GENERIC_TYPE REMOVE_KEY(final int index) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public boolean REMOVE(final KEY_TYPE k) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public KEY_GENERIC_TYPE set(final int index, final KEY_GENERIC_TYPE k) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void clear() {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void size(final int size) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void removeElements(final int from, final int to) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void addElements(final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void setElements(final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length) {
+		throw new UnsupportedOperationException();
+	}
+
+#if KEYS_PRIMITIVE
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void sort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void unstableSort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
+		throw new UnsupportedOperationException();
+	}
+#endif
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void sort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Always throws {@link UnsupportedOperationException} as this is an immutable type.
+	 *
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void unstableSort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
+		throw new UnsupportedOperationException();
+	}
 }

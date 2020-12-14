@@ -16,7 +16,10 @@
 
 package it.unimi.dsi.fastutil.objects;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -61,5 +64,40 @@ public class ObjectArrayListTest {
 	public void testOfSingleton() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0");
 		assertEquals(ObjectArrayList.wrap(new String[] { "0" }), l);
+	}
+
+	@Test
+	public void testToArray() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		assertArrayEquals(new Object[] {"0", "1", "2"}, l.toArray());
+	}
+
+	@Test
+	public void testCopyingToArray() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		Object[] out = new String[3];
+		Object[] newOut;
+		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
+		assertSame(out, newOut);
+	}
+
+	@Test
+	public void testCopyingToArrayUndersized() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		Object[] out = new String[2];
+		Object[] newOut;
+		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
+		assertNotSame(out, newOut);
+	}
+
+	@Test
+	public void testCopyingToArrayOversized() {
+		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
+		Object[] out = new String[5];
+		out[4] = "I should be replaced with null per spec.";
+		out[5] = "Not me though.";
+		Object[] newOut;
+		assertArrayEquals(new Object[] {"0", "1", "2", null, "Not me though."}, newOut = l.toArray(out));
+		assertSame(out, newOut);
 	}
 }
