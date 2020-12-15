@@ -112,6 +112,36 @@ public class ObjectOpenHashSetTest {
 		ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(0));
 	}
 
+	@Test
+	public void testToSet() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet.of("wood", "board", "glass", "metal");
+		ObjectOpenHashSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSet());
+		assertEquals(ObjectOpenHashSet.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet
+				.of("0", "1", "2", "3", "4", "5", "bird");
+		ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport
+				.stream(spliterator1, false);
+		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport
+				.stream(spliterator2, false);
+
+		final ObjectOpenHashSet<String> subSet1 = stream1.collect(ObjectOpenHashSet.toSet());
+		// Intentionally collecting to a list for this second one.
+		final ObjectArrayList<String> subSet2 = stream2.collect(ObjectArrayList.toList());
+		assertEquals(baseSet.size(), subSet1.size() + subSet2.size());
+		final ObjectOpenHashSet<String> recombinedSet = new ObjectOpenHashSet<>(baseSet.size());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
+	}
+
 	private static java.util.Random r = new java.util.Random(0);
 
 	private static Object genKey() {
@@ -243,8 +273,11 @@ public class ObjectOpenHashSetTest {
 			assertTrue("Error: m and t differ on a key (" + e + ") after removal (iterating on m)", t.contains(e));
 		}
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		final Object a[] = m.toArray();
+		Object a[] = m.toArray();
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
+		/* As above, but using streams */
+		a = m.stream().toArray();
+		assertTrue("Error: stream().toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
 		/* Now we check cloning. */
 		assertTrue("Error: m does not equal m.clone()", m.equals(m.clone()));
 		assertTrue("Error: m.clone() does not equal m", m.clone().equals(m));

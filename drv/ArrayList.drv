@@ -22,9 +22,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER
+import java.util.function.Consumer;
+#endif
 #if KEYS_REFERENCE
 import java.lang.reflect.Array;
 import java.util.Comparator;
+import java.util.stream.Collector;
 #endif
 
 #if KEYS_PRIMITIVE
@@ -107,6 +111,26 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	/** The current actual size of the list (never greater than the backing-array length). */
 	protected int size;
 
+	/** Ensures that the component type of the given array is the proper type.
+	 * This is irrelevant for primitive types, so it will just do a trivial copy.
+	 * But for Reference types, you can have a {@code String[]} masquerading as an {@code Object[]},
+	 * which is a case we need to prepare for because we let the user give an array to use directly
+	 * with {@link #wrap}.
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	private static final KEY_GENERIC KEY_GENERIC_TYPE[] copyArraySafe(KEY_GENERIC_TYPE[] a, int length) {
+		if (length == 0) return KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+#if KEYS_PRIMITIVE
+		return java.util.Arrays.copyOf(a, length);
+#else
+		return (KEY_GENERIC_TYPE[])java.util.Arrays.copyOf(a, length, KEY_TYPE[].class);
+#endif
+	}
+
+	private static final KEY_GENERIC KEY_GENERIC_TYPE[] copyArrayFromSafe(ARRAY_LIST KEY_GENERIC l) {
+		return copyArraySafe(l.a, l.size);
+	}
+
 	/** Creates a new array list using a given array.
 	 *
 	 * <p>This constructor is only meant to be used by the wrapping methods.
@@ -114,11 +138,17 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @param a the array that will be used to back this array list.
 	 */
 
-	protected ARRAY_LIST(final KEY_GENERIC_TYPE a[], @SuppressWarnings("unused") boolean dummy) {
+	protected ARRAY_LIST(final KEY_GENERIC_TYPE a[], @SuppressWarnings("unused") boolean wrapped) {
 		this.a = a;
 #if ! KEYS_PRIMITIVE
-		this.wrapped = true;
+		this.wrapped = wrapped;
 #endif
+	}
+
+	private void initArrayFromCapacity(final int capacity) {
+		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
+		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+		else a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
 	}
 
 	/** Creates a new array list with given capacity.
@@ -128,11 +158,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_LIST(final int capacity) {
-		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
-		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
-		else a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[capacity];
+		initArrayFromCapacity(capacity);
 #if ! KEYS_PRIMITIVE
-		wrapped = false;
+		this.wrapped = false;
 #endif
 	}
 
@@ -145,18 +173,30 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		wrapped = false;
 #endif
 	}
-	
+
 	/** Creates a new array list and fills it with a given collection.
 	 *
 	 * @param c a collection that will be used to fill the array list.
 	 */
 
 	public ARRAY_LIST(final Collection<? extends KEY_GENERIC_CLASS> c) {
-		this(c.size());
+		if (c instanceof ARRAY_LIST) {
+			a = copyArrayFromSafe((ARRAY_LIST KEY_EXTENDS_GENERIC)c);
+			size = a.length;
+		} else {
+			initArrayFromCapacity(c.size());
+			if (c instanceof LIST) {
+				((LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = c.size());
+			} else {
 #if KEYS_PRIMITIVE
-		size = ITERATORS.unwrap(ITERATORS.AS_KEY_ITERATOR(c.iterator()), a);
+				size = ITERATORS.unwrap(ITERATORS.AS_KEY_ITERATOR(c.iterator()), a);
 #else
-		size = ITERATORS.unwrap(c.iterator(), a);
+				size = ITERATORS.unwrap(c.iterator(), a);
+#endif
+			}
+		}
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
 #endif
 	}
 
@@ -166,8 +206,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 
 	public ARRAY_LIST(final COLLECTION KEY_EXTENDS_GENERIC c) {
-		this(c.size());
-		size = ITERATORS.unwrap(c.iterator(), a);
+		if (c instanceof ARRAY_LIST) {
+			a = copyArrayFromSafe((ARRAY_LIST KEY_EXTENDS_GENERIC)c);
+			size = a.length;
+		} else {
+			initArrayFromCapacity(c.size());
+			if (c instanceof LIST) {
+				((LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = c.size());
+			} else {
+				size = ITERATORS.unwrap(c.iterator(), a);
+			}
+		}
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list and fills it with a given type-specific list.
@@ -176,8 +228,16 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 
 	public ARRAY_LIST(final LIST KEY_EXTENDS_GENERIC l) {
-		this(l.size());
-		l.getElements(0, a, 0, size = l.size());
+		if (l instanceof ARRAY_LIST) {
+			a = copyArrayFromSafe((ARRAY_LIST KEY_EXTENDS_GENERIC)l);
+			size = a.length;
+		} else {
+			initArrayFromCapacity(l.size());
+			l.getElements(0, a, 0, size = l.size());
+		}
+#if ! KEYS_PRIMITIVE
+		this.wrapped = false;
+#endif
 	}
 
 	/** Creates a new array list and fills it with the elements of a given array.
@@ -264,7 +324,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC wrap(final KEY_GENERIC_TYPE a[], final int length) {
 		if (length > a.length) throw new IllegalArgumentException("The specified length (" + length + ") is greater than the array size (" + a.length + ")");
-		final ARRAY_LIST KEY_GENERIC l = new ARRAY_LIST KEY_GENERIC_DIAMOND(a, false);
+		final ARRAY_LIST KEY_GENERIC l = new ARRAY_LIST KEY_GENERIC_DIAMOND(a, true);
 		l.size = length;
 		return l;
 	}
@@ -302,6 +362,64 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return wrap(init);
 	}
 
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+	/** Collects the result of a primitive {@code Stream} into a new ArrayList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	 public static KEY_GENERIC ARRAY_LIST KEY_GENERIC toList(JDK_PRIMITIVE_STREAM stream) {
+	 	return stream.collect(
+	 		ARRAY_LIST::new,
+	 		ARRAY_LIST::add,
+	 		ARRAY_LIST::addAll);
+	 }
+	 
+	/** Collects the result of a primitive {@code Stream} into a new ArrayList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC toListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+		return stream.collect(
+			() -> new ARRAY_LIST KEY_GENERIC(expectedSize),
+			ARRAY_LIST::add,
+			ARRAY_LIST::addAll);
+	}
+#elif KEYS_REFERENCE
+	// Collector wants a function that returns the collection being added to.
+	ARRAY_LIST KEY_GENERIC combine(ARRAY_LIST KEY_EXTENDS_GENERIC toAddFrom) {
+		addAll(toAddFrom);
+		return this;
+	}
+
+	private static final Collector<KEY_TYPE, ?, ARRAY_LIST<KEY_TYPE>> TO_LIST_COLLECTOR =
+		Collector.of(
+			ARRAY_LIST::new,
+			ARRAY_LIST::add,
+			ARRAY_LIST::combine); 
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, ARRAY_LIST KEY_GENERIC> toList() {
+		return (Collector) TO_LIST_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, ARRAY_LIST KEY_GENERIC> toListWithExpectedSize(int expectedSize) {
+ 		return Collector.of(
+		() -> new ARRAY_LIST KEY_GENERIC_DIAMOND(expectedSize),
+		ARRAY_LIST::add,
+		ARRAY_LIST::combine);
+	}
+#endif
+
 	/** Ensures that this array list can contain the given number of entries without resizing.
 	 *
 	 * @param capacity the new minimum capacity for this array list.
@@ -332,7 +450,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private void grow(int capacity) {
 		if (capacity <= a.length) return;
-		if (a != ARRAYS.DEFAULT_EMPTY_ARRAY) 
+		if (a != ARRAYS.DEFAULT_EMPTY_ARRAY)
 			capacity = (int)Math.max(Math.min((long)a.length + (a.length >> 1), it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE), capacity);
 		else if (capacity < DEFAULT_INITIAL_CAPACITY) capacity = DEFAULT_INITIAL_CAPACITY;
 #if KEYS_PRIMITIVE
@@ -477,8 +595,113 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		assert size <= a.length;
 	}
 
+	private class SubList extends ABSTRACT_LIST.SUBLIST_RANDOM_ACCESS KEY_GENERIC {
+		private static final long serialVersionUID = -3185226345314976296L;
 
-   	/** Copies element of this type-specific list into the given array using optimized system calls.
+		protected SubList(int from, int to) {
+			super(ARRAY_LIST.this, from, to);
+		}
+
+		// Most of the inherited methods should be fine, but we can override a few of them for performance.
+
+		@Override
+		public KEY_GENERIC_TYPE GET_KEY(int i) {
+			ensureRestrictedIndex(i);
+			return a[i + from];
+		}
+
+		private final class SubListIterator extends ITERATORS.AbstractIndexBasedListIterator KEY_GENERIC {
+
+			// We are using pos == 0 to be 0 relative to SubList.from (meaning you need to do a[from + i] when accessing array).
+			SubListIterator(int index) {
+				super(0, index);
+			}
+
+			@Override
+			protected final KEY_GENERIC_TYPE get(int i) { return a[from + i]; }
+			@Override
+			protected final void add(int i, KEY_GENERIC_TYPE k) { SubList.this.add(i, k); }
+			@Override
+			protected final void set(int i, KEY_GENERIC_TYPE k) { SubList.this.set(i, k); }
+			@Override
+			protected final void remove(int i) { SubList.this.REMOVE_KEY(i); }
+			@Override
+			protected final int getMaxPos() { return to - from; }
+
+			@Override
+			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[from + (lastReturned = pos++)]; }
+			@Override
+			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[from + (lastReturned = --pos)]; }
+
+			@Override
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				final int max = to - from;
+				while(pos < max) {
+					action.accept(a[from + (lastReturned = pos++)]);
+				}
+			}
+		}
+
+		@Override
+		public KEY_LIST_ITERATOR KEY_GENERIC listIterator(int index) {
+			return new SubListIterator(index);
+		}
+
+		private final class SubListSpliterator extends SPLITERATORS.LateBindingSizeIndexBasedSpliterator KEY_GENERIC {
+
+			// We are using pos == 0 to be 0 relative to real array 0
+			SubListSpliterator() {
+				super(from);
+			}
+
+			private SubListSpliterator(int pos, int maxPos) {
+				super(pos, maxPos);
+			}
+
+			@Override
+			protected final int getMaxPosFromBackingStore() { return to; }
+
+	 		@Override
+			protected final KEY_GENERIC_TYPE get(int i) { return a[i]; }
+			@Override
+			protected final SubListSpliterator makeForSplit(int pos, int maxPos) {
+				return new SubListSpliterator(pos, maxPos);
+			}
+			@Override
+			public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+				if (pos >= getMaxPos()) return false;
+				action.accept(a[pos++]);
+				return true;
+			}
+			@Override
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				final int max = getMaxPos();
+				while(pos < max) {
+					action.accept(a[pos++]);
+				}
+			}
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+			return new SubListSpliterator();
+		}
+
+		// We don't override subList as we want AbstractList's "sub-sublist" nesting handling,
+		// which would be tricky to do here.
+		// TODO Do override it so array access isn't sent through N indirections.
+		// This will likely mean making this class static.
+	}
+
+	@Override
+	public LIST KEY_GENERIC subList(int from, int to) {
+		ensureIndex(from);
+		ensureIndex(to);
+		if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
+		return new SubList(from, to);
+	}
+
+	/** Copies element of this type-specific list into the given array using optimized system calls.
 	 *
 	 * @param from the start index (inclusive).
 	 * @param a the destination array.
@@ -540,17 +763,27 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		System.arraycopy(a, offset, this.a, index, length);
 	}
 
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		for (int i = 0; i < size; ++i) {
+			action.accept(a[i]);
+		}
+	}
+
 #if KEYS_PRIMITIVE
 
 	@Override
 	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		if (a == null || a.length < size) a = new KEY_TYPE[size];
+		if (a == null || a.length < size) a = java.util.Arrays.copyOf(a, size);
 		System.arraycopy(this.a, 0, a, 0, size);
 		return a;
 	}
 
 	@Override
 	public boolean addAll(int index, final COLLECTION c) {
+		if (c instanceof LIST) {
+			return addAll(index, (LIST)c);
+		}
 		ensureIndex(index);
 		int n = c.size();
 		if (n == 0) return false;
@@ -664,9 +897,137 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 					if (last < pos) pos--;
 					last = -1;
 				}
+				@Override
+				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+					while (pos < size) {
+						action.accept(a[last = pos++]);
+					}
+				}
+				@Override
+				public int back(int n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = size - pos;
+					if (n < remaining) {
+						pos -= n;
+					} else {
+						n = remaining;
+						pos = 0;
+					}
+					last = pos;
+					return n;
+				}
+				@Override
+				public int skip(int n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = size - pos;
+					if (n < remaining) {
+						pos += n;
+					} else {
+						n = remaining;
+						pos = size;
+					}
+					last = pos - 1;
+					return n;
+				}
 			};
 	}
 
+	// If you update this, you will probably want to update ArraySet as well
+	private final class Spliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		// Until we split, we will track the size of the list.
+		// Once we split, then we stop updating on structural modifications.
+		// Aka, size is late-binding.
+		boolean hasSplit = false;
+		int pos, max;
+
+#ifdef TEST
+		// Sentinel to make sure we don't accidentally use size when we mean max
+		@Deprecated
+		private final Object size = null;
+#endif
+
+		public Spliterator() {
+			this(0, ARRAY_LIST.this.size, false);
+		}
+
+		private Spliterator(int pos, int max, boolean hasSplit) {
+			assert pos <= max : "pos " + pos + " must be <= max " + max;
+			this.pos = pos;
+			this.max = max;
+			this.hasSplit = hasSplit;
+		}
+
+		private int getWorkingMax() {
+			return hasSplit ? max : ARRAY_LIST.this.size;
+		}
+
+		@Override
+		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS; }
+
+		@Override
+		public long estimateSize() { return getWorkingMax() - pos; }
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= getWorkingMax()) return false;
+			action.accept(a[pos++]);
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (final int max = getWorkingMax(); pos < max; ++pos) {
+				action.accept(a[pos]);
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			final int max = getWorkingMax();
+			if (pos >= max) return 0;
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
+				return n;
+			}
+			n = remaining;
+			pos = max;
+			return n;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			final int max = getWorkingMax();
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			// Update instance max with the last seen list size (if needed) before continuing
+			this.max = max;
+			int myNewPos = pos + retLen;
+			int retMax = myNewPos;
+			int oldPos = pos;
+			this.pos = myNewPos;
+			this.hasSplit = true;
+			return new Spliterator(oldPos, retMax, true);
+		}
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <p>The returned spliterator is late-binding; it will track structural changes
+	 * after the current index, up until the first {@link java.util.Spliterator#trySplit() trySplit()},
+	 * at which point the maximum index will be fixed.
+	 * <br>Structural changes before the current index or after the first
+	 * {@link java.util.Spliterator#trySplit() trySplit()} will result in unspecified behavior.
+	 */
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		// If it wasn't for the possibility of the list being expanded or shrunk,
+		// we could return SPLITERATORS.wrap(a, 0, size).
+		return new Spliterator();
+	}
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public void sort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
 		if (comp == null) {
@@ -687,10 +1048,26 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public ARRAY_LIST KEY_GENERIC clone() {
-		ARRAY_LIST KEY_GENERIC c = new ARRAY_LIST KEY_GENERIC_DIAMOND(size);
-		System.arraycopy(a, 0, c.a, 0, size);
-		c.size = size;
-		return c;
+		ARRAY_LIST KEY_GENERIC cloned = null;
+		// Test for fastpath we can do if exactly an ArrayList
+		if (getClass() == ARRAY_LIST.class) {
+			// Preserve backwards compatibility and make new list have Object[] even if it was wrapped from some subclass.
+			cloned = new ARRAY_LIST KEY_GENERIC_DIAMOND(copyArraySafe(a, size), false);
+			cloned.size = size;
+		} else {
+			try {
+				cloned = (ARRAY_LIST KEY_GENERIC)super.clone();
+			} catch (CloneNotSupportedException err) {
+				// Can't happen
+				throw new InternalError(err);
+			}
+			// Preserve backwards compatibility and make new list have Object[] even if it was wrapped from some subclass.
+			cloned.a = copyArraySafe(a, size);
+#if ! KEYS_PRIMITIVE
+			// We can't clear cloned.wrapped because it is final.
+#endif
+		}
+		return cloned;
 	}
 
 	/** Compares this type-specific array list to another one.
@@ -702,6 +1079,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * @return true if the argument contains the same elements of this type-specific array list.
 	 */
 	public boolean equals(final ARRAY_LIST KEY_GENERIC l) {
+		// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
 		if (l == this) return true;
 		int s = size();
 		if (s != l.size()) return false;
@@ -716,6 +1094,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return true;
 	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof ARRAY_LIST ? equals((ARRAY_LIST KEY_GENERIC)o) : super.equals(o);
+	}
 
 #if ! KEY_CLASS_Reference
 
@@ -731,6 +1114,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final ARRAY_LIST KEY_EXTENDS_GENERIC l) {
+		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
 		KEY_GENERIC_TYPE e1, e2;
@@ -743,6 +1127,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 
 		return i < s2 ? -1 : (i < s1 ? 1 : 0);
+	}
+
+	@Override
+	public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
+		return l instanceof ARRAY_LIST ? compareTo((ARRAY_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
 	}
 #endif
 
@@ -777,6 +1166,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 	}
 
+	private static int genIndex(int size) {
+		return size == 0 ? 0 : r.nextInt(size);
+	}
+
 	private static java.text.NumberFormat format = new java.text.DecimalFormat("#,###.00");
 	private static java.text.FieldPosition p = new java.text.FieldPosition(0);
 
@@ -785,14 +1178,205 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return format.format(d, s, p).toString();
 	}
 
-	private static void speedTest(int n, boolean comp) {
-		System.out.println("There are presently no speed tests for this class.");
+	private static final int WARMUP_CYCLES = 12;
+	private static final int NUM_RUNS = 25;
+	private static final int GC_EVERY = 5;
+	// TODO Use a ASSERTS like preprocessor variable?
+	private static final boolean PARALLEL_STREAMS = Boolean.getBoolean("useParallelStreams");
+
+	private static final int intDivRoundUp(int numerator, int denominator) {
+		return (numerator + denominator - 1) / denominator;
+	}
+
+	// WARNING: This benchmark runs in amortized time O(n^(3/2)). Don't choose huge n values for this test (about 10,000,000 starts showing significant slowdown)
+	private static void speedTest(final int n, boolean comp) {
+		if (n < 0) throw new IllegalArgumentException("n: " + n + " must be >0 (overflow?)");
+		java.util.ArrayList t;
+		ARRAY_LIST m;
+
+		int i;
+		int j;
+		KEY_TYPE k[] = new KEY_TYPE[n];
+		KEY_TYPE nk[] = new KEY_TYPE[n];
+		int randIndexes[] = new int[n];
+		long ns;
+
+		for(i = 0; i < n; i++) {
+			k[i] = genKey();
+			nk[i] = genKey();
+			randIndexes[i] = genIndex(i);
+		}
+
+		final int nRandom = (int)Math.sqrt(n);
+		final int nSequential = n - nRandom;
+
+		double totAddEnd = 0, totAddRandom = 0, totYes = 0, totNo = 0, totIter = 0, totRemEnd = 0, totRemRandom = 0, toStreamSum = 0, d;
+
+		if (comp) { for(j = 0; j < NUM_RUNS; j++) {
+
+			if ((j + 1) % GC_EVERY == 0) System.gc();
+
+			t = new java.util.ArrayList(16);
+
+			/* We add to t at a random position. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom; i++) t.add(randIndexes[i], KEY2OBJ(k[i]));
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totAddRandom += d;
+			System.out.print("AddToRandom: " + format(d) + "ns ");
+
+			/* We add to t at end. */
+			ns = System.nanoTime();
+			for(; i < n; i++) t.add(KEY2OBJ(k[i]));
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totAddEnd += d;
+			System.out.print("AddToEnd: " + format(d) + "ns ");
+
+			/* We check things in t. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) t.contains(KEY2OBJ(k[i]));
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totYes += d;
+			System.out.print("Yes: " + format(d) + "ns ");
+
+			/* We check for things likely not in t. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) t.contains(KEY2OBJ(nk[i]));
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totNo += d;
+			System.out.print("No: " + format(d) + "ns ");
+
+			/* We iterate on t. */
+			ns = System.nanoTime();
+			for(java.util.Iterator it = t.iterator(); it.hasNext(); it.next());
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) totIter += d;
+			System.out.print("Iter: " + format(d) + "ns ");
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+			/* We sum on t. */
+			ns = System.nanoTime();
+#if KEY_WIDENED
+			// Since the primitive stream has to upcast to a widened primitive, for fairness we will upcast here too
+#endif
+			java.util.stream.Stream<KEY_CLASS> tStream = ((java.util.List<KEY_CLASS>)t).stream();
+			if (PARALLEL_STREAMS) tStream = tStream.parallel();
+#if KEY_CLASS_Character
+			tStream.MAP_TO_KEY_WIDENED(Character::charValue).sum();
+#else
+			tStream.MAP_TO_KEY_WIDENED(KEY_CLASS::KEY_WIDENED_VALUE).sum();
+#endif
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) toStreamSum += d;
+			System.out.print("Stream sum: " + format(d) + "ns ");
+#endif
+
+			// Don't bother with remove(KEY); that is just going to be a contains + remove random.
+			/* We remove from end */
+			ns = System.nanoTime();
+			for(i = 0; i < nSequential;  i++) t.remove(t.size() - 1);
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totRemEnd += d;
+			System.out.print("RemEnd: " + format(d) + "ns ");
+
+			/* We remove randomly */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) t.remove(randIndexes[t.size() - 1]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totRemRandom += d;
+			System.out.print("RemRandom: " + format(d) + "ns ");
+
+			System.out.println();
+		}
+
+		System.out.println();
+		System.out.println("java.util AddToRandom: " + format(totAddRandom/(j-WARMUP_CYCLES)) + " AddToEnd: " + format(totAddEnd/(j-WARMUP_CYCLES)) + "ns Yes: " + format(totYes/(j-WARMUP_CYCLES)) + "ns No: " + format(totNo/(j-WARMUP_CYCLES)) + "ns Iter: " + format(totIter/(j-WARMUP_CYCLES)) + "ns StreamSum: " + format(toStreamSum/(j-WARMUP_CYCLES)) + "ns RemEnd: " + format(totRemEnd/(j-WARMUP_CYCLES)) + "ns RemRandom: " + format(totRemRandom/(j-WARMUP_CYCLES)) + "ns");
+
+		System.out.println();
+
+		totAddEnd = totAddRandom = totYes = totNo = totIter = totRemEnd = totRemRandom = toStreamSum = 0;
+		}
+
+		for(j = 0; j < NUM_RUNS; j++) {
+
+			if ((j + 1) % GC_EVERY == 0) System.gc();
+
+			m = new ARRAY_LIST(16);
+
+			/* We add to m at a random position. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom; i++) m.add(randIndexes[i], k[i]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totAddRandom += d;
+			System.out.print("AddToRandom: " + format(d) + "ns ");
+
+			/* We add to m at end. */
+			ns = System.nanoTime();
+			for(; i < n;  i++) m.add(k[i]);
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totAddEnd += d;
+			System.out.print("AddToEnd: " + format(d) + "ns ");
+
+			/* We check things in m. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) m.contains(k[i]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totYes += d;
+			System.out.print("Yes: " + format(d) + "ns ");
+
+			/* We check for things likely not in m. */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) m.contains(nk[i]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totNo += d;
+			System.out.print("No: " + format(d) + "ns ");
+
+			/* We iterate on m. */
+			ns = System.nanoTime();
+			for(KEY_ITERATOR it = (KEY_ITERATOR)m.iterator(); it.hasNext(); it.NEXT_KEY());
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) totIter += d;
+			System.out.print("Iter: " + format(d) + "ns ");
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+			/* We sum on m. */
+			ns = System.nanoTime();
+			JDK_PRIMITIVE_STREAM mStream = m.KEY_WIDENED_STREAM_METHOD();
+			if (PARALLEL_STREAMS) mStream = mStream.parallel();
+			mStream.sum();
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) toStreamSum += d;
+			System.out.print("Stream sum: " + format(d) + "ns ");
+#endif
+
+			// Don't bother with rem(KEY); that is just going to be a contains + remove random.
+			/* We remove from end */
+			ns = System.nanoTime();
+			for(i = 0; i < nSequential;  i++) m.REMOVE_KEY(m.size() - 1);
+			d = (System.nanoTime() - ns) / (double)nSequential;
+			if (j >= WARMUP_CYCLES) totRemEnd += d;
+			System.out.print("RemEnd: " + format(d) + "ns ");
+
+			/* We remove randomly */
+			ns = System.nanoTime();
+			for(i = 0; i < nRandom;  i++) m.REMOVE_KEY(randIndexes[m.size() - 1]);
+			d = (System.nanoTime() - ns) / (double)nRandom;
+			if (j >= WARMUP_CYCLES) totRemRandom += d;
+			System.out.print("RemRandom: " + format(d) + "ns ");
+
+			System.out.println();
+		}
+
+		System.out.println();
+		System.out.println("fastutil AddToRandom: " + format(totAddRandom/(j-WARMUP_CYCLES)) + " AddToEnd: " + format(totAddEnd/(j-WARMUP_CYCLES)) +  "ns Yes: " + format(totYes/(j-WARMUP_CYCLES)) + "ns No: " + format(totNo/(j-WARMUP_CYCLES)) + "ns Iter: " + format(totIter/(j-WARMUP_CYCLES)) + "ns StreamSum: " + format(toStreamSum/(j-WARMUP_CYCLES)) + "ns RemEnd: " + format(totRemEnd/(j-WARMUP_CYCLES)) + "ns RemRandom: " + format(totRemRandom/(j-WARMUP_CYCLES)) + "ns");
+
+		System.out.println();
 	}
 
 
 	private static void fatal(String msg) {
 		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
@@ -960,6 +1544,14 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 		ensure(m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals(t) after add/remove");
 		ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after add/remove");
+
+#if KEYS_PRIMITIVE
+		/* Now we sort the data and make sure the results is the same. */
+		m.sort(null);
+		t.sort(null);
+		ensure(m.equals(t), "Error (" + level + ", " + seed + "): ! m.equals(t) after sort");
+		ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after sort");
+#endif
 
 		/* Now we add random data in m and t using addAll on a collection, checking that the result is the same. */
 
@@ -1152,6 +1744,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		/* Now we play with constructors. */
 		ensure(m.equals(new ARRAY_LIST((Collection)m)), "Error (" + level + ", " + seed + "): m does not equal new (Collection m)");
 		ensure((new ARRAY_LIST((Collection)m)).equals(m), "Error (" + level + ", " + seed + "): new (Collection m)does not equal m");
+		ensure(m.equals(new ARRAY_LIST(new java.util.ArrayList(m))), "Error (" + level + ", " + seed + "): m does not equal new (Collection m)");
+		ensure((new ARRAY_LIST(new java.util.ArrayList(m)).equals(m)), "Error (" + level + ", " + seed + "): new (Collection m)does not equal m");
 		ensure(m.equals(new ARRAY_LIST((COLLECTION)m)), "Error (" + level + ", " + seed + "): m does not equal new (type-specific Collection m)");
 		ensure((new ARRAY_LIST((COLLECTION)m)).equals(m), "Error (" + level + ", " + seed + "): new (type-specific Collection m) does not equal m");
 		ensure(m.equals(new ARRAY_LIST((LIST)m)), "Error (" + level + ", " + seed + "): m does not equal new (type-specific List m)");
@@ -1263,6 +1857,41 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 			}
 
+		}
+
+		/* Now we play with spliterators.
+		 *
+		 * Or rather we would, except comparing results of spliterators directly is a bit painful.
+		 * However, there is an easy workaround; use streams, which are built on Spliterators.
+		 */
+		{
+#if KEYS_REFERENCE
+			java.util.stream.Stream<KEY_TYPE> i = m.stream();
+			java.util.stream.Stream<KEY_TYPE> j = t.stream();
+#elif KEY_CLASS_Boolean
+			java.util.stream.Stream<KEY_CLASS> i = m.stream();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#else
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#endif
+
+			if (PARALLEL_STREAMS) {
+				i = i.parallel();
+				j = j.parallel();
+			}
+
+#if KEYS_REFERENCE || KEY_CLASS_Boolean
+			Object[] iArray = i.toArray();
+			Object[] jArray = j.toArray();
+#elif KEY_CLASS_Character
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(c -> (int)c.charValue()).toArray();
+#else
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).toArray();
+#endif
+			ensure(java.util.Arrays.equals(iArray, jArray), "Error (" + level + ", " + seed + "): divergence in toArray() from streams (" + java.util.Arrays.toString(iArray) + " != " + java.util.Arrays.toString(jArray) + ")");
 		}
 
 		{
@@ -1388,6 +2017,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			System.exit(1);
 		}
 	}
 

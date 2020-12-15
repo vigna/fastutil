@@ -18,7 +18,7 @@
 package PACKAGE;
 
 import java.util.Iterator;
-#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+#if KEYS_PRIMITIVE
 import java.util.PrimitiveIterator;
 #endif
 #if (!defined JDK_PRIMITIVE_ITERATOR || KEY_WIDENED) && KEYS_PRIMITIVE
@@ -33,9 +33,10 @@ import java.util.function.Consumer;
  *
  * @see Iterator
  */
-
 #if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
 public interface KEY_ITERATOR KEY_GENERIC extends JDK_PRIMITIVE_ITERATOR {
+#elif KEYS_PRIMITIVE
+public interface KEY_ITERATOR KEY_GENERIC extends PrimitiveIterator<KEY_GENERIC_CLASS, KEY_CONSUMER> {
 #else
 public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 #endif
@@ -61,7 +62,7 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 		return KEY_CLASS.valueOf(NEXT_KEY());
 	}
 
-#if !defined JDK_PRIMITIVE_ITERATOR || KEY_WIDENED
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
 	/**
 	 * Performs the given action for each remaining element until all elements
 	 * have been processed or the action throws an exception.
@@ -69,6 +70,7 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	 * @see java.util.Iterator#forEachRemaining(java.util.function.Consumer)
 	 * @since 8.0.0
 	 */
+	@Override
 	default void forEachRemaining(final KEY_CONSUMER action) {
 		Objects.requireNonNull(action);
 		while (hasNext()) {
@@ -77,16 +79,39 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	}
 #endif
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	// Because our primitive Consumer interface extends both the JDK's primitive
+	// and object Consumer interfaces, calling this method with it would be ambiguous.
+	// This overload exists to pass it to the proper primitive overload.
+	/**
+	 * Performs the given action for each remaining element until all elements
+	 * have been processed or the action throws an exception.
+	 *
+	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead override the {@code forEachRemaining()} overload
+	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
+	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
+	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param action the action to be performed for each element.
+	 * @see java.util.Iterator#forEachRemaining(java.util.function.Consumer)
+	 * @since 8.5.0
+	 */
+	default void forEachRemaining(final KEY_CONSUMER action) {
+		forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER) action);
+	}
+#endif
+
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
 	@Override
 	default void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
-#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
-		forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER) action::accept);
-#else
-		forEachRemaining((KEY_CONSUMER) action::accept);
-#endif
+		// The instanceof and cast is required for performance. Without it, calls routed through this
+		// overload using a primitive consumer would go through the slow lambda.
+		forEachRemaining(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (KEY_CONSUMER) action::accept);
 	}
 
 #endif

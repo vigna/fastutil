@@ -26,12 +26,20 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Collection;
 import java.util.NoSuchElementException;
+#if KEYS_REFERENCE
+import java.util.function.Consumer;
+#endif
 
 /**  An abstract class providing basic methods for lists implementing a type-specific list interface.
  *
  * <p>As an additional bonus, this class implements on top of the list operations a type-specific stack.
+ *
+ * <p>Most of the methods in this class are optimized with the assumption that the List will have
+ * {@link java.util.RandomAccess have constant-time random access}. If this is not the case, you
+ * should probably <em>at least</em> override {@link #listIterator(int)} and the {@code xAll()} methods
+ * (such as {@link #addAll}) with a more appropriate iteration scheme. Note the {@link #subList(int, int)}
+ * method is cognizant of random-access or not, so that need not be reimplemented.
  */
-
 public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_GENERIC implements LIST KEY_GENERIC, STACK KEY_GENERIC {
 
 	protected ABSTRACT_LIST() {}
@@ -42,6 +50,7 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	 * @throws IndexOutOfBoundsException if the given index is negative or greater than the list size.
 	 */
 	protected void ensureIndex(final int index) {
+		// TODO When Java 9 becomes the minimum java, use Objects#checkIndex(index, size() + 1) (as can be an intrinsic)
 		if (index < 0)  throw new IndexOutOfBoundsException("Index (" + index + ") is negative");
 		if (index > size()) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than list size (" + (size()) + ")");
 	}
@@ -52,6 +61,7 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	 * @throws IndexOutOfBoundsException if the given index is negative or not smaller than the list size.
 	 */
 	protected void ensureRestrictedIndex(final int index) {
+		// TODO When Java 9 becomes the minimum java, use Objects#checkIndex (as can be an intrinsic)
 		if (index < 0)  throw new IndexOutOfBoundsException("Index (" + index + ") is negative");
 		if (index >= size()) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + (size()) + ")");
 	}
@@ -141,40 +151,42 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
 		ensureIndex(index);
 
-		return new KEY_LIST_ITERATOR KEY_GENERIC() {
-				int pos = index, last = -1;
+		return new ITERATORS.AbstractIndexBasedListIterator KEY_GENERIC(0, index) {
+			@Override
+			protected final KEY_GENERIC_TYPE get(int i) { return ABSTRACT_LIST.this.GET_KEY(i); }
+			@Override
+			protected final void add(int i, KEY_GENERIC_TYPE k) { ABSTRACT_LIST.this.add(i, k); }
+			@Override
+			protected final void set(int i, KEY_GENERIC_TYPE k) { ABSTRACT_LIST.this.set(i, k); }
+			@Override
+			protected final void remove(int i) { ABSTRACT_LIST.this.REMOVE_KEY(i); }
+			@Override
+			protected final int getMaxPos() { return ABSTRACT_LIST.this.size(); }
+		};
+	}
 
-				@Override
-				public boolean hasNext() { return pos < ABSTRACT_LIST.this.size(); }
-				@Override
-				public boolean hasPrevious() { return pos > 0; }
-				@Override
-				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY(last = pos++); }
-				@Override
-				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return ABSTRACT_LIST.this.GET_KEY(last = --pos); }
-				@Override
-				public int nextIndex() { return pos; }
-				@Override
-				public int previousIndex() { return pos - 1; }
-				@Override
-				public void add(final KEY_GENERIC_TYPE k) {
-					ABSTRACT_LIST.this.add(pos++, k);
-					last = -1;
-				}
-				@Override
-				public void set(final KEY_GENERIC_TYPE k) {
-					if (last == -1) throw new IllegalStateException();
-					ABSTRACT_LIST.this.set(last, k);
-				}
-				@Override
-				public void remove() {
-					if (last == -1) throw new IllegalStateException();
-					ABSTRACT_LIST.this.REMOVE_KEY(last);
-					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-					if (last < pos) pos--;
-					last = -1;
-				}
-			};
+	private static final class IndexBasedSpliterator KEY_GENERIC extends SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator KEY_GENERIC {
+		final LIST KEY_GENERIC l;
+		IndexBasedSpliterator(LIST KEY_GENERIC l, int pos, int maxPos) {
+			super(pos, maxPos);
+			this.l = l;
+		}
+
+		@Override
+		protected final KEY_GENERIC_TYPE get(int i) { return l.GET_KEY(i); }
+		@Override
+		protected final IndexBasedSpliterator KEY_GENERIC makeForSplit(int pos, int maxPos) {
+			return new IndexBasedSpliterator KEY_GENERIC_DIAMOND(l, pos, maxPos);
+		}
+	}
+
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		if (this instanceof java.util.RandomAccess) {
+			return new IndexBasedSpliterator KEY_GENERIC_DIAMOND(this, 0, ABSTRACT_LIST.this.size());
+		} else {
+			return LIST.super.spliterator();
+		}
 	}
 
 	/** Returns true if this list contains the specified element.
@@ -223,17 +235,35 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		ensureIndex(to);
 		if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
 
-		return new SUBLIST KEY_GENERIC_DIAMOND(this, from, to);
+		return this instanceof java.util.RandomAccess ? new SUBLIST_RANDOM_ACCESS KEY_GENERIC_DIAMOND(this, from, to) : new SUBLIST KEY_GENERIC_DIAMOND(this, from, to);
 	}
 
 	/** {@inheritDoc}
 	 *
-	 * <p>This is a trivial iterator-based implementation. It is expected that
+	 * @implNote If this list is {@link java.util.RandomAccess}, will iterate using a for
+	 * loop and the type-specific {@link List#get(int)} method. Otherwise it will fallback
+	 * to using the iterator based loop implementation from the superinterface.
+	 */
+	 @Override
+	 public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+	 	if (this instanceof java.util.RandomAccess) {
+	 		for (int i = 0, max = size(); i < max; ++i) {
+	 			action.accept(GET_KEY(i));
+			}
+		} else {
+			LIST.super.forEach(action);
+		}
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <p>This is a trivial iterator-based based implementation. It is expected that
 	 * implementations will override this method with a more optimized version.
 	 */
 	@Override
 	public void removeElements(final int from, final int to) {
 		ensureIndex(to);
+		// Always use the iterator based implementation even for RandomAccess so we don't have to worry about shifting indexes.
 		KEY_LIST_ITERATOR KEY_GENERIC i = listIterator(from);
 		int n = to - from;
 		if (n < 0) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
@@ -251,9 +281,13 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	@Override
 	public void addElements(int index, final KEY_GENERIC_TYPE a[], int offset, int length) {
 		ensureIndex(index);
-		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
-		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
-		while(length-- != 0) add(index++, a[offset++]);
+		ARRAYS.ensureOffsetLength(a, offset, length);
+		if (this instanceof java.util.RandomAccess) {
+			while(length-- != 0) add(index++, a[offset++]);
+		} else {
+			KEY_LIST_ITERATOR KEY_GENERIC iter = listIterator(index);
+			while(length-- != 0) iter.add(a[offset++]);
+		}
 	}
 
 	/** {@inheritDoc}
@@ -272,11 +306,35 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 	 */
 	@Override
 	public void getElements(final int from, final KEY_TYPE a[], int offset, int length) {
-		KEY_LIST_ITERATOR KEY_GENERIC i = listIterator(from);
-		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
-		if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
+		ensureIndex(from);
+		ARRAYS.ensureOffsetLength(a, offset, length);
 		if (from + length > size()) throw new IndexOutOfBoundsException("End index (" + (from + length) + ") is greater than list size (" + size() + ")");
-		while(length-- != 0) a[offset++] = i.NEXT_KEY();
+		if (this instanceof java.util.RandomAccess) {
+			int current = from;
+			while(length-- != 0) a[offset++] = GET_KEY(current++);
+		} else {
+			KEY_LIST_ITERATOR KEY_GENERIC i = listIterator(from);
+			while(length-- != 0) a[offset++] = i.NEXT_KEY();
+		}
+	}
+
+	@Override
+	public void setElements(int index, KEY_GENERIC_TYPE a[], int offset, int length) {
+		ensureIndex(index);
+		ARRAYS.ensureOffsetLength(a, offset, length);
+		if (index + length > size()) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size() + ")");
+		if (this instanceof java.util.RandomAccess) {
+			for (int i = 0; i < length; ++i) {
+				set(i + index, a[i + offset]);
+			}
+		} else {
+			KEY_LIST_ITERATOR KEY_GENERIC iter = listIterator(index);
+			int i = 0;
+			while (i < length) {
+				iter.NEXT_KEY();
+				iter.set(a[offset + i++]);
+			}
+		}
 	}
 
 	/** {@inheritDoc}
@@ -286,6 +344,24 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		removeElements(0, size());
 	}
 
+#if KEYS_REFERENCE
+	@Override
+	public Object[] toArray() {
+		final int size = size();
+		Object[] ret = new Object[size];
+		getElements(0, ret, 0, size);
+		return ret;
+	}
+
+	@Override
+	public <T> T[] toArray(T[] a) {
+		final int size = size();
+		if (a.length < size) a = java.util.Arrays.copyOf(a, size);
+		getElements(0, a, 0, size);
+		if (a.length > size) a[size] = null;
+		return a;
+	}
+#endif
 
 	/** Returns the hash code for this list, which is identical to {@link java.util.List#hashCode()}.
 	 *
@@ -405,6 +481,24 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		if (index == -1) return false;
 		REMOVE_KEY(index);
 		return true;
+	}
+
+	@Override
+	public KEY_TYPE[] TO_KEY_ARRAY() {
+		final int size = size();
+		KEY_TYPE[] ret = new KEY_TYPE[size];
+		getElements(0, ret, 0, size);
+		return ret;
+	}
+
+	@Override
+	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+		final int size = size();
+		if (a.length < size) {
+			a = java.util.Arrays.copyOf(a, size);
+		}
+		getElements(0, a, 0, size);
+		return a;
 	}
 
 	@Override
@@ -564,46 +658,110 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		}
 
 		@Override
+		public void setElements(int index, final KEY_GENERIC_TYPE a[], int offset, int length) {
+			ensureIndex(index);
+			l.setElements(this.from + index, a, offset, length);
+			assert assertRange();
+		}
+
+		private final class RandomAccessIter extends ITERATORS.AbstractIndexBasedListIterator KEY_GENERIC {
+
+			// We don't set the minPos to be "from" because we need to call our containing class'
+			// add, set, and remove methods with 0 relative to the start of the sublist, not the
+			// start of the original list.
+			// Thus pos is relative to the start of the SubList, not the start of the original list.
+			RandomAccessIter(int pos) {
+				super(0, pos);
+			}
+
+			@Override
+			protected final KEY_GENERIC_TYPE get(int i) { return l.GET_KEY(from + i); }
+			// Remember, these are calling SUBLIST's methods, meaning 0 is the start of the sublist for these.
+			@Override
+			protected final void add(int i, KEY_GENERIC_TYPE k) { SUBLIST.this.add(i, k); }
+			@Override
+			protected final void set(int i, KEY_GENERIC_TYPE k) { SUBLIST.this.set(i, k); }
+			@Override
+			protected final void remove(int i) { SUBLIST.this.REMOVE_KEY(i); }
+			@Override
+			protected final int getMaxPos() { return to - from; }
+
+			@Override
+			public void add(KEY_GENERIC_TYPE k) {
+				super.add(k);
+				assert assertRange();
+			}
+			@Override
+			public void remove() {
+				super.remove();
+				assert assertRange();
+			}
+		}
+
+		private class ParentWrappingIter implements KEY_LIST_ITERATOR KEY_GENERIC {
+			private KEY_LIST_ITERATOR KEY_GENERIC parent;
+
+			ParentWrappingIter(KEY_LIST_ITERATOR KEY_GENERIC parent) {
+				this.parent = parent;
+			}
+
+			@Override
+			public int nextIndex() { return parent.nextIndex() - from; }
+			@Override
+			public int previousIndex() { return parent.previousIndex() - from; }
+			@Override
+			public boolean hasNext() { return parent.nextIndex() < to; }
+			@Override
+			public boolean hasPrevious() { return parent.previousIndex() >= from; }
+			@Override
+			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return parent.NEXT_KEY(); }
+			@Override
+			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return parent.PREV_KEY(); }
+			@Override
+			public void add(KEY_GENERIC_TYPE k) { parent.add(k); }
+			@Override
+			public void set(KEY_GENERIC_TYPE k) { parent.set(k); }
+			@Override
+			public void remove() { parent.remove(); }
+
+			@Override
+			public int back(int n) {
+				if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+				int currentPos = parent.previousIndex();
+				int parentNewPos = currentPos - n;
+				// Remember, the minimum acceptable previousIndex is not from but (from - 1), since (from - 1)
+				// means this subList is at the beginning of our sub range.
+				// Same reason why previousIndex()'s minimum for the full list is not 0 but -1.
+				if (parentNewPos < (from - 1)) parentNewPos = (from - 1);
+				int toSkip = parentNewPos - currentPos;
+				return parent.back(toSkip);
+			}
+			@Override
+			public int skip(int n) {
+				if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+				int currentPos = parent.nextIndex();
+				int parentNewPos = currentPos + n;
+				if (parentNewPos > to) parentNewPos = to;
+				int toSkip = parentNewPos - currentPos;
+				return parent.skip(toSkip);
+			}
+		}
+
+
+		@Override
 		public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
 			ensureIndex(index);
 
-			return new KEY_LIST_ITERATOR KEY_GENERIC() {
-					int pos = index, last = -1;
+			// If this class wasn't public, then RandomAccessIter would live in SUBLISTRandomAccess,
+			// and the switching would be done in sublist(int, int). However, this is a public class
+			// that may have existing implementors, so to get the benefit of RandomAccessIter class for
+			// for existing uses, it has to be done in this class.
+			return l instanceof java.util.RandomAccess ? new RandomAccessIter(index) : new ParentWrappingIter(l.listIterator(index + from));
+		}
 
-					@Override
-					public boolean hasNext() { return pos < size(); }
-					@Override
-					public boolean hasPrevious() { return pos > 0; }
-					@Override
-					public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return l.GET_KEY(from + (last = pos++)); }
-					@Override
-					public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return l.GET_KEY(from + (last = --pos)); }
-					@Override
-					public int nextIndex() { return pos; }
-					@Override
-					public int previousIndex() { return pos - 1; }
-					@Override
-					public void add(KEY_GENERIC_TYPE k) {
-						if (last == -1) throw new IllegalStateException();
-						SUBLIST.this.add(pos++, k);
-						last = -1;
-						assert assertRange();
-					}
-					@Override
-					public void set(KEY_GENERIC_TYPE k) {
-						if (last == -1) throw new IllegalStateException();
-						SUBLIST.this.set(last, k);
-					}
-					@Override
-					public void remove() {
-						if (last == -1) throw new IllegalStateException();
-						SUBLIST.this.REMOVE_KEY(last);
-						/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-						if (last < pos) pos--;
-						last = -1;
-						assert assertRange();
-					}
-				};
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+			return l instanceof java.util.RandomAccess ? new IndexBasedSpliterator KEY_GENERIC_DIAMOND(l, from, to) : super.spliterator();
 		}
 
 		@Override
@@ -611,7 +769,8 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 			ensureIndex(from);
 			ensureIndex(to);
 			if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
-
+			// Sadly we have to rewrap this, because if there is a sublist of a sublist, and the
+			// subsublist adds, both sublists need to update their "to" value.
 			return new SUBLIST KEY_GENERIC_DIAMOND(this, from, to);
 		}
 
@@ -642,4 +801,20 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 
 	}
 
+	public static class SUBLIST_RANDOM_ACCESS KEY_GENERIC extends SUBLIST KEY_GENERIC implements java.util.RandomAccess {
+		private static final long serialVersionUID = -107070782945191929L;
+		public SUBLIST_RANDOM_ACCESS(final LIST KEY_GENERIC l, final int from, final int to) {
+			super(l, from, to);
+		}
+
+		@Override
+		public LIST KEY_GENERIC subList(final int from, final int to) {
+			ensureIndex(from);
+			ensureIndex(to);
+			if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
+			// Sadly we have to rewrap this, because if there is a sublist of a sublist, and the
+			// subsublist adds, both sublists need to update their "to" value.
+			return new SUBLIST_RANDOM_ACCESS KEY_GENERIC_DIAMOND(this, from, to);
+		}
+	}
 }

@@ -620,4 +620,45 @@ public class IntBigArrayBigListTest {
 		final IntBigArrayBigList l = IntBigArrayBigList.of(0, 1, 2);
 		assertEquals(IntBigArrayBigList.wrap(BigArrays.wrap(new int[] { 0, 1, 2 })), l);
 	}
+
+	@Test
+	public void testToBigList() {
+		final IntBigArrayBigList baseList = IntBigArrayBigList.of(2, 380, 1297);
+		// Also conveniently serves as a test of the intStream and spliterator.
+		IntBigArrayBigList transformed = IntBigArrayBigList.toBigList(baseList.intStream().map(i -> i + 40));
+		assertEquals(IntBigArrayBigList.of(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntBigArrayBigList baseList = IntBigArrayBigList.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator willBeSuffix = baseList.spliterator();
+		assertEquals(baseList.size64(), willBeSuffix.getExactSizeIfKnown());
+
+		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
+		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
+		IntSpliterator prefix = willBeSuffix.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
+		java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
+		java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
+
+		final IntBigArrayBigList prefixList = IntBigArrayBigList.toBigList(prefixStream);
+		final IntBigArrayBigList suffixList = IntBigArrayBigList.toBigList(suffixStream);
+		assertEquals(baseList.size64(), prefixList.size64() + suffixList.size64());
+		assertEquals(baseList.subList(0, prefixList.size64()), prefixList);
+		assertEquals(baseList.subList(prefixList.size64(), baseList.size64()), suffixList);
+		final IntBigArrayBigList recombinedList = new IntBigArrayBigList(baseList.size64());
+		recombinedList.addAll(prefixList);
+		recombinedList.addAll(suffixList);
+		assertEquals(baseList, recombinedList);
+	}
+
+	@Test
+	public void testSpliteratorSkip() {
+		final IntBigArrayBigList baseList = IntBigArrayBigList.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator spliterator = baseList.spliterator();
+		assertEquals(1, spliterator.skip(1));
+		java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
+		assertEquals(baseList.subList(1, baseList.size64()), IntBigArrayBigList.toBigList(stream));
+	}
 }

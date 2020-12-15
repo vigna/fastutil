@@ -120,6 +120,7 @@ echo -e \
 "${Custom:+#define Custom}\n"\
 "#define PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$k]}s\n"\
 "#define VALUE_PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$v]}s\n"\
+"#define WIDENED_PACKAGE it.unimi.dsi.fastutil.${TYPE_LC2[$wk]}s\n"\
 \
 \
 "/* Assertions (useful to generate conditional code) */\n"\
@@ -134,6 +135,10 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
+			echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\\n";\
+			echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$wk]}Stream\\n";\
+			echo "#define JDK_PRIMITIVE_UNARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}UnaryOperator\\n";\
+			echo "#define JDK_PRIMITIVE_KEY_APPLY applyAs${TYPE_CAP[$wk]}\\n";\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
@@ -141,6 +146,8 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
+		echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$k]}\\n";\
+		echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$k]}Stream\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
@@ -185,6 +192,13 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	else\
 		echo "#define KEY_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safe${TYPE_CAP[$wk]}To${TYPE_CAP[$k]}(x)\\n";\
 		echo "#define KEY_WIDENED 1\\n";\
+	fi;\
+fi)\
+$(if [[ "${CLASS[$k]}" != "" ]]; then\
+	if [[ "${TYPE_CAP[$k]}" == "Long" ]]; then\
+		echo "#define KEY_LONG_NARROWING(x) x\\n";\
+	elif [[ "${TYPE_CAP[$k]}" != "Double" && "${TYPE_CAP[$k]}" != "Float" ]]; then\
+		echo "#define KEY_LONG_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safeLongTo${TYPE_CAP[$k]}(x)\\n";\
 	fi;\
 fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
@@ -331,7 +345,9 @@ fi)\
 \
 \
 "#define KEY_VALUE ${TYPE[$k]}Value\n"\
+"#define KEY_WIDENED_VALUE ${TYPE[$wk]}Value\n"\
 "#define VALUE_VALUE ${TYPE[$v]}Value\n"\
+"#define VALUE_WIDENED_VALUE ${TYPE[$wv]}Value\n"\
 \
 \
 "/* Interfaces (keys) */\n"\
@@ -371,7 +387,10 @@ fi)\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n"\
 "#define KEY_CONSUMER ${TYPE_STD[$k]}Consumer\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n"\
+"#define KEY_WIDENED_ITERATOR ${TYPE_CAP[$wk]}Iterator\n"\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n"\
+"#define KEY_SPLITERATOR ${TYPE_CAP2[$k]}Spliterator\n"\
+"#define KEY_WIDENED_SPLITERATOR ${TYPE_CAP[$wk]}Spliterator\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n"\
 "#define KEY_BIDI_ITERABLE ${TYPE_CAP2[$k]}BidirectionalIterable\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n"\
@@ -388,7 +407,44 @@ fi)\
 "#define VALUE_ARRAY_SET ${TYPE_CAP[$v]}ArraySet\n"\
 "#define VALUE_CONSUMER ${TYPE_STD[$v]}Consumer\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP2[$v]}Iterator\n"\
+"#define VALUE_SPLITERATOR ${TYPE_CAP2[$v]}Spliterator\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
+\
+\
+"/* Types that vary based on being reference or primitve, or widened primitive or not */\n"\
+\
+\
+"#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED\n"\
+"#if KEYS_REFERENCE\n"\
+"#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\
+"#else\n"\
+"#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER\n"\
+"#endif\n"\
+"#else\n"\
+"#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
+"#endif\n"\
+\
+"#if !defined JDK_PRIMITIVE_VALUE_CONSUMER || VALUE_WIDENED\n"\
+"#if VALUES_REFERENCE\n"\
+"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
+"#else\n"\
+"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER\n"\
+"#endif\n"\
+"#else\n"\
+"#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
+"#endif\n"\
+\
+"#if !defined JDK_PRIMITIVE_PREDICATE || KEYS_REFERENCE\n"\
+"#define METHOD_ARG_PREDICATE java.util.function.Predicate<? super KEY_GENERIC_CLASS>\n"\
+"#else\n"\
+"#define METHOD_ARG_PREDICATE JDK_PRIMITIVE_PREDICATE\n"\
+"#endif\n"\
+\
+"#if !defined JDK_PRIMITIVE_UNARY_OPERATOR || KEYS_REFERENCE\n"\
+"#define METHOD_ARG_UNARY_OPERATOR java.util.function.UnaryOperator<KEY_GENERIC_CLASS>\n"\
+"#else\n"\
+"#define METHOD_ARG_UNARY_OPERATOR JDK_PRIMITIVE_UNARY_OPERATOR\n"\
+"#endif\n"\
 \
 \
 "/* Abstract implementations (keys) */\n"\
@@ -404,6 +460,7 @@ fi)\
 "#define ABSTRACT_LIST Abstract${TYPE_CAP[$k]}List\n"\
 "#define ABSTRACT_BIG_LIST Abstract${TYPE_CAP[$k]}BigList\n"\
 "#define SUBLIST ${TYPE_CAP[$k]}SubList\n"\
+"#define SUBLIST_RANDOM_ACCESS ${TYPE_CAP[$k]}RandomAccessSubList\n"\
 "#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_STD[$k]}PriorityQueue\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_STD[$k]}Stack\n"\
 "#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP2[$k]}Iterator\n"\
@@ -442,9 +499,13 @@ fi)\
 "#define INDIRECT_HEAPS ${TYPE_CAP2[$k]}IndirectHeaps\n"\
 "#define ARRAYS ${TYPE_CAP2[$k]}Arrays\n"\
 "#define BIG_ARRAYS ${TYPE_CAP2[$k]}BigArrays\n"\
-"#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n"\
 "#define ITERABLES ${TYPE_CAP2[$k]}Iterables\n"\
+"#define ITERATORS ${TYPE_CAP2[$k]}Iterators\n"\
+"#define WIDENED_ITERATORS ${TYPE_CAP[$wk]}Iterators\n"\
+"#define SPLITERATORS ${TYPE_CAP2[$k]}Spliterators\n"\
+"#define WIDENED_SPLITERATORS ${TYPE_CAP[$wk]}Spliterators\n"\
 "#define BIG_LIST_ITERATORS ${TYPE_CAP2[$k]}BigListIterators\n"\
+"#define BIG_SPLITERATORS ${TYPE_CAP2[$k]}BigSpliterators\n"\
 "#define COMPARATORS ${TYPE_CAP2[$k]}Comparators\n"\
 \
 \
@@ -454,6 +515,8 @@ fi)\
 "#define VALUE_COLLECTIONS ${TYPE_CAP[$v]}Collections\n"\
 "#define VALUE_SETS ${TYPE_CAP[$v]}Sets\n"\
 "#define VALUE_ARRAYS ${TYPE_CAP2[$v]}Arrays\n"\
+"#define VALUE_ITERATORS ${TYPE_CAP2[$v]}Iterators\n"\
+"#define VALUE_SPLITERATORS ${TYPE_CAP2[$v]}Spliterators\n"\
 \
 \
 "/* Implementations */\n"\
@@ -528,6 +591,10 @@ fi)\
 "#define PREV_KEY previous${TYPE_STD[$k]}\n"\
 "#define NEXT_KEY_WIDENED next${TYPE_STD[$wk]}\n"\
 "#define PREV_KEY_WIDENED previous${TYPE_STD[$wk]}\n"\
+"#define KEY_WIDENED_ITERATOR_METHOD ${TYPE_LC[$wk]}Iterator\n"\
+"#define KEY_WIDENED_SPLITERATOR_METHOD ${TYPE_LC[$wk]}Spliterator\n"\
+"#define KEY_WIDENED_STREAM_METHOD ${TYPE_LC[$wk]}Stream\n"\
+"#define KEY_WIDENED_PARALLEL_STREAM_METHOD ${TYPE_LC[$wk]}ParallelStream\n"\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
@@ -546,9 +613,13 @@ fi)\
 "#define PEEK peek${TYPE_STD[$k]}\n"\
 "#define POP pop${TYPE_STD[$k]}\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n"\
+"#define KEY_EMPTY_SPLITERATOR_METHOD empty${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n"\
+"#define AS_KEY_SPLITERATOR as${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_COMPARATOR as${TYPE_CAP2[$k]}Comparator\n"\
 "#define AS_KEY_ITERABLE as${TYPE_CAP2[$k]}Iterable\n"\
+"#define AS_KEY_WIDENED_ITERATOR as${TYPE_CAP2[$wk]}Iterator\n"\
+"#define AS_KEY_WIDENED_SPLITERATOR as${TYPE_CAP2[$wk]}Spliterator\n"\
 "#define TO_KEY_ARRAY to${TYPE_STD[$k]}Array\n"\
 "#define ENTRY_GET_KEY get${TYPE_STD[$k]}Key\n"\
 "#define REMOVE_FIRST_KEY removeFirst${TYPE_STD[$k]}\n"\
@@ -557,6 +628,13 @@ fi)\
 "#define LOAD_KEYS load${TYPE_STD[$k]}s\n"\
 "#define LOAD_KEYS_BIG load${TYPE_STD[$k]}sBig\n"\
 "#define STORE_KEYS store${TYPE_STD[$k]}s\n"\
+"#if KEYS_REFERENCE\n"\
+"#define MAP_TO_KEY map\n"\
+"#define MAP_TO_KEY_WIDENED map\n"\
+"#else\n"\
+"#define MAP_TO_KEY mapTo${TYPE_CAP2[$k]}\n"\
+"#define MAP_TO_KEY_WIDENED mapTo${TYPE_CAP2[$wk]}\n"\
+"#endif\n"\
 \
 \
 "/* Methods (values) */\n"\
@@ -569,6 +647,8 @@ fi)\
 "#define ENTRY_GET_VALUE get${TYPE_STD[$v]}Value\n"\
 "#define REMOVE_FIRST_VALUE removeFirst${TYPE_STD[$v]}\n"\
 "#define REMOVE_LAST_VALUE removeLast${TYPE_STD[$v]}\n"\
+"#define AS_VALUE_ITERATOR as${TYPE_CAP2[$v]}Iterator\n"\
+"#define AS_VALUE_SPLITERATOR as${TYPE_CAP2[$v]}Spliterator\n"\
 "#define PAIR_RIGHT right${TYPE_STD[$v]}\n"\
 "#define PAIR_SECOND second${TYPE_STD[$v]}\n"\
 "#define PAIR_VALUE value${TYPE_STD[$v]}\n"\

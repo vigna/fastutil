@@ -19,6 +19,8 @@ package PACKAGE;
 
 import java.util.SortedSet;
 import java.util.Collection;
+import static it.unimi.dsi.fastutil.Size64.getSizeOf;
+
 
 /** A type-specific {@link SortedSet}; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
@@ -62,11 +64,11 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	/** Returns a type-specific {@link it.unimi.dsi.fastutil.BidirectionalIterator} on the elements in
 	 * this set.
 	 *
-	 * <p>Note that this specification strengthens the one given in the corresponding type-specific
-	 * {@link Collection}.
-	 *
 	 * <p>This method returns a parameterised bidirectional iterator. The iterator
 	 * can be moreover safely cast to a type-specific iterator.
+	 *
+	 * <p>This specification strengthens the one given in the corresponding type-specific
+	 * {@link Collection}.
 	 *
 	 * @return a bidirectional iterator on the element in this set.
 	 */
@@ -74,8 +76,25 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	@Override
 	KEY_BIDI_ITERATOR KEY_GENERIC iterator();
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @apiNote This specification strengthens the one given in
+	 * {@link java.util.Collection#spliterator()}, which was already
+	 * strengthened in the corresponding type-specific class,
+	 * but was weakened by the fact that this interface extends {@link SortedSet}.
+	 */
+	@Override
+#if SPLITERATOR_ASSURE_OVERRIDE
+	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+#else
+	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return SPLITERATORS.asSpliteratorFromSorted(iterator(), getSizeOf(this), SPLITERATORS.SORTED_SET_SPLITERATOR_CHARACTERISTICS, comparator());
+	}
+#endif
+
 	/** Returns a view of the portion of this sorted set whose elements range from {@code fromElement}, inclusive, to {@code toElement}, exclusive.
-	 * <p>Note that this specification strengthens the one given in {@link SortedSet#subSet(Object,Object)}.
+	 * @apiNote This specification strengthens the one given in {@link SortedSet#subSet(Object,Object)}.
 	 * @see SortedSet#subSet(Object,Object)
 	 */
 
@@ -85,7 +104,7 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	SORTED_SET KEY_GENERIC subSet(KEY_GENERIC_TYPE fromElement, KEY_GENERIC_TYPE toElement) ;
 
 	/** Returns a view of the portion of this sorted set whose elements are strictly less than {@code toElement}.
-	 * <p>Note that this specification strengthens the one given in {@link SortedSet#headSet(Object)}.
+	 * @apiNote This specification strengthens the one given in {@link SortedSet#headSet(Object)}.
 	 * @see SortedSet#headSet(Object)
 	 */
 
@@ -95,7 +114,7 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	SORTED_SET KEY_GENERIC headSet(KEY_GENERIC_TYPE toElement);
 
 	/** Returns a view of the portion of this sorted set whose elements are greater than or equal to {@code fromElement}.
-	 * <p>Note that this specification strengthens the one given in {@link SortedSet#headSet(Object)}.
+	 * @apiNote This specification strengthens the one given in {@link SortedSet#headSet(Object)}.
 	 * @see SortedSet#tailSet(Object)
 	 */
 
@@ -106,7 +125,7 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 
 #if KEYS_PRIMITIVE
 	/** {@inheritDoc}
-	 * <p>Note that this specification strengthens the one given in {@link SortedSet#comparator()}.
+	 * @apiNote This specification strengthens the one given in {@link SortedSet#comparator()}.
 	 */
 	@Override
 	KEY_COMPARATOR comparator();
@@ -167,5 +186,4 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	}
 
 #endif
-
 }

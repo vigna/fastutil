@@ -21,6 +21,11 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER
+import java.util.function.Consumer;
+#endif
+
+
 /** A simple, brute-force implementation of a set based on a backing array.
  *
  * <p>The main purpose of this
@@ -61,7 +66,7 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 	 * @param c a collection.
 	 */
 	public ARRAY_SET(COLLECTION KEY_GENERIC c) {
-		this(c.size ());
+		this(c.size());
 		addAll(c);
 	}
 
@@ -125,11 +130,11 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 
 	/** Creates a new array set using the element given.
 	 *
-	 * @param element the element that the returned set will contain.
-	 * @return a new array set containing the elements in {@code a}.
+	 * @param e the element that the returned set will contain.
+	 * @return a new array set containing {@code e}.
 	 */
-	public static KEY_GENERIC ARRAY_SET KEY_GENERIC of(final KEY_GENERIC_TYPE a) {
-		return ofUnchecked(a);
+	public static KEY_GENERIC ARRAY_SET KEY_GENERIC of(final KEY_GENERIC_TYPE e) {
+		return ofUnchecked(e);
 	}
 
 	/** Creates a new array set using an array of elements.
@@ -182,6 +187,8 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 		return -1;
 	}
 
+	// TODO Maybe make this return a list-iterator like the LinkedXHashSets do?
+
 	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public KEY_ITERATOR KEY_GENERIC iterator() {
@@ -205,7 +212,119 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 				a[size] = null;
 #endif
 			}
+
+			@Override
+			public int skip(int n) {
+				if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+				final int remaining = size - next;
+				if (n < remaining) {
+					next += n;
+					return n;
+				}
+				n = remaining;
+				next = size;
+				return n;
+			}
 		};
+	}
+
+	// If you update this, you will probably want to update ArrayList as well
+	private final class Spliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		// Until we split, we will track the size of the set
+		// Once we split, then we stop updating on structural modifications.
+		// Aka, size is late-binding.
+		boolean hasSplit = false;
+		int pos, max;
+
+#ifdef TEST
+		// Sentinal to make sure we don't accidentally use size when we mean max
+		@Deprecated
+		private final Object size = null;
+#endif
+
+		public Spliterator() {
+			this(0, ARRAY_SET.this.size, false);
+		}
+
+		private Spliterator(int pos, int max, boolean hasSplit) {
+			assert pos <= max : "pos " + pos + " must be <= max " + max;
+			this.pos = pos;
+			this.max = max;
+			this.hasSplit = hasSplit;
+		}
+
+		private int getWorkingMax() {
+			return hasSplit ? max : ARRAY_SET.this.size;
+		}
+
+		@Override
+		public int characteristics() { return SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.SUBSIZED | java.util.Spliterator.ORDERED; }
+
+		@Override
+		public long estimateSize() { return getWorkingMax() - pos; }
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= getWorkingMax()) return false;
+			action.accept(KEY_GENERIC_CAST a[pos++]);
+			return true;
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (final int max = getWorkingMax(); pos < max; ++pos) {
+				action.accept(KEY_GENERIC_CAST a[pos]);
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			final int max = getWorkingMax();
+			if (pos >= max) return 0;
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
+				return n;
+			}
+			n = remaining;
+			pos = max;
+			return n;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			final int max = getWorkingMax();
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			// Update instance max with the last seen list size (if needed) before continuing
+			this.max = max;
+			int myNewPos = pos + retLen;
+			int retMax = myNewPos;
+			int oldPos = pos;
+			this.pos = myNewPos;
+			this.hasSplit = true;
+			return new Spliterator(oldPos, retMax, true);
+		}
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <p>In addition to the usual trait of {@link java.util.Spliterator#DISTINCT DISTINCT} for
+	 * sets, the returned spliterator will also {@linkplain java.util.Spliterator#characteristics() report}
+	 * the trait {@link java.util.Spliterator#ORDERED ORDERED}.
+	 *
+	 * <p>The returned spliterator is late-binding; it will track structural changes
+	 * after the current item, up until the first {@link java.util.Spliterator#trySplit() trySplit()},
+	 * at which point the maximum index will be fixed.
+	 * <br>Structural changes before the current item or after the first
+	 * {@link java.util.Spliterator#trySplit() trySplit()} will result in unspecified behavior.
+	 */
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return new Spliterator();
 	}
 
 	@Override

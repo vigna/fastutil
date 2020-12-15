@@ -18,6 +18,14 @@
 package PACKAGE;
 
 import java.util.Collection;
+import java.util.Objects;
+import java.util.function.Consumer;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
 
 #if ! KEYS_REFERENCE
 import it.unimi.dsi.fastutil.objects.ObjectArrays;
@@ -31,6 +39,15 @@ import it.unimi.dsi.fastutil.objects.ObjectArrays;
 public final class COLLECTIONS {
 
 	private COLLECTIONS() {}
+
+#if KEYS_PRIMITIVE && !KEY_TYPE_Boolean
+	/* Only in the EmptyCollection class, where performance is critical, do we override the
+	 * deprecated, Object based functional methods. For the rest, we just override the
+	 * non-deprecated type-specific method, and let the default method from the interface
+	 * filter into that. This is an extra method call and lambda creation, but it isn't worth
+	 * complexifying the code generation for a case that is already marked as being inefficient.
+	 */
+#endif
 
 	/** An immutable class representing an empty type-specific collection.
 	 *
@@ -48,8 +65,18 @@ public final class COLLECTIONS {
 		public Object[] toArray() { return ObjectArrays.EMPTY_ARRAY; }
 
 		@Override
+		public <T> T[] toArray(T[] array) {
+			if (array.length > 0) array[0] = null;
+			return array;
+		}
+
+		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return ITERATORS.EMPTY_ITERATOR; }
+
+		@Override
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return SPLITERATORS.EMPTY_SPLITERATOR; }
 
 		@Override
 		public int size() { return 0; }
@@ -67,6 +94,13 @@ public final class COLLECTIONS {
 			return ((Collection<?>)o).isEmpty();
 		}
 
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) { }
+
+		@Override
+		public boolean containsAll(final Collection<?> c) { return c.isEmpty(); }
+
 		@Override
 		public boolean addAll(final Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
 
@@ -76,7 +110,27 @@ public final class COLLECTIONS {
 		@Override
 		public boolean retainAll(final Collection<?> c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_PREDICATE && KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
+			Objects.requireNonNull(filter);
+			return false;
+		}
 #if KEYS_PRIMITIVE
+
+		@Override
+		public KEY_TYPE[] TO_KEY_ARRAY() { return ARRAYS.EMPTY_ARRAY; }
+
+		@Override
+		public KEY_TYPE[] TO_KEY_ARRAY(KEY_TYPE[] a) { return a; }
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) { }
+
+		@Override
+		public boolean containsAll(final COLLECTION c) { return c.isEmpty(); }
 
 		@Override
 		public boolean addAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
@@ -87,6 +141,22 @@ public final class COLLECTIONS {
 		@Override
 		public boolean retainAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_PREDICATE
+		@Override
+		public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
+			Objects.requireNonNull(filter);
+			return false;
+		}
+#endif
+
+#if defined JDK_PRIMITIVE_ITERATOR && SMALL_TYPES && KEY_WIDENED
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return WIDENED_ITERATORS.EMPTY_ITERATOR; }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return WIDENED_SPLITERATORS.EMPTY_SPLITERATOR; }
+#endif
+
 #endif
 
 	}
@@ -94,7 +164,7 @@ public final class COLLECTIONS {
 
 	/** A synchronized wrapper class for collections. */
 
-	public static class SynchronizedCollection KEY_GENERIC implements COLLECTION KEY_GENERIC, java.io.Serializable {
+	static class SynchronizedCollection KEY_GENERIC implements COLLECTION KEY_GENERIC, java.io.Serializable {
 
 		private static final long serialVersionUID = -7046029254386353129L;
 
@@ -102,14 +172,12 @@ public final class COLLECTIONS {
 		protected final Object sync;
 
 		protected SynchronizedCollection(final COLLECTION KEY_GENERIC c, final Object sync) {
-			if (c == null) throw new NullPointerException();
-			this.collection = c;
+			this.collection = Objects.requireNonNull(c);
 			this.sync = sync;
 		}
 
 		protected SynchronizedCollection(final COLLECTION KEY_GENERIC c) {
-			if (c == null) throw new NullPointerException();
-			this.collection = c;
+			this.collection = Objects.requireNonNull(c);
 			this.sync = this;
 		}
 
@@ -154,11 +222,6 @@ public final class COLLECTIONS {
 		@Override
 		public boolean removeAll(final COLLECTION c) { synchronized(sync) { return collection.removeAll(c); } }
 
-#ifdef JDK_PRIMITIVE_PREDICATE
-		@Override
-		public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) { synchronized(sync) { return collection.removeIf(filter); } }
-#endif
-
 		@Override
 		public boolean retainAll(final COLLECTION c) { synchronized(sync) { return collection.retainAll(c); } }
 
@@ -173,6 +236,22 @@ public final class COLLECTIONS {
 		@Override
 		@Deprecated
 		public boolean remove(final Object k) { synchronized(sync) { return collection.remove(k); } }
+
+#if defined JDK_PRIMITIVE_ITERATOR && SMALL_TYPES
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return collection.KEY_WIDENED_ITERATOR_METHOD(); }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return collection.KEY_WIDENED_SPLITERATOR_METHOD(); }
+#endif
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_STREAM_METHOD() { return collection.KEY_WIDENED_STREAM_METHOD(); }
+
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_PARALLEL_STREAM_METHOD() { return collection.KEY_WIDENED_PARALLEL_STREAM_METHOD(); }
+#endif
 #endif
 
 		@Override
@@ -180,6 +259,24 @@ public final class COLLECTIONS {
 
 		@Override
 		public KEY_ITERATOR KEY_GENERIC iterator() { return collection.iterator(); }
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return collection.spliterator(); }
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Deprecated
+#endif
+		@Override
+		public java.util.stream.Stream <KEY_GENERIC_CLASS> stream() { return collection.stream(); }
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Deprecated
+#endif
+		@Override
+		public java.util.stream.Stream <KEY_GENERIC_CLASS> parallelStream() { return collection.parallelStream(); }
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) { synchronized(sync) { collection.forEach(action); } }
 
 		@Override
 		public boolean addAll(final Collection<? extends KEY_GENERIC_CLASS> c) { synchronized(sync) { return collection.addAll(c); } }
@@ -192,6 +289,9 @@ public final class COLLECTIONS {
 
 		@Override
 		public boolean retainAll(final Collection<?> c) { synchronized(sync) { return collection.retainAll(c); } }
+
+		@Override
+		public boolean removeIf(final METHOD_ARG_PREDICATE filter) { synchronized(sync) { return collection.removeIf(filter); } }
 
 		@Override
 		public void clear() { synchronized(sync) { collection.clear(); } }
@@ -232,15 +332,14 @@ public final class COLLECTIONS {
 
 	/** An unmodifiable wrapper class for collections. */
 
-	public static class UnmodifiableCollection KEY_GENERIC implements COLLECTION KEY_GENERIC, java.io.Serializable {
+	static class UnmodifiableCollection KEY_GENERIC implements COLLECTION KEY_GENERIC, java.io.Serializable {
 
 		private static final long serialVersionUID = -7046029254386353129L;
 
 		protected final COLLECTION KEY_GENERIC collection;
 
 		protected UnmodifiableCollection(final COLLECTION KEY_GENERIC c) {
-			if (c == null) throw new NullPointerException();
-			this.collection = c;
+			this.collection = Objects.requireNonNull(c);
 		}
 
 		@Override
@@ -262,6 +361,21 @@ public final class COLLECTIONS {
 		public KEY_ITERATOR KEY_GENERIC iterator() { return ITERATORS.unmodifiable(collection.iterator()); }
 
 		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return collection.spliterator(); }
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Deprecated
+#endif
+		@Override
+		public java.util.stream.Stream <KEY_GENERIC_CLASS> stream() { return collection.stream(); }
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Deprecated
+#endif
+		@Override
+		public java.util.stream.Stream <KEY_GENERIC_CLASS> parallelStream() { return collection.parallelStream(); }
+
+		@Override
 		public void clear() { throw new UnsupportedOperationException(); }
 
 		@Override
@@ -269,6 +383,9 @@ public final class COLLECTIONS {
 
 		@Override
 		public Object[] toArray() { return collection.toArray(); }
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) { collection.forEach(action); }
 
 		@Override
 		public boolean containsAll(Collection<?> c) { return collection.containsAll(c); }
@@ -281,6 +398,9 @@ public final class COLLECTIONS {
 
 		@Override
 		public boolean retainAll(Collection<?> c) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public boolean removeIf(final METHOD_ARG_PREDICATE filter) { throw new UnsupportedOperationException(); }
 
 #if KEYS_PRIMITIVE
 		@Override
@@ -319,7 +439,24 @@ public final class COLLECTIONS {
 
 		@Override
 		public boolean retainAll(COLLECTION c) { throw new UnsupportedOperationException(); }
+
+#if defined JDK_PRIMITIVE_ITERATOR && SMALL_TYPES
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return collection.KEY_WIDENED_ITERATOR_METHOD(); }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return collection.KEY_WIDENED_SPLITERATOR_METHOD(); }
 #endif
+
+#if defined JDK_PRIMITIVE_STREAM
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_STREAM_METHOD() { return collection.KEY_WIDENED_STREAM_METHOD(); }
+
+		@Override
+		public JDK_PRIMITIVE_STREAM KEY_WIDENED_PARALLEL_STREAM_METHOD() { return collection.KEY_WIDENED_PARALLEL_STREAM_METHOD(); }
+#endif
+#endif
+
 		@Override
 		public String toString() { return collection.toString(); }
 
@@ -348,12 +485,13 @@ public final class COLLECTIONS {
 		protected final KEY_ITERABLE KEY_GENERIC iterable;
 
 		protected IterableCollection(final KEY_ITERABLE KEY_GENERIC iterable) {
-			if (iterable == null) throw new NullPointerException();
-			this.iterable = iterable;
+			this.iterable = Objects.requireNonNull(iterable);
 		}
 
 		@Override
 		public int size() {
+			long size = iterable.spliterator().getExactSizeIfKnown();
+			if (size >= 0) return (int)Math.min(Integer.MAX_VALUE, size);
 			int c = 0;
 			final KEY_ITERATOR KEY_GENERIC iterator = iterator();
 			while(iterator.hasNext()) {
@@ -369,6 +507,17 @@ public final class COLLECTIONS {
 
 		@Override
 		public KEY_ITERATOR KEY_GENERIC iterator() { return iterable.iterator(); }
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return iterable.spliterator(); }
+
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && SMALL_TYPES
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterable.KEY_WIDENED_ITERATOR_METHOD() ; }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return iterable.KEY_WIDENED_SPLITERATOR_METHOD() ; }
+#endif
 	}
 
 
@@ -379,6 +528,7 @@ public final class COLLECTIONS {
 	 */
 	public static KEY_GENERIC COLLECTION KEY_GENERIC asCollection(final KEY_ITERABLE KEY_GENERIC iterable) {
 		if (iterable instanceof COLLECTION) return (COLLECTION KEY_GENERIC)iterable;
+		// TODO test for Collection but not our collection, and make a wrapper for it.
 		return new IterableCollection KEY_GENERIC_DIAMOND(iterable);
 	}
 
