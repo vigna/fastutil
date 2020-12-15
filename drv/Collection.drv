@@ -18,6 +18,13 @@
 package PACKAGE;
 
 import java.util.Collection;
+import static it.unimi.dsi.fastutil.Size64.getSizeOf;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
 
 /** A type-specific {@link Collection}; provides some additional methods
  * that use polymorphism to avoid (un)boxing.
@@ -31,7 +38,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 
 	/** Returns a type-specific iterator on the elements of this collection.
 	 *
-	 * <p>Note that this specification strengthens the one given in
+	 * @apiNote This specification strengthens the one given in
 	 * {@link java.lang.Iterable#iterator()}, which was already
 	 * strengthened in the corresponding type-specific class,
 	 * but was weakened by the fact that this interface extends {@link Collection}.
@@ -40,6 +47,118 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	@Override
 	KEY_ITERATOR KEY_GENERIC iterator();
+
+#if defined JDK_PRIMITIVE_ITERATOR && KEY_WIDENED && SMALL_TYPES
+#if KEY_CLASS_Character
+	/**
+	 * Returns a widened primitive iterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is provided for the purpose of APIs that expect only the JDK's
+	 * primitive iterators, of which there are only {@code int}, {@code long}, and {@code double}.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents. See {@link Character} for more discussion on code points,
+	 * char values, and surrogate pairs.
+	 *
+	 * @return a widened primitive iterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+#else
+	/**
+	 * Returns a widened primitive iterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is provided for the purpose of APIs that expect only the JDK's
+	 * primitive iterators, of which there are only {@code int}, {@code long}, and {@code double}.
+	 *
+	 * @return a widened primitive iterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+#endif
+	@Override
+	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() {
+		return KEY_ITERABLE.super.KEY_WIDENED_ITERATOR_METHOD();
+	}
+#elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
+	/** Returns a primitive iterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is identical to {@link #iterator()}, as the type-specific
+	 * iterator is already compatible with the JDK's primitive iterators.
+	 * It only exists for compatibility with the other primitive types' {@code Collection}s
+	 * that have use for widened iterators.
+	 *
+	 * @return a primitive iterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+	@Override
+	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterator(); }
+#endif
+
+	// If you change these default spliterator methods, you will likely need to update Iterable, List, Set, and SortedSet too
+
+	/** Returns a type-specific spliterator on the elements of this collection.
+	 *
+	 * @apiNote This specification strengthens the one given in
+	 * {@link java.util.Collection#spliterator()}.
+	 *
+	 * @return a type-specific spliterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+	@Override
+#if SPLITERATOR_ASSURE_OVERRIDE
+	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+#else
+	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return SPLITERATORS.asSpliterator(
+				iterator(), getSizeOf(this), SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS);
+	}
+#endif
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
+#if KEY_CLASS_Character
+	/** Returns widened primitive spliterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is provided for the purpose of APIs that expect only the JDK's
+	 * primitive spliterators, of which there are only {@code int}, {@code long}, and {@code double}.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents. See {@link Character} for more discussion on code points,
+	 * char values, and surrogate pairs.
+	 *
+	 * @return a widened primitive spliterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+#else
+	/** Returns widened primitive spliterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is provided for the purpose of APIs that expect only the JDK's
+	 * primitive spliterators, of which there are only {@code int}, {@code long}, and {@code double}.
+	 *
+	 * @return a widened primitive spliterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+#endif
+	@Override
+	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
+		return KEY_ITERABLE.super.KEY_WIDENED_SPLITERATOR_METHOD();
+	}
+#elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
+	/** Returns a primitive spliterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is identical to {@link #spliterator()}, as the type-specific
+	 * spliterator is already compatible with the JDK's primitive spliterators.
+	 * It only exists for compatibility with the other primitive types' {@code Collection}s
+	 * that have use for widened spliterators.
+	 *
+	 * @return a primitive spliterator on the elements of this collection.
+	 */
+	@Override
+	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return spliterator(); }
+#endif
+
 
 #if KEYS_PRIMITIVE
 
@@ -112,7 +231,9 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * @deprecated Please use {@code toArray()} instead&mdash;this method is redundant and will be removed in the future.
 	 */
 	@Deprecated
-	KEY_TYPE[] TO_KEY_ARRAY(KEY_TYPE a[]);
+	default KEY_TYPE[] TO_KEY_ARRAY(KEY_TYPE a[]) {
+		return toArray(a);
+	}
 
 	/** Returns an array containing all of the elements in this collection; the runtime type of the returned array is that of the specified array.
 	 *
@@ -190,6 +311,69 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	boolean retainAll(COLLECTION c);
 
+#if defined JDK_PRIMITIVE_STREAM
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default java.util.stream.Stream<KEY_GENERIC_CLASS> stream() { return Collection.super.stream(); }
+
+#if KEY_CLASS_Character
+	/** Return a primitive stream over the elements, performing widening casts if needed.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents. See {@link Character} for more discussion on code points,
+	 * char values, and surrogate pairs.
+	 *
+	 * @return a primitive stream over the elements.
+	 * @see Collection#stream()
+	 * @see java.util.stream.IntStream
+	 */
+#else
+	/** Return a primitive stream over the elements, performing widening casts if needed.
+	 * @return a primitive stream over the elements.
+	 * @see Collection#stream()
+	 * @see java.util.stream.IntStream
+	 */
+#endif
+	default JDK_PRIMITIVE_STREAM KEY_WIDENED_STREAM_METHOD() {
+		return java.util.stream.StreamSupport.KEY_WIDENED_STREAM_METHOD(KEY_WIDENED_SPLITERATOR_METHOD(), false);
+	}
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead.
+	 */
+	@Deprecated
+	@Override
+	default java.util.stream.Stream<KEY_GENERIC_CLASS> parallelStream() { return Collection.super.parallelStream(); }
+
+#if KEY_CLASS_Character
+	/** Return a parallel primitive stream over the elements, performing widening casts if needed.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents. See {@link Character} for more discussion on code points,
+	 * char values, and surrogate pairs.
+	 *
+	 * @return a parallel primitive stream over the elements.
+	 * @see Collection#parallelStream()
+	 * @see java.util.stream.IntStream
+	 */
+#else
+	/** Return a parallel primitive stream over the elements, performing widening casts if needed.
+	 * @return a parallel primitive stream over the elements.
+	 * @see Collection#parallelStream()
+	 * @see java.util.stream.IntStream
+	 */
+#endif
+	default JDK_PRIMITIVE_STREAM KEY_WIDENED_PARALLEL_STREAM_METHOD() {
+		return java.util.stream.StreamSupport.KEY_WIDENED_STREAM_METHOD(KEY_WIDENED_SPLITERATOR_METHOD(), true);
+	}
 #endif
 
+#endif
 }

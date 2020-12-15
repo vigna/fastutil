@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,6 +14,9 @@ package it.unimi.dsi.fastutil.objects;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.objects;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -59,6 +60,17 @@ public class ObjectArraySetTest {
 			assertTrue(s.contains(2));
 			assertTrue(s.contains(2));
 			assertEquals(new ObjectOpenHashSet<>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 }), new ObjectOpenHashSet<>(s.iterator()));
+			assertTrue(s.contains(3));
+			Integer[] expectedArray = i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 };
+			ObjectSet<Integer> expected = new ObjectOpenHashSet<Integer>(expectedArray);
+			assertEquals(expected, s);
+			assertEquals(s, expected);
+			assertEquals(s, new ObjectOpenHashSet<>(s.iterator()));
+			assertEquals(s, new ObjectArraySet<>(s.stream().toArray()));
+			// Test iterator and spliterator (through stream) preserve order.
+			assertArrayEquals(expectedArray, s.toArray());
+			assertArrayEquals(expectedArray, new ObjectArrayList<>(s.iterator()).toArray());
+			assertArrayEquals(expectedArray, s.stream().toArray());
 			assertTrue(s.remove(3));
 			assertEquals(2 + i, s.size());
 			assertTrue(s.remove(1));
@@ -129,5 +141,53 @@ public class ObjectArraySetTest {
 		assertEquals(Integer.valueOf(44), iterator.next());
 		assertFalse(iterator.hasNext());
 		assertEquals(new ObjectArraySet<Integer>(new Integer[] { 42, 44 }), set);
+	}
+
+	@Test
+	public void testOf() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		assertEquals(new ObjectArraySet<>(new String[] { "0", "1", "2" }), l);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectArraySet<String> l = ObjectArraySet.of();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0");
+		assertEquals(new ObjectArraySet<>(new String[] { "0" }), l);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		ObjectArraySet.of("0", "0");
+	}
+
+	@Test
+	public void testOfUnchecked() {
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0", "1", "2");
+		assertEquals(new ObjectArraySet<>(new String[] { "0", "1", "2" }), l);
+	}
+
+	@Test
+	public void testOfUncheckedEmpty() {
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked();
+		assertTrue(l.isEmpty());
+	}
+
+	@Test
+	public void testOfUnchekedSingleton() {
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0");
+		assertEquals(new ObjectArraySet<>(new String[] { "0" }), l);
+	}
+
+	@Test
+	public void testOfUnchekedDuplicatesNotDetected() {
+		// A ObjectArraySet in an invalid state that by spec we aren't checking for in this method.
+		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0", "0");
+		assertEquals(new ObjectArraySet<>(new String[] { "0" , "0" }), l);
 	}
 }

@@ -15,6 +15,7 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,12 +31,12 @@ public class IntLinkedOpenCustomHashSetTest {
 		final IntLinkedOpenCustomHashSet s = new IntLinkedOpenCustomHashSet(new IntHash.Strategy() {
 
 			@Override
-			public int hashCode(int o) {
+			public int hashCode(final int o) {
 				return o % 10;
 			}
 
 			@Override
-			public boolean equals(int a, int b) {
+			public boolean equals(final int a, final int b) {
 				return (a - b) % 10 == 0;
 			}
 		});

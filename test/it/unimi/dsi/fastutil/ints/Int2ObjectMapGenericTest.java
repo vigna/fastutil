@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -46,6 +46,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -58,6 +59,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
+@Ignore
 @SuppressWarnings("deprecation")
 @RunWith(Parameterized.class)
 public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>> {

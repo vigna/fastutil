@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.longs;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.longs;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.longs;
 
 
 import static org.junit.Assert.assertArrayEquals;

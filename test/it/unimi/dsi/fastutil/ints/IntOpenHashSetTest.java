@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -57,6 +57,26 @@ public class IntOpenHashSetTest {
 	public void testEquals() {
 		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
 		assertFalse(s.equals(new ObjectOpenHashSet<>(new Integer[] { 1, null })));
+	}
+
+	@Test
+	public void testEqualsSameType() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		assertTrue(s.equals(new IntOpenHashSet(new int[] { 1, 2, 3 })));
+	}
+
+	@SuppressWarnings("unlikely-arg-type")
+	@Test
+	public void testEqualsIntSetType() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		assertTrue(s.equals(new IntArraySet(new int[] { 1, 2, 3 })));
+	}
+
+	@SuppressWarnings({ "boxing", "unlikely-arg-type" })
+	@Test
+	public void testEqualsObjectSet() {
+		final IntOpenHashSet s = new IntOpenHashSet(new int[] { 1, 2, 3 });
+		assertTrue(s.equals(new ObjectOpenHashSet<>(new Integer[] { 1, 2, 3 })));
 	}
 
 	@Test
@@ -287,6 +307,50 @@ public class IntOpenHashSetTest {
 		assertEquals(new IntOpenHashSet(new int[] { 0, 1, 2 }), s);
 	}
 
+	@Test
+	public void testOfEmpty() {
+		final IntOpenHashSet s = IntOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntOpenHashSet s = IntOpenHashSet.of(0);
+		assertEquals(new IntOpenHashSet(new int[] { 0 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		IntOpenHashSet.of(0, 0);
+	}
+
+	@Test
+	public void testToSet() {
+		final IntOpenHashSet baseSet = IntOpenHashSet.of(2, 380, 1297);
+		IntOpenHashSet transformed = IntOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
+		assertEquals(IntOpenHashSet.of(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntOpenHashSet baseSet = IntOpenHashSet.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		IntSpliterator spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
+		java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
+
+		final IntOpenHashSet subSet1 = IntOpenHashSet.toSet(stream1);
+		// Intentionally collecting to a list for this second one.
+		final IntArrayList subSet2 = IntArrayList.toList(stream2);
+		assertEquals(baseSet.size(), subSet1.size() + subSet2.size());
+		final IntOpenHashSet recombinedSet = new IntOpenHashSet(baseSet.size());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
+	}
+
 	@SuppressWarnings("boxing")
 	private static void checkTable(final IntOpenHashSet s) {
 		final int[] key = s.key;
@@ -415,9 +479,14 @@ public class IntOpenHashSetTest {
 		}
 
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		final int a[] = m.toIntArray();
+		int a[] = m.toIntArray();
 
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
+		
+		/* Same, but with streams */
+		a = m.intStream().toArray();
+
+		assertTrue("Error: intStream().toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
 
 		/* Now we check cloning. */
 

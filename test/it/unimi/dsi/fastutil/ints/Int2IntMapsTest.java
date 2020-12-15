@@ -15,6 +15,7 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -35,7 +36,7 @@ public class Int2IntMapsTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testSingletonMapEqualsShouldCheckTheTypeOfParamters() {
-		Int2IntMap map = Int2IntMaps.singleton(1, 2);
+		final Int2IntMap map = Int2IntMaps.singleton(1, 2);
 		assertFalse(map.equals(Collections.singletonMap(null, 2)));
 		assertFalse(map.equals(Collections.singletonMap(1, null)));
 		assertFalse(map.equals(Collections.singletonMap("foo", 2)));
@@ -44,33 +45,33 @@ public class Int2IntMapsTest {
 
 	@Test
 	public void testToArrayShouldNullElementAfterLastEntry() {
-		Int2IntMap map = Int2IntMaps.EMPTY_MAP;
-		Object[] values = new Object[] { "test" };
+		final Int2IntMap map = Int2IntMaps.EMPTY_MAP;
+		final Object[] values = new Object[] { "test" };
 		map.int2IntEntrySet().toArray(values);
 		assertNull(values[0]);
 	}
 
 	@Test
 	public void testReadingDefaultReturnValueFromUnmodifiableMap() {
-		Int2IntMap map = Int2IntMaps.unmodifiable(Int2IntMaps.EMPTY_MAP);
+		final Int2IntMap map = Int2IntMaps.unmodifiable(Int2IntMaps.EMPTY_MAP);
 		assert(map.defaultReturnValue() == 0);
 	}
 
 	@Test
 	public void testFastIteratorHelpers() {
-		Int2IntMap m = new Int2IntOpenHashMap();
+		final Int2IntMap m = new Int2IntOpenHashMap();
 		m.put(0, 0);
 		m.put(1, 1);
 		ObjectIterator<Entry> fastIterator = Int2IntMaps.fastIterator(m);
 		Entry e = fastIterator.next();
 		assertSame(e, fastIterator.next());
 
-		ObjectIterable<Entry> fastIterable = Int2IntMaps.fastIterable(m);
+		final ObjectIterable<Entry> fastIterable = Int2IntMaps.fastIterable(m);
 		fastIterator = fastIterable.iterator();
 		e = fastIterator.next();
 		assertSame(e, fastIterator.next());
 
-		Set<Entry> s = new HashSet<>();
+		final Set<Entry> s = new HashSet<>();
 		Int2IntMaps.fastIterable(m).forEach(s::add);
 		assertEquals(1, s.size()); // Should be always the same entry, mutated
 	}

@@ -1,7 +1,3 @@
-package it.unimi.dsi.fastutil.bytes;
-
-import static org.junit.Assert.assertArrayEquals;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -18,6 +14,9 @@ import static org.junit.Assert.assertArrayEquals;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.bytes;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;

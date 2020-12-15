@@ -26,6 +26,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+#if KEYS_REFERENCE
+import java.util.function.Consumer;
+import java.util.stream.Collector;
+#endif
 
 #ifdef Linked
 
@@ -569,16 +573,141 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		this(a, DEFAULT_LOAD_FACTOR);
 	}
 
+	/** Creates a new empty hash set. 
+	 *
+	 * @return a new empty hash set.
+	 */
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of() {
+		return new OPEN_HASH_SET KEY_GENERIC_DIAMOND();
+	}
+	
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor
+	 * using the given element.
+	 *
+	 * @param e the element that the returned set will contain.
+	 * @return a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor containing {@code e}.
+	 */
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of(final KEY_GENERIC_TYPE e) {
+		OPEN_HASH_SET KEY_GENERIC result = new OPEN_HASH_SET KEY_GENERIC_DIAMOND(1, DEFAULT_LOAD_FACTOR);
+		result.add(e);
+		return result;
+	}
+
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor
+	 * using the elements given.
+	 *
+	 * @param e0 the first element.
+	 * @param e1 the second element.
+	 * @return a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor containing {@code e0} and {@code e1}.
+	 * @throws IllegalArgumentException if there were duplicate entries.
+	 */
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of(final KEY_GENERIC_TYPE e0, final KEY_GENERIC_TYPE e1) {
+		OPEN_HASH_SET KEY_GENERIC result = new OPEN_HASH_SET KEY_GENERIC_DIAMOND(2, DEFAULT_LOAD_FACTOR);
+		result.add(e0);
+		if (!result.add(e1)) {
+			throw new IllegalArgumentException("Duplicate element: " + e1);
+		}
+		return result;
+	}
+
+	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor
+	 * using the elements given.
+	 *
+	 * @param e0 the first element.
+	 * @param e1 the second element.
+	 * @param e2 the third element.
+	 * @return a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor containing {@code e0}, {@code e1}, and {@code e2}.
+	 * @throws IllegalArgumentException if there were duplicate entries.
+	 */
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of(final KEY_GENERIC_TYPE e0, final KEY_GENERIC_TYPE e1, final KEY_GENERIC_TYPE e2) {
+		OPEN_HASH_SET KEY_GENERIC result = new OPEN_HASH_SET KEY_GENERIC_DIAMOND(3, DEFAULT_LOAD_FACTOR);
+		result.add(e0);
+		if (!result.add(e1)) {
+			throw new IllegalArgumentException("Duplicate element: " + e1);
+		}
+		if (!result.add(e2)) {
+			throw new IllegalArgumentException("Duplicate element: " + e2);
+		}
+		return result;
+	}
+
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor
 	 * using a list of elements.
 	 *
 	 * @param a a list of elements that will be used to initialize the new hash set.
+	 * @return a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor containing the elements of {@code a}.
+	 * @throws IllegalArgumentException if a duplicate entry was encountered.
 	 */
-
-	@SafeVarargs
+	SAFE_VARARGS
 	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of(final KEY_GENERIC_TYPE... a) {
-		return new OPEN_HASH_SET KEY_GENERIC(a, DEFAULT_LOAD_FACTOR);
+		OPEN_HASH_SET KEY_GENERIC result = new OPEN_HASH_SET KEY_GENERIC_DIAMOND(a.length, DEFAULT_LOAD_FACTOR);
+		for (KEY_GENERIC_TYPE element : a) {
+			if (!result.add(element)) {
+				throw new IllegalArgumentException("Duplicate element " + element);
+			}
+		}
+		return result; 
 	}
+#endif
+
+#ifndef Custom
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+	/** Collects the result of a primitive {@code Stream} into a new hash set.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	 public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSet(JDK_PRIMITIVE_STREAM stream) {
+	 	return stream.collect(
+	 		OPEN_HASH_SET::new,
+	 		OPEN_HASH_SET::add,
+	 		OPEN_HASH_SET::addAll);
+	 }
+	 
+	/** Collects the result of a primitive {@code Stream} into a new hash set.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSetWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+		return stream.collect(
+			() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+			OPEN_HASH_SET::add,
+			OPEN_HASH_SET::addAll);
+	}
+#elif KEYS_REFERENCE
+	// Collector wants a function that returns the collection being added to.
+	private OPEN_HASH_SET KEY_GENERIC combine(OPEN_HASH_SET KEY_EXTENDS_GENERIC toAddFrom) {
+		addAll(toAddFrom);
+		return this;
+	}
+
+	private static final Collector<KEY_TYPE, ?, OPEN_HASH_SET<KEY_TYPE>> TO_SET_COLLECTOR =
+		Collector.of(
+			OPEN_HASH_SET::new,
+			OPEN_HASH_SET::add,
+			OPEN_HASH_SET::combine); 
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toSet() {
+		return (Collector) TO_SET_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toSetWithExpectedSize(int expectedSize) {
+ 		return Collector.of(
+		() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+		OPEN_HASH_SET::add,
+		OPEN_HASH_SET::combine);
+	}
+#endif
 #endif
 
 
@@ -1176,7 +1305,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 *
 	 * <p>This class provides a list iterator over a linked hash set. The constructor runs in constant time.
 	 */
-	private class SetIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+	private final class SetIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or {@code null} if no previous entry exists). */
 		int prev = -1;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or {@code null} if no next entry exists). */
@@ -1253,6 +1382,19 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			if (index >= 0) index--;
 
 			return key[curr];
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while (next != -1) {
+				curr = next;
+				next = GET_NEXT(link[curr]);
+				prev = curr;
+
+				if (index >= 0) index++;
+				if (ASSERTS) assert curr == n || ! KEY_IS_NULL(key[curr]) : "Position " + curr + " is not used";
+				action.accept(key[curr]);
+			}
 		}
 
 		private final void ensureIndexKnown() {
@@ -1341,7 +1483,6 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 	}
 
-
 	/** Returns a type-specific list iterator on the elements in this set, starting from a given element of the set.
 	 * Please see the class documentation for implementation details.
 	 *
@@ -1364,11 +1505,41 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return new SetIterator();
 	}
 
+	private static final int SPLITERATOR_CHARACTERISTICS = SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.ORDERED;
+
+	/** {@inheritDoc}
+	 *
+	 * <p>There isn't a way to split efficiently while still preserving order for a linked data structure,
+	 * so this implementation is just backed by the iterator. Thus, this spliterator is not well optimized
+	 * for parallel streams.
+	 *
+	 * <p>Note, contrary to the specification of {@link java.util.SortedSet}, this spliterator does not,
+	 * report {@link java.util.Spliterator#SORTED}. This is because iteration order is based on insertion
+	 * order, not natural ordering.
+	 */
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return SPLITERATORS.asSpliterator(
+			iterator(), it.unimi.dsi.fastutil.Size64.getSizeOf(this), SPLITERATOR_CHARACTERISTICS);
+	}
+
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		int curr;
+		int next = first;
+		while (next != -1) {
+			curr = next;
+			next = GET_NEXT(link[curr]);
+			if (ASSERTS) assert curr == n || ! KEY_IS_NULL(key[curr]) : "Position " + curr + " is not used";
+			action.accept(key[curr]);
+		}
+	}
+
 #else
 
 	/** An iterator over a hash set. */
 
-	private class SetIterator implements KEY_ITERATOR KEY_GENERIC {
+	private final class SetIterator implements KEY_ITERATOR KEY_GENERIC {
 		/** The index of the last entry returned, if positive or zero; initially, {@link #n}. If negative, the last
 			element returned was that of index {@code - pos - 1} from the {@link #wrapped} list. */
 		int pos = n;
@@ -1465,11 +1636,174 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			last = -1; // You can no longer remove this entry.
 			if (ASSERTS) checkTable();
 		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while(hasNext()) {
+				c--;
+				if (mustReturnNull) {
+					mustReturnNull = false;
+					last = n;
+					action.accept(key[n]);
+					continue;
+				}
+				final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+				for(;;) {
+					if (--pos < 0) {
+						// We are just enumerating elements from the wrapped list.
+						last = Integer.MIN_VALUE;
+						action.accept(wrapped.GET_KEY(- pos - 1));
+						break;
+					} else if (! KEY_IS_NULL(key[pos])) {
+						action.accept(key[last = pos]);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	@Override
 	public KEY_ITERATOR KEY_GENERIC iterator() {
 		return new SetIterator();
+	}
+
+	private final class SetSpliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		private static final int POST_SPLIT_CHARACTERISTICS = SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS & ~java.util.Spliterator.SIZED;
+
+		/** The index (which bucket) of the next item to give to the action.
+		 * Unlike {@link SetIterator}, this counts up instead of down.
+		 */
+		int pos = 0;
+		/** The maximum bucket (exclusive) to iterate to */
+		int max = n;
+		/** An upwards counter counting how many we have given */
+		int c = 0;
+		/** A boolean telling us whether we should return the null key. */
+		boolean mustReturnNull = OPEN_HASH_SET.this.containsNull;
+		boolean hasSplit = false;
+
+
+		SetSpliterator() {}
+
+		SetSpliterator(int pos, int max, boolean mustReturnNull, boolean hasSplit) {
+			this.pos = pos;
+			this.max = max;
+			this.mustReturnNull = mustReturnNull;
+			this.hasSplit = hasSplit;
+		}
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				++c;
+				action.accept(key[n]);
+				return true;
+			}
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+			while (pos < max) {
+				if (! KEY_IS_NULL(key[pos])) {
+					++c;
+					action.accept(key[pos++]);
+					return true;
+				} else {
+					++pos;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				action.accept(key[n]);
+				++c;
+			}
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+			while (pos < max) {
+				if (! KEY_IS_NULL(key[pos])) {
+					action.accept(key[pos]);
+					++c;
+				}
+				++pos;
+			}
+		}
+
+		@Override
+		public int characteristics() {
+			return hasSplit ? POST_SPLIT_CHARACTERISTICS : SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS;
+		}
+
+		@Override
+		public long estimateSize() {
+			if (!hasSplit) {
+				// Root spliterator; we know how many are remaining.
+				return size - c;
+			} else {
+				// After we split, we can no longer know exactly how many we have (or at least not efficiently).
+				// (size / n) * (max - pos) aka currentTableDensity * numberOfBucketsLeft seems like a good estimate.
+				return Math.min(size - c, (long)(((double)realSize() / n) * (max - pos)) + (mustReturnNull ? 1 : 0));
+			}
+		}
+
+		@Override
+		public SetSpliterator trySplit() {
+			if (pos >= max - 1) return null;
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			int myNewPos = pos + retLen;
+			int retPos = pos;
+			int retMax = myNewPos;
+			// Since null is returned first, and the convention is that the returned split is the prefix of elements,
+			// the split will take care of returning null (if needed), and we won't return it anymore.
+			SetSpliterator split = new SetSpliterator(retPos, retMax, mustReturnNull, true);
+			this.pos = myNewPos;
+			this.mustReturnNull = false;
+			this.hasSplit = true;
+			return split;
+		}
+
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (n == 0) return 0;
+			long skipped = 0;
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				++skipped;
+				--n;
+			}
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+			while (pos < max && n > 0) {
+				if (! KEY_IS_NULL(key[pos++])) {
+					++skipped;
+					--n;
+				}
+			}
+			return skipped;
+		}
+	}
+
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return new SetSpliterator();
+	}
+
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		if (containsNull) {
+			action.accept(key[n]);
+		}
+		int pos = 0;
+		final int max = n;
+		final KEY_GENERIC_TYPE key[] = this.key;
+		while (pos < max) {
+			if (! KEY_IS_NULL(key[pos])) {
+				action.accept(key[pos]);
+			}
+			++pos;
+		}
 	}
 
 #endif
@@ -1851,6 +2185,10 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return format.format(d, s, fp).toString();
 	}
 
+	private static final int WARMUP_CYCLES = 12;
+	private static final int NUM_RUNS = 50;
+	private static final int GC_EVERY = 5;
+
 	private static void speedTest(int n, float f, boolean comp) {
 #ifndef Custom
 		int i, j;
@@ -1870,9 +2208,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			nk[i] = genKey();
 		}
 
-		double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, d;
+		double totAdd = 0, totYes = 0, totNo = 0, totIter = 0, totRemYes = 0, totRemNo = 0, toStreamSum = 0, d;
 
-		if (comp) { for(j = 0; j < 20; j++) {
+		if (comp) { for(j = 0; j < NUM_RUNS; j++) {
+
+			if ((j + 1) % GC_EVERY == 0) System.gc();
 
 #ifdef Linked
 			t = new java.util.LinkedHashSet(16);
@@ -1884,29 +2224,45 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) t.add(KEY2OBJ(k[i]));
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totAdd += d;
+			if (j >= WARMUP_CYCLES) totAdd += d;
 			System.out.print("Add: " + format(d) + "ns ");
 
 			/* We check for pairs in t. */
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) t.contains(KEY2OBJ(k[i]));
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totYes += d;
+			if (j >= WARMUP_CYCLES) totYes += d;
 			System.out.print("Yes: " + format(d) + "ns ");
 
 			/* We check for pairs not in t. */
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) t.contains(KEY2OBJ(nk[i]));
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totNo += d;
+			if (j >= WARMUP_CYCLES) totNo += d;
 			System.out.print("No: " + format(d) + "ns ");
 
 			/* We iterate on t. */
 			ns = System.nanoTime();
 			for(java.util.Iterator it = t.iterator(); it.hasNext(); it.next());
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totIter += d;
+			if (j >= WARMUP_CYCLES) totIter += d;
 			System.out.print("Iter: " + format(d) + "ns ");
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+			/* We sum on t. */
+			ns = System.nanoTime();
+#if KEY_WIDENED
+			// Since the primitive stream has to upcast to a widened primitive, for fairness we will upcast here too
+#endif
+#if KEY_CLASS_Character
+			((java.util.Set<KEY_CLASS>)t).stream().MAP_TO_KEY_WIDENED(Character::charValue).sum();
+#else
+			((java.util.Set<KEY_CLASS>)t).stream().MAP_TO_KEY_WIDENED(KEY_CLASS::KEY_WIDENED_VALUE).sum();
+#endif
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) toStreamSum += d;
+			System.out.print("Stream sum: " + format(d) + "ns ");
+#endif
 
 			// Too expensive in the linked case
 #ifndef Linked
@@ -1914,14 +2270,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) t.remove(KEY2OBJ(nk[i]));
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totRemNo += d;
+			if (j >= WARMUP_CYCLES) totRemNo += d;
 			System.out.print("RemNo: " + format(d) + "ns ");
 
 			/* We delete pairs in t. */
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) t.remove(KEY2OBJ(k[i]));
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totRemYes += d;
+			if (j >= WARMUP_CYCLES) totRemYes += d;
 			System.out.print("RemYes: " + format(d) + "ns ");
 #endif
 
@@ -1929,14 +2285,16 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 
 		System.out.println();
-		System.out.println("java.util Add: " + format(totAdd/(j-3)) + "ns Yes: " + format(totYes/(j-3)) + "ns No: " + format(totNo/(j-3)) + "ns Iter: " + format(totIter/(j-3)) + "ns RemNo: " + format(totRemNo/(j-3)) + "ns RemYes: " + format(totRemYes/(j-3)) + "ns");
+		System.out.println("java.util Add: " + format(totAdd/(j-WARMUP_CYCLES)) + "ns Yes: " + format(totYes/(j-WARMUP_CYCLES)) + "ns No: " + format(totNo/(j-WARMUP_CYCLES)) + "ns Iter: " + format(totIter/(j-WARMUP_CYCLES)) + "ns StreamSum: " + format(toStreamSum/(j-WARMUP_CYCLES)) + "ns RemNo: " + format(totRemNo/(j-WARMUP_CYCLES)) + "ns RemYes: " + format(totRemYes/(j-WARMUP_CYCLES)) + "ns");
 
 		System.out.println();
 
-		totAdd = totYes = totNo = totIter = totRemYes = totRemNo = 0;
+		totAdd = totYes = totNo = totIter = totRemYes = totRemNo = toStreamSum = 0;
 		}
 
-		for(j = 0; j < 20; j++) {
+		for(j = 0; j < NUM_RUNS; j++) {
+
+			if ((j + 1) % GC_EVERY == 0) System.gc();
 
 			m = new OPEN_HASH_SET(16, f);
 
@@ -1944,29 +2302,38 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) m.add(k[i]);
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totAdd += d;
+			if (j >= WARMUP_CYCLES) totAdd += d;
 			System.out.print("Add: " + format(d) + "ns ");
 
 			/* We check for pairs in m. */
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) m.contains(k[i]);
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totYes += d;
+			if (j >= WARMUP_CYCLES) totYes += d;
 			System.out.print("Yes: " + format(d) + "ns ");
 
 			/* We check for pairs not in m. */
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) m.contains(nk[i]);
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totNo += d;
+			if (j >= WARMUP_CYCLES) totNo += d;
 			System.out.print("No: " + format(d) + "ns ");
 
 			/* We iterate on m. */
 			ns = System.nanoTime();
 			for(KEY_ITERATOR it = (KEY_ITERATOR)m.iterator(); it.hasNext(); it.NEXT_KEY());
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totIter += d;
+			if (j >= WARMUP_CYCLES) totIter += d;
 			System.out.print("Iter: " + format(d) + "ns ");
+
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
+			/* We sum on t. */
+			ns = System.nanoTime();
+			m.KEY_WIDENED_STREAM_METHOD().sum();
+			d = (System.nanoTime() - ns) / (double)n;
+			if (j >= WARMUP_CYCLES) toStreamSum += d;
+			System.out.print("Stream sum: " + format(d) + "ns ");
+#endif
 
 			// Too expensive in the linked case
 #ifndef Linked
@@ -1974,14 +2341,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) m.remove(nk[i]);
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totRemNo += d;
+			if (j >= WARMUP_CYCLES) totRemNo += d;
 			System.out.print("RemNo: " + format(d) + "ns ");
 
 			/* We delete pairs in m. */
 			ns = System.nanoTime();
 			for(i = 0; i < n;  i++) m.remove(k[i]);
 			d = (System.nanoTime() - ns) / (double)n;
-			if (j > 2) totRemYes += d;
+			if (j >= WARMUP_CYCLES) totRemYes += d;
 			System.out.print("RemYes: " + format(d) + "ns ");
 #endif
 
@@ -1990,7 +2357,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 
 		System.out.println();
-		System.out.println("fastutil  Add: " + format(totAdd/(j-3)) + "ns Yes: " + format(totYes/(j-3)) + "ns No: " + format(totNo/(j-3)) + "ns Iter: " + format(totIter/(j-3)) + "ns RemNo: " + format(totRemNo/(j-3)) + "ns RemYes: " + format(totRemYes/(j-3)) + "ns");
+		System.out.println("fastutil Add: " + format(totAdd/(j-WARMUP_CYCLES)) + "ns Yes: " + format(totYes/(j-WARMUP_CYCLES)) + "ns No: " + format(totNo/(j-WARMUP_CYCLES)) + "ns Iter: " + format(totIter/(j-WARMUP_CYCLES)) + "ns StreamSum: " + format(toStreamSum/(j-WARMUP_CYCLES)) + "ns RemNo: " + format(totRemNo/(j-WARMUP_CYCLES)) + "ns RemYes: " + format(totRemYes/(j-WARMUP_CYCLES)) + "ns");
 
 		System.out.println();
 #endif
@@ -2144,6 +2511,46 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		ensure(m.equals(((OPEN_HASH_SET)m).clone()), "Error (" + seed + "): m does not equal m.clone()");
 		ensure(((OPEN_HASH_SET)m).clone().equals(m), "Error (" + seed + "): m.clone() does not equal m");
+
+		/* Now test that the sets hold the same data using streams */
+		{
+#if KEYS_REFERENCE
+			java.util.stream.Stream<KEY_TYPE> i = m.stream();
+			java.util.stream.Stream<KEY_TYPE> j = t.stream();
+#elif KEY_CLASS_Boolean
+			java.util.stream.Stream<KEY_CLASS> i = m.stream();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#else
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.stream();
+#endif
+
+#if (!defined Linked || defined Custom) && KEYS_REFERENCE
+			// There is no good way to order arbitrary, non-Comparable objects in a consistent way.
+			// Ordering by Object.hashCode is tempting, but can conflict (two difference objects can have the same hashCode)
+			// Thus, we will dump into a JDK set, whose equals method will make sure they have the same in any order.
+			java.util.Set iSet = i.collect(java.util.stream.Collectors.toSet());
+			java.util.Set jSet = j.collect(java.util.stream.Collectors.toSet());
+			ensure(iSet.equals(jSet), "! same contents in stream");
+#else
+#if !defined Linked && !KEYS_REFERENCE
+			// Impose ordering to make arrays consistent even though backing data is not ordered.
+			i = i.sorted();
+			j = j.sorted();
+#endif
+#if KEYS_REFERENCE || KEY_CLASS_Boolean
+			Object[] iArray = i.toArray();
+			Object[] jArray = j.toArray();
+#elif KEY_CLASS_Character
+			int[] iArray = i.toArray();
+			int[] jArray = j.mapToInt(Character::charValue).toArray();
+#else
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).toArray();
+#endif
+			ensure(java.util.Arrays.equals(iArray, jArray), "! sorted arrays equal");
+#endif
+		}
 
 		int h = m.hashCode();
 

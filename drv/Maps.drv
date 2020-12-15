@@ -98,6 +98,17 @@ public final class MAPS {
 		@Override
 		public boolean containsValue(final VALUE_TYPE v) { return false; }
 
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public VALUE_GENERIC_CLASS getOrDefault(final Object key, final VALUE_GENERIC_CLASS defaultValue) { return defaultValue; }
+
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
+		@Override
+		public VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE key, final VALUE_GENERIC_TYPE defaultValue) { return defaultValue; }
+#endif
+
 #if VALUES_PRIMITIVE
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
@@ -120,6 +131,9 @@ public final class MAPS {
 		SUPPRESS_WARNINGS_VALUE_UNCHECKED
 		@Override
 		public VALUE_COLLECTION VALUE_GENERIC values() { return VALUE_SETS.EMPTY_SET; }
+
+		@Override
+		public void forEach(final java.util.function.BiConsumer<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS> consumer) { }
 
 		@Override
 		public Object clone() { return EMPTY_MAP; }
@@ -313,7 +327,7 @@ public final class MAPS {
 
 		@Override
 		public VALUE_COLLECTION VALUE_GENERIC values() {
-			synchronized(sync) { if (values == null) return VALUE_COLLECTIONS.synchronize(map.values(), sync); return values; }
+			synchronized(sync) { if (values == null) values = VALUE_COLLECTIONS.synchronize(map.values(), sync); return values; }
 		}
 
 		@Override
@@ -517,7 +531,7 @@ public final class MAPS {
 		public SET KEY_GENERIC keySet() { if (keys == null) keys = SETS.unmodifiable(map.keySet()); return keys; }
 
 		@Override
-		public VALUE_COLLECTION VALUE_GENERIC values() { if (values == null) return VALUE_COLLECTIONS.unmodifiable(map.values()); return values; }
+		public VALUE_COLLECTION VALUE_GENERIC values() { if (values == null) values = VALUE_COLLECTIONS.unmodifiable(map.values()); return values; }
 
 		@Override
 		public boolean isEmpty() { return map.isEmpty(); }

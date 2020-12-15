@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2017-2020 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unimi.dsi.fastutil.ints;
 
 import static it.unimi.dsi.fastutil.BigArrays.get;
@@ -114,6 +130,42 @@ public class IntOpenHashBigSetTest {
 		assertArrayEquals(new int[] { -1, 1 }, content);
 	}
 
+	// Here because IntOpenHashBigSet has neither an of() nor a wrap().
+	private static IntOpenHashBigSet setOf(int... elements) {
+		IntOpenHashBigSet result = new IntOpenHashBigSet(elements.length);
+		for (int i : elements) {
+			result.add(i);
+		}
+		return result;
+	}
+
+	@Test
+	public void testToBigSet() {
+		final IntOpenHashBigSet baseSet = setOf(2, 380, 1297);
+		IntOpenHashBigSet transformed = IntOpenHashBigSet.toBigSet(baseSet.intStream().map(i -> i + 40));
+		assertEquals(setOf(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntOpenHashBigSet baseSet = setOf(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size64(), spliterator1.getExactSizeIfKnown());
+		IntSpliterator spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
+		java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
+
+		final IntOpenHashBigSet subSet1 = IntOpenHashBigSet.toBigSet(stream1);
+		// Intentionally collecting to a list for this second one.
+		final IntBigArrayBigList subSet2 = IntBigArrayBigList.toBigList(stream2);
+		assertEquals(baseSet.size64(), subSet1.size64() + subSet2.size64());
+		final IntOpenHashBigSet recombinedSet = new IntOpenHashBigSet(baseSet.size64());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
+	}
+
 
 	private static java.util.Random r = new java.util.Random(0);
 
@@ -185,8 +237,7 @@ public class IntOpenHashBigSetTest {
 
 		/* Now we check that m actually holds that data. */
 
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", m.contains(e));
 		}
 
@@ -235,8 +286,7 @@ public class IntOpenHashBigSetTest {
 		assertTrue("Error: !t.equals(m) after removal", t.equals(m));
 		/* Now we check that m actually holds that data. */
 
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (Object e : t) {
 			assertFalse("Error: m and t differ on a key (" + e + ") after removal (iterating on t)", !m.contains(e));
 		}
 

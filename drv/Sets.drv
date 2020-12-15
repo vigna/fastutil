@@ -19,6 +19,13 @@ package PACKAGE;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.Consumer;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
 
 /** A class providing static methods and objects that do useful things with type-specific sets.
  *
@@ -28,6 +35,9 @@ import java.util.Set;
 public final class SETS {
 
 	private SETS() {}
+
+	/** The maximum size to choose ArraySet over OpenHashSet for utilites that automatically choose. */
+	static final int ARRAY_SET_CUTOFF = 4;
 
 	/** An immutable class representing the empty set and implementing a type-specific set interface.
 	 *
@@ -65,7 +75,6 @@ public final class SETS {
 	SUPPRESS_WARNINGS_KEY_RAWTYPES
 	public static final EmptySet EMPTY_SET = new EmptySet();
 
-#if KEYS_REFERENCE
 	/** Returns an empty set (immutable). It is serializable and cloneable.
 	 *
 	 * <p>This method provides a typesafe access to {@link #EMPTY_SET}.
@@ -75,8 +84,6 @@ public final class SETS {
 	public static KEY_GENERIC SET KEY_GENERIC emptySet() {
 		return EMPTY_SET;
 	}
-#endif
-
 
 	/** An immutable class representing a type-specific singleton set.
 	 *
@@ -104,7 +111,17 @@ public final class SETS {
 		public KEY_LIST_ITERATOR KEY_GENERIC iterator() { return ITERATORS.singleton(element); }
 
 		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return SPLITERATORS.singleton(element); }
+
+		@Override
 		public int size() { return 1; }
+
+		@Override
+		public KEY_TYPE[] TO_KEY_ARRAY() { return new KEY_TYPE[]{element}; }
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) { action.accept(element); }
 
 		@Override
 		public boolean addAll(final Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
@@ -115,7 +132,16 @@ public final class SETS {
 		@Override
 		public boolean retainAll(final Collection<?> c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_PREDICATE && KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) { throw new UnsupportedOperationException(); }
+
 #if KEYS_PRIMITIVE
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) {	action.accept(element); }
 
 		@Override
 		public boolean addAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
@@ -125,6 +151,24 @@ public final class SETS {
 
 		@Override
 		public boolean retainAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
+
+#if defined JDK_PRIMITIVE_PREDICATE
+		@Override
+		public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) { throw new UnsupportedOperationException(); }
+#endif
+
+#if defined JDK_PRIMITIVE_ITERATOR && SMALL_TYPES && KEY_WIDENED
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return WIDENED_ITERATORS.singleton(element); }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return WIDENED_SPLITERATORS.singleton(element); }
+#endif
+
+		@Deprecated
+		@Override
+		public Object[] toArray() { return new Object[]{ KEY2OBJ(element) }; }
+
 
 #endif
 		@Override

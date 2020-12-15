@@ -86,8 +86,8 @@ source: pom
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/makefile \
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
-		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package.html \
-		fastutil-$(version)/$(SOURCEDIR)/io/package.html \
+		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package-info.java \
+		fastutil-$(version)/$(SOURCEDIR)/io/package-info.java \
 		fastutil-$(version)/src/overview.html \
 		$$(find fastutil-$(version)/test -iname \*.java)
 	rm fastutil-$(version)
@@ -112,7 +112,7 @@ pom:
 	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
 
 format:
-	$(ECLIPSE) -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
+	$(ECLIPSE) -data workspace -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
 
 stage: pom
 	(unset LOCAL_IVY_SETTINGS; ant stage)
@@ -206,6 +206,11 @@ $(ITERATORS): drv/Iterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERATORS)
 
+SPLITERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterator.c)
+$(SPLITERATORS): drv/Spliterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SPLITERATORS) 
+
 BIDIRECTIONAL_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterator.c)
 $(BIDIRECTIONAL_ITERATORS): drv/BidirectionalIterator.drv; ./gencsource.sh $< $@ >$@
 
@@ -225,6 +230,17 @@ BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PAC
 $(BIG_LIST_ITERATORS): drv/BigListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS)
+
+PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)Pair.c))
+$(PAIRS): drv/Pair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(PAIRS)
+
+SORTED_PAIRS := $(foreach k,$(TYPE_NOBOOL_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(k)SortedPair.c)
+$(SORTED_PAIRS): drv/SortedPair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SORTED_PAIRS)
+
 
 #
 # Abstract implementations
@@ -399,6 +415,11 @@ $(BIG_ARRAY_BIG_LISTS): drv/BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAY_BIG_LISTS)
 
+IMMUTABLE_LISTS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ImmutableList.c)
+$(IMMUTABLE_LISTS): drv/ImmutableList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_LISTS)
+
 FRONT_CODED_LISTS := $(foreach k, $(if $(SMALL_TYPES),Byte Short Char,) Int Long, $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ArrayFrontCodedList.c)
 $(FRONT_CODED_LISTS): drv/ArrayFrontCodedList.drv; ./gencsource.sh $< $@ >$@
 
@@ -439,6 +460,21 @@ $(ARRAY_INDIRECT_PRIORITY_QUEUES): drv/ArrayIndirectPriorityQueue.drv; ./gencsou
 
 CSOURCES += $(ARRAY_INDIRECT_PRIORITY_QUEUES)
 
+MUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)MutablePair.c))
+$(MUTABLE_PAIRS): drv/MutablePair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(MUTABLE_PAIRS)
+
+IMMUTABLE_PAIRS := $(foreach k,$(TYPE), $(foreach v,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(v)ImmutablePair.c))
+$(IMMUTABLE_PAIRS): drv/ImmutablePair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_PAIRS)
+
+IMMUTABLE_SORTED_PAIRS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)$(k)ImmutableSortedPair.c)
+$(IMMUTABLE_SORTED_PAIRS): drv/ImmutableSortedPair.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_SORTED_PAIRS)
+
 
 #
 # Static containers
@@ -450,10 +486,21 @@ $(ITERATORS_STATIC): drv/Iterators.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ITERATORS_STATIC)
 
 
+SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterators.c)
+$(SPLITERATORS_STATIC): drv/Spliterators.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SPLITERATORS_STATIC)
+
+
 BIG_LIST_ITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigListIterators.c)
 $(BIG_LIST_ITERATORS_STATIC): drv/BigListIterators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS_STATIC)
+
+BIG_SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigSpliterators.c)
+$(BIG_SPLITERATORS_STATIC): drv/BigSpliterators.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_SPLITERATORS_STATIC)
 
 
 ITERABLES_STATIC := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterables.c)
@@ -602,6 +649,8 @@ SOURCES = \
 	$(SOURCEDIR)/BigList.java \
 	$(SOURCEDIR)/BigListIterator.java \
 	$(SOURCEDIR)/PriorityQueue.java \
+	$(SOURCEDIR)/Pair.java \
+	$(SOURCEDIR)/SortedPair.java \
 	$(SOURCEDIR)/IndirectPriorityQueue.java \
 	$(SOURCEDIR)/Arrays.java \
 	$(SOURCEDIR)/Swapper.java \
@@ -632,17 +681,17 @@ $(JSOURCES): %.java: %.c
 	$(CC) -w -I. -DSMALL_TYPES=$(if $(SMALL_TYPES),1,0) $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< \
 		| sed -e '1,/START_OF_JAVA_SOURCE/d' -e 's/^ /	/' >$@
 
-
 clean:
 	-@find build -name \*.class -exec rm {} \;
 	-@find . -name \*.java~ -exec rm {} \;
 	-@find . -name \*.html~ -exec rm {} \;
-	-@rm -f $(foreach k, $(sort $(TYPE)), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/*.java)
+	-@$(foreach k, $(sort $(TYPE)), find $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k)) -iname \*.java -and -not -iname \*-info.java -delete &&) true
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.[chj] $(GEN_SRCDIR)/$(PKG_PATH)/*/*.[chj]
 	-@rm -fr $(DOCSDIR)/*
 
 sources: $(JSOURCES)
+	rm $(GEN_SRCDIR)/it/unimi/dsi/fastutil/objects/ObjectObjectPair.java
 
 csources: $(CSOURCES)

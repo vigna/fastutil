@@ -1,8 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -19,6 +14,10 @@ import static org.junit.Assert.assertFalse;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.ints;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 

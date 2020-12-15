@@ -19,8 +19,16 @@ package PACKAGE;
 
 import java.util.List;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Random;
 import java.util.RandomAccess;
+import java.util.function.Consumer;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
+import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#endif
 
 /** A class providing static methods and objects that do useful things with type-specific lists.
  *
@@ -28,6 +36,15 @@ import java.util.RandomAccess;
  */
 
 public final class LISTS {
+
+#if KEYS_PRIMITIVE && !KEY_TYPE_Boolean
+	/* Only in the EmptyList and Singleton classes, where performance is critical, do we override
+	 * the deprecated, Object based functional methods. For the rest, we just override the
+	 * non-deprecated type-specific method, and let the default method from the interface
+	 * filter into that. This is an extra method call and lambda creation, but it isn't worth
+	 * complexifying the code generation for a case that is already marked as being inefficient.
+	 */
+#endif
 
 	private LISTS() {}
 
@@ -83,6 +100,14 @@ public final class LISTS {
 		@Override
 		public boolean addAll(int i, Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR && KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) {
+			Objects.requireNonNull(operator);
+		}
+
 #if KEYS_PRIMITIVE
 		@Override
 		public boolean addAll(LIST c) { throw new UnsupportedOperationException(); }
@@ -120,6 +145,13 @@ public final class LISTS {
 		@Deprecated
 		@Override
 		public KEY_GENERIC_CLASS set(final int index, final KEY_GENERIC_CLASS k) { throw new UnsupportedOperationException(); }
+
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR
+		@Override
+		public void replaceAll(final JDK_PRIMITIVE_UNARY_OPERATOR operator) {
+			Objects.requireNonNull(operator);
+		}
+#endif
 
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
@@ -227,7 +259,6 @@ public final class LISTS {
 	SUPPRESS_WARNINGS_KEY_RAWTYPES
 	public static final EmptyList EMPTY_LIST = new EmptyList();
 
-#if KEYS_REFERENCE
 	/** Returns an empty list (immutable). It is serializable and cloneable.
 	 *
 	 * <p>This method provides a typesafe access to {@link #EMPTY_LIST}.
@@ -237,8 +268,6 @@ public final class LISTS {
 	public static KEY_GENERIC LIST KEY_GENERIC emptyList() {
 		return EMPTY_LIST;
 	}
-#endif
-
 
 	/** An immutable class representing a type-specific singleton list.
 	 *
@@ -266,20 +295,22 @@ public final class LISTS {
 		@Override
 		public boolean contains(final KEY_TYPE k) { return KEY_EQUALS(k, element); }
 
+		@Override
+		public int indexOf(final KEY_TYPE k) { return KEY_EQUALS(k, element) ? 0 : -1; }
+
 		/* Slightly optimized w.r.t. the one in ABSTRACT_SET. */
 
 		@Override
-		public KEY_TYPE[] TO_KEY_ARRAY() {
-			KEY_TYPE a[] = new KEY_TYPE[1];
-			a[0] = element;
-			return a;
-		}
+		public KEY_TYPE[] TO_KEY_ARRAY() { return new KEY_TYPE[]{element}; }
 
 		@Override
 		public KEY_LIST_ITERATOR KEY_GENERIC listIterator() { return ITERATORS.singleton(element); }
 
 		@Override
 		public KEY_LIST_ITERATOR KEY_GENERIC iterator() { return listIterator(); }
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return SPLITERATORS.singleton(element); }
 
 		@Override
 		public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int i) {
@@ -295,10 +326,13 @@ public final class LISTS {
 			ensureIndex(from);
 			ensureIndex(to);
 			if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
-
 			if (from != 0 || to != 1) return EMPTY_LIST;
 			return this;
 		}
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEach(final Consumer<? super KEY_GENERIC_CLASS> action) { action.accept(element); }
 
 		@Override
 		public boolean addAll(int i, Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
@@ -312,7 +346,22 @@ public final class LISTS {
 		@Override
 		public boolean retainAll(final Collection<?> c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_PREDICATE && KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) { throw new UnsupportedOperationException(); }
+
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR && KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) { throw new UnsupportedOperationException(); }
+
 #if KEYS_PRIMITIVE
+
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) {	action.accept(element); }
 
 		@Override
 		public boolean addAll(LIST c) { throw new UnsupportedOperationException(); }
@@ -332,13 +381,34 @@ public final class LISTS {
 		@Override
 		public boolean retainAll(final COLLECTION c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR
+		@Override
+		public void replaceAll(final JDK_PRIMITIVE_UNARY_OPERATOR operator) { throw new UnsupportedOperationException(); }
+#endif
+
+#if defined JDK_PRIMITIVE_PREDICATE
+		@Override
+		public boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) { throw new UnsupportedOperationException(); }
+#endif
+
+#if defined JDK_PRIMITIVE_ITERATOR && SMALL_TYPES && KEY_WIDENED
+		@Override
+		public KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return WIDENED_ITERATORS.singleton(element); }
+
+		@Override
+		public KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return WIDENED_SPLITERATORS.singleton(element); }
+#endif
+
+		@Deprecated
+		@Override
+		public Object[] toArray() { return new Object[]{ KEY2OBJ(element) }; }
+
 		// Lists of size 1 are trivially always sorted
 		@Override
 		public void sort(final KEY_COMPARATOR comparator) { }
 
 		@Override
 		public void unstableSort(final KEY_COMPARATOR comparator) { }
-
 #endif
 
 		// Lists of size 1 are trivially always sorted
@@ -349,6 +419,16 @@ public final class LISTS {
 		DEPRECATED_IF_KEYS_PRIMITIVE
 		@Override
 		public void unstableSort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) { }
+
+		@Override
+		public void getElements(int from, KEY_TYPE a[], int offset, int length) {
+			if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
+			if (offset + length > a.length) throw new ArrayIndexOutOfBoundsException("End index (" + (offset + length) + ") is greater than array length (" + a.length + ")");
+			if (from + length > size()) throw new IndexOutOfBoundsException("End index (" + (from + length) + ") is greater than list size (" + size() + ")");
+			// Should be from == 0
+			if (length <= 0) return;
+			a[offset] = element;
+		}
 
 		@Override
 		public void removeElements(int from, int to) { throw new UnsupportedOperationException(); }
@@ -437,6 +517,12 @@ public final class LISTS {
 
 		@Override
 		public int lastIndexOf(final KEY_TYPE k) { synchronized(sync) { return list.lastIndexOf(k); } }
+
+		@Override
+		public boolean removeIf(final METHOD_ARG_PREDICATE filter) { synchronized(sync) { return list.removeIf(filter); } }
+
+		@Override
+		public void replaceAll(final METHOD_ARG_UNARY_OPERATOR operator) { synchronized(sync) { list.replaceAll(operator); } }
 
 		@Override
 		public boolean addAll(final int index, final Collection<? extends KEY_GENERIC_CLASS> c) { synchronized(sync) { return list.addAll(index, c); } }
@@ -631,6 +717,12 @@ public final class LISTS {
 		@Override
 		public boolean addAll(final int index, final Collection<? extends KEY_GENERIC_CLASS> c) { throw new UnsupportedOperationException(); }
 
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR && KEYS_PRIMITIVE
+		@Deprecated
+#endif
+		@Override
+		public void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) { throw new UnsupportedOperationException(); }
+
 		@Override
 		public void getElements(final int from, final KEY_TYPE a[], final int offset, final int length) { list.getElements(from, a, offset, length); }
 
@@ -687,6 +779,11 @@ public final class LISTS {
 
 		@Override
 		public boolean addAll(final int index, final LIST l) { throw new UnsupportedOperationException(); }
+
+#if defined JDK_PRIMITIVE_UNARY_OPERATOR
+		@Override
+		public void replaceAll(final JDK_PRIMITIVE_UNARY_OPERATOR operator) { throw new UnsupportedOperationException(); }
+#endif
 
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
@@ -749,7 +846,6 @@ public final class LISTS {
 		protected UnmodifiableRandomAccessList(final LIST KEY_GENERIC l) {
 			super(l);
 		}
-
 
 		@Override
 		public LIST KEY_GENERIC subList(final int from, final int to) { return new UnmodifiableRandomAccessList KEY_GENERIC_DIAMOND(list.subList(from, to)); }

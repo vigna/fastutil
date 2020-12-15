@@ -23,6 +23,12 @@ import java.util.RandomAccess;
 import java.util.NoSuchElementException;
 import it.unimi.dsi.fastutil.BigArrays;
 import static it.unimi.dsi.fastutil.BigArrays.length;
+import it.unimi.dsi.fastutil.BigList;
+import it.unimi.dsi.fastutil.Size64;
+#if KEYS_REFERENCE
+import java.util.function.Consumer;
+import java.util.stream.Collector;
+#endif
 
 #if KEYS_PRIMITIVE
 
@@ -31,7 +37,7 @@ import static it.unimi.dsi.fastutil.BigArrays.length;
  * <p>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of big-array-based big lists. Instances of this class
  * represent a big list with a big array that is enlarged as needed when new entries
- * are created (by doubling the current length), but is
+ * are created (by increasing its current length by 50%), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing big array; this is particularly useful if you reuse instances of this class.
@@ -42,7 +48,7 @@ import static it.unimi.dsi.fastutil.BigArrays.length;
  * <p>This class implements the bulk methods {@code removeElements()},
  * {@code addElements()} and {@code getElements()} using
  * high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
  * expensive loops.
  *
  * @see java.util.ArrayList
@@ -59,7 +65,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
  * <p>This class implements a lightweight, fast, open, optimized,
  * reuse-oriented version of big-array-based big lists. Instances of this class
  * represent a big list with a big array that is enlarged as needed when new entries
- * are created (by doubling the current length), but is
+ * are created (by increasing its current length to 50%), but is
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing big array; this is particularly useful if you reuse instances of this class.
@@ -75,7 +81,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
  * <p>This class implements the bulk methods {@code removeElements()},
  * {@code addElements()} and {@code getElements()} using
  * high-performance system calls (e.g., {@link
- * System#arraycopy(Object,int,Object,int,int) System.arraycopy()} instead of
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
  * expensive loops.
  *
  * @see java.util.ArrayList
@@ -147,8 +153,12 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 
 	public BIG_ARRAY_BIG_LIST(final COLLECTION KEY_EXTENDS_GENERIC c) {
-		this(c.size());
-		for(KEY_ITERATOR KEY_EXTENDS_GENERIC i = c.iterator(); i.hasNext();) add(i.NEXT_KEY());
+		this(Size64.getSizeOf(c));
+		if (c instanceof BIG_LIST) {
+			((BIG_LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = Size64.getSizeOf(c));
+		} else {
+			for(KEY_ITERATOR KEY_EXTENDS_GENERIC i = c.iterator(); i.hasNext();) add(i.NEXT_KEY());
+		}
 	}
 
 	/** Creates a new big-array big list and fills it with a given type-specific list.
@@ -267,11 +277,68 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 * @param init a list of elements that will be used to initialize the big list.
 	 * @return a new big-array big list containing the given elements.
 	 */
-
-	@SafeVarargs
+	SAFE_VARARGS
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
 		return wrap(BigArrays.wrap(init));
 	}
+
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+	/** Collects the result of a primitive {@code Stream} into a new BigArrayBigList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	 public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC toBigList(JDK_PRIMITIVE_STREAM stream) {
+	 	return stream.collect(
+	 		BIG_ARRAY_BIG_LIST::new,
+	 		BIG_ARRAY_BIG_LIST::add,
+	 		BIG_ARRAY_BIG_LIST::addAll);
+	 }
+	 
+	/** Collects the result of a primitive {@code Stream} into a new BigArrayBigList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC toBigListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, long expectedSize) {
+		return stream.collect(
+			() -> new BIG_ARRAY_BIG_LIST KEY_GENERIC(expectedSize),
+			BIG_ARRAY_BIG_LIST::add,
+			BIG_ARRAY_BIG_LIST::addAll);
+	}
+#elif KEYS_REFERENCE
+	// Collector wants a function that returns the collection being added to.
+	private BIG_ARRAY_BIG_LIST KEY_GENERIC combine(BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC toAddFrom) {
+		addAll(toAddFrom);
+		return this;
+	}
+
+	private static final Collector<KEY_TYPE, ?, BIG_ARRAY_BIG_LIST<KEY_TYPE>> TO_LIST_COLLECTOR =
+		Collector.of(
+			BIG_ARRAY_BIG_LIST::new,
+			BIG_ARRAY_BIG_LIST::add,
+			BIG_ARRAY_BIG_LIST::combine); 
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, BIG_ARRAY_BIG_LIST KEY_GENERIC> toBigList() {
+		return (Collector) TO_LIST_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, BIG_ARRAY_BIG_LIST KEY_GENERIC> toBigListWithExpectedSize(long expectedSize) {
+ 		return Collector.of(
+		() -> new BIG_ARRAY_BIG_LIST KEY_GENERIC(expectedSize),
+		BIG_ARRAY_BIG_LIST::add,
+		BIG_ARRAY_BIG_LIST::combine);
+	}
+#endif
 
 
 	/** Ensures that this big-array big list can contain the given number of entries without resizing.
@@ -502,8 +569,121 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		assert size <= length(a);
 	}
 
+	private class SubList extends ABSTRACT_BIG_LIST.SUBLIST_RANDOM_ACCESS KEY_GENERIC {
+		private static final long serialVersionUID = -3185226345314976296L;
 
-   	/** Copies element of this type-specific list into the given big array using optimized system calls.
+		protected SubList(long from, long to) {
+			super(BIG_ARRAY_BIG_LIST.this, from, to);
+		}
+
+		// Most of the inherited methods should be fine, but we can override a few of them for performance.
+
+		@Override
+		public KEY_GENERIC_TYPE GET_KEY(long i) {
+			ensureRestrictedIndex(i);
+			return BIG_ARRAYS.get(a, i + from);
+		}
+
+		private final class SubListIterator extends BIG_LIST_ITERATORS.AbstractIndexBasedBigListIterator KEY_GENERIC {
+
+			// We are using pos == 0 to be 0 relative to SubList.from (meaning you need to do a[from + i] when accessing array).
+			SubListIterator(long index) {
+				super(0, index);
+			}
+
+			@Override
+			protected final KEY_GENERIC_TYPE get(long i) { return BIG_ARRAYS.get(a, from + i); }
+			@Override
+			protected final void add(long i, KEY_GENERIC_TYPE k) { SubList.this.add(i, k); }
+			@Override
+			protected final void set(long i, KEY_GENERIC_TYPE k) { SubList.this.set(i, k); }
+			@Override
+			protected final void remove(long i) { SubList.this.REMOVE_KEY(i); }
+			@Override
+			protected final long getMaxPos() { return to - from; }
+
+			@Override
+			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return BIG_ARRAYS.get(a, from + (lastReturned = pos++)); }
+			@Override
+			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return BIG_ARRAYS.get(a, from + (lastReturned = --pos)); }
+
+			@Override
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				final long max = to - from;
+				while(pos < max) {
+					action.accept(BIG_ARRAYS.get(a, from + (lastReturned = pos++)));
+				}
+			}
+		}
+
+		@Override
+		public KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator(long index) {
+			return new SubListIterator(index);
+		}
+
+		private final class SubListSpliterator extends BIG_SPLITERATORS.LateBindingSizeIndexBasedSpliterator KEY_GENERIC {
+
+			// We are using pos == 0 to be 0 relative to real array 0
+			SubListSpliterator() {
+				super(from);
+			}
+
+			private SubListSpliterator(long pos, long maxPos) {
+				super(pos, maxPos);
+			}
+
+			@Override
+			protected final long getMaxPosFromBackingStore() { return to; }
+
+	 		@Override
+			protected final KEY_GENERIC_TYPE get(long i) { return BIG_ARRAYS.get(a, i); }
+			@Override
+			protected final SubListSpliterator makeForSplit(long pos, long maxPos) {
+				return new SubListSpliterator(pos, maxPos);
+			}
+			@Override
+			protected final long computeSplitPoint() {
+				long defaultSplit = super.computeSplitPoint();
+				// Align to outer array starting point if possible.
+				// We add/subtract one to the bounds to ensure the new pos will always shrink the range
+				return BigArrays.nearestSegmentStart(defaultSplit, pos + 1, getMaxPos() - 1);
+			}
+			@Override
+			public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+				if (pos >= getMaxPos()) return false;
+				action.accept(BIG_ARRAYS.get(a, pos++));
+				return true;
+			}
+			@Override
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				final long max = getMaxPos();
+				while(pos < max) {
+					action.accept(BIG_ARRAYS.get(a, pos++));
+				}
+			}
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+			return new SubListSpliterator();
+		}
+
+		// We don't override subList as we want AbstractList's "sub-sublist" nesting handling,
+		// which would be tricky to do here.
+		// TODO Do override it so array access isn't sent through N indirections.
+		// This will likely mean making this class static.
+	}
+
+	@Override
+	public BIG_LIST KEY_GENERIC subList(long from, long to) {
+		ensureIndex(from);
+		ensureIndex(to);
+		if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
+		return new SubList(from, to);
+	}
+
+
+	/** Copies element of this type-specific list into the given big array using optimized system calls.
 	 *
 	 * @param from the start index (inclusive).
 	 * @param a the destination big array.
@@ -549,6 +729,25 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		size += length;
 	}
 
+	/** Copies elements in the given big array into this type-specific list using optimized system calls.
+	 *
+	 * @param index the start index (inclusive).
+	 * @param a the destination big array.
+	 * @param offset the offset into the destination array where to store the first element copied.
+	 * @param length the number of elements to be copied.
+	 */
+	@Override
+	public void setElements(final long index, final KEY_TYPE[][] a, final long offset, final long length) {
+		BIG_ARRAYS.copy(a, offset, this.a, index, length);
+	}
+
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		for (long i = 0; i < size; ++i) {
+			action.accept(BIG_ARRAYS.get(a, i));
+		}
+	}
+
 	@Override
 	public KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator(final long index) {
 		ensureIndex(index);
@@ -586,22 +785,147 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 					if (last < pos) pos--;
 					last = -1;
 				}
+				@Override
+				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+					while (pos < size) {
+						action.accept(BIG_ARRAYS.get(a, last = pos++));
+					}
+				}
+				@Override
+				public long back(long n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final long remaining = size - pos;
+					if (n < remaining) {
+						pos -= n;
+					} else {
+						n = remaining;
+						pos = 0;
+					}
+					last = pos;
+					return n;
+				}
+				@Override
+				public long skip(long n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final long remaining = size - pos;
+					if (n < remaining) {
+						pos += n;
+					} else {
+						n = remaining;
+						pos = size;
+					}
+					last = pos - 1;
+					return n;
+				}
 			};
+	}
+
+	private final class Spliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		// Until we split, we will track the size of the list.
+		// Once we split, then we stop updating on structural modifications.
+		// Aka, size is late-binding.
+		boolean hasSplit = false;
+		long pos, max;
+
+#ifdef TEST
+		// Sentinel to make sure we don't accidentally use size when we mean max
+		@Deprecated
+		private final Object size = null;
+#endif
+
+		public Spliterator() {
+			this(0, BIG_ARRAY_BIG_LIST.this.size, false);
+		}
+
+		private Spliterator(long pos, long max, boolean hasSplit) {
+			assert pos <= max : "pos " + pos + " must be <= max " + max;
+			this.pos = pos;
+			this.max = max;
+			this.hasSplit = hasSplit;
+		}
+
+		private long getWorkingMax() {
+			return hasSplit ? max : BIG_ARRAY_BIG_LIST.this.size;
+		}
+
+		@Override
+		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS; }
+
+		@Override
+		public long estimateSize() { return getWorkingMax() - pos; }
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= getWorkingMax()) return false;
+			action.accept(BIG_ARRAYS.get(a, pos++));
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (final long max = getWorkingMax(); pos < max; ++pos) {
+				action.accept(BIG_ARRAYS.get(a, pos));
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			final long max = getWorkingMax();
+			if (pos >= max) return 0;
+			final long remaining = max - pos;
+			if (n < remaining) {
+				pos += n;
+				return n;
+			}
+			n = remaining;
+			pos = max;
+			return n;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			final long max = getWorkingMax();
+			long retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			// Update instance max with the last seen list size (if needed) before continuing
+			this.max = max;
+			long myNewPos = pos + retLen;
+			// Align to an outer array boundary if possible
+			// We add/subtract one to the bounds to ensure the new pos will always shrink the range
+			myNewPos = BigArrays.nearestSegmentStart(myNewPos, pos + 1, max - 1);
+			long retMax = myNewPos;
+			long oldPos = pos;
+			this.pos = myNewPos;
+			this.hasSplit = true;
+			return new Spliterator(oldPos, retMax, true);
+		}
+	}
+
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return new Spliterator();
 	}
 
 	@Override
 	public BIG_ARRAY_BIG_LIST KEY_GENERIC clone() {
-		BIG_ARRAY_BIG_LIST KEY_GENERIC c = new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND(size);
+		BIG_ARRAY_BIG_LIST KEY_GENERIC c;
+		// Test for fastpath we can do if exactly an BigArrayBigList
+		if (getClass() == BIG_ARRAY_BIG_LIST.class) {
+			c = new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND(size);
+			c.size = size;
+		} else {
+			try {
+				c = (BIG_ARRAY_BIG_LIST KEY_GENERIC)super.clone();
+			} catch (CloneNotSupportedException e) {
+				// Can't happen
+				throw new InternalError(e);
+			}
+			c.a = KEY_GENERIC_BIG_ARRAY_CAST BIG_ARRAYS.newBigArray(size);
+		}
 		BigArrays.copy(a, 0, c.a, 0, size);
-		c.size = size;
 		return c;
 	}
-
-#if KEY_CLASS_Object
-	private static boolean valEquals(final Object a, final Object b) {
-		return a == null ? b == null : a.equals(b);
-	}
-#endif
 
 	/** Compares this type-specific big-array list to another one.
 	 *
@@ -619,13 +943,16 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final KEY_GENERIC_TYPE[][] a2 = l.a;
 
 #if KEY_CLASS_Object
-		while(s-- !=  0) if (! valEquals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
+		while(s-- !=  0) if (! java.util.Objects.equals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
 #else
 		while(s-- !=  0) if (BigArrays.get(a1, s) != BigArrays.get(a2, s)) return false;
 #endif
 		return true;
 	}
 
+	public boolean equals(final Object o) {
+		return o instanceof BIG_ARRAY_BIG_LIST ? equals((BIG_ARRAY_BIG_LIST KEY_GENERIC)o) : super.equals(o);
+	}
 
 #if ! KEY_CLASS_Reference
 
@@ -653,6 +980,11 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		}
 
 		return i < s2 ? -1 : (i < s1 ? 1 : 0);
+	}
+
+	@Override
+	public int compareTo(final BigList<? extends KEY_GENERIC_CLASS> l) {
+		return l instanceof BIG_ARRAY_BIG_LIST ? compareTo((BIG_ARRAY_BIG_LIST)l) : super.compareTo(l);
 	}
 #endif
 
@@ -1117,6 +1449,36 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 			}
 
+		}
+
+		/* Now we play with spliterators.
+		 *
+		 * Or rather we would, except comparing results of spliterators directly is a bit painful.
+		 * However, there is an easy workaround; use streams, which are built on Spliterators.
+		 */
+		{
+#if KEYS_REFERENCE
+			java.util.stream.Stream<KEY_TYPE> i = m.parallelStream();
+			java.util.stream.Stream<KEY_TYPE> j = t.parallelStream();
+#elif KEY_CLASS_Boolean
+			java.util.stream.Stream<KEY_CLASS> i = m.parallelStream();
+			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+#else
+			JDK_PRIMITIVE_STREAM i = m.KEY_WIDENED_PARALLEL_STREAM_METHOD();
+			java.util.stream.Stream<KEY_CLASS> j = t.parallelStream();
+#endif
+
+#if KEYS_REFERENCE || KEY_CLASS_Boolean
+			Object[] iArray = i.toArray();
+			Object[] jArray = j.toArray();
+#elif KEY_CLASS_Character
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(c -> (int)c.charValue()).toArray();
+#else
+			KEY_TYPE_WIDENED[] iArray = i.toArray();
+			KEY_TYPE_WIDENED[] jArray = j.MAP_TO_KEY_WIDENED(Number::KEY_WIDENED_VALUE).toArray();
+#endif
+			ensure(java.util.Arrays.equals(iArray, jArray), "Error (" + level + ", " + seed + "): divergence in toArray() from streams (" + java.util.Arrays.toString(iArray) + " != " + java.util.Arrays.toString(jArray) + ")");
 		}
 
 		{

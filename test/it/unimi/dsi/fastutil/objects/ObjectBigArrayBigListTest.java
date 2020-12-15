@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.objects;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.objects;
 
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +66,41 @@ public class ObjectBigArrayBigListTest {
 		assertTrue(l.elements()[0][3] == null);
 	}
 
+	@Test
+	public void testOf() {
+		final ObjectBigArrayBigList<String> l = ObjectBigArrayBigList.of("0", "1", "2");
+		assertEquals(ObjectBigArrayBigList.wrap(new String[][] { new String[] {"0", "1", "2" } }), l);
+	}
+	
+	@Test
+	public void testToBigList() {
+		final ObjectBigArrayBigList<String> baseList = ObjectBigArrayBigList.of("wood", "board", "glass", "metal");
+		ObjectBigArrayBigList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectBigArrayBigList.toBigList());
+		assertEquals(ObjectBigArrayBigList.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
 
+	@Test
+	public void testSpliteratorTrySplit() {
+		final ObjectBigArrayBigList<String> baseList = ObjectBigArrayBigList.of("0", "1", "2", "3", "4", "5", "bird");
+		ObjectSpliterator<String> willBeSuffix = baseList.spliterator();
+		assertEquals(baseList.size64(), willBeSuffix.getExactSizeIfKnown());
+		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
+		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
+		ObjectSpliterator<String> prefix = willBeSuffix.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
+		java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport.stream(willBeSuffix, false);
+		java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport.stream(prefix, false);
+
+		final ObjectBigArrayBigList<String> prefixList = prefixStream.collect(ObjectBigArrayBigList.toBigList());
+		final ObjectBigArrayBigList<String> suffixList = suffixStream.collect(ObjectBigArrayBigList.toBigList());
+		assertEquals(baseList.size64(), prefixList.size64() + suffixList.size64());
+		assertEquals(baseList.subList(0, prefixList.size64()), prefixList);
+		assertEquals(baseList.subList(prefixList.size64(), baseList.size64()), suffixList);
+		final ObjectBigArrayBigList<String> recombinedList = new ObjectBigArrayBigList<>(baseList.size64());
+		recombinedList.addAll(prefixList);
+		recombinedList.addAll(suffixList);
+		assertEquals(baseList, recombinedList);
+	}
 
 	private static java.util.Random r = new java.util.Random(0);
 

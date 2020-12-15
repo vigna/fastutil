@@ -19,6 +19,10 @@ package PACKAGE;
 
 import java.util.AbstractCollection;
 
+#if KEYS_PRIMITIVE
+import java.util.Collection;
+#endif
+
 /** An abstract class providing basic methods for collections implementing a type-specific interface.
  *
  * <p>In particular, this class provide {@link #iterator()}, {@code add()}, {@link #remove(Object)} and
@@ -107,7 +111,12 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
 
 	@Override
 	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		if (a == null || a.length < size()) a = new KEY_TYPE[size()];
+		final int size = size();
+		if (a == null) {
+			a = new KEY_TYPE[size];
+		} else if (a.length < size) {
+			a = java.util.Arrays.copyOf(a, size);
+		}
 		ITERATORS.unwrap(iterator(), a);
 		return a;
 	}
@@ -126,6 +135,17 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
 		return toArray(a);
 	}
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	/** {@inheritDoc}
+	 *
+	 * @apiNote This exists to actually make final what should be considered final in the interface.
+	 */
+	@Override
+	public final void forEach(final KEY_CONSUMER action) {
+		COLLECTION.super.forEach(action);
+	}
+#endif
+
 	@Override
 	public boolean addAll(final COLLECTION c) {
 		boolean retVal = false;
@@ -134,12 +154,38 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
 			if (add(i.NEXT_KEY())) retVal = true;
 		return retVal;
 	}
+	
+	/** {@inheritDoc}
+	 *
+	 * <p>This implementation delegates to the type-specific version if given a type-specific
+	 * collection, otherwise is uses the implementation from {@link AbstractCollection}.
+	 */
+	@Override
+	public boolean addAll(final Collection<? extends KEY_CLASS> c) {
+		if (c instanceof COLLECTION) {
+			return addAll((COLLECTION) c);
+		}
+		return super.addAll(c);
+	}
 
 	@Override
 	public boolean containsAll(final COLLECTION c) {
 		for(final KEY_ITERATOR i = c.iterator(); i.hasNext();)
 			if (! contains(i.NEXT_KEY())) return false;
 		return true;
+	}
+	
+	/** {@inheritDoc}
+	 *
+	 * <p>This implementation delegates to the type-specific version if given a type-specific
+	 * collection, otherwise is uses the implementation from {@link AbstractCollection}.
+	 */
+	@Override
+	public boolean containsAll(final Collection<?> c) {
+		if (c instanceof COLLECTION) {
+			return containsAll((COLLECTION) c);
+		}
+		return super.containsAll(c);
 	}
 
 	@Override
@@ -148,6 +194,19 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
 		for(final KEY_ITERATOR i = c.iterator(); i.hasNext();)
 			if (rem(i.NEXT_KEY())) retVal = true;
 		return retVal;
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <p>This implementation delegates to the type-specific version if given a type-specific
+	 * collection, otherwise is uses the implementation from {@link AbstractCollection}.
+	 */
+	@Override
+	public boolean removeAll(final Collection<?> c) {
+		if (c instanceof COLLECTION) {
+			return removeAll((COLLECTION) c);
+		}
+		return super.removeAll(c);
 	}
 
 	@Override
@@ -159,6 +218,19 @@ public abstract class ABSTRACT_COLLECTION KEY_GENERIC extends AbstractCollection
 				retVal = true;
 			}
 		return retVal;
+	}
+
+	/** {@inheritDoc}
+	 *
+	 * <p>This implementation delegates to the type-specific version if given a type-specific
+	 * collection, otherwise is uses the implementation from {@link AbstractCollection}.
+	 */
+	@Override
+	public boolean retainAll(final Collection<?> c) {
+		if (c instanceof COLLECTION) {
+			return retainAll((COLLECTION) c);
+		}
+		return super.retainAll(c);
 	}
 #endif
 

@@ -1,0 +1,440 @@
+/*
+ * Copyright (C) 2002-2020 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.RandomAccess;
+import java.util.NoSuchElementException;
+#if !defined JDK_PRIMITIVE_KEY_CONSUMER
+import java.util.function.Consumer;
+#endif
+#if KEYS_REFERENCE
+import java.util.stream.Collector;
+#endif
+
+/** A type-specific array-based immutable list; provides some additional methods that use polymorphism to avoid (un)boxing.
+ *
+ * <p>Instances of this class are immutable
+ * and (contrarily to mutable array-based list implementations) the backing array is not exposed.
+ * Instances can be built using a variety of methods, but note that constructors using
+ * an array will not make a defensive copy.
+ *
+ * <p>This class implements the bulk methods {@code removeElements()},
+ * {@code addElements()} and {@code getElements()} using
+ * high-performance system calls (e.g., {@link
+ * System#arraycopy(Object,int,Object,int,int) System.arraycopy()}) instead of
+ * expensive loops.
+ */
+
+public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
+	private static final long serialVersionUID = 0L;
+
+	/** The backing array; all elements are part of this list. */
+	protected transient KEY_GENERIC_TYPE a[];
+
+	/** Creates a new immutable list using a given array.
+	 *
+	 * <p>Note that this constructor does not perform a defensive copy.
+	 *
+	 * @param a the array that will be used to back this immutable list.
+	 */
+
+	public IMMUTABLE_LIST(final KEY_GENERIC_TYPE a[]) {
+		this.a = a;
+	}
+
+	/** Creates a new immutable list and fills it with a given collection.
+	 *
+	 * @param c a collection that will be used to fill the immutable list.
+	 */
+
+	public IMMUTABLE_LIST(final Collection<? extends KEY_GENERIC_CLASS> c) {
+#if KEYS_PRIMITIVE
+		this(ITERATORS.unwrap(ITERATORS.AS_KEY_ITERATOR(c.iterator())));
+#else
+		this(ITERATORS.unwrap(c.iterator()));
+#endif
+	}
+
+	/** Creates a new immutable list and fills it with a given type-specific collection.
+	 *
+	 * @param c a type-specific collection that will be used to fill the immutable list.
+	 */
+
+	public IMMUTABLE_LIST(final COLLECTION KEY_EXTENDS_GENERIC c) {
+		this(ITERATORS.unwrap(c.iterator()));
+	}
+
+	/** Creates a new immutable list and fills it with a given type-specific list.
+	 *
+	 * @param l a type-specific list that will be used to fill the immutable list.
+	 */
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public IMMUTABLE_LIST(final LIST KEY_EXTENDS_GENERIC l) {
+		this(KEY_GENERIC_ARRAY_CAST new KEY_TYPE[l.size()]);
+		l.getElements(0, a, 0, l.size());
+	}
+
+	/** Creates a new immutable list and fills it with the elements of a given array.
+	 *
+	 * @param a an array whose elements will be used to fill the immutable list.
+	 * @param offset the first element to use.
+	 * @param length the number of elements to use.
+	 */
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public IMMUTABLE_LIST(final KEY_GENERIC_TYPE a[], final int offset, final int length) {
+		this(KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length]);
+		System.arraycopy(a, offset, this.a, 0, length);
+	}
+
+	/** Creates a new immutable list and fills it with the elements returned by a type-specific iterator..
+	 *
+	 * @param i a type-specific iterator whose returned elements will fill the immutable list.
+	 */
+
+	public IMMUTABLE_LIST(final KEY_ITERATOR KEY_EXTENDS_GENERIC i) {
+		this(ITERATORS.unwrap(i));
+	}
+
+	/** Creates an immutable list using a list of elements.
+	 *
+	 * @param init a list of elements that will be used to initialize the list.
+	 * @return a new immutable list containing the given elements.
+	 */
+	SAFE_VARARGS
+	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
+		return new IMMUTABLE_LIST KEY_GENERIC(init);
+	}
+
+	private static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC convertTrustedToImmutableList(ARRAY_LIST KEY_GENERIC arrayList) {
+		KEY_GENERIC_TYPE backingArray[] = arrayList.elements();
+		if (arrayList.size() != backingArray.length) {
+			backingArray = Arrays.copyOf(backingArray, arrayList.size());
+		}
+		return new IMMUTABLE_LIST KEY_GENERIC_DIAMOND (backingArray);
+  }
+
+#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+
+	/** Collects the result of a primitive {@code Stream} into a new ImmutableList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead of returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC toList(JDK_PRIMITIVE_STREAM stream) {
+		return convertTrustedToImmutableList(ARRAY_LIST.toList(stream));
+	}
+
+	/** Collects the result of a primitive {@code Stream} into a new ImmutableList.
+	 *
+	 * <p>This method performs a terminal operation on the given {@code Stream}
+	 *
+	 * @apiNote Taking a primitive stream instead returning something like a
+	 * {@link java.util.stream.Collector Collector} is necessary because there is no
+	 * primitive {@code Collector} equivalent in the Java API.
+	 */
+	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC toListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+		return convertTrustedToImmutableList(ARRAY_LIST.toListWithExpectedSize(stream, expectedSize));
+	}
+#elif KEYS_REFERENCE
+	private static final Collector<KEY_TYPE, ?, IMMUTABLE_LIST<KEY_TYPE>> TO_LIST_COLLECTOR =
+		Collector.of(
+			ARRAY_LIST::new,
+			ARRAY_LIST::add,
+			ARRAY_LIST::combine,
+			IMMUTABLE_LIST::convertTrustedToImmutableList);
+
+	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ImmutableList. */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, IMMUTABLE_LIST KEY_GENERIC> toList() {
+		return (Collector) TO_LIST_COLLECTOR;
+	}
+
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ImmutableList. */
+ 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, IMMUTABLE_LIST KEY_GENERIC> toListWithExpectedSize(int expectedSize) {
+ 		return Collector.<KEY_GENERIC_TYPE, ARRAY_LIST KEY_GENERIC, IMMUTABLE_LIST KEY_GENERIC>of(
+			() -> new ARRAY_LIST KEY_GENERIC_DIAMOND(expectedSize),
+			ARRAY_LIST::add,
+			ARRAY_LIST::combine,
+			IMMUTABLE_LIST::convertTrustedToImmutableList);
+	}
+#endif
+
+	@Override
+	public KEY_GENERIC_TYPE GET_KEY(final int index) {
+		if (index >= a.length) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + a.length + ")");
+		return a[index];
+	}
+
+	@Override
+	public int indexOf(final KEY_TYPE k) {
+		for(int i = 0, size = a.length; i < size; i++) if (KEY_EQUALS(k, a[i])) return i;
+		return -1;
+	}
+
+
+	@Override
+	public int lastIndexOf(final KEY_TYPE k) {
+		for(int i = a.length; i-- != 0;) if (KEY_EQUALS(k, a[i])) return i;
+		return -1;
+	}
+
+	@Override
+	public int size() {
+		return a.length;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return a.length == 0;
+	}
+
+   	/** Copies element of this type-specific list into the given array using optimized system calls.
+	 *
+	 * @param from the start index (inclusive).
+	 * @param a the destination array.
+	 * @param offset the offset into the destination array where to store the first element copied.
+	 * @param length the number of elements to be copied.
+	 */
+	@Override
+	public void getElements(final int from, final KEY_TYPE[] a, final int offset, final int length) {
+		ARRAYS.ensureOffsetLength(a, offset, length);
+		System.arraycopy(this.a, from, a, offset, length);
+	}
+
+	@Override
+	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+		for (int i = 0; i < a.length; ++i) {
+			action.accept(a[i]);
+		}
+	}
+
+#if KEYS_PRIMITIVE
+
+	@Override
+	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+		if (a == null) a = new KEY_TYPE[this.a.length];
+		System.arraycopy(this.a, 0, a, 0, a.length);
+		return a;
+	}
+
+#endif
+
+	@Override
+	public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
+		ensureIndex(index);
+
+		return new KEY_LIST_ITERATOR KEY_GENERIC() {
+				int pos = index, last = -1;
+
+				@Override
+				public boolean hasNext() { return pos < a.length; }
+				@Override
+				public boolean hasPrevious() { return pos > 0; }
+				@Override
+				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[last = pos++]; }
+				@Override
+				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[last = --pos]; }
+				@Override
+				public int nextIndex() { return pos; }
+				@Override
+				public int previousIndex() { return pos - 1; }
+				@Override
+				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+					while (pos < a.length) {
+						action.accept(a[last = pos++]);
+					}
+				}
+				@Override
+				public void add(KEY_GENERIC_TYPE k) {
+					IMMUTABLE_LIST.this.add(pos++, k);
+					last = -1;
+				}
+				@Override
+				public void set(KEY_GENERIC_TYPE k) {
+					if (last == -1) throw new IllegalStateException();
+					IMMUTABLE_LIST.this.set(last, k);
+				}
+				@Override
+				public void remove() {
+					if (last == -1) throw new IllegalStateException();
+					IMMUTABLE_LIST.this.REMOVE_KEY(last);
+					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+					if (last < pos) pos--;
+					last = -1;
+				}
+				@Override
+				public int back(int n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = a.length - pos;
+					if (n < remaining) {
+						pos -= n;
+					} else {
+						n = remaining;
+						pos = 0;
+					}
+					last = pos;
+					return n;
+				}
+				@Override
+				public int skip(int n) {
+					if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+					final int remaining = a.length - pos;
+					if (n < remaining) {
+						pos += n;
+					} else {
+						n = remaining;
+						pos = a.length;
+					}
+					last = pos - 1;
+					return n;
+				}
+			};
+	}
+
+  private final class Spliterator implements KEY_SPLITERATOR KEY_GENERIC {
+		int pos, max;
+
+#ifdef TEST
+		// Sentinel to make sure we don't accidentally use size when we mean max
+		@Deprecated
+		private final Object size = null;
+#endif
+
+		public Spliterator() {
+			this(0, a.length);
+		}
+
+		private Spliterator(int pos, int max) {
+			assert pos <= max : "pos " + pos + " must be <= max " + max;
+			this.pos = pos;
+			this.max = max;
+		}
+
+		@Override
+		public int characteristics() { return SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.IMMUTABLE; }
+
+		@Override
+		public long estimateSize() { return max - pos; }
+
+		@Override
+		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+			if (pos >= max) return false;
+			action.accept(a[pos++]);
+			return true;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			for (; pos < max; ++pos) {
+				action.accept(a[pos]);
+			}
+		}
+
+		@Override
+		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (pos >= max) return 0;
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos = it.unimi.dsi.fastutil.SafeMath.safeLongToInt(pos + n);
+				return n;
+			}
+			n = remaining;
+			pos = max;
+			return n;
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC trySplit() {
+			int retLen = (max - pos) >> 1;
+			if (retLen <= 1) return null;
+			int myNewPos = pos + retLen;
+			int retMax = myNewPos;
+			int oldPos = pos;
+			this.pos = myNewPos;
+			return new Spliterator(oldPos, retMax);
+		}
+	}
+
+	@Override
+	public IMMUTABLE_LIST KEY_GENERIC clone() {
+		return this;
+	}
+
+	/** Compares this type-specific immutable list to another one.
+	 *
+	 * <p>This method exists only for sake of efficiency. The implementation
+	 * inherited from the abstract implementation would already work.
+	 *
+	 * @param l a type-specific immutable list.
+	 * @return true if the argument contains the same elements of this type-specific immutable list.
+	 */
+	public boolean equals(final IMMUTABLE_LIST KEY_GENERIC l) {
+		if (l == this) return true;
+		int s = size();
+		if (s != l.size()) return false;
+		final KEY_GENERIC_TYPE[] a1 = a;
+		final KEY_GENERIC_TYPE[] a2 = l.a;
+
+#if KEY_CLASS_Object
+		while(s-- !=  0) if (! java.util.Objects.equals(a1[s], a2[s])) return false;
+#else
+		while(s-- !=  0) if (a1[s] != a2[s]) return false;
+#endif
+		return true;
+	}
+
+
+#if ! KEY_CLASS_Reference
+
+	/** Compares this immutable list to another immutable list.
+	 *
+	 * <p>This method exists only for sake of efficiency. The implementation
+	 * inherited from the abstract implementation would already work.
+	 *
+	 * @param l an immutable list.
+	 * @return a negative integer,
+	 * zero, or a positive integer as this list is lexicographically less than, equal
+	 * to, or greater than the argument.
+	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	public int compareTo(final IMMUTABLE_LIST KEY_EXTENDS_GENERIC l) {
+		final int s1 = size(), s2 = l.size();
+		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
+		KEY_GENERIC_TYPE e1, e2;
+		int r, i;
+
+		for(i = 0; i < s1 && i < s2; i++) {
+			e1 = a1[i];
+			e2 = a2[i];
+			if ((r = KEY_CMP(e1, e2)) != 0) return r;
+		}
+
+		return i < s2 ? -1 : (i < s1 ? 1 : 0);
+	}
+#endif
+
+
+}

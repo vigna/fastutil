@@ -1,0 +1,159 @@
+/*
+ * Copyright (C) 2002-2020 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package PACKAGE;
+
+import java.util.Spliterator;
+#if KEYS_PRIMITIVE
+import java.util.function.Consumer;
+#endif
+
+/** A type-specific {@link Spliterator}; provides an additional methods to avoid (un)boxing, and
+ * the possibility to skip elements.
+ *
+ * @author C. Sean Young &lt;csyoung@google.com&gt;
+ * @see Spliterator
+ * @since 8.5.0
+ */
+
+#if defined JDK_PRIMITIVE_SPLITERATOR && !KEY_WIDENED
+public interface KEY_SPLITERATOR KEY_GENERIC extends JDK_PRIMITIVE_SPLITERATOR {
+#elif KEYS_PRIMITIVE
+public interface KEY_SPLITERATOR KEY_GENERIC extends Spliterator.OfPrimitive<KEY_GENERIC_CLASS, KEY_CONSUMER, KEY_SPLITERATOR KEY_GENERIC> {
+#else
+public interface KEY_SPLITERATOR KEY_GENERIC extends Spliterator<KEY_GENERIC_CLASS> {
+#endif
+
+#if KEYS_PRIMITIVE
+
+	// tryAdvance(KEY_CONSUMER action) declaration inherited from super interface.
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default boolean tryAdvance(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		// The instanceof and cast is required for performance. Without it, calls routed through this
+		// overload using a primitive consumer would go through the slow lambda.
+		return tryAdvance(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (METHOD_ARG_KEY_CONSUMER) action::accept);
+	}
+
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	// Because our primitive Consumer interface extends both the JDK's primitive
+	// and object Consumer interfaces, calling this method with it would be ambiguous.
+	// This overload exists to pass it to the proper primitive overload.
+	/**
+	 * Attempts to perform the action on the next element, or do nothing
+	 * but return {@code false} if there are no remaining elements.
+	 *
+	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead override the {@code tryAdvance()} overload
+	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
+	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
+	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param action the action to be performed on the next element.
+	 * @return whether there was a next element the action was performed on
+	 * @see java.util.Spliterator#tryAdvance(java.util.function.Consumer)
+	 */
+	default boolean tryAdvance(final KEY_CONSUMER action) {
+		return tryAdvance((JDK_PRIMITIVE_KEY_CONSUMER) action);
+	}
+#endif
+
+	// forEachRemaining(KEY_CONSUMER action) default impl inherited from super interface.
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+		// The instanceof and cast is required for performance. Without it, calls routed through this
+		// overload using a primitive consumer would go through the slow lambda.
+		// This is not just theoretical; Oracle's Stream implementation (Pipeline) routes primitive
+		// consumer calls through this overload, and the difference in performance is an order
+		// of magnitude.
+		forEachRemaining(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (METHOD_ARG_KEY_CONSUMER) action::accept);
+	}
+
+#endif
+
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	// Because our primitive Consumer interface extends both the JDK's primitive
+	// and object Consumer interfaces, calling this method with it would be ambiguous.
+	// This overload exists to pass it to the proper primitive overload.
+	/**
+	 * Performs the given action for each remaining element until all elements
+	 * have been processed or the action throws an exception.
+	 *
+	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead override the {@code forEachRemaining()} overload
+	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
+	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
+	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param action the action to be performed for each element.
+	 * @see java.util.Spliterator#forEachRemaining(java.util.function.Consumer)
+	 */
+	default void forEachRemaining(final KEY_CONSUMER action) {
+		forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER) action);
+	}
+#endif
+
+	/** Skips the given number of elements.
+	 *
+	 * <p>The effect of this call is exactly the same as that of calling {@link #tryAdvance} for
+	 * {@code n} times (possibly stopping if {@link #tryAdvance} returns false).
+	 * The action called will do nothing; elements will be discarded.
+	 *
+	 * @implNote This default implementation is linear in n. It is expected concrete implementations
+	 * that are capable of it will override it to run lower time, but be prepared for linear time.
+	 *
+	 * @param n the number of elements to skip.
+	 * @return the number of elements actually skipped.
+	 * @see Spliterator#tryAdvance
+	 */
+	default long skip(final long n) {
+		if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+		long i = n;
+		while(i-- != 0 && tryAdvance((KEY_GENERIC_TYPE unused) -> {})) {}  // No loop body; logic all happens in conditional
+		return n - i - 1;
+	}
+
+	/**
+	  * {@inheritDoc}
+	  *
+	  * <p>Note that this specification strengthens the one given in {@link Spliterator#trySplit()}.
+	  */
+	@Override
+	KEY_SPLITERATOR KEY_GENERIC trySplit();
+
+#if KEYS_PRIMITIVE
+	/**
+	  * {@inheritDoc}
+	  *
+	  * <p>Note that this specification strengthens the one given in {@link Spliterator#getComparator()}.
+	  */
+	@Override
+	default KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+		throw new IllegalStateException();
+	}
+#endif
+}

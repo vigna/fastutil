@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.objects;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.objects;
 
 
 import static it.unimi.dsi.fastutil.BigArrays.copy;

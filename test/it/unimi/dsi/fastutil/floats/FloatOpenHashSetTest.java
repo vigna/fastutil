@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.floats;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,6 +14,8 @@ package it.unimi.dsi.fastutil.floats;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.floats;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -27,7 +27,7 @@ public class FloatOpenHashSetTest {
 
 	@Test
 	public void testNaNs() {
-		FloatOpenHashSet s = new FloatOpenHashSet();
+		final FloatOpenHashSet s = new FloatOpenHashSet();
 		s.add(Float.NaN);
 		s.add(Float.NaN);
 		assertEquals(1, s.size());
@@ -35,7 +35,7 @@ public class FloatOpenHashSetTest {
 
 	@Test
 	public void testZeros() {
-		FloatOpenHashSet s = new FloatOpenHashSet();
+		final FloatOpenHashSet s = new FloatOpenHashSet();
 		assertTrue(s.add(-0.0f));
 		assertTrue(s.add(+0.0f));
 		assertEquals(2, s.size());

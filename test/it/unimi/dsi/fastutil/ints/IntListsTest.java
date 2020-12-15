@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -16,6 +14,8 @@ package it.unimi.dsi.fastutil.ints;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.ints;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -30,7 +30,7 @@ public class IntListsTest {
 	public void testRandomAccess() {
 		final IntList fakeList = new AbstractIntList() {
 			@Override
-			public int getInt(int index) {
+			public int getInt(final int index) {
 				return 0;
 			}
 			@Override

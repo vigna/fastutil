@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.objects;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.objects;
 
 
 import static org.junit.Assert.assertEquals;
@@ -81,8 +81,67 @@ public class ObjectOpenHashSetTest {
 
 	@Test
 	public void testOf() {
-		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(1), Long.valueOf(2));
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l), Long.valueOf(2l), Long.valueOf(3l));
+		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2, 3 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l));
+		assertEquals(new LongOpenHashSet(new long[] { 0 }), s);
+	}
+
+	@Test
+	public void testOfPair() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l));
+		assertEquals(new LongOpenHashSet(new long[] { 0, 1 }), s);
+	}
+
+	@Test
+	public void testOfTriplet() {
+		final ObjectOpenHashSet<Long> s = ObjectOpenHashSet.of(Long.valueOf(0l), Long.valueOf(1l), Long.valueOf(2l));
 		assertEquals(new LongOpenHashSet(new long[] { 0, 1, 2 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		ObjectOpenHashSet.of(Long.valueOf(0), Long.valueOf(0));
+	}
+
+	@Test
+	public void testToSet() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet.of("wood", "board", "glass", "metal");
+		ObjectOpenHashSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSet());
+		assertEquals(ObjectOpenHashSet.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet
+				.of("0", "1", "2", "3", "4", "5", "bird");
+		ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport
+				.stream(spliterator1, false);
+		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport
+				.stream(spliterator2, false);
+
+		final ObjectOpenHashSet<String> subSet1 = stream1.collect(ObjectOpenHashSet.toSet());
+		// Intentionally collecting to a list for this second one.
+		final ObjectArrayList<String> subSet2 = stream2.collect(ObjectArrayList.toList());
+		assertEquals(baseSet.size(), subSet1.size() + subSet2.size());
+		final ObjectOpenHashSet<String> recombinedSet = new ObjectOpenHashSet<>(baseSet.size());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
 	}
 
 	private static java.util.Random r = new java.util.Random(0);
@@ -216,8 +275,11 @@ public class ObjectOpenHashSetTest {
 			assertTrue("Error: m and t differ on a key (" + e + ") after removal (iterating on m)", t.contains(e));
 		}
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		final Object a[] = m.toArray();
+		Object a[] = m.toArray();
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
+		/* As above, but using streams */
+		a = m.stream().toArray();
+		assertTrue("Error: stream().toArray() output (or array-based constructor) is not OK", new ObjectOpenHashSet(a).equals(m));
 		/* Now we check cloning. */
 		assertTrue("Error: m does not equal m.clone()", m.equals(m.clone()));
 		assertTrue("Error: m.clone() does not equal m", m.clone().equals(m));

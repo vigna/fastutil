@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2019-2020 Sebastiano Vigna
  *
@@ -16,6 +14,7 @@ package it.unimi.dsi.fastutil.objects;
  * limitations under the License.
  */
 
+package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertTrue;
 

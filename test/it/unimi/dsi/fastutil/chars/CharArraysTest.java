@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.chars;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.chars;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.chars;
 
 import static org.junit.Assert.assertTrue;
 
@@ -68,7 +68,7 @@ public class CharArraysTest {
 
 	@Test
 	public void testRadixSort2() {
-		char[][] d = new char[2][];
+		final char[][] d = new char[2][];
 
 		d[0] = new char[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = (char)(3 - i % 3);
@@ -109,7 +109,7 @@ public class CharArraysTest {
 
 	@Test
 	public void testRadixSort() {
-		char[][] t = { { 2, 1, 0, 4 } };
+		final char[][] t = { { 2, 1, 0, 4 } };
 		CharArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
@@ -117,7 +117,7 @@ public class CharArraysTest {
 		CharArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
-		char[][] d = new char[2][];
+		final char[][] d = new char[2][];
 
 		d[0] = new char[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = (char)(3 - i % 3);

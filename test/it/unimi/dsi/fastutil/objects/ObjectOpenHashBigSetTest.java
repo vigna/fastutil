@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.objects;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.objects;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.objects;
 
 import static it.unimi.dsi.fastutil.BigArrays.get;
 import static it.unimi.dsi.fastutil.BigArrays.length;
@@ -77,6 +77,43 @@ public class ObjectOpenHashBigSetTest {
 
 		// Fails
 		assertEquals(referenceInstance, instance);
+	}
+
+	// Here because IntOpenHashBigSet has neither an of() nor a wrap().
+	@SafeVarargs
+	private static <T> ObjectOpenHashBigSet<T> setOf(T... elements) {
+		ObjectOpenHashBigSet<T> result = new ObjectOpenHashBigSet<>(elements.length);
+		for (T i : elements) {
+			result.add(i);
+		}
+		return result;
+	}
+
+	@Test
+	public void testToBigSet() {
+		final ObjectOpenHashBigSet<String> baseSet = setOf("wood", "board", "glass", "metal");
+		ObjectOpenHashBigSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashBigSet.toBigSet());
+		assertEquals(setOf("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final ObjectOpenHashBigSet<String> baseSet = setOf("0", "1", "2", "3", "4", "5", "bird");
+		ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport.stream(spliterator1, false);
+		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport.stream(spliterator2, false);
+
+		final ObjectOpenHashBigSet<String> subSet1 = stream1.collect(ObjectOpenHashBigSet.toBigSet());
+		// Intentionally collecting to a list for this second one.
+		final ObjectBigArrayBigList<String> subSet2 = stream2.collect(ObjectBigArrayBigList.toBigList());
+		assertEquals(baseSet.size64(), subSet1.size64() + subSet2.size64());
+		final ObjectOpenHashBigSet<String> recombinedSet = new ObjectOpenHashBigSet<>(baseSet.size64());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
 	}
 
 	private static java.util.Random r = new java.util.Random(0);
