@@ -323,6 +323,33 @@ public class IntOpenHashSetTest {
 		IntOpenHashSet.of(0, 0);
 	}
 
+	@Test
+	public void testToSet() {
+		final IntOpenHashSet baseSet = IntOpenHashSet.of(2, 380, 1297);
+		IntOpenHashSet transformed = IntOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
+		assertEquals(IntOpenHashSet.of(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntOpenHashSet baseSet = IntOpenHashSet.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		IntSpliterator spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
+		java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
+
+		final IntOpenHashSet subSet1 = IntOpenHashSet.toSet(stream1);
+		// Intentionally collecting to a list for this second one.
+		final IntArrayList subSet2 = IntArrayList.toList(stream2);
+		assertEquals(baseSet.size(), subSet1.size() + subSet2.size());
+		final IntOpenHashSet recombinedSet = new IntOpenHashSet(baseSet.size());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
+	}
+
 	@SuppressWarnings("boxing")
 	private static void checkTable(final IntOpenHashSet s) {
 		final int[] key = s.key;
@@ -451,9 +478,14 @@ public class IntOpenHashSetTest {
 		}
 
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		final int a[] = m.toIntArray();
+		int a[] = m.toIntArray();
 
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
+		
+		/* Same, but with streams */
+		a = m.intStream().toArray();
+
+		assertTrue("Error: intStream().toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
 
 		/* Now we check cloning. */
 

@@ -26,6 +26,14 @@ import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Consumer;
+#if KEYS_PRIMITIVE
+import java.util.PrimitiveIterator;
+#if KEY_WIDENED
+import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
+import WIDENED_PACKAGE.WIDENED_ITERATORS;
+#endif
+#endif
 
 /** A class providing static methods and objects that do useful things with type-specific iterators.
  *
@@ -67,10 +75,19 @@ public final class ITERATORS {
 		public int previousIndex() { return -1; }
 
 		@Override
-		public int skip(int n) { return 0; };
+		public int skip(int n) { return 0; }
 
 		@Override
-		public int back(int n) { return 0; };
+		public int back(int n) { return 0; }
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) { }
+#endif
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) { }
 
 		@Override
 		public Object clone() { return EMPTY_ITERATOR; }
@@ -105,7 +122,7 @@ public final class ITERATORS {
 
 	private static class SingletonIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
 		private final KEY_GENERIC_TYPE element;
-		private int curr;
+		private byte curr;
 
 		public SingletonIterator(final KEY_GENERIC_TYPE element) {
 			this.element = element;
@@ -132,6 +149,20 @@ public final class ITERATORS {
 		}
 
 		@Override
+#if KEYS_PRIMITIVE
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#else // ! KEY_PRIMITIVE == KEY_REFERENCE
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+			Objects.requireNonNull(action);
+			if (curr == 0) {
+				action.accept(element);
+				curr = 1;
+			}
+		}
+
+
+		@Override
 		public int nextIndex() {
 			return curr;
 		}
@@ -139,6 +170,22 @@ public final class ITERATORS {
 		@Override
 		public int previousIndex() {
 			return curr - 1;
+		}
+
+		@Override
+		public int back(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (n == 0 || curr < 1) return 0;
+			curr = 1;
+			return 1;
+		}
+
+		@Override
+		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			if (n == 0 || curr > 0) return 0;
+			curr = 0;
+			return 1;
 		}
 	}
 
@@ -185,7 +232,20 @@ public final class ITERATORS {
 		}
 
 		@Override
+#if KEYS_PRIMITIVE
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#else // ! KEY_PRIMITIVE == KEY_REFERENCE
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+			Objects.requireNonNull(action);
+			for (; curr < length; ++curr) {
+				action.accept(array[offset + curr]);
+			}
+		}
+
+		@Override
 		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			if (n <= length - curr) {
 				curr += n;
 				return n;
@@ -197,6 +257,7 @@ public final class ITERATORS {
 
 		@Override
 		public int back(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			if (n <= curr) {
 				curr -= n;
 				return n;
@@ -240,7 +301,7 @@ public final class ITERATORS {
 	 * all elements of the given array.
 	 *
 	 * @param array an array to wrap into a type-specific list iterator.
-	 * @return an iterator that will the elements of {@code array}.
+	 * @return an iterator that will return the elements of {@code array}.
 	 */
 	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC wrap(final KEY_GENERIC_TYPE[] array) {
 		return new ArrayIterator KEY_GENERIC_DIAMOND(array, 0, array.length);
@@ -521,7 +582,78 @@ public final class ITERATORS {
 		public void remove() { i.remove(); }
 		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_CLASS2TYPE(i.next()); }
+
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		// This is pretty much the only time overriding this overload is correct; we want to
+		// delegate as an Object consumer, not wrap it as a primitive one.
+		@Override
+		public void forEachRemaining(final KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+			Objects.requireNonNull(action);
+			// This will cause an unchecked cast warning, but the code gen conditionals for this method are already
+			// too complicated to justify adding the @SuppressWarnings conditionally.
+			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
+#else
+			i.forEachRemaining(action);
+#endif
+		}
+#endif
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			i.forEachRemaining(action);
+		}
 	}
+
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE
+	private static class PrimitiveIteratorWrapper KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+		final JDK_PRIMITIVE_ITERATOR i;
+
+		public PrimitiveIteratorWrapper(JDK_PRIMITIVE_ITERATOR i) {
+			this.i = i;
+		}
+
+		@Override
+		public boolean hasNext() { return i.hasNext(); }
+		@Override
+		public void remove() { i.remove(); }
+		@Override
+#if KEY_WIDENED
+		public KEY_GENERIC_TYPE NEXT_KEY() { return (KEY_GENERIC_TYPE)i.NEXT_KEY_WIDENED(); }
+#else
+		public KEY_GENERIC_TYPE NEXT_KEY() { return i.NEXT_KEY_WIDENED(); }
+#endif
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+	}
+#endif
+
+#if defined JDK_PRIMITIVE_ITERATOR && KEY_WIDENED
+	private static class CheckedPrimitiveIteratorWrapper KEY_GENERIC extends PrimitiveIteratorWrapper {
+		public CheckedPrimitiveIteratorWrapper(JDK_PRIMITIVE_ITERATOR i) {
+			super(i);
+		}
+
+		@Override
+		public KEY_GENERIC_TYPE NEXT_KEY() { return KEY_NARROWING(i.NEXT_KEY_WIDENED()); }
+
+		@Override
+		public void forEachRemaining(final KEY_CONSUMER action) {
+			i.forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER)(KEY_GENERIC_TYPE_WIDENED value) -> { action.accept(KEY_NARROWING(value)); });
+		}
+	}
+#endif
 
 	/** Wraps a standard iterator into a type-specific iterator.
 	 *
@@ -535,16 +667,79 @@ public final class ITERATORS {
 	 * will be generated.
 	 *
 	 * @param i an iterator.
-	 * @return a type-specific iterator  backed by {@code i}.
+	 * @return a type-specific iterator backed by {@code i}.
 	 */
 #if KEYS_PRIMITIVE
 	@SuppressWarnings({"unchecked","rawtypes"})
 #endif
- 	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC AS_KEY_ITERATOR(final Iterator KEY_GENERIC i) {
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC AS_KEY_ITERATOR(final Iterator KEY_GENERIC i) {
 		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED
+		if (i instanceof JDK_PRIMITIVE_ITERATOR) return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_ITERATOR)i);
+#endif
 		return new IteratorWrapper KEY_GENERIC_DIAMOND(i);
 	}
 
+#if defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && KEY_WIDENED
+	/** Wrap a JDK primitive iterator to a type-specific iterator, making checked
+	 * narrowed casts.<p>
+	 *  The {@code next} method throws {@link IllegalArgumentException} if any element would underflow or overflow.
+	 *
+	 * @param i an iterator
+	 * @return a type-specific iterator backed by {@code i}
+	 * @since <SPLITERATORS VERSION>
+	 */
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC narrow(final JDK_PRIMITIVE_ITERATOR i) {
+#if !KEY_WIDENED
+		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
+		return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+#else
+		return new CheckedPrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+#endif
+	}
+#endif
+
+#if KEYS_PRIMITIVE && KEY_WIDENED
+	/** Wrap a JDK primitive iterator to a type-specific iterator, making <em>unchecked</em>
+	 * narrowing casts.
+	 * <em>No</em> test is done for overflow or underflow.
+	 *
+	 * @param i an iterator
+	 * @return a type-specific iterator backed by {@code i}
+	 * @since <SPLITERATORS VERSION>
+	 */
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC uncheckedNarrow(final JDK_PRIMITIVE_ITERATOR i) {
+#if !KEY_WIDENED
+		if (i instanceof KEY_ITERATOR) return (KEY_ITERATOR KEY_GENERIC)i;
+#endif
+		return new PrimitiveIteratorWrapper KEY_GENERIC_DIAMOND(i);
+	}
+#endif
+
+#if KEYS_PRIMITIVE && KEY_WIDENED
+#if KEY_CLASS_Character
+	/** Wrap a type-specific iterator to a JDK compatible primitive iterator.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents. See {@link Character} for more discussion on code points,
+	 * char values, and surrogate pairs.
+	 *
+	 * @param i an iterator
+	 * @return a JDK compatible primitive iterator backed by {@code i}
+	 * @since <SPLITERATORS VERSION>
+	 */
+#else
+	/** Wrap a type-specific iterator to a JDK compatible primitive iterator.
+	 *
+	 * @param i an iterator
+	 * @return a JDK compatible primitive iterator backed by {@code i}
+	 * @since <SPLITERATORS VERSION>
+	 */
+#endif
+	public static KEY_WIDENED_ITERATOR widen(KEY_ITERATOR i) { return WIDENED_ITERATORS.wrap(i); }
+#endif
 
 	private static class ListIteratorWrapper KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
 		final ListIterator<KEY_GENERIC_CLASS> i;
@@ -579,6 +774,33 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_GENERIC_TYPE PREV_KEY() { return KEY_CLASS2TYPE(i.previous()); }
+
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		// This is pretty much the only time overriding this overload is correct; we want to
+		// delegate as an Object consumer, not wrap it as a primitive one.
+		@Override
+		public void forEachRemaining(final KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+			Objects.requireNonNull(action);
+			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
+#else
+			i.forEachRemaining(action);
+#endif
+		}
+#endif
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			i.forEachRemaining(action);
+		}
 	}
 
 	/** Wraps a standard list iterator into a type-specific list iterator.
@@ -599,7 +821,7 @@ public final class ITERATORS {
 #if KEYS_PRIMITIVE
 	@SuppressWarnings({"unchecked","rawtypes"})
 #endif
- 	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC AS_KEY_ITERATOR(final ListIterator KEY_GENERIC i) {
+	public static KEY_GENERIC KEY_LIST_ITERATOR KEY_GENERIC AS_KEY_ITERATOR(final ListIterator KEY_GENERIC i) {
 		if (i instanceof KEY_LIST_ITERATOR) return (KEY_LIST_ITERATOR KEY_GENERIC)i;
 		return new ListIteratorWrapper KEY_GENERIC_DIAMOND(i);
 	}
@@ -647,6 +869,207 @@ public final class ITERATORS {
 		return -1;
 	}
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+	/** Shim to make final the methods that only exist to disambiguate. */
+	static abstract class IteratorDisambiguationMethodFinalShim KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
+		@Override
+		public final void forEachRemaining(final KEY_CONSUMER action) {
+			KEY_ITERATOR.super.forEachRemaining(action);
+		}
+	}
+#endif
+
+	/**
+	 * A skeletal implementation for an iterator backed by an index based data store. High performance
+	 * concrete implementations (like the main Iterator of ArrayList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>This class is only appropriate for sequences that are at most {@link Integer#MAX_VALUE} long.
+	 * If your backing data store can be bigger then this, consider the equivalently named class in
+	 * the type specific {@code BigListIterators} class.
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a
+	 * good idea to override the class as {@code final} as to encourage the JVM to inline
+	 * them (or alternatively, override the abstract methods as final).
+	 */
+	public static abstract class AbstractIndexBasedIterator KEY_GENERIC
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+			extends IteratorDisambiguationMethodFinalShim KEY_GENERIC
+#endif
+		 	implements KEY_ITERATOR KEY_GENERIC {
+		/** The minimum pos can be, and is the logical start of the "range".
+		 * Usually set to the initialPos unless it is a ListIterator, in which case it can vary.
+		 *
+		 * There isn't any way for a range to shift its beginning like the end can (through {@link #remove}),
+		 * so this is final.
+		 */
+		protected final int minPos;
+		/** The current position index, the index of the item to be returned after the next call to {@link #next()}.
+		 *
+		 * <p>This value will be between {@code minPos} and {@link #getMaxPos()} (exclusive) (on a best effort, so concurrent
+		 * structural modifications outside this iterator may cause this to be violated, but that usually invalidates
+		 * iterators anyways). Thus {@code pos} being {@code minPos + 2} would mean {@link #next()}
+		 * was called twice and the next call will return the third element of this iterator.
+		 */
+		protected int pos;
+		/** The last returned index by a call to {@link #next} or, if a list-iterator, {@link java.util.ListIterator#previous().
+		 *
+		 * Is {@code -1} if no such call has occurred or a mutation has occurred through this iterator and no
+		 * advancement has been done.
+		 */
+		protected int lastReturned;
+
+		protected AbstractIndexBasedIterator(int minPos, int initialPos) {
+			this.minPos = minPos;
+			this.pos = initialPos;
+		}
+
+		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+
+		/** Get the item corresponding to the given index location.
+		 *
+		 * <p>Do <em>not</em> advance {@link #pos} in this method; the default {@code next} method takes care of this.
+		 *
+		 * <p>The {@code location} given will be between {@code minPos} and {@link #getMaxPos()} (exclusive).
+		 * Thus, a {@code location} of {@code minPos + 2} would mean {@link #next()} was called twice
+		 * and this method should return what the next call to {@link #next()} should return.
+		 */
+		protected abstract KEY_GENERIC_TYPE get(int location);
+
+		/** Remove the item at the given index.
+		 *
+		 * <p>Do <em>not</em> modify {@link #pos} in this method; the default {@code #remove()} method takes care of this.
+		 *
+		 * <p>This method should also do what is needed to track the change to the {@link #getMaxPos}.
+		 * Usually this is accomplished by having this method call the parent {@link Collection}'s appropriate remove
+		 * method, and having {@link #getMaxPos} track the parent {@linkplain Collection#size() collection's size}.
+		 */
+		protected abstract void remove(int location);
+
+		/** The maximum pos can be, and is the logical end (exclusive) of the "range".
+		 *
+		 * <p>If pos is equal to the return of this method, this means the last element has been returned and the next call to {@link #next()} will throw.
+		 *
+		 * <p>Usually set return the parent {@linkplain Collection#size() collection's size}, but does not have to be
+		 * (for example, sublists and subranges).
+		 */
+		protected abstract int getMaxPos();
+
+		@Override
+		public boolean hasNext() { return pos < getMaxPos(); }
+		@Override
+		public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return get(lastReturned = pos++); }
+		@Override
+		public void remove() {
+			if (lastReturned == -1) throw new IllegalStateException();
+			remove(lastReturned);
+			/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
+			if (lastReturned < pos) pos--;
+			lastReturned = -1;
+		}
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while(pos < getMaxPos()) {
+				action.accept(get(lastReturned = pos++));
+			}
+		}
+
+		// TODO since this method doesn't depend on the type at all, should it be "hoisted" into a
+		// non type-specific superclass in it.unimi.dsi.fastutil?
+		@Override
+		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			final int max = getMaxPos();
+			final int remaining = max - pos;
+			if (n < remaining) {
+				pos += n;
+			} else {
+				n = remaining;
+				pos = max;
+			}
+			lastReturned = pos - 1;
+			return n;
+		}
+	}
+
+	/**
+	 * A skeletal implementation for a list-iterator backed by an index based data store. High performance
+	 * concrete implementations (like the main ListIterator of ArrayList) generally should avoid using this
+	 * and just implement the interface directly, but should be decent for less
+	 * performance critical implementations.
+	 *
+	 * <p>This class is only appropriate for sequences that are at most {@link Integer#MAX_VALUE} long.
+	 * If your backing data store can be bigger then this, consider the equivalently named class in
+	 * the type specific {@code BigListSpliterators} class.
+	 *
+	 * <p>As the abstract methods in this class are used in inner loops, it is generally a
+	 * good idea to override the class as {@code final} as to encourage the JVM to inline
+	 * them (or alternatively, override the abstract methods as final).
+	 */
+	public static abstract class AbstractIndexBasedListIterator KEY_GENERIC extends AbstractIndexBasedIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
+
+		protected AbstractIndexBasedListIterator(int minPos, int initialPos) {
+			super(minPos, initialPos);
+		}
+
+		// When you implement these, you should probably declare them final to encourage the JVM to inline them.
+
+		/** Add the given item at the given index.
+		 *
+		 * <p>This method should also do what is needed to track the change to the {@link #getMaxPos}.
+		 * Usually this is accomplished by having this method call the parent {@link Collection}'s appropriate add
+		 * method, and having {@link #getMaxPos} track the parent {@linkplain Collection#size() collection's size}.
+		 *
+		 * <p>Do <em>not</em> modify {@link #pos} in this method; the default {@code #add()} method takes care of this.
+		 *
+		 * <p>See {@link #pos} and {@link #get(int)} for discussion on what the location means.
+		 */
+		protected abstract void add(int location, KEY_GENERIC_TYPE k);
+
+		/** Sets the given item at the given index.
+		 *
+		 * <p>See {@link #pos} and {@link #get(int)} for discussion on what the location means.
+		 */
+		protected abstract void set(int location, KEY_GENERIC_TYPE k);
+
+		@Override
+		public boolean hasPrevious() { return pos > minPos; }
+		@Override
+		public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return get(lastReturned = --pos); }
+		@Override
+		public int nextIndex() { return pos; }
+		@Override
+		public int previousIndex() { return pos - 1; }
+		@Override
+		public void add(final KEY_GENERIC_TYPE k) {
+			add(pos++, k);
+			lastReturned = -1;
+		}
+		@Override
+		public void set(final KEY_GENERIC_TYPE k) {
+			if (lastReturned == -1) throw new IllegalStateException();
+			set(lastReturned, k);
+		}
+		// TODO since this method doesn't depend on the type at all, should it be "hoisted" into a
+		// non type-specific superclass in it.unimi.dsi.fastutil?
+		@Override
+		public int back(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+			final int max = getMaxPos();
+			final int remaining = pos - minPos;
+			if (n < remaining) {
+				pos -= n;
+			} else {
+				n = remaining;
+				pos = minPos;
+			}
+			lastReturned = pos;
+			return n;
+		}
+	}
+
 #if KEY_CLASS_Integer || KEY_CLASS_Byte || KEY_CLASS_Short || KEY_CLASS_Character || KEY_CLASS_Long
 
 #if KEY_CLASS_Long
@@ -680,6 +1103,18 @@ public final class ITERATORS {
 			return --curr;
 		}
 
+		@Override
+#if KEYS_PRIMITIVE
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+#else // ! KEY_PRIMITIVE == KEY_REFERENCE
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+#endif
+			Objects.requireNonNull(action);
+			for (; curr < to; ++curr) {
+				action.accept(curr);
+			}
+		}
+
 #if ! KEY_CLASS_Long
 		@Override
 		public int nextIndex() { return curr - from; }
@@ -690,6 +1125,7 @@ public final class ITERATORS {
 
 		@Override
 		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			if (curr + n <= to) {
 				curr += n;
 				return n;
@@ -790,6 +1226,26 @@ public final class ITERATORS {
 			return next;
 		}
 
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			while (length > 0) {
+				a[lastOffset = offset].forEachRemaining(action);
+				advance();
+			}
+		}
+#endif
+
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			while (length > 0) {
+				a[lastOffset = offset].forEachRemaining(action);
+				advance();
+			}
+		}
+
 		@Override
 		public void remove() {
 			if (lastOffset == -1) throw new IllegalStateException();
@@ -798,6 +1254,7 @@ public final class ITERATORS {
 
 		@Override
 		public int skip(int n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			lastOffset = -1;
 
 			int skipped = 0;
@@ -822,8 +1279,10 @@ public final class ITERATORS {
 	 * @param a an array of iterators.
 	 * @return an iterator obtained by concatenation.
 	 */
-
-	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC concat(final KEY_ITERATOR KEY_EXTENDS_GENERIC a[]) {
+#if KEYS_REFERENCE
+	@SafeVarargs  // Spliterators can only give K, never consume them, making this safe.
+#endif
+	public static KEY_GENERIC KEY_ITERATOR KEY_GENERIC concat(final KEY_ITERATOR KEY_EXTENDS_GENERIC... a) {
 		return concat(a, 0, a.length);
 	}
 
@@ -846,7 +1305,7 @@ public final class ITERATORS {
 	}
 
 
-  	/** An unmodifiable wrapper class for iterators. */
+	/** An unmodifiable wrapper class for iterators. */
 
 
 	public static class UnmodifiableIterator KEY_GENERIC implements KEY_ITERATOR KEY_GENERIC {
@@ -861,6 +1320,20 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return i.NEXT_KEY(); }
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			i.forEachRemaining(action);
+		}
+
 	}
 
 
@@ -873,7 +1346,7 @@ public final class ITERATORS {
 
 
 
-  	/** An unmodifiable wrapper class for bidirectional iterators. */
+	/** An unmodifiable wrapper class for bidirectional iterators. */
 
 	public static class UnmodifiableBidirectionalIterator KEY_GENERIC implements KEY_BIDI_ITERATOR KEY_GENERIC {
 		protected final KEY_BIDI_ITERATOR KEY_GENERIC i;
@@ -893,6 +1366,19 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_GENERIC_TYPE PREV_KEY() { return i.PREV_KEY(); }
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			i.forEachRemaining(action);
+		}
 	}
 
 
@@ -904,7 +1390,7 @@ public final class ITERATORS {
 	public static KEY_GENERIC KEY_BIDI_ITERATOR KEY_GENERIC unmodifiable(final KEY_BIDI_ITERATOR KEY_GENERIC i) { return new UnmodifiableBidirectionalIterator KEY_GENERIC_DIAMOND(i); }
 
 
-  	/** An unmodifiable wrapper class for list iterators. */
+	/** An unmodifiable wrapper class for list iterators. */
 
 	public static class UnmodifiableListIterator KEY_GENERIC implements KEY_LIST_ITERATOR KEY_GENERIC {
 		protected final KEY_LIST_ITERATOR KEY_GENERIC i;
@@ -930,6 +1416,19 @@ public final class ITERATORS {
 
 		@Override
 		public int previousIndex() { return i.previousIndex(); }
+
+#if KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			i.forEachRemaining(action);
+		}
+#endif
+
+		DEPRECATED_IF_KEYS_PRIMITIVE
+		@Override
+		public void forEachRemaining(final Consumer<? super KEY_GENERIC_CLASS> action) {
+			i.forEachRemaining(action);
+		}
 	}
 
 	/** Returns an unmodifiable list iterator backed by the specified list iterator.
@@ -941,9 +1440,9 @@ public final class ITERATORS {
 
 #if SMALL_TYPES && (KEY_CLASS_Short || KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
 
-  	/** A wrapper promoting the results of a ByteIterator. */
+	/** A wrapper promoting the results of a ByteIterator. */
 
-	protected static class ByteIteratorWrapper implements KEY_ITERATOR {
+	private final static class ByteIteratorWrapper implements KEY_ITERATOR {
 		final it.unimi.dsi.fastutil.bytes.ByteIterator iterator;
 
 		public ByteIteratorWrapper(final it.unimi.dsi.fastutil.bytes.ByteIterator iterator) {
@@ -959,6 +1458,12 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_TYPE NEXT_KEY() { return iterator.nextByte(); }
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			iterator.forEachRemaining(action::accept);
+		}
 
 		@Override
 		public void remove() { iterator.remove(); }
@@ -980,7 +1485,7 @@ public final class ITERATORS {
 
 	/** A wrapper promoting the results of a ShortIterator. */
 
-	protected static class ShortIteratorWrapper implements KEY_ITERATOR {
+	private final static class ShortIteratorWrapper implements KEY_ITERATOR {
 		final it.unimi.dsi.fastutil.shorts.ShortIterator iterator;
 
 		public ShortIteratorWrapper(final it.unimi.dsi.fastutil.shorts.ShortIterator iterator) {
@@ -996,6 +1501,12 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_TYPE NEXT_KEY() { return iterator.nextShort(); }
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			iterator.forEachRemaining(action::accept);
+		}
 
 		@Override
 		public void remove() { iterator.remove(); }
@@ -1014,11 +1525,62 @@ public final class ITERATORS {
 
 #endif
 
+#if SMALL_TYPES && (KEY_CLASS_Integer || KEY_CLASS_Long || KEY_CLASS_Float || KEY_CLASS_Double)
+
+	/** A wrapper promoting the results of a CharIterator. */
+
+	private final static class CharIteratorWrapper implements KEY_ITERATOR {
+		final it.unimi.dsi.fastutil.chars.CharIterator iterator;
+
+		public CharIteratorWrapper(final it.unimi.dsi.fastutil.chars.CharIterator iterator) {
+			this.iterator = iterator;
+		}
+
+		@Override
+		public boolean hasNext() { return iterator.hasNext(); }
+
+		@Deprecated
+		@Override
+		public KEY_GENERIC_CLASS next() { return KEY_GENERIC_CLASS.valueOf(iterator.nextChar()); }
+
+		@Override
+		public KEY_TYPE NEXT_KEY() { return iterator.nextChar(); }
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			iterator.forEachRemaining(action::accept);
+		}
+
+		@Override
+		public void remove() { iterator.remove(); }
+
+		@Override
+		public int skip(final int n) { return iterator.skip(n); }
+	}
+
+	/** Returns an iterator backed by the specified char iterator.
+	 *
+	 * <p><b>WARNING:</b> This is <em>not</em> the same as converting the source to a sequence
+	 * of code points. This returned instance literally performs {@code (int)(charValue)} casts.
+	 * Surrogate pairs will be left as separate elements instead of combined into a single element
+	 * with the code point it represents. See {@link Character} for more discussion on code points,
+	 * char values, and surrogate pairs.
+	 *
+	 * @param iterator a char iterator.
+	 * @return an iterator backed by the specified char iterator.
+	 */
+	public static KEY_ITERATOR wrap(final it.unimi.dsi.fastutil.chars.CharIterator iterator) {
+		return new CharIteratorWrapper(iterator);
+	}
+
+#endif
+
 #if KEY_CLASS_Long || KEY_CLASS_Double
 
-  	/** A wrapper promoting the results of an IntIterator. */
+	/** A wrapper promoting the results of an IntIterator. */
 
-	protected static class IntIteratorWrapper implements KEY_ITERATOR {
+	private final static class IntIteratorWrapper implements KEY_ITERATOR {
 		final it.unimi.dsi.fastutil.ints.IntIterator iterator;
 
 		public IntIteratorWrapper(final it.unimi.dsi.fastutil.ints.IntIterator iterator) {
@@ -1034,6 +1596,12 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_TYPE NEXT_KEY() { return iterator.nextInt(); }
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			iterator.forEachRemaining(action::accept);
+		}
 
 		@Override
 		public void remove() { iterator.remove(); }
@@ -1055,9 +1623,9 @@ public final class ITERATORS {
 
 #if SMALL_TYPES && KEY_CLASS_Double
 
-  	/** A wrapper promoting the results of a FloatIterator. */
+	/** A wrapper promoting the results of a FloatIterator. */
 
-	protected static class FloatIteratorWrapper implements KEY_ITERATOR {
+	private final static class FloatIteratorWrapper implements KEY_ITERATOR {
 		final it.unimi.dsi.fastutil.floats.FloatIterator iterator;
 
 		public FloatIteratorWrapper(final it.unimi.dsi.fastutil.floats.FloatIterator iterator) {
@@ -1073,6 +1641,12 @@ public final class ITERATORS {
 
 		@Override
 		public KEY_TYPE NEXT_KEY() { return iterator.nextFloat(); }
+
+		@Override
+		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			Objects.requireNonNull(action);
+			iterator.forEachRemaining(action::accept);
+		}
 
 		@Override
 		public void remove() { iterator.remove(); }

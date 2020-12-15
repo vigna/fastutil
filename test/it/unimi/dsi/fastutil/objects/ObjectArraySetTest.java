@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.objects;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -59,6 +60,17 @@ public class ObjectArraySetTest {
 			assertTrue(s.contains(2));
 			assertTrue(s.contains(2));
 			assertEquals(new ObjectOpenHashSet<>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 }), new ObjectOpenHashSet<>(s.iterator()));
+			assertTrue(s.contains(3));
+			Integer[] expectedArray = i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 };
+			ObjectSet<Integer> expected = new ObjectOpenHashSet<Integer>(expectedArray);
+			assertEquals(expected, s);
+			assertEquals(s, expected);
+			assertEquals(s, new ObjectOpenHashSet<>(s.iterator()));
+			assertEquals(s, new ObjectArraySet<>(s.stream().toArray()));
+			// Test iterator and spliterator (through stream) preserve order.
+			assertArrayEquals(expectedArray, s.toArray());
+			assertArrayEquals(expectedArray, new ObjectArrayList<>(s.iterator()).toArray());
+			assertArrayEquals(expectedArray, s.stream().toArray());
 			assertTrue(s.remove(3));
 			assertEquals(2 + i, s.size());
 			assertTrue(s.remove(1));

@@ -114,6 +114,21 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 
 	V get(Object key);
 
+	/** Returns the value associated by this function to the specified key, or give the specified
+	 *  value if not present.
+	 *
+	 * @param key the key.
+	 * @param defaultValue the default value to return if not present.
+	 * @return the corresponding value, or {@code defaultValue} if no value was present for the given key.
+	 * @see java.util.Map#getOrDefault(Object, Object)
+	 * @since <SPLITERATORS VERSION>
+	 */
+	default V getOrDefault(Object key, V defaultValue) {
+		V value = get(key);
+		return (value != null || containsKey(key)) ? value : defaultValue;
+	}
+	
+
 	/** Returns true if this function contains a mapping for the specified key.
 	 *
 	 * <p>Note that for some kind of functions (e.g., hashes) this method

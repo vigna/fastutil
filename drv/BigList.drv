@@ -55,7 +55,7 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 
 	/** Returns a type-specific iterator on the elements of this list.
 	 *
-	 * <p>Note that this specification strengthens the one given in {@link java.util.Collection#iterator()}.
+	 * @apiNote This specification strengthens the one given in {@link java.util.Collection#iterator()}.
 	 * @see java.util.Collection#iterator()
 	 */
 	@Override
@@ -64,7 +64,7 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 
 	/** Returns a type-specific big-list iterator on this type-specific big list.
 	 *
-	 * <p>Note that this specification strengthens the one given in {@link BigList#listIterator()}.
+	 * @apiNote This specification strengthens the one given in {@link BigList#listIterator()}.
 	 * @see BigList#listIterator()
 	 */
 	@Override
@@ -72,15 +72,25 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 
 	/** Returns a type-specific list iterator on this type-specific big list starting at a given index.
 	 *
-	 * <p>Note that this specification strengthens the one given in {@link BigList#listIterator(long)}.
+	 * @apiNote This specification strengthens the one given in {@link BigList#listIterator(long)}.
 	 * @see BigList#listIterator(long)
 	 */
 	@Override
 	KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator(long index);
 
+	@Override
+#if SPLITERATOR_ASSURE_OVERRIDE
+	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+#else
+	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return SPLITERATORS.asSpliterator(
+				iterator(), size64(), SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS);
+	}
+#endif
+
 	/** Returns a type-specific view of the portion of this type-specific big list from the index {@code from}, inclusive, to the index {@code to}, exclusive.
 	 *
-	 * <p>Note that this specification strengthens the one given in {@link BigList#subList(long,long)}.
+	 * @apiNote This specification strengthens the one given in {@link BigList#subList(long,long)}.
 	 *
 	 * @see BigList#subList(long,long)
 	 */
@@ -118,6 +128,58 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 	 * @param length the number of elements to add.
 	 */
 	void addElements(long index, KEY_GENERIC_TYPE a[][], long offset, long length);
+
+	/** Set (hopefully quickly) elements to match the array given.
+	 * @param a the big array containing the elements.
+	 * @since <SPLITERATORS VERSION>
+	 */
+	default void setElements(KEY_GENERIC_TYPE a[][]) {
+		setElements(0, a);
+	}
+
+	/** Set (hopefully quickly) elements to match the array given.
+	 * @param index the index at which to start setting elements.
+	 * @param a the big array containing the elements.
+	 * @since <SPLITERATORS VERSION>
+	 */
+	default void setElements(long index, KEY_GENERIC_TYPE a[][]) {
+		setElements(index, a, 0, a.length);
+	}
+
+	/** Set (hopefully quickly) elements to match the array given.
+	 *
+	 * Sets each in this list to the corresponding elements in the array, as if by
+	 * <pre><code>
+	 * ListIterator iter = listIterator(index);
+	 * long i = 0;
+	 * while (i < length) {
+	 *   iter.next();
+	 *   iter.set(BigArrays.get(a, offset + i++);
+	 * }
+	 * </code></pre>
+	 * However, the exact implementation may be more efficient, taking into account
+	 * whether random access is faster or not, or at the discretion of subclasses,
+	 * abuse internals.
+	 *
+	 * @param index the index at which to start setting elements.
+	 * @param a the big array containing the elements
+	 * @param offset the offset of the first element to add.
+	 * @param length the number of elements to add.
+	 * @since <SPLITERATORS VERSION>
+	 */
+	default void setElements(long index, KEY_GENERIC_TYPE a[][], long offset, long length) {
+		// We can't use AbstractList#ensureIndex, sadly.
+		if (index < 0)  throw new IndexOutOfBoundsException("Index (" + index + ") is negative");
+		if (index > size64()) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than list size (" + (size64()) + ")");
+		BIG_ARRAYS.ensureOffsetLength(a, offset, length);
+		if (index + length > size64()) throw new IndexOutOfBoundsException("End index (" + (index + length) + ") is greater than list size (" + size64() + ")");
+		KEY_BIG_LIST_ITERATOR KEY_GENERIC iter = listIterator(index);
+		long i = 0;
+		while (i < length) {
+			iter.NEXT_KEY();
+			iter.set(BIG_ARRAYS.get(a, offset + i++));
+		}
+	}
 
 #if KEYS_PRIMITIVE
 
@@ -202,4 +264,5 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 	KEY_GENERIC_CLASS set(long index, KEY_GENERIC_CLASS k);
 #endif
 
+	// Without any toBigArray methods, there is no sensible default sort methods we can have.
 }

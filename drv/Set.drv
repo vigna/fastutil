@@ -18,6 +18,7 @@
 package PACKAGE;
 
 import java.util.Set;
+import static it.unimi.dsi.fastutil.Size64.getSizeOf;
 
 /** A type-specific {@link Set}; provides some additional methods that use polymorphism to avoid (un)boxing.
  *
@@ -30,7 +31,7 @@ public interface SET KEY_GENERIC extends COLLECTION KEY_GENERIC, Set<KEY_GENERIC
 
 	/** Returns a type-specific iterator on the elements of this set.
 	 *
-	 * <p>Note that this specification strengthens the one given in {@link java.lang.Iterable#iterator()},
+	 * @apiNote This specification strengthens the one given in {@link java.lang.Iterable#iterator()},
 	 * which was already strengthened in the corresponding type-specific class,
 	 * but was weakened by the fact that this interface extends {@link Set}.
 	 *
@@ -38,6 +39,24 @@ public interface SET KEY_GENERIC extends COLLECTION KEY_GENERIC, Set<KEY_GENERIC
 	 */
 	@Override
 	KEY_ITERATOR KEY_GENERIC iterator();
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @implSpec This specification strengthens the one given in
+	 * {@link java.util.Collection#spliterator()}, which was already
+	 * strengthened in the corresponding type-specific class,
+	 * but was weakened by the fact that this interface extends {@link Set}.
+	 */
+	@Override
+#if SPLITERATOR_ASSURE_OVERRIDE
+	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
+#else
+	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return SPLITERATORS.asSpliterator(
+				iterator(), getSizeOf(this), SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS);
+	}
+#endif
 
 #if KEYS_PRIMITIVE
 	/** Removes an element from this set.

@@ -206,6 +206,11 @@ $(ITERATORS): drv/Iterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERATORS)
 
+SPLITERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterator.c)
+$(SPLITERATORS): drv/Spliterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SPLITERATORS) 
+
 BIDIRECTIONAL_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterator.c)
 $(BIDIRECTIONAL_ITERATORS): drv/BidirectionalIterator.drv; ./gencsource.sh $< $@ >$@
 
@@ -481,10 +486,21 @@ $(ITERATORS_STATIC): drv/Iterators.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ITERATORS_STATIC)
 
 
+SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterators.c)
+$(SPLITERATORS_STATIC): drv/Spliterators.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(SPLITERATORS_STATIC)
+
+
 BIG_LIST_ITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigListIterators.c)
 $(BIG_LIST_ITERATORS_STATIC): drv/BigListIterators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS_STATIC)
+
+BIG_SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigSpliterators.c)
+$(BIG_SPLITERATORS_STATIC): drv/BigSpliterators.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(BIG_SPLITERATORS_STATIC)
 
 
 ITERABLES_STATIC := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterables.c)
@@ -664,7 +680,6 @@ SOURCES = \
 $(JSOURCES): %.java: %.c
 	$(CC) -w -I. -DSMALL_TYPES=$(if $(SMALL_TYPES),1,0) $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< \
 		| sed -e '1,/START_OF_JAVA_SOURCE/d' -e 's/^ /	/' >$@
-
 
 clean:
 	-@find build -name \*.class -exec rm {} \;

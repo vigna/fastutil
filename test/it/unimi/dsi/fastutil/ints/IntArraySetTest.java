@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.ints;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -63,8 +64,17 @@ public class IntArraySetTest {
 			assertEquals(3 + i, s.size());
 			assertTrue(s.contains(1));
 			assertTrue(s.contains(2));
-			assertTrue(s.contains(2));
-			assertEquals(new IntOpenHashSet(i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 }), new IntOpenHashSet(s.iterator()));
+			assertTrue(s.contains(3));
+			int[] expectedArray = i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 };
+			IntSet expected = new IntOpenHashSet(expectedArray);
+			assertEquals(expected, s);
+			assertEquals(s, expected);
+			assertEquals(expected, new IntOpenHashSet(s.iterator()));
+			assertEquals(expected, new IntArraySet(s.intStream().toArray()));
+			// Test iterator and spliterator (through stream) preserve order.
+			assertArrayEquals(expectedArray, s.toIntArray());
+			assertArrayEquals(expectedArray, new IntArrayList(s.iterator()).toIntArray());
+			assertArrayEquals(expectedArray, s.intStream().toArray());
 			assertTrue(s.remove(3));
 			assertEquals(2 + i, s.size());
 			assertTrue(s.remove(1));
