@@ -48,6 +48,19 @@ import java.util.stream.Collector;
 
 public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
 	private static final long serialVersionUID = 0L;
+	
+	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
+	private static final IMMUTABLE_LIST EMPTY = new IMMUTABLE_LIST(ARRAYS.EMPTY_ARRAY);
+
+#if KEYS_PRIMITIVE
+#define _EMPTY_ARRAY ARRAYS.EMPTY_ARRAY
+#else
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	private static final KEY_GENERIC KEY_GENERIC_TYPE[] emptyArray() {
+		return KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
+	}
+#define _EMPTY_ARRAY emptyArray()
+#endif
 
 	/** The backing array; all elements are part of this list. */
 	private final KEY_GENERIC_TYPE a[];
@@ -70,9 +83,9 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 
 	public IMMUTABLE_LIST(final Collection<? extends KEY_GENERIC_CLASS> c) {
 #if KEYS_PRIMITIVE
-		this(ITERATORS.unwrap(ITERATORS.AS_KEY_ITERATOR(c.iterator())));
+		this(c.isEmpty() ? _EMPTY_ARRAY : ITERATORS.unwrap( ITERATORS.AS_KEY_ITERATOR(c.iterator())));
 #else
-		this(ITERATORS.unwrap(c.iterator()));
+		this(c.isEmpty() ? _EMPTY_ARRAY : ITERATORS.unwrap(c.iterator()));
 #endif
 	}
 
@@ -80,19 +93,17 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 *
 	 * @param c a type-specific collection that will be used to fill the immutable list.
 	 */
-
 	public IMMUTABLE_LIST(final COLLECTION KEY_EXTENDS_GENERIC c) {
-		this(ITERATORS.unwrap(c.iterator()));
+		this(c.isEmpty() ? _EMPTY_ARRAY : ITERATORS.unwrap(c.iterator()));
 	}
 
 	/** Creates a new immutable list and fills it with a given type-specific list.
 	 *
 	 * @param l a type-specific list that will be used to fill the immutable list.
 	 */
-
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public IMMUTABLE_LIST(final LIST KEY_EXTENDS_GENERIC l) {
-		this(KEY_GENERIC_ARRAY_CAST new KEY_TYPE[l.size()]);
+		this(l.isEmpty() ? _EMPTY_ARRAY : KEY_GENERIC_ARRAY_CAST new KEY_TYPE[l.size()]);
 		l.getElements(0, a, 0, l.size());
 	}
 
@@ -102,7 +113,6 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 * @param offset the first element to use.
 	 * @param length the number of elements to use.
 	 */
-
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public IMMUTABLE_LIST(final KEY_GENERIC_TYPE a[], final int offset, final int length) {
 		this(KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length]);
@@ -113,10 +123,18 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 *
 	 * @param i a type-specific iterator whose returned elements will fill the immutable list.
 	 */
-
 	public IMMUTABLE_LIST(final KEY_ITERATOR KEY_EXTENDS_GENERIC i) {
-		this(ITERATORS.unwrap(i));
+		this(i.hasNext() ? ITERATORS.unwrap(i) : _EMPTY_ARRAY);
 	}
+	
+	/**
+	 * Returns an empty immutable list.
+	 * @return an immutable list (possibly shared) that is empty.
+	 */
+	 SUPPRESS_WARNINGS_KEY_UNCHECKED
+	 public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC of() {
+		return EMPTY;
+	 }
 
 	/** Creates an immutable list using a list of elements.
 	 *
@@ -125,10 +143,13 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 */
 	SAFE_VARARGS
 	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
-		return new IMMUTABLE_LIST KEY_GENERIC(init);
+		return init.length == 0 ? of() : new IMMUTABLE_LIST KEY_GENERIC(init);
 	}
 
 	private static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC convertTrustedToImmutableList(ARRAY_LIST KEY_GENERIC arrayList) {
+		if (arrayList.isEmpty()) {
+			return of();
+		}
 		KEY_GENERIC_TYPE backingArray[] = arrayList.elements();
 		if (arrayList.size() != backingArray.length) {
 			backingArray = Arrays.copyOf(backingArray, arrayList.size());
@@ -832,3 +853,5 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		throw new UnsupportedOperationException();
 	}
 }
+
+#undef _EMPTY_ARRAY
