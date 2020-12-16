@@ -33,6 +33,7 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.BigArrays;
+import it.unimi.dsi.fastutil.MainRunner;
 
 public class ObjectBigArraysTest {
 
@@ -137,5 +138,10 @@ public class ObjectBigArraysTest {
 		assertTrue(BigArrays.equals(b, c));
 		b[0][0] = 0;
 		assertFalse(BigArrays.equals(b, c));
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectBigArrays.class, "test", /*num=*/"10000", /*seed=*/"293843");
 	}
 }

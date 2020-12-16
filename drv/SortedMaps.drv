@@ -572,8 +572,7 @@ public final class SORTED_MAPS {
 	}
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
@@ -587,7 +586,7 @@ public final class SORTED_MAPS {
 	private static VALUE_TYPE vt[];
 	private static SORTED_MAP topMap;
 
-	protected static void testMaps(SORTED_MAP m, SortedMap t, int n, int level) {
+	protected static void testMaps(SORTED_MAP m, SortedMap t, int n, int level) throws Exception {
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement, mThrowsUnsupp, tThrowsUnsupp;
 		Object rt = null, rm = null;
@@ -712,8 +711,7 @@ public final class SORTED_MAPS {
 						! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T))))
 #endif
 						{
-							System.out.println("Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method)");
-							System.exit(1);
+							ensure(false, "Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method)");
 						}
 			}
 		}
@@ -891,7 +889,7 @@ public final class SORTED_MAPS {
 
 		SORTED_MAP m2 = null;
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -905,10 +903,6 @@ public final class SORTED_MAPS {
 			m2 = (SORTED_MAP)ois.readObject();
 			ois.close();
 			ff.delete();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
 		}
 
 #if !VALUE_CLASS_Reference
@@ -1027,7 +1021,7 @@ public final class SORTED_MAPS {
 	}
 
 
-	private static void test() {
+	private static void test() throws Exception {
 		int n = 1;
 		k = new Object[n];
 		v = new Object[n];
@@ -1065,7 +1059,7 @@ public final class SORTED_MAPS {
 	}
 
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		if (args.length > 1) r = new java.util.Random(seed = Long.parseLong(args[1]));
 
 		try {
@@ -1073,6 +1067,7 @@ public final class SORTED_MAPS {
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			throw e;
 		}
 	}
 

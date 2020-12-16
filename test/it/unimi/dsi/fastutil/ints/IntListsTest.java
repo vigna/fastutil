@@ -23,6 +23,8 @@ import java.util.RandomAccess;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntListsTest {
 	@Test
 	public void testRandomAccess() {
@@ -44,5 +46,10 @@ public class IntListsTest {
 		assertTrue(IntLists.unmodifiable(new IntArrayList()) instanceof RandomAccess);
 		assertTrue(IntLists.synchronize(new IntArrayList()) instanceof RandomAccess);
 		assertTrue(IntLists.synchronize(new IntArrayList(), new Object()) instanceof RandomAccess);
+	}
+	
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntLists.class, "int", /*seed=*/"9389487");
 	}
 }

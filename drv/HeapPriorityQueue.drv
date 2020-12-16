@@ -309,8 +309,7 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENER
 
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
@@ -330,7 +329,7 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENER
 
 	private static KEY_TYPE k[];
 
-	protected static void runTest(int n) {
+	protected static void runTest(int n) throws Exception {
 		long ms;
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
 		KEY_TYPE rm = KEY_NULL, rt = KEY_NULL;
@@ -421,7 +420,7 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENER
 
 			/* Now we save and read m. */
 
-			try {
+			{
 				java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test");
 				java.io.OutputStream os = new java.io.FileOutputStream(ff);
 				java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -435,10 +434,6 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENER
 				m = (HEAP_PRIORITY_QUEUE)ois.readObject();
 				ois.close();
 				ff.delete();
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-				System.exit(1);
 			}
 
 			ensure(heapEqual(m.heap, t.array, m.size(), t.size()), "Error (" + seed + "): m and t differ after save/read");
@@ -487,7 +482,7 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENER
 
 
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		int n  = Integer.parseInt(args[1]);
 		if (args.length > 2) r = new java.util.Random(seed = Long.parseLong(args[2]));
 
@@ -498,6 +493,7 @@ public class HEAP_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENER
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			throw e;
 		}
 	}
 

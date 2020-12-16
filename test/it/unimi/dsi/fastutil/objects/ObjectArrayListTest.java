@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class ObjectArrayListTest {
 
 	@SuppressWarnings("boxing")
@@ -94,5 +96,9 @@ public class ObjectArrayListTest {
 		recombinedList.addAll(prefixList);
 		recombinedList.addAll(suffixList);
 		assertEquals(baseList, recombinedList);
+	}
+
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
 	}
 }

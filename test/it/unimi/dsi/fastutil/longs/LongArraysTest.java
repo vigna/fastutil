@@ -23,6 +23,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class LongArraysTest {
 
 	private static long[] identity(int n) {
@@ -176,5 +178,10 @@ public class LongArraysTest {
 
 		LongArrays.stabilize(perm, val, 1, 3);
 		assertArrayEquals(new int[] { 4, 2, 3, 1, 0 }, perm);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(LongArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
 	}
 }

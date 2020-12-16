@@ -2954,27 +2954,34 @@ public final class ARRAYS {
 
 #ifdef TEST
 #if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
-	private static int currentSeed = 6;
+	private static long seed = System.currentTimeMillis();
+	private static java.util.Random r = new java.util.Random(seed);
 
 	private static final KEY_TYPE[] fillArrayForBenchmark(KEY_TYPE[] a, int uniqueValues) {
 		for(int i = a.length; i-- != 0;) a[i] = (KEY_TYPE)(uniqueValues - (i % uniqueValues));
-		a = shuffle(a, new Random(currentSeed++));
+		a = shuffle(a, r);
 		return a;
 	}
 
 	private static final int WARMUP_RUNS = 100;
 	private static final int GC_EVERY = 100;
-	private static final int N = 1000;
-	private static final int UNIQUE_VALUES = 2 * N / 3; 
-	private static final int RUNS = 1000;
+	private static final int DEFAULT_MAX = 1000;
+	private static final int RUNS = 30;
 	public static final void main(String... args) {
-		KEY_TYPE[] a = new KEY_TYPE[N];
-		KEY_TYPE[] b = new KEY_TYPE[N];
-		KEY_TYPE[] c = new KEY_TYPE[N];
+		int max = DEFAULT_MAX;
+		if (args.length > 1) max = Integer.parseInt(args[1]);
+		if (args.length > 2) {
+			seed = Integer.parseInt(args[2]);
+			r = new java.util.Random(seed);
+		}
+		final int uniqueValues = 5 * max / 8;
+		KEY_TYPE[] a = new KEY_TYPE[max];
+		KEY_TYPE[] b = new KEY_TYPE[max];
+		KEY_TYPE[] c = new KEY_TYPE[max];
 		for (int n = 0; n < WARMUP_RUNS; ++n) {
-			a = fillArrayForBenchmark(a, UNIQUE_VALUES);
-			System.arraycopy(a, 0, b, 0, N);
-			System.arraycopy(a, 0, c, 0, N);
+			a = fillArrayForBenchmark(a, uniqueValues);
+			System.arraycopy(a, 0, b, 0, max);
+			System.arraycopy(a, 0, c, 0, max);
 			java.util.Arrays.sort(a);
 			quickSort(b);
 			radixSort(c);
@@ -2984,9 +2991,9 @@ public final class ARRAYS {
 		long radixSortSum = 0;
 		System.gc();
 		for (int n = 0; n < RUNS; ++n) {
-			a = fillArrayForBenchmark(a, UNIQUE_VALUES);
-			System.arraycopy(a, 0, b, 0, N);
-			System.arraycopy(a, 0, c, 0, N);
+			a = fillArrayForBenchmark(a, uniqueValues);
+			System.arraycopy(a, 0, b, 0, max);
+			System.arraycopy(a, 0, c, 0, max);
 
 			if (n > 0 && n % GC_EVERY == 0) System.gc();
 			long start = System.nanoTime();
@@ -3006,7 +3013,8 @@ public final class ARRAYS {
 			end = System.nanoTime();
 			radixSortSum += end - start;
 		}
-	 	System.out.println(String.format("Quicksort vs radix sort for arrays of length %d with %d unique values", N, UNIQUE_VALUES));
+	 	System.out.println(String.format("%s: Quicksort vs radix sort for arrays of length %d with %d unique values",
+	 									 ARRAYS.class.getSimpleName(), max, uniqueValues));
 		double averageArraysSort = (double)arraysSortSum / RUNS;
 		System.out.println("java.util.Arrays.sort() average time " + averageArraysSort);
 		double averageQuickSort = (double)quickSortSum / RUNS;

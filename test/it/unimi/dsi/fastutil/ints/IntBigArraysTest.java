@@ -33,6 +33,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.BigArrays;
+import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.longs.LongBigArrays;
 
 public class IntBigArraysTest {
@@ -520,4 +521,8 @@ public class IntBigArraysTest {
 		IntBigArrays.binarySearch(a, 4);
 	}
 
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntBigArrays.class, "test", /*num=*/"10000", /*seed=*/"293843");
+	}
 }

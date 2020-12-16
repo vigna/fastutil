@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntSetsTest {
 	@Test
 	public void testToArrayShouldNullElementAfterLastEntry() {
@@ -79,5 +81,10 @@ public class IntSetsTest {
 		s = IntSets.from(2);
 		assertEquals(Integer.MAX_VALUE - 1, s.size());
 
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntSets.class, "int", /*seed=*/"928374");
 	}
 }

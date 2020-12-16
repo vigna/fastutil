@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.HashCommon;
+import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class Int2IntOpenHashMapTest {
@@ -184,5 +185,10 @@ public class Int2IntOpenHashMapTest {
 		assertEquals(8, s.n);
 		s.trim(2);
 		assertEquals(8, s.n);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(Int2IntOpenHashMap.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383454");
 	}
 }

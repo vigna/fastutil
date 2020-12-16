@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class FloatOpenHashSetTest {
 
 	@Test
@@ -37,5 +39,10 @@ public class FloatOpenHashSetTest {
 		assertTrue(s.add(-0.0f));
 		assertTrue(s.add(+0.0f));
 		assertEquals(2, s.size());
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(FloatOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3838474");
 	}
 }

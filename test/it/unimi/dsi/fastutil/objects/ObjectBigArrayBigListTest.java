@@ -28,6 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.BigArrays;
+import it.unimi.dsi.fastutil.MainRunner;
 
 @SuppressWarnings("rawtypes")
 public class ObjectBigArrayBigListTest {
@@ -605,5 +606,10 @@ public class ObjectBigArrayBigListTest {
 	public void testSizeOnDefaultInstance() {
 		final ObjectBigArrayBigList<Integer> l = new ObjectBigArrayBigList<>();
 		l.size(100);
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectBigArrayBigList.class, "test", /*num=*/"200", /*seed=*/"90293");
 	}
 }
