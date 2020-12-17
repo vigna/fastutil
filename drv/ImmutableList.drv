@@ -122,6 +122,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		return new IMMUTABLE_LIST KEY_GENERIC(init);
 	}
 
+#if (defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED) || KEYS_REFERENCE
 	private static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC convertTrustedToImmutableList(ARRAY_LIST KEY_GENERIC arrayList) {
 		KEY_GENERIC_TYPE backingArray[] = arrayList.elements();
 		if (arrayList.size() != backingArray.length) {
@@ -129,9 +130,9 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		}
 		return new IMMUTABLE_LIST KEY_GENERIC_DIAMOND (backingArray);
   }
+#endif
 
 #if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
-
 	/** Collects the result of a primitive {@code Stream} into a new ImmutableList.
 	 *
 	 * <p>This method performs a terminal operation on the given {@code Stream}
@@ -244,16 +245,16 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		ensureIndex(index);
 
 		return new KEY_LIST_ITERATOR KEY_GENERIC() {
-				int pos = index, last = -1;
+				int pos = index;
 
 				@Override
 				public boolean hasNext() { return pos < a.length; }
 				@Override
 				public boolean hasPrevious() { return pos > 0; }
 				@Override
-				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[last = pos++]; }
+				public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[pos++]; }
 				@Override
-				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[last = --pos]; }
+				public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[--pos]; }
 				@Override
 				public int nextIndex() { return pos; }
 				@Override
@@ -261,26 +262,20 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 				@Override
 				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 					while (pos < a.length) {
-						action.accept(a[last = pos++]);
+						action.accept(a[pos++]);
 					}
 				}
 				@Override
 				public void add(KEY_GENERIC_TYPE k) {
-					IMMUTABLE_LIST.this.add(pos++, k);
-					last = -1;
+					throw new UnsupportedOperationException();
 				}
 				@Override
 				public void set(KEY_GENERIC_TYPE k) {
-					if (last == -1) throw new IllegalStateException();
-					IMMUTABLE_LIST.this.set(last, k);
+					throw new UnsupportedOperationException();
 				}
 				@Override
 				public void remove() {
-					if (last == -1) throw new IllegalStateException();
-					IMMUTABLE_LIST.this.REMOVE_KEY(last);
-					/* If the last operation was a next(), we are removing an element *before* us, and we must decrease pos correspondingly. */
-					if (last < pos) pos--;
-					last = -1;
+					throw new UnsupportedOperationException();
 				}
 				@Override
 				public int back(int n) {
@@ -292,7 +287,6 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 						n = remaining;
 						pos = 0;
 					}
-					last = pos;
 					return n;
 				}
 				@Override
@@ -305,7 +299,6 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 						n = remaining;
 						pos = a.length;
 					}
-					last = pos - 1;
 					return n;
 				}
 			};
@@ -374,6 +367,11 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 			this.pos = myNewPos;
 			return new Spliterator(oldPos, retMax);
 		}
+	}
+
+	@Override
+	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+		return new Spliterator();
 	}
 
 	@Override
