@@ -27,7 +27,7 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.function.Consumer;
-#if ! KEY_CLASS_Boolean
+#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
 import java.util.PrimitiveIterator;
 #endif
 #if KEY_WIDENED
@@ -593,12 +593,13 @@ public final class ITERATORS {
 #endif
 
 #if KEYS_PRIMITIVE
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		@SuppressWarnings("unchecked")
+#endif
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need another lambda.
 			Objects.requireNonNull(action);
-			// This will cause an unchecked cast warning, but the code gen conditionals for this method are already
-			// too complicated to justify adding the @SuppressWarnings conditionally.
 			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			i.forEachRemaining(action);
@@ -785,9 +786,12 @@ public final class ITERATORS {
 #endif
 
 #if KEYS_PRIMITIVE
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		@SuppressWarnings("unchecked")
+#endif
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we another lambda.
 			Objects.requireNonNull(action);
 			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
@@ -1057,7 +1061,6 @@ public final class ITERATORS {
 		@Override
 		public int back(int n) {
 			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-			final int max = getMaxPos();
 			final int remaining = pos - minPos;
 			if (n < remaining) {
 				pos -= n;

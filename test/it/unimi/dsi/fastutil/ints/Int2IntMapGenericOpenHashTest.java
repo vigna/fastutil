@@ -28,7 +28,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.MainRunner;
 
 public class Int2IntMapGenericOpenHashTest extends Int2IntMapGenericTest<Int2IntOpenHashMap> {
 	@Parameter(2)

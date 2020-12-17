@@ -462,13 +462,14 @@ public final class SPLITERATORS {
 		}
 #endif
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		@SuppressWarnings("unchecked")
+#endif
 #if KEYS_PRIMITIVE
 		@Override
 		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need another lambda.
 			Objects.requireNonNull(action);
-			// This will cause an unchecked cast warning, but the code gen conditionals for this method are already
-			// too complicated to justify adding the @SuppressWarnings conditionally.
 			return i.tryAdvance(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			return i.tryAdvance(action);
@@ -491,13 +492,14 @@ public final class SPLITERATORS {
 		}
 #endif
 
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
+		@SuppressWarnings("unchecked")
+#endif
 #if KEYS_PRIMITIVE
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need with another lambda.
+#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED  // The JDK's IntConsumer is not a subclass of Consumer, so we need another lambda.
 			Objects.requireNonNull(action);
-			// This will cause an unchecked cast warning, but the code gen conditionals for this method are already
-			// too complicated to justify adding the @SuppressWarnings conditionally.
 			i.forEachRemaining(action instanceof Consumer ? (Consumer<? super KEY_GENERIC_CLASS>)action : action::accept);
 #else
 			i.forEachRemaining(action);
@@ -669,7 +671,7 @@ public final class SPLITERATORS {
 #endif
 	public static KEY_GENERIC KEY_SPLITERATOR KEY_GENERIC AS_KEY_SPLITERATOR(final Spliterator KEY_GENERIC i, final KEY_COMPARATOR KEY_SUPER_GENERIC comparatorOverride) {
 		if (i instanceof KEY_SPLITERATOR) throw new IllegalArgumentException("Cannot override comparator on instance that is already a " + KEY_SPLITERATOR.class.getSimpleName());
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED
+#if defined JDK_PRIMITIVE_SPLITERATOR && KEYS_PRIMITIVE
 		if (i instanceof JDK_PRIMITIVE_SPLITERATOR) return new PrimitiveSpliteratorWrapperWithComparator KEY_GENERIC_DIAMOND((JDK_PRIMITIVE_SPLITERATOR)i, comparatorOverride);
 #endif
 		return new SpliteratorWrapperWithComparator KEY_GENERIC_DIAMOND(i, comparatorOverride);
