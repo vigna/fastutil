@@ -1472,22 +1472,22 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 	/** {@inheritDoc}
-	 * <p>This implementation just throws an {@link UnsupportedOperationException}.*/
+	 * @implSpec This implementation just throws an {@link UnsupportedOperationException}.*/
 	@Override
 	public SORTED_MAP KEY_VALUE_GENERIC tailMap(KEY_GENERIC_TYPE from) { throw new UnsupportedOperationException(); }
 
 	/** {@inheritDoc}
-	 * <p>This implementation just throws an {@link UnsupportedOperationException}.*/
+	 * @implSpec This implementation just throws an {@link UnsupportedOperationException}.*/
 	@Override
 	public SORTED_MAP KEY_VALUE_GENERIC headMap(KEY_GENERIC_TYPE to) { throw new UnsupportedOperationException(); }
 
 	/** {@inheritDoc}
-	 * <p>This implementation just throws an {@link UnsupportedOperationException}.*/
+	 * @implSpec This implementation just throws an {@link UnsupportedOperationException}.*/
 	@Override
 	public SORTED_MAP KEY_VALUE_GENERIC subMap(KEY_GENERIC_TYPE from, KEY_GENERIC_TYPE to) { throw new UnsupportedOperationException(); }
 
 	/** {@inheritDoc}
-	 * <p>This implementation just returns {@code null}.*/
+	 * @implSpec This implementation just returns {@code null}.*/
 	@Override
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return null; }
 
@@ -1750,6 +1750,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** A lazily allocated list containing keys of entries that have wrapped around the table because of removals. */
 		ARRAY_LIST KEY_GENERIC wrapped;
 
+		@SuppressWarnings("unused")
 		void acceptOnIndex(final ConsumerType action, int index) {
 			throw new UnsupportedOperationException("Raw MapIterator not meant for forEach operations.");
 		}
@@ -2745,8 +2746,11 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		final KEY_GENERIC_TYPE key[] = this.key;
 		final VALUE_GENERIC_TYPE value[] = this.value;
+#ifdef Linked
 		final MapIterator i = new MapIterator();
-
+#else
+		final MapIterator<?> i = new MapIterator<>();
+#endif
 		s.defaultWriteObject();
 
 		for(int j = size, e; j-- != 0;) {
@@ -3161,8 +3165,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
@@ -3170,7 +3173,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		fatal(msg);
 	}
 
-	protected static void runTest(int n, float f) {
+	protected static void runTest(int n, float f) throws Exception {
 #if !defined(Custom) || KEYS_REFERENCE
 
 #ifdef Custom
@@ -3201,51 +3204,37 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		m.putAll(t);
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after insertion");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after insertion");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after insertion");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after insertion");;
 
 		/* Now we check that m actually holds that data. */
 
 		for(java.util.Iterator i=t.entrySet().iterator(); i.hasNext();) {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-			if (!java.util.Objects.equals(e.getValue(), m.get(e.getKey())))
-				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t)");
+			ensure(java.util.Objects.equals(e.getValue(), m.get(e.getKey())), "Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 
 		for(java.util.Iterator i=m.entrySet().iterator(); i.hasNext();) {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-			if (!java.util.Objects.equals(e.getValue(), t.get(e.getKey())))
-				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m)");
+			ensure(java.util.Objects.equals(e.getValue(), t.get(e.getKey())), "Error (" + seed + "): m and t differ on an entry ("+e+") after insertion (iterating on m)");
 		}
 
 		/* Now we check that m actually holds the same keys. */
 
 		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!m.containsKey(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)");
-				System.exit(1);
-			}
-			if (!m.keySet().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)");
-				System.exit(1);
-			}
+			ensure(m.containsKey(o), "Error (" + seed + "): m and t differ on a key ("+o+") after insertion (iterating on t)");
+			ensure(m.keySet().contains(o), "Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after insertion (iterating on t)");
 		}
 
 		/* Now we check that m actually holds the same keys, but iterating on m. */
 
 		for(java.util.Iterator i=m.keySet().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!t.containsKey(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key after insertion (iterating on m)");
-				System.exit(1);
-			}
-			if (!t.keySet().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)");
-				System.exit(1);
-			}
+			ensure(t.containsKey(o), "Error (" + seed + "): m and t differ on a key after insertion (iterating on m)");
+			ensure(t.keySet().contains(o), "Error (" + seed + "): m and t differ on a key (in keySet()) after insertion (iterating on m)");
 		}
 
 
@@ -3253,28 +3242,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		for(java.util.Iterator i=t.values().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!m.containsValue(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on t)");
-				System.exit(1);
-			}
-			if (!m.values().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)");
-				System.exit(1);
-			}
+			ensure(m.containsValue(o), "Error (" + seed + "): m and t differ on a value after insertion (iterating on t)");
+			ensure(m.values().contains(o), "Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on t)");
 		}
 
 		/* Now we check that m actually hold the same values, but iterating on m. */
 
 		for(java.util.Iterator i=m.values().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!t.containsValue(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value after insertion (iterating on m)");
-				System.exit(1);
-			}
-			if (!t.values().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
-				System.exit(1);
-			}
+			ensure(t.containsValue(o), "Error (" + seed + "): m and t differ on a value after insertion (iterating on m)");
+			ensure(t.values().contains(o), "Error (" + seed + "): m and t differ on a value (in values()) after insertion (iterating on m)");
 		}
 
 		/* Now we check that inquiries about random data give the same answer in m and t. For
@@ -3282,10 +3259,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		for(int i=0; i<n;  i++) {
 			KEY_TYPE T = genKey();
-			if (m.containsKey(KEY2OBJ(T)) != t.containsKey(KEY2OBJ(T))) {
-				System.out.println("Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
-				System.exit(1);
-			}
+			ensure(m.containsKey(KEY2OBJ(T)) == t.containsKey(KEY2OBJ(T)), "Error (" + seed + "): divergence in keys between t and m (polymorphic method)");
 
 #if (KEYS_REFERENCE) && ! (VALUES_REFERENCE)
 			if ((m.GET_VALUE(T) != VALUE_NULL) != ((t.get(KEY2OBJ(T)) == null ? VALUE_NULL : VALUE_OBJ2TYPE(t.get(KEY2OBJ(T)))) != VALUE_NULL) ||
@@ -3297,8 +3271,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T))))
 #endif
 					{
-						System.out.println("Error (" + seed + "): divergence between t and m (polymorphic method)");
-						System.exit(1);
+						ensure(false, "Error (" + seed + "): divergence between t and m (polymorphic method)");
 					}
 		}
 
@@ -3307,10 +3280,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		for(int i=0; i<n;  i++) {
 			KEY_TYPE T = genKey();
-			if (!java.util.Objects.equals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T)))) {
-				System.out.println("Error (" + seed + "): divergence between t and m (standard method)");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(m.get(KEY2OBJ(T)), t.get(KEY2OBJ(T))), "Error (" + seed + "): divergence between t and m (standard method)");
 		}
 
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
@@ -3318,67 +3288,43 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		for(int i=0; i<20*n;  i++) {
 			KEY_TYPE T = genKey();
 			VALUE_TYPE U = genValue();
-			if (!java.util.Objects.equals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
-				System.out.println("Error (" + seed + "): divergence in put() between t and m");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U))), "Error (" + seed + "): divergence in put() between t and m");
 			T = genKey();
-			if (!java.util.Objects.equals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
-				System.out.println("Error (" + seed + "): divergence in remove() between t and m");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T))), "Error (" + seed + "): divergence in remove() between t and m");
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after removal");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after removal");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after removal");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after removal");;
 
 
 		/* Now we check that m actually holds the same data. */
 
 		for(java.util.Iterator i=t.entrySet().iterator(); i.hasNext();) {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-			if (!java.util.Objects.equals(e.getValue(), m.get(e.getKey()))) {
-				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(e.getValue(), m.get(e.getKey())), "Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually holds that data, but iterating on m. */
 
 		for(java.util.Iterator i=m.entrySet().iterator(); i.hasNext();) {
 			java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-			if (!java.util.Objects.equals(e.getValue(), t.get(e.getKey()))) {
-				System.out.println("Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(e.getValue(), t.get(e.getKey())), "Error (" + seed + "): m and t differ on an entry ("+e+") after removal (iterating on m)");
 		}
 
 		/* Now we check that m actually holds the same keys. */
 
 		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!m.containsKey(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
-				System.exit(1);
-			}
-			if (!m.keySet().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
-				System.exit(1);
-			}
+			ensure(m.containsKey(o), "Error (" + seed + "): m and t differ on a key ("+o+") after removal (iterating on t)");
+			ensure(m.keySet().contains(o), "Error (" + seed + "): m and t differ on a key ("+o+", in keySet()) after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually holds the same keys, but iterating on m. */
 
 		for(java.util.Iterator i=m.keySet().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!t.containsKey(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key after removal (iterating on m)");
-				System.exit(1);
-			}
-			if (!t.keySet().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
-				System.exit(1);
-			}
+			ensure(t.containsKey(o), "Error (" + seed + "): m and t differ on a key after removal (iterating on m)");
+			ensure(t.keySet().contains(o), "Error (" + seed + "): m and t differ on a key (in keySet()) after removal (iterating on m)");
 		}
 
 
@@ -3386,28 +3332,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		for(java.util.Iterator i=t.values().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!m.containsValue(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on t)");
-				System.exit(1);
-			}
-			if (!m.values().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
-				System.exit(1);
-			}
+			ensure(m.containsValue(o), "Error (" + seed + "): m and t differ on a value after removal (iterating on t)");
+			ensure(m.values().contains(o), "Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on t)");
 		}
 
 		/* Now we check that m actually hold the same values, but iterating on m. */
 
 		for(java.util.Iterator i=m.values().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!t.containsValue(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value after removal (iterating on m)");
-				System.exit(1);
-			}
-			if (!t.values().contains(o)) {
-				System.out.println("Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
-				System.exit(1);
-			}
+			ensure(t.containsValue(o), "Error (" + seed + "): m and t differ on a value after removal (iterating on m)");
+			ensure(t.values().contains(o), "Error (" + seed + "): m and t differ on a value (in values()) after removal (iterating on m)");
 		}
 
 
@@ -3416,7 +3350,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		/* Now we save and read m. */
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -3431,23 +3365,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			ois.close();
 			ff.delete();
 		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
 
 
 #if !KEY_CLASS_Reference && !VALUE_CLASS_Reference
-		if (m.hashCode() != h) System.out.println("Error (" + seed + "): hashCode() changed after save/read");
+		ensure(m.hashCode() == h, "Error (" + seed + "): hashCode() changed after save/read");;
 
 		/* Now we check that m actually holds that data. */
 
 		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();) {
 			Object o = i.next();
-			if (!java.util.Objects.equals(m.get(o),t.get(o))) {
-				System.out.println("Error (" + seed + "): m and t differ on an entry after save/read");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(m.get(o),t.get(o)), "Error (" + seed + "): m and t differ on an entry after save/read");
 		}
 #else
 		m.clear();
@@ -3459,19 +3386,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		for(int i=0; i<20*n;  i++) {
 			KEY_TYPE T = genKey();
 			VALUE_TYPE U = genValue();
-			if (!java.util.Objects.equals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U)))) {
-				System.out.println("Error (" + seed + "): divergence in put() between t and m after save/read");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(m.put(KEY2OBJ(T), VALUE2OBJ(U)), t.put(KEY2OBJ(T), VALUE2OBJ(U))), "Error (" + seed + "): divergence in put() between t and m after save/read");
 			T = genKey();
-			if (!java.util.Objects.equals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T)))) {
-				System.out.println("Error (" + seed + "): divergence in remove() between t and m after save/read");
-				System.exit(1);
-			}
+			ensure(java.util.Objects.equals(m.remove(KEY2OBJ(T)), t.remove(KEY2OBJ(T))), "Error (" + seed + "): divergence in remove() between t and m after save/read");
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after post-save/read removal");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after post-save/read removal");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after post-save/read removal");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after post-save/read removal");;
 
 
 
@@ -3597,10 +3518,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		for(java.util.Iterator i=t.keySet().iterator(); i.hasNext();) m.remove(i.next());
 
-		if (!m.isEmpty())  {
-			System.out.println("Error (" + seed + "): m is not empty (as it should be)");
-			System.exit(1);
-		}
+		ensure(m.isEmpty(), "Error (" + seed + "): m is not empty (as it should be)");
 
 #ifdef NumericEnhancements
 #if VALUE_CLASS_Byte || VALUE_CLASS_Character || VALUE_CLASS_Short || VALUE_CLASS_Integer || VALUE_CLASS_Long
@@ -3657,31 +3575,31 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		for(int i=0; i<(p*f)/10; i++) {
 			for (int j=0; j<10; j++) {
-				if (!java.util.Objects.equals(m.put(KEY2OBJ(x = i+(r.nextInt() % 10)*p), VALUE2OBJ(1)), t.put(KEY2OBJ(x), VALUE2OBJ(1))))
-					System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test insertion.");
+				ensure(java.util.Objects.equals(m.put(KEY2OBJ(x = i+(r.nextInt() % 10)*p), VALUE2OBJ(1)), t.put(KEY2OBJ(x), VALUE2OBJ(1))),
+					"Error (" + seed + "): m and t differ on an entry during torture-test insertion.");
 			}
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test insertion");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test insertion");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after torture-test insertion");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after torture-test insertion");;
 
 		for(int i=0; i<p/10; i++) {
 			for (int j=0; j<10; j++) {
-				if (!java.util.Objects.equals(m.remove(KEY2OBJ(x = i+(r.nextInt() % 10)*p)), t.remove(KEY2OBJ(x))))
-					System.out.println("Error (" + seed + "): m and t differ on an entry during torture-test removal.");
+				ensure(java.util.Objects.equals(m.remove(KEY2OBJ(x = i+(r.nextInt() % 10)*p)), t.remove(KEY2OBJ(x))),
+					"Error (" + seed + "): m and t differ on an entry during torture-test removal.");
 			}
 		}
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after torture-test removal");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after torture-test removal");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after torture-test removal");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after torture-test removal");;
 
-		if (!m.equals(m.clone())) System.out.println("Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");
-		if (!((OPEN_HASH_MAP)m.clone()).equals(m)) System.out.println("Error (" + seed + "): !m.clone().equals(m) after torture-test removal");
+		ensure(m.equals(m.clone()), "Error (" + seed + "): !m.equals(m.clone()) after torture-test removal");;
+		ensure(((OPEN_HASH_MAP)m.clone()).equals(m), "Error (" + seed + "): !m.clone().equals(m) after torture-test removal");;
 
 		m.trim();
 
-		if (!m.equals(t)) System.out.println("Error (" + seed + "): !m.equals(t) after trim()");
-		if (!t.equals(m)) System.out.println("Error (" + seed + "): !t.equals(m) after trim()");
+		ensure(m.equals(t), "Error (" + seed + "): !m.equals(t) after trim()");;
+		ensure(t.equals(m), "Error (" + seed + "): !t.equals(m) after trim()");;
 #endif
 
 		System.out.println("Test OK");
@@ -3691,7 +3609,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		float f = Hash.DEFAULT_LOAD_FACTOR;
 		int n  = Integer.parseInt(args[1]);
 		if (args.length>2) f = Float.parseFloat(args[2]);
@@ -3703,7 +3621,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
-			System.exit(1);
+			throw e;
 		}
 
 	}

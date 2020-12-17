@@ -29,6 +29,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.MainRunner;
 
 @SuppressWarnings("rawtypes")
 public class ObjectOpenHashBigSetTest {
@@ -80,9 +81,9 @@ public class ObjectOpenHashBigSetTest {
 
 	// Here because IntOpenHashBigSet has neither an of() nor a wrap().
 	@SafeVarargs
-	private static <T> ObjectOpenHashBigSet<T> setOf(T... elements) {
-		ObjectOpenHashBigSet<T> result = new ObjectOpenHashBigSet<>(elements.length);
-		for (T i : elements) {
+	private static <T> ObjectOpenHashBigSet<T> setOf(final T... elements) {
+		final ObjectOpenHashBigSet<T> result = new ObjectOpenHashBigSet<>(elements.length);
+		for (final T i : elements) {
 			result.add(i);
 		}
 		return result;
@@ -91,19 +92,19 @@ public class ObjectOpenHashBigSetTest {
 	@Test
 	public void testToBigSet() {
 		final ObjectOpenHashBigSet<String> baseSet = setOf("wood", "board", "glass", "metal");
-		ObjectOpenHashBigSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashBigSet.toBigSet());
+		final ObjectOpenHashBigSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashBigSet.toBigSet());
 		assertEquals(setOf("plywood", "plyboard", "plyglass", "plymetal"), transformed);
 	}
 
 	@Test
 	public void testSpliteratorTrySplit() {
 		final ObjectOpenHashBigSet<String> baseSet = setOf("0", "1", "2", "3", "4", "5", "bird");
-		ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
-		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
-		ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
+		final ObjectSpliterator<String> spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size64(), spliterator1.getExactSizeIfKnown());
+		final ObjectSpliterator<String> spliterator2 = spliterator1.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split.
-		java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport.stream(spliterator1, false);
-		java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport.stream(spliterator2, false);
+		final java.util.stream.Stream<String> stream1 = java.util.stream.StreamSupport.stream(spliterator1, false);
+		final java.util.stream.Stream<String> stream2 = java.util.stream.StreamSupport.stream(spliterator2, false);
 
 		final ObjectOpenHashBigSet<String> subSet1 = stream1.collect(ObjectOpenHashBigSet.toBigSet());
 		// Intentionally collecting to a list for this second one.
@@ -174,8 +175,7 @@ public class ObjectOpenHashBigSetTest {
 		printProbes(m);
 		checkTable(m);
 		/* Now we check that m actually holds that data. */
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", m.contains(e));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
@@ -230,8 +230,7 @@ public class ObjectOpenHashBigSetTest {
 		/*
 		 * Now we check that m actually holds that data.
 		 */
-		for (final java.util.Iterator i = t.iterator(); i.hasNext();) {
-			final Object e = i.next();
+		for (Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after removal (iterating on t)", m.contains(e));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
@@ -321,5 +320,10 @@ public class ObjectOpenHashBigSetTest {
 		assertTrue(s.add(a));
 		assertSame(a, s.get("a"));
 		assertNull(s.get("b"));
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectOpenHashBigSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383474");
 	}
 }

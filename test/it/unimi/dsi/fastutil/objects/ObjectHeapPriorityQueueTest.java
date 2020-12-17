@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.io.BinIO;
 
 public class ObjectHeapPriorityQueueTest {
@@ -43,6 +44,11 @@ public class ObjectHeapPriorityQueueTest {
 			assertEquals(q.first(), r.first());
 			assertEquals(q.dequeue(), r.dequeue());
 		}
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(ObjectHeapPriorityQueue.class, "test", /*num=*/"500", /*seed=*/"9329384");
 	}
 }
 

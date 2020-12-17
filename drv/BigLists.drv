@@ -783,7 +783,7 @@ public final class BIG_LISTS {
 	}
 
 
-	private static void testLists(KEY_TYPE k, BIG_LIST m, BIG_LIST t, int level) {
+	private static void testLists(KEY_TYPE k, BIG_LIST m, BIG_LIST t, int level) throws Exception {
 		int n = 100;
 		int c;
 
@@ -1112,7 +1112,7 @@ public final class BIG_LISTS {
 
 		BIG_LIST m2 = null;
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -1126,10 +1126,6 @@ public final class BIG_LISTS {
 			m2 = (BIG_LIST)ois.readObject();
 			ois.close();
 			ff.delete();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
 		}
 
 #if ! KEY_CLASS_Reference
@@ -1148,7 +1144,7 @@ public final class BIG_LISTS {
 			//System.err.println("Checking subList from " + start + " to " + end + " (level=" + (level+1) + ")...");
 			testLists(k, m.subList(start, end), t.subList(start, end), level - 1);
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after subList");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after subList");
 			ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after subList");
 
 		}
@@ -1156,7 +1152,7 @@ public final class BIG_LISTS {
 		return;
 	}
 
-	private static void test() {
+	private static void test() throws Exception {
 		KEY_TYPE k = genKey();
 		BIG_LIST m = new Singleton(k);
 		BIG_LIST u = BIG_LISTS.unmodifiable(BIG_LISTS.asBigList(LISTS.singleton(KEY2OBJ(k))));
@@ -1176,13 +1172,17 @@ public final class BIG_LISTS {
 	}
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
 		if (cond) return;
 		fatal(msg);
+	}
+
+	private static void ensure(boolean cond, java.util.function.Supplier<String> msgSupplier) {
+		if (cond) return;
+		fatal(msgSupplier.get());
 	}
 
 	/** This method expects as first argument a lower-cased type (e.g., "int"),
@@ -1196,6 +1196,7 @@ public final class BIG_LISTS {
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			throw e;
 		}
 	}
 

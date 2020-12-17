@@ -26,6 +26,8 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class IntArrayListTest {
 
 	@SuppressWarnings("unlikely-arg-type")
@@ -253,7 +255,6 @@ public class IntArrayListTest {
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);
 	}
 
-	@Test
 	public void testOfEmpty() {
 		final IntArrayList l = IntArrayList.of();
 		assertTrue(l.isEmpty());
@@ -303,5 +304,10 @@ public class IntArrayListTest {
 		assertEquals(1, spliterator.skip(1));
 		java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
 		assertEquals(baseList.subList(1, baseList.size()), IntArrayList.toList(stream));
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
 	}
 }

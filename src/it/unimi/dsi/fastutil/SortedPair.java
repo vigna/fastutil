@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2020 Sebastiano Vigna
+ * Copyright (C) 2020 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import java.util.Objects;
+
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutableSortedPair;
 
@@ -31,7 +33,9 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutableSortedPair;
  * <p>
  * Implementations of this class can be used to represent <em>unordered pairs</em> by
  * canonicalization. Note that, in particular, if you build a sorted pair using a left and right
- * element in the wrong order they will be exchanged.
+ * element in the wrong order they will be exchanged. To support this usage, this interface provides
+ * a {@link #contains(Comparable)} method that can be used to check whether a given object is equal
+ * to either element of the sorted pair.
  *
  * @param <K> the type of the elements.
  */
@@ -53,5 +57,15 @@ public interface SortedPair<K extends Comparable<K>> extends Pair<K, K> {
 	 */
 	public static <K extends Comparable<K>> SortedPair<K> of(final K l, final K r) {
 		return ObjectObjectImmutableSortedPair.of(l, r);
+	}
+
+	/**
+	 * Returns true if one of the two elements of this sorted pair is equal to a given object.
+	 *
+	 * @param o an object, or {@code null}-
+	 * @return true if one of the two elements of this sorted pair is equal to {@code o}.
+	 */
+	default boolean contains(final Object o) {
+		return Objects.equals(o, left()) || Objects.equals(o, right());
 	}
 }

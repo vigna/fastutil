@@ -581,7 +581,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		@Override
 		public KEY_GENERIC_TYPE GET_KEY(long i) {
 			ensureRestrictedIndex(i);
-			return BIG_ARRAYS.get(a, i + from);
+			return BigArrays.get(a, i + from);
 		}
 
 		private final class SubListIterator extends BIG_LIST_ITERATORS.AbstractIndexBasedBigListIterator KEY_GENERIC {
@@ -592,7 +592,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			}
 
 			@Override
-			protected final KEY_GENERIC_TYPE get(long i) { return BIG_ARRAYS.get(a, from + i); }
+			protected final KEY_GENERIC_TYPE get(long i) { return BigArrays.get(a, from + i); }
 			@Override
 			protected final void add(long i, KEY_GENERIC_TYPE k) { SubList.this.add(i, k); }
 			@Override
@@ -603,15 +603,15 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			protected final long getMaxPos() { return to - from; }
 
 			@Override
-			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return BIG_ARRAYS.get(a, from + (lastReturned = pos++)); }
+			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return BigArrays.get(a, from + (lastReturned = pos++)); }
 			@Override
-			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return BIG_ARRAYS.get(a, from + (lastReturned = --pos)); }
+			public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return BigArrays.get(a, from + (lastReturned = --pos)); }
 
 			@Override
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 				final long max = to - from;
 				while(pos < max) {
-					action.accept(BIG_ARRAYS.get(a, from + (lastReturned = pos++)));
+					action.accept(BigArrays.get(a, from + (lastReturned = pos++)));
 				}
 			}
 		}
@@ -636,7 +636,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			protected final long getMaxPosFromBackingStore() { return to; }
 
 	 		@Override
-			protected final KEY_GENERIC_TYPE get(long i) { return BIG_ARRAYS.get(a, i); }
+			protected final KEY_GENERIC_TYPE get(long i) { return BigArrays.get(a, i); }
 			@Override
 			protected final SubListSpliterator makeForSplit(long pos, long maxPos) {
 				return new SubListSpliterator(pos, maxPos);
@@ -651,14 +651,14 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			@Override
 			public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
 				if (pos >= getMaxPos()) return false;
-				action.accept(BIG_ARRAYS.get(a, pos++));
+				action.accept(BigArrays.get(a, pos++));
 				return true;
 			}
 			@Override
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 				final long max = getMaxPos();
 				while(pos < max) {
-					action.accept(BIG_ARRAYS.get(a, pos++));
+					action.accept(BigArrays.get(a, pos++));
 				}
 			}
 		}
@@ -738,13 +738,13 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 	@Override
 	public void setElements(final long index, final KEY_TYPE[][] a, final long offset, final long length) {
-		BIG_ARRAYS.copy(a, offset, this.a, index, length);
+		BigArrays.copy(a, offset, this.a, index, length);
 	}
 
 	@Override
 	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
 		for (long i = 0; i < size; ++i) {
-			action.accept(BIG_ARRAYS.get(a, i));
+			action.accept(BigArrays.get(a, i));
 		}
 	}
 
@@ -788,7 +788,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 				@Override
 				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 					while (pos < size) {
-						action.accept(BIG_ARRAYS.get(a, last = pos++));
+						action.accept(BigArrays.get(a, last = pos++));
 					}
 				}
 				@Override
@@ -857,14 +857,14 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		@Override
 		public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
 			if (pos >= getWorkingMax()) return false;
-			action.accept(BIG_ARRAYS.get(a, pos++));
+			action.accept(BigArrays.get(a, pos++));
 			return true;
 		}
 
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 			for (final long max = getWorkingMax(); pos < max; ++pos) {
-				action.accept(BIG_ARRAYS.get(a, pos));
+				action.accept(BigArrays.get(a, pos));
 			}
 		}
 
@@ -1033,13 +1033,17 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
 		if (cond) return;
 		fatal(msg);
+	}
+	
+	private static void ensure(boolean cond, java.util.function.Supplier<String> msgSupplier) {
+		if (cond) return;
+		fatal(msgSupplier.get());
 	}
 
 	private static Object[] k, v, nk;
@@ -1047,7 +1051,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	private static KEY_TYPE nkt[];
 	private static BIG_ARRAY_BIG_LIST topList;
 
-	protected static void testLists(BIG_LIST m, BIG_LIST t, int n, int level) {
+	protected static void testLists(BIG_LIST m, BIG_LIST t, int n, int level) throws Exception {
 		long ms;
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds;
 		Object rt = null;
@@ -1225,8 +1229,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 			ensure((mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null), "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")");
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after addAll");
-			ensure(t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after addAll");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after addAll");
+			ensure(t.equals(m), () -> "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after addAll");
 		}
 
 		if (m.size64() > n) {
@@ -1261,8 +1265,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 			ensure((mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null), "Error (" + level + ", " + seed + "): polymorphic addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")");
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after polymorphic addAll");
-			ensure(t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after polymorphic addAll");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after polymorphic addAll");
+			ensure(t.equals(m), () -> "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after polymorphic addAll");
 		}
 
 		if (m.size64() > n) {
@@ -1360,7 +1364,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 		BIG_LIST m2 = null;
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -1374,10 +1378,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			m2 = (BIG_LIST)ois.readObject();
 			ois.close();
 			ff.delete();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
 		}
 
 #if ! KEY_CLASS_Reference
@@ -1550,8 +1550,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			//System.err.println("Checking subList from " + start + " to " + end + " (level=" + (level+1) + ")...");
 			testLists(m.subList(start, end), t.subList(start, end), n, level + 1);
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after subList");
-			ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after subList");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after subList");
+			ensure(t.equals(m), () -> "Error (" + level + ", " + seed + "): ! t.equals(m) after subList");
 
 		}
 
@@ -1561,7 +1561,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	}
 
 
-	protected static void runTest(int n) {
+	protected static void runTest(int n) throws Exception {
 		BIG_ARRAY_BIG_LIST m = new BIG_ARRAY_BIG_LIST();
 		BIG_LIST t = BIG_LISTS.asBigList(new ARRAY_LIST());
 		topList = m;
@@ -1597,7 +1597,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	}
 
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		int n  = Integer.parseInt(args[1]);
 		if (args.length > 2) r = new java.util.Random(seed = Long.parseLong(args[2]));
 
@@ -1608,6 +1608,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			throw e;
 		}
 	}
 

@@ -22,6 +22,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.MainRunner;
+
 public class FloatArraysTest {
 
 	private static float[] identity(int n) {
@@ -222,4 +224,8 @@ public class FloatArraysTest {
 
 	}
 
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(FloatArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
+	}
 }

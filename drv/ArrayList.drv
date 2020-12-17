@@ -22,13 +22,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.RandomAccess;
 import java.util.NoSuchElementException;
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER
-import java.util.function.Consumer;
-#endif
 #if KEYS_REFERENCE
 import java.lang.reflect.Array;
 import java.util.Comparator;
 import java.util.stream.Collector;
+import java.util.function.Consumer;
 #endif
 
 #if KEYS_PRIMITIVE
@@ -145,6 +143,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private void initArrayFromCapacity(final int capacity) {
 		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
 		if (capacity == 0) a = KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
@@ -1049,6 +1048,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 	@Override
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_LIST KEY_GENERIC clone() {
 		ARRAY_LIST KEY_GENERIC cloned = null;
 		// Test for fastpath we can do if exactly an ArrayList
@@ -1377,7 +1377,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
 		throw new AssertionError(msg);
 	}
 
@@ -1386,12 +1385,17 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		fatal(msg);
 	}
 
+	private static void ensure(boolean cond, java.util.function.Supplier<String> msgSupplier) {
+		if (cond) return;
+		fatal(msgSupplier.get());
+	}
+
 	private static Object[] k, v, nk;
 	private static KEY_TYPE kt[];
 	private static KEY_TYPE nkt[];
 	private static ARRAY_LIST topList;
 
-	protected static void testLists(LIST m, java.util.List t, int n, int level) {
+	protected static void testLists(LIST m, java.util.List t, int n, int level) throws Exception {
 		long ms;
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds;
 		Object rt = null;
@@ -1577,8 +1581,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 			ensure((mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null), "Error (" + level + ", " + seed + "): addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")");
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after addAll");
-			ensure(t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after addAll");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after addAll");
+			ensure(t.equals(m), () -> "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after addAll");
 		}
 
 		if (m.size() > n) {
@@ -1613,8 +1617,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 			ensure((mThrowsOutOfBounds == null) == (tThrowsOutOfBounds == null), "Error (" + level + ", " + seed + "): polymorphic addAll() divergence in IndexOutOfBoundsException for index " + p + " for " + m1 + " (" + mThrowsOutOfBounds + ", " + tThrowsOutOfBounds + ")");
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after polymorphic addAll");
-			ensure(t.equals(m), "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after polymorphic addAll");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after polymorphic addAll");
+			ensure(t.equals(m), () -> "Error (" + level + ", " + seed + m + t + "): ! t.equals(m) after polymorphic addAll");
 		}
 
 		if (m.size() > n) {
@@ -1770,7 +1774,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 		LIST m2 = null;
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -1784,10 +1788,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			m2 = (LIST)ois.readObject();
 			ois.close();
 			ff.delete();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
 		}
 
 #if ! KEY_CLASS_Reference
@@ -1965,8 +1965,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			//System.err.println("Checking subList from " + start + " to " + end + " (level=" + (level+1) + ")...");
 			testLists(m.subList(start, end), t.subList(start, end), n, level + 1);
 
-			ensure(m.equals(t), "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after subList");
-			ensure(t.equals(m), "Error (" + level + ", " + seed + "): ! t.equals(m) after subList");
+			ensure(m.equals(t), () -> "Error (" + level + ", " + seed + m + t + "): ! m.equals(t) after subList");
+			ensure(t.equals(m), () -> "Error (" + level + ", " + seed + "): ! t.equals(m) after subList");
 
 		}
 
@@ -1976,7 +1976,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 
-	protected static void runTest(int n) {
+	protected static void runTest(int n) throws Exception {
 		ARRAY_LIST m = new ARRAY_LIST();
 		java.util.ArrayList t = new java.util.ArrayList();
 		topList = m;
@@ -2008,7 +2008,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		int n  = Integer.parseInt(args[1]);
 		if (args.length > 2) r = new java.util.Random(seed = Long.parseLong(args[2]));
 
@@ -2019,7 +2019,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
-			System.exit(1);
+			throw e;
 		}
 	}
 

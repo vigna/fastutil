@@ -2095,8 +2095,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 
 
 	private static void fatal(String msg) {
-		System.out.println(msg);
-		System.exit(1);
+		throw new AssertionError(msg);
 	}
 
 	private static void ensure(boolean cond, String msg) {
@@ -2110,7 +2109,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	private static VALUE_TYPE vt[];
 	private static RB_TREE_MAP topMap;
 
-	protected static void testMaps(SORTED_MAP m, SortedMap t, int n, int level) {
+	protected static void testMaps(SORTED_MAP m, SortedMap t, int n, int level) throws Exception {
 		long ms;
 		boolean mThrowsIllegal, tThrowsIllegal, mThrowsNoElement, tThrowsNoElement;
 		Object rt = null, rm = null;
@@ -2235,8 +2234,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 						! m.get(KEY2OBJ(T)).equals(t.get(KEY2OBJ(T))))
 #endif
 						{
-							System.out.println("Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method)");
-							System.exit(1);
+							ensure(false, "Error (" + level + ", " + seed + "): divergence between t and m (polymorphic method)");
 						}
 			}
 		}
@@ -2409,7 +2407,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 
 		SORTED_MAP m2 = null;
 
-		try {
+		{
 			java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test." + m.getClass().getSimpleName() + "." + n);
 			java.io.OutputStream os = new java.io.FileOutputStream(ff);
 			java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
@@ -2423,10 +2421,6 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 			m2 = (SORTED_MAP)ois.readObject();
 			ois.close();
 			ff.delete();
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
 		}
 
 #if !VALUE_CLASS_Reference
@@ -2581,7 +2575,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	}
 
 
-	private static void runTest(int n) {
+	private static void runTest(int n) throws Exception {
 		RB_TREE_MAP m = new RB_TREE_MAP();
 		SortedMap t = new java.util.TreeMap();
 		topMap = m;
@@ -2620,7 +2614,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 	}
 
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		int n  = Integer.parseInt(args[1]);
 		if (args.length > 2) r = new java.util.Random(seed = Long.parseLong(args[2]));
 
@@ -2630,6 +2624,7 @@ public class RB_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP KEY_VALUE
 		} catch(Throwable e) {
 			e.printStackTrace(System.err);
 			System.err.println("seed: " + seed);
+			throw e;
 		}
 	}
 

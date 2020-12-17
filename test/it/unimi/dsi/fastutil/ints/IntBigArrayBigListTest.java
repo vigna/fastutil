@@ -29,6 +29,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.BigArrays;
+import it.unimi.dsi.fastutil.MainRunner;
 
 @SuppressWarnings("rawtypes")
 public class IntBigArrayBigListTest {
@@ -660,5 +661,10 @@ public class IntBigArrayBigListTest {
 		assertEquals(1, spliterator.skip(1));
 		java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
 		assertEquals(baseList.subList(1, baseList.size64()), IntBigArrayBigList.toBigList(stream));
+	}
+
+	@Test
+	public void testLegacyMainMethodTests() throws Exception {
+		MainRunner.callMainIfExists(IntBigArrayBigList.class, "test", /*num=*/"200", /*seed=*/"90293");
 	}
 }

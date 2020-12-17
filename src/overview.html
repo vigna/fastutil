@@ -909,8 +909,8 @@ Long2IntSortedMap m2 = Long2IntSortedMaps.synchronize(m1);
     <p>Linked maps are very flexible data structures which can be used to implement, for
     instance, queues whose content can be probed efficiently:
     <pre>
-// This map remembers insertion order (note that we are using the array-based constructor)
-IntSortedSet s = new IntLinkedOpenHashSet(new int[] { 4, 3, 2, 1 });
+// This map remembers insertion order.
+IntSortedSet s = new IntLinkedOpenHashSet.of(4, 3, 2, 1);
 s.firstInt(); // This method call will return 4
 s.lastInt(); // This method call will return 1
 s.contains(5); // This method will return false
@@ -927,10 +927,10 @@ int[] a = new int[] { 5, 1, 9 };
 IntIterator j = IntIterators.wrap(a); // This iterator will return 5, 1, 9.
 IntIterator k = IntIterators.concat(new IntIterator[] { i , j }); // This iterator will return 0, 1, ..., 9, 5, 1, 9
     </pre>
-    <p>It is easy to build sets and maps on the fly using the array-based
-    constructors:
+    <p>It is easy to build lists and sets on the fly using the {@code of} static factory methods.
+    For maps you can use the constructors that take key and value arrays (array based constructors for list and set exist too):
 <pre>
-IntSet s = new IntOpenHashSet(new int[] { 1, 2, 3 }); // This set will contain 1, 2, and 3
+IntSet s = IntOpenHashSet.of(1, 2, 3); // This set will contain 1, 2, and 3
 Char2IntMap m = new Char2IntRBTreeMap(new char[] { '@', '-' }, new int[] { 0, 1 }); // This map will map '@' to 0 and '-' to 1
 </pre>
     <p>Whenever you have some data structure, it is easy to serialize it in an
@@ -939,6 +939,13 @@ Char2IntMap m = new Char2IntRBTreeMap(new char[] { '@', '-' }, new int[] { 0, 1 
 BinIO.storeObject(s, "foo"); // This method call will save s in the file named "foo"
 TextIO.storeInts(s.intIterator(), "foo.txt"); // This method call will save the content of s in ASCII
 i = TextIO.asIntIterator("foo.txt"); // This iterator will parse the file and return the integers therein
+	</pre>
+	<p>Support for Java 8 primitive streams is included for primitive collections (e.g. {@code intStream}),
+	which will work in terms of primitives instead of boxing to wrapper types like the regular {@code stream} would do:
+	<pre>
+IntList l = IntList.of(2, 380, 1297);
+int lSum = l.intStream().sum();  // Will be 1679
+IntList lTransformed = IntArrayList.toList(l.intStream().map(i -&gt; i + 40)); // Will be 42, 420, 1337
     </pre>
     <p>You can sort arrays using type-specific comparators specified by lambda expressions (no boxing/unboxing here):
     <pre>
