@@ -34,8 +34,8 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutableSortedPair;
  * Implementations of this class can be used to represent <em>unordered pairs</em> by
  * canonicalization. Note that, in particular, if you build a sorted pair using a left and right
  * element in the wrong order they will be exchanged. To support this usage, this interface provides
- * a {@link #contains(Comparable)} method that can be used to check whether a given object is equal
- * to either element of the sorted pair.
+ * a {@link #contains(Object)} method that can be used to check whether a given object is equal to
+ * either element of the sorted pair.
  *
  * @param <K> the type of the elements.
  */
