@@ -591,6 +591,7 @@ fi)\
 "#define PREV_KEY previous${TYPE_STD[$k]}\n"\
 "#define NEXT_KEY_WIDENED next${TYPE_STD[$wk]}\n"\
 "#define PREV_KEY_WIDENED previous${TYPE_STD[$wk]}\n"\
+"#define FOREACH_KEY forEach${TYPE_STD[$k]}\n"\
 "#define KEY_WIDENED_ITERATOR_METHOD ${TYPE_LC[$wk]}Iterator\n"\
 "#define KEY_WIDENED_SPLITERATOR_METHOD ${TYPE_LC[$wk]}Spliterator\n"\
 "#define KEY_WIDENED_STREAM_METHOD ${TYPE_LC[$wk]}Stream\n"\

@@ -665,7 +665,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 			m.put(i, Integer.valueOf(i));
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
-		m.keySet().forEach((java.util.function.IntConsumer) s::add);
+		m.keySet().forEachInt((java.util.function.IntConsumer)s::add);
 		assertEquals(s, m.keySet());
 	}
 

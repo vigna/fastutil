@@ -706,7 +706,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 			m.put(i, i);
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
-		m.keySet().forEach((java.util.function.IntConsumer) s::add);
+		m.keySet().forEachInt((java.util.function.IntConsumer)s::add);
 		assertEquals(s, m.keySet());
 	}
 
@@ -1258,7 +1258,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 			m.put(i, i);
 		}
 		final IntOpenHashSet s = new IntOpenHashSet();
-		m.values().forEach((java.util.function.IntConsumer) s::add);
+		m.values().forEachInt((java.util.function.IntConsumer)s::add);
 		assertEquals(s, new IntOpenHashSet(m.values()));
 	}
 
