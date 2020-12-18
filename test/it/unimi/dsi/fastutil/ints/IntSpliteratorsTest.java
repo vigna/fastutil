@@ -182,6 +182,17 @@ public class IntSpliteratorsTest {
 		IntSpliterator concat = IntSpliterators.concat(split1, split2);
 		assertTrue((concat.characteristics() & Spliterator.SORTED) == 0);
 		assertTrue((concat.characteristics() & Spliterator.DISTINCT) == 0);
+		// SIZED is preserved though.
+		assertTrue((concat.characteristics() & Spliterator.SIZED) != 0);
+	}
+	
+	@Test
+	public void testConcatSpliteratorSortedAndDistinctPreservedIfOnlyOne() {
+		IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
+		IntSpliterator split1 = s1.spliterator();
+		IntSpliterator concat = IntSpliterators.concat(split1);
+		assertTrue((concat.characteristics() & Spliterator.SORTED) != 0);
+		assertTrue((concat.characteristics() & Spliterator.DISTINCT) != 0);
 		assertTrue((concat.characteristics() & Spliterator.SIZED) != 0);
 	}
 
