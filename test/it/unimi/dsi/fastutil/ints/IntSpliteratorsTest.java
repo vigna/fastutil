@@ -168,6 +168,7 @@ public class IntSpliteratorsTest {
 		assertArrayEquals(expectedAfterSkipping, actualConcat);
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test
 	public void testConcatSpliteratorNotSortedOrDistinctPreserved() {
 		IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
@@ -187,6 +188,7 @@ public class IntSpliteratorsTest {
 		assertTrue(concat.hasCharacteristics(Spliterator.SIZED));
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test
 	public void testConcatSpliteratorSortedAndDistinctPreservedIfOnlyOne() {
 		IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
