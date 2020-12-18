@@ -3,6 +3,7 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.util.Spliterator;
 import java.util.stream.IntStream;
@@ -193,6 +194,8 @@ public class IntSpliteratorsTest {
 		assertTrue((concat.characteristics() & Spliterator.SORTED) != 0);
 		assertTrue((concat.characteristics() & Spliterator.DISTINCT) != 0);
 		assertTrue((concat.characteristics() & Spliterator.SIZED) != 0);
+		// Null for natural ordering, as opposed to IllegalStateException thrown for not being sorted.
+		assertNull(concat.getComparator());
 	}
 
 	@Test
