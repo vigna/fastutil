@@ -369,6 +369,41 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 
 	@Override
 	public boolean isEmpty() { return size == 0; }
+	
+#if KEYS_PRIMITIVE
+	@Override
+	public KEY_TYPE[] TO_KEY_ARRAY() {
+		return java.util.Arrays.copyOf(a, size);
+	}
+
+	@Override
+	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+		if (a == null || a.length < size) a = new KEY_TYPE[size];
+		System.arraycopy(this.a, 0, a, 0, size);
+		return a;
+	}
+#else // KEYS_REFERENCE
+	@Override
+	public Object[] toArray() {
+		// A subtle part of the spec says the returned array must be Object[] exactly.
+		return java.util.Arrays.copyOf(a, size, Object[].class);
+	}
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	@Override
+	public KEY_GENERIC KEY_GENERIC_TYPE[] toArray(KEY_GENERIC_TYPE a[]) {
+		if (a == null) {
+			a = KEY_GENERIC_ARRAY_CAST new Object[size];
+		} else if (a.length < size) {
+			a = KEY_GENERIC_ARRAY_CAST java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), size);
+		}
+		System.arraycopy(this.a, 0, a, 0, size);
+		if (a.length > size) {
+			a[size] = null;
+		}
+		return a;
+	}
+#endif
 
 	/** Returns a deep copy of this set.
 	 *

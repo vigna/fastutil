@@ -19,6 +19,8 @@ package it.unimi.dsi.fastutil.objects;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -164,6 +166,49 @@ public class ObjectArraySetTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testOfDuplicateThrows() {
 		ObjectArraySet.of("0", "0");
+	}
+
+	@Test
+	public void testToArray() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		assertArrayEquals(new Object[] {"0", "1", "2"}, l.toArray());
+	}
+
+	@Test
+	public void testToArrayAlwaysObject() {
+		final ObjectArraySet<String> stringBacked = new ObjectArraySet(new String[] {"1", "2"});
+		assertEquals(String[].class, stringBacked.elements().getClass());
+		assertEquals(Object[].class, stringBacked.toArray().getClass());
+	}
+
+	@Test
+	public void testCopyingToArray() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		Object[] out = new String[3];
+		Object[] newOut;
+		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
+		assertSame(out, newOut);
+	}
+
+	@Test
+	public void testCopyingToArrayUndersized() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		Object[] out = new String[2];
+		Object[] newOut;
+		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
+		assertEquals(String[].class, newOut.getClass());
+		assertNotSame(out, newOut);
+	}
+
+	@Test
+	public void testCopyingToArrayOversized() {
+		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
+		Object[] out = new String[5];
+		out[3] = "I should be replaced with null per spec.";
+		out[4] = "Not me though.";
+		Object[] newOut;
+		assertArrayEquals(new Object[] {"0", "1", "2", null, "Not me though."}, newOut = l.toArray(out));
+		assertSame(out, newOut);
 	}
 
 	@Test
