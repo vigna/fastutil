@@ -3,7 +3,6 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 import java.util.Spliterator;
 import java.util.stream.IntStream;
