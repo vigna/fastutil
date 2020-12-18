@@ -3,6 +3,7 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 import java.util.Spliterator;
@@ -173,17 +174,17 @@ public class IntSpliteratorsTest {
 		IntSortedSet s2 = new IntRBTreeSet(new int[] {1, 3, 4});
 		IntSpliterator split1 = s1.spliterator();
 		IntSpliterator split2 = s2.spliterator();
-		assertTrue((split1.characteristics() & Spliterator.SORTED) != 0);
-		assertTrue((split2.characteristics() & Spliterator.SORTED) != 0);
-		assertTrue((split1.characteristics() & Spliterator.DISTINCT) != 0);
-		assertTrue((split2.characteristics() & Spliterator.DISTINCT) != 0);
-		assertTrue((split1.characteristics() & Spliterator.SIZED) != 0);
-		assertTrue((split2.characteristics() & Spliterator.SIZED) != 0);
+		assertTrue(split1.hasCharacteristics(Spliterator.SORTED));
+		assertTrue(split2.hasCharacteristics(Spliterator.SORTED));
+		assertTrue(split1.hasCharacteristics(Spliterator.DISTINCT));
+		assertTrue(split2.hasCharacteristics(Spliterator.DISTINCT));
+		assertTrue(split1.hasCharacteristics(Spliterator.SIZED));
+		assertTrue(split2.hasCharacteristics(Spliterator.SIZED));
 		IntSpliterator concat = IntSpliterators.concat(split1, split2);
-		assertTrue((concat.characteristics() & Spliterator.SORTED) == 0);
-		assertTrue((concat.characteristics() & Spliterator.DISTINCT) == 0);
+		assertFalse(concat.hasCharacteristics(Spliterator.SORTED));
+		assertFalse(concat.hasCharacteristics(Spliterator.DISTINCT));
 		// SIZED is preserved though.
-		assertTrue((concat.characteristics() & Spliterator.SIZED) != 0);
+		assertTrue(concat.hasCharacteristics(Spliterator.SIZED));
 	}
 	
 	@Test
@@ -191,9 +192,9 @@ public class IntSpliteratorsTest {
 		IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
 		IntSpliterator split1 = s1.spliterator();
 		IntSpliterator concat = IntSpliterators.concat(split1);
-		assertTrue((concat.characteristics() & Spliterator.SORTED) != 0);
-		assertTrue((concat.characteristics() & Spliterator.DISTINCT) != 0);
-		assertTrue((concat.characteristics() & Spliterator.SIZED) != 0);
+		assertTrue(concat.hasCharacteristics(Spliterator.SORTED));
+		assertTrue(concat.hasCharacteristics(Spliterator.DISTINCT));
+		assertTrue(concat.hasCharacteristics(Spliterator.SIZED));
 		// Null for natural ordering, as opposed to IllegalStateException thrown for not being sorted.
 		assertNull(concat.getComparator());
 	}
