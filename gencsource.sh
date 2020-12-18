@@ -591,7 +591,6 @@ fi)\
 "#define PREV_KEY previous${TYPE_STD[$k]}\n"\
 "#define NEXT_KEY_WIDENED next${TYPE_STD[$wk]}\n"\
 "#define PREV_KEY_WIDENED previous${TYPE_STD[$wk]}\n"\
-"#define FOREACH_KEY forEach${TYPE_STD[$k]}\n"\
 "#define KEY_WIDENED_ITERATOR_METHOD ${TYPE_LC[$wk]}Iterator\n"\
 "#define KEY_WIDENED_SPLITERATOR_METHOD ${TYPE_LC[$wk]}Spliterator\n"\
 "#define KEY_WIDENED_STREAM_METHOD ${TYPE_LC[$wk]}Stream\n"\
@@ -632,9 +631,11 @@ fi)\
 "#if KEYS_REFERENCE\n"\
 "#define MAP_TO_KEY map\n"\
 "#define MAP_TO_KEY_WIDENED map\n"\
+"#define FOREACH_KEY forEach\n"\
 "#else\n"\
 "#define MAP_TO_KEY mapTo${TYPE_CAP2[$k]}\n"\
 "#define MAP_TO_KEY_WIDENED mapTo${TYPE_CAP2[$wk]}\n"\
+"#define FOREACH_KEY forEach${TYPE_STD[$k]}\n"\
 "#endif\n"\
 \
 \
@@ -653,6 +654,11 @@ fi)\
 "#define PAIR_RIGHT right${TYPE_STD[$v]}\n"\
 "#define PAIR_SECOND second${TYPE_STD[$v]}\n"\
 "#define PAIR_VALUE value${TYPE_STD[$v]}\n"\
+"#if VALUES_REFERENCE\n"\
+"#define FOREACH_VALUE forEach\n"\
+"#else\n"\
+"#define FOREACH_VALUE forEach${TYPE_STD[$v]}\n"\
+"#endif\n"\
 \
 \
 "/* Methods (keys/values) */\n"\

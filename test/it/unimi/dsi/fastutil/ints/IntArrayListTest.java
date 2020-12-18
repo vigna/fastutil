@@ -307,6 +307,14 @@ public class IntArrayListTest {
 	}
 
 	@Test
+	public void testForEach() {
+		final IntArrayList baseList = IntArrayList.of(0, 1, 2, 3, 72, 5, 6);
+		int[] m = {1};
+		baseList.forEachInt(i -> m[0] += i);
+		assertEquals(baseList.intStream().sum(), m[0]);
+	}
+
+	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
 	}
