@@ -75,6 +75,13 @@ public class ObjectArrayListTest {
 	}
 
 	@Test
+	public void testToArrayAlwaysObject() {
+		final ObjectArrayList<String> stringBacked = ObjectArrayList.wrap(new String[] {"1", "2"});
+		assertEquals(String[].class, stringBacked.elements().getClass());
+		assertEquals(Object[].class, stringBacked.toArray().getClass());
+	}
+
+	@Test
 	public void testCopyingToArray() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
 		Object[] out = new String[3];
@@ -89,6 +96,7 @@ public class ObjectArrayListTest {
 		Object[] out = new String[2];
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
+		assertEquals(String[].class, newOut.getClass());
 		assertNotSame(out, newOut);
 	}
 
