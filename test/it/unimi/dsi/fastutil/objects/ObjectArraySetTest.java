@@ -63,8 +63,8 @@ public class ObjectArraySetTest {
 			assertTrue(s.contains(2));
 			assertEquals(new ObjectOpenHashSet<>(i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 }), new ObjectOpenHashSet<>(s.iterator()));
 			assertTrue(s.contains(3));
-			Integer[] expectedArray = i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 };
-			ObjectSet<Integer> expected = new ObjectOpenHashSet<Integer>(expectedArray);
+			final Integer[] expectedArray = i == 0 ? new Integer[] { 1, 2, 3 } : new Integer[] { 0, 1, 2, 3 };
+			final ObjectSet<Integer> expected = new ObjectOpenHashSet<>(expectedArray);
 			assertEquals(expected, s);
 			assertEquals(s, expected);
 			assertEquals(s, new ObjectOpenHashSet<>(s.iterator()));
@@ -176,14 +176,14 @@ public class ObjectArraySetTest {
 
 	@Test
 	public void testToArrayAlwaysObject() {
-		final ObjectArraySet<String> stringBacked = new ObjectArraySet(new String[] {"1", "2"});
+		final ObjectArraySet<String> stringBacked = new ObjectArraySet<>(new String[] { "1", "2" });
 		assertEquals(Object[].class, stringBacked.toArray().getClass());
 	}
 
 	@Test
 	public void testCopyingToArray() {
 		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
-		Object[] out = new String[3];
+		final Object[] out = new String[3];
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
 		assertSame(out, newOut);
@@ -192,7 +192,7 @@ public class ObjectArraySetTest {
 	@Test
 	public void testCopyingToArrayUndersized() {
 		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
-		Object[] out = new String[2];
+		final Object[] out = new String[2];
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
 		assertEquals(String[].class, newOut.getClass());
@@ -202,7 +202,7 @@ public class ObjectArraySetTest {
 	@Test
 	public void testCopyingToArrayOversized() {
 		final ObjectArraySet<String> l = ObjectArraySet.of("0", "1", "2");
-		Object[] out = new String[5];
+		final Object[] out = new String[5];
 		out[3] = "I should be replaced with null per spec.";
 		out[4] = "Not me though.";
 		Object[] newOut;

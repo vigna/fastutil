@@ -612,6 +612,7 @@ fi)\
 "#define TOP top${TYPE_STD[$k]}\n"\
 "#define PEEK peek${TYPE_STD[$k]}\n"\
 "#define POP pop${TYPE_STD[$k]}\n"\
+"#define REPLACE_ALL_KEY replaceAll${TYPE_STD[$k]}s\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n"\
 "#define KEY_EMPTY_SPLITERATOR_METHOD empty${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n"\
