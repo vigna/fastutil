@@ -1129,6 +1129,10 @@ public final class SPLITERATORS {
 
 	private static class SpliteratorConcatenator KEY_GENERIC implements KEY_SPLITERATOR KEY_GENERIC {
 		private static final int EMPTY_CHARACTERISTICS = Spliterator.SIZED | Spliterator.SUBSIZED;
+		// Neither SORTED nor DISTINCT "combine". Two combined spliterators with these characteristics may not have it.
+		// Example, {1, 2} and {1, 3}, both SORTED and DISTINCT, concat to {1, 2, 1, 3}, which isn't.
+		private static final int CHARACTERISTICS_NOT_SUPPORTED_WHILE_MULTIPLE = Spliterator.SORTED | Spliterator.DISTINCT;
+			
 		final KEY_SPLITERATOR KEY_EXTENDS_GENERIC a[];
 		// Unlike the other classes in this file, length represents remaining, NOT the high mark for offset.
 		int offset, length;
@@ -1161,20 +1165,26 @@ public final class SPLITERATORS {
 			return result;
 		}
 
-		/** Compute the intersection of all contained spliterators' characteristics */
+		/** Compute the intersection of all contained spliterators' characteristics. */
 		private int computeCharacteristics() {
+			if (length <= 0) {
+				return EMPTY_CHARACTERISTICS;
+			}
 			int current = ~0;
 			int curLength = length;
 			int curOffset = offset;
+			if (curLength > 1) {
+				current &= ~CHARACTERISTICS_NOT_SUPPORTED_WHILE_MULTIPLE; 
+			}
 			while (curLength > 0) {
 				current &= a[curOffset++].characteristics();
 				--curLength;
 			}
-			return current == ~0 ? EMPTY_CHARACTERISTICS : current;
+			return current;
 		}
 
 		private void advanceNextSpliterator() {
-			if (length == 0) {
+			if (length <= 0) {
 				throw new AssertionError("advanceNextSpliterator() called with none remaining");
 			}
 			++offset;
@@ -1233,6 +1243,19 @@ public final class SPLITERATORS {
 		@Override
 		public int characteristics() {
 			return characteristics;
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public KEY_COMPARATOR KEY_SUPER_GENERIC getComparator() {
+			if (length == 1 && ((characteristics & Spliterator.SORTED) != 0) ) {
+#if KEYS_REFERENCE
+				return (KEY_COMPARATOR KEY_SUPER_GENERIC) a[offset].getComparator();
+#else
+				return a[offset].getComparator();
+#endif
+			}
+			throw new IllegalStateException();
 		}
 
 		@Override
