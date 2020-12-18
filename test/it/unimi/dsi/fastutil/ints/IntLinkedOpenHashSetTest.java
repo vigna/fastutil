@@ -477,6 +477,56 @@ public class IntLinkedOpenHashSetTest {
 	}
 
 	@Test
+	public void testOf() {
+		final IntOpenHashSet s = IntOpenHashSet.of(0, 1, 2);
+		assertEquals(new IntOpenHashSet(new int[] { 0, 1, 2 }), s);
+	}
+
+	@Test
+	public void testOfEmpty() {
+		final IntOpenHashSet s = IntOpenHashSet.of();
+		assertTrue(s.isEmpty());
+	}
+
+	@Test
+	public void testOfSingleton() {
+		final IntOpenHashSet s = IntOpenHashSet.of(0);
+		assertEquals(new IntOpenHashSet(new int[] { 0 }), s);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testOfDuplicateThrows() {
+		IntOpenHashSet.of(0, 0);
+	}
+
+	@Test
+	public void testToSet() {
+		final IntLinkedOpenHashSet baseSet = IntLinkedOpenHashSet.of(2, 380, 1297);
+		IntLinkedOpenHashSet transformed = IntLinkedOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
+		assertEquals(IntLinkedOpenHashSet.of(42, 420, 1337), transformed);
+	}
+
+	@Test
+	public void testSpliteratorTrySplit() {
+		final IntLinkedOpenHashSet baseSet = IntLinkedOpenHashSet.of(0, 1, 2, 3, 72, 5, 6);
+		IntSpliterator spliterator1 = baseSet.spliterator();
+		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
+		IntSpliterator spliterator2 = spliterator1.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split.
+		java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
+		java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
+
+		final IntLinkedOpenHashSet subSet1 = IntLinkedOpenHashSet.toSet(stream1);
+		// Intentionally collecting to a list for this second one.
+		final IntArrayList subSet2 = IntArrayList.toList(stream2);
+		assertEquals(baseSet.size(), subSet1.size() + subSet2.size());
+		final IntOpenHashSet recombinedSet = new IntOpenHashSet(baseSet.size());
+		recombinedSet.addAll(subSet1);
+		recombinedSet.addAll(subSet2);
+		assertEquals(baseSet, recombinedSet);
+	}
+
+	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntLinkedOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3832474");
 	}
