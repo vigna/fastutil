@@ -96,8 +96,8 @@ public class ObjectArrayListTest {
 	public void testCopyingToArrayOversized() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
 		Object[] out = new String[5];
-		out[4] = "I should be replaced with null per spec.";
-		out[5] = "Not me though.";
+		out[3] = "I should be replaced with null per spec.";
+		out[4] = "Not me though.";
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2", null, "Not me though."}, newOut = l.toArray(out));
 		assertSame(out, newOut);
