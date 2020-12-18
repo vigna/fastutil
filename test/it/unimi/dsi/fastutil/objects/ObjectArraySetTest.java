@@ -177,7 +177,6 @@ public class ObjectArraySetTest {
 	@Test
 	public void testToArrayAlwaysObject() {
 		final ObjectArraySet<String> stringBacked = new ObjectArraySet(new String[] {"1", "2"});
-		assertEquals(String[].class, stringBacked.elements().getClass());
 		assertEquals(Object[].class, stringBacked.toArray().getClass());
 	}
 
