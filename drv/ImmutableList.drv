@@ -441,12 +441,18 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		final KEY_GENERIC_TYPE[] a1 = a;
 		final KEY_GENERIC_TYPE[] a2 = l.a;
 
-#if KEY_CLASS_Object
-		while(s-- !=  0) if (! java.util.Objects.equals(a1[s], a2[s])) return false;
-#else
+#if KEY_CLASS_Reference
 		while(s-- !=  0) if (a1[s] != a2[s]) return false;
+#else
+		java.util.Arrays.equals(a1, a2);
 #endif
 		return true;
+	}
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	@Override
+	public boolean equals(final Object o) {
+		return o instanceof IMMUTABLE_LIST ? equals((IMMUTABLE_LIST KEY_GENERIC) o) : super.equals(o);
 	}
 
 
@@ -464,6 +470,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final IMMUTABLE_LIST KEY_EXTENDS_GENERIC l) {
+		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
 		KEY_GENERIC_TYPE e1, e2;
@@ -476,6 +483,12 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 		}
 
 		return i < s2 ? -1 : (i < s1 ? 1 : 0);
+	}
+
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
+	@Override
+	public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
+		return l instanceof IMMUTABLE_LIST ? compareTo((IMMUTABLE_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
 	}
 #endif
 
