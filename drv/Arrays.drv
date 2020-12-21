@@ -32,9 +32,9 @@ package PACKAGE;
 
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.Threading;
 import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 
 #if ! KEY_CLASS_Integer
@@ -45,7 +45,6 @@ import it.unimi.dsi.fastutil.ints.IntArrays;
 
 #if ! KEY_CLASS_Boolean
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 #endif
@@ -67,10 +66,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * the sorting algorithm you prefer (i.e., trading stability of mergesort for no memory allocation in quicksort).
  * 
  * <h3>Parallel operations</h3>
- * Some algorithms provide a parallel version that will by default use the {@linkplain ForkJoinPool#commonPool()
- * common pool} (or whatever is currently set as the {@linkplain
- * Threading#getCurrentDefaultFastutilExecutor default pool}), but this can be overridden by calling
- * the function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
+ * Some algorithms provide a parallel version that will by default use the
+ * {@linkplain ForkJoinPool#commonPool() common pool}, but this can be overridden by calling the
+ * function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
  * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}" 
  * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
  *
@@ -124,10 +122,9 @@ import java.util.Comparator;
  * the sorting algorithm you prefer (i.e., trading stability of mergesort for no memory allocation in quicksort).
  *
  * <h3>Parallel operations</h3>
- * Some algorithms provide a parallel version that will by default use the {@linkplain ForkJoinPool#commonPool()
- * common pool} (or whatever is currently set as the {@linkplain
- * Threading#getCurrentDefaultFastutilExecutor default pool}), but this can be overridden by calling
- * the function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
+ * Some algorithms provide a parallel version that will by default use the
+ * {@linkplain ForkJoinPool#commonPool() common pool}, but this can be overridden by calling the
+ * function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
  * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}" 
  * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
  *
@@ -453,6 +450,12 @@ public final class ARRAYS {
 	private static final int QUICKSORT_MEDIAN_OF_9 = 128;
 	private static final int MERGESORT_NO_REC = 16;
 
+	private static ForkJoinPool getPool() {
+		// Make sure to update Arrays.drv, BigArrays.drv, and src/it/unimi/dsi/fastutil/Arrays.java as well
+		ForkJoinPool current = ForkJoinTask.getPool();
+		return current == null ? ForkJoinPool.commonPool() : current;
+	}
+
 	/** Swaps two elements of an anrray.
 	 *
 	 * @param x an array.
@@ -674,7 +677,6 @@ public final class ARRAYS {
 	 * @param comp the comparator to determine the sorting order.
 	 */
 	public static KEY_GENERIC void parallelQuickSort(final KEY_GENERIC_TYPE[] x, final int from, final int to, final KEY_COMPARATOR KEY_GENERIC comp) {
-		ForkJoinPool pool = Threading.getPool();
 		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(x, from, to, comp);
 		else {
 			pool.invoke(new ForkJoinQuickSortComp KEY_GENERIC_DIAMOND(x, from, to, comp));
@@ -888,7 +890,7 @@ public final class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void parallelQuickSort(final KEY_GENERIC_TYPE[] x, final int from, final int to) {
-		ForkJoinPool pool = Threading.getPool();
+		ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(x, from, to);
 		else {
 			pool.invoke(new ForkJoinQuickSort KEY_GENERIC_DIAMOND(x, from, to));
@@ -1107,7 +1109,7 @@ public final class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void parallelQuickSortIndirect(final int[] perm, final KEY_GENERIC_TYPE[] x, final int from, final int to) {
-		ForkJoinPool pool = Threading.getPool();
+		ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSortIndirect(perm, x, from, to);
 		else {
 			pool.invoke(new ForkJoinQuickSortIndirect KEY_GENERIC_DIAMOND(perm, x, from, to));
@@ -1388,7 +1390,7 @@ public final class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void parallelQuickSort(final KEY_GENERIC_TYPE[] x, final KEY_GENERIC_TYPE[] y, final int from, final int to) {
-		ForkJoinPool pool = Threading.getPool();
+		ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(x, y, from, to);
 		else {
 			pool.invoke(new ForkJoinQuickSort2 KEY_GENERIC_DIAMOND(x, y, from, to));
@@ -1982,7 +1984,7 @@ public final class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static void parallelRadixSort(final KEY_TYPE[] a, final int from, final int to) {
-		ForkJoinPool pool = Threading.getPool();
+		ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_RADIXSORT_NO_FORK || pool.getParallelism() == 1) {
 			quickSort(a, from, to);
 			return;
@@ -2216,7 +2218,7 @@ public final class ARRAYS {
 	 * @param stable whether the sorting algorithm should be stable.
 	 */
 	public static void parallelRadixSortIndirect(final int perm[], final KEY_TYPE[] a, final int from, final int to, final boolean stable) {
-		ForkJoinPool pool = Threading.getPool();
+		ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_RADIXSORT_NO_FORK || pool.getParallelism() == 1) {
 			radixSortIndirect(perm, a, from, to, stable);
 			return;
@@ -2459,7 +2461,7 @@ public final class ARRAYS {
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static void parallelRadixSort(final KEY_TYPE[] a, final KEY_TYPE[] b, final int from, final int to) {
-		ForkJoinPool pool = Threading.getPool();
+		ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_RADIXSORT_NO_FORK || pool.getParallelism() == 1) {
 			quickSort(a, b, from, to);
 			return;
