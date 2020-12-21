@@ -38,7 +38,6 @@ import java.util.concurrent.ForkJoinTask;
  */
 public class Threading {
 
-	// We never need to worry about seeing
 	private static volatile ForkJoinPool defaultExecutor = ForkJoinPool.commonPool();
 
 	/**
