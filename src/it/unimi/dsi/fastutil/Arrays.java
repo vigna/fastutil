@@ -18,6 +18,7 @@ package it.unimi.dsi.fastutil;
 
 import java.util.ArrayList;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 
 import it.unimi.dsi.fastutil.ints.IntComparator;
@@ -29,6 +30,12 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
  * a stable, in-place {@linkplain #mergeSort(int, int, IntComparator, Swapper) mergesort}. These
  * generic sorting methods can be used to sort any kind of list, but they find their natural
  * usage, for instance, in sorting arrays in parallel.
+ *
+ * <p>Some algorithms provide a parallel version that will by default use the
+ * {@linkplain ForkJoinPool#commonPool() common pool}, but this can be overridden by calling the
+ * function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
+ * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}" 
+ * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
  *
  * @see Arrays
  */
@@ -213,6 +220,12 @@ public class Arrays {
 
 	 private static final int MERGESORT_NO_REC = 16;
 
+	private static ForkJoinPool getPool() {
+		// Make sure to update Arrays.drv, BigArrays.drv, and src/it/unimi/dsi/fastutil/Arrays.java as well
+		ForkJoinPool current = ForkJoinTask.getPool();
+		return current == null ? ForkJoinPool.commonPool() : current;
+	}
+
 	 /** Sorts the specified range of elements using the specified swapper and according to the order induced by the specified
 	 * comparator using mergesort.
 	 *
@@ -356,8 +369,6 @@ public class Arrays {
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
 	 *
-	 * <p>This implementation uses a {@link ForkJoinPool} executor service with {@link Runtime#availableProcessors()} parallel threads.
-	 *
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the order of the generic data.
@@ -365,9 +376,11 @@ public class Arrays {
 	 *
 	 */
 	public static void parallelQuickSort(final int from, final int to, final IntComparator comp, final Swapper swapper) {
-		final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-		pool.invoke(new ForkJoinGenericQuickSort(from, to, comp, swapper));
-		pool.shutdown();
+		ForkJoinPool pool = getPool();
+		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(from, to, comp, swapper);
+		else {
+			pool.invoke(new ForkJoinGenericQuickSort(from, to, comp, swapper));
+		}
 	}
 
 
@@ -377,8 +390,6 @@ public class Arrays {
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
-	 *
-	 * <p>This implementation uses a {@link ForkJoinPool} executor service with {@link Runtime#availableProcessors()} parallel threads.
 	 *
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.

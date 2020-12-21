@@ -31,6 +31,7 @@ package PACKAGE;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 
 import it.unimi.dsi.fastutil.BigArrays;
@@ -68,7 +69,13 @@ import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
  *
  * <p>There are several sorting methods available. The main theme is that of letting you choose
  * the sorting algorithm you prefer.
- * Some algorithms provide a parallel version that will use the {@linkplain ForkJoinPool#commonPool() common pool}.
+ *
+ * <h3>Parallel operations</h3>
+ * Some algorithms provide a parallel version that will by default use the
+ * {@linkplain ForkJoinPool#commonPool() common pool}, but this can be overridden by calling the
+ * function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
+ * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}" 
+ * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
  *
  * <p>All comparison-based algorithm have an implementation based on a type-specific comparator.
  *
@@ -92,6 +99,13 @@ import java.util.Comparator;
  * <p>Note that {@link it.unimi.dsi.fastutil.io.BinIO} and {@link it.unimi.dsi.fastutil.io.TextIO}
  * contain several methods make it possible to load and save big arrays of primitive types as sequences
  * of elements in {@link java.io.DataInput} format (i.e., not as objects) or as sequences of lines of text.
+ *
+ * <h3>Parallel operations</h3>
+ * Some algorithms provide a parallel version that will by default use the
+ * {@linkplain ForkJoinPool#commonPool() common pool}, but this can be overridden by calling the
+ * function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
+ * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}" 
+ * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
  *
  * <p><strong>Warning:</strong> creating arrays
  * using {@linkplain java.lang.reflect.Array#newInstance(Class,int) reflection}, as it
@@ -761,6 +775,12 @@ public final class BIG_ARRAYS {
 	private static final int PARALLEL_QUICKSORT_NO_FORK = 8192;
 	private static final int MEDIUM = 40;
 
+	private static ForkJoinPool getPool() {
+		// Make sure to update Arrays.drv, BigArrays.drv, and src/it/unimi/dsi/fastutil/Arrays.java as well
+		ForkJoinPool current = ForkJoinTask.getPool();
+		return current == null ? ForkJoinPool.commonPool() : current;
+	}
+
 	private static KEY_GENERIC void swap(final KEY_GENERIC_TYPE[][] x, long a, long b, final long n) {
 		for(int i = 0; i < n; i++, a++, b++) BigArrays.swap(x, a, b);
 	}
@@ -1031,18 +1051,15 @@ public final class BIG_ARRAYS {
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
 	 *
-	 * @implSpec This implementation uses the {@link ForkJoinPool#commonPool() common pool}.
-	 *
 	 * @param x the big array to be sorted.
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 */
 	public static KEY_GENERIC void parallelQuickSort(final KEY_GENERIC_TYPE[][] x, final long from, final long to) {
-		if (to - from < PARALLEL_QUICKSORT_NO_FORK || ForkJoinPool.getCommonPoolParallelism() == 1) quickSort(x, from, to);
+		ForkJoinPool pool = getPool();
+		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(x, from, to);
 		else {
-			final ForkJoinPool pool = ForkJoinPool.commonPool();;
 			pool.invoke(new ForkJoinQuickSort KEY_GENERIC_DIAMOND(x, from, to));
-			pool.shutdown();
 		}
 	}
 
@@ -1051,8 +1068,6 @@ public final class BIG_ARRAYS {
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
-	 *
-	 * @implSpec This implementation uses the {@link ForkJoinPool#commonPool() common pool}.
 	 *
 	 * @param x the big array to be sorted.
 	 */
@@ -1130,19 +1145,16 @@ public final class BIG_ARRAYS {
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
 	 *
-	 * @implSpec This implementation uses the {@link ForkJoinPool#commonPool() common pool}.
-	 *
 	 * @param x the big array to be sorted.
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the sorting order.
 	 */
 	public static KEY_GENERIC void parallelQuickSort(final KEY_GENERIC_TYPE[][] x, final long from, final long to, final KEY_COMPARATOR KEY_GENERIC comp) {
-		if (to - from < PARALLEL_QUICKSORT_NO_FORK || ForkJoinPool.getCommonPoolParallelism() == 1) quickSort(x, from, to, comp);
+		ForkJoinPool pool = getPool();
+		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(x, from, to, comp);
 		else {
-			final ForkJoinPool pool = ForkJoinPool.commonPool();;
 			pool.invoke(new ForkJoinQuickSortComp KEY_GENERIC_DIAMOND(x, from, to, comp));
-			pool.shutdown();
 		}
 	}
 
@@ -1152,8 +1164,6 @@ public final class BIG_ARRAYS {
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
-	 *
-	 * @implSpec This implementation uses the {@link ForkJoinPool#commonPool() common pool}.
 	 *
 	 * @param x the big array to be sorted.
 	 * @param comp the comparator to determine the sorting order.
