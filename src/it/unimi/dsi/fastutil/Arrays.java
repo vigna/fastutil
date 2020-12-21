@@ -30,6 +30,13 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
  * generic sorting methods can be used to sort any kind of list, but they find their natural
  * usage, for instance, in sorting arrays in parallel.
  *
+ * Some algorithms provide a parallel version that will by default use the {@linkplain ForkJoinPool#commonPool()
+ * common pool} (or whatever is currently set as the {@linkplain
+ * Threading#getCurrentDefaultFastutilExecutor default pool}), but this can be overridden by calling
+ * the function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
+ * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort));}" 
+ * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
+ *
  * @see Arrays
  */
 
@@ -356,8 +363,6 @@ public class Arrays {
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
 	 *
-	 * <p>This implementation uses a {@link ForkJoinPool} executor service with {@link Runtime#availableProcessors()} parallel threads.
-	 *
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
 	 * @param comp the comparator to determine the order of the generic data.
@@ -365,9 +370,7 @@ public class Arrays {
 	 *
 	 */
 	public static void parallelQuickSort(final int from, final int to, final IntComparator comp, final Swapper swapper) {
-		final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-		pool.invoke(new ForkJoinGenericQuickSort(from, to, comp, swapper));
-		pool.shutdown();
+		Threading.getPool().invoke(new ForkJoinGenericQuickSort(from, to, comp, swapper));
 	}
 
 
@@ -377,8 +380,6 @@ public class Arrays {
 	 * <p>The sorting algorithm is a tuned quicksort adapted from Jon L. Bentley and M. Douglas
 	 * McIlroy, &ldquo;Engineering a Sort Function&rdquo;, <i>Software: Practice and Experience</i>, 23(11), pages
 	 * 1249&minus;1265, 1993.
-	 *
-	 * <p>This implementation uses a {@link ForkJoinPool} executor service with {@link Runtime#availableProcessors()} parallel threads.
 	 *
 	 * @param from the index of the first element (inclusive) to be sorted.
 	 * @param to the index of the last element (exclusive) to be sorted.
