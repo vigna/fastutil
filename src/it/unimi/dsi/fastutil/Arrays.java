@@ -377,7 +377,7 @@ public class Arrays {
 	 */
 	public static void parallelQuickSort(final int from, final int to, final IntComparator comp, final Swapper swapper) {
 		ForkJoinPool pool = getPool();
-		if (from - to < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(from, to, comp, swapper);
+		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(from, to, comp, swapper);
 		else {
 			pool.invoke(new ForkJoinGenericQuickSort(from, to, comp, swapper));
 		}
