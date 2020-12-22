@@ -134,6 +134,8 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 		if [[ "${CLASS[$k]}" != "Boolean" ]]; then\
 			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
+			echo "#define JDK_PRIMITIVE_BINARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}BinaryOperator\\n";\
+			echo "#define JDK_PRIMITIVE_BINARY_OPERATOR_APPLY applyAs${TYPE_CAP[$wk]}\\n";\
 			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
 			echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\\n";\
 			echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$wk]}Stream\\n";\
@@ -387,6 +389,7 @@ fi)\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n"\
 "#define KEY_CONSUMER ${TYPE_STD[$k]}Consumer\n"\
 "#define KEY_PREDICATE ${TYPE_STD[$k]}Predicate\n"\
+"#define KEY_BINARY_OPERATOR ${TYPE_STD[$k]}BinaryOperator\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n"\
 "#define KEY_WIDENED_ITERATOR ${TYPE_CAP[$wk]}Iterator\n"\
 "#define KEY_ITERABLE ${TYPE_CAP2[$k]}Iterable\n"\
