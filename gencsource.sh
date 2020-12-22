@@ -130,7 +130,6 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	echo "#define KEY_CLASS_${CLASS[$k]} 1\\n";\
 	if [[ "${CLASS[$k]}" != "Object" && "${CLASS[$k]}" != "Reference" ]]; then\
 		echo "#define KEYS_PRIMITIVE 1\\n";\
-		echo "#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\\n";\
 		if [[ "${CLASS[$k]}" != "Boolean" ]]; then\
 			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
 			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
@@ -144,7 +143,6 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
-		echo "#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.Function\\n";\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
@@ -250,6 +248,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
 "#define SAFE_VARARGS @SafeVarargs\n"\
+"#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.Function\n"\
 "#if defined(Custom)\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#else\n"\
@@ -276,6 +275,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
 "#define SAFE_VARARGS\n"\
+"#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\n"\
 "#endif\n"\
 \
 "#if VALUES_REFERENCE\n"\
@@ -419,21 +419,13 @@ fi)\
 \
 \
 "#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED\n"\
-"#if KEYS_REFERENCE\n"\
 "#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\
-"#else\n"\
-"#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER\n"\
-"#endif\n"\
 "#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
 "#endif\n"\
 \
 "#if !defined JDK_PRIMITIVE_VALUE_CONSUMER || VALUE_WIDENED\n"\
-"#if VALUES_REFERENCE\n"\
 "#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
-"#else\n"\
-"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER\n"\
-"#endif\n"\
 "#else\n"\
 "#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
 "#endif\n"\
