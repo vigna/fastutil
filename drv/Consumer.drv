@@ -17,9 +17,7 @@
 
 package PACKAGE;
 
-#if KEYS_PRIMITIVE
 import java.util.Objects;
-#endif
 import java.util.function.Consumer;
 
 /** A type-specific {@link Consumer}; provides methods to consume a primitive type both as object
@@ -36,8 +34,12 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS>, J
 public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 #endif
 
-#if KEYS_PRIMITIVE
 #if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
+	/**
+	 * Performs this operation on the given input.
+	 *
+	 * @param t the input.
+	 */
 	void accept(KEY_TYPE t);
 #endif
 
@@ -60,9 +62,14 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 	}
 
 #if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
+    /**
+     * Returns a composed type-specific consumer that performs, in sequence, this
+     * operation followed by the {@code after} operation.
+	 * @see Consumer#andThen
+	 */
 	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
 		Objects.requireNonNull(after);
-		return (KEY_TYPE t) -> { accept(t); after.accept(t); };
+		return t -> { accept(t); after.accept(t); };
 	}
 #endif
 
@@ -75,7 +82,7 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 	@Override
 	default KEY_CONSUMER andThen(final JDK_PRIMITIVE_KEY_CONSUMER after) {
 		Objects.requireNonNull(after);
-		return (KEY_TYPE t) -> { accept(t); after.accept(t); };
+		return t -> { accept(t); after.accept(t); };
 	}
 #endif
 
@@ -86,5 +93,4 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 	default Consumer<KEY_GENERIC_CLASS> andThen(final Consumer<? super KEY_GENERIC_CLASS> after) {
 		return Consumer.super.andThen(after);
 	}
-#endif
 }
