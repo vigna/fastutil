@@ -51,6 +51,13 @@ public class ObjectArrayListTest {
 	}
 
 	@Test
+	public void testRemoveIf() {
+		final ObjectArrayList<Integer> l = ObjectArrayList.of(1,2,3,4,5,6);
+		l.removeIf(i -> i % 2 == 0);
+		assertEquals(ObjectArrayList.of(1,3,5), l);
+	}
+
+	@Test
 	public void testOf() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
 		assertEquals(ObjectArrayList.wrap(new String[] { "0", "1", "2" }), l);
