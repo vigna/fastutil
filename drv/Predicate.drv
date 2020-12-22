@@ -1,0 +1,138 @@
+/*
+ * Copyright (C) 2020-2021 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.Objects;
+import java.util.function.Predicate;
+
+/** A type-specific {@link Predicate}; provides methods to consume a primitive type both as object
+ * and as primitive.
+ *
+ * @see Predicate
+ * @since 8.5.0
+ */
+
+@FunctionalInterface
+#ifdef JDK_PRIMITIVE_PREDICATE
+public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_PREDICATE {
+#else
+public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> {
+#endif
+
+#if !defined JDK_PRIMITIVE_PREDICATE || KEY_WIDENED
+	/**
+	 * Evaluates this predicate on the given input.
+	 *
+	 * @param t the input.
+	 * @return {@code true} if the input matches the predicate,
+	 * otherwise {@code false}
+	 */
+	boolean test(KEY_TYPE t);
+#endif
+
+#if KEY_WIDENED
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default boolean test(final KEY_TYPE_WIDENED t) {
+		return test(KEY_NARROWING(t));
+	}
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default boolean test(final KEY_CLASS t) {
+		return test(t.KEY_VALUE());
+	}
+
+#if !defined JDK_PRIMITIVE_PREDICATE || KEY_WIDENED
+    /**
+     * Returns a composed type-specific predicate that represents a short-circuiting logical
+     * AND of this type-specific predicate and another. 
+	 * @see Predicate#and(Object)
+	 */
+	default KEY_PREDICATE and(final KEY_PREDICATE other) {
+		Objects.requireNonNull(other);
+		return (KEY_TYPE t) -> test(t) && other.test(t);
+	}
+#endif
+
+#ifdef JDK_PRIMITIVE_PREDICATE
+#if KEY_WIDENED
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+#endif
+	@Override
+	default KEY_PREDICATE and(final JDK_PRIMITIVE_PREDICATE other) {
+		Objects.requireNonNull(other);
+		return (KEY_TYPE t) -> test(t) && other.test(t);
+	}
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default Predicate<KEY_GENERIC_CLASS> and(final Predicate<? super KEY_GENERIC_CLASS> other) {
+		return Predicate.super.and(other);
+	}
+
+	/** {@inheritDoc} */
+	default KEY_PREDICATE negate() {
+		return t -> ! test(t);
+	}
+
+
+#if !defined JDK_PRIMITIVE_PREDICATE || KEY_WIDENED
+    /**
+     * Returns a composed type-specific predicate that represents a short-circuiting logical
+     * OR of this type-specific predicate and another. 
+	 * @see Predicate#or(Object)
+	 */
+	default KEY_PREDICATE or(final KEY_PREDICATE other) {
+		Objects.requireNonNull(other);
+		return (KEY_TYPE t) -> test(t) || other.test(t);
+	}
+#endif
+
+#ifdef JDK_PRIMITIVE_PREDICATE
+#if KEY_WIDENED
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+#endif
+	@Override
+	default KEY_PREDICATE or(final JDK_PRIMITIVE_PREDICATE other) {
+		Objects.requireNonNull(other);
+		return t -> test(t) || other.test(t);
+	}
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default Predicate<KEY_GENERIC_CLASS> or(final Predicate<? super KEY_GENERIC_CLASS> other) {
+		return Predicate.super.or(other);
+	}
+
+}
