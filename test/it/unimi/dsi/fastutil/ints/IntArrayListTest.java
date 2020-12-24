@@ -250,6 +250,13 @@ public class IntArrayListTest {
 	}
 
 	@Test
+	public void testRemoveIf() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		l.removeIf(i -> i % 2 == 0);
+		assertEquals(IntArrayList.of(1,3,5), l);
+	}
+
+	@Test
 	public void testOf() {
 		final IntArrayList l = IntArrayList.of(0, 1, 2);
 		assertEquals(IntArrayList.wrap(new int[] { 0, 1, 2 }), l);

@@ -269,16 +269,58 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	boolean removeAll(COLLECTION c);
 
-#ifdef JDK_PRIMITIVE_PREDICATE
+#if defined JDK_PRIMITIVE_PREDICATE || KEY_CLASS_Boolean
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
 	@Deprecated
 	@Override
 	default boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> filter) {
-		return removeIf((JDK_PRIMITIVE_PREDICATE) key -> filter.test(KEY2OBJ(KEY_NARROWING(key))));
+		return removeIf(
+			filter instanceof METHOD_ARG_PREDICATE ?
+				((METHOD_ARG_PREDICATE) filter) :
+				(METHOD_ARG_PREDICATE) key -> filter.test(KEY2OBJ(KEY_NARROWING(key))));
 	}
 
+#if KEY_WIDENED || KEY_CLASS_Boolean
+#ifdef JDK_PRIMITIVE_PREDICATE
+	/** Remove from this collection all elements which satisfy the given predicate.
+	 *
+	 * @param filter a predicate which returns {@code true} for elements to be
+	 *        removed.
+	 * @see Collection#removeIf(java.util.function.Predicate)
+	 * @return {@code true} if any elements were removed.
+	 * @deprecated Please use the corresponding type-specific method instead. This method
+	 *   performs a widening primitive cast for each element, when a type-specific consumer
+	 *   could avoid this.
+	 */
+	@Deprecated
+	@SuppressWarnings("overloads")
+	default boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
+		return removeIf(filter instanceof KEY_PREDICATE ? (KEY_PREDICATE) filter : (KEY_PREDICATE) filter::test);
+	}
+#endif
+
+	/** Remove from this collection all elements which satisfy the given predicate.
+	 *
+	 * @param filter a predicate which returns {@code true} for elements to be
+	 *        removed.
+	 * @see Collection#removeIf(java.util.function.Predicate)
+	 * @return {@code true} if any elements were removed.
+	 */
+	default boolean removeIf(final KEY_PREDICATE filter) {
+		java.util.Objects.requireNonNull(filter);
+		boolean removed = false;
+		final KEY_ITERATOR each = iterator();
+		while (each.hasNext()) {
+			if (filter.test(each.NEXT_KEY())) {
+				each.remove();
+				removed = true;
+			}
+		}
+		return removed;
+	}
+#else // !KEY_WIDENED
 	/** Remove from this collection all elements which satisfy the given predicate.
 	 *
 	 * @param filter a predicate which returns {@code true} for elements to be
@@ -299,6 +341,30 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 		}
 		return removed;
 	}
+	
+	// Because our primitive Predicate interface extends both the JDK's primitive
+	// and object Predicate interfaces, calling this method with it would be ambiguous.
+	// This overload exists to pass it to the proper primitive overload.
+
+	/** Remove from this collection all elements which satisfy the given predicate.
+	 *
+	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead override the {@code removeIf()} overload
+	 * that uses the JDK's primitive predicate type (e.g. {@link java.util.function.IntPredicate}).
+	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XPredicate}, and
+	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param filter a predicate which returns {@code true} for elements to be
+	 *        removed.
+	 * @see Collection#removeIf(java.util.function.Predicate)
+	 * @return {@code true} if any elements were removed.
+	 */
+	default boolean removeIf(final KEY_PREDICATE filter) {
+		return removeIf((JDK_PRIMITIVE_PREDICATE) filter);
+	}
+#endif
 #endif
 
 	/** Retains in this collection only elements from the given type-specific collection.

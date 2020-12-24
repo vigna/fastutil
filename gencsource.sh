@@ -430,8 +430,10 @@ fi)\
 "#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
 "#endif\n"\
 \
-"#if !defined JDK_PRIMITIVE_PREDICATE || KEYS_REFERENCE\n"\
-"#define METHOD_ARG_PREDICATE java.util.function.Predicate<? super KEY_GENERIC_CLASS>\n"\
+"#if KEYS_REFERENCE\n"\
+"#define METHOD_ARG_PREDICATE java.util.function.Predicate <? super KEY_GENERIC_CLASS>\n"\
+"#elif !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED || KEY_CLASS_Boolean\n"\
+"#define METHOD_ARG_PREDICATE KEY_PREDICATE KEY_SUPER_GENERIC\n"\
 "#else\n"\
 "#define METHOD_ARG_PREDICATE JDK_PRIMITIVE_PREDICATE\n"\
 "#endif\n"\
