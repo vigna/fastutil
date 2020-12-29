@@ -155,7 +155,7 @@ public class ShortArrayListTest {
 		l.addAll(ShortArrayList.wrap(new short[] { 2, 3 } ));
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 1, 2, 3 }), l);
 		// Test object based lists still work too.
-		l.addAll(java.util.Arrays.asList(s(4), s(5)));
+		l.addAll(java.util.Arrays.asList(Short.valueOf(s(4)), Short.valueOf(s(5))));
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 1, 2, 3, 4, 5 }), l);
 	}
 
@@ -165,7 +165,7 @@ public class ShortArrayListTest {
 		l.addAll(1, ShortArrayList.wrap(new short[] { 1, 2 } ));
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 1, 2, 3 }), l);
 		// Test object based lists still work too.
-		l.addAll(2, java.util.Arrays.asList(s(4), s(5)));
+		l.addAll(2, java.util.Arrays.asList(Short.valueOf(s(4)), Short.valueOf(s(5))));
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 1, 4, 5, 2, 3 }), l);
 	}
 
@@ -176,7 +176,7 @@ public class ShortArrayListTest {
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 2 }), l);
 
 		l = ShortArrayList.wrap(new short[] { 0, 1, 1, 2 });
-		l.removeAll(Collections.singleton(s(1)));
+		l.removeAll(Collections.singleton(Short.valueOf(s(1))));
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 2 }), l);
 	}
 

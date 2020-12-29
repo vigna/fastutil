@@ -19,9 +19,6 @@ TYPE_CAP2=(Boolean Byte Short Int Long Char Float Double Object Object)
 # Much like $TYPE_CAP, but object type get the empty string.
 TYPE_STD=(Boolean Byte Short Int Long Char Float Double "" "")
 
-# The upper case types used to build class and method names.
-TYPE_UC=(BOOLEAN BYTE SHORT INT LONG CHAR FLOAT DOUBLE OBJECT REFERENCE)
-
 # The downcased types used to build method names.
 TYPE_LC=(boolean byte short int long char float double object reference)
 
@@ -36,6 +33,9 @@ WIDENED_TYPE_CAP=(Boolean Int Int Int Long Int Double Double Object Reference)
 
 export LC_ALL=C
 shopt -s extglob
+
+# Derive from the filename the key (and possibly value) types, and whether the
+# class is abstract or a linked hash-based container.
 
 file=${2##*/}
 name=${file%.*}
@@ -69,6 +69,11 @@ if [[ "$class" == *Pair ]]; then
     VALUE_TYPE_CAP=${rem:0:$valuelen}
 fi
 
+# Compute indices k (position of the key type in TYPE), v (position of the value type in TYPE),
+# wk (position of the widened key type in TYPE), and wv (position of the widened value type in TYPE).
+# Widening happens for non-boolean primitive types, and promotes a type to the smallest of
+# int/long/double (i.e., the types for which the JDK offers special treatment) that can represent it.
+
 for((k=0; k<${#TYPE_CAP[*]}; k++)); do
     if [[ ${TYPE_CAP[$k]} == ${KEY_TYPE_CAP} ]]; then break; fi;
 done
@@ -85,12 +90,14 @@ for((wv=0; wv<${#TYPE_CAP[*]}; wv++)); do
     if [[ ${TYPE_CAP[$wv]} == ${WIDENED_TYPE_CAP[$v]} ]]; then break; fi;
 done
 
-if [[ $root == *Linked* ]]; then
-Linked=Linked
+# Additional setup for hash-based containers.
 
 # Macros for transforming the bi-directional long link. Return values are 32-bit int indexes.
 # SET_UPPER and SET_LOWER do a masked assignment as described at
 # http://www-graphics.stanford.edu/~seander/bithacks.html#MaskedMerge
+
+if [[ $root == *Linked* ]]; then
+Linked=Linked
 
 echo -e \
 "#define SET_PREV( f64, p32 )       SET_UPPER( f64, p32 )\n"\
@@ -130,62 +137,26 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	echo "#define KEY_CLASS_${CLASS[$k]} 1\\n";\
 	if [[ "${CLASS[$k]}" != "Object" && "${CLASS[$k]}" != "Reference" ]]; then\
 		echo "#define KEYS_PRIMITIVE 1\\n";\
-		if [[ "${CLASS[$k]}" != "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\\n";\
-			echo "#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
-			echo "#define JDK_PRIMITIVE_BINARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}BinaryOperator\\n";\
-			echo "#define JDK_PRIMITIVE_BINARY_OPERATOR_APPLY applyAs${TYPE_CAP[$wk]}\\n";\
-			echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\\n";\
-			echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\\n";\
-			echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$wk]}Stream\\n";\
-			echo "#define JDK_PRIMITIVE_UNARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}UnaryOperator\\n";\
-			echo "#define JDK_PRIMITIVE_KEY_APPLY applyAs${TYPE_CAP[$wk]}\\n";\
-		fi\
 	else\
 		echo "#define KEYS_REFERENCE 1\\n";\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
-		echo "#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$k]}\\n";\
-		echo "#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$k]}\\n";\
-		echo "#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$k]}Stream\\n";\
+		echo "KEYS_INT_LONG_DOUBLE 1\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	echo "#define VALUE_CLASS_${CLASS[$v]} 1\\n";\
 	if [[ "${CLASS[$v]}" != "Object" && "${CLASS[$v]}" != "Reference" ]]; then\
 		echo "#define VALUES_PRIMITIVE 1\\n";\
-		if [[ "${CLASS[$v]}" != "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_VALUE_CONSUMER java.util.function.${TYPE_CAP[$wv]}Consumer\\n";\
-		fi\
 	else\
 		echo "#define VALUES_REFERENCE 1\\n";\
 	fi;\
  fi)\
-$(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
-	if [[ "${TYPE_CAP[$wk]}" == "Int" || "${TYPE_CAP[$wk]}" == "Long" || "${TYPE_CAP[$wk]}" == "Double" ]]; then\
-		if [[ "${TYPE_CAP[$wk]}" == "${TYPE_CAP[$wv]}" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}UnaryOperator\\n";\
-			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
-		elif [[ "${TYPE_CAP[$wv]}" == "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
-			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
-		elif [[ "${TYPE_CAP[$wv]}" == "Object" || "${TYPE_CAP[$wv]}" == "Reference" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\\n";\
-			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY apply\\n";\
-		elif [[ "${TYPE_CAP[$wv]}" == "Int" || "${TYPE_CAP[$wv]}" == "Long" || "${TYPE_CAP[$wv]}" == "Double" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}To${TYPE_CAP[$wv]}Function\\n";\
-			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
-		fi;\
-	elif [[ "${TYPE_CAP[$wk]}" == "Object" || "${TYPE_CAP[$wk]}" == "Reference" ]]; then\
-		if [[ "${TYPE_CAP[$wv]}" == "Int" || "${TYPE_CAP[$wv]}" == "Long" || "${TYPE_CAP[$wv]}" == "Double" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.To${TYPE_CAP[$wv]}Function\\n";\
-			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
-		elif [[ "${TYPE_CAP[$wv]}" == "Boolean" ]]; then\
-			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.Predicate\\n";\
-			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
-		fi;\
-	fi;\
- fi)\
+\
+\
+"/* Narrowing and widening */\n"\
+\
+\
 $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	if [[ "${TYPE[$wk]}" == "${TYPE[$k]}" ]]; then\
 		echo "#define KEY_NARROWING(x) x\\n";\
@@ -248,7 +219,6 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES @SuppressWarnings({\"unchecked\",\"rawtypes\"})\n"\
 "#define SAFE_VARARGS @SafeVarargs\n"\
-"#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.Function\n"\
 "#if defined(Custom)\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#else\n"\
@@ -275,7 +245,6 @@ fi)\
 "#define SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES\n"\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
 "#define SAFE_VARARGS\n"\
-"#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\n"\
 "#endif\n"\
 \
 "#if VALUES_REFERENCE\n"\
@@ -415,8 +384,53 @@ fi)\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
 \
 \
-"/* Types that vary based on being reference or primitve, or widened primitive or not */\n"\
+"/* Types and methods related to primitive-type support in the JDK */\n"\
 \
+\
+"#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean\n"\
+"#define JDK_PRIMITIVE_KEY_CONSUMER java.util.function.${TYPE_CAP[$wk]}Consumer\n"\
+"#define JDK_PRIMITIVE_PREDICATE java.util.function.${TYPE_CAP[$wk]}Predicate\n"\
+"#define JDK_PRIMITIVE_BINARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}BinaryOperator\n"\
+"#define JDK_PRIMITIVE_BINARY_OPERATOR_APPLY applyAs${TYPE_CAP[$wk]}\n"\
+"#define JDK_PRIMITIVE_ITERATOR PrimitiveIterator.Of${TYPE_CAP[$wk]}\n"\
+"#define JDK_PRIMITIVE_SPLITERATOR Spliterator.Of${TYPE_CAP[$wk]}\n"\
+"#define JDK_PRIMITIVE_STREAM java.util.stream.${TYPE_CAP[$wk]}Stream\n"\
+"#define JDK_PRIMITIVE_UNARY_OPERATOR java.util.function.${TYPE_CAP[$wk]}UnaryOperator\n"\
+"#define JDK_PRIMITIVE_KEY_APPLY applyAs${TYPE_CAP[$wk]}\n"\
+"#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\n"\
+"#else\n"\
+"#define JDK_KEY_TO_GENERIC_FUNCTION java.util.function.Function\n"\
+"#endif\n"\
+\
+"#if VALUES_PRIMITIVE && ! VALUE_CLASS_Boolean\n"\
+"#define JDK_PRIMITIVE_VALUE_CONSUMER java.util.function.${TYPE_CAP[$wv]}Consumer\n"\
+"#endif\n"\
+\
+$(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
+	if [[ "${TYPE_CAP[$wk]}" == "Int" || "${TYPE_CAP[$wk]}" == "Long" || "${TYPE_CAP[$wk]}" == "Double" ]]; then\
+		if [[ "${TYPE_CAP[$wk]}" == "${TYPE_CAP[$wv]}" ]]; then\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}UnaryOperator\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
+		elif [[ "${TYPE_CAP[$wv]}" == "Boolean" ]]; then\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}Predicate\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
+		elif [[ "${TYPE_CAP[$wv]}" == "Object" || "${TYPE_CAP[$wv]}" == "Reference" ]]; then\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}Function\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY apply\\n";\
+		elif [[ "${TYPE_CAP[$wv]}" == "Int" || "${TYPE_CAP[$wv]}" == "Long" || "${TYPE_CAP[$wv]}" == "Double" ]]; then\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.${TYPE_CAP[$wk]}To${TYPE_CAP[$wv]}Function\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
+		fi;\
+	elif [[ "${TYPE_CAP[$wk]}" == "Object" || "${TYPE_CAP[$wk]}" == "Reference" ]]; then\
+		if [[ "${TYPE_CAP[$wv]}" == "Int" || "${TYPE_CAP[$wv]}" == "Long" || "${TYPE_CAP[$wv]}" == "Double" ]]; then\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.To${TYPE_CAP[$wv]}Function\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY applyAs${TYPE_CAP[$wv]}\\n";\
+		elif [[ "${TYPE_CAP[$wv]}" == "Boolean" ]]; then\
+			echo "#define JDK_PRIMITIVE_FUNCTION java.util.function.Predicate\\n";\
+			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
+		fi;\
+	fi;\
+ fi)\
 \
 "#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED\n"\
 "#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\

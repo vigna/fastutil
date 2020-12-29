@@ -52,9 +52,9 @@ public class ObjectArrayListTest {
 
 	@Test
 	public void testRemoveIf() {
-		final ObjectArrayList<Integer> l = ObjectArrayList.of(1,2,3,4,5,6);
-		l.removeIf(i -> i % 2 == 0);
-		assertEquals(ObjectArrayList.of(1,3,5), l);
+		final ObjectArrayList<Integer> l = ObjectArrayList.of(Integer.valueOf(1), Integer.valueOf(2), Integer.valueOf(3), Integer.valueOf(4), Integer.valueOf(5), Integer.valueOf(6));
+		l.removeIf(i -> i.intValue() % 2 == 0);
+		assertEquals(ObjectArrayList.of(Integer.valueOf(1), Integer.valueOf(3), Integer.valueOf(5)), l);
 	}
 
 	@Test
@@ -91,7 +91,7 @@ public class ObjectArrayListTest {
 	@Test
 	public void testCopyingToArray() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
-		Object[] out = new String[3];
+		final Object[] out = new String[3];
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
 		assertSame(out, newOut);
@@ -100,7 +100,7 @@ public class ObjectArrayListTest {
 	@Test
 	public void testCopyingToArrayUndersized() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
-		Object[] out = new String[2];
+		final Object[] out = new String[2];
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2"}, newOut = l.toArray(out));
 		assertEquals(String[].class, newOut.getClass());
@@ -110,18 +110,18 @@ public class ObjectArrayListTest {
 	@Test
 	public void testCopyingToArrayOversized() {
 		final ObjectArrayList<String> l = ObjectArrayList.of("0", "1", "2");
-		Object[] out = new String[5];
+		final Object[] out = new String[5];
 		out[3] = "I should be replaced with null per spec.";
 		out[4] = "Not me though.";
 		Object[] newOut;
 		assertArrayEquals(new Object[] {"0", "1", "2", null, "Not me though."}, newOut = l.toArray(out));
 		assertSame(out, newOut);
 	}
-	
+
 	@Test
 	public void testToList() {
 		final ObjectArrayList<String> baseList = ObjectArrayList.of("wood", "board", "glass", "metal");
-		ObjectArrayList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toList());
+		final ObjectArrayList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toList());
 		assertEquals(ObjectArrayList.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
 	}
 
@@ -129,15 +129,15 @@ public class ObjectArrayListTest {
 	public void testSpliteratorTrySplit() {
 		final ObjectArrayList<String> baseList = ObjectArrayList
 				.of("0", "1", "2", "3", "4", "5", "bird");
-		ObjectSpliterator<String> willBeSuffix = baseList.spliterator();
+		final ObjectSpliterator<String> willBeSuffix = baseList.spliterator();
 		assertEquals(baseList.size(), willBeSuffix.getExactSizeIfKnown());
 		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
 		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
-		ObjectSpliterator<String> prefix = willBeSuffix.trySplit();
+		final ObjectSpliterator<String> prefix = willBeSuffix.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
-		java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport
+		final java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport
 				.stream(willBeSuffix, false);
-		java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport
+		final java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport
 				.stream(prefix, false);
 
 		final ObjectArrayList<String> prefixList = prefixStream.collect(ObjectArrayList.toList());
