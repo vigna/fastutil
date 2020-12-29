@@ -25,15 +25,23 @@ public class IntCollectionsTest {
 
 	@Test
 	public void testIsNotEmpty() {
-		IntCollection test = IntCollections.asCollection(() -> IntSets.singleton(0).iterator());
+		final IntCollection test = IntCollections.asCollection(() -> IntSets.singleton(0).iterator());
 
 		assertFalse(test.isEmpty());
 	}
 
 	@Test
 	public void testEmpty() {
-		IntCollection test = IntCollections.asCollection(() -> IntSets.EMPTY_SET.iterator());
+		final IntCollection test = IntCollections.asCollection(() -> IntSets.EMPTY_SET.iterator());
 
 		assertTrue(test.isEmpty());
+	}
+
+	@Test
+	public void testRemoveIf() {
+		final IntConsumer c = x -> {
+		};
+		c.andThen(x -> {
+		});
 	}
 }

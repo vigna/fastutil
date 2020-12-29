@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.shorts;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.shorts;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.shorts;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,9 +42,9 @@ public class ShortArrayListTest {
 	public void testNullInContains() {
 		assertFalse(new ShortArrayList().contains(null));
 	}
-	
+
 	// Here because Java int -> short literal logic annoyingly only handles variable assignment, not method parameters.
-	private static short s(int i) {
+	private static short s(final int i) {
 		return it.unimi.dsi.fastutil.SafeMath.safeIntToShort(i);
 	}
 
@@ -182,8 +182,8 @@ public class ShortArrayListTest {
 
 	@Test
 	public void testClearSublist() {
-		ShortArrayList l = ShortArrayList.wrap(new short[] { 0, 1, 1, 2 });
-		ShortList sublist = l.subList(1,3);
+		final ShortArrayList l = ShortArrayList.wrap(new short[] { 0, 1, 1, 2 });
+		final ShortList sublist = l.subList(1,3);
 		sublist.clear();
 		assertEquals(ShortArrayList.wrap(new short[] { }), sublist);
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 2 }), l);

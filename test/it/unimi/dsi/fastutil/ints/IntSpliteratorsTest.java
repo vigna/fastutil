@@ -1,10 +1,26 @@
+/*
+ * Copyright (C) 2017-2020 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Spliterator;
 import java.util.stream.IntStream;
@@ -167,33 +183,33 @@ public class IntSpliteratorsTest {
 		final int[] actualConcat = concatStream.toArray();
 		assertArrayEquals(expectedAfterSkipping, actualConcat);
 	}
-	
+
 	@SuppressWarnings("static-method")
 	@Test
 	public void testConcatSpliteratorNotSortedOrDistinctPreserved() {
-		IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
-		IntSortedSet s2 = new IntRBTreeSet(new int[] {1, 3, 4});
-		IntSpliterator split1 = s1.spliterator();
-		IntSpliterator split2 = s2.spliterator();
+		final IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
+		final IntSortedSet s2 = new IntRBTreeSet(new int[] {1, 3, 4});
+		final IntSpliterator split1 = s1.spliterator();
+		final IntSpliterator split2 = s2.spliterator();
 		assertTrue(split1.hasCharacteristics(Spliterator.SORTED));
 		assertTrue(split2.hasCharacteristics(Spliterator.SORTED));
 		assertTrue(split1.hasCharacteristics(Spliterator.DISTINCT));
 		assertTrue(split2.hasCharacteristics(Spliterator.DISTINCT));
 		assertTrue(split1.hasCharacteristics(Spliterator.SIZED));
 		assertTrue(split2.hasCharacteristics(Spliterator.SIZED));
-		IntSpliterator concat = IntSpliterators.concat(split1, split2);
+		final IntSpliterator concat = IntSpliterators.concat(split1, split2);
 		assertFalse(concat.hasCharacteristics(Spliterator.SORTED));
 		assertFalse(concat.hasCharacteristics(Spliterator.DISTINCT));
 		// SIZED is preserved though.
 		assertTrue(concat.hasCharacteristics(Spliterator.SIZED));
 	}
-	
+
 	@SuppressWarnings("static-method")
 	@Test
 	public void testConcatSpliteratorSortedAndDistinctPreservedIfOnlyOne() {
-		IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
-		IntSpliterator split1 = s1.spliterator();
-		IntSpliterator concat = IntSpliterators.concat(split1);
+		final IntSortedSet s1 = new IntRBTreeSet(new int[] {1, 2, 3});
+		final IntSpliterator split1 = s1.spliterator();
+		final IntSpliterator concat = IntSpliterators.concat(split1);
 		assertTrue(concat.hasCharacteristics(Spliterator.SORTED));
 		assertTrue(concat.hasCharacteristics(Spliterator.DISTINCT));
 		assertTrue(concat.hasCharacteristics(Spliterator.SIZED));
