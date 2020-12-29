@@ -36,12 +36,4 @@ public class IntCollectionsTest {
 
 		assertTrue(test.isEmpty());
 	}
-
-	@Test
-	public void testRemoveIf() {
-		final IntConsumer c = x -> {
-		};
-		c.andThen(x -> {
-		});
-	}
 }
