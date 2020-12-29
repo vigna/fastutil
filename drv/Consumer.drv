@@ -68,26 +68,49 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 		this.accept(t.KEY_VALUE());
 	}
 
-    /**
-     * Returns a composed type-specific consumer that performs, in sequence, this
-     * operation followed by the {@code after} operation.
+	/**
+	 * Returns a composed type-specific consumer that performs, in sequence, this
+	 * operation followed by the {@code after} operation.
+	 * @param after the operation to perform after this operation.
+	 * @return a composed {@code Consumer} that performs in sequence this
+	 * operation followed by the {@code after} operation.
 	 * @see Consumer#andThen
 	 */
-	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
+	default KEY_CONSUMER andThen(final METHOD_ARG_KEY_CONSUMER after) {
 		Objects.requireNonNull(after);
 		return t -> { accept(t); after.accept(t); };
 	}
 
-#if ! KEY_CLASS_Boolean
+#if KEYS_INT_LONG_DOUBLE
+	/**
+	 * Returns a composed type-specific consumer that performs, in sequence, this
+	 * operation followed by the {@code after} operation.
+	 *
+	 * <p><b>WARNING</b>: Overriding this method is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead, override the {@code andThen()} overload
+	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
+	 *
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
+	 *
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
+	 * you still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param after the operation to perform after this operation.
+	 * @return a composed {@code Consumer} that performs in sequence this
+	 * operation followed by the {@code after} operation.
+	 * @see Consumer#andThen
+	 */
+	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
+		return andThen((JDK_PRIMITIVE_KEY_CONSUMER) after);
+	}
 
-#if ! KEYS_INT_LONG_DOUBLE
+#elif ! KEY_CLASS_Boolean
 	/** {@inheritDoc}	
 	 * @implNote Composing with a JDK type-specific consumer will be slightly less efficient than using a type-specific consumer, as the argument will have to be widened at each call.  */
-#endif
 	@Override
 	default KEY_CONSUMER andThen(final JDK_PRIMITIVE_KEY_CONSUMER after) {
-		Objects.requireNonNull(after);
-		return t -> { accept(t); after.accept(t); };
+		return andThen(after instanceof KEY_CONSUMER ? (KEY_CONSUMER) after : (KEY_CONSUMER) after::accept);
 	}
 
 #endif
