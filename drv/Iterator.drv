@@ -48,8 +48,7 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	 * @return the next element in the iteration.
 	 * @see Iterator#next()
 	 */
-
-#if defined JDK_PRIMITIVE_ITERATOR && !KEY_WIDENED
+#if KEYS_INT_LONG_DOUBLE
 	@Override
 #endif
 	KEY_TYPE NEXT_KEY();
@@ -62,24 +61,9 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 		return KEY_CLASS.valueOf(NEXT_KEY());
 	}
 
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
-	/**
-	 * Performs the given action for each remaining element until all elements
-	 * have been processed or the action throws an exception.
-	 * @param action the action to be performed for each element.
-	 * @see java.util.Iterator#forEachRemaining(java.util.function.Consumer)
-	 * @since 8.0.0
-	 */
-	@Override
-	default void forEachRemaining(final KEY_CONSUMER action) {
-		Objects.requireNonNull(action);
-		while (hasNext()) {
-			action.accept(NEXT_KEY());
-		}
-	}
-#endif
+#if KEYS_INT_LONG_DOUBLE
+	// We inherit the canonical primitive forEachRemaining overload.
 
-#if defined JDK_PRIMITIVE_KEY_CONSUMER && !KEY_WIDENED
 	// Because our primitive Consumer interface extends both the JDK's primitive
 	// and object Consumer interfaces, calling this method with it would be ambiguous.
 	// This overload exists to pass it to the proper primitive overload.
@@ -101,6 +85,21 @@ public interface KEY_ITERATOR KEY_GENERIC extends Iterator<KEY_GENERIC_CLASS> {
 	 */
 	default void forEachRemaining(final KEY_CONSUMER action) {
 		forEachRemaining((JDK_PRIMITIVE_KEY_CONSUMER) action);
+	}
+#else
+	/**
+	 * Performs the given action for each remaining element until all elements
+	 * have been processed or the action throws an exception.
+	 * @param action the action to be performed for each element.
+	 * @see java.util.Iterator#forEachRemaining(java.util.function.Consumer)
+	 * @since 8.0.0
+	 */
+	@Override
+	default void forEachRemaining(final KEY_CONSUMER action) {
+		Objects.requireNonNull(action);
+		while (hasNext()) {
+			action.accept(NEXT_KEY());
+		}
 	}
 #endif
 
