@@ -290,6 +290,9 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 *        removed.
 	 * @see Collection#removeIf(java.util.function.Predicate)
 	 * @return {@code true} if any elements were removed.
+	 * @apiNote Implementing classes that want to implement an optimized {@code removeIf} should
+	 *   generally override this method, and take the default implementation of the other overloads
+	 *   which will delegate to this method (after proper conversions).
 	 */
 	default boolean removeIf(final METHOD_ARG_PREDICATE filter) {
 		java.util.Objects.requireNonNull(filter);
@@ -314,7 +317,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
 	 * overload only exists to disambiguate. Instead override the {@code removeIf()} overload
 	 * that uses the JDK's primitive predicate type (e.g. {@link java.util.function.IntPredicate}).
-	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
 	 * <p>If you checked and are overriding the version with {@code java.util.function.XPredicate}, and
 	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
 	 * method to override, and you can safely ignore this message.
@@ -334,11 +337,9 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 *        removed.
 	 * @see Collection#removeIf(java.util.function.Predicate)
 	 * @return {@code true} if any elements were removed.
-	 * @deprecated Please use the corresponding type-specific method instead. This method
-	 *   performs a widening primitive cast for each element, when a type-specific consumer
-	 *   could avoid this.
+	 * @implNote This will introduce an intermediary lambda to perform widening casts.
+	 *   Use the type specific {@code removeIf} to avoid this overhead. 
 	 */
-	@Deprecated
 	@SuppressWarnings("overloads")
 	default boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
 		return removeIf(filter instanceof KEY_PREDICATE ? (KEY_PREDICATE) filter : (KEY_PREDICATE) filter::test);

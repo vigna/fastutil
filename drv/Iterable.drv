@@ -187,9 +187,13 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * Performs the given action for each element of this type-specific {@link java.lang.Iterable}
 	 * until all elements have been processed or the action throws an
 	 * exception.
+	 *
 	 * @param action the action to be performed for each element.
 	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
 	 * @since 8.0.0
+	 * @apiNote Implementing classes that want to implement an optimized {@code forEach} should
+	 *   generally override this method, and take the default implementation of the other overloads
+	 *   which will delegate to this method (after proper conversions).
 	 */
 	default void forEach(final METHOD_ARG_KEY_CONSUMER action) {
 		Objects.requireNonNull(action);
@@ -207,7 +211,7 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
 	 * overload only exists to disambiguate. Instead override the {@code forEach()} overload
 	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
-	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
 	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
 	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
 	 * method to override, and you can safely ignore this message.
@@ -228,13 +232,9 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * @param action the action to be performed for each element.
 	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
 	 * @since 8.0.0
-	 * @deprecated This method performs a widening primitive cast for each element, when a type-specific
-	 *   consumer could avoid this. This is inconsistent with how the primitive {@code Iterator} class is defined.
-	 *   This method has been redefined to be implemented in terms of the type-specific overload
-	 *   (e.g. {@code forEach(ShortConsumer)} for {@code short}s) and now that method should be used or overridden
-	 *   instead of this one. This method now only remains for backwards compatibility purposes.
+	 * @implNote This will introduce an intermediary lambda to perform widening casts.
+	 *   Use the type specific {@code forEach} to avoid this overhead. 
 	 */
-	@Deprecated
 	default void forEach(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 		Objects.requireNonNull(action);
 		forEach(action instanceof KEY_CONSUMER ? (KEY_CONSUMER)action : (KEY_CONSUMER)action::accept);
