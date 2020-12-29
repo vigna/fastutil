@@ -23,18 +23,23 @@ import java.util.function.Predicate;
 /** A type-specific {@link Predicate}; provides methods to test a primitive type both as object
  * and as primitive.
  *
+ * <p>Except for the boolean case, this interface extends both a parameterized {@link java.util.function.Predicate}
+ * and a type-specific JDK predicate (e.g., {@link java.util.function.IntPredicate}). For types missing
+ * a type-specific JDK predicate (e.g., {@code short} or {@code float}), we extend the predicate associated with
+ * the smallest primitive type that can represent the current type (e.g., {@code int} or {@code double}, respectively).
+ *
  * @see Predicate
  * @since 8.5.0
  */
 
 @FunctionalInterface
-#ifdef JDK_PRIMITIVE_PREDICATE
+#if ! KEY_CLASS_Boolean
 public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_PREDICATE {
 #else
 public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> {
 #endif
 
-#if !defined JDK_PRIMITIVE_PREDICATE || KEY_WIDENED
+#if ! KEYS_INT_LONG_DOUBLE
 	/**
 	 * Evaluates this predicate on the given input.
 	 *
@@ -43,9 +48,8 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	 * otherwise {@code false}
 	 */
 	boolean test(KEY_TYPE t);
-#endif
 
-#if KEY_WIDENED
+#if ! KEY_CLASS_Boolean
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
 	@Deprecated
@@ -53,6 +57,8 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	default boolean test(final KEY_TYPE_WIDENED t) {
 		return test(KEY_NARROWING(t));
 	}
+#endif
+
 #endif
 
 	/** {@inheritDoc}
@@ -63,7 +69,6 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 		return test(t.KEY_VALUE());
 	}
 
-#if !defined JDK_PRIMITIVE_PREDICATE || KEY_WIDENED
     /**
      * Returns a composed type-specific predicate that represents a short-circuiting logical
      * AND of this type-specific predicate and another. 
@@ -71,21 +76,17 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	 */
 	default KEY_PREDICATE and(final KEY_PREDICATE other) {
 		Objects.requireNonNull(other);
-		return (KEY_TYPE t) -> test(t) && other.test(t);
+		return t -> test(t) && other.test(t);
 	}
-#endif
 
-#ifdef JDK_PRIMITIVE_PREDICATE
-#if KEY_WIDENED
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-#endif
+#if ! KEY_CLASS_Boolean
+
 	@Override
 	default KEY_PREDICATE and(final JDK_PRIMITIVE_PREDICATE other) {
 		Objects.requireNonNull(other);
-		return (KEY_TYPE t) -> test(t) && other.test(t);
+		return t -> test(t) && other.test(t);
 	}
+
 #endif
 
 	/** {@inheritDoc}
@@ -103,7 +104,6 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	}
 
 
-#if !defined JDK_PRIMITIVE_PREDICATE || KEY_WIDENED
     /**
      * Returns a composed type-specific predicate that represents a short-circuiting logical
      * OR of this type-specific predicate and another. 
@@ -111,21 +111,17 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	 */
 	default KEY_PREDICATE or(final KEY_PREDICATE other) {
 		Objects.requireNonNull(other);
-		return (KEY_TYPE t) -> test(t) || other.test(t);
+		return t -> test(t) || other.test(t);
 	}
-#endif
 
-#ifdef JDK_PRIMITIVE_PREDICATE
-#if KEY_WIDENED
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-#endif
+#if ! KEY_CLASS_Boolean
+
 	@Override
 	default KEY_PREDICATE or(final JDK_PRIMITIVE_PREDICATE other) {
 		Objects.requireNonNull(other);
 		return t -> test(t) || other.test(t);
 	}
+
 #endif
 
 	/** {@inheritDoc}
