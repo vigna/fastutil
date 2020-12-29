@@ -23,34 +23,41 @@ import java.util.function.Consumer;
 /** A type-specific {@link Consumer}; provides methods to consume a primitive type both as object
  * and as primitive.
  *
+ * <p>Except for the boolean case, this interface extends both a parameterized {@link java.util.function.Consumer}
+ * and a type-specific JDK consumer (e.g., {@link java.util.function.IntConsumer}). For types missing
+ * a type-specific JDK consumer (e.g., {@code short} or {@code float}), we extend the consumer associated with
+ * the smallest primitive type that can represent the current type (e.g., {@code int} or {@code double}, respectively).
+ *
  * @see Consumer
  * @since 8.0.0
  */
 
 @FunctionalInterface
-#ifdef JDK_PRIMITIVE_KEY_CONSUMER
+#if ! KEY_CLASS_Boolean
 public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_KEY_CONSUMER {
 #else
 public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 #endif
 
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
+#if ! KEYS_INT_LONG_DOUBLE
 	/**
 	 * Performs this operation on the given input.
 	 *
 	 * @param t the input.
 	 */
 	void accept(KEY_TYPE t);
-#endif
 
-#if KEY_WIDENED
+#if ! KEY_CLASS_Boolean
 	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
+	 * @deprecated Please use the corresponding exact type-specific method instead. */
 	@Deprecated
 	@Override
 	default void accept(final KEY_TYPE_WIDENED t) {
 		accept(KEY_NARROWING(t));
 	}
+	
+#endif
+
 #endif
 
 	/** {@inheritDoc}
@@ -61,29 +68,32 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 		this.accept(t.KEY_VALUE());
 	}
 
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
     /**
      * Returns a composed type-specific consumer that performs, in sequence, this
      * operation followed by the {@code after} operation.
 	 * @see Consumer#andThen
 	 */
 	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
+#if KEYS_INT_LONG_DOUBLE
+		return andThen((JDK_PRIMITIVE_KEY_CONSUMER)after);
+#else
 		Objects.requireNonNull(after);
 		return t -> { accept(t); after.accept(t); };
-	}
 #endif
+	}
 
-#ifdef JDK_PRIMITIVE_KEY_CONSUMER
-#if KEY_WIDENED
+#if ! KEY_CLASS_Boolean
+
+#if ! KEYS_INT_LONG_DOUBLE
 	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
+	 * @implNote Composing with a widened consumer is slightly less efficient than using a type-specific consumer, as the argument will be checked for correctness at each call.  */
 #endif
 	@Override
 	default KEY_CONSUMER andThen(final JDK_PRIMITIVE_KEY_CONSUMER after) {
 		Objects.requireNonNull(after);
 		return t -> { accept(t); after.accept(t); };
 	}
+
 #endif
 
 	/** {@inheritDoc}

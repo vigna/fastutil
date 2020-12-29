@@ -141,7 +141,7 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 		echo "#define KEYS_REFERENCE 1\\n";\
 	fi;\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
-		echo "KEYS_INT_LONG_DOUBLE 1\\n";\
+		echo "#define KEYS_INT_LONG_DOUBLE 1\\n";\
 	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
