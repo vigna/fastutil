@@ -250,9 +250,86 @@ public class IntArrayListTest {
 	}
 
 	@Test
+	public void testForEach() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
+		int[] forEachSum = new int[1];
+		l.forEach(i -> forEachSum[0] += i);
+		int realSum = l.intStream().sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@Test
+	public void testForEach_jdkConsumer() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
+		int[] forEachSum = new int[1];
+		l.forEach((java.util.function.IntConsumer) (i -> forEachSum[0] += i));
+		int realSum = l.intStream().sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testForEach_objectConsumer() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
+		int[] forEachSum = new int[1];
+		l.forEach((java.util.function.Consumer<Integer>) (i -> forEachSum[0] += i));
+		int realSum = l.intStream().sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@Test
+	public void testIterator_forEachRemaining() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
+		int[] forEachSum = new int[1];
+		l.iterator().forEachRemaining(i -> forEachSum[0] += i);
+		int realSum = l.intStream().sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@Test
+	public void testIterator_forEachRemaining_jdkConsumer() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
+		int[] forEachSum = new int[1];
+		l.iterator().forEachRemaining((java.util.function.IntConsumer) (i -> forEachSum[0] += i));
+		int realSum = l.intStream().sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testIterator_forEachRemaining_objectConsumer() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
+		int[] forEachSum = new int[1];
+		l.iterator().forEachRemaining((java.util.function.Consumer<Integer>) (i -> forEachSum[0] += i));
+		int realSum = l.intStream().sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@Test
 	public void testRemoveIf() {
 		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
 		l.removeIf(i -> i % 2 == 0);
+		assertEquals(IntArrayList.of(1,3,5), l);
+	}
+
+	@Test
+	public void testRemoveIf_jdkPredicate() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		l.removeIf((java.util.function.IntPredicate) (i -> i % 2 == 0));
+		assertEquals(IntArrayList.of(1,3,5), l);
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testRemoveIf_objectPredicate() {
+		final IntArrayList l = IntArrayList.of(1,2,3,4,5,6);
+		l.removeIf((java.util.function.Predicate<Integer>) (i -> i % 2 == 0));
 		assertEquals(IntArrayList.of(1,3,5), l);
 	}
 
