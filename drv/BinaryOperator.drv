@@ -33,7 +33,6 @@ public interface KEY_BINARY_OPERATOR KEY_GENERIC extends BinaryOperator<KEY_GENE
 public interface KEY_BINARY_OPERATOR KEY_GENERIC extends BinaryOperator<KEY_GENERIC_CLASS> {
 #endif
 
-#if ! KEYS_INT_LONG_DOUBLE
 	/**
 	 * Computes the operator on the given inputs.
 	 *
@@ -42,17 +41,33 @@ public interface KEY_BINARY_OPERATOR KEY_GENERIC extends BinaryOperator<KEY_GENE
 	 * @return the output of the operator on the given inputs.
 	 */
 	KEY_TYPE apply(KEY_TYPE x, KEY_TYPE y);
-#endif
 
-#if KEYS_BYTE_CHAR_SHORT_FLOAT
+#if KEYS_INT_LONG_DOUBLE
 	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
+	 *
+	 * @implSpec This default implementation delegates to {@link #apply}.
+	 * @deprecated Please use {@link #apply}.
+	 */
+#else
+	/** {@inheritDoc}
+	 *
+	 * @implSpec This default implementation delegates to
+	 * {@link #apply} after narrowing down the arguments to the
+	 * actual key type, throwing an exception if the arguments cannot be
+	 * represented in the restricted domain. This is done for interoperability
+	 * with the Java 8 function environment. The use of this method discouraged, as
+	 * unexpected errors can occur.
+	 *
+	 * @throws IllegalArgumentException If the given operands are not an element of the key domain.
+	 * @since 8.5.0
+	 * @deprecated Please use {@link #apply}.
+	 */
+#endif
 	@Deprecated
 	@Override
 	default KEY_TYPE_WIDENED JDK_PRIMITIVE_BINARY_OPERATOR_APPLY(final KEY_TYPE_WIDENED x, final KEY_TYPE_WIDENED y) {
 		return apply(KEY_NARROWING(x), KEY_NARROWING(y));
 	}
-#endif
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
