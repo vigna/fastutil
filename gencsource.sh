@@ -143,6 +143,9 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 	if [[ "${CLASS[$k]}" == "Integer" || "${CLASS[$k]}" == "Long" || "${CLASS[$k]}" == "Double" ]]; then\
 		echo "#define KEYS_INT_LONG_DOUBLE 1\\n";\
 	fi;\
+	if [[ "${CLASS[$k]}" == "Byte" || "${CLASS[$k]}" == "Character" || "${CLASS[$k]}" == "Short" || "${CLASS[$k]}" == "Float" ]]; then\
+		echo "#define KEYS_BYTE_CHAR_SHORT_FLOAT 1\\n";\
+	fi;\
  fi)\
 $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	echo "#define VALUE_CLASS_${CLASS[$v]} 1\\n";\
@@ -153,6 +156,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	fi;\
 	if [[ "${CLASS[$v]}" == "Integer" || "${CLASS[$v]}" == "Long" || "${CLASS[$v]}" == "Double" ]]; then\
 		echo "#define VALUES_INT_LONG_DOUBLE 1\\n";\
+	fi;\
+	if [[ "${CLASS[$v]}" == "Byte" || "${CLASS[$v]}" == "Character" || "${CLASS[$v]}" == "Short" || "${CLASS[$v]}" == "Float" ]]; then\
+		echo "#define VALUES_BYTE_CHAR_SHORT_FLOAT 1\\n";\
 	fi;\
  fi)\
 \
