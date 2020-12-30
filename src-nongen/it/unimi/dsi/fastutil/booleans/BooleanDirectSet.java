@@ -17,7 +17,7 @@ import java.util.function.Consumer;
  * one for {@code true} presence. While this is an extremely compact representation, it also leads to
  * some rather branch heavy code, albeit still all constant time.
  * 
- * @author C. Sean Young (csyoung@google.com)
+ * @author C. Sean Young &lt;csyoung@google.com&gt;
  *
  */
 // TODO Would being backed with a byte bitfield be faster? We could use bit twiddling fun to eliminate a lot of branches.
@@ -49,6 +49,41 @@ public class BooleanDirectSet extends AbstractBooleanSet implements BooleanSet, 
 				break;
 			}
 		}
+	}
+	
+	public static BooleanDirectSet withGivenMemberships(boolean hasFalse, boolean hasTrue) {
+		BooleanDirectSet result = new BooleanDirectSet();
+		result.hasFalse = hasFalse;
+		result.hasTrue = hasTrue;
+		return result;
+	}
+
+	public static BooleanDirectSet of() {
+		return new BooleanDirectSet();
+	}
+	
+	public static BooleanDirectSet of(boolean value) {
+		BooleanDirectSet result = new BooleanDirectSet();
+		if (value) {
+			result.hasTrue = true;
+		} else {
+			result.hasFalse = true;
+		}
+		return result;
+	}
+
+	public static BooleanDirectSet of(boolean b1, boolean b2) {
+		if (b1 == b2) {
+			throw new IllegalArgumentException("Duplicate element: " + b1);
+		}
+		return ofAll();
+	}
+
+	public static BooleanDirectSet ofAll() {
+		BooleanDirectSet result = new BooleanDirectSet();
+		result.hasFalse = true;
+		result.hasTrue = true;
+		return result;
 	}
 	
 	@Override
