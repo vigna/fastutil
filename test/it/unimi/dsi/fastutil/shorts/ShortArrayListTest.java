@@ -23,6 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
+import java.util.function.Predicate;
 
 import org.junit.Test;
 
@@ -359,5 +360,19 @@ public class ShortArrayListTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(ShortArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testRemoveIfOverloads() {
+		final ShortArrayList l = ShortArrayList.of((short)1, (short)2, (short)3);
+		l.removeIf(x -> x == 1);
+		final ShortPredicate p = x -> x == 1;
+		l.removeIf(p);
+		final it.unimi.dsi.fastutil.ints.IntPredicate q = x -> x == 1;
+		l.removeIf(q);
+		@SuppressWarnings("boxing")
+		final Predicate<Short> r = x -> x == 1;
+		l.removeIf(r);
 	}
 }

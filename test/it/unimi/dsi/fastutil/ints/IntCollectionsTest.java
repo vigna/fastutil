@@ -19,6 +19,9 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.function.IntPredicate;
+import java.util.function.Predicate;
+
 import org.junit.Test;
 
 public class IntCollectionsTest {
@@ -35,5 +38,19 @@ public class IntCollectionsTest {
 		final IntCollection test = IntCollections.asCollection(() -> IntSets.EMPTY_SET.iterator());
 
 		assertTrue(test.isEmpty());
+	}
+
+	@SuppressWarnings("deprecation")
+	@Test
+	public void testRemoveIfOverloads() {
+		final IntOpenHashSet s = IntOpenHashSet.of(1, 2, 3);
+		s.removeIf(x -> x == 1);
+		final IntPredicate p = x -> x == 1;
+		s.removeIf(p);
+		final it.unimi.dsi.fastutil.ints.IntPredicate q = x -> x == 1;
+		s.removeIf(q);
+		@SuppressWarnings("boxing")
+		final Predicate<Integer> r = x -> x == 1;
+		s.removeIf(r);
 	}
 }

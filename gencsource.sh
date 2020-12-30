@@ -151,6 +151,9 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 	else\
 		echo "#define VALUES_REFERENCE 1\\n";\
 	fi;\
+	if [[ "${CLASS[$v]}" == "Integer" || "${CLASS[$v]}" == "Long" || "${CLASS[$v]}" == "Double" ]]; then\
+		echo "#define VALUES_INT_LONG_DOUBLE 1\\n";\
+	fi;\
  fi)\
 \
 \
@@ -440,10 +443,10 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define METHOD_ARG_PREDICATE KEY_PREDICATE KEY_SUPER_GENERIC\n"\
 "#endif\n"\
 \
-"#if !defined JDK_PRIMITIVE_VALUE_CONSUMER || VALUE_WIDENED\n"\
-"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
-"#else\n"\
+"#if VALUES_INT_LONG_DOUBLE\n"\
 "#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
+"#else\n"\
+"#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
 "#endif\n"\
 \
 "#if !defined JDK_PRIMITIVE_UNARY_OPERATOR || KEYS_REFERENCE\n"\
