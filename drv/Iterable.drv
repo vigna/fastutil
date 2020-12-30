@@ -21,7 +21,7 @@ import java.lang.Iterable;
 #if KEYS_PRIMITIVE
 import java.util.Objects;
 import java.util.function.Consumer;
-#if KEY_WIDENED
+#if !KEYS_INT_LONG_DOUBLE && !KEY_CLASS_Boolean
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.WIDENED_ITERATORS;
 import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
@@ -45,7 +45,7 @@ import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
  * @see Iterable
  */
 
-#else
+#else // !KEYS_PRIMITIVE
 
 /** A type-specific {@link Iterable} that strengthens that specification of {@link #iterator()}.
  *
@@ -68,7 +68,20 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	@Override
 	KEY_ITERATOR KEY_GENERIC iterator();
 
-#if defined JDK_PRIMITIVE_ITERATOR && KEY_WIDENED && SMALL_TYPES
+#if KEYS_PRIMITIVE && !KEY_CLASS_Boolean
+#if KEYS_INT_LONG_DOUBLE
+	/** Returns a primitive iterator on the elements of this iterable.<p>
+	 *
+	 * This method is identical to {@link #iterator()}, as the type-specific
+	 * iterator is already compatible with the JDK's primitive iterators.
+	 * It only exists for compatibility with the other primitive types' {@code Iterable}s
+	 * that have use for widened iterators.
+	 *
+	 * @return a primitive iterator on the elements of this iterable.
+	 * @since 8.5.0
+	 */
+	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterator(); }
+#else
 #if KEY_CLASS_Character
 	/**
 	 * Returns a widened primitive iterator on the elements of this iterable.<p>
@@ -98,19 +111,8 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 #endif
 	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() {
 		return WIDENED_ITERATORS.wrap(iterator());
-	}
-#elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
-	/** Returns a primitive iterator on the elements of this iterable.<p>
-	 *
-	 * This method is identical to {@link #iterator()}, as the type-specific
-	 * iterator is already compatible with the JDK's primitive iterators.
-	 * It only exists for compatibility with the other primitive types' {@code Iterable}s
-	 * that have use for widened iterators.
-	 *
-	 * @return a primitive iterator on the elements of this iterable.
-	 * @since 8.5.0
-	 */
-	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterator(); }
+	} 
+#endif
 #endif
 
 	// If you change these default spliterator methods, you will likely need to update Collection, List, Set, and SortedSet too.
@@ -132,7 +134,21 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	}
 #endif
 
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
+#if KEYS_PRIMITIVE
+#if !KEY_CLASS_Boolean
+#if KEYS_INT_LONG_DOUBLE
+	/** Returns a primitive spliterator on the elements of this iterable.<p>
+	 *
+	 * This method is identical to {@link #spliterator()}, as the type-specific
+	 * spliterator is already compatible with the JDK's primitive spliterators.
+	 * It only exists for compatibility with the other primitive types' {@code Iterable}s
+	 * that have use for widened spliterators.
+	 *
+	 * @return a primitive spliterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return spliterator(); }
+#else
 #if KEY_CLASS_Character
 	/** Returns widened primitive spliterator on the elements of this iterable.<p>
 	 *
@@ -163,36 +179,28 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
 		return WIDENED_SPLITERATORS.wrap(spliterator());
 	}
-#elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
-	/** Returns a primitive spliterator on the elements of this iterable.<p>
-	 *
-	 * This method is identical to {@link #spliterator()}, as the type-specific
-	 * spliterator is already compatible with the JDK's primitive spliterators.
-	 * It only exists for compatibility with the other primitive types' {@code Iterable}s
-	 * that have use for widened spliterators.
-	 *
-	 * @return a primitive spliterator on the elements of this collection.
-	 * @since 8.5.0
-	 */
-	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return spliterator(); }
+#endif
 #endif
 
-#if KEYS_PRIMITIVE
+
 	/**
 	 * Performs the given action for each element of this type-specific {@link java.lang.Iterable}
 	 * until all elements have been processed or the action throws an
 	 * exception.
+	 *
 	 * @param action the action to be performed for each element.
 	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
 	 * @since 8.0.0
+	 * @apiNote Implementing classes should generally override this method, and take the default
+	 *   implementation of the other overloads which will delegate to this method (after proper
+	 *   conversions).
 	 */
 	default void forEach(final METHOD_ARG_KEY_CONSUMER action) {
 		Objects.requireNonNull(action);
 		iterator().forEachRemaining(action);
 	}
 
-#if defined JDK_PRIMITIVE_KEY_CONSUMER
-#if !KEY_WIDENED
+#if KEYS_INT_LONG_DOUBLE
 	// Because our primitive Consumer interface extends both the JDK's primitive
 	// and object Consumer interfaces, calling this method with it would be ambiguous.
 	// This overload exists to pass it to the proper primitive overload.
@@ -203,7 +211,7 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
 	 * overload only exists to disambiguate. Instead override the {@code forEach()} overload
 	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
-	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
 	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
 	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
 	 * method to override, and you can safely ignore this message.
@@ -215,7 +223,7 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	default void forEach(final KEY_CONSUMER action) {
 		forEach((JDK_PRIMITIVE_KEY_CONSUMER) action);
 	}
-#else
+#elif !KEY_CLASS_Boolean
 	/**
 	 * Performs the given action for each element of this type-specific {@link java.lang.Iterable},
 	 * performing widening primitive casts, until all elements have been processed or the action
@@ -224,20 +232,14 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 	 * @param action the action to be performed for each element.
 	 * @see java.lang.Iterable#forEach(java.util.function.Consumer)
 	 * @since 8.0.0
-	 * @deprecated This method performs a widening primitive cast for each element, when a type-specific
-	 *   consumer could avoid this. This is inconsistent with how the primitive {@code Iterator} class is defined.
-	 *   This method has been redefined to be implemented in terms of the type-specific overload
-	 *   (e.g. {@code forEach(ShortConsumer)} for {@code short}s) and now that method should be used or overridden
-	 *   instead of this one. This method now only remains for backwards compatibility purposes.
+	 * @implNote Unless the argument is type-specific, this method will introduce an intermediary
+	 *   lambda to perform widening casts. Please use the type-specific overload to avoid this overhead.
 	 */
-	@Deprecated
 	default void forEach(final JDK_PRIMITIVE_KEY_CONSUMER action) {
 		Objects.requireNonNull(action);
 		forEach(action instanceof KEY_CONSUMER ? (KEY_CONSUMER)action : (KEY_CONSUMER)action::accept);
 	}
 #endif
-#endif
-
 
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead. */
@@ -250,5 +252,4 @@ public interface KEY_ITERABLE KEY_GENERIC extends Iterable<KEY_GENERIC_CLASS> {
 		forEach(action instanceof METHOD_ARG_KEY_CONSUMER ? (METHOD_ARG_KEY_CONSUMER)action : (KEY_CONSUMER) action::accept);
 	}
 #endif
-
 }

@@ -19,7 +19,7 @@ package PACKAGE;
 
 import java.util.Collection;
 import static it.unimi.dsi.fastutil.Size64.getSizeOf;
-#if KEY_WIDENED
+#if KEYS_PRIMITIVE && !KEYS_INT_LONG_DOUBLE && !KEY_CLASS_Boolean
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
 #endif
@@ -46,7 +46,21 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	@Override
 	KEY_ITERATOR KEY_GENERIC iterator();
 
-#if defined JDK_PRIMITIVE_ITERATOR && KEY_WIDENED && SMALL_TYPES
+#if KEYS_PRIMITIVE && !KEY_CLASS_Boolean
+#if KEYS_INT_LONG_DOUBLE
+	/** Returns a primitive iterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is identical to {@link #iterator()}, as the type-specific
+	 * iterator is already compatible with the JDK's primitive iterators.
+	 * It only exists for compatibility with the other primitive types' {@code Collection}s
+	 * that have use for widened iterators.
+	 *
+	 * @return a primitive iterator on the elements of this collection.
+	 * @since 8.5.0
+	 */
+	@Override
+	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterator(); }
+#else
 #if KEY_CLASS_Character
 	/**
 	 * Returns a widened primitive iterator on the elements of this collection.<p>
@@ -78,19 +92,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() {
 		return KEY_ITERABLE.super.KEY_WIDENED_ITERATOR_METHOD();
 	}
-#elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
-	/** Returns a primitive iterator on the elements of this collection.<p>
-	 *
-	 * <p>This method is identical to {@link #iterator()}, as the type-specific
-	 * iterator is already compatible with the JDK's primitive iterators.
-	 * It only exists for compatibility with the other primitive types' {@code Collection}s
-	 * that have use for widened iterators.
-	 *
-	 * @return a primitive iterator on the elements of this collection.
-	 * @since 8.5.0
-	 */
-	@Override
-	default KEY_WIDENED_ITERATOR KEY_WIDENED_ITERATOR_METHOD() { return iterator(); }
+#endif
 #endif
 
 	// If you change these default spliterator methods, you will likely need to update Iterable, List, Set, and SortedSet too
@@ -113,7 +115,20 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	}
 #endif
 
-#if defined JDK_PRIMITIVE_SPLITERATOR && KEY_WIDENED
+#if KEYS_PRIMITIVE && !KEY_CLASS_Boolean
+#if KEYS_INT_LONG_DOUBLE
+	/** Returns a primitive spliterator on the elements of this collection.<p>
+	 *
+	 * <p>This method is identical to {@link #spliterator()}, as the type-specific
+	 * spliterator is already compatible with the JDK's primitive spliterators.
+	 * It only exists for compatibility with the other primitive types' {@code Collection}s
+	 * that have use for widened spliterators.
+	 *
+	 * @return a primitive spliterator on the elements of this collection.
+	 */
+	@Override
+	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return spliterator(); }
+#else
 #if KEY_CLASS_Character
 	/** Returns widened primitive spliterator on the elements of this collection.<p>
 	 *
@@ -143,20 +158,8 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() {
 		return KEY_ITERABLE.super.KEY_WIDENED_SPLITERATOR_METHOD();
 	}
-#elif defined JDK_PRIMITIVE_ITERATOR && KEYS_PRIMITIVE && !KEY_WIDENED && SMALL_TYPES
-	/** Returns a primitive spliterator on the elements of this collection.<p>
-	 *
-	 * <p>This method is identical to {@link #spliterator()}, as the type-specific
-	 * spliterator is already compatible with the JDK's primitive spliterators.
-	 * It only exists for compatibility with the other primitive types' {@code Collection}s
-	 * that have use for widened spliterators.
-	 *
-	 * @return a primitive spliterator on the elements of this collection.
-	 */
-	@Override
-	default KEY_WIDENED_SPLITERATOR KEY_WIDENED_SPLITERATOR_METHOD() { return spliterator(); }
 #endif
-
+#endif
 
 #if KEYS_PRIMITIVE
 
@@ -269,7 +272,6 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	boolean removeAll(COLLECTION c);
 
-#if defined JDK_PRIMITIVE_PREDICATE || KEY_CLASS_Boolean
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
@@ -282,66 +284,30 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 				(METHOD_ARG_PREDICATE) key -> filter.test(KEY2OBJ(KEY_NARROWING(key))));
 	}
 
-#if KEY_WIDENED || KEY_CLASS_Boolean
-#ifdef JDK_PRIMITIVE_PREDICATE
 	/** Remove from this collection all elements which satisfy the given predicate.
 	 *
 	 * @param filter a predicate which returns {@code true} for elements to be
 	 *        removed.
 	 * @see Collection#removeIf(java.util.function.Predicate)
 	 * @return {@code true} if any elements were removed.
-	 * @deprecated Please use the corresponding type-specific method instead. This method
-	 *   performs a widening primitive cast for each element, when a type-specific consumer
-	 *   could avoid this.
+	 * @apiNote Implementing classes should generally override this method, and take the default
+	 *   implementation of the other overloads which will delegate to this method (after proper
+	 *   conversions).
 	 */
-	@Deprecated
-	@SuppressWarnings("overloads")
-	default boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
-		return removeIf(filter instanceof KEY_PREDICATE ? (KEY_PREDICATE) filter : (KEY_PREDICATE) filter::test);
+	default boolean removeIf(final METHOD_ARG_PREDICATE filter) {
+		java.util.Objects.requireNonNull(filter);
+		boolean removed = false;
+		final KEY_ITERATOR each = iterator();
+		while (each.hasNext()) {
+			if (filter.test(each.NEXT_KEY())) {
+				each.remove();
+				removed = true;
+			}
+		}
+		return removed;
 	}
-#endif
 
-	/** Remove from this collection all elements which satisfy the given predicate.
-	 *
-	 * @param filter a predicate which returns {@code true} for elements to be
-	 *        removed.
-	 * @see Collection#removeIf(java.util.function.Predicate)
-	 * @return {@code true} if any elements were removed.
-	 */
-	default boolean removeIf(final KEY_PREDICATE filter) {
-		java.util.Objects.requireNonNull(filter);
-		boolean removed = false;
-		final KEY_ITERATOR each = iterator();
-		while (each.hasNext()) {
-			if (filter.test(each.NEXT_KEY())) {
-				each.remove();
-				removed = true;
-			}
-		}
-		return removed;
-	}
-#else // !KEY_WIDENED
-	/** Remove from this collection all elements which satisfy the given predicate.
-	 *
-	 * @param filter a predicate which returns {@code true} for elements to be
-	 *        removed.
-	 * @see Collection#removeIf(java.util.function.Predicate)
-	 * @return {@code true} if any elements were removed.
-	 */
-	@SuppressWarnings("overloads")
-	default boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
-		java.util.Objects.requireNonNull(filter);
-		boolean removed = false;
-		final KEY_ITERATOR each = iterator();
-		while (each.hasNext()) {
-			if (filter.test(each.NEXT_KEY())) {
-				each.remove();
-				removed = true;
-			}
-		}
-		return removed;
-	}
-	
+#if KEYS_INT_LONG_DOUBLE
 	// Because our primitive Predicate interface extends both the JDK's primitive
 	// and object Predicate interfaces, calling this method with it would be ambiguous.
 	// This overload exists to pass it to the proper primitive overload.
@@ -351,7 +317,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 * <p><b>WARNING:</b> Overriding this is almost always a mistake, as this
 	 * overload only exists to disambiguate. Instead override the {@code removeIf()} overload
 	 * that uses the JDK's primitive predicate type (e.g. {@link java.util.function.IntPredicate}).
-	 * <br>If Java supported final default methods, this would be one, but sadly it does not.
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
 	 * <p>If you checked and are overriding the version with {@code java.util.function.XPredicate}, and
 	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
 	 * method to override, and you can safely ignore this message.
@@ -364,7 +330,20 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	default boolean removeIf(final KEY_PREDICATE filter) {
 		return removeIf((JDK_PRIMITIVE_PREDICATE) filter);
 	}
-#endif
+#elif !KEY_CLASS_Boolean
+	/** Remove from this collection all elements which satisfy the given predicate.
+	 *
+	 * @param filter a predicate which returns {@code true} for elements to be
+	 *        removed.
+	 * @see Collection#removeIf(java.util.function.Predicate)
+	 * @return {@code true} if any elements were removed.
+	 * @implNote Unless the argument is type-specific, this method will introduce an intermediary
+	 *   lambda to perform widening casts. Please use the type-specific overload to avoid this overhead. 
+	 */
+	@SuppressWarnings("overloads")
+	default boolean removeIf(final JDK_PRIMITIVE_PREDICATE filter) {
+		return removeIf(filter instanceof KEY_PREDICATE ? (KEY_PREDICATE) filter : (KEY_PREDICATE) filter::test);
+	}
 #endif
 
 	/** Retains in this collection only elements from the given type-specific collection.
@@ -375,7 +354,7 @@ public interface COLLECTION KEY_GENERIC extends Collection<KEY_GENERIC_CLASS>, K
 	 */
 	boolean retainAll(COLLECTION c);
 
-#if defined JDK_PRIMITIVE_STREAM
+#if !KEY_CLASS_Boolean
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */

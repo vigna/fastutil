@@ -51,6 +51,26 @@ public class ObjectArrayListTest {
 	}
 
 	@Test
+	public void testForEach() {
+		final ObjectArrayList<Integer> l = ObjectArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would mapToInt and then compute the sum.
+		int[] forEachSum = new int[1];
+		l.forEach(i -> forEachSum[0] += i);
+		int realSum = l.stream().mapToInt(Integer::intValue).sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@Test
+	public void testIterator_forEachRemaining() {
+		final ObjectArrayList<Integer> l = ObjectArrayList.of(1,2,3,4,5,6);
+		// A hack-ish loop testing forEach, in real code you would mapToInt and then compute the sum.
+		int[] forEachSum = new int[1];
+		l.iterator().forEachRemaining(i -> forEachSum[0] += i);
+		int realSum = l.stream().mapToInt(Integer::intValue).sum();
+		assertEquals(realSum, forEachSum[0]);
+	}
+
+	@Test
 	public void testRemoveIf() {
 		final ObjectArrayList<Integer> l = ObjectArrayList.of(Integer.valueOf(1), Integer.valueOf(2), Integer.valueOf(3), Integer.valueOf(4), Integer.valueOf(5), Integer.valueOf(6));
 		l.removeIf(i -> i.intValue() % 2 == 0);
