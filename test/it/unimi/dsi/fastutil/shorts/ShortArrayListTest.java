@@ -259,10 +259,10 @@ public class ShortArrayListTest {
 	public void testForEach() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
 		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
-		int[] forEachSum = new int[1];
+		final int[] forEachSum = new int[1];
 		// i is a short here; we are getting ShortConsumer overload.
 		l.forEach(i -> forEachSum[0] += i);
-		int realSum = l.intStream().sum();
+		final int realSum = l.intStream().sum();
 		assertEquals(realSum, forEachSum[0]);
 	}
 
@@ -270,9 +270,9 @@ public class ShortArrayListTest {
 	public void testForEach_jdkConsumer() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
 		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
-		int[] forEachSum = new int[1];
+		final int[] forEachSum = new int[1];
 		l.forEach((java.util.function.IntConsumer) (i -> forEachSum[0] += i));
-		int realSum = l.intStream().sum();
+		final int realSum = l.intStream().sum();
 		assertEquals(realSum, forEachSum[0]);
 	}
 
@@ -281,9 +281,9 @@ public class ShortArrayListTest {
 	public void testForEach_objectConsumer() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
 		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
-		int[] forEachSum = new int[1];
-		l.forEach((java.util.function.Consumer<Short>) (i -> forEachSum[0] += i));
-		int realSum = l.intStream().sum();
+		final int[] forEachSum = new int[1];
+		l.forEach((java.util.function.Consumer<Short>)(i -> forEachSum[0] += i.shortValue()));
+		final int realSum = l.intStream().sum();
 		assertEquals(realSum, forEachSum[0]);
 	}
 
@@ -291,9 +291,9 @@ public class ShortArrayListTest {
 	public void testIterator_forEachRemaining() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
 		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
-		int[] forEachSum = new int[1];
+		final int[] forEachSum = new int[1];
 		l.iterator().forEachRemaining(i -> forEachSum[0] += i);
-		int realSum = l.intStream().sum();
+		final int realSum = l.intStream().sum();
 		assertEquals(realSum, forEachSum[0]);
 	}
 
@@ -301,9 +301,9 @@ public class ShortArrayListTest {
 	public void testIterator_forEachRemaining_jdkConsumer() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
 		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
-		int[] forEachSum = new int[1];
+		final int[] forEachSum = new int[1];
 		l.iterator().forEachRemaining((java.util.function.IntConsumer) (i -> forEachSum[0] += i));
-		int realSum = l.intStream().sum();
+		final int realSum = l.intStream().sum();
 		assertEquals(realSum, forEachSum[0]);
 	}
 
@@ -312,9 +312,9 @@ public class ShortArrayListTest {
 	public void testIterator_forEachRemaining_objectConsumer() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
 		// A hack-ish loop testing forEach, in real code you would use intStream to compute the sum.
-		int[] forEachSum = new int[1];
-		l.iterator().forEachRemaining((java.util.function.Consumer<Short>) (i -> forEachSum[0] += i));
-		int realSum = l.intStream().sum();
+		final int[] forEachSum = new int[1];
+		l.iterator().forEachRemaining((java.util.function.Consumer<Short>)(i -> forEachSum[0] += i.shortValue()));
+		final int realSum = l.intStream().sum();
 		assertEquals(realSum, forEachSum[0]);
 	}
 
@@ -336,7 +336,7 @@ public class ShortArrayListTest {
 	@Test
 	public void testRemoveIf_objectPredicate() {
 		final ShortArrayList l = new ShortArrayList(new short[] {1,2,3,4,5,6});
-		l.removeIf((java.util.function.Predicate<Short>) (i -> i % 2 == 0));
+		l.removeIf((java.util.function.Predicate<Short>)(i -> i.shortValue() % 2 == 0));
 		assertEquals(ShortArrayList.of(s(1),s(3),s(5)), l);
 	}
 
