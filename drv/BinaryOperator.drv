@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2020-2021 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.function.BinaryOperator;
+
+/** A type-specific {@link BinaryOperator}; provides methods operating both on objects
+ * and on primitives.
+ *
+ * @see BinaryOperator
+ * @since 8.5.0
+ */
+
+@FunctionalInterface
+#if ! KEY_CLASS_Boolean
+public interface KEY_BINARY_OPERATOR KEY_GENERIC extends BinaryOperator<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_BINARY_OPERATOR {
+#else
+public interface KEY_BINARY_OPERATOR KEY_GENERIC extends BinaryOperator<KEY_GENERIC_CLASS> {
+#endif
+
+	/**
+	 * Computes the operator on the given inputs.
+	 *
+	 * @param x the first input.
+	 * @param y the second input.
+	 * @return the output of the operator on the given inputs.
+	 */
+	KEY_TYPE apply(KEY_TYPE x, KEY_TYPE y);
+
+#if KEYS_INT_LONG_DOUBLE
+	/** {@inheritDoc}
+	 *
+	 * @implSpec This default implementation delegates to {@link #apply}.
+	 * @deprecated Please use {@link #apply}.
+	 */
+#else
+	/** {@inheritDoc}
+	 *
+	 * @implSpec This default implementation delegates to
+	 * {@link #apply} after narrowing down the arguments to the
+	 * actual key type, throwing an exception if the arguments cannot be
+	 * represented in the restricted domain. This is done for interoperability
+	 * with the Java 8 function environment. The use of this method discouraged, as
+	 * unexpected errors can occur.
+	 *
+	 * @throws IllegalArgumentException If the given operands are not an element of the key domain.
+	 * @since 8.5.0
+	 * @deprecated Please use {@link #apply}.
+	 */
+#endif
+
+#if ! KEY_CLASS_Boolean
+	@Deprecated
+	@Override
+	default KEY_TYPE_WIDENED JDK_PRIMITIVE_BINARY_OPERATOR_APPLY(final KEY_TYPE_WIDENED x, final KEY_TYPE_WIDENED y) {
+		return apply(KEY_NARROWING(x), KEY_NARROWING(y));
+	}
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	@SuppressWarnings("boxing")
+	default KEY_CLASS apply(final KEY_CLASS x, final KEY_CLASS y) {
+		return apply(x.KEY_VALUE(), y.KEY_VALUE());
+	}
+}

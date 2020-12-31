@@ -1,0 +1,200 @@
+/*
+ * Copyright (C) 2020-2021 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.util.Objects;
+import java.util.function.Predicate;
+
+/** A type-specific {@link Predicate}; provides methods to test a primitive type both as object
+ * and as primitive.
+ *
+ * <p>Except for the boolean case, this interface extends both a parameterized {@link java.util.function.Predicate}
+ * and a type-specific JDK predicate (e.g., {@link java.util.function.IntPredicate}). For types missing
+ * a type-specific JDK predicate (e.g., {@code short} or {@code float}), we extend the predicate associated with
+ * the smallest primitive type that can represent the current type (e.g., {@code int} or {@code double}, respectively).
+ *
+ * @see Predicate
+ * @since 8.5.0
+ */
+
+@FunctionalInterface
+#if ! KEY_CLASS_Boolean
+public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_PREDICATE {
+#else
+public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> {
+#endif
+
+#if ! KEYS_INT_LONG_DOUBLE
+	/**
+	 * Evaluates this predicate on the given input.
+	 *
+	 * @param t the input.
+	 * @return {@code true} if the input matches the predicate,
+	 * otherwise {@code false}
+	 */
+	boolean test(KEY_TYPE t);
+
+#if ! KEY_CLASS_Boolean
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default boolean test(final KEY_TYPE_WIDENED t) {
+		return test(KEY_NARROWING(t));
+	}
+#endif
+
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default boolean test(final KEY_CLASS t) {
+		return test(t.KEY_VALUE());
+	}
+
+    /**
+	 * Returns a composed type-specific predicate that represents a short-circuiting logical
+	 * AND of this type-specific predicate and another.
+	 * @param other a predicate that will be logically-ANDed with this predicate.
+     * @return a composed predicate that represents the short-circuiting logical
+     * AND of this predicate and the {@code other} predicate.
+	 * @see Predicate#and
+	 * @apiNote Implementing classes should generally override this method and 
+	 * keep the default implementation of the other overloads, which will 
+	 * delegate to this method (after proper conversions).
+	 */
+	default KEY_PREDICATE and(final METHOD_ARG_PREDICATE other) {
+		Objects.requireNonNull(other);
+		return t -> test(t) && other.test(t);
+	}
+
+#if KEYS_INT_LONG_DOUBLE
+
+	/**
+	 * Returns a composed type-specific predicate that represents a short-circuiting logical
+	 * AND of this type-specific predicate and another.
+	 *
+	 * <p><b>WARNING</b>: Overriding this method is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead, override the {@code and()} overload
+	 * that uses the JDK's primitive predicate type (e.g. {@link java.util.function.IntPredicate}).
+	 *
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
+	 *
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XPredicate}, and
+	 * you still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param other a predicate that will be logically-ANDed with this predicate.
+     * @return a composed predicate that represents the short-circuiting logical
+     * AND of this predicate and the {@code other} predicate.
+	 * @see Predicate#and
+	 */
+	default KEY_PREDICATE and(final KEY_PREDICATE other) {
+		return and((JDK_PRIMITIVE_PREDICATE) other);
+	}
+
+
+#elif ! KEY_CLASS_Boolean
+
+	/** {@inheritDoc}	
+	 * @implNote Composing with a JDK type-specific predicate will be slightly less efficient than using a type-specific predicate, as the argument will have to be widened at each call.  */
+	@Override
+	default KEY_PREDICATE and(final JDK_PRIMITIVE_PREDICATE other) {
+		return and(other instanceof KEY_PREDICATE ? (KEY_PREDICATE)other : (KEY_PREDICATE)other::test);
+	}
+
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default Predicate<KEY_GENERIC_CLASS> and(final Predicate<? super KEY_GENERIC_CLASS> other) {
+		return Predicate.super.and(other);
+	}
+
+	@Override
+	/** {@inheritDoc} */
+	default KEY_PREDICATE negate() {
+		return t -> ! test(t);
+	}
+
+
+    /**
+	 * Returns a composed type-specific predicate that represents a short-circuiting logical
+	 * OR of this type-specific predicate and another. 
+	 * @param other a predicate that will be logically-ORed with this predicate.
+	 * @return a composed predicate that represents the short-circuiting logical
+	 * OR of this predicate and the {@code other} predicate.
+	 * @see Predicate#or
+	 * @apiNote Implementing classes should generally override this method and 
+	 * keep the default implementation of the other overloads, which will 
+	 * delegate to this method (after proper conversions).
+	 */
+	default KEY_PREDICATE or(final METHOD_ARG_PREDICATE other) {
+		Objects.requireNonNull(other);
+		return t -> test(t) || other.test(t);
+	}
+
+#if KEYS_INT_LONG_DOUBLE
+
+	/**
+	 * Returns a composed type-specific predicate that represents a short-circuiting logical
+	 * OR of this type-specific predicate and another. 
+	 *
+	 * <p><b>WARNING</b>: Overriding this method is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead, override the {@code or()} overload
+	 * that uses the JDK's primitive predicate type (e.g. {@link java.util.function.IntPredicate}).
+	 *
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
+	 *
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XPredicate}, and
+	 * you still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param other a predicate that will be logically-ORed with this predicate.
+	 * @return a composed predicate that represents the short-circuiting logical
+	 * OR of this predicate and the {@code other} predicate.
+	 * @see Predicate#or
+	 */
+	default KEY_PREDICATE or(final KEY_PREDICATE other) {
+		return or((JDK_PRIMITIVE_PREDICATE) other);
+	}
+
+#elif ! KEY_CLASS_Boolean
+
+	/** {@inheritDoc}	
+	 * @implNote Composing with a JDK type-specific predicate will be slightly less efficient than using a type-specific predicate, as the argument will have to be widened at each call.  */
+	@Override
+	default KEY_PREDICATE or(final JDK_PRIMITIVE_PREDICATE other) {
+		return or(other instanceof KEY_PREDICATE ? (KEY_PREDICATE)other : (KEY_PREDICATE)other::test);
+	}
+
+#endif
+
+	/** {@inheritDoc}
+	 * @deprecated Please use the corresponding type-specific method instead. */
+	@Deprecated
+	@Override
+	default Predicate<KEY_GENERIC_CLASS> or(final Predicate<? super KEY_GENERIC_CLASS> other) {
+		return Predicate.super.or(other);
+	}
+
+}

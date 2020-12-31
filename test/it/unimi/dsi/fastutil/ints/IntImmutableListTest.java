@@ -1,5 +1,3 @@
-package it.unimi.dsi.fastutil.ints;
-
 /*
  * Copyright (C) 2017-2020 Sebastiano Vigna
  *
@@ -15,6 +13,8 @@ package it.unimi.dsi.fastutil.ints;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -64,21 +64,21 @@ public class IntImmutableListTest {
 	public void testToList() {
 		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
 		// Also conveniently serves as a test of the intStream and spliterator.
-		IntImmutableList transformed = IntImmutableList.toList(baseList.intStream().map(i -> i + 40));
+		final IntImmutableList transformed = IntImmutableList.toList(baseList.intStream().map(i -> i + 40));
 		assertEquals(IntImmutableList.of(42, 420, 1337), transformed);
 	}
 
 	@Test
 	public void testSpliteratorTrySplit() {
 		final IntImmutableList baseList = IntImmutableList.of(0, 1, 2, 3, 72, 5, 6);
-		IntSpliterator willBeSuffix = baseList.spliterator();
+		final IntSpliterator willBeSuffix = baseList.spliterator();
 		assertEquals(baseList.size(), willBeSuffix.getExactSizeIfKnown());
 		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
 		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
-		IntSpliterator prefix = willBeSuffix.trySplit();
+		final IntSpliterator prefix = willBeSuffix.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
-		java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
-		java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
+		final java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
+		final java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
 
 		final IntImmutableList prefixList = IntImmutableList.toList(prefixStream);
 		final IntImmutableList suffixList = IntImmutableList.toList(suffixStream);

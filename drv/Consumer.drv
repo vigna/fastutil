@@ -17,38 +17,47 @@
 
 package PACKAGE;
 
-#if KEYS_PRIMITIVE
 import java.util.Objects;
-#endif
 import java.util.function.Consumer;
 
 /** A type-specific {@link Consumer}; provides methods to consume a primitive type both as object
  * and as primitive.
+ *
+ * <p>Except for the boolean case, this interface extends both a parameterized {@link java.util.function.Consumer}
+ * and a type-specific JDK consumer (e.g., {@link java.util.function.IntConsumer}). For types missing
+ * a type-specific JDK consumer (e.g., {@code short} or {@code float}), we extend the consumer associated with
+ * the smallest primitive type that can represent the current type (e.g., {@code int} or {@code double}, respectively).
  *
  * @see Consumer
  * @since 8.0.0
  */
 
 @FunctionalInterface
-#ifdef JDK_PRIMITIVE_KEY_CONSUMER
+#if ! KEY_CLASS_Boolean
 public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_KEY_CONSUMER {
 #else
 public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 #endif
 
-#if KEYS_PRIMITIVE
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
+#if ! KEYS_INT_LONG_DOUBLE
+	/**
+	 * Performs this operation on the given input.
+	 *
+	 * @param t the input.
+	 */
 	void accept(KEY_TYPE t);
-#endif
 
-#if KEY_WIDENED
+#if ! KEY_CLASS_Boolean
 	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
+	 * @deprecated Please use the corresponding exact type-specific method instead. */
 	@Deprecated
 	@Override
 	default void accept(final KEY_TYPE_WIDENED t) {
 		accept(KEY_NARROWING(t));
 	}
+	
+#endif
+
 #endif
 
 	/** {@inheritDoc}
@@ -59,24 +68,54 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 		this.accept(t.KEY_VALUE());
 	}
 
-#if !defined JDK_PRIMITIVE_KEY_CONSUMER || KEY_WIDENED
-	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
+	/**
+	 * Returns a composed type-specific consumer that performs, in sequence, this
+	 * operation followed by the {@code after} operation.
+	 * @param after the operation to perform after this operation.
+	 * @return a composed {@code Consumer} that performs in sequence this
+	 * operation followed by the {@code after} operation.
+	 * @see Consumer#andThen
+	 * @apiNote Implementing classes should generally override this method and 
+	 * keep the default implementation of the other overloads, which will 
+	 * delegate to this method (after proper conversions).
+	 */
+	default KEY_CONSUMER andThen(final METHOD_ARG_KEY_CONSUMER after) {
 		Objects.requireNonNull(after);
-		return (KEY_TYPE t) -> { accept(t); after.accept(t); };
+		return t -> { accept(t); after.accept(t); };
 	}
-#endif
 
-#ifdef JDK_PRIMITIVE_KEY_CONSUMER
-#if KEY_WIDENED
-	/** {@inheritDoc}
-	 * @deprecated Please use the corresponding type-specific method instead. */
-	@Deprecated
-#endif
+#if KEYS_INT_LONG_DOUBLE
+	/**
+	 * Returns a composed type-specific consumer that performs, in sequence, this
+	 * operation followed by the {@code after} operation.
+	 *
+	 * <p><b>WARNING</b>: Overriding this method is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead, override the {@code andThen()} overload
+	 * that uses the JDK's primitive consumer type (e.g. {@link java.util.function.IntConsumer}).
+	 *
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
+	 *
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XConsumer}, and
+	 * you still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param after the operation to perform after this operation.
+	 * @return a composed {@code Consumer} that performs in sequence this
+	 * operation followed by the {@code after} operation.
+	 * @see Consumer#andThen
+	 */
+	default KEY_CONSUMER andThen(final KEY_CONSUMER after) {
+		return andThen((JDK_PRIMITIVE_KEY_CONSUMER) after);
+	}
+
+#elif ! KEY_CLASS_Boolean
+	/** {@inheritDoc}	
+	 * @implNote Composing with a JDK type-specific consumer will be slightly less efficient than using a type-specific consumer, as the argument will have to be widened at each call.  */
 	@Override
 	default KEY_CONSUMER andThen(final JDK_PRIMITIVE_KEY_CONSUMER after) {
-		Objects.requireNonNull(after);
-		return (KEY_TYPE t) -> { accept(t); after.accept(t); };
+		return andThen(after instanceof KEY_CONSUMER ? (KEY_CONSUMER) after : (KEY_CONSUMER) after::accept);
 	}
+
 #endif
 
 	/** {@inheritDoc}
@@ -86,5 +125,4 @@ public interface KEY_CONSUMER KEY_GENERIC extends Consumer<KEY_GENERIC_CLASS> {
 	default Consumer<KEY_GENERIC_CLASS> andThen(final Consumer<? super KEY_GENERIC_CLASS> after) {
 		return Consumer.super.andThen(after);
 	}
-#endif
 }
