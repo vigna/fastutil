@@ -207,15 +207,15 @@ public class BooleanDirectSet extends AbstractBooleanSet implements BooleanSet, 
 	
 	@Override
 	public boolean retainAll(BooleanCollection c) {
-		if (c instanceof BooleanDirectSet) {
-			return retainAll((BooleanDirectSet) c);
-		}
 		if (isEmpty()) {
 			return false;
 		}
 		if (c.isEmpty()) {
 			clear();
 			return true;
+		}
+		if (c instanceof BooleanDirectSet) {
+			return retainAll((BooleanDirectSet) c);
 		}
 		boolean seenFalse = false;
 		boolean seenTrue = false;
@@ -241,6 +241,7 @@ public class BooleanDirectSet extends AbstractBooleanSet implements BooleanSet, 
 		return anyRemoved;
 	}
 	
+	@Deprecated
 	@Override
 	public boolean removeIf(java.util.function.Predicate<? super java.lang.Boolean> filter) {
 		boolean anyRemoved = false;
@@ -261,12 +262,12 @@ public class BooleanDirectSet extends AbstractBooleanSet implements BooleanSet, 
 
 	@Override
 	public boolean containsAll(BooleanCollection c) {
-		if (c instanceof BooleanDirectSet) {
-			return containsAll((BooleanDirectSet) c);
-		}
 		if (hasFalse && hasTrue) {
 			// We already contain every possible value; no need to even check.
 			return true;
+		}
+		if (c instanceof BooleanDirectSet) {
+			return containsAll((BooleanDirectSet) c);
 		}
 		if (isEmpty()) {
 			return c.isEmpty();
@@ -369,6 +370,13 @@ public class BooleanDirectSet extends AbstractBooleanSet implements BooleanSet, 
 			throw new InternalError(impossible);
 		}
 		return cloned;
+	}
+
+
+	@Override
+	public String toString() {
+		// To be consistent with the toArray() spec, we will return a new array every time, even if empty.
+		return hasFalse ? (hasTrue ? "{false, true}" : "{false}") : (hasTrue ? "{true}" : "{}");
 	}
 
 	// This class is so dead simple it makes sense to roll the iterator and spliterator into one. 
