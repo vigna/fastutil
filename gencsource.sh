@@ -445,9 +445,13 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#if KEYS_INT_LONG_DOUBLE\n"\
 "#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
 "#define METHOD_ARG_PREDICATE JDK_PRIMITIVE_PREDICATE\n"\
+"#define METHOD_ARG_KEY_UNARY_OPERATOR JDK_PRIMITIVE_UNARY_OPERATOR\n"\
+"#define KEY_UNARY_OPERATOR_APPLY applyAs${TYPE_CAP[$k]}\n"\
 "#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\
 "#define METHOD_ARG_PREDICATE KEY_PREDICATE KEY_SUPER_GENERIC\n"\
+"#define METHOD_ARG_KEY_UNARY_OPERATOR KEY_UNARY_OPERATOR KEY_SUPER_GENERIC\n"\
+"#define KEY_UNARY_OPERATOR_APPLY apply\n"\
 "#endif\n"\
 \
 "#if VALUES_INT_LONG_DOUBLE\n"\
@@ -628,7 +632,6 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define TOP top${TYPE_STD[$k]}\n"\
 "#define PEEK peek${TYPE_STD[$k]}\n"\
 "#define POP pop${TYPE_STD[$k]}\n"\
-"#define REPLACE_ALL_KEY replaceAll${TYPE_STD[$k]}s\n"\
 "#define KEY_EMPTY_ITERATOR_METHOD empty${TYPE_CAP2[$k]}Iterator\n"\
 "#define KEY_EMPTY_SPLITERATOR_METHOD empty${TYPE_CAP2[$k]}Spliterator\n"\
 "#define AS_KEY_ITERATOR as${TYPE_CAP2[$k]}Iterator\n"\

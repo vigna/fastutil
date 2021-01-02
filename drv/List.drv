@@ -18,6 +18,7 @@
 package PACKAGE;
 
 import java.util.List;
+import java.util.Objects;
 import static it.unimi.dsi.fastutil.Size64.getSizeOf;
 
 #if ! KEY_CLASS_Reference
@@ -245,7 +246,68 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 */
 	KEY_TYPE set(int index, KEY_TYPE k);
 
-#if defined JDK_PRIMITIVE_UNARY_OPERATOR
+
+	/**
+	 * Replaces each element of this list with the result of applying the
+	 * operator to that element. 
+	 * @param operator the operator to apply to each element.
+	 * @see java.util.List#replaceAll
+	 */
+	default void replaceAll(final METHOD_ARG_KEY_UNARY_OPERATOR operator) {
+		final KEY_LIST_ITERATOR iter = listIterator();
+		while(iter.hasNext()) {
+			iter.set(operator.KEY_UNARY_OPERATOR_APPLY(iter.NEXT_KEY()));
+		}
+	}
+
+#if KEYS_INT_LONG_DOUBLE
+	// Because our primitive UnaryOperator interface extends both the JDK's primitive
+	// and object UnaryOperator interfaces, calling this method with it would be ambiguous.
+	// This overload exists to pass it to the proper primitive overload.
+	/**
+	 * Replaces each element of this list with the result of applying the
+	 * operator to that element. 
+	 *
+	 * <p><b>WARNING</b>: Overriding this method is almost always a mistake, as this
+	 * overload only exists to disambiguate. Instead, override the {@code replaceAll()} overload
+	 * that uses the JDK's primitive unary operator type (e.g. {@link java.util.function.IntUnaryOperator}).
+	 *
+	 * <p>If Java supported final default methods, this would be one, but sadly it does not.
+	 *
+	 * <p>If you checked and are overriding the version with {@code java.util.function.XUnaryOperator}, and
+	 * still see this warning, then your IDE is incorrectly conflating this method with the proper
+	 * method to override, and you can safely ignore this message.
+	 *
+	 * @param operator the operator to apply to each element
+	 * @see java.util.List#replaceAll
+	 * @since 8.5.0
+	 */
+	default void replaceAll(final KEY_UNARY_OPERATOR operator) {
+		replaceAll((METHOD_ARG_KEY_UNARY_OPERATOR) operator);
+	}
+
+#elif KEYS_BYTE_CHAR_SHORT_FLOAT
+	/**
+	 * Replaces each element of this list with the result of applying the
+	 * operator to that element, performing widening and narrowing primitive casts, 
+	 * until all elements have been processed or the action
+	 * throws an exception.
+	 *
+	 * @param operator the operator to apply to each element
+	 * @see java.util.List#replaceAll
+	 * @since 8.5.0
+	 * @implNote Unless the argument is type-specific, this method will introduce an intermediary
+	 *   lambda to perform widening and narrowing casts. Please use the type-specific overload to avoid this overhead.
+	 */
+	default void replaceAll(final JDK_PRIMITIVE_UNARY_OPERATOR operator) {
+		Objects.requireNonNull(operator);
+		final KEY_LIST_ITERATOR iter = listIterator();
+		while(iter.hasNext()) {
+			iter.set(KEY_NARROWING(operator.JDK_PRIMITIVE_KEY_APPLY(iter.NEXT_KEY())));
+		}
+	}
+#endif
+
 	/** {@inheritDoc}
 	 * @deprecated Please use the corresponding type-specific method instead.
 	 */
@@ -253,24 +315,11 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	@Override
 	@SuppressWarnings("boxing")
 	default void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) {
-#if KEYS_BYTE_CHAR_SHORT_FLOAT
-		REPLACE_ALL_KEY((KEY_TYPE_WIDENED value) -> operator.apply(KEY_NARROWING(value)));
-#else
-		REPLACE_ALL_KEY((KEY_TYPE value) -> KEY_CLASS2TYPE(operator.apply(KEY2OBJ(value))));
-#endif
+		Objects.requireNonNull(operator);
+		// The instanceof and cast is required for performance. Without it, calls routed through this
+		// overload using a primitive consumer would go through the slow lambda.
+		replaceAll(operator instanceof METHOD_ARG_KEY_UNARY_OPERATOR ? (METHOD_ARG_KEY_UNARY_OPERATOR) operator : (METHOD_ARG_KEY_UNARY_OPERATOR) operator::apply);
 	}
-
-	 /** Replaces each element of this list with the result of the given operation (which is given the corresponding element it will replace as an argument.
-	  * <p>If needed, a checked narrowing cast will be performed (aka, will throw if the value provided would overflow or underflow the current datatype).
-	  * @see List#replaceAll(java.util.function.UnaryOperator)
-	  */
-	default void REPLACE_ALL_KEY(final JDK_PRIMITIVE_UNARY_OPERATOR operator) {
-		final KEY_LIST_ITERATOR iter = listIterator();
-		while(iter.hasNext()) {
-			iter.set(KEY_NARROWING(operator.JDK_PRIMITIVE_KEY_APPLY(iter.NEXT_KEY())));
-		}
-	}
-#endif
 
 	/** Returns the element at the specified position in this list.
 	 * @see List#get(int)
