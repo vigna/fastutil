@@ -36,7 +36,7 @@ import java.util.function.Predicate;
 #if ! KEY_CLASS_Boolean
 public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS>, JDK_PRIMITIVE_PREDICATE {
 #else
-public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> {
+public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS>, KEY_UNARY_OPERATOR {
 #endif
 
 #if ! KEYS_INT_LONG_DOUBLE
@@ -59,6 +59,21 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	}
 #endif
 
+#if KEY_CLASS_Boolean
+	/**
+	 * Returns a {@code BooleanPredicate} that returns the boolean to be tested unmodified.
+	 * @see java.util.function.UnaryOperator#identity()
+	 */
+	public static KEY_PREDICATE identity() {
+		 return b -> b;
+	}
+
+	/** Returns a {@code BooleanPredicate} that returns the negation of the boolean to be tested. */
+	public static KEY_PREDICATE negation() {
+		 return b -> !b;
+	}
+#endif
+
 #endif
 
 	/** {@inheritDoc}
@@ -68,6 +83,16 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	default boolean test(final KEY_CLASS t) {
 		return test(t.KEY_VALUE());
 	}
+
+#if KEY_CLASS_Boolean
+	/** Evaluates this predicate on the given input.
+	 *  @see #test(boolean)
+	 */
+	@Override
+	default boolean apply(final KEY_TYPE b) {
+		return test(b);
+	}
+#endif
 
     /**
 	 * Returns a composed type-specific predicate that represents a short-circuiting logical
@@ -135,7 +160,6 @@ public interface KEY_PREDICATE KEY_GENERIC extends Predicate<KEY_GENERIC_CLASS> 
 	default KEY_PREDICATE negate() {
 		return t -> ! test(t);
 	}
-
 
     /**
 	 * Returns a composed type-specific predicate that represents a short-circuiting logical
