@@ -367,6 +367,7 @@ fi)\
 "#define INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_STD[$k]}IndirectDoublePriorityQueue\n"\
 "#define KEY_CONSUMER ${TYPE_STD[$k]}Consumer\n"\
 "#define KEY_PREDICATE ${TYPE_STD[$k]}Predicate\n"\
+"#define KEY_UNARY_OPERATOR ${TYPE_STD[$k]}UnaryOperator\n"\
 "#define KEY_BINARY_OPERATOR ${TYPE_STD[$k]}BinaryOperator\n"\
 "#define KEY_ITERATOR ${TYPE_CAP2[$k]}Iterator\n"\
 "#define KEY_WIDENED_ITERATOR ${TYPE_CAP[$wk]}Iterator\n"\
@@ -696,7 +697,6 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define COMPUTE_IF_ABSENT_PARTIAL computeIfAbsentPartial\n"\
 "#define COMPUTE compute\n"\
 "#define COMPUTE_IF_PRESENT computeIfPresent\n"\
-"#define MERGE merge\n"\
 "#endif\n"\
 \
 \

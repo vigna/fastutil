@@ -211,6 +211,11 @@ $(BINARY_OPERATORS): drv/BinaryOperator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BINARY_OPERATORS)
 
+UNARY_OPERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)UnaryOperator.c)
+$(UNARY_OPERATORS): drv/UnaryOperator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(UNARY_OPERATORS)
+
 ITERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterator.c)
 $(ITERATORS): drv/Iterator.drv; ./gencsource.sh $< $@ >$@
 

@@ -280,26 +280,26 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		f.defaultReturnValue(1);
 		f.put(1, 1);
 
-		assertEquals(1, m.computeIfAbsentPartial(1, f));
+		assertEquals(1, m.computeIfAbsent(1, f));
 		assertEquals(1, m.get(1));
 
-		assertEquals(-1, m.computeIfAbsentPartial(2, f));
+		assertEquals(-1, m.computeIfAbsent(2, f));
 		assertFalse(m.containsKey(2));
 
 		f.put(2, 2);
-		assertEquals(2, m.computeIfAbsentPartial(2, f));
+		assertEquals(2, m.computeIfAbsent(2, f));
 		assertTrue(m.containsKey(2));
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentPartialPrimitiveNullFunction() {
 		m.put(1, 1);
-		m.computeIfAbsentPartial(1, null);
+		m.computeIfAbsent(1, null);
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentPartialPrimitiveNullFunctionMissingKey() {
-		m.computeIfAbsentPartial(1, null);
+		m.computeIfAbsent(1, null);
 	}
 
 	@Test
