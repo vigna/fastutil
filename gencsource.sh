@@ -450,7 +450,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\
 "#define METHOD_ARG_PREDICATE KEY_PREDICATE KEY_SUPER_GENERIC\n"\
-"#define METHOD_ARG_KEY_UNARY_OPERATOR KEY_UNARY_OPERATOR KEY_SUPER_GENERIC\n"\
+"#define METHOD_ARG_KEY_UNARY_OPERATOR KEY_UNARY_OPERATOR KEY_GENERIC\n"\
 "#define KEY_UNARY_OPERATOR_APPLY apply\n"\
 "#endif\n"\
 \
@@ -458,12 +458,6 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
 "#else\n"\
 "#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
-"#endif\n"\
-\
-"#if !defined JDK_PRIMITIVE_UNARY_OPERATOR || KEYS_REFERENCE\n"\
-"#define METHOD_ARG_UNARY_OPERATOR java.util.function.UnaryOperator<KEY_GENERIC_CLASS>\n"\
-"#else\n"\
-"#define METHOD_ARG_UNARY_OPERATOR JDK_PRIMITIVE_UNARY_OPERATOR\n"\
 "#endif\n"\
 \
 \
