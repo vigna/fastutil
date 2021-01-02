@@ -696,7 +696,6 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define COMPUTE_IF_ABSENT_PARTIAL computeIfAbsentPartial\n"\
 "#define COMPUTE compute\n"\
 "#define COMPUTE_IF_PRESENT computeIfPresent\n"\
-"#define MERGE merge\n"\
 "#endif\n"\
 \
 \

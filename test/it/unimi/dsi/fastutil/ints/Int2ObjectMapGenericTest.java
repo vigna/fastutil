@@ -249,26 +249,26 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		final Int2ObjectFunction<Integer> f = new Int2ObjectArrayMap<>();
 		f.put(1, ONE);
 
-		assertEquals(ONE, m.computeIfAbsentPartial(1, f));
+		assertEquals(ONE, m.computeIfAbsent(1, f));
 		assertEquals(ONE, m.get(1));
 
-		assertSame(DEFAULT, m.computeIfAbsentPartial(2, f));
+		assertSame(DEFAULT, m.computeIfAbsent(2, f));
 		assertFalse(m.containsKey(2));
 
 		f.put(2, TWO);
-		assertEquals(TWO, m.computeIfAbsentPartial(2, f));
+		assertEquals(TWO, m.computeIfAbsent(2, f));
 		assertTrue(m.containsKey(2));
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentPartialPrimitiveNullFunction() {
 		m.put(1, ONE);
-		m.computeIfAbsentPartial(1, null);
+		m.computeIfAbsent(1, null);
 	}
 
 	@Test(expected = NullPointerException.class)
 	public void testComputeIfAbsentPartialPrimitiveNullFunctionMissingKey() {
-		m.computeIfAbsentPartial(1, null);
+		m.computeIfAbsent(1, null);
 	}
 
 	@Test
