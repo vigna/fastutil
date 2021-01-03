@@ -478,6 +478,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define ABSTRACT_PRIORITY_QUEUE Abstract${TYPE_STD[$k]}PriorityQueue\n"\
 "#define ABSTRACT_STACK Abstract${TYPE_STD[$k]}Stack\n"\
 "#define KEY_ABSTRACT_ITERATOR Abstract${TYPE_CAP2[$k]}Iterator\n"\
+"#define KEY_ABSTRACT_SPLITERATOR Abstract${TYPE_CAP2[$k]}Spliterator\n"\
 "#define KEY_ABSTRACT_BIDI_ITERATOR Abstract${TYPE_CAP2[$k]}BidirectionalIterator\n"\
 "#define KEY_ABSTRACT_LIST_ITERATOR Abstract${TYPE_CAP2[$k]}ListIterator\n"\
 "#define KEY_ABSTRACT_BIG_LIST_ITERATOR Abstract${TYPE_CAP2[$k]}BigListIterator\n"\

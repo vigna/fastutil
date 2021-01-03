@@ -336,6 +336,11 @@ $(ABSTRACT_BIG_LIST_ITERATORS): drv/AbstractBigListIterator.drv; ./gencsource.sh
 
 CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 
+ABSTRACT_SPLITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Spliterator.c)
+$(ABSTRACT_SPLITERATORS): drv/AbstractSpliterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(ABSTRACT_SPLITERATORS)
+
 #
 # Concrete implementations
 #
