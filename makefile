@@ -135,12 +135,12 @@ dirs:
 # Interfaces
 #
 
-ITERABLES := $(foreach k, $(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterable.c)
+ITERABLES := $(foreach k, $(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterable.c)
 $(ITERABLES): drv/Iterable.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERABLES)
 
-BIDIRECTIONAL_ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterable.c)
+BIDIRECTIONAL_ITERABLES := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterable.c)
 $(BIDIRECTIONAL_ITERABLES): drv/BidirectionalIterable.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIDIRECTIONAL_ITERABLES)
@@ -225,12 +225,12 @@ $(UNARY_OPERATORS): drv/UnaryOperator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(UNARY_OPERATORS)
 
-ITERATORS := $(foreach k,$(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterator.c)
+ITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterator.c)
 $(ITERATORS): drv/Iterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERATORS)
 
-SPLITERATORS := $(foreach k,$(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterator.c)
+SPLITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterator.c)
 $(SPLITERATORS): drv/Spliterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SPLITERATORS) 
@@ -325,7 +325,7 @@ $(ABSTRACT_COMPARATORS): drv/AbstractComparator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_COMPARATORS)
 
-ABSTRACT_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Iterator.c)
+ABSTRACT_ITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Iterator.c)
 $(ABSTRACT_ITERATORS): drv/AbstractIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_ITERATORS)
@@ -568,13 +568,13 @@ $(BIG_LISTS_STATIC): drv/BigLists.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(BIG_LISTS_STATIC)
 
 
-ARRAYS_STATIC := $(foreach k,$(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Arrays.c)
+ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Arrays.c)
 $(ARRAYS_STATIC): drv/Arrays.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAYS_STATIC)
 
 
-BIG_ARRAYS_STATIC := $(foreach k,$(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigArrays.c)
+BIG_ARRAYS_STATIC := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigArrays.c)
 $(BIG_ARRAYS_STATIC): drv/BigArrays.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAYS_STATIC)
