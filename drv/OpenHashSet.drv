@@ -676,6 +676,8 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * @apiNote Taking a primitive stream instead returning something like a
 	 * {@link java.util.stream.Collector Collector} is necessary because there is no
 	 * primitive {@code Collector} equivalent in the Java API.
+	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
+	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
 	 */
 	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSetWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
 		return stream.collect(
@@ -702,7 +704,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return (Collector) TO_SET_COLLECTOR;
 	}
 
- 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
+ 	/**
+ 	 * Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set.
+ 	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
+	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
+ 	 */
  	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toSetWithExpectedSize(int expectedSize) {
  		return Collector.of(
 		() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
