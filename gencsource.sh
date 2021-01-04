@@ -171,7 +171,6 @@ $(if [[ "${CLASS[$k]}" != "" ]]; then\
 		echo "#define KEY_NARROWING(x) x\\n";\
 	else\
 		echo "#define KEY_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safe${TYPE_CAP[$wk]}To${TYPE_CAP[$k]}(x)\\n";\
-		echo "#define KEY_WIDENED 1\\n";\
 	fi;\
 fi)\
 $(if [[ "${CLASS[$k]}" != "" ]]; then\
@@ -186,7 +185,6 @@ $(if [[ "${CLASS[$v]}" != "" ]]; then\
 		echo "#define VALUE_NARROWING(x) x\\n";\
 	else\
 		echo "#define VALUE_NARROWING(x) it.unimi.dsi.fastutil.SafeMath.safe${TYPE_CAP[$wv]}To${TYPE_CAP[$v]}(x)\\n";\
-		echo "#define VALUE_WIDENED 1\\n";\
 	fi;\
 fi)\
 \
