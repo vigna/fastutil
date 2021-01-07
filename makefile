@@ -7,7 +7,8 @@ GEN_SRCDIR ?= src
 export GEN_SRCDIR
 DOCSDIR = docs
 
-SMALL_TYPES ?= $(if $(NO_SMALL_TYPES),,1)
+SMALL_TYPES ?= $(if $(MINIMAL_TYPES),,1)
+IO_TYPES ?= $(if $(MINIMAL_TYPES),,1)
 
 APIURL=http://java.sun.com/j2se/5.0/docs/api # External URLs in the docs will point here
 
@@ -16,8 +17,6 @@ APIURL=http://java.sun.com/j2se/5.0/docs/api # External URLs in the docs will po
 .PHONY: all clean depend install docs jar tar jsources csources dirs
 
 .SECONDARY: $(JSOURCES)
-
-BYTE_NOSMALL=$(if $(SMALL_TYPES),,Byte)
 
 #  The capitalized types used to build class and method names; boolean and object types are not listed.
 TYPE_NOBOOL_NOOBJ= $(if $(SMALL_TYPES),Byte Short Char Float,) Int Long Double
@@ -30,9 +29,6 @@ TYPE_NOOBJ=$(if $(SMALL_TYPES),Boolean,) $(TYPE_NOBOOL_NOOBJ)
 
 #  The capitalized types used to build class and method names; references are not listed.
 TYPE_NOREF=$(TYPE_NOOBJ) Object
-
-#  The capitalized types used to build class and method names; references are not listed, byte is always included.
-TYPE_NOREF_B=$(BYTE_NOSMALL) $(TYPE_NOREF)
 
 #  The capitalized types used to build class and method names; boolean is not listed.
 TYPE_NOBOOL=$(TYPE_NOBOOL_NOREF) Reference
@@ -73,9 +69,9 @@ explain:
 	@echo "will compile behavioral and speed tests into the classes.\n"
 	@echo "If you set the make variable ASSERTS (e.g., make sources ASSERTS=1),"
 	@echo "you will compile assertions into the classes.\n"
-	@echo "If you set the make variable NO_SMALL_TYPES (e.g.,"
-	@echo "make sources NO_SMALL_TYPES=1), you will only generate classes "
-	@echo "involving ints, longs and doubles (and some byte utility)."
+	@echo "If you set the make variable MINIMAL_TYPES (e.g.,"
+	@echo "make sources MINIMAL_TYPES=1), you will only generate classes "
+	@echo "involving ints, longs and doubles (and some necessary utility)."
 	@echo "Note that in this case some tests will not compile."
 
 source: pom
@@ -135,12 +131,12 @@ dirs:
 # Interfaces
 #
 
-ITERABLES := $(foreach k, $(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterable.c)
+ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterable.c)
 $(ITERABLES): drv/Iterable.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERABLES)
 
-BIDIRECTIONAL_ITERABLES := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterable.c)
+BIDIRECTIONAL_ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterable.c)
 $(BIDIRECTIONAL_ITERABLES): drv/BidirectionalIterable.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIDIRECTIONAL_ITERABLES)
@@ -210,17 +206,17 @@ $(CONSUMERS): drv/Consumer.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(CONSUMERS)
 
-PREDICATES := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Predicate.c)
+PREDICATES := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Predicate.c)
 $(PREDICATES): drv/Predicate.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(PREDICATES)
 
-BINARY_OPERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BinaryOperator.c)
+BINARY_OPERATORS := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BinaryOperator.c)
 $(BINARY_OPERATORS): drv/BinaryOperator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BINARY_OPERATORS)
 
-UNARY_OPERATORS := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)UnaryOperator.c)
+UNARY_OPERATORS := $(foreach k,$(TYPE_NOOBJ), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)UnaryOperator.c)
 $(UNARY_OPERATORS): drv/UnaryOperator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(UNARY_OPERATORS)
@@ -233,9 +229,9 @@ CSOURCES += $(ITERATORS)
 SPLITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterator.c)
 $(SPLITERATORS): drv/Spliterator.drv; ./gencsource.sh $< $@ >$@
 
-CSOURCES += $(SPLITERATORS) 
+CSOURCES += $(SPLITERATORS)
 
-BIDIRECTIONAL_ITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterator.c)
+BIDIRECTIONAL_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BidirectionalIterator.c)
 $(BIDIRECTIONAL_ITERATORS): drv/BidirectionalIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIDIRECTIONAL_ITERATORS)
@@ -250,7 +246,7 @@ $(BIG_LISTS): drv/BigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LISTS)
 
-BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigListIterator.c)
+BIG_LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)BigListIterator.c)
 $(BIG_LIST_ITERATORS): drv/BigListIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_LIST_ITERATORS)
@@ -325,7 +321,7 @@ $(ABSTRACT_COMPARATORS): drv/AbstractComparator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_COMPARATORS)
 
-ABSTRACT_ITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Iterator.c)
+ABSTRACT_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Iterator.c)
 $(ABSTRACT_ITERATORS): drv/AbstractIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_ITERATORS)
@@ -345,7 +341,7 @@ $(ABSTRACT_BIG_LIST_ITERATORS): drv/AbstractBigListIterator.drv; ./gencsource.sh
 
 CSOURCES += $(ABSTRACT_BIG_LIST_ITERATORS)
 
-ABSTRACT_SPLITERATORS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Spliterator.c)
+ABSTRACT_SPLITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Abstract$(k)Spliterator.c)
 $(ABSTRACT_SPLITERATORS): drv/AbstractSpliterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ABSTRACT_SPLITERATORS)
@@ -515,7 +511,7 @@ $(ITERATORS_STATIC): drv/Iterators.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(ITERATORS_STATIC)
 
 
-SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterators.c)
+SPLITERATORS_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Spliterators.c)
 $(SPLITERATORS_STATIC): drv/Spliterators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(SPLITERATORS_STATIC)
@@ -532,7 +528,7 @@ $(BIG_SPLITERATORS_STATIC): drv/BigSpliterators.drv; ./gencsource.sh $< $@ >$@
 CSOURCES += $(BIG_SPLITERATORS_STATIC)
 
 
-ITERABLES_STATIC := $(foreach k,$(BYTE_NOSMALL) $(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterables.c)
+ITERABLES_STATIC := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Iterables.c)
 $(ITERABLES_STATIC): drv/Iterables.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ITERABLES_STATIC)
@@ -631,7 +627,7 @@ CSOURCES += $(COMPARATORS_STATIC)
 # Fragmented stuff
 #
 
-BINIO_FRAGMENTS := $(foreach k,$(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/io/$(k)BinIOFragment.h)
+BINIO_FRAGMENTS := $(foreach k,$(if $(IO_TYPES),$(TYPE_NOOBJ),), $(GEN_SRCDIR)/$(PKG_PATH)/io/$(k)BinIOFragment.h)
 $(BINIO_FRAGMENTS): drv/BinIOFragment.drv; ./gencsource.sh $< $@ >$@
 
 CFRAGMENTS += $(BINIO_FRAGMENTS)
@@ -639,10 +635,10 @@ CFRAGMENTS += $(BINIO_FRAGMENTS)
 $(GEN_SRCDIR)/$(PKG_PATH)/io/BinIO.c: drv/BinIO.drv $(BINIO_FRAGMENTS)
 	./gencsource.sh drv/BinIO.drv $@ >$@
 
-CSOURCES += $(GEN_SRCDIR)/$(PKG_PATH)/io/BinIO.c
+CSOURCES += $(if $(IO_TYPES),$(GEN_SRCDIR)/$(PKG_PATH)/io/BinIO.c,)
 
 
-TEXTIO_FRAGMENTS := $(foreach k,$(TYPE_NOOBJ_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/io/$(k)TextIOFragment.h)
+TEXTIO_FRAGMENTS := $(foreach k,$(if $(IO_TYPES),$(TYPE_NOOBJ),), $(GEN_SRCDIR)/$(PKG_PATH)/io/$(k)TextIOFragment.h)
 $(TEXTIO_FRAGMENTS): drv/TextIOFragment.drv; ./gencsource.sh $< $@ >$@
 
 CFRAGMENTS += $(TEXTIO_FRAGMENTS)
@@ -650,7 +646,7 @@ CFRAGMENTS += $(TEXTIO_FRAGMENTS)
 $(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c: drv/TextIO.drv $(TEXTIO_FRAGMENTS)
 	./gencsource.sh drv/TextIO.drv $@ >$@
 
-CSOURCES += $(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c
+CSOURCES += $(if $(IO_TYPES),$(GEN_SRCDIR)/$(PKG_PATH)/io/TextIO.c,)
 
 
 BIG_ARRAYS_FRAGMENTS := $(foreach k,$(TYPE_NOREF_ALL), $(GEN_SRCDIR)/$(PKG_PATH)/$(k)BigArraysFragment.h)
@@ -664,11 +660,10 @@ $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.c: drv/BigArraysCommon.drv $(BIG_ARRAYS_FRAG
 CSOURCES += $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.c
 
 
-
 JSOURCES = $(CSOURCES:.c=.java) # The list of generated Java source files
 
 
-
+# These are True Java Sources instead
 SOURCES = \
 	$(SOURCEDIR)/Function.java \
 	$(SOURCEDIR)/Hash.java \
@@ -700,17 +695,17 @@ SOURCES = \
 	$(SOURCEDIR)/io/MeasurableInputStream.java \
 	$(SOURCEDIR)/io/MeasurableOutputStream.java \
 	$(SOURCEDIR)/io/MeasurableStream.java \
-	$(SOURCEDIR)/io/RepositionableStream.java # These are True Java Sources instead
-
+	$(SOURCEDIR)/io/RepositionableStream.java
 
 # We pass each generated Java source through the gccpreprocessor. TEST compiles in the test code,
 # whereas ASSERTS compiles in some assertions (whose testing, of course, must be enabled in the JVM).
 
 $(JSOURCES): %.java: %.c
-	$(CC) -w -I. -DSMALL_TYPES=$(if $(SMALL_TYPES),1,0) $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< \
+	$(CC) -w -I. $(if $(TEST),-DTEST,) $(if $(ASSERTS),-DASSERTS_CODE,) -DASSERTS_VALUE=$(if $(ASSERTS),true,false) -E -C -P $< \
 		| sed -e '1,/START_OF_JAVA_SOURCE/d' -e 's/^ /	/' >$@
 
 clean:
+	-@mkdir -p build
 	-@find build -name \*.class -exec rm {} \;
 	-@find . -name \*.java~ -exec rm {} \;
 	-@find . -name \*.html~ -exec rm {} \;
