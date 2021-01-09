@@ -709,7 +709,7 @@ clean:
 	-@find build -name \*.class -exec rm {} \;
 	-@find . -name \*.java~ -exec rm {} \;
 	-@find . -name \*.html~ -exec rm {} \;
-	-@$(foreach k, $(sort $(TYPE)), find $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k)) -iname \*.java -and -not -iname \*-info.java -delete &&) true
+	-@$(foreach k, $(sort $(TYPE_ALL)), find $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k)) -iname \*.java -and -not -iname \*-info.java -delete &&) true
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/io/*IO.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/BigArrays.java
 	-@rm -f $(GEN_SRCDIR)/$(PKG_PATH)/*.[chj] $(GEN_SRCDIR)/$(PKG_PATH)/*/*.[chj]
