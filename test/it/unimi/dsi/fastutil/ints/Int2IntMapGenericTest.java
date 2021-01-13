@@ -41,6 +41,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.IntBinaryOperator;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
@@ -791,6 +792,23 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(-1, m.get(1));
 	}
 
+	@Test
+	public void testMergePrimitive() {
+		m.defaultReturnValue(-1);
+		assertEquals(0, m.mergeInt(0, 0, (x, y) -> 1000));
+		assertEquals(0, m.get(0));
+		assertEquals(1000, m.mergeInt(0, 0, (x, y) -> 1000));
+		assertEquals(1000, m.get(0));
+		assertEquals(2000, m.mergeInt(0, 500, (x, y) -> (x + y * 2)));
+		assertEquals(2000, m.get(0));
+
+		assertEquals(0, m.mergeInt(1, 0, (x, y) -> 1000));
+		assertEquals(0, m.get(1));
+		assertEquals(1000, m.mergeInt(1, 0, (x, y) -> 1000));
+		assertEquals(1000, m.get(1));
+		assertEquals(2000, m.mergeInt(1, 500, (x, y) -> (x + y * 2)));
+		assertEquals(2000, m.get(1));
+	}
 
 	@Test
 	public void testMergeObject() {
@@ -851,7 +869,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 	}
 
 	@Test
-	public void testMergePrimitive() {
+	public void testMergeDefaultReturnValue() {
 		m.defaultReturnValue(-1);
 
 		assertEquals(0, m.merge(1, 0, (oldVal, newVal) -> {
@@ -876,6 +894,26 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.isEmpty());
 	}
 
+	@Test
+	public void testMergeDefaultReturnValuePrimitive() {
+		m.defaultReturnValue(-1);
+
+		assertEquals(0, m.mergeInt(1, 0, (oldVal, newVal) -> {
+			assertEquals(-1, oldVal);
+			assertEquals(0, newVal);
+			return 0;
+		}));
+		assertEquals(0, m.get(1));
+		m.clear();
+
+		final IntBinaryOperator add = (oldVal, newVal) -> oldVal + newVal;
+
+		assertEquals(0, m.mergeInt(1, 0, add));
+		assertEquals(1, m.mergeInt(1, 1, add));
+		assertEquals(3, m.mergeInt(1, 2, add));
+		assertEquals(0, m.mergeInt(2, 0, add));
+		assertTrue(m.containsKey(1));
+	}
 
 	@Test(expected = NullPointerException.class)
 	public void testMergePrimitiveNullFunction() {
