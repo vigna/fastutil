@@ -165,13 +165,20 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		};
 	}
 
-	private static final class IndexBasedSpliterator KEY_GENERIC extends SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator KEY_GENERIC {
+	private static final class IndexBasedSpliterator KEY_GENERIC extends SPLITERATORS.LateBindingSizeIndexBasedSpliterator KEY_GENERIC {
 		final LIST KEY_GENERIC l;
+		IndexBasedSpliterator(LIST KEY_GENERIC l, int pos) {
+			super(pos);
+			this.l = l;
+		}
+		
 		IndexBasedSpliterator(LIST KEY_GENERIC l, int pos, int maxPos) {
 			super(pos, maxPos);
 			this.l = l;
 		}
-
+		
+		@Override
+		protected final int getMaxPosFromBackingStore() { return l.size(); }
 		@Override
 		protected final KEY_GENERIC_TYPE get(int i) { return l.GET_KEY(i); }
 		@Override
@@ -180,10 +187,24 @@ public abstract class ABSTRACT_LIST KEY_GENERIC extends ABSTRACT_COLLECTION KEY_
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @implSpec For {@link java.util.RandomAccess RandomAccess} lists, this implementation
+	 * will return a simple {@code Spliterator} that just calls {@link #get(int)} (except the
+	 * appropriate type specific method) with the appropriate indexes, which should be able to
+	 * {@link java.util.Spliterator#trySplit trySplit} in constant time. For non {@code RandomAccess}
+	 * lists, then the linear time splitting {@link java.util.Spliterator Spliterator} provided by
+	 * the {@code List} interface is used.
+	 * <p>Like the {@code List} and {@code Collection} interfaces' default implementations, the
+	 * returned spliterator is late-binding with regards to size, that is, it will track size
+	 * changes until the first {@code java.util.Spliterator#trySplit trySplit} (after which case
+	 * whether it binds early or late is unspecified). 
+	 */
 	@Override
 	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 		if (this instanceof java.util.RandomAccess) {
-			return new IndexBasedSpliterator KEY_GENERIC_DIAMOND(this, 0, ABSTRACT_LIST.this.size());
+			return new IndexBasedSpliterator KEY_GENERIC_DIAMOND(this, 0);
 		} else {
 			return LIST.super.spliterator();
 		}
