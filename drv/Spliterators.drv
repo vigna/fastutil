@@ -21,6 +21,9 @@ import java.util.Comparator;
 import java.util.Spliterator;
 import java.util.Objects;
 import java.util.function.Consumer;
+#if KEYS_REFERENCE
+import java.util.function.Predicate;
+#endif
 import it.unimi.dsi.fastutil.SafeMath;
 #if KEYS_BYTE_CHAR_SHORT_FLOAT
 import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
@@ -715,29 +718,41 @@ public final class SPLITERATORS {
 	public static KEY_WIDENED_SPLITERATOR widen(KEY_SPLITERATOR i) { return WIDENED_SPLITERATORS.wrap(i); }
 #endif
 
-#ifdef JDK_PRIMITIVE_PREDICATE
-	public static void onEachMatching(final KEY_SPLITERATOR KEY_GENERIC spliterator, final JDK_PRIMITIVE_PREDICATE predicate, final METHOD_ARG_KEY_CONSUMER action) {
+	/**
+	 * Perform the given {@code action} on each element that matches the given {@code predicate}.
+	 *
+	 * <p>This is equivalent to {@code java.util.stream.StreamSupport.stream(spliterator).filter(predicate).forEach(action)}
+	 * (substitute the proper primitive stream as needed), except it may perform better (but no potential for parallelism).
+	 */
+	public static KEY_GENERIC void onEachMatching(final STD_KEY_SPLITERATOR KEY_GENERIC spliterator, final METHOD_ARG_PREDICATE predicate, final METHOD_ARG_KEY_CONSUMER action) {
 		Objects.requireNonNull(predicate);
 		Objects.requireNonNull(action);
 
-		spliterator.forEachRemaining((KEY_CONSUMER KEY_GENERIC)(KEY_GENERIC_TYPE value) -> {
+		spliterator.forEachRemaining((KEY_GENERIC_TYPE value) -> {
 			if (predicate.test(value)) {
 				action.accept(value);
 			}
 		});
-#else
-	public static KEY_GENERIC void onEachMatching(final KEY_SPLITERATOR KEY_GENERIC spliterator, final java.util.function.Predicate<? super KEY_GENERIC_CLASS> predicate, final Consumer<? super KEY_GENERIC_CLASS> action) {
+	}
+#if KEYS_BYTE_CHAR_SHORT_FLOAT
+	/**
+	 * Perform the given {@code action} on each element that matches the given {@code predicate}.
+	 *
+	 * <p>This is equivalent to {@code java.util.stream.StreamSupport.stream(spliterator).filter(predicate).forEach(action)}
+	 * (substitute the proper primitive stream as needed), except it may perform better (but no potential for parallelism).
+	 */
+	public static KEY_GENERIC void onEachMatching(final STD_KEY_SPLITERATOR KEY_GENERIC spliterator, final JDK_PRIMITIVE_PREDICATE predicate, final JDK_PRIMITIVE_KEY_CONSUMER action) {
 		Objects.requireNonNull(predicate);
 		Objects.requireNonNull(action);
 
-		spliterator.forEachRemaining((KEY_CONSUMER KEY_GENERIC)(KEY_GENERIC_TYPE value) -> {
-			if (predicate.test(KEY2OBJ(value))) {
-				action.accept(KEY2OBJ(value));
+		// No lambda introduction here; this isn't overrideable (static method) and widening casts are implicit. 
+		spliterator.forEachRemaining((KEY_GENERIC_TYPE value) -> {
+			if (predicate.test(value)) {
+				action.accept(value);
 			}
 		});
-
-#endif
 	}
+#endif
 
 	/**
 	 * A skeletal implementation for a spliterator backed by an index based data store. High performance
