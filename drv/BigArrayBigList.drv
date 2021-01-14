@@ -152,13 +152,31 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 */
 
 	public BIG_ARRAY_BIG_LIST(final COLLECTION KEY_EXTENDS_GENERIC c) {
-		this(Size64.getSizeOf(c));
+		this(Size64.sizeOf(c));
 		if (c instanceof BIG_LIST) {
-			((BIG_LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = Size64.getSizeOf(c));
+			((BIG_LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = Size64.sizeOf(c));
 		} else {
 			for(KEY_ITERATOR KEY_EXTENDS_GENERIC i = c.iterator(); i.hasNext();) add(i.NEXT_KEY());
 		}
 	}
+
+#if KEYS_REFERENCE
+
+	/** Creates a new big-array big list and fills it with a given collection.
+	 *
+	 * @param c a collection that will be used to fill the array list.
+	 */
+
+	public BIG_ARRAY_BIG_LIST(final Collection KEY_EXTENDS_GENERIC c) {
+		this(Size64.sizeOf(c));
+		if (c instanceof BIG_LIST) {
+			((BIG_LIST KEY_EXTENDS_GENERIC)c).getElements(0, a, 0, size = Size64.sizeOf(c));
+		} else {
+			for(Iterator KEY_EXTENDS_GENERIC i = c.iterator(); i.hasNext();) add(i.next());
+		}
+	}
+
+#endif
 
 	/** Creates a new big-array big list and fills it with a given type-specific list.
 	 *
@@ -172,11 +190,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	/** Creates a new big-array big list and fills it with the elements of a given big array.
 	 *
-	 * <p>Note that this constructor makes it easy to build big lists from literal arrays
-	 * declared as <code><var>type</var>[][] {{ <var>init_values</var> }}</code>.
-	 * The only constraint is that the number of initialisation values is
-	 * below {@link it.unimi.dsi.fastutil.BigArrays#SEGMENT_SIZE}.
-	 *
 	 * @param a a big array whose elements will be used to fill the array list.
 	 */
 
@@ -185,11 +198,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	}
 
 	/** Creates a new big-array big list and fills it with the elements of a given big array.
-	 *
-	 * <p>Note that this constructor makes it easy to build big lists from literal arrays
-	 * declared as <code><var>type</var>[][] {{ <var>init_values</var> }}</code>.
-	 * The only constraint is that the number of initialisation values is
-	 * below {@link it.unimi.dsi.fastutil.BigArrays#SEGMENT_SIZE}.
 	 *
 	 * @param a a big array whose elements will be used to fill the array list.
 	 * @param offset the first element to use.
@@ -507,6 +515,68 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		final boolean modified = size != j;
 		size = j;
 		return modified;
+	}
+
+	@Override
+	public boolean addAll(long index, final STD_KEY_COLLECTION KEY_EXTENDS_GENERIC c) {
+		if (c instanceof LIST) {
+			return addAll(index, (LIST KEY_EXTENDS_GENERIC)c);
+		}
+		if (c instanceof BIG_LIST) {
+			return addAll(index, (BIG_LIST KEY_EXTENDS_GENERIC)c);
+		}
+		ensureIndex(index);
+		int n = c.size();
+		if (n == 0) return false;
+		grow(size + n);
+		BigArrays.copy(a, index, a, index + n, size - index);
+		final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i = c.iterator();
+		size += n;
+		assert size <= length(a);
+		while(n-- != 0) BigArrays.set(a, index++, i.NEXT_KEY());
+		return true;
+	}
+
+	@Override
+	public boolean addAll(final long index, final BIG_LIST KEY_EXTENDS_GENERIC list) {
+		ensureIndex(index);
+		final long n = list.size64();
+		if (n == 0) return false;
+		grow(size + n);
+		BigArrays.copy(a, index, a, index + n, size - index);
+		list.getElements(0, a, index, n);
+		size += n;
+		assert size <= length(a);
+		return true;
+	}
+
+	@Override
+	public boolean addAll(final long index, final LIST KEY_EXTENDS_GENERIC list) {
+		ensureIndex(index);
+		int n = list.size();
+		if (n == 0) return false;
+		grow(size + n);
+		BigArrays.copy(a, index, a, index + n, size - index);
+
+		size += n;
+		assert size <= length(a);
+
+		int segment = BigArrays.segment(index);
+		int displ = BigArrays.displacement(index);
+		int pos = 0;
+
+		while(n > 0) {
+			final int l = Math.min(a[segment].length - displ, n);
+			list.getElements(pos, a[segment], displ, l);
+			if ((displ += l) == BigArrays.SEGMENT_SIZE) {
+				displ = 0;
+				segment++;
+			}
+			pos += l;
+			n -= l;
+		}
+
+		return true;
 	}
 
 	@Override
