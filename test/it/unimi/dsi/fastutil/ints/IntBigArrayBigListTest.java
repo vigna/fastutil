@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.ints;
 
+import static it.unimi.dsi.fastutil.BigArrays.wrap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -44,17 +45,11 @@ public class IntBigArrayBigListTest {
 	@SuppressWarnings("boxing")
 	@Test
 	public void testRemoveAllSkipSegment() {
-		IntBigList list = new IntBigArrayBigList();
+		final IntBigList list = new IntBigArrayBigList();
 		for(long i = 0; i < BigArrays.SEGMENT_SIZE + 10; i++) list.add((int)(i % 2));
 		assertTrue(list.removeAll(IntSets.singleton(1)));
-		assertEquals(BigArrays.SEGMENT_SIZE / 2 + 5, list.size64());
-		for(long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++) assertEquals(0, list.getInt(i));
-
-		list = new IntBigArrayBigList();
-		for(long i = 0; i < BigArrays.SEGMENT_SIZE + 10; i++) list.add((int)(i % 2));
-		assertTrue(list.removeAll(Collections.singleton(1)));
-		assertEquals(BigArrays.SEGMENT_SIZE / 2 + 5, list.size64());
-		for(long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++) assertEquals(0, list.getInt(i));
+		assertEquals((BigArrays.SEGMENT_SIZE + 1) / 2 + 5, list.size64());
+		for (long i = 0; i < (BigArrays.SEGMENT_SIZE + 1) / 2 + 5; i++) assertEquals(0, list.getInt(i));
 	}
 
 
@@ -77,13 +72,13 @@ public class IntBigArrayBigListTest {
 
 	@Test
 	public void testRemoveAll() {
-		IntBigArrayBigList l = IntBigArrayBigList.wrap(new int[][] { { 0, 1, 2 } });
+		IntBigArrayBigList l = new IntBigArrayBigList(wrap(new int[] { 0, 1, 2 }));
 		l.removeAll(IntSets.singleton(1));
-		assertEquals(IntBigArrayBigList.wrap(new int[][] { { 0, 2 } }), l);
+		assertEquals(IntBigArrayBigList.of(0, 2), l);
 
-		l = IntBigArrayBigList.wrap(new int[][] { { 0, 1, 1, 2 } });
+		l = new IntBigArrayBigList(wrap(new int[] { 0, 1, 1, 2 }));
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
-		assertEquals(IntBigArrayBigList.wrap(new int[][] { { 0, 2 } }), l);
+		assertEquals(IntBigArrayBigList.of(0, 2), l);
 	}
 
 	private static java.util.Random r = new java.util.Random(0);
@@ -572,28 +567,28 @@ public class IntBigArrayBigListTest {
 		for(int i = 0; i < IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY + 2; i++) l.add(0);
 
 		l = new IntBigArrayBigList();
-		l.addElements(0, new int[1][IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+		l.addElements(0, wrap(new int[IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY]), 0, IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
 
 		l = new IntBigArrayBigList();
-		l.addElements(0, new int[1][2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+		l.addElements(0, wrap(new int[2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY]), 0, 2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
 
 		l = new IntBigArrayBigList(0);
 		for(int i = 0; i < IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY + 2; i++) l.add(0);
 
 		l = new IntBigArrayBigList(0);
-		l.addElements(0, new int[1][IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+		l.addElements(0, wrap(new int[IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY]), 0, IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
 
 		l = new IntBigArrayBigList(0);
-		l.addElements(0, new int[1][2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+		l.addElements(0, wrap(new int[2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY]), 0, 2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
 
 		l = new IntBigArrayBigList(2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY );
 		for(int i = 0; i < 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY; i++) l.add(0);
 
 		l = new IntBigArrayBigList(2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY );
-		l.addElements(0, new int[1][3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+		l.addElements(0, wrap(new int[3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY]), 0, 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
 
 		l = new IntBigArrayBigList(2 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY );
-		l.addElements(0, new int[1][3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY], 0, 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
+		l.addElements(0, wrap(new int[3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY]), 0, 3 * IntBigArrayBigList.DEFAULT_INITIAL_CAPACITY);
 
 		// Test lazy allocation
 		l = new IntBigArrayBigList();
@@ -619,29 +614,29 @@ public class IntBigArrayBigListTest {
 	@Test
 	public void testOf() {
 		final IntBigArrayBigList l = IntBigArrayBigList.of(0, 1, 2);
-		assertEquals(IntBigArrayBigList.wrap(BigArrays.wrap(new int[] { 0, 1, 2 })), l);
+		assertEquals(IntBigArrayBigList.wrap(wrap(new int[] { 0, 1, 2 })), l);
 	}
 
 	@Test
 	public void testToBigList() {
 		final IntBigArrayBigList baseList = IntBigArrayBigList.of(2, 380, 1297);
 		// Also conveniently serves as a test of the intStream and spliterator.
-		IntBigArrayBigList transformed = IntBigArrayBigList.toBigList(baseList.intStream().map(i -> i + 40));
+		final IntBigArrayBigList transformed = IntBigArrayBigList.toBigList(baseList.intStream().map(i -> i + 40));
 		assertEquals(IntBigArrayBigList.of(42, 420, 1337), transformed);
 	}
 
 	@Test
 	public void testSpliteratorTrySplit() {
 		final IntBigArrayBigList baseList = IntBigArrayBigList.of(0, 1, 2, 3, 72, 5, 6);
-		IntSpliterator willBeSuffix = baseList.spliterator();
+		final IntSpliterator willBeSuffix = baseList.spliterator();
 		assertEquals(baseList.size64(), willBeSuffix.getExactSizeIfKnown());
 
 		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
 		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
-		IntSpliterator prefix = willBeSuffix.trySplit();
+		final IntSpliterator prefix = willBeSuffix.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
-		java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
-		java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
+		final java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
+		final java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
 
 		final IntBigArrayBigList prefixList = IntBigArrayBigList.toBigList(prefixStream);
 		final IntBigArrayBigList suffixList = IntBigArrayBigList.toBigList(suffixStream);
@@ -657,9 +652,9 @@ public class IntBigArrayBigListTest {
 	@Test
 	public void testSpliteratorSkip() {
 		final IntBigArrayBigList baseList = IntBigArrayBigList.of(0, 1, 2, 3, 72, 5, 6);
-		IntSpliterator spliterator = baseList.spliterator();
+		final IntSpliterator spliterator = baseList.spliterator();
 		assertEquals(1, spliterator.skip(1));
-		java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
+		final java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
 		assertEquals(baseList.subList(1, baseList.size64()), IntBigArrayBigList.toBigList(stream));
 	}
 

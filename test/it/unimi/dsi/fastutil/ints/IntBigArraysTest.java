@@ -78,11 +78,11 @@ public class IntBigArraysTest {
 
 	@Test
 	public void testParallelQuickSort1Comp() {
-		int[][] t = {{ 2, 1, 0, 4 }};
+		int[][] t = wrap(new int[] { 2, 1, 0, 4 });
 		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
 
-		t = new int[][] {{ 2, -1, 0, -4 }};
+		t = wrap(new int[] { 2, -1, 0, -4 });
 		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
 
@@ -90,13 +90,13 @@ public class IntBigArraysTest {
 		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
 
-		t = new int[1][100];
+		t = IntBigArrays.newBigArray(100);
 		Random random = new Random(0);
 		for (long i = length(t) - 1; i-- != 0;) set(t, i, random.nextInt());
 		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) >= get(t, i + 1));
 
-		t = new int[1][100000];
+		t = IntBigArrays.newBigArray(100000);
 		random = new Random(0);
 		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
 		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
@@ -105,7 +105,7 @@ public class IntBigArraysTest {
 		IntBigArrays.parallelQuickSort(t, 10, 100, IntComparators.OPPOSITE_COMPARATOR);
 		for (int i = 99; i-- != 10;) assertTrue(get(t, i) >= get(t, i + 1));
 
-		t = new int[1][10000000];
+		t = IntBigArrays.newBigArray(10000000);
 		random = new Random(0);
 		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
 		IntBigArrays.parallelQuickSort(t, IntComparators.OPPOSITE_COMPARATOR);
@@ -114,11 +114,11 @@ public class IntBigArraysTest {
 
 	@Test
 	public void testParallelQuickSort1() {
-		int[][] t = { { 2, 1, 0, 4 } };
+		int[][] t = wrap(new int[] { 2, 1, 0, 4 });
 		IntBigArrays.parallelQuickSort(t);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
 
-		t = new int[][] { { 2, -1, 0, -4 } };
+		t = wrap(new int[] { 2, -1, 0, -4 });
 		IntBigArrays.parallelQuickSort(t);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
 
@@ -126,13 +126,13 @@ public class IntBigArraysTest {
 		IntBigArrays.parallelQuickSort(t);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
 
-		t = new int[1][100];
+		t = IntBigArrays.newBigArray(100);
 		Random random = new Random(0);
 		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
 		IntBigArrays.parallelQuickSort(t);
 		for (long i = length(t) - 1; i-- != 0;) assertTrue(get(t, i) <= get(t, i + 1));
 
-		t = new int[1][100000];
+		t = IntBigArrays.newBigArray(100000);
 		random = new Random(0);
 		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
 		IntBigArrays.parallelQuickSort(t);
@@ -141,7 +141,7 @@ public class IntBigArraysTest {
 		IntBigArrays.parallelQuickSort(t, 10, 100);
 		for (int i = 99; i-- != 10;) assertTrue(get(t, i) <= get(t, i + 1));
 
-		t = new int[1][10000000];
+		t = IntBigArrays.newBigArray(10000000);
 		random = new Random(0);
 		for (long i = length(t); i-- != 0;) set(t, i, random.nextInt());
 		IntBigArrays.parallelQuickSort(t);
