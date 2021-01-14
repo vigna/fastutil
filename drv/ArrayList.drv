@@ -773,26 +773,16 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 	}
 
-#if KEYS_PRIMITIVE
-
 	@Override
-	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
-		if (a == null || a.length < size) a = java.util.Arrays.copyOf(a, size);
-		System.arraycopy(this.a, 0, a, 0, size);
-		return a;
-	}
-
-	@Override
-	public boolean addAll(int index, final COLLECTION c) {
+	public boolean addAll(int index, final STD_KEY_COLLECTION KEY_EXTENDS_GENERIC c) {
 		if (c instanceof LIST) {
-			return addAll(index, (LIST)c);
+			return addAll(index, (LIST KEY_EXTENDS_GENERIC)c);
 		}
 		ensureIndex(index);
 		int n = c.size();
-		if (n == 0) return false;
 		grow(size + n);
-		if (index != size) System.arraycopy(a, index, a, index + n, size - index);
-		final KEY_ITERATOR i = c.iterator();
+		System.arraycopy(a, index, a, index + n, size - index);
+		final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i = c.iterator();
 		size += n;
 		while(n-- != 0) a[index++] = i.NEXT_KEY();
 		assert size <= a.length;
@@ -800,12 +790,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 	@Override
-	public boolean addAll(final int index, final LIST l) {
+	public boolean addAll(final int index, final LIST KEY_EXTENDS_GENERIC l) {
 		ensureIndex(index);
 		final int n = l.size();
-		if (n == 0) return false;
 		grow(size + n);
-		if (index != size) System.arraycopy(a, index, a, index + n, size - index);
+		System.arraycopy(a, index, a, index + n, size - index);
 		l.getElements(0, a, index, n);
 		size += n;
 		assert size <= a.length;
@@ -813,7 +802,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	}
 
 	@Override
-	public boolean removeAll(final COLLECTION c) {
+	public boolean removeAll(final STD_KEY_COLLECTION KEY_GENERIC_WILDCARD c) {
 		final KEY_TYPE[] a = this.a;
 		int j = 0;
 		for(int i = 0; i < size; i++)
@@ -826,9 +815,17 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return modified;
 	}
 
-#endif
+#if KEYS_PRIMITIVE
 
-#if KEYS_REFERENCE
+	@Override
+	public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+		if (a == null || a.length < size) a = java.util.Arrays.copyOf(a, size);
+		System.arraycopy(this.a, 0, a, 0, size);
+		return a;
+	}
+
+#else
+
 	@Override
 	public Object[] toArray() {
 		// A subtle part of the spec says the returned array must be Object[] exactly.
@@ -850,20 +847,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return a;
 	}
 #endif
-
-	@Override
-	public boolean removeAll(final Collection<?> c) {
-		final KEY_TYPE[] a = this.a;
-		int j = 0;
-		for(int i = 0; i < size; i++)
-			if (! c.contains(KEY2OBJ(a[i]))) a[j++] = a[i];
-#if KEYS_REFERENCE
-		Arrays.fill(a, j, size, null);
-#endif
-		final boolean modified = size != j;
-		size = j;
-		return modified;
-	}
 
 	@Override
 	public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {

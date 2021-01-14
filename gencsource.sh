@@ -332,6 +332,7 @@ fi)\
 \
 \
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n"\
+"#define STD_KEY_COLLECTION ${TYPE_STD[$k]}Collection\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n"\
 "#define HASH ${TYPE_CAP[$k]}Hash\n"\
 "#define SORTED_SET ${TYPE_CAP[$k]}SortedSet\n"\
