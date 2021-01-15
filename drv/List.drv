@@ -17,6 +17,7 @@
 
 package PACKAGE;
 
+import java.util.Spliterator;
 import java.util.List;
 import static it.unimi.dsi.fastutil.Size64.getSizeOf;
 
@@ -62,28 +63,58 @@ public interface LIST KEY_GENERIC extends List<KEY_GENERIC_CLASS>, COLLECTION KE
 	 * @apiNote This specification strengthens the one given in {@link List#iterator()}.
 	 * It would not be normally necessary, but {@link java.lang.Iterable#iterator()} is bizarrily re-specified
 	 * in {@link List}.
+	 * <p>Also, this is generally the only {@code iterator} method subclasses should override.
 	 *
 	 * @return an iterator on the elements of this list.
 	 */
 	@Override
 	KEY_LIST_ITERATOR KEY_GENERIC iterator();
 
-	/**
-	 * {@inheritDoc}
+	/** Returns a type-specific spliterator on the elements of this collection.
+	 *
+	 * <p>List spliterators must report at least {@link Spliterator#SIZED} and {@link Spliterator#ORDERED}.
+	 *
+	 * <p>See {@link java.util.List#spliterator()} for more documentation on the requirements
+	 * of the returned spliterator.
 	 *
 	 * @apiNote This specification strengthens the one given in
 	 * {@link java.util.Collection#spliterator()}, which was already
 	 * strengthened in the corresponding type-specific class,
 	 * but was weakened by the fact that this interface extends {@link List}.
+	 * <p>Also, this is generally the only {@code spliterator} method subclasses should override.
 	 *
+	 * @implSpec The default implementation returns a late-binding spliterator (see
+	 * {@link Spliterator} for documentation on what binding policies mean).
+	 * <ul>
+	 * <li>For {@link java.util.RandomAccess RandomAccess} lists, this will return a spliterator
+	 * that calls the type-specific {@link #get(int)} method on the appropriate indexes.</li>
+	 * <li>Otherwise, the spliterator returned will wrap this instance's type specific {@link #iterator}.</li>
+	 * </ul>
+	 * <p>In either case, the spliterator reports {@link Spliterator#SIZED},
+	 * {@link Spliterator#SUBSIZED}, and {@link Spliterator#ORDERED}.
+	 *
+	 * @implNote As the non-{@linkplain java.util.RandomAccess RandomAccess} case is based on the
+	 * iterator, and {@link java.util.Iterator} is an inherently linear API, the returned
+	 * spliterator will yield limited performance gains when run in parallel contexts, as the
+	 * returned spliterator's {@link Spliterator#trySplit() trySplit()} will have linear runtime.
+	 * <p>For {@link java.util.RandomAccess RandomAccess} lists, the parallel performance should
+	 * be reasonable assuming {@link #get(int)} is truly constant time like {@link java.util.RandomAccess
+	 * RandomAccess} suggests. 
+	 *
+	 * @return {@inheritDoc}
+	 * @since 8.5.0
 	 */
 	@Override
 #if SPLITERATOR_ASSURE_OVERRIDE
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();
 #else
 	default KEY_SPLITERATOR KEY_GENERIC spliterator() {
-		return SPLITERATORS.asSpliterator(
+		if (this instanceof java.util.RandomAccess) {
+			return new ABSTRACT_LIST.IndexBasedSpliterator KEY_GENERIC_DIAMOND(this, 0);
+		} else {
+			return SPLITERATORS.asSpliterator(
 				iterator(), getSizeOf(this), SPLITERATORS.LIST_SPLITERATOR_CHARACTERISTICS);
+		}
 	}
 #endif
 
