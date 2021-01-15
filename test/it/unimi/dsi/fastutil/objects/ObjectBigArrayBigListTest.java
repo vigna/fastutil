@@ -19,16 +19,21 @@ package it.unimi.dsi.fastutil.objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.MainRunner;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 @SuppressWarnings("rawtypes")
 public class ObjectBigArrayBigListTest {
@@ -46,50 +51,83 @@ public class ObjectBigArrayBigListTest {
 		final ObjectBigList<Integer> list = new ObjectBigArrayBigList<>();
 		for(long i = 0; i < BigArrays.SEGMENT_SIZE + 10; i++) list.add(Integer.valueOf((int)(i % 2)));
 		assertTrue(list.removeAll(ObjectSets.singleton(1)));
-		assertEquals(BigArrays.SEGMENT_SIZE / 2 + 5, list.size64());
-		for(long i = 0; i < BigArrays.SEGMENT_SIZE / 2 + 5; i++) assertEquals(Integer.valueOf(0), list.get(i));
+		assertEquals((BigArrays.SEGMENT_SIZE + 1) / 2 + 5, list.size64());
+		for (long i = 0; i < (BigArrays.SEGMENT_SIZE + 1) / 2 + 5; i++) assertEquals(Integer.valueOf(0), list.get(i));
 	}
 
 	@SuppressWarnings("boxing")
 	@Test
 	public void testRemoveAll() {
-		ObjectBigArrayBigList<Integer> l = ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 1, 1, 2 } });
+		final ObjectBigArrayBigList<Integer> l = new ObjectBigArrayBigList<>(ObjectBigArrayBigList.of(0, 1, 1, 2));
 		l.removeAll(ObjectSets.singleton(1));
-		assertEquals(ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 2 } }), l);
-		assertTrue(l.elements()[0][2] == null);
-		assertTrue(l.elements()[0][3] == null);
+		assertEquals(ObjectBigArrayBigList.of(0, 2), l);
+		final Object[][] elements = l.elements();
+		assertNull(BigArrays.get(elements, 2));
+		assertNull(BigArrays.get(elements, 3));
+	}
 
-		l = ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 1, 1, 2 } });
-		l.removeAll(ObjectSets.singleton(1));
-		assertEquals(ObjectBigArrayBigList.wrap(new Integer[][] { { 0, 2 } }), l);
-		assertTrue(l.elements()[0][2] == null);
-		assertTrue(l.elements()[0][3] == null);
+	@SuppressWarnings("boxing")
+	@Test
+	public void testAddAllCollection() {
+		final ObjectBigArrayBigList<Integer> l = new ObjectBigArrayBigList<>(ObjectBigArrayBigList.of(0, 1, 1, 2));
+		final List<Integer> m = Arrays.asList(new Integer[] { 2, 3, 3, 4 });
+		l.addAll(0, m);
+		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+		l.addAll(0, IntList.of());
+		l.addAll(2, IntList.of());
+		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+		l.addAll(0, (Collection<Integer>)ObjectList.of(0));
+		assertEquals(ObjectBigArrayBigList.of(0, 2, 3, 3, 4, 0, 1, 1, 2), l);
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testAddAllList() {
+		final ObjectBigArrayBigList<Integer> l = new ObjectBigArrayBigList<>(ObjectBigArrayBigList.of(0, 1, 1, 2));
+		final ObjectList<Integer> m = ObjectList.of(2, 3, 3, 4);
+		l.addAll(0, m);
+		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+		l.addAll(0, List.of());
+		l.addAll(2, List.of());
+		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testAddAllBigList() {
+		final ObjectBigArrayBigList<Integer> l = new ObjectBigArrayBigList<>(ObjectBigArrayBigList.of(0, 1, 1, 2));
+		final ObjectBigArrayBigList<Integer> m = ObjectBigArrayBigList.of(2, 3, 3, 4);
+		l.addAll(0, m);
+		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+		l.addAll(0, ObjectBigArrayBigList.of());
+		l.addAll(2, ObjectBigArrayBigList.of());
+		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
 	}
 
 	@Test
 	public void testOf() {
 		final ObjectBigArrayBigList<String> l = ObjectBigArrayBigList.of("0", "1", "2");
-		assertEquals(ObjectBigArrayBigList.wrap(new String[][] { new String[] {"0", "1", "2" } }), l);
+		assertEquals(new ObjectBigArrayBigList<>(List.of("0", "1", "2")), l);
 	}
-	
+
 	@Test
 	public void testToBigList() {
 		final ObjectBigArrayBigList<String> baseList = ObjectBigArrayBigList.of("wood", "board", "glass", "metal");
-		ObjectBigArrayBigList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectBigArrayBigList.toBigList());
+		final ObjectBigArrayBigList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectBigArrayBigList.toBigList());
 		assertEquals(ObjectBigArrayBigList.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
 	}
 
 	@Test
 	public void testSpliteratorTrySplit() {
 		final ObjectBigArrayBigList<String> baseList = ObjectBigArrayBigList.of("0", "1", "2", "3", "4", "5", "bird");
-		ObjectSpliterator<String> willBeSuffix = baseList.spliterator();
+		final ObjectSpliterator<String> willBeSuffix = baseList.spliterator();
 		assertEquals(baseList.size64(), willBeSuffix.getExactSizeIfKnown());
 		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
 		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
-		ObjectSpliterator<String> prefix = willBeSuffix.trySplit();
+		final ObjectSpliterator<String> prefix = willBeSuffix.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
-		java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport.stream(willBeSuffix, false);
-		java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport.stream(prefix, false);
+		final java.util.stream.Stream<String> suffixStream = java.util.stream.StreamSupport.stream(willBeSuffix, false);
+		final java.util.stream.Stream<String> prefixStream = java.util.stream.StreamSupport.stream(prefix, false);
 
 		final ObjectBigArrayBigList<String> prefixList = prefixStream.collect(ObjectBigArrayBigList.toBigList());
 		final ObjectBigArrayBigList<String> suffixList = suffixStream.collect(ObjectBigArrayBigList.toBigList());

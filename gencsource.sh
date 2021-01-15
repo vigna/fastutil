@@ -332,6 +332,7 @@ fi)\
 \
 \
 "#define COLLECTION ${TYPE_CAP[$k]}Collection\n"\
+"#define STD_KEY_COLLECTION ${TYPE_STD[$k]}Collection\n"\
 "#define SET ${TYPE_CAP[$k]}Set\n"\
 "#define HASH ${TYPE_CAP[$k]}Hash\n"\
 "#define SORTED_SET ${TYPE_CAP[$k]}SortedSet\n"\
@@ -388,6 +389,7 @@ fi)\
 "#define VALUE_COLLECTION ${TYPE_CAP[$v]}Collection\n"\
 "#define VALUE_ARRAY_SET ${TYPE_CAP[$v]}ArraySet\n"\
 "#define VALUE_CONSUMER ${TYPE_STD[$v]}Consumer\n"\
+"#define VALUE_BINARY_OPERATOR ${TYPE_STD[$v]}BinaryOperator\n"\
 "#define VALUE_ITERATOR ${TYPE_CAP2[$v]}Iterator\n"\
 "#define VALUE_SPLITERATOR ${TYPE_CAP2[$v]}Spliterator\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
@@ -413,6 +415,8 @@ fi)\
 \
 "#if VALUES_PRIMITIVE && ! VALUE_CLASS_Boolean\n"\
 "#define JDK_PRIMITIVE_VALUE_CONSUMER java.util.function.${TYPE_CAP[$wv]}Consumer\n"\
+"#define JDK_PRIMITIVE_VALUE_BINARY_OPERATOR java.util.function.${TYPE_CAP[$wv]}BinaryOperator\n"\
+"#define JDK_PRIMITIVE_VALUE_OPERATOR_APPLY applyAs${TYPE_CAP[$wv]}\n"\
 "#endif\n"\
 \
 $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
@@ -445,18 +449,24 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define METHOD_ARG_KEY_CONSUMER JDK_PRIMITIVE_KEY_CONSUMER\n"\
 "#define METHOD_ARG_PREDICATE JDK_PRIMITIVE_PREDICATE\n"\
 "#define METHOD_ARG_KEY_UNARY_OPERATOR JDK_PRIMITIVE_UNARY_OPERATOR\n"\
-"#define KEY_UNARY_OPERATOR_APPLY applyAs${TYPE_CAP[$k]}\n"\
+"#define METHOD_ARG_KEY_BINARY_OPERATOR JDK_PRIMITIVE_BINARY_OPERATOR\n"\
+"#define KEY_OPERATOR_APPLY applyAs${TYPE_CAP[$k]}\n"\
 "#else\n"\
 "#define METHOD_ARG_KEY_CONSUMER KEY_CONSUMER KEY_SUPER_GENERIC\n"\
 "#define METHOD_ARG_PREDICATE KEY_PREDICATE KEY_SUPER_GENERIC\n"\
 "#define METHOD_ARG_KEY_UNARY_OPERATOR KEY_UNARY_OPERATOR KEY_GENERIC\n"\
-"#define KEY_UNARY_OPERATOR_APPLY apply\n"\
+"#define METHOD_ARG_KEY_BINARY_OPERATOR KEY_BINARY_OPERATOR KEY_GENERIC\n"\
+"#define KEY_OPERATOR_APPLY apply\n"\
 "#endif\n"\
 \
 "#if VALUES_INT_LONG_DOUBLE\n"\
 "#define METHOD_ARG_VALUE_CONSUMER JDK_PRIMITIVE_VALUE_CONSUMER\n"\
+"#define METHOD_ARG_VALUE_BINARY_OPERATOR JDK_PRIMITIVE_VALUE_BINARY_OPERATOR\n"\
+"#define VALUE_OPERATOR_APPLY applyAs${TYPE_CAP[$v]}\n"\
 "#else\n"\
 "#define METHOD_ARG_VALUE_CONSUMER VALUE_CONSUMER VALUE_SUPER_GENERIC\n"\
+"#define METHOD_ARG_VALUE_BINARY_OPERATOR VALUE_PACKAGE.VALUE_BINARY_OPERATOR VALUE_GENERIC\n"\
+"#define VALUE_OPERATOR_APPLY apply\n"\
 "#endif\n"\
 \
 \
@@ -654,6 +664,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "/* Methods (values) */\n"\
 \
 \
+"#define MERGE_VALUE merge${TYPE_STD[$v]}\n"\
 "#define NEXT_VALUE next${TYPE_STD[$v]}\n"\
 "#define PREV_VALUE previous${TYPE_STD[$v]}\n"\
 "#define READ_VALUE read${TYPE_CAP2[$v]}\n"\

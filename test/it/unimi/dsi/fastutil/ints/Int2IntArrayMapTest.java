@@ -17,7 +17,9 @@
 package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.junit.Test;
@@ -28,5 +30,26 @@ public class Int2IntArrayMapTest {
 		final Int2IntOpenHashMap m = new Int2IntOpenHashMap(new int [] {1, 2}, new int[] {3, 4});
 		assertEquals(new Int2IntArrayMap(m), m);
 		assertEquals(new HashMap<>(m), m);
+	}
+
+	@Test
+	public void testValuesClear() {
+		final Int2IntMap map = new Int2IntArrayMap(Int2IntMaps.singleton(42, 24));
+		map.values().clear();
+		assertTrue(map.isEmpty());
+	}
+
+	@Test
+	public void testValuesRemove() {
+		final Int2IntMap map = new Int2IntArrayMap(Int2IntMaps.singleton(42, 24));
+		map.values().rem(24);
+		assertTrue(map.isEmpty());
+	}
+
+	@Test
+	public void testValuesRemoveAll() {
+		final Int2IntMap map = new Int2IntArrayMap(Int2IntMaps.singleton(42, 24));
+		map.values().removeAll(Collections.singleton(Integer.valueOf(24)));
+		assertTrue(map.isEmpty());
 	}
 }

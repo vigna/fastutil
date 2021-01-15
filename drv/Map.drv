@@ -21,7 +21,7 @@ package PACKAGE;
 import VALUE_PACKAGE.VALUE_COLLECTION;
 #endif
 
-#if ! KEYS_REFERENCE
+#if KEYS_PRIMITIVE
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 #endif
@@ -586,10 +586,12 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 #endif
 	}
 
-#if VALUES_PRIMITIVE
 	/**
 	 * If the specified key is not already associated with a value, associates it with the given {@code value}.
 	 * Otherwise, replaces the associated value with the results of the given remapping function, or removes if the result is {@code null}.
+	 *
+	 * @apiNote The JDK specification for this method equates not being associated with a value with being associated with {code null}.
+	 * This is not the case for this method.
 	 *
 	 * @param key key with which the resulting value is to be associated.
 	 * @param value the value to be merged with the existing value associated with the key or, if no existing value is associated with the key, to be associated with the key.
@@ -600,22 +602,6 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	 * @see java.util.Map#merge(Object, Object, java.util.function.BiFunction)
 	 * @since 8.0.0
 	 */
-#else
-	/**
-	 * If the specified key is not already associated with a value or is associated with null, associates it with the given non-null {@code value}.
-	 * Otherwise, replaces the associated value with the results of the given remapping function, or removes if the result is {@code null}.
-	 *
-	 * @param key key with which the resulting value is to be associated.
-	 * @param value the non-{@code null} value to be merged with the existing value associated with the key or, if no existing value is associated with the key, to be associated with the key.
-	 * @param remappingFunction the function to recompute a value if present.
-	 *
-	 * @return the new value associated with the specified key, or the {@linkplain #defaultReturnValue() default return value} if no value is associated with the key.
-	 *
-	 * @see java.util.Map#merge(Object, Object, java.util.function.BiFunction)
-	 * @since 8.0.0
-	 */
-#endif
-
 	default VALUE_GENERIC_TYPE merge(final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
 		java.util.Objects.requireNonNull(remappingFunction);
 #if VALUES_REFERENCE
@@ -635,8 +621,62 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 		return newValue;
 	}
 
+#if VALUES_PRIMITIVE && ! VALUE_CLASS_Boolean
 
-#if KEYS_REFERENCE
+	/**
+	 * If the specified key is not already associated with a value, associates it with the given {@code value}.
+	 * Otherwise, replaces the associated value with the results of the given remapping function.
+	 *
+	 * @apiNote The JDK specification for this method equates not being associated with a value with being associated with {code null}.
+	 * This is not the case for this method. Moreover, this method cannot delete entries as the type-specific remapping
+	 * function cannot return {@code null}.
+	 *
+	 * @param key key with which the resulting value is to be associated.
+	 * @param value the value to be merged with the existing value associated with the key or, if no existing value is associated with the key, to be associated with the key.
+	 * @param remappingFunction the function to recompute a value if present.
+	 *
+	 * @return the new value associated with the specified key.
+	 *
+	 * @see java.util.Map#merge(Object, Object, java.util.function.BiFunction)
+	 * @since 8.5.0
+	 */
+	default VALUE_TYPE MERGE_VALUE(final KEY_GENERIC_TYPE key, final VALUE_TYPE value, final METHOD_ARG_VALUE_BINARY_OPERATOR remappingFunction) {
+		java.util.Objects.requireNonNull(remappingFunction);
+		final VALUE_TYPE oldValue = GET_VALUE(key), drv = defaultReturnValue();
+		final VALUE_TYPE newValue = oldValue != drv || containsKey(key) ? remappingFunction.VALUE_OPERATOR_APPLY(oldValue, value) : value;
+		put(key, newValue);
+		return newValue;
+	}
+
+#if VALUES_BYTE_CHAR_SHORT_FLOAT
+	/**
+	 * If the specified key is not already associated with a value, associates it with the given {@code value}.
+	 * Otherwise, replaces the associated value with the results of the given remapping function.
+	 *
+	 * @apiNote The JDK specification for this method equates not being associated with a value with being associated with {code null}.
+	 * This is not the case for this method. Moreover, this method cannot delete entries as the type-specific remapping
+	 * function cannot return {@code null}.
+	 *
+	 * @param key key with which the resulting value is to be associated.
+	 * @param value the value to be merged with the existing value associated with the key or, if no existing value is associated with the key, to be associated with the key.
+	 * @param remappingFunction the function to recompute a value if present.
+	 *
+	 * @return the new value associated with the specified key.
+	 *
+	 * @see java.util.Map#merge(Object, Object, java.util.function.BiFunction)
+	 * @since 8.5.0
+	 * @implNote Unless the argument is type-specific, this method will introduce an intermediary
+	 *   lambda to perform narrowing and widening casts. Please use the type-specific overload to avoid this overhead.
+	 */
+
+	default VALUE_TYPE MERGE_VALUE(final KEY_GENERIC_TYPE key, final VALUE_TYPE value, final JDK_PRIMITIVE_VALUE_BINARY_OPERATOR remappingFunction) {
+		return MERGE_VALUE(key, value, remappingFunction instanceof METHOD_ARG_VALUE_BINARY_OPERATOR ? (METHOD_ARG_VALUE_BINARY_OPERATOR)remappingFunction : (x, y) -> VALUE_NARROWING(remappingFunction.JDK_PRIMITIVE_VALUE_OPERATOR_APPLY(x, y)));
+	}
+
+#endif
+
+#else
+
 	/**
 	 * @deprecated Please use {@code merge()} instead.
 	 */
@@ -644,6 +684,7 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 	default VALUE_GENERIC_TYPE MERGE(final KEY_GENERIC_TYPE key, final VALUE_GENERIC_TYPE value, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
 		return merge(key, value, remappingFunction);
 	}
+
 #endif
 
   /** {@inheritDoc}
