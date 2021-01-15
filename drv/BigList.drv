@@ -80,6 +80,37 @@ public interface BIG_LIST KEY_GENERIC extends BigList<KEY_GENERIC_CLASS>, COLLEC
 	@Override
 	KEY_BIG_LIST_ITERATOR KEY_GENERIC listIterator(long index);
 
+	/** Returns a type-specific spliterator on the elements of this big-list.
+	 *
+	 * <p>BigList spliterators must report at least {@link Spliterator#SIZED} and {@link Spliterator#ORDERED}.
+	 *
+	 * <p>See {@link java.util.List#spliterator()} for more documentation on the requirements
+	 * of the returned spliterator (despite {@code BigList} not being a {@code List}, most of the
+	 * same requirements apply.
+	 *
+	 * @apiNote This is generally the only {@code spliterator} method subclasses should override.
+	 *
+	 * @implSpec The default implementation returns a late-binding spliterator (see
+	 * {@link Spliterator} for documentation on what binding policies mean).
+	 * <ul>
+	 * <li>For {@link java.util.RandomAccess RandomAccess} lists, this will return a spliterator
+	 * that calls the type-specific {@link #get(long)} method on the appropriate indexes.</li>
+	 * <li>Otherwise, the spliterator returned will wrap this instance's type specific {@link #iterator}.</li>
+	 * </ul>
+	 * <p>In either case, the spliterator reports {@link Spliterator#SIZED},
+	 * {@link Spliterator#SUBSIZED}, and {@link Spliterator#ORDERED}.
+	 *
+	 * @implNote As the non-{@linkplain java.util.RandomAccess RandomAccess} case is based on the
+	 * iterator, and {@link java.util.Iterator} is an inherently linear API, the returned
+	 * spliterator will yield limited performance gains when run in parallel contexts, as the
+	 * returned spliterator's {@link Spliterator#trySplit() trySplit()} will have linear runtime.
+	 * <p>For {@link java.util.RandomAccess RandomAccess} lists, the parallel performance should
+	 * be reasonable assuming {@link #get(long)} is truly constant time like {@link java.util.RandomAccess
+	 * RandomAccess} suggests. 
+	 *
+	 * @return {@inheritDoc}
+	 * @since 8.5.0
+	 */
 	@Override
 #if SPLITERATOR_ASSURE_OVERRIDE
 	abstract KEY_SPLITERATOR KEY_GENERIC spliterator();

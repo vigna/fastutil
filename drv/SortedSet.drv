@@ -17,6 +17,7 @@
 
 package PACKAGE;
 
+import java.util.Spliterator;
 import java.util.SortedSet;
 import java.util.Collection;
 import static it.unimi.dsi.fastutil.Size64.sizeOf;
@@ -77,12 +78,36 @@ public interface SORTED_SET KEY_GENERIC extends SET KEY_GENERIC, SortedSet<KEY_G
 	KEY_BIDI_ITERATOR KEY_GENERIC iterator();
 
 	/**
-	 * {@inheritDoc}
+	 * Returns a type-specific spliterator on the elements of this sorted-set.
+	 *
+	 * <p>SortedSet spliterators must report at least {@link Spliterator#UNIQUE},
+	 * {@link Spliterator#ORDERED}, and {@link Spliterator#SORTED}. The returned spliterator's
+	 * {@link Spliterator#getComparator() getComparator()} must be the same (or at the very least,
+	 * consistent with) this instance's {@link #comparator()}.
+	 *
+	 * <p>See {@link java.util.SortedSet#spliterator()} for more documentation on the requirements
+	 * of the returned spliterator.
 	 *
 	 * @apiNote This specification strengthens the one given in
 	 * {@link java.util.Collection#spliterator()}, which was already
 	 * strengthened in the corresponding type-specific class,
 	 * but was weakened by the fact that this interface extends {@link SortedSet}.
+	 * <p>Also, this is generally the only {@code spliterator} method subclasses should override.
+	 *
+	 * @implSpec The default implementation returns a late-binding spliterator (see
+	 * {@link Spliterator} for documentation on what binding policies mean)
+	 * that wraps this instance's type specific {@link #iterator}.
+	 * <p>Additionally, it reports {@link Spliterator.SIZED}, {@link Spliterator.UNIQUE},
+	 * {@link Spliterator#SORTED}, and {@link Spliterator#ORDERED}. The reported {@link java.util.Comparator}
+	 * from {@link Spliterator#getComparator()} will be the one reported by this instance's {@link #comparator()}.
+	 *
+	 * @implNote As this default implementation wraps the iterator, and {@link java.util.Iterator}
+	 * is an inherently linear API, the returned spliterator will yield limited performance gains
+	 * when run in parallel contexts, as the returned spliterator's
+	 * {@link Spliterator#trySplit() trySplit()} will have linear runtime.
+	 *
+	 * @return {@inheritDoc}
+	 * @since 8.5.0
 	 */
 	@Override
 #if SPLITERATOR_ASSURE_OVERRIDE
