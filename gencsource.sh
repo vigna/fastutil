@@ -205,6 +205,8 @@ fi)\
 "#define KEY_CLASS_WIDENED ${CLASS[$wk]}\n"\
 "#define VALUE_CLASS_WIDENED ${CLASS[$wv]}\n"\
 \
+"#define KEYS_USE_REFERENCE_EQUALITY KEY_CLASS_Reference\n"\
+"#define VALUES_USE_REFERENCE_EQUALITY VALUE_CLASS_Reference\n"\
 \
 "#if KEYS_REFERENCE\n"\
 "#define KEY_GENERIC_CLASS K\n"\
