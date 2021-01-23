@@ -43,7 +43,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	private static final long serialVersionUID = 0L;
 	
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
-	private static final IMMUTABLE_LIST EMPTY = new IMMUTABLE_LIST(ARRAYS.EMPTY_ARRAY);
+	static final IMMUTABLE_LIST EMPTY = new IMMUTABLE_LIST(ARRAYS.EMPTY_ARRAY);
 
 #if KEYS_PRIMITIVE
 #define _EMPTY_ARRAY ARRAYS.EMPTY_ARRAY
@@ -108,7 +108,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public IMMUTABLE_LIST(final KEY_GENERIC_TYPE a[], final int offset, final int length) {
-		this(KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length]);
+		this(length == 0 ? _EMPTY_ARRAY : KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length]);
 		System.arraycopy(a, offset, this.a, 0, length);
 	}
 
@@ -430,7 +430,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	}
 	
 	private final static class ImmutableSubList KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements java.util.RandomAccess {
-		final IMMUTABLE_LIST innerList;
+		final IMMUTABLE_LIST KEY_GENERIC innerList;
 		final int from;
 		final int to;
 		/**
@@ -438,9 +438,9 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		 * the first element of the {@code innerList}, not this sublist. {@code a[from]} is the
 		 * first element of this sublist.
 		 */  
-		private final KEY_GENERIC_TYPE a[];
-		
-		ImmutableSubList(IMMUTABLE_LIST innerList, int from, int to) {
+		final KEY_GENERIC_TYPE a[];
+
+		ImmutableSubList(IMMUTABLE_LIST KEY_GENERIC innerList, int from, int to) {
 			this.innerList = innerList;
 			this.from = from;
 			this.to = to;
@@ -669,6 +669,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			return super.equals(o);
 		}
 
+#if ! KEY_CLASS_Reference
 		int contentsCompareTo(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
 #if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
 			if (a == otherA && from == otherAFrom && to == otherATo) return 0;
@@ -700,12 +701,14 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			return super.compareTo(l);
 		}
 
+#endif
 		@Override
 		public LIST KEY_GENERIC subList(int from, int to) {
 			// We don't need to worry about keeping all nested sublists up to date with bounds as we are immutable.
 			// So don't even nest; just return a sublist with the immediate parent of the root list.
 			ensureIndex(from);
 			ensureIndex(to);
+			if (from == to) return EMPTY;
 			if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
 			return new ImmutableSubList KEY_GENERIC_DIAMOND(innerList, from + this.from, to + this.from);
 		}
@@ -714,7 +717,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	/**
 	 * {@inheritDoc}
 	 *
-	 * <p>The returned list will be immutable, but is currently not declared to return an
+	 * @apiNote The returned list will be immutable, but is currently not declared to return an
 	 * instance of {@code ImmutableList} due to complications of implementation details.
 	 * This may change in a future version (in other words, do not consider the return type of
 	 * this method to be stable if making a subclass of {@code ImmutableList}).
@@ -724,6 +727,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		if (from == 0 && to == size()) return this;
 		ensureIndex(from);
 		ensureIndex(to);
+		if (from == to) return EMPTY;
 		if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
 		return new ImmutableSubList KEY_GENERIC_DIAMOND(this, from, to);
 	}
@@ -736,7 +740,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 
 	/** Compares this type-specific immutable list to another one.
 	 *
-	 * <p>This method exists only for sake of efficiency. The implementation
+	 * @apiNote This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
 	 * @param l a type-specific immutable list.
@@ -758,7 +762,11 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 #endif
 	}
 
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
+#if KEYS_REFERENCE
+	@SuppressWarnings({"unchecked", "unlikely-arg-type"})
+#else
+	@SuppressWarnings("unlikely-arg-type")
+#endif
 	@Override
 	public boolean equals(final Object o) {
 		if (o == this) return true;
@@ -771,15 +779,14 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			// Sublist has an optimized sub-array based comparison, reuse that. 
 			return ((ImmutableSubList KEY_GENERIC)o).equals(this);
 		}
-		return super.equals(0);
+		return super.equals(o);
 	}
-
 
 #if ! KEY_CLASS_Reference
 
 	/** Compares this immutable list to another immutable list.
 	 *
-	 * <p>This method exists only for sake of efficiency. The implementation
+	 * @apiNote This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
 	 * @param l an immutable list.
