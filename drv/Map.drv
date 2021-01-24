@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.util.function.Consumer;
 import java.util.Map;
 
+#if !KEYS_USE_REFERENCE_EQUALITY && !VALUES_USE_REFERENCE_EQUALITY
 /** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
  *
  * <p>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link Map#entrySet()},
@@ -42,7 +43,28 @@ import java.util.Map;
  *
  * @see Map
  */
-
+#else
+/** A type-specific {@link Map}; provides some additional methods that use polymorphism to avoid (un)boxing, and handling of a default return value.
+ *
+ * <p>Besides extending the corresponding type-specific {@linkplain it.unimi.dsi.fastutil.Function function}, this interface strengthens {@link Map#entrySet()},
+ * {@link #keySet()} and {@link #values()}. Moreover, a number of methods, such as {@link #size()}, {@link #defaultReturnValue()}, etc., are un-defaulted
+ * as their function default do not make sense for a map.
+ * Maps returning entry sets of type {@link FastEntrySet} support also fast iteration.
+ *
+ * <p>This interface specifies reference equality semantics (members will be compared equal with
+ * {@code ==} instead of {@link Object#equals(Object) equals}) for its keys or values (or both), which may result in breaks in contract
+ * if attempted to be used with non reference-equality semantics based {@link Maps}s. For example, a
+ * {@code aReferenceToIntMap.equals(aObjectToIntMap)} may return different a different result then
+ * {@code aObjectToIntMap.equals(aReferenceToIntMap)}, in violation of {@link Object#equals equals}'s
+ * contract requiring it being symmetric.
+ *
+ * <p>A submap or subset may or may not have an
+ * independent default return value (which however must be initialized to the
+ * default return value of the originator).
+ *
+ * @see Map
+ */
+#endif
 public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<KEY_GENERIC_CLASS,VALUE_GENERIC_CLASS> {
 
 	/** An entry set providing fast iteration.
