@@ -17,6 +17,7 @@
 package it.unimi.dsi.fastutil.ints;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -66,6 +67,20 @@ public class IntImmutableListTest {
 		// Also conveniently serves as a test of the intStream and spliterator.
 		final IntImmutableList transformed = IntImmutableList.toList(baseList.intStream().map(i -> i + 40));
 		assertEquals(IntImmutableList.of(42, 420, 1337), transformed);
+	}
+	
+	@Test
+	public void testEquals_AnotherImmutableList() {
+		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
+		assertEquals(IntImmutableList.of(2, 380, 1297), baseList);
+		assertNotEquals(IntImmutableList.of(42, 420, 1337), baseList);
+	}
+
+	@Test
+	public void testEquals_OtherListImpl() {
+		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
+		assertEquals(IntArrayList.of(2, 380, 1297), baseList);
+		assertNotEquals(IntArrayList.of(42, 420, 1337), baseList);
 	}
 
 	@Test
