@@ -429,7 +429,8 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		return new Spliterator();
 	}
 	
-	private final static class ImmutableSubList KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements java.util.RandomAccess {
+	private final static class ImmutableSubList KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements java.util.RandomAccess, java.io.Serializable {
+		private static final long serialVersionUID = 7054639518438982401L;
 		final IMMUTABLE_LIST KEY_GENERIC innerList;
 		final int from;
 		final int to;
@@ -437,8 +438,8 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		 * An alias to {@code innerList}'s array to save some typing. Note that 0 in this array is actually
 		 * the first element of the {@code innerList}, not this sublist. {@code a[from]} is the
 		 * first element of this sublist.
-		 */  
-		final KEY_GENERIC_TYPE a[];
+		 */
+		final transient KEY_GENERIC_TYPE a[];
 
 		ImmutableSubList(IMMUTABLE_LIST KEY_GENERIC innerList, int from, int to) {
 			this.innerList = innerList;
@@ -642,10 +643,11 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			}
 			int pos = from, otherPos = otherAFrom;
 			// We have already assured that the two ranges are the same size, so we only need to check one bound.
+			// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
+			// Make sure to split out the reference equality case when you do this.
 #if KEY_CLASS_Object
 			while(pos < to) if (!java.util.Objects.equals(a[pos++], otherA[otherPos++])) return false;
 #else
-			// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
 			while(pos < to) if (a[pos++] != otherA[otherPos++]) return false;
 #endif
 			return true;
@@ -702,6 +704,18 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		}
 
 #endif
+
+		private Object readResolve() throws java.io.ObjectStreamException {
+			// We need to recheck the invariants of the subList and reestablish our "a" array alias.
+			// Easiest way to do this is to just make a subList anew.
+			// This will not cause a recopy of contents as subLists are a view, so this is all constant time.
+			try {
+				return innerList.subList(from, to);
+			} catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
+				throw (java.io.InvalidObjectException) (new java.io.InvalidObjectException(ex.getMessage()).initCause(ex));
+			}
+		}
+
 		@Override
 		public LIST KEY_GENERIC subList(int from, int to) {
 			// We don't need to worry about keeping all nested sublists up to date with bounds as we are immutable.
@@ -816,7 +830,16 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
-		return l instanceof IMMUTABLE_LIST ? compareTo((IMMUTABLE_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
+		if (l instanceof IMMUTABLE_LIST) {
+			return compareTo((IMMUTABLE_LIST KEY_EXTENDS_GENERIC)l);
+		}
+		if (l instanceof ImmutableSubList) {
+			// Safe to strip the "extends" because we will only ever take elements, never modify them (especially because it is immutable).
+			ImmutableSubList KEY_GENERIC other = (ImmutableSubList KEY_GENERIC)l;
+			// Must negate because we are inverting the order of the comparison.
+			return -other.compareTo(this);
+		}
+		return super.compareTo(l);
 	}
 #endif
 }

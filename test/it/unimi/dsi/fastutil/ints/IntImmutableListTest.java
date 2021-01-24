@@ -82,8 +82,10 @@ public class IntImmutableListTest {
 	public void testEquals_Sublist() {
 		final IntImmutableList l1 = IntImmutableList.of(0, 1, 2, 3);
 		final IntImmutableList l2 = IntImmutableList.of(5, 0, 1, 2, 3, 4);
-		final IntList sl2 = l2.subList(1, 5);
+		final IntList sl2 = l2.subList(1, 5); // 0, 1, 2, 3
 		assertEquals(l1, sl2);
+		final IntList sl2b = l2.subList(0, 4); // 5, 0, 1, 2
+		assertNotEquals(l1, sl2b);
 	}
 
 	@Test
@@ -91,6 +93,51 @@ public class IntImmutableListTest {
 		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
 		assertEquals(IntArrayList.of(2, 380, 1297), baseList);
 		assertNotEquals(IntArrayList.of(42, 420, 1337), baseList);
+	}
+
+	@Test
+	public void testCompareTo_AnotherImmutableList() {
+		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
+		final IntImmutableList lessThenList = IntImmutableList.of(2, 365, 1297);
+		final IntImmutableList greaterThenList = IntImmutableList.of(2, 380, 1300);
+		final IntImmutableList lessBecauseItIsSmaller = IntImmutableList.of(2, 380);
+		final IntImmutableList greaterBecauseItIsLarger = IntImmutableList.of(2, 380, 1297, 1);
+		final IntImmutableList equalList = IntImmutableList.of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testCompareTo_Sublist() {
+		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
+		final IntList lessThenList = IntImmutableList.of(2, 365, 1297, 1).subList(0, 3);
+		final IntList greaterThenList = IntImmutableList.of(2, 380, 1300, 1).subList(0, 3);
+		final IntList lessBecauseItIsSmaller = IntImmutableList.of(2, 380, 1).subList(0, 2);
+		final IntList greaterBecauseItIsLarger = IntImmutableList.of(2, 380, 1297, 1, 1).subList(0, 4);
+		final IntList equalList = IntImmutableList.of(2, 380, 1297, 1).subList(0, 3);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testCompareTo_OtherListImpl() {
+		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
+		final IntArrayList lessThenList = IntArrayList.of(2, 365, 1297);
+		final IntArrayList greaterThenList = IntArrayList.of(2, 380, 1300);
+		final IntArrayList lessBecauseItIsSmaller = IntArrayList.of(2, 380);
+		final IntArrayList greaterBecauseItIsLarger = IntArrayList.of(2, 380, 1297, 1);
+		final IntArrayList equalList = IntArrayList.of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
 	}
 
 	@Test
@@ -128,10 +175,10 @@ public class IntImmutableListTest {
 	public void testSubList_testEquals_Sublist() {
 		final IntImmutableList l1 = IntImmutableList.of(0, 1, 2, 3);
 		final IntImmutableList l2 = IntImmutableList.of(5, 0, 1, 2, 3, 4);
-		final IntList sl1 = l1.subList(0, 3);
-		final IntList sl2 = l2.subList(1, 4);
+		final IntList sl1 = l1.subList(0, 3); // 0, 1, 2
+		final IntList sl2 = l2.subList(1, 4); // 0, 1, 2
 		assertEquals(sl1, sl2);
-		final IntList sl3 = l2.subList(0, 3);
+		final IntList sl3 = l2.subList(0, 3); // 5, 0, 1
 		assertNotEquals(sl1, sl3);
 	}
 
@@ -180,5 +227,50 @@ public class IntImmutableListTest {
 		recombinedList.addAll(prefixList);
 		recombinedList.addAll(suffixList);
 		assertEquals(baseList, recombinedList);
+	}
+
+	@Test
+	public void testSubList_testCompareTo_ImmutableList() {
+		final IntList baseList = IntImmutableList.of(2, 380, 1297, 1).subList(0, 3);
+		final IntImmutableList lessThenList = IntImmutableList.of(2, 365, 1297);
+		final IntImmutableList greaterThenList = IntImmutableList.of(2, 380, 1300);
+		final IntImmutableList lessBecauseItIsSmaller = IntImmutableList.of(2, 380);
+		final IntImmutableList greaterBecauseItIsLarger = IntImmutableList.of(2, 380, 1297, 1);
+		final IntImmutableList equalList = IntImmutableList.of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testSubList_testCompareTo_Sublist() {
+		final IntList baseList = IntImmutableList.of(2, 380, 1297, 1).subList(0, 3);
+		final IntList lessThenList = IntImmutableList.of(2, 365, 1297, 1).subList(0, 3);
+		final IntList greaterThenList = IntImmutableList.of(2, 380, 1300, 1).subList(0, 3);
+		final IntList lessBecauseItIsSmaller = IntImmutableList.of(2, 380, 1).subList(0, 2);
+		final IntList greaterBecauseItIsLarger = IntImmutableList.of(2, 380, 1297, 1, 1).subList(0, 4);
+		final IntList equalList = IntImmutableList.of(2, 380, 1297, 1).subList(0, 3);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testSubList_testCompareTo_OtherListImpl() {
+		final IntList baseList = IntImmutableList.of(2, 380, 1297, 1).subList(0, 3);
+		final IntArrayList lessThenList = IntArrayList.of(2, 365, 1297);
+		final IntArrayList greaterThenList = IntArrayList.of(2, 380, 1300);
+		final IntArrayList lessBecauseItIsSmaller = IntArrayList.of(2, 380);
+		final IntArrayList greaterBecauseItIsLarger = IntArrayList.of(2, 380, 1297, 1);
+		final IntArrayList equalList = IntArrayList.of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
 	}
 }
