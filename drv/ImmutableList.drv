@@ -39,11 +39,11 @@ import java.util.stream.Collector;
  * expensive loops.
  */
 
-public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements RandomAccess, Cloneable, java.io.Serializable {
+public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements LIST KEY_GENERIC, RandomAccess, Cloneable, java.io.Serializable {
 	private static final long serialVersionUID = 0L;
 	
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
-	private static final IMMUTABLE_LIST EMPTY = new IMMUTABLE_LIST(ARRAYS.EMPTY_ARRAY);
+	static final IMMUTABLE_LIST EMPTY = new IMMUTABLE_LIST(ARRAYS.EMPTY_ARRAY);
 
 #if KEYS_PRIMITIVE
 #define _EMPTY_ARRAY ARRAYS.EMPTY_ARRAY
@@ -108,7 +108,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public IMMUTABLE_LIST(final KEY_GENERIC_TYPE a[], final int offset, final int length) {
-		this(KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length]);
+		this(length == 0 ? _EMPTY_ARRAY : KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length]);
 		System.arraycopy(a, offset, this.a, 0, length);
 	}
 
@@ -428,7 +428,326 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 		return new Spliterator();
 	}
+	
+	private final static class ImmutableSubList KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements java.util.RandomAccess, java.io.Serializable {
+		private static final long serialVersionUID = 7054639518438982401L;
+		final IMMUTABLE_LIST KEY_GENERIC innerList;
+		final int from;
+		final int to;
+		/**
+		 * An alias to {@code innerList}'s array to save some typing. Note that 0 in this array is actually
+		 * the first element of the {@code innerList}, not this sublist. {@code a[from]} is the
+		 * first element of this sublist.
+		 */
+		final transient KEY_GENERIC_TYPE a[];
 
+		/** No validation; callers must validate arguments. */
+		ImmutableSubList(IMMUTABLE_LIST KEY_GENERIC innerList, int from, int to) {
+			this.innerList = innerList;
+			this.from = from;
+			this.to = to;
+			this.a = innerList.a;
+		}
+
+		@Override
+		public KEY_GENERIC_TYPE GET_KEY(final int index) {
+			ensureRestrictedIndex(index);
+			return a[index + from];
+		}
+
+		@Override
+		public int indexOf(final KEY_TYPE k) {
+			for(int i = from; i < to; i++) if (KEY_EQUALS(k, a[i])) return i - from;
+			return -1;
+		}
+
+		@Override
+		public int lastIndexOf(final KEY_TYPE k) {
+			for(int i = to; i-- != from;) if (KEY_EQUALS(k, a[i])) return i - from;
+			return -1;
+		}
+	
+		@Override
+		public int size() {
+			return to - from;
+		}
+	
+		@Override
+		public boolean isEmpty() {
+			return to <= from;
+		}
+
+		@Override
+		public void getElements(final int fromSublistIndex, final KEY_TYPE[] a, final int offset, final int length) {
+			ARRAYS.ensureOffsetLength(a, offset, length);
+			ensureRestrictedIndex(fromSublistIndex);
+			if (from + length > to) {
+				throw new IndexOutOfBoundsException(
+					String.format("Final index: %i (startingIndex: %i + length: %i) is greater then the list's length %i",
+						from + length, from, length, size()));
+			}
+			System.arraycopy(this.a, fromSublistIndex + from, a, offset, length);
+		}
+	
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
+			for (int i = from; i < to; ++i) {
+				action.accept(a[i]);
+			}
+		}
+
+#if KEYS_PRIMITIVE
+		@Override
+		public KEY_TYPE[] TO_KEY_ARRAY() {
+			return java.util.Arrays.copyOfRange(a, from, to); 
+		}
+	
+		@Override
+		public KEY_TYPE[] toArray(KEY_TYPE a[]) {
+			if (a == null || a.length < size()) a = new KEY_TYPE[size()];
+			System.arraycopy(this.a, from, a, 0, size());
+			return a;
+		}
+#else // KEYS_REFERENCE
+		@Override
+		public Object[] toArray() {
+			// A subtle part of the spec says the returned array must be Object[] exactly.
+			return java.util.Arrays.copyOfRange(a, from, to, Object[].class);
+		}
+	
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public KEY_GENERIC KEY_GENERIC_TYPE[] toArray(KEY_GENERIC_TYPE a[]) {
+			final int size = size();
+			if (a == null) {
+				a = KEY_GENERIC_ARRAY_CAST new Object[size];
+			} else if (a.length < size) {
+				a = KEY_GENERIC_ARRAY_CAST Array.newInstance(a.getClass().getComponentType(), size);
+			}
+			System.arraycopy(this.a, from, a, 0, size);
+			if (a.length > size) {
+				a[size] = null;
+			}
+			return a;
+		}
+#endif
+
+		@Override
+		public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
+			ensureIndex(index);
+	
+			return new KEY_LIST_ITERATOR KEY_GENERIC() {
+					int pos = index;
+	
+					@Override
+					public boolean hasNext() { return pos < to; }
+					@Override
+					public boolean hasPrevious() { return pos > from; }
+					@Override
+					public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[pos++ + from]; }
+					@Override
+					public KEY_GENERIC_TYPE PREV_KEY() { if (! hasPrevious()) throw new NoSuchElementException(); return a[--pos + from]; }
+					@Override
+					public int nextIndex() { return pos; }
+					@Override
+					public int previousIndex() { return pos - 1; }
+					@Override
+					public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+						while (pos < to) {
+							action.accept(a[pos++ + from]);
+						}
+					}
+					@Override
+					public void add(KEY_GENERIC_TYPE k) {
+						throw new UnsupportedOperationException();
+					}
+					@Override
+					public void set(KEY_GENERIC_TYPE k) {
+						throw new UnsupportedOperationException();
+					}
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException();
+					}
+					@Override
+					public int back(int n) {
+						if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+						final int remaining = to - pos;
+						if (n < remaining) {
+							pos -= n;
+						} else {
+							n = remaining;
+							pos = 0;
+						}
+						return n;
+					}
+					@Override
+					public int skip(int n) {
+						if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
+						final int remaining = to - pos;
+						if (n < remaining) {
+							pos += n;
+						} else {
+							n = remaining;
+							pos = to;
+						}
+						return n;
+					}
+				};
+		}
+
+		private final class SubListSpliterator extends SPLITERATORS.EarlyBindingSizeIndexBasedSpliterator KEY_GENERIC {
+
+			// We are using pos == 0 to be 0 relative to real array 0
+			SubListSpliterator() {
+				super(from, to);
+			}
+
+			/** No validation; callers must validate arguments. */
+			private SubListSpliterator(int pos, int maxPos) {
+				super(pos, maxPos);
+			}
+
+			// Remember, the indexes we are getting is the real array's index, not our sublist relative index.
+	 		@Override
+			protected final KEY_GENERIC_TYPE get(int i) { return a[i]; }
+			@Override
+			protected final SubListSpliterator makeForSplit(int pos, int maxPos) {
+				return new SubListSpliterator(pos, maxPos);
+			}
+			@Override
+			public boolean tryAdvance(final METHOD_ARG_KEY_CONSUMER action) {
+				if (pos >= maxPos) return false;
+				action.accept(a[pos++]);
+				return true;
+			}
+			@Override
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				final int max = maxPos;
+				while(pos < max) {
+					action.accept(a[pos++]);
+				}
+			}
+		}
+
+		@Override
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+			return new SubListSpliterator();
+		}
+
+		boolean contentsEquals(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
+			if (a == otherA && from == otherAFrom && to == otherATo) {
+				return true;
+			}
+			if (otherATo - otherAFrom != size()) {
+				return false;
+			}
+			int pos = from, otherPos = otherAFrom;
+			// We have already assured that the two ranges are the same size, so we only need to check one bound.
+			// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
+			// Make sure to split out the reference equality case when you do this.
+#if KEY_CLASS_Object
+			while(pos < to) if (!java.util.Objects.equals(a[pos++], otherA[otherPos++])) return false;
+#else
+			while(pos < to) if (a[pos++] != otherA[otherPos++]) return false;
+#endif
+			return true;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) return true;
+			if (o == null) return false;
+			if (!(o instanceof java.util.List)) return false;
+			if (o instanceof IMMUTABLE_LIST) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				IMMUTABLE_LIST KEY_GENERIC other = (IMMUTABLE_LIST KEY_GENERIC) o;
+				return contentsEquals(other.a, 0, other.size());
+			}
+			if (o instanceof ImmutableSubList) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				ImmutableSubList KEY_GENERIC other = (ImmutableSubList KEY_GENERIC) o;
+				return contentsEquals(other.a, other.from, other.to);
+			}
+			return super.equals(o);
+		}
+
+#if ! KEYS_USE_REFERENCE_EQUALITY
+		int contentsCompareTo(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
+#if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
+			if (a == otherA && from == otherAFrom && to == otherATo) return 0;
+#endif
+			// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
+			KEY_GENERIC_TYPE e1, e2;
+			int r, i, j;
+			for(i = from, j = otherAFrom; i < to && i < otherATo; i++, j++) {
+				e1 = a[i];
+				e2 = otherA[j];
+				if ((r = KEY_CMP(e1, e2)) != 0) return r;
+			}
+			return i < otherATo ? -1 : (i < to ? 1 : 0);
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
+			if (l instanceof IMMUTABLE_LIST) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				IMMUTABLE_LIST KEY_GENERIC other = (IMMUTABLE_LIST KEY_GENERIC) l;
+				return contentsCompareTo(other.a, 0, other.size());
+			}
+			if (l instanceof ImmutableSubList) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				ImmutableSubList KEY_GENERIC other = (ImmutableSubList KEY_GENERIC) l;
+				return contentsCompareTo(other.a, other.from, other.to);
+			}
+			return super.compareTo(l);
+		}
+
+#endif
+
+		private Object readResolve() throws java.io.ObjectStreamException {
+			// We need to recheck the invariants of the subList and reestablish our "a" array alias.
+			// Easiest way to do this is to just make a subList anew.
+			// This will not cause a recopy of contents as subLists are a view, so this is all constant time.
+			try {
+				return innerList.subList(from, to);
+			} catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
+				throw (java.io.InvalidObjectException) (new java.io.InvalidObjectException(ex.getMessage()).initCause(ex));
+			}
+		}
+
+		@Override
+		public LIST KEY_GENERIC subList(int from, int to) {
+			// We don't need to worry about keeping all nested sublists up to date with bounds as we are immutable.
+			// So don't even nest; just return a sublist with the immediate parent of the root list.
+			ensureIndex(from);
+			ensureIndex(to);
+			if (from == to) return EMPTY;
+			if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
+			return new ImmutableSubList KEY_GENERIC_DIAMOND(innerList, from + this.from, to + this.from);
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @apiNote The returned list will be immutable, but is currently not declared to return an
+	 * instance of {@code ImmutableList} due to complications of implementation details.
+	 * This may change in a future version (in other words, do not consider the return type of
+	 * this method to be stable if making a subclass of {@code ImmutableList}).
+	 */
+	@Override
+	public LIST KEY_GENERIC subList(int from, int to) {
+		if (from == 0 && to == size()) return this;
+		ensureIndex(from);
+		ensureIndex(to);
+		if (from == to) return EMPTY;
+		if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
+		return new ImmutableSubList KEY_GENERIC_DIAMOND(this, from, to);
+	}
+		
+	
 	@Override
 	public IMMUTABLE_LIST KEY_GENERIC clone() {
 		return this;
@@ -436,7 +755,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 
 	/** Compares this type-specific immutable list to another one.
 	 *
-	 * <p>This method exists only for sake of efficiency. The implementation
+	 * @apiNote This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
 	 * @param l a type-specific immutable list.
@@ -444,6 +763,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 */
 	public boolean equals(final IMMUTABLE_LIST KEY_GENERIC l) {
 		if (l == this) return true;
+		if (a == l.a) return true;
 		int s = size();
 		if (s != l.size()) return false;
 		final KEY_GENERIC_TYPE[] a1 = a;
@@ -457,18 +777,30 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 #endif
 	}
 
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
+#if KEYS_REFERENCE
+	@SuppressWarnings({"unchecked", "unlikely-arg-type"})
+#else
+	@SuppressWarnings("unlikely-arg-type")
+#endif
 	@Override
 	public boolean equals(final Object o) {
-		return o instanceof IMMUTABLE_LIST ? equals((IMMUTABLE_LIST KEY_GENERIC) o) : super.equals(o);
+		if (o == this) return true;
+		if (o == null) return false;
+		if (!(o instanceof java.util.List)) return false;
+		if (o instanceof IMMUTABLE_LIST) {
+			return equals((IMMUTABLE_LIST KEY_GENERIC) o);
+		}
+		if (o instanceof ImmutableSubList) {
+			// Sublist has an optimized sub-array based comparison, reuse that. 
+			return ((ImmutableSubList KEY_GENERIC)o).equals(this);
+		}
+		return super.equals(o);
 	}
 
-
 #if ! KEYS_USE_REFERENCE_EQUALITY
-
 	/** Compares this immutable list to another immutable list.
 	 *
-	 * <p>This method exists only for sake of efficiency. The implementation
+	 * @apiNote This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
 	 * @param l an immutable list.
@@ -478,6 +810,9 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final IMMUTABLE_LIST KEY_EXTENDS_GENERIC l) {
+#if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
+		if (a == l.a) return 0;
+#endif
 		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
@@ -496,382 +831,18 @@ public class IMMUTABLE_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implem
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
-		return l instanceof IMMUTABLE_LIST ? compareTo((IMMUTABLE_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
+		if (l instanceof IMMUTABLE_LIST) {
+			return compareTo((IMMUTABLE_LIST KEY_EXTENDS_GENERIC)l);
+		}
+		if (l instanceof ImmutableSubList) {
+			// Safe to strip the "extends" because we will only ever take elements, never modify them (especially because it is immutable).
+			ImmutableSubList KEY_GENERIC other = (ImmutableSubList KEY_GENERIC)l;
+			// Must negate because we are inverting the order of the comparison.
+			return -other.compareTo(this);
+		}
+		return super.compareTo(l);
 	}
 #endif
-
-	// Overridden mutation methods to make unsupported.
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void add(final int index, final KEY_GENERIC_TYPE k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean add(final KEY_GENERIC_TYPE k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean addAll(final java.util.Collection<? extends KEY_GENERIC_CLASS> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean addAll(int index, final java.util.Collection<? extends KEY_GENERIC_CLASS> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final KEY_GENERIC_TYPE REMOVE_KEY(final int index) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean REMOVE(final KEY_TYPE k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean removeAll(final java.util.Collection<?> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean retainAll(final java.util.Collection<?> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean removeIf(final java.util.function.Predicate<? super KEY_GENERIC_CLASS> c) {
-		throw new UnsupportedOperationException();
-	}
-
-#if KEYS_PRIMITIVE
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean removeIf(final METHOD_ARG_PREDICATE c) {
-		throw new UnsupportedOperationException();
-	}
-#endif
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void replaceAll(final java.util.function.UnaryOperator<KEY_GENERIC_CLASS> operator) {
-		throw new UnsupportedOperationException();
-	}	
-
-#if KEYS_PRIMITIVE && ! KEY_CLASS_Boolean
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void replaceAll(final JDK_PRIMITIVE_UNARY_OPERATOR operator) {
-		throw new UnsupportedOperationException();
-	}
-#endif
-
-#if KEYS_PRIMITIVE
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void add(final int index, final KEY_GENERIC_CLASS k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean add(final KEY_GENERIC_CLASS k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final KEY_GENERIC_CLASS remove(final int index) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean remove(final Object k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final KEY_GENERIC_CLASS set(final int index, final KEY_GENERIC_CLASS k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean addAll(final COLLECTION c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean addAll(final LIST c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean addAll(final int index, final COLLECTION c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean addAll(final int index, final LIST c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean removeAll(final COLLECTION c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final boolean retainAll(final COLLECTION c) {
-		throw new UnsupportedOperationException();
-	}
-#endif
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final KEY_GENERIC_TYPE set(final int index, final KEY_GENERIC_TYPE k) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void clear() {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void size(final int size) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void removeElements(final int from, final int to) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void addElements(final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void setElements(final int index, final KEY_GENERIC_TYPE a[], final int offset, final int length) {
-		throw new UnsupportedOperationException();
-	}
-
-#if KEYS_PRIMITIVE
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void sort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void unstableSort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
-		throw new UnsupportedOperationException();
-	}
-#endif
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void sort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * @implSpec Always throws {@link UnsupportedOperationException} as this is an immutable type.
-	 *
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public final void unstableSort(final java.util.Comparator<? super KEY_GENERIC_CLASS> comparator) {
-		throw new UnsupportedOperationException();
-	}
 }
 
 #undef _EMPTY_ARRAY

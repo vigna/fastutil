@@ -607,6 +607,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 		// Most of the inherited methods should be fine, but we can override a few of them for performance.
 
+		// Needed because we can't access the parent class' instance variables directly in a different instance of SubList.
+		private KEY_GENERIC_TYPE[] getParentArray() {
+			return a;
+		}
+
 		@Override
 		public KEY_GENERIC_TYPE GET_KEY(int i) {
 			ensureRestrictedIndex(i);
@@ -689,7 +694,74 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 			return new SubListSpliterator();
 		}
+		
+		boolean contentsEquals(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
+			if (a == otherA && from == otherAFrom && to == otherATo) return true;
+			if (otherATo - otherAFrom != size()) {
+				return false;
+			}
+			int pos = from, otherPos = otherAFrom;
+			// We have already assured that the two ranges are the same size, so we only need to check one bound.
+			// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
+			// Make sure to split out the reference equality case when you do this.
+#if KEY_CLASS_Object
+			while(pos < to) if (!java.util.Objects.equals(a[pos++], otherA[otherPos++])) return false;
+#else
+			while(pos < to) if (a[pos++] != otherA[otherPos++]) return false;
+#endif
+			return true;
+		}
 
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) return true;
+			if (o == null) return false;
+			if (!(o instanceof java.util.List)) return false;
+			if (o instanceof ARRAY_LIST) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				ARRAY_LIST KEY_GENERIC other = (ARRAY_LIST KEY_GENERIC) o;
+				return contentsEquals(other.a, 0, other.size());
+			}
+			if (o instanceof ARRAY_LIST.SubList) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				ARRAY_LIST KEY_GENERIC.SubList other = (ARRAY_LIST KEY_GENERIC.SubList) o;
+				return contentsEquals(other.getParentArray(), other.from, other.to);
+			}
+			return super.equals(o);
+		}
+
+#if ! KEYS_USE_REFERENCE_EQUALITY
+		int contentsCompareTo(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
+#if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
+			if (a == otherA && from == otherAFrom && to == otherATo) return 0;
+#endif
+			// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
+			KEY_GENERIC_TYPE e1, e2;
+			int r, i, j;
+			for(i = from, j = otherAFrom; i < to && i < otherATo; i++, j++) {
+				e1 = a[i];
+				e2 = otherA[j];
+				if ((r = KEY_CMP(e1, e2)) != 0) return r;
+			}
+			return i < otherATo ? -1 : (i < to ? 1 : 0);
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
+			if (l instanceof ARRAY_LIST) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				ARRAY_LIST KEY_GENERIC other = (ARRAY_LIST KEY_GENERIC) l;
+				return contentsCompareTo(other.a, 0, other.size());
+			}
+			if (l instanceof ARRAY_LIST.SubList) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				ARRAY_LIST KEY_GENERIC.SubList other = (ARRAY_LIST KEY_GENERIC.SubList) l;
+				return contentsCompareTo(other.getParentArray(), other.from, other.to);
+			}
+			return super.compareTo(l);
+		}
+#endif
 		// We don't override subList as we want AbstractList's "sub-sublist" nesting handling,
 		// which would be tricky to do here.
 		// TODO Do override it so array access isn't sent through N indirections.
@@ -698,6 +770,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public LIST KEY_GENERIC subList(int from, int to) {
+		if (from == 0 && to == size()) return this;
 		ensureIndex(from);
 		ensureIndex(to);
 		if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
@@ -1063,7 +1136,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	/** Compares this type-specific array list to another one.
 	 *
-	 * <p>This method exists only for sake of efficiency. The implementation
+	 * @apiNote This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
 	 * @param l a type-specific array list.
@@ -1077,6 +1150,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		final KEY_GENERIC_TYPE[] a1 = a;
 		final KEY_GENERIC_TYPE[] a2 = l.a;
 
+		if (a1 == a2 && s == l.size()) return true; 
+
 #if KEY_CLASS_Object
 		while(s-- !=  0) if (! java.util.Objects.equals(a1[s], a2[s])) return false;
 #else
@@ -1085,17 +1160,33 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return true;
 	}
 
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
+#if KEYS_REFERENCE
+	@SuppressWarnings({"unchecked", "unlikely-arg-type"})
+#else
+	@SuppressWarnings("unlikely-arg-type")
+#endif
 	@Override
-	public boolean equals(Object o) {
-		return o instanceof ARRAY_LIST ? equals((ARRAY_LIST KEY_GENERIC)o) : super.equals(o);
+	public boolean equals(final Object o) {
+		if (o == this) return true;
+		if (o == null) return false;
+		if (!(o instanceof java.util.List)) return false;
+		if (o instanceof ARRAY_LIST) {
+			// Safe cast because we are only going to take elements from other list, never give them
+			return equals((ARRAY_LIST KEY_GENERIC) o);
+		}
+		if (o instanceof ARRAY_LIST.SubList) {
+			// Safe cast because we are only going to take elements from other list, never give them
+			// Sublist has an optimized sub-array based comparison, reuse that. 
+			return ((ARRAY_LIST KEY_GENERIC.SubList)o).equals(this);
+		}
+		return super.equals(o);
 	}
 
 #if ! KEYS_USE_REFERENCE_EQUALITY
 
 	/** Compares this array list to another array list.
 	 *
-	 * <p>This method exists only for sake of efficiency. The implementation
+	 * @apiNote This method exists only for sake of efficiency. The implementation
 	 * inherited from the abstract implementation would already work.
 	 *
 	 * @param l an array list.
@@ -1105,9 +1196,13 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final ARRAY_LIST KEY_EXTENDS_GENERIC l) {
-		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE a1[] = a, a2[] = l.a;
+#if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
+		if (a1 == a2 && s1 == s2) return 0;
+#endif
+		
+		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		KEY_GENERIC_TYPE e1, e2;
 		int r, i;
 
@@ -1120,12 +1215,19 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return i < s2 ? -1 : (i < s1 ? 1 : 0);
 	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public int compareTo(final java.util.List <? extends KEY_GENERIC_CLASS> l) {
-		return l instanceof ARRAY_LIST ? compareTo((ARRAY_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
+		if (l instanceof ARRAY_LIST) {
+			return compareTo((ARRAY_LIST KEY_EXTENDS_GENERIC)l);
+		}
+		if (l instanceof ARRAY_LIST.SubList) {
+			// Must negate because we are inverting the order of the comparison.
+			return -((ARRAY_LIST KEY_EXTENDS_GENERIC.SubList) l).compareTo(this);
+		}
+		return super.compareTo(l);
 	}
 #endif
-
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
