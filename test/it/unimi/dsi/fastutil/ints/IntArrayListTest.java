@@ -535,7 +535,7 @@ public class IntArrayListTest {
 
 	@Test
 	public void testSubList_testSpliteratorTrySplit() {
-		final IntList baseList = IntArrayList.of(0, 1, 2, 3, 72, 5, 6).subList(1, 5); // 1, 2, 3, 72
+		final IntList baseList = IntArrayList.of(0, 1, 2, 3, 72, 5, 6).subList(1, 5); // 1, 2, 3, 72, 5
 		final IntSpliterator willBeSuffix = baseList.spliterator();
 		assertEquals(baseList.size(), willBeSuffix.getExactSizeIfKnown());
 		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
