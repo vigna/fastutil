@@ -279,7 +279,6 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return wrap(a, length(a));
 	}
 
-
 	/** Creates a big array list using a list of elements.
 	 *
 	 * @param init a list of elements that will be used to initialize the big list.
@@ -748,14 +747,14 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			if (otherATo - otherAFrom != size64()) {
 				return false;
 			}
-			long pos = from, otherPos = otherAFrom;
+			long pos = to, otherPos = otherATo;
 			// We have already assured that the two ranges are the same size, so we only need to check one bound.
-			// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
-			// Make sure to split out the reference equality case when you do this.
+			// If BigArrays.equals ever gets an overload that accepts bounds, use that instead
+			// (but make sure to break out the reference equality case).
 #if KEY_CLASS_Object
-			while(pos < to) if (! java.util.Objects.equals(BigArrays.get(a, pos++), BigArrays.get(otherA, otherPos++))) return false;
+			while(--pos >= from) if (! java.util.Objects.equals(BigArrays.get(a, pos), BigArrays.get(otherA, --otherPos))) return false;
 #else
-			while(pos < to) if (BigArrays.get(a, pos++) != BigArrays.get(otherA, otherPos++)) return false;
+			while(--pos >= from) if (BigArrays.get(a, pos) != BigArrays.get(otherA, --otherPos)) return false;
 #endif
 			return true;
 		}
@@ -1087,7 +1086,9 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if (s != l.size64()) return false;
 		final KEY_GENERIC_TYPE[][] a1 = a;
 		final KEY_GENERIC_TYPE[][] a2 = l.a;
-
+		// Already checked s == l.size64 above
+		if (a1 == a2) return true;
+		// Backwards loop is faster then forwards loop, at least in Java 8 and below.
 #if KEY_CLASS_Object
 		while(s-- !=  0) if (! java.util.Objects.equals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
 #else
