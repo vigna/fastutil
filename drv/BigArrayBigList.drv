@@ -279,10 +279,21 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return wrap(a, length(a));
 	}
 
+	/** Creates a new empty big array list. 
+	 *
+	 * @return a new empty big-array big list.
+	 */
+	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC of() {
+		return new BIG_ARRAY_BIG_LIST KEY_GENERIC_DIAMOND();
+	}
+
 	/** Creates a big array list using a list of elements.
 	 *
 	 * @param init a list of elements that will be used to initialize the big list.
+	 *   It is possible (but not assured) that the returned big-array big list will be
+	 *   backed by the given array in one of its segments.
 	 * @return a new big-array big list containing the given elements.
+	 * @see BigArrays#wrap
 	 */
 	SAFE_VARARGS
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC of(final KEY_GENERIC_TYPE... init) {
@@ -312,6 +323,8 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	 * @apiNote Taking a primitive stream instead returning something like a
 	 * {@link java.util.stream.Collector Collector} is necessary because there is no
 	 * primitive {@code Collector} equivalent in the Java API.
+	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
+	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the contents of the full stream.
 	 */
 	public static KEY_GENERIC BIG_ARRAY_BIG_LIST KEY_GENERIC toBigListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, long expectedSize) {
 		return stream.collect(
@@ -338,7 +351,12 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return (Collector) TO_LIST_COLLECTOR;
 	}
 
- 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
+ 	/**
+ 	 * Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList.
+ 	 *
+ 	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
+	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the contents of the full stream.
+ 	 */
  	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, BIG_ARRAY_BIG_LIST KEY_GENERIC> toBigListWithExpectedSize(long expectedSize) {
  		return Collector.of(
 		() -> new BIG_ARRAY_BIG_LIST KEY_GENERIC(expectedSize),
