@@ -19,6 +19,7 @@ package it.unimi.dsi.fastutil.ints;
 import static it.unimi.dsi.fastutil.BigArrays.wrap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -32,7 +33,7 @@ import org.junit.Test;
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.MainRunner;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "static-method"})
 public class IntBigArrayBigListTest {
 
 	@Test
@@ -79,6 +80,80 @@ public class IntBigArrayBigListTest {
 		l = new IntBigArrayBigList(wrap(new int[] { 0, 1, 1, 2 }));
 		l.removeAll(Collections.singleton(Integer.valueOf(1)));
 		assertEquals(IntBigArrayBigList.of(0, 2), l);
+	}
+
+
+	private static IntBigArrayBigList of(int... members) {
+		return new IntBigArrayBigList(IntArrayList.of(members));
+	}
+
+	@Test
+	public void testEquals_AnotherArrayList() {
+		final IntBigArrayBigList baseList = of(2, 380, 1297);
+		assertEquals(of(2, 380, 1297), baseList);
+		assertNotEquals(of(42, 420, 1337), baseList);
+	}
+
+	@Test
+	public void testEquals_Sublist() {
+		final IntBigArrayBigList l1 = of(0, 1, 2, 3);
+		final IntBigArrayBigList l2 = of(5, 0, 1, 2, 3, 4);
+		final IntBigList sl2 = l2.subList(1, 5); // 0, 1, 2, 3
+		assertEquals(l1, sl2);
+		final IntBigList sl2b = l2.subList(0, 4); // 5, 0, 1, 2
+		assertNotEquals(l1, sl2b);
+	}
+
+	@Test
+	public void testEquals_OtherListImpl() {
+		final IntBigArrayBigList baseList = of(2, 380, 1297);
+		assertEquals(IntBigLists.unmodifiable(of(2, 380, 1297)), baseList);
+		assertNotEquals(IntBigLists.unmodifiable(of(42, 420, 1337)), baseList);
+	}
+
+	@Test
+	public void testCompareTo_AnotherArrayList() {
+		final IntBigArrayBigList baseList = of(2, 380, 1297);
+		final IntBigArrayBigList lessThenList = of(2, 365, 1297);
+		final IntBigArrayBigList greaterThenList = of(2, 380, 1300);
+		final IntBigArrayBigList lessBecauseItIsSmaller = of(2, 380);
+		final IntBigArrayBigList greaterBecauseItIsLarger = of(2, 380, 1297, 1);
+		final IntBigArrayBigList equalList = of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testCompareTo_Sublist() {
+		final IntBigArrayBigList baseList = of(2, 380, 1297);
+		final IntBigList lessThenList = of(2, 365, 1297, 1).subList(0, 3);
+		final IntBigList greaterThenList = of(2, 380, 1300, 1).subList(0, 3);
+		final IntBigList lessBecauseItIsSmaller = of(2, 380, 1).subList(0, 2);
+		final IntBigList greaterBecauseItIsLarger = of(2, 380, 1297, 1, 1).subList(0, 4);
+		final IntBigList equalList = of(2, 380, 1297, 1).subList(0, 3);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testCompareTo_OtherListImpl() {
+		final IntBigArrayBigList baseList = of(2, 380, 1297);
+		final IntBigList lessThenList = IntBigLists.unmodifiable(of(2, 365, 1297));
+		final IntBigList greaterThenList = IntBigLists.unmodifiable(of(2, 380, 1300));
+		final IntBigList lessBecauseItIsSmaller = IntBigLists.unmodifiable(of(2, 380));
+		final IntBigList greaterBecauseItIsLarger = IntBigLists.unmodifiable(of(2, 380, 1297, 1));
+		final IntBigList equalList = IntBigLists.unmodifiable(of(2, 380, 1297));
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
 	}
 
 	private static java.util.Random r = new java.util.Random(0);
@@ -656,6 +731,101 @@ public class IntBigArrayBigListTest {
 		assertEquals(1, spliterator.skip(1));
 		final java.util.stream.IntStream stream = java.util.stream.StreamSupport.intStream(spliterator, false);
 		assertEquals(baseList.subList(1, baseList.size64()), IntBigArrayBigList.toBigList(stream));
+	}
+
+	@Test
+	public void testSubList_testEquals_ArrayList() {
+		final IntBigArrayBigList l = of(0, 1, 2, 3);
+		final IntBigList sl = l.subList(0, 3);
+		assertEquals(of(0, 1, 2), sl);
+		assertNotEquals(of(0, 1, 3), sl);
+	}
+
+	@Test
+	public void testSubList_testEquals_Sublist() {
+		final IntBigArrayBigList l1 = of(0, 1, 2, 3);
+		final IntBigArrayBigList l2 = of(5, 0, 1, 2, 3, 4);
+		final IntBigList sl1 = l1.subList(0, 3); // 0, 1, 2
+		final IntBigList sl2 = l2.subList(1, 4); // 0, 1, 2
+		assertEquals(sl1, sl2);
+		final IntBigList sl3 = l2.subList(0, 3); // 5, 0, 1
+		assertNotEquals(sl1, sl3);
+	}
+
+	@Test
+	public void testSubList_testEquals_OtherListImpl() {
+		final IntBigArrayBigList l = of(0, 1, 2, 3);
+		final IntBigList sl = l.subList(0, 3);
+		assertEquals(IntBigLists.unmodifiable(of(0, 1, 2)), sl);
+		assertNotEquals(IntBigLists.unmodifiable(of(0, 1, 3)), sl);
+	}
+
+	@Test
+	public void testSubList_testCompareTo_ArrayList() {
+		final IntBigList baseList = of(2, 380, 1297, 1).subList(0, 3);
+		final IntBigArrayBigList lessThenList = of(2, 365, 1297);
+		final IntBigArrayBigList greaterThenList = of(2, 380, 1300);
+		final IntBigArrayBigList lessBecauseItIsSmaller = of(2, 380);
+		final IntBigArrayBigList greaterBecauseItIsLarger = of(2, 380, 1297, 1);
+		final IntBigArrayBigList equalList = of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testSubList_testCompareTo_Sublist() {
+		final IntList baseList = IntArrayList.of(2, 380, 1297, 1).subList(0, 3);
+		final IntList lessThenList = IntArrayList.of(2, 365, 1297, 1).subList(0, 3);
+		final IntList greaterThenList = IntArrayList.of(2, 380, 1300, 1).subList(0, 3);
+		final IntList lessBecauseItIsSmaller = IntArrayList.of(2, 380, 1).subList(0, 2);
+		final IntList greaterBecauseItIsLarger = IntArrayList.of(2, 380, 1297, 1, 1).subList(0, 4);
+		final IntList equalList = IntArrayList.of(2, 380, 1297, 1).subList(0, 3);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testSubList_testCompareTo_OtherListImpl() {
+		final IntList baseList = IntArrayList.of(2, 380, 1297, 1).subList(0, 3);
+		final IntImmutableList lessThenList = IntImmutableList.of(2, 365, 1297);
+		final IntImmutableList greaterThenList = IntImmutableList.of(2, 380, 1300);
+		final IntImmutableList lessBecauseItIsSmaller = IntImmutableList.of(2, 380);
+		final IntImmutableList greaterBecauseItIsLarger = IntImmutableList.of(2, 380, 1297, 1);
+		final IntImmutableList equalList = IntImmutableList.of(2, 380, 1297);
+		assertTrue(baseList.compareTo(lessThenList) > 0);
+		assertTrue(baseList.compareTo(greaterThenList) < 0);
+		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
+		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
+		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testSubList_testSpliteratorTrySplit() {
+		final IntBigList baseList = of(0, 1, 2, 3, 72, 5, 6).subList(1, 5); // 1, 2, 3, 72, 5
+		final IntSpliterator willBeSuffix = baseList.spliterator();
+		assertEquals(baseList.size64(), willBeSuffix.getExactSizeIfKnown());
+		// Rather non-intuitively for finite sequences (but makes perfect sense for infinite ones),
+		// the spec demands the original spliterator becomes the suffix and the new Spliterator becomes the prefix.
+		final IntSpliterator prefix = willBeSuffix.trySplit();
+		// No assurance of where we split, but where ever it is it should be a perfect split into a prefix and suffix.
+		final java.util.stream.IntStream suffixStream = java.util.stream.StreamSupport.intStream(willBeSuffix, false);
+		final java.util.stream.IntStream prefixStream = java.util.stream.StreamSupport.intStream(prefix, false);
+
+		final IntBigArrayBigList prefixList = IntBigArrayBigList.toBigList(prefixStream);
+		final IntBigArrayBigList suffixList = IntBigArrayBigList.toBigList(suffixStream);
+		assertEquals(baseList.size64(), prefixList.size64() + suffixList.size64());
+		assertEquals(baseList.subList(0, prefixList.size64()), prefixList);
+		assertEquals(baseList.subList(prefixList.size64(), baseList.size64()), suffixList);
+		final IntBigArrayBigList recombinedList = new IntBigArrayBigList(baseList.size64());
+		recombinedList.addAll(prefixList);
+		recombinedList.addAll(suffixList);
+		assertEquals(baseList, recombinedList);
 	}
 
 	@Test

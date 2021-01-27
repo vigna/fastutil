@@ -23,6 +23,7 @@ import java.util.RandomAccess;
 import java.util.NoSuchElementException;
 import it.unimi.dsi.fastutil.BigArrays;
 import static it.unimi.dsi.fastutil.BigArrays.length;
+import it.unimi.dsi.fastutil.BigList;
 import it.unimi.dsi.fastutil.Size64;
 #if KEYS_REFERENCE
 import java.util.function.Consumer;
@@ -662,6 +663,11 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			super(BIG_ARRAY_BIG_LIST.this, from, to);
 		}
 
+		// Needed because we can't access the parent class' instance variables directly in a different instance of SubList.
+		private KEY_GENERIC_TYPE[][] getParentArray() {
+			return a;
+		}
+
 		// Most of the inherited methods should be fine, but we can override a few of them for performance.
 
 		@Override
@@ -754,6 +760,75 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 			return new SubListSpliterator();
 		}
 
+		boolean contentsEquals(KEY_GENERIC_TYPE[][] otherA, long otherAFrom, long otherATo) {
+			if (a == otherA && from == otherAFrom && to == otherATo) return true;
+			if (otherATo - otherAFrom != size64()) {
+				return false;
+			}
+			long pos = to, otherPos = otherATo;
+			// We have already assured that the two ranges are the same size, so we only need to check one bound.
+			// If BigArrays.equals ever gets an overload that accepts bounds, use that instead
+			// (but make sure to break out the reference equality case).
+#if KEY_CLASS_Object
+			while(--pos >= from) if (! java.util.Objects.equals(BigArrays.get(a, pos), BigArrays.get(otherA, --otherPos))) return false;
+#else
+			while(--pos >= from) if (BigArrays.get(a, pos) != BigArrays.get(otherA, --otherPos)) return false;
+#endif
+			return true;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == this) return true;
+			if (o == null) return false;
+			if (!(o instanceof BigList)) return false;
+			if (o instanceof BIG_ARRAY_BIG_LIST) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				BIG_ARRAY_BIG_LIST KEY_GENERIC other = (BIG_ARRAY_BIG_LIST KEY_GENERIC) o;
+				return contentsEquals(other.a, 0, other.size64());
+			}
+			if (o instanceof BIG_ARRAY_BIG_LIST.SubList) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				BIG_ARRAY_BIG_LIST KEY_GENERIC.SubList other = (BIG_ARRAY_BIG_LIST KEY_GENERIC.SubList) o;
+				return contentsEquals(other.getParentArray(), other.from, other.to);
+			}
+			return super.equals(o);
+		}
+
+#if ! KEYS_USE_REFERENCE_EQUALITY
+		int contentsCompareTo(KEY_GENERIC_TYPE[][] otherA, long otherAFrom, long otherATo) {
+#if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
+			if (a == otherA && from == otherAFrom && to == otherATo) return 0;
+#endif
+			// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
+			KEY_GENERIC_TYPE e1, e2;
+			int r;
+			long i, j;
+			for(i = from, j = otherAFrom; i < to && i < otherATo; i++, j++) {
+				e1 = BigArrays.get(a, i);
+				e2 = BigArrays.get(otherA, j);
+				if ((r = KEY_CMP(e1, e2)) != 0) return r;
+			}
+			return i < otherATo ? -1 : (i < to ? 1 : 0);
+		}
+
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		@Override
+		public int compareTo(final BigList <? extends KEY_GENERIC_CLASS> l) {
+			if (l instanceof BIG_ARRAY_BIG_LIST) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				BIG_ARRAY_BIG_LIST KEY_GENERIC other = (BIG_ARRAY_BIG_LIST KEY_GENERIC) l;
+				return contentsCompareTo(other.a, 0, other.size64());
+			}
+			if (l instanceof BIG_ARRAY_BIG_LIST.SubList) {
+				SUPPRESS_WARNINGS_KEY_UNCHECKED
+				BIG_ARRAY_BIG_LIST KEY_GENERIC.SubList other = (BIG_ARRAY_BIG_LIST KEY_GENERIC.SubList) l;
+				return contentsCompareTo(other.getParentArray(), other.from, other.to);
+			}
+			return super.compareTo(l);
+		}
+#endif
+
 		// We don't override subList as we want AbstractList's "sub-sublist" nesting handling,
 		// which would be tricky to do here.
 		// TODO Do override it so array access isn't sent through N indirections.
@@ -762,6 +837,7 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 
 	@Override
 	public BIG_LIST KEY_GENERIC subList(long from, long to) {
+		if (from == 0 && to == size64()) return this;
 		ensureIndex(from);
 		ensureIndex(to);
 		if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
@@ -1028,7 +1104,9 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		if (s != l.size64()) return false;
 		final KEY_GENERIC_TYPE[][] a1 = a;
 		final KEY_GENERIC_TYPE[][] a2 = l.a;
-
+		// Already checked s == l.size64 above
+		if (a1 == a2) return true;
+		// Backwards loop is faster then forwards loop, at least in Java 8 and below.
 #if KEY_CLASS_Object
 		while(s-- !=  0) if (! java.util.Objects.equals(BigArrays.get(a1, s), BigArrays.get(a2, s))) return false;
 #else
@@ -1040,7 +1118,19 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public boolean equals(final Object o) {
-		return o instanceof BIG_ARRAY_BIG_LIST ? equals((BIG_ARRAY_BIG_LIST KEY_GENERIC)o) : super.equals(o);
+		if (o == this) return true;
+		if (o == null) return false;
+		if (!(o instanceof BigList)) return false;
+		if (o instanceof BIG_ARRAY_BIG_LIST) {
+			// Safe cast because we are only going to take elements from other list, never give them
+			return equals((BIG_ARRAY_BIG_LIST KEY_GENERIC) o);
+		}
+		if (o instanceof BIG_ARRAY_BIG_LIST.SubList) {
+			// Safe cast because we are only going to take elements from other list, never give them
+			// Sublist has an optimized sub-array based comparison, reuse that. 
+			return ((BIG_ARRAY_BIG_LIST KEY_GENERIC.SubList)o).equals(this);
+		}
+		return super.equals(o);
 	}
 
 #if ! KEYS_USE_REFERENCE_EQUALITY
@@ -1059,6 +1149,9 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 	public int compareTo(final BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC l) {
 		final long s1 = size64(), s2 = l.size64();
 		final KEY_GENERIC_TYPE a1[][] = a, a2[][] = l.a;
+#if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
+		if (a1 == a2 && s1 == s2) return 0;
+#endif
 		KEY_GENERIC_TYPE e1, e2;
 		int r, i;
 
@@ -1071,9 +1164,17 @@ public class BIG_ARRAY_BIG_LIST KEY_GENERIC extends ABSTRACT_BIG_LIST KEY_GENERI
 		return i < s2 ? -1 : (i < s1 ? 1 : 0);
 	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
-	public int compareTo(final it.unimi.dsi.fastutil.BigList<? extends KEY_GENERIC_CLASS> l) {
-		return l instanceof BIG_ARRAY_BIG_LIST ? compareTo((BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC)l) : super.compareTo(l);
+	public int compareTo(final BigList <? extends KEY_GENERIC_CLASS> l) {
+		if (l instanceof BIG_ARRAY_BIG_LIST) {
+			return compareTo((BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC)l);
+		}
+		if (l instanceof BIG_ARRAY_BIG_LIST.SubList) {
+			// Must negate because we are inverting the order of the comparison.
+			return -((BIG_ARRAY_BIG_LIST KEY_EXTENDS_GENERIC.SubList) l).compareTo(this);
+		}
+		return super.compareTo(l);
 	}
 #endif
 
