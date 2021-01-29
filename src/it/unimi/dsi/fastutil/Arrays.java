@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2020 Sebastiano Vigna
+ * Copyright (C) 2002-2021 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
  * <p>Some algorithms provide a parallel version that will by default use the
  * {@linkplain ForkJoinPool#commonPool() common pool}, but this can be overridden by calling the
  * function in a task already in the {@link ForkJoinPool} that the operation should run in. For example,
- * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}" 
+ * something along the lines of "{@code poolToParallelSortIn.invoke(() -> parallelQuickSort(arrayToSort))}"
  * will run the parallel sort in {@code poolToParallelSortIn} instead of the default pool.
  *
  * @see Arrays
@@ -222,7 +222,7 @@ public class Arrays {
 
 	private static ForkJoinPool getPool() {
 		// Make sure to update Arrays.drv, BigArrays.drv, and src/it/unimi/dsi/fastutil/Arrays.java as well
-		ForkJoinPool current = ForkJoinTask.getPool();
+		final ForkJoinPool current = ForkJoinTask.getPool();
 		return current == null ? ForkJoinPool.commonPool() : current;
 	}
 
@@ -376,7 +376,7 @@ public class Arrays {
 	 *
 	 */
 	public static void parallelQuickSort(final int from, final int to, final IntComparator comp, final Swapper swapper) {
-		ForkJoinPool pool = getPool();
+		final ForkJoinPool pool = getPool();
 		if (to - from < PARALLEL_QUICKSORT_NO_FORK || pool.getParallelism() == 1) quickSort(from, to, comp, swapper);
 		else {
 			pool.invoke(new ForkJoinGenericQuickSort(from, to, comp, swapper));

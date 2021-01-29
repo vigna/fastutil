@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2020 Sebastiano Vigna
+ * Copyright (C) 2002-2021 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,49 +16,7 @@
 
 package it.unimi.dsi.fastutil;
 
-/** Basic data for all hash-based classes.
- *
- * <h2>Historical note</h2>
- *
- * <p><strong>Warning:</strong> the following comments are here for historical reasons,
- * and apply just to the <em>double hash</em> classes that can be optionally generated.
- * The standard {@code fastutil} distribution since 6.1.0 uses linear-probing hash
- * tables, and tables are always sized as powers of two.
- *
- * <p>The classes in {@code fastutil} are built around open-addressing hashing
- * implemented <em>via</em> double hashing. Following Knuth's suggestions in the third volume of <em>The Art of Computer
- * Programming</em>, we use for the table size a prime <var>p</var> such that
- * <var>p</var>-2 is also prime. In this way hashing is implemented with modulo <var>p</var>,
- * and secondary hashing with modulo <var>p</var>-2.
- *
- * <p>Entries in a table can be in three states: {@link #FREE}, {@link #OCCUPIED} or {@link #REMOVED}.
- * The naive handling of removed entries requires that you search for a free entry as if they were occupied. However,
- * {@code fastutil} implements two useful optimizations, based on the following invariant:
- * <blockquote>
- * Let <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip;, <var>i</var><sub><var>p</var>-1</sub> be
- * the permutation of the table indices induced by the key <var>k</var>, that is, <var>i</var><sub>0</sub> is the hash
- * of <var>k</var> and the following indices are obtained by adding (modulo <var>p</var>) the secondary hash plus one.
- * If there is a {@link #OCCUPIED} entry with key <var>k</var>, its index in the sequence above comes <em>before</em>
- * the indices of any {@link #REMOVED} entries with key <var>k</var>.
- * </blockquote>
- *
- * <p>When we search for the key <var>k</var> we scan the entries in the
- * sequence <var>i</var><sub>0</sub>, <var>i</var><sub>1</sub>, &hellip;,
- * <var>i</var><sub><var>p</var>-1</sub> and stop when <var>k</var> is found,
- * when we finished the sequence or when we find a {@link #FREE} entry. Note
- * that the correctness of this procedure it is not completely trivial. Indeed,
- * when we stop at a {@link #REMOVED} entry with key <var>k</var> we must rely
- * on the invariant to be sure that no {@link #OCCUPIED} entry with the same
- * key can appear later. If we insert and remove frequently the same entries,
- * this optimization can be very effective (note, however, that when using
- * objects as keys or values deleted entries are set to a special fixed value to
- * optimize garbage collection).
- *
- * <p>Moreover, during the probe we keep the index of the first {@link #REMOVED} entry we meet.
- * If we actually have to insert a new element, we use that
- * entry if we can, thus avoiding to pollute another {@link #FREE} entry. Since this position comes
- * <i>a fortiori</i> before any {@link #REMOVED} entries with the same key, we are also keeping the invariant true.
- */
+/** Basic data for all hash-based classes. */
 
 public interface Hash {
 

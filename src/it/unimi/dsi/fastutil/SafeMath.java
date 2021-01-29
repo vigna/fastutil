@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2020 Sebastiano Vigna
+ * Copyright (C) 2017-2021 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,15 @@
  */
 
 package it.unimi.dsi.fastutil;
+
+/**
+ * Static utility method for safe conversions between primitive types.
+ *
+ * <P>
+ * Note that the methods of this class will throw an exception whenever a larger type cannot be
+ * exactly represented by a smaller type. This includes doubles within the range a float, but with
+ * too many significant bits.
+ */
 
 public final class SafeMath {
 	private SafeMath() {}
