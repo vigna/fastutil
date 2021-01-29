@@ -83,7 +83,7 @@ public class IntBigArrayBigListTest {
 	}
 
 
-	private static IntBigArrayBigList of(int... members) {
+	private static IntBigArrayBigList of(final int... members) {
 		return new IntBigArrayBigList(IntArrayList.of(members));
 	}
 
@@ -831,5 +831,27 @@ public class IntBigArrayBigListTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntBigArrayBigList.class, "test", /*num=*/"200", /*seed=*/"90293");
+	}
+
+	@Test
+	public void testReallyLargeListIteration() {
+		final AbstractIntBigList l = new AbstractIntBigList() {
+
+			@Override
+			public int getInt(final long index) {
+				return 0;
+			}
+
+			@Override
+			public long size64() {
+				return 1L << 31;
+			}
+
+		};
+		final IntBigListIterator iterator = l.iterator();
+		for (long i = 0; i < (1L << 31); i++) iterator.nextInt();
+		assertFalse(iterator.hasNext());
+		for (long i = 0; i < (1L << 31); i++) iterator.previousInt();
+		assertFalse(iterator.hasPrevious());
 	}
 }
