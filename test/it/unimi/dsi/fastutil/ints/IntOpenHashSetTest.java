@@ -319,6 +319,29 @@ public class IntOpenHashSetTest {
 		assertEquals(new IntOpenHashSet(new int[] { 0 }), s);
 	}
 
+	@Test
+	public void testForEachRemaining() {
+		// This set of extremely contorted parameters is necessary to trigger the usage of wrapped
+		final IntOpenHashSet s = new IntOpenHashSet(0, .99f);
+		s.add(1);
+		s.iterator().forEachRemaining(x -> {
+		});
+		s.add(0);
+		s.iterator().forEachRemaining(x -> {
+		});
+
+		for (int i = 2; i < 1000; i++) s.add(i);
+
+		final IntIterator it = s.iterator();
+		for (int i = 1; i < 990; i++) {
+			it.nextInt();
+			it.remove();
+		}
+
+		it.forEachRemaining(x -> {
+		});
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testOfDuplicateThrows() {
 		IntOpenHashSet.of(0, 0);
@@ -327,19 +350,19 @@ public class IntOpenHashSetTest {
 	@Test
 	public void testToSet() {
 		final IntOpenHashSet baseSet = IntOpenHashSet.of(2, 380, 1297);
-		IntOpenHashSet transformed = IntOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
+		final IntOpenHashSet transformed = IntOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
 		assertEquals(IntOpenHashSet.of(42, 420, 1337), transformed);
 	}
 
 	@Test
 	public void testSpliteratorTrySplit() {
 		final IntOpenHashSet baseSet = IntOpenHashSet.of(0, 1, 2, 3, 72, 5, 6);
-		IntSpliterator spliterator1 = baseSet.spliterator();
+		final IntSpliterator spliterator1 = baseSet.spliterator();
 		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
-		IntSpliterator spliterator2 = spliterator1.trySplit();
+		final IntSpliterator spliterator2 = spliterator1.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split.
-		java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
-		java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
+		final java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
+		final java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
 
 		final IntOpenHashSet subSet1 = IntOpenHashSet.toSet(stream1);
 		// Intentionally collecting to a list for this second one.
@@ -482,7 +505,7 @@ public class IntOpenHashSetTest {
 		int a[] = m.toIntArray();
 
 		assertTrue("Error: toArray() output (or array-based constructor) is not OK", new IntOpenHashSet(a).equals(m));
-		
+
 		/* Same, but with streams */
 		a = m.intStream().toArray();
 
@@ -602,7 +625,7 @@ public class IntOpenHashSetTest {
 		test(1000, Hash.FAST_LOAD_FACTOR);
 		test(1000, Hash.VERY_FAST_LOAD_FACTOR);
 	}
-	
+
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3838474");

@@ -1394,6 +1394,9 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+			final long link[] = OPEN_HASH_SET.this.link;
+
 			while (next != -1) {
 				curr = next;
 				next = GET_NEXT(link[curr]);
@@ -1647,25 +1650,24 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-			while(hasNext()) {
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+
+			if (mustReturnNull) {
+				mustReturnNull = false;
+				last = n;
+				action.accept(key[n]);
 				c--;
-				if (mustReturnNull) {
-					mustReturnNull = false;
-					last = n;
-					action.accept(key[n]);
-					continue;
-				}
-				final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
-				for(;;) {
-					if (--pos < 0) {
-						// We are just enumerating elements from the wrapped list.
-						last = Integer.MIN_VALUE;
-						action.accept(wrapped.GET_KEY(- pos - 1));
-						break;
-					} else if (! KEY_IS_NULL(key[pos])) {
-						action.accept(key[last = pos]);
-						break;
-					}
+			}
+
+			while(c != 0) {
+				if (--pos < 0) {
+					// We are just enumerating elements from the wrapped list.
+					last = Integer.MIN_VALUE;
+					action.accept(wrapped.GET_KEY(- pos - 1));
+					c--;
+				} else if (! KEY_IS_NULL(key[pos])) {
+					action.accept(key[last = pos]);
+					c--;
 				}
 			}
 		}
@@ -1724,12 +1726,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+
 			if (mustReturnNull) {
 				mustReturnNull = false;
 				action.accept(key[n]);
 				++c;
 			}
-			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+
 			while (pos < max) {
 				if (! KEY_IS_NULL(key[pos])) {
 					action.accept(key[pos]);

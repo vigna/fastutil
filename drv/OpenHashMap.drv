@@ -1797,23 +1797,26 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		public void forEachRemaining(final ConsumerType action) {
-			while (hasNext()) {
+			if (mustReturnNullKey) {
+				mustReturnNullKey = false;
+				acceptOnIndex(action, last = n);
 				c--;
-				if (mustReturnNullKey) {
-					mustReturnNullKey = false;
-					acceptOnIndex(action, last = n);
-				}
-				for(;;) {
-					if (--pos < 0) {
-						// We are just enumerating elements from the wrapped list.
-						last = Integer.MIN_VALUE;
-						final KEY_GENERIC_TYPE k = wrapped.GET_KEY(- pos - 1);
-						int p = KEY2INTHASH(k) & mask;
-						while (! KEY_EQUALS_NOT_NULL(k, key[p])) p = (p + 1) & mask;
-						acceptOnIndex(action, p);
-					} else {
-						if (! KEY_IS_NULL(key[pos])) acceptOnIndex(action, last = pos);
-					}
+			}
+
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_SET.this.key;
+
+			while (c != 0) {
+				if (--pos < 0) {
+					// We are just enumerating elements from the wrapped list.
+					last = Integer.MIN_VALUE;
+					final KEY_GENERIC_TYPE k = wrapped.GET_KEY(- pos - 1);
+					int p = KEY2INTHASH(k) & mask;
+					while (! KEY_EQUALS_NOT_NULL(k, key[p])) p = (p + 1) & mask;
+					acceptOnIndex(action, p);
+					c--;
+				} else if (! KEY_IS_NULL(key[pos])) {
+					acceptOnIndex(action, last = pos);
+					c--;
 				}
 			}
 		}
@@ -1978,7 +1981,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				++c;
 				acceptOnIndex(action, n);
 			}
+
 			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
+
 			while (pos < max) {
 				if (! KEY_IS_NULL(key[pos])) {
 					acceptOnIndex(action, pos);

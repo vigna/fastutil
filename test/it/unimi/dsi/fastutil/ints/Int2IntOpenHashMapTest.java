@@ -25,7 +25,9 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.MainRunner;
+import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 public class Int2IntOpenHashMapTest {
 	@SuppressWarnings("deprecation")
@@ -194,8 +196,24 @@ public class Int2IntOpenHashMapTest {
 
 	@Test
 	public void testForEachRemaining() {
-		final Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		// This set of extremely contorted parameters is necessary to trigger the usage of wrapped
+		final Int2IntOpenHashMap m = new Int2IntOpenHashMap(0, .99f);
 		m.put(1, 1);
-		m.int2IntEntrySet().fastIterator().forEachRemaining(System.out::println);
+		m.int2IntEntrySet().fastIterator().forEachRemaining(x -> {
+		});
+		m.put(0, 0);
+		m.int2IntEntrySet().fastIterator().forEachRemaining(x -> {
+		});
+
+		for (int i = 2; i < 1000; i++) m.put(i, i);
+
+		final ObjectIterator<Entry> it = m.int2IntEntrySet().fastIterator();
+		for (int i = 1; i < 990; i++) {
+			it.next();
+			it.remove();
+		}
+
+		it.forEachRemaining(x -> {
+		});
 	}
 }
