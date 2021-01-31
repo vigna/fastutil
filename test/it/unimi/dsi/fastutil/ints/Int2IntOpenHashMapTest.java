@@ -216,4 +216,14 @@ public class Int2IntOpenHashMapTest {
 		it.forEachRemaining(x -> {
 		});
 	}
+
+	@Test
+	public void testForEach() {
+		final Int2IntOpenHashMap s = new Int2IntOpenHashMap();
+		for (int i = 0; i < 100; i++) s.put(i, i);
+		final int[] c = new int[1];
+		s.forEach((x, y) -> c[0] += x.intValue());
+		assertEquals((100 * 99) / 2, c[0]);
+	}
+
 }

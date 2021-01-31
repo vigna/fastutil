@@ -342,6 +342,15 @@ public class IntOpenHashSetTest {
 		});
 	}
 
+	@Test
+	public void testForEach() {
+		final IntOpenHashSet s = new IntOpenHashSet();
+		for (int i = 0; i < 100; i++) s.add(i);
+		final int[] c = new int[1];
+		s.forEach(x -> c[0] += x);
+		assertEquals((100 * 99) / 2, c[0]);
+	}
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testOfDuplicateThrows() {
 		IntOpenHashSet.of(0, 0);
