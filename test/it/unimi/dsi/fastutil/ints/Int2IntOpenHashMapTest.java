@@ -191,4 +191,11 @@ public class Int2IntOpenHashMapTest {
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(Int2IntOpenHashMap.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383454");
 	}
+
+	@Test
+	public void testForEachRemaining() {
+		final Int2IntOpenHashMap m = new Int2IntOpenHashMap();
+		m.put(1, 1);
+		m.int2IntEntrySet().fastIterator().forEachRemaining(System.out::println);
+	}
 }
