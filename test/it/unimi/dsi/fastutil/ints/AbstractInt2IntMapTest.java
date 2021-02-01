@@ -19,15 +19,102 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.function.Supplier;
 
+import org.junit.Test;
+import org.junit.runners.Parameterized.Parameters;
+
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 
-public class AbstractInt2IntMapTest {
+public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2IntMap> {
+
+	@Parameters
+	public static Iterable<Object[]> data() {
+		return Collections.singletonList(new Object[] {(Supplier<Int2IntMap>) SimpleInt2IntMap::new, EnumSet.allOf(Capability.class)});
+	}
+
+	// A basic implementation of AbstractInt2IntMap that contains as little methods implemented
+	// possible to make a mutable map, so we can test as many of the AbstractInt2IntMap default
+	// implementations as possible.
+	static final class SimpleInt2IntMap extends AbstractInt2IntMap implements Int2IntMap {
+		private static final long serialVersionUID = 1L;
+
+		private final IntList keys = new IntArrayList();
+		private final IntList values = new IntArrayList();
+		@Override
+		public int get(int key) {
+			int index = keys.indexOf(key);
+			if (index == -1) {
+				return defaultReturnValue();
+			}
+			return values.getInt(index);
+		}
+		@Override
+		public int size() {
+			return keys.size();
+		}
+		@Override
+		public int put(int key, int value) {
+			int index = keys.indexOf(key);
+			if (index == -1) {
+				keys.add(key);
+				values.add(value);
+				return defaultReturnValue();
+			}
+			return values.set(index, value);
+		}
+		@Override
+		public int remove(int key) {
+			int index = keys.indexOf(key);
+			if (index == -1) {
+				return defaultReturnValue();
+			}
+			keys.removeInt(index);
+			return values.removeInt(index);
+		}
+		@Override
+		public void clear() {
+			keys.clear();
+			values.clear();
+		}
+
+		@Override
+		public ObjectSet<Entry> int2IntEntrySet() {
+			return new AbstractInt2IntMap.BasicEntrySet(this) {
+				@Override
+				public ObjectIterator<Entry> iterator() {
+					return new ObjectIterator<Entry>() {
+    					final IntIterator keyIter = keys.iterator();
+    					final IntIterator valueIter = values.iterator();
+    					
+    					@Override
+    					public boolean hasNext() {
+    						return keyIter.hasNext();
+    					}
+
+						@Override
+						public Entry next() {
+							return new AbstractInt2IntMap.BasicEntry(keyIter.nextInt(), valueIter.nextInt());
+						}
+
+    					@Override
+    					public void remove() {
+    						keyIter.remove();
+    						valueIter.remove();
+    					}
+					};
+				}
+			};
+		}
+	}
+
 	@Test
 	public void testContainsKeyEmptySet() {
-		Int2IntMap m = new AbstractInt2IntMap() {
+		m = new AbstractInt2IntMap() {
 			private static final long serialVersionUID = 0L;
 
 			@Override
@@ -52,7 +139,7 @@ public class AbstractInt2IntMapTest {
 
 	@Test
 	public void testContainsKeySingleton() {
-		Int2IntMap m = new AbstractInt2IntMap() {
+		m = new AbstractInt2IntMap() {
 			private static final long serialVersionUID = 0L;
 
 			@Override
