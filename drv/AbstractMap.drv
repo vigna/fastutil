@@ -24,12 +24,17 @@ import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ITERATOR;
 import VALUE_PACKAGE.VALUE_SPLITERATOR;
 import VALUE_PACKAGE.VALUE_SPLITERATORS;
+#if VALUES_BYTE_CHAR_SHORT_FLOAT || VALUE_CLASS_Boolean
+import VALUE_PACKAGE.VALUE_CONSUMER;
+#endif
 #endif
 
 #if KEYS_PRIMITIVE && VALUES_PRIMITIVE
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
 import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
+#else
+import java.util.function.Consumer;
 #endif
 
 #if KEYS_PRIMITIVE
@@ -253,34 +258,11 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 	 * this method and caching the result, but implementors are encouraged to
 	 * write more efficient ad-hoc implementations.
 	 *
-	 * @implNote  <strong>Warning</strong>: The returned {@code Set}'s {@link java.util.Set#iterator() iterator} is likely to be <em>thread hostile</em>
-	 *   (meaning not even external locking will make it safe for parallel use). This is because it attempts to use the {@code fastIterator()} of
-	 *   the parent class' {@link java.util.Map#entrySet() entrySet()} if it is present.
-	 *   <p><em>Do not</em> wrap it in a {@link java.util.Spliterator Spliterator} (such as by
-	 *   {@link java.util.Spliterators#spliterator(java.util.Iterator, long, int) Spliterators.spliterator(Iterator, long, int)}),
-	 *   or at the very least don't attempt to make {@linkplain java.util.stream.Stream steams} based on them.
-	 *   <p>The returned instance's {@link java.util.Set#spliterator() spliterator} already takes this into consideration, so it
-	 *   is safe to use in parallel streams.
-	 *
 	 * @return a set view of the keys of this map; it may be safely cast to a type-specific interface.
 	 */
 	@Override
 	public SET KEY_GENERIC keySet() {
 		return new ABSTRACT_SET KEY_GENERIC() {
-				final class KeySetIterator implements KEY_ITERATOR KEY_GENERIC {
-					// While using the fast iterator is fine for iterators, it is absolutely not for spliterators, due to parallel potential.
-					// Thus we need to be able to turn it on or off.
-					private final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i;
-					KeySetIterator(boolean useFastIterator) {
-						i = useFastIterator ? MAPS.fastIterator(ABSTRACT_MAP.this) : ABSTRACT_MAP.this.ENTRYSET().iterator();
-					}
-					@Override
-					public KEY_GENERIC_TYPE NEXT_KEY() { return i.next().ENTRY_GET_KEY(); }
-					@Override
-					public boolean hasNext() { return i.hasNext(); }
-					@Override
-					public void remove() { i.remove(); }
-				}
 				@Override
 				public boolean contains(final KEY_TYPE k) { return containsKey(k); }
 				@Override
@@ -289,12 +271,24 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 				public void clear() { ABSTRACT_MAP.this.clear(); }
 				@Override
 				public KEY_ITERATOR KEY_GENERIC iterator() {
-					return new KeySetIterator(true);
+					return new KEY_ITERATOR KEY_GENERIC() {
+							private final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = MAPS.fastIterator(ABSTRACT_MAP.this);
+							@Override
+							public KEY_GENERIC_TYPE NEXT_KEY() { return i.next().ENTRY_GET_KEY(); }
+							@Override
+							public boolean hasNext() { return i.hasNext(); }
+							@Override
+							public void remove() { i.remove(); }
+							@Override
+							public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+								i.forEachRemaining(entry -> action.accept(entry.ENTRY_GET_KEY()));
+							}
+						};
 				}
 				@Override
 				public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 					return SPLITERATORS.asSpliterator(
-	 					new KeySetIterator(false), sizeOf(ABSTRACT_MAP.this), SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS);
+	 					iterator(), sizeOf(ABSTRACT_MAP.this), SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS);
 				}
 			};
 	}
@@ -309,44 +303,35 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 	 * write more efficient ad-hoc implementations.
 	 *
 	 * @return a set view of the values of this map; it may be safely cast to a type-specific interface.
-	 * @implNote  <strong>Warning</strong>: The returned {@code Collection}'s {@link java.util.Collection#iterator() iterator} is likely to be <em>thread hostile</em>
-	 *   (meaning not even external locking will make it safe for parallel use). This is because it attempts to use the {@code fastIterator()} of
-	 *   the parent class' {@link java.util.Map#entrySet() entrySet()} if it is present.
-	 *   <p><em>Do not</em> wrap it in a {@link java.util.Spliterator Spliterator} (such as by
-	 *   {@link java.util.Spliterators#spliterator(java.util.Iterator, long, int) Spliterators.spliterator(Iterator, long, int)}),
-	 *   or at the very least don't attempt to make {@linkplain java.util.stream.Stream steams} based on them.
-	 *   <p>The returned instance's {@link java.util.Collection#spliterator() spliterator} already takes this into consideration, so it
-	 *   is safe to use in parallel streams.
 	 */
 	@Override
 	public VALUE_COLLECTION VALUE_GENERIC values() {
 		return new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
-				final class ValuesIterator implements VALUE_ITERATOR VALUE_GENERIC {
-					// While using the fast iterator is fine for iterators, it is absolutely not for spliterators, due to parallel potential.
-					// Thus we need to be able to turn it on or off.
-					private final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i;
-					ValuesIterator(boolean useFastIterator) {
-						i = useFastIterator ? MAPS.fastIterator(ABSTRACT_MAP.this) : ABSTRACT_MAP.this.ENTRYSET().iterator();
-					}
-					@Override
-					public VALUE_GENERIC_TYPE NEXT_VALUE() { return i.next().ENTRY_GET_VALUE(); }
-					@Override
-					public boolean hasNext() { return i.hasNext(); }
-				}
 				@Override
 				public boolean contains(final VALUE_TYPE k) { return containsValue(k); }
 				@Override
 				public int size() { return ABSTRACT_MAP.this.size(); }
 				@Override
 				public void clear() { ABSTRACT_MAP.this.clear(); }
+
 				@Override
 				public VALUE_ITERATOR VALUE_GENERIC iterator() {
-					return new ValuesIterator(true);
+					return new VALUE_ITERATOR VALUE_GENERIC() {
+							private final ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> i = MAPS.fastIterator(ABSTRACT_MAP.this);
+							@Override
+							public VALUE_GENERIC_TYPE NEXT_VALUE() { return i.next().ENTRY_GET_VALUE(); }
+							@Override
+							public boolean hasNext() { return i.hasNext(); }
+							@Override
+							public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
+								i.forEachRemaining(entry -> action.accept(entry.ENTRY_GET_VALUE()));
+							}
+						};
 				}
 				@Override
 				public VALUE_SPLITERATOR VALUE_GENERIC spliterator() {
 					return VALUE_SPLITERATORS.asSpliterator(
-	 					new ValuesIterator(false), sizeOf(ABSTRACT_MAP.this), VALUE_SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS);
+	 					iterator(), sizeOf(ABSTRACT_MAP.this), VALUE_SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS);
 				}
 			};
 	}
