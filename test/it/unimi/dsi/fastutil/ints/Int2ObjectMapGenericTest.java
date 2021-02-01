@@ -34,9 +34,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -44,6 +47,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -53,6 +57,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap.FastEntrySet;
 import it.unimi.dsi.fastutil.io.BinIO;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -528,17 +533,39 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 	}
 
 	@Test
-	public void testEntrySetIteratorFastForEach() {
+	public void testEntrySetIteration() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final Set<Entry<Integer>> s = new HashSet<>(m.int2ObjectEntrySet());
+		assertEquals(m.int2ObjectEntrySet(), s);
+		// Test symmetry of equals
+		assertEquals(s, m.int2ObjectEntrySet());
+	}
+
+	@Test
+	public void testEntrySetFastForEach() {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
 		final Set<Entry<Integer>> s = new HashSet<>();
-		Int2ObjectMaps.fastForEach(m, x -> s.add(new AbstractInt2ObjectMap.BasicEntry<>(x.getIntKey(), x.getValue())));
+		final Set<Entry<Integer>> sIdentity = Collections.newSetFromMap(new IdentityHashMap<Entry<Integer>, Boolean>());
+		Int2ObjectMaps.fastForEach(m, x -> {
+			s.add(new AbstractInt2ObjectMap.BasicEntry<>(x.getIntKey(), x.getValue()));
+			sIdentity.add(x);
+		});
 		assertEquals(m.int2ObjectEntrySet(), s);
+		if (m.int2ObjectEntrySet() instanceof FastEntrySet) {
+			// Same instance for each iteration
+			assertEquals(1, sIdentity.size());
+		} else {
+		    // Different instance for each iteration
+		    assertEquals(m.size(), sIdentity.size());
+		}
 	}
 
 	@Test
-	public void testEntrySetIteratorForEach() {
+	public void testEntrySetForEach() {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
@@ -546,6 +573,74 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		//noinspection UseBulkOperation
 		m.int2ObjectEntrySet().forEach(s::add);
 		assertEquals(m.int2ObjectEntrySet(), s);
+	}
+
+	@Test
+	public void testIteratorEntrySetFastForEach() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final Set<Entry<Integer>> s = new HashSet<>();
+		final Set<Entry<Integer>> sIdentity = Collections.newSetFromMap(new IdentityHashMap<Entry<Integer>, Boolean>());
+		
+		Int2ObjectMaps.fastIterator(m).forEachRemaining(x -> {
+			s.add(new AbstractInt2ObjectMap.BasicEntry<>(x.getIntKey(), x.getValue()));
+			sIdentity.add(x);
+		});
+		assertEquals(m.int2ObjectEntrySet(), s);
+		if (m.int2ObjectEntrySet() instanceof FastEntrySet) {
+			// Same instance for each iteration
+			assertEquals(1, sIdentity.size());
+		} else {
+		    // Different instance for each iteration
+		    assertEquals(m.size(), sIdentity.size());
+		}
+	}
+
+	@Test
+	public void testIteratorEntrySetForEach() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final Set<Entry<Integer>> s = new HashSet<>();
+		//noinspection UseBulkOperation
+		m.int2ObjectEntrySet().iterator().forEachRemaining(s::add);
+		assertEquals(m.int2ObjectEntrySet(), s);
+	}
+
+	@Test
+	public void testEntrySetSpliterator() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final Set<Entry<Integer>> s =
+				m.int2ObjectEntrySet().stream().collect(Collectors.toSet());
+		assertEquals(m.int2ObjectEntrySet(), s);
+	}
+
+	@Test
+	public void testEntrySetIteratorRemove() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		Iterator<Entry<Integer>> i = m.int2ObjectEntrySet().iterator();
+		int key;
+		Integer value;
+		// This will be an invalid entry after the removal, so we can't trust it long term.
+		// Enforce this with scoping; get the contents and then not use it again.
+		{
+			Entry<Integer> toRemoveEntry = i.next();
+			key = toRemoveEntry.getIntKey();
+			value = toRemoveEntry.getValue();
+		}
+		assertTrue(m.containsKey(key));
+		assertTrue(m.containsValue(value));
+		assertEquals(m.get(key), value);
+		i.remove();
+		assertFalse(m.containsKey(key));
+		assertFalse(m.containsValue(value));
+		assertNull(m.get(key));
+		assertEquals(99, m.size());
 	}
 
 	@Test(expected = IllegalStateException.class)
@@ -660,13 +755,51 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 	}
 
 	@Test
+	public void testKeySetIteration() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final IntSet s = new IntOpenHashSet(m.keySet());
+		assertEquals(m.keySet(), s);
+		// Test symmetry of equals
+		assertEquals(s, m.keySet());
+	}
+	
+	@Test
+	public void testKeySetForEach() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final IntSet s = new IntOpenHashSet();
+		//noinspection UseBulkOperation
+		m.keySet().forEach(s::add);
+		assertEquals(m.keySet(), s);
+	}
+
+	@Test
+	public void testKeySetForEachObject() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final IntSet s = new IntOpenHashSet();
+		final Set<Integer> sObject = new HashSet<>();
+		//noinspection UseBulkOperation
+		m.keySet().forEach((Consumer<Integer>) s::add);
+		//noinspection UseBulkOperation
+		m.keySet().forEach(sObject::add);
+		assertEquals(m.keySet(), s);
+		assertEquals(m.keySet(), sObject);
+	}
+
+	@Test
 	public void testKeySetIteratorForEach() {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
-		final IntOpenHashSet s = new IntOpenHashSet();
-		m.keySet().forEach((java.util.function.IntConsumer) s::add);
-		assertEquals(s, m.keySet());
+		final IntSet s = new IntOpenHashSet();
+		//noinspection UseBulkOperation
+		m.keySet().iterator().forEachRemaining(s::add);
+		assertEquals(m.keySet(), s);
 	}
 
 	@Test
@@ -674,9 +807,40 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
-		final IntOpenHashSet s = new IntOpenHashSet();
-		m.keySet().forEach((Consumer<Integer>) s::add);
-		assertEquals(s, m.keySet());
+		final IntSet s = new IntOpenHashSet();
+		final Set<Integer> sObject = new HashSet<>();
+		//noinspection UseBulkOperation
+		m.keySet().iterator().forEachRemaining((Consumer<Integer>) s::add);
+		//noinspection UseBulkOperation
+		m.keySet().iterator().forEachRemaining(sObject::add);
+		assertEquals(m.keySet(), s);
+		assertEquals(m.keySet(), sObject);
+	}
+
+	@Test
+	public void testKeySetSpliterator() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final IntSet s = IntOpenHashSet.toSet(m.keySet().intStream());
+		assertEquals(m.keySet(), s);
+	}
+
+	@Test
+	public void testKeySetIteratorRemove() {
+		assumeTrue(capabilities.contains(Capability.ITERATOR_MODIFY));
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		IntIterator i = m.keySet().iterator();
+		int toRemoveKey = i.nextInt();
+		assertTrue(m.containsKey(toRemoveKey));
+		// Taking advantage of the fact we mapped keys to their Integer values
+		assertEquals(m.get(toRemoveKey), Integer.valueOf(toRemoveKey));
+		i.remove();
+		assertFalse(m.containsKey(toRemoveKey));
+		assertEquals(m.get(toRemoveKey), null);
+		assertEquals(99, m.size());
 	}
 
 	@Test
@@ -1178,13 +1342,69 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 	}
 
 	@Test
-	public void testValueSetIteratorForEach() {
+	public void testValuesIteration() {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
-		final IntOpenHashSet s = new IntOpenHashSet();
-		m.values().forEach(s::add);
+		final IntSet s = new IntOpenHashSet(m.values());
+		// values() is a Collection without an equals, so need to convert to Set first.
+		assertEquals(new IntOpenHashSet(m.values()), s);
+		// Test symmetry of equals
 		assertEquals(s, new IntOpenHashSet(m.values()));
+	}
+
+	@Test
+	public void testValuesForEach() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final IntSet s = new IntOpenHashSet();
+		//noinspection UseBulkOperation
+		m.values().forEach(s::add);
+		// values() is a Collection without an equals, so need to convert to Set first.
+		assertEquals(new IntOpenHashSet(m.values()), s);
+	}
+
+
+	@Test
+	public void testValuesIteratorForEach() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final IntSet s = new IntOpenHashSet();
+		//noinspection UseBulkOperation
+		m.values().iterator().forEachRemaining(s::add);
+		// values() is a Collection without an equals, so need to convert to Set first.
+		assertEquals(new IntOpenHashSet(m.values()), s);
+	}
+
+	@Test
+	public void testValuesSpliterator() {
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		final Set<Integer> s = m.values().stream().collect(Collectors.toSet());
+		// values() is a Collection without an equals, so need to convert to Set first.
+		assertEquals(new IntOpenHashSet(m.values()), s);
+	}
+	
+	@Test
+	public void testValuesIteratorRemove() {
+		assumeTrue(capabilities.contains(Capability.ITERATOR_MODIFY));
+		for (int i = 0; i < 100; i++) {
+			m.put(i, Integer.valueOf(i));
+		}
+		Iterator<Integer> i = m.values().iterator();
+		Integer toRemoveValue = i.next();
+		// Taking advantage of the fact we mapped keys to their Integer values
+		assertTrue(m.containsKey(toRemoveValue.intValue()));
+		assertTrue(m.containsValue(toRemoveValue));
+		assertEquals(m.get(toRemoveValue.intValue()), toRemoveValue);
+		i.remove();
+		assertFalse(m.containsKey(toRemoveValue.intValue()));
+		assertFalse(m.containsValue(toRemoveValue));
+		assertEquals(m.get(toRemoveValue.intValue()), null);
+		assertEquals(99, m.size());
 	}
 
 	public enum Capability {

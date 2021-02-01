@@ -20,11 +20,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameters;
@@ -33,6 +37,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 
 public class Int2ObjectMapGenericLinkedOpenHashTest extends Int2ObjectMapGenericTest<Int2ObjectLinkedOpenHashMap<Integer>> {
+	
 	@Parameters
 	public static Iterable<Object[]> data() {
 		return Collections.singletonList(new Object[] {(Supplier<Int2ObjectMap<Integer>>) Int2ObjectLinkedOpenHashMap::new, EnumSet.allOf(Capability.class)});
@@ -107,6 +112,137 @@ public class Int2ObjectMapGenericLinkedOpenHashTest extends Int2ObjectMapGeneric
 		iterator.remove();
 		assertEquals(50, iterator.nextIndex());
 		assertEquals(52, iterator.nextInt());
+	}
+	
+	private static <T> List<T> toList(Collection<T> c) {
+		if (c instanceof List) {
+			return (List<T>)c;
+		}
+		if (c instanceof IntCollection) {
+			// T is assured to be Integer in this case
+			@SuppressWarnings("unchecked")
+			List<T> ret = (List<T>)toList((IntCollection) c);
+			return ret;
+		}
+		return new ArrayList<>(c);
+	}
+
+	private static IntList toList(IntCollection c) {
+		if (c instanceof IntList) {
+			return (IntList)c;
+		}
+		return new IntArrayList(c);
+	}
+
+	@Test
+	public void testEntrySetSameOrder() {
+		List<Entry<Integer>> expectedOrder = new ArrayList<>();
+		// Intentionally thrown off natural order
+		for (int i = 0; i < 100; i++) {
+			int k;
+			Integer v;
+			if (i == 0) {
+				k = 500;
+				v = Integer.valueOf(i);
+			} else {
+				k = i;
+				v = Integer.valueOf(i);
+			}
+			m.put(k, v);
+			expectedOrder.add(new AbstractInt2ObjectMap.BasicEntry<>(k, v));
+		}
+
+		List<Entry<Integer>> entries = toList(m.int2ObjectEntrySet());
+		assertEquals(expectedOrder, entries);
+
+		List<Entry<Integer>> entriesForEach = new ArrayList<>();
+		//noinspection UseBulkOperation
+		m.int2ObjectEntrySet().forEach(entriesForEach::add);
+		assertEquals(expectedOrder, entriesForEach);
+
+		List<Entry<Integer>> entriesFromIterator = new ArrayList<>();
+		//noinspection UseBulkOperation
+		m.int2ObjectEntrySet().iterator().forEachRemaining(entriesFromIterator::add);
+		assertEquals(expectedOrder, entriesFromIterator);
+
+		List<Entry<Integer>> entriesFromSpliterator = m.int2ObjectEntrySet().stream().collect(Collectors.toList());
+		assertEquals(expectedOrder, entriesFromSpliterator);
+	}
+
+	@Test
+	public void testKeySetSameOrder() {
+		IntList expectedOrder = new IntArrayList();
+		// Intentionally thrown off natural order
+		for (int i = 0; i < 100; i++) {
+			int k;
+			Integer v;
+			if (i == 0) {
+				k = 500;
+				v = Integer.valueOf(i);
+			} else {
+				k = i;
+				v = Integer.valueOf(i);
+			}
+    		m.put(k, v);
+    		expectedOrder.add(k);
+		}
+
+		IntList keys = toList(m.keySet());
+		assertEquals(expectedOrder, keys);
+		
+		IntList keysFromEntrySet = IntArrayList.toList(m.int2ObjectEntrySet().stream().mapToInt(Entry::getIntKey));
+		assertEquals(expectedOrder, keysFromEntrySet);
+
+		IntList keysForEach = new IntArrayList();
+		//noinspection UseBulkOperation
+		m.keySet().forEach(keysForEach::add);
+		assertEquals(expectedOrder, keysForEach);
+
+		IntList keysFromIterator = new IntArrayList();
+		//noinspection UseBulkOperation
+		m.keySet().iterator().forEachRemaining(keysFromIterator::add);
+		assertEquals(expectedOrder, keysFromIterator);
+
+		IntList keysFromSpliterator = IntArrayList.toList(m.keySet().intStream());
+		assertEquals(expectedOrder, keysFromSpliterator);
+	}
+	
+	@Test
+	public void testValuesSameOrder() {
+		List<Integer> expectedOrder = new ArrayList<>();
+		// Intentionally thrown off natural order
+		for (int i = 0; i < 100; i++) {
+			int k;
+			Integer v;
+			if (i == 0) {
+				k = 500;
+				v = Integer.valueOf(1000);
+			} else {
+				k = i;
+				v = Integer.valueOf(i);
+			}
+    		m.put(k, v);
+    		expectedOrder.add(v);
+		}
+
+		List<Integer> values = toList(m.values());
+		assertEquals(expectedOrder, values);
+
+		List<Integer> valuesFromEntrySet = m.int2ObjectEntrySet().stream().map(Entry::getValue).collect(Collectors.toList());
+		assertEquals(expectedOrder, valuesFromEntrySet);
+
+		List<Integer> valuesForEach = new ArrayList<>();
+		//noinspection UseBulkOperation
+		m.values().forEach(valuesForEach::add);
+		assertEquals(expectedOrder, valuesForEach);
+
+		List<Integer> valuesFromIterator = new ArrayList<>();
+		//noinspection UseBulkOperation
+		m.values().iterator().forEachRemaining(valuesFromIterator::add);
+		assertEquals(expectedOrder, valuesFromIterator);
+
+		List<Integer> valuesFromSpliterator = m.values().stream().collect(Collectors.toList());
+		assertEquals(expectedOrder, valuesFromSpliterator);
 	}
 
 	@Test(expected = NoSuchElementException.class)
