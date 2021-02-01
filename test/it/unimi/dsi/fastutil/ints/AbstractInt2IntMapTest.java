@@ -88,24 +88,24 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 				@Override
 				public ObjectIterator<Entry> iterator() {
 					return new ObjectIterator<Entry>() {
-    					final IntIterator keyIter = keys.iterator();
-    					final IntIterator valueIter = values.iterator();
-    					
-    					@Override
-    					public boolean hasNext() {
-    						return keyIter.hasNext();
-    					}
+					final IntIterator keyIter = keys.iterator();
+					final IntIterator valueIter = values.iterator();
+					
+					@Override
+					public boolean hasNext() {
+						return keyIter.hasNext();
+					}
 
 						@Override
 						public Entry next() {
 							return new AbstractInt2IntMap.BasicEntry(keyIter.nextInt(), valueIter.nextInt());
 						}
 
-    					@Override
-    					public void remove() {
-    						keyIter.remove();
-    						valueIter.remove();
-    					}
+					@Override
+					public void remove() {
+						keyIter.remove();
+						valueIter.remove();
+					}
 					};
 				}
 			};
