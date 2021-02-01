@@ -1504,12 +1504,11 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	@Override
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return null; }
 
-
 	/** A list iterator over a linked map.
 	 *
 	 * <p>This class provides a list iterator over a linked hash map. The constructor runs in constant time.
 	 */
-	private class MapIterator {
+	private abstract class MapIterator<ConsumerType> {
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or {@code null} if no previous entry exists). */
 		int prev = -1;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or {@code null} if no next entry exists). */
@@ -1518,6 +1517,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int curr = -1;
 		/** The current index (in the sense of a {@link java.util.ListIterator}). Note that this value is not meaningful when this iterator has been created using the nonempty constructor.*/
 		int index = -1;
+
+		@SuppressWarnings("unused")
+		abstract void acceptOnIndex(final ConsumerType action, final int index);
 
 		protected MapIterator() {
 			next = first;
@@ -1612,6 +1614,18 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			return curr;
 		}
 
+		public void forEachRemaining(final ConsumerType action) {
+			while (hasNext()) {
+				curr = next;
+				next = GET_NEXT(link[curr]);
+				prev = curr;
+
+				if (index >= 0) index++;
+
+				acceptOnIndex(action, curr);
+			}
+		}
+
 		public void remove() {
 			ensureIndexKnown();
 			if (curr == -1) throw new IllegalStateException();
@@ -1696,13 +1710,20 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 	}
 
-	private class EntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+	private final class EntryIterator extends MapIterator<Consumer<? super MAP.Entry KEY_VALUE_GENERIC>> implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
 		private MapEntry entry;
 
 		public EntryIterator() {}
 
 		public EntryIterator(KEY_GENERIC_TYPE from) {
 			super(from);
+		}
+
+		// forEachRemaining inherited from MapIterator superclass.
+
+		@Override
+		final void acceptOnIndex(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, final int index) {
+			action.accept(new MapEntry(index));
 		}
 
 		@Override
@@ -1722,13 +1743,21 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 	}
 
-	private class FastEntryIterator extends MapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+	private final class FastEntryIterator extends MapIterator<Consumer<? super MAP.Entry KEY_VALUE_GENERIC>> implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
 		final MapEntry entry = new MapEntry();
 
 		public FastEntryIterator() {}
 
 		public FastEntryIterator(KEY_GENERIC_TYPE from) {
 			super(from);
+		}
+		
+		// forEachRemaining inherited from MapIterator superclass.
+
+		@Override
+		final void acceptOnIndex(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, final int index) {
+			entry.index = index;
+			action.accept(entry);
 		}
 
 		@Override
@@ -1748,7 +1777,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	/** An iterator over a hash map. */
 
-	private class MapIterator<ConsumerType> {
+	private abstract class MapIterator<ConsumerType> {
 		/** The index of the last entry returned, if positive or zero; initially, {@link #n}. If negative, the last
 			entry returned was that of the key of index {@code - pos - 1} from the {@link #wrapped} list. */
 		int pos = n;
@@ -1764,9 +1793,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		ARRAY_LIST KEY_GENERIC wrapped;
 
 		@SuppressWarnings("unused")
-		void acceptOnIndex(final ConsumerType action, int index) {
-			throw new UnsupportedOperationException("Raw MapIterator not meant for forEach operations.");
-		}
+		abstract void acceptOnIndex(final ConsumerType action, final int index);
 
 		public boolean hasNext() {
 			return c != 0;
@@ -1894,16 +1921,18 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 
-	private class EntryIterator extends MapIterator<java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC>> implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
+	private final class EntryIterator extends MapIterator<Consumer<? super MAP.Entry KEY_VALUE_GENERIC>> implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
 		private MapEntry entry;
 
 		@Override
 		public MapEntry next() {
 			return entry = new MapEntry(nextEntry());
 		}
+		
+		// forEachRemaining inherited from MapIterator superclass.
 
 		@Override
-		final void acceptOnIndex(final java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, int index) {
+		final void acceptOnIndex(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, final int index) {
 			action.accept(entry = new MapEntry(index));
 		}
 
@@ -1914,7 +1943,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 	}
 
-	private class FastEntryIterator extends MapIterator<java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC>> implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
+	private final class FastEntryIterator extends MapIterator<Consumer<? super MAP.Entry KEY_VALUE_GENERIC>> implements ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> {
 		private final MapEntry entry = new MapEntry();
 
 		@Override
@@ -1923,8 +1952,10 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			return entry;
 		}
 
+		// forEachRemaining inherited from MapIterator superclass.
+
 		@Override
-		final void acceptOnIndex(final java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, int index) {
+		final void acceptOnIndex(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, final int index) {
 			entry.index = index;
 			action.accept(entry);
 		}
@@ -1952,7 +1983,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			this.hasSplit = hasSplit;
 		}
 
-		abstract void acceptOnIndex(final ConsumerType action, int index);
+		abstract void acceptOnIndex(final ConsumerType action, final int index);
 
 		abstract SplitType makeForSplit(int pos, int max, boolean mustReturnNull);
 
@@ -2040,7 +2071,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 	}
 
-	private class EntrySpliterator extends MapSpliterator<java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC>, EntrySpliterator> implements ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> {
+	private final class EntrySpliterator extends MapSpliterator<Consumer<? super MAP.Entry KEY_VALUE_GENERIC>, EntrySpliterator> implements ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> {
 
 		private static final int POST_SPLIT_CHARACTERISTICS = ObjectSpliterators.SET_SPLITERATOR_CHARACTERISTICS & ~java.util.Spliterator.SIZED;
 
@@ -2056,7 +2087,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		@Override
-		final void acceptOnIndex(final java.util.function.Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, int index) {
+		final void acceptOnIndex(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action, final int index) {
 			action.accept(new MapEntry(index));
 		}
 
@@ -2127,6 +2158,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		@Override
 		public ObjectSpliterator<MAP.Entry KEY_VALUE_GENERIC> spliterator() { return new EntrySpliterator(); }
+		
+		// 
 #endif
 
 		@Override
@@ -2326,21 +2359,24 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 */
 
 #ifdef Linked
-	private final class KeyIterator extends MapIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+	private final class KeyIterator extends MapIterator<METHOD_ARG_KEY_CONSUMER> implements KEY_LIST_ITERATOR KEY_GENERIC {
 		public KeyIterator(final KEY_GENERIC_TYPE k) { super(k); }
 
 		@Override
 		public KEY_GENERIC_TYPE PREV_KEY() { return key[previousEntry()]; }
-
 #else
 	private final class KeyIterator extends MapIterator<METHOD_ARG_KEY_CONSUMER> implements KEY_ITERATOR KEY_GENERIC {
-
-		@Override
-		final void acceptOnIndex(final METHOD_ARG_KEY_CONSUMER action, int index) {
-			action.accept(key[index]);
-		}
 #endif
 		public KeyIterator() { super(); }
+
+		// forEachRemaining inherited from MapIterator superclass.
+		// Despite the superclass declared with generics, the way Java inherits and generates bridge methods avoids the boxing/unboxing
+
+		@Override
+		final void acceptOnIndex(final METHOD_ARG_KEY_CONSUMER action, final int index) {
+			action.accept(key[index]);
+		}
+		
 
 		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return key[nextEntry()]; }
@@ -2363,7 +2399,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		@Override
-		final void acceptOnIndex(final METHOD_ARG_KEY_CONSUMER action, int index) {
+		final void acceptOnIndex(final METHOD_ARG_KEY_CONSUMER action, final int index) {
 			action.accept(key[index]);
 		}
 
@@ -2394,6 +2430,16 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				iterator(), it.unimi.dsi.fastutil.Size64.sizeOf(OPEN_HASH_MAP.this), SPLITERATOR_CHARACTERISTICS);
 		}
 
+		/** {@inheritDoc} */
+		@Override
+		public void forEach(final METHOD_ARG_KEY_CONSUMER consumer) {
+			for(int i = size, curr, next = first; i-- != 0;) {
+				curr = next;
+				next = GET_NEXT(link[curr]);
+				consumer.accept(key[curr]);
+			}
+		}
+
 #else
 	private final class KeySet extends ABSTRACT_SET KEY_GENERIC {
 
@@ -2402,7 +2448,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 		@Override
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return new KeySpliterator(); }
-#endif
 
 		/** {@inheritDoc} */
 		@Override
@@ -2413,6 +2458,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				if (! KEY_IS_NULL(k)) consumer.accept(k);
 			}
 		}
+#endif
 
 		@Override
 		public int size() { return size; }
@@ -2478,19 +2524,22 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	 */
 
 #ifdef Linked
-	private final class ValueIterator extends MapIterator implements VALUE_LIST_ITERATOR VALUE_GENERIC {
+	private final class ValueIterator extends MapIterator<METHOD_ARG_VALUE_CONSUMER> implements VALUE_LIST_ITERATOR VALUE_GENERIC {
 		@Override
 		public VALUE_GENERIC_TYPE PREV_VALUE() { return value[previousEntry()]; }
-
 #else
 	private final class ValueIterator extends MapIterator<METHOD_ARG_VALUE_CONSUMER> implements VALUE_ITERATOR VALUE_GENERIC {
+#endif
+
+		public ValueIterator() { super(); }
+
+		// forEachRemaining inherited from MapIterator superclass.
+		// Despite the superclass declared with generics, the way Java inherits and generates bridge methods avoids the boxing/unboxing
 
 		@Override
-		final void acceptOnIndex(final METHOD_ARG_VALUE_CONSUMER action, int index) {
+		final void acceptOnIndex(final METHOD_ARG_VALUE_CONSUMER action, final int index) {
 			action.accept(value[index]);
 		}
-#endif
-		public ValueIterator() { super(); }
 
 		@Override
 		public VALUE_GENERIC_TYPE NEXT_VALUE() { return value[nextEntry()]; }
@@ -2513,7 +2562,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		}
 
 		@Override
-		final void acceptOnIndex(final METHOD_ARG_VALUE_CONSUMER action, int index) {
+		final void acceptOnIndex(final METHOD_ARG_VALUE_CONSUMER action, final int index) {
 			action.accept(value[index]);
 		}
 
@@ -2528,7 +2577,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	public VALUE_COLLECTION VALUE_GENERIC values() {
 		if (values == null) values = new VALUE_ABSTRACT_COLLECTION VALUE_GENERIC() {
 #ifdef Linked
-				private static final int SPLITERATOR_CHARACTERISTICS = SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.ORDERED;
+				private static final int SPLITERATOR_CHARACTERISTICS = VALUE_SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS | java.util.Spliterator.ORDERED;
 #endif
 				@Override
 				public VALUE_ITERATOR VALUE_GENERIC iterator() { return new ValueIterator(); }
@@ -2541,16 +2590,19 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					return VALUE_SPLITERATORS.asSpliterator(
 						iterator(), it.unimi.dsi.fastutil.Size64.sizeOf(OPEN_HASH_MAP.this), SPLITERATOR_CHARACTERISTICS);
 				}
+
+				/** {@inheritDoc} */
+				@Override
+				public void forEach(final METHOD_ARG_VALUE_CONSUMER consumer) {
+					for(int i = size, curr, next = first; i-- != 0;) {
+						curr = next;
+						next = GET_NEXT(link[curr]);
+						consumer.accept(value[curr]);
+					}
+				}
 #else
 				@Override
 				public VALUE_SPLITERATOR VALUE_GENERIC spliterator() { return new ValueSpliterator(); }
-#endif
-				@Override
-				public int size() { return size; }
-				@Override
-				public boolean contains(VALUE_TYPE v) { return containsValue(v); }
-				@Override
-				public void clear() { OPEN_HASH_MAP.this.clear(); }
 
 				/** {@inheritDoc} */
 				@Override
@@ -2559,7 +2611,13 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 					for(int pos = n; pos-- != 0;)
 						if (! KEY_IS_NULL(key[pos])) consumer.accept(value[pos]);
 				}
-
+#endif
+				@Override
+				public int size() { return size; }
+				@Override
+				public boolean contains(VALUE_TYPE v) { return containsValue(v); }
+				@Override
+				public void clear() { OPEN_HASH_MAP.this.clear(); }
 			};
 
 		return values;
@@ -2765,11 +2823,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		final KEY_GENERIC_TYPE key[] = this.key;
 		final VALUE_GENERIC_TYPE value[] = this.value;
-#ifdef Linked
-		final MapIterator i = new MapIterator();
-#else
-		final MapIterator<?> i = new MapIterator<>();
-#endif
+		final EntryIterator i = new EntryIterator();
 		s.defaultWriteObject();
 
 		for(int j = size, e; j-- != 0;) {

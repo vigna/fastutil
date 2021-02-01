@@ -17,14 +17,24 @@
 
 package PACKAGE;
 
+import static it.unimi.dsi.fastutil.Size64.sizeOf;
 #if KEY_INDEX != VALUE_INDEX && !(KEYS_REFERENCE && VALUES_REFERENCE)
 import VALUE_PACKAGE.VALUE_COLLECTION;
 import VALUE_PACKAGE.VALUE_ABSTRACT_COLLECTION;
 import VALUE_PACKAGE.VALUE_ITERATOR;
+import VALUE_PACKAGE.VALUE_SPLITERATOR;
+import VALUE_PACKAGE.VALUE_SPLITERATORS;
+#if VALUES_BYTE_CHAR_SHORT_FLOAT || VALUE_CLASS_Boolean
+import VALUE_PACKAGE.VALUE_CONSUMER;
+#endif
 #endif
 
 #if KEYS_PRIMITIVE && VALUES_PRIMITIVE
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSpliterator;
+import it.unimi.dsi.fastutil.objects.ObjectSpliterators;
+#else
+import java.util.function.Consumer;
 #endif
 
 #if KEYS_PRIMITIVE
@@ -230,6 +240,12 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 		public int size() {
 			return map.size();
 		}
+
+		@Override
+		public ObjectSpliterator<Entry KEY_VALUE_GENERIC> spliterator() {
+			return ObjectSpliterators.asSpliterator(
+				iterator(), sizeOf(map), ObjectSpliterators.SET_SPLITERATOR_CHARACTERISTICS);
+		}
 	}
 
 
@@ -263,7 +279,16 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 							public boolean hasNext() { return i.hasNext(); }
 							@Override
 							public void remove() { i.remove(); }
+							@Override
+							public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+								i.forEachRemaining(entry -> action.accept(entry.ENTRY_GET_KEY()));
+							}
 						};
+				}
+				@Override
+				public KEY_SPLITERATOR KEY_GENERIC spliterator() {
+					return SPLITERATORS.asSpliterator(
+	 					iterator(), sizeOf(ABSTRACT_MAP.this), SPLITERATORS.SET_SPLITERATOR_CHARACTERISTICS);
 				}
 			};
 	}
@@ -297,7 +322,16 @@ public abstract class ABSTRACT_MAP KEY_VALUE_GENERIC extends ABSTRACT_FUNCTION K
 							public VALUE_GENERIC_TYPE NEXT_VALUE() { return i.next().ENTRY_GET_VALUE(); }
 							@Override
 							public boolean hasNext() { return i.hasNext(); }
+							@Override
+							public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
+								i.forEachRemaining(entry -> action.accept(entry.ENTRY_GET_VALUE()));
+							}
 						};
+				}
+				@Override
+				public VALUE_SPLITERATOR VALUE_GENERIC spliterator() {
+					return VALUE_SPLITERATORS.asSpliterator(
+	 					iterator(), sizeOf(ABSTRACT_MAP.this), VALUE_SPLITERATORS.COLLECTION_SPLITERATOR_CHARACTERISTICS);
 				}
 			};
 	}
