@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import java.util.Comparator;
+
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 
 /**
@@ -188,5 +190,24 @@ public interface Pair<L, R> {
 	 */
 	public static <L, R> Pair<L, R> of(final L l, final R r) {
 		return new ObjectObjectImmutablePair<>(l, r);
+	}
+
+	/**
+	 * Returns a lexicographical comparator for pairs.
+	 *
+	 * <p>
+	 * The comparator returned by this method implements lexicographical order. It compares first
+	 * the left elements: if the result of the comparison is nonzero, it returns said result.
+	 * Otherwise, this comparator returns the result of the comparison of the right elements.
+	 *
+	 * @return a lexicographical comparator for pairs.
+	 */
+	@SuppressWarnings("unchecked")
+	public static <L, R> Comparator<Pair<L, R>> lexComparator() {
+		return (x, y) -> {
+			final int t = ((Comparable<L>)x.left()).compareTo(y.left());
+			if (t != 0) return t;
+			return ((Comparable<R>)x.right()).compareTo(y.right());
+		};
 	}
 }
