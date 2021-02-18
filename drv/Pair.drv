@@ -281,4 +281,36 @@ public interface PAIR KEY_VALUE_GENERIC extends it.unimi.dsi.fastutil.Pair<KEY_G
 	public static KEY_VALUE_GENERIC PAIR KEY_VALUE_GENERIC of(final KEY_GENERIC_TYPE left, final VALUE_GENERIC_TYPE right) {
 		return new IMMUTABLE_PAIR KEY_VALUE_GENERIC(left, right);
 	}
+
+#if ! KEYS_USE_REFERENCE_EQUALITY && ! VALUES_USE_REFERENCE_EQUALITY
+
+	/**
+	 * Returns a lexicographical comparator for pairs.
+	 *
+	 * <p>
+	 * The comparator returned by this method implements lexicographical order. It compares first
+	 * the left elements: if the result of the comparison is nonzero, it returns said result.
+	 * Otherwise, this comparator returns the result of the comparison of the right elements.
+	 *
+	 * @return a lexicographical comparator for pairs.
+	 */
+	SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
+	public static KEY_VALUE_GENERIC java.util.Comparator<PAIR KEY_VALUE_GENERIC> lexComparator() {
+		return (x, y) -> {
+#if KEYS_PRIMITIVE
+			final int t = KEY_CLASS.compare(x.PAIR_LEFT(), y.PAIR_LEFT());
+#else
+			final int t = ((Comparable KEY_GENERIC)x.PAIR_LEFT()).compareTo(y.PAIR_LEFT());
+#endif
+			if (t != 0) return t;
+#if VALUES_PRIMITIVE
+			return VALUE_CLASS.compare(x.PAIR_RIGHT(), y.PAIR_RIGHT());
+#else
+			return ((Comparable VALUE_GENERIC)x.PAIR_RIGHT()).compareTo(y.PAIR_RIGHT());
+#endif
+		};
+	}
+
+#endif
+
 }
