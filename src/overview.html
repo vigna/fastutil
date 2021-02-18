@@ -444,7 +444,12 @@
     it.unimi.dsi.fastutil.ints.IntIterator#nextInt()
     next<var>type</var>()} returning directly a primitive type.
     And, of course, you have a type-specific version of {@link
-    java.util.ListIterator#previous() previous()}.
+    java.util.ListIterator#previous() previous()}. Note that the &ldquo;for each&rdquo;
+	style of iteration can hide boxing and unboxing: even if you iterate
+	using a primitive variable (as in {@code for(long x: s)}, where {@code s}
+	is a {@link it.unimi.dsi.fastutil.longs.LongSet}), the actual iterator used will be
+	object-based, as Java knows nothing about <code>fastutil</code>'s
+	type-specific {@code next()}/{@code previous()} methods.
 
     <li>For the same reason, the method {@link java.util.Collection#toArray}
     as a polymorphic version accepting a type-specific array, but there is
@@ -885,11 +890,40 @@
 
 
 
-    <h1>An Example</h1>
+    <h1>Examples</h1>
 
-    <p>Suppose you want to store a sorted map from longs to integers. The first
-    step is to define a variable of the right interface, and assign it a new
-    tree map (say, of the AVL type):
+	<p>To store a set of longs, we can use a hash-based container:
+    <pre>
+LongSet s = new LongOpenHashSet();
+    </pre>
+	<p>Access methods avoid boxing and unboxing:
+    <pre>
+s.add(1);
+s.contains(2);
+    </pre>
+    <p>We can obtain a type-specific iterator on the elements of the set:
+    <pre>
+// Sum all elements
+long t = 0;
+for(LongIterator i = s.iterator(); i.hasNext();) t += i.nextLong();
+	</pre>
+	<p>Note that &ldquo;for each&rdquo; iteration must be avoided:
+    <pre>
+long t = 0;
+for(long x: s) t += x;
+	</pre>
+	<p>In the loop above, boxing and unboxing is happening (even if your IDE does not report it).
+	In some cases, a solution is to use a type-specific {@link java.util.Collection#forEach(java.util.function.Consumer) forEach()}:
+    <pre>
+// Print all elements
+s.forEach(x -&gt; System.out.println(x));
+	</pre>
+    <p>Or we can use <code>fastutil</code>'s type-specific version of Java 8's streams:
+    <pre>
+long t = m.longStream().sum();
+    </pre>
+
+    <p>Suppose instead you want to store a sorted map from longs to integers. We will use a tree of AVL type:
     <pre>
 Long2IntSortedMap m = new Long2IntAVLTreeMap();
     </pre>
@@ -914,7 +948,7 @@ LongBidirectionalIterator i = m.keySet().iterator();
 long s = 0;
 while(i.hasNext()) s += i.nextLong();
 	</pre>
-    <p>Or we can use Java 8's streams, using the primitive stream methods
+    <p>Or we can use again <code>fastutil</code>'s type-specific version of Java 8's streams:
     <pre>
 long s = m.longStream().sum();
     </pre>
@@ -975,7 +1009,7 @@ IntList lTransformed = IntArrayList.toList(l.intStream().map(i -&gt; i + 40)); /
     </pre>
     <p>You can sort arrays using type-specific comparators specified by lambda expressions (no boxing/unboxing here):
     <pre>
-IntArrays.quickSort(a, (x, y) -&gt; y - x); // Sorts in reverse order
+IntArrays.quickSort(a, (x, y) -&gt; Integer.compare(y,  x)); // Sorts in reverse order
     </pre>
     <p>You can also easily specify complex generic sorting, like sorting indirectly on {@code a} while swapping elements in {@code a} and {@code b} in parallel:
     <pre>
