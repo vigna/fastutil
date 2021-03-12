@@ -13,9 +13,16 @@
 	<property name="version" value="${version}" />
 
 	<!-- define artifacts' name, which follows the convention of Maven -->
-	<property name="maven-jar" value="${dist}/lib/${artifactId}-${version}.jar" />
+
+	<property name="maven-core-jar" value="${dist}/lib/${artifactId}-core-${version}.jar" />
+	<property name="maven-refbytechar-jar" value="${dist}/lib/${artifactId}-refbytechar-${version}.jar" />
+	<property name="maven-boolshortfloat-jar" value="${dist}/lib/${artifactId}-boolshortfloat-${version}.jar" />
+
+	<property name="maven-core-sources-jar" value="${dist}/lib/${artifactId}-core-${version}-sources.jar" />
+	<property name="maven-refbytechar-sources-jar" value="${dist}/lib/${artifactId}-refbytechar-${version}-sources.jar" />
+	<property name="maven-boolshortfloat-sources-jar" value="${dist}/lib/${artifactId}-boolshortfloat-${version}-sources.jar" />
+
 	<property name="maven-javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
-	<property name="maven-sources-jar" value="${dist}/lib/${artifactId}-${version}-sources.jar" />
 
 	<!-- defined maven snapshots and staging repository id and url -->
 
@@ -26,61 +33,183 @@
 
 
 	<!-- OSGi manifest generation -->
-	<target name="resolve" description="run Ivy to fetch jars">
+<!--	<target name="resolve" description="run Ivy to fetch jars">
 		<ivy:retrieve />
+	</target>-->
+
+	<target name="split-core" depends="compile">
+		<delete dir="${build}-core"/>
+		<mkdir dir="${build}-core"/> 
+		<copy todir="${build}-core">
+			<fileset dir="${build}" includesfile="fastutil-core.txt"/>
+		</copy>
 	</target>
 
-	<target name="osgi" depends="resolve,compile">
+	<target name="split-refbytechar" depends="resolve,compile">
+		<delete dir="${build}-refbytechar"/>
+		<mkdir dir="${build}-refbytechar"/> 
+		<copy todir="${build}-refbytechar">
+			<fileset dir="${build}" includesfile="fastutil-refbytechar.txt"/>
+		</copy>
+	</target>
+
+	<target name="split-boolshortfloat" depends="resolve,compile">
+		<delete dir="${build}-boolshortfloat"/>
+		<mkdir dir="${build}-boolshortfloat"/>
+		<copy todir="${build}-boolshortfloat">
+			<fileset dir="${build}" includesfile="fastutil-boolshortfloat.txt"/>
+		</copy>
+	</target>
+
+	<target name="osgi-core" depends="split-core">
 		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
 		<bnd
-			classpath="${build}"
+			classpath="${build}-core"
+			eclipse="false"
+			failok="false"
+			exceptions="true"
+			output="${maven-core-jar}"
+			files="fastutil-core.bnd"/>
+	</target>
+
+	<target name="osgi-refbytechar" depends="split-refbytechar">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
+		<bnd
+			classpath="${build}-refbytechar"
+			eclipse="false"
+			failok="false"
+			exceptions="true"
+			output="${maven-refbytechar-jar}"
+			files="fastutil-refbytechar.bnd"/>
+	</target>
+
+	<target name="osgi-boolshortfloat" depends="split-boolshortfloat">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
+		<bnd
+			classpath="${build}-boolshortfloat"
 			eclipse="false"
 			failok="false"
 			exceptions="true"
 			output="${maven-jar}"
-			files="fastutil.bnd"/>
+			files="fastutil-boolshortfloat.bnd"/>
 	</target>
 	<!-- end OSGi manifest generation -->
 
-	<target name="dist" depends="osgi,javadoc" description="generate the distribution">
+	<target name="dist-javadoc" depends="javadoc" description="generate the distribution Javadoc">
 		<!-- build the javadoc artifact (from symbolic link created in init) -->
 		<jar jarfile="${maven-javadoc-jar}">
 			<fileset dir="${dist}/javadoc" />
 		</jar>
+	</target>
 
+	<target name="dist-core" depends="osgi-core,javadoc" description="generate the core distribution">
 		<!-- build the sources artifact -->
-		<jar jarfile="${maven-sources-jar}">
-			<fileset dir="." includes="README.md,CHANGES,LICENSE-2.0,build.xml,ivy.xml,pom.xml,fastutil.bnd,build.properties,makefile,${drv}/*.drv,gencsource.sh"/>
-			<fileset dir="src" includes="it/unimi/dsi/fastutil/**/*.java,it/unimi/dsi/fastutil/**/*.html"/>
+		<jar jarfile="${maven-core-sources-jar}">
+			<fileset dir="." includes="README.md,CHANGES,LICENSE-2.0,build.xml,ivy.xml,pom.xml,fastutil.bnd,split.sh,fastutil-core.bnd,fastutil-refbytechar.bnd,build.properties,makefile,${drv}/*.drv,gencsource.sh,src/overview.html"/>
+			<fileset dir="src" includesfile="fastutil-src-core.txt"/>
 		</jar>
 	</target>
 
-	<target name="pom" depends="dist" description="insert version into pom">
-		<copy todir="${build}" file="pom.xml">
+	<target name="dist-refbytechar" depends="osgi-refbytechar,javadoc" description="generate the distribution">
+		<!-- build the sources artifact -->
+		<jar jarfile="${maven-refbytechar-sources-jar}">
+			<fileset dir="src" includesfile="fastutil-src-refbytechar.txt"/>
+		</jar>
+	</target>
+
+	<target name="dist-boolshortfloat" depends="osgi-boolshortfloat,javadoc" description="generate the distribution">
+		<!-- build the sources artifact -->
+		<jar jarfile="${maven-sources-jar}">
+			<fileset dir="src" includesfile="fastutil-src-boolshortfloat.txt"/>
+		</jar>
+	</target>
+
+	<target name="pom-core" description="insert version into core pom">
+		<copy tofile="pom-core.xml" file="pom-core-model.xml">
 			<filterset>
-				<filter token="version" value="${version}"/>
+				<filter token="VERSION" value="${version}"/>
 			</filterset>
 		</copy>
 	</target>
 
-	<target name="deploy" depends="pom" description="deploy snapshot version to Maven snapshot repository">
+	<target name="pom-refbytechar" description="insert version into core pom">
+		<copy tofile="pom-refbytechar.xml" file="pom-refbytechar-model.xml">
+			<filterset>
+				<filter token="VERSION" value="${version}"/>
+			</filterset>
+		</copy>
+	</target>
+
+	<target name="pom" description="insert version into pom">
+		<copy tofile="pom.xml" file="pom-model.xml">
+			<filterset>
+				<filter token="VERSION" value="${version}"/>
+			</filterset>
+		</copy>
+	</target>
+
+	<target name="deploy-core" depends="pom-core,dist-core" description="deploy core snapshot version to Maven snapshot repository">
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
 			<arg value="-Durl=${maven-snapshots-repository-url}" />
 			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
-			<arg value="-DpomFile=${build}/pom.xml" />
-			<arg value="-Dfile=${maven-jar}" />
+			<arg value="-DpomFile=${build}/pom-core.xml" />
+			<arg value="-Dfile=${maven-core-jar}" />
 		</artifact:mvn>
 	</target>
 
-	<target name="stage" depends="dist" description="deploy release version to Maven staging repository">
+	<target name="stage-core" depends="pom-core,dist-core" description="deploy core release version to Maven staging repository">
 		<!-- sign and deploy the main artifact -->
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
-			<arg value="-Dfile=${maven-jar}" />
+			<arg value="-DpomFile=pom-core.xml" />
+			<arg value="-Dfile=${maven-core-jar}" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+
+		<!-- sign and deploy the sources artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-core.xml" />
+			<arg value="-Dfile=${maven-core-sources-jar}" />
+			<arg value="-Dclassifier=sources" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+
+		<!-- sign and deploy the javadoc artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-core.xml" />
+			<arg value="-Dfile=${maven-javadoc-jar}" />
+			<arg value="-Dclassifier=javadoc" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+	</target>
+
+	<target name="deploy-refbytechar" depends="deploy-core,pom-refbytechar,dist-refbytechar" description="deploy snapshot version to Maven snapshot repository">
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
+			<arg value="-Durl=${maven-snapshots-repository-url}" />
+			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
+			<arg value="-DpomFile=${build}/pom-refbytechar.xml" />
+			<arg value="-Dfile=${maven-refbytechar-jar}" />
+		</artifact:mvn>
+	</target>
+
+	<target name="stage-refbytechar" depends="stage-core,pom-refbytechar,dist-refbytechar" description="deploy release version to Maven staging repository">
+		<!-- sign and deploy the main artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-refbytechar.xml" />
+			<arg value="-Dfile=${maven-refbytechar-jar}" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
 
@@ -90,7 +219,51 @@
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
 			<arg value="-DpomFile=pom.xml" />
-			<arg value="-Dfile=${maven-sources-jar}" />
+			<arg value="-Dfile=${maven-refbytechar-sources-jar}" />
+			<arg value="-Dclassifier=sources" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+
+		<!-- sign and deploy the javadoc artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-refbytechar.xml" />
+			<arg value="-Dfile=${maven-javadoc-jar}" />
+			<arg value="-Dclassifier=javadoc" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+	</target>
+
+	<target name="deploy" depends="deploy-refbytechar,pom,dist-boolshortfloat" description="deploy snapshot version to Maven snapshot repository">
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
+			<arg value="-Durl=${maven-snapshots-repository-url}" />
+			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
+			<arg value="-DpomFile=${build}/pom.xml" />
+			<arg value="-Dfile=${maven-jar}" />
+		</artifact:mvn>
+	</target>
+
+	<target name="stage" depends="stage-refbytechar,pom,dist-boolshortfloat" description="deploy release version to Maven staging repository">
+		<!-- sign and deploy the main artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom.xml" />
+			<arg value="-Dfile=${maven-boolshortfloat-jar}" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+
+		<!-- sign and deploy the sources artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom.xml" />
+			<arg value="-Dfile=${maven-boolshortfloat-sources-jar}" />
 			<arg value="-Dclassifier=sources" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
@@ -157,12 +330,6 @@
 	</target>
 
 	<target name="jar-tests" depends="compile">
-		<jar jarfile="fastutil-${version}.jar">
-			<fileset dir="${build}"/>
-	 </jar>
-	</target>
-
-	<target name="jar-oldsources" depends="compile">
 		<jar jarfile="fastutil-${version}.jar">
 			<fileset dir="${build}"/>
 	 </jar>

@@ -81,7 +81,8 @@ source: pom
 		fastutil-$(version)/drv/*.drv \
 		fastutil-$(version)/build.xml \
 		fastutil-$(version)/ivy.xml \
-		fastutil-$(version)/fastutil.bnd \
+		fastutil-$(version)/split.sh \
+		fastutil-$(version)/fastutil*bnd \
 		fastutil-$(version)/pom.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
@@ -99,27 +100,29 @@ source: pom
 
 binary:
 	make -s clean sources format
-	ant clean osgi jar javadoc
+	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
+	cp dist/lib/fastutil-core-$(version).jar .
+	cp dist/lib/fastutil-refbytechar-$(version).jar .
 	cp dist/lib/fastutil-$(version).jar .
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README.md \
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/docs \
+		fastutil-$(version)/fastutil-core-$(version).jar \
+		fastutil-$(version)/fastutil-refbytechar-$(version).jar \
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)
 
 ECLIPSE=/usr/bin/eclipse
 
-pom:
-	(sed -e s/VERSION/$$(grep version build.properties | cut -d= -f2)/ <pom-model.xml >pom.xml)
-
 format:
 	$(ECLIPSE) -data workspace -nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config $(CURDIR)/.settings/org.eclipse.jdt.core.prefs $(CURDIR)/src/it/unimi/dsi/fastutil/{booleans,bytes,shorts,chars,ints,floats,longs,doubles,objects}
 
-stage: pom
+stage:
+	./split.sh
 	(unset LOCAL_IVY_SETTINGS; ant stage)
 
 dirs:
