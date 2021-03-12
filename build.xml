@@ -90,7 +90,7 @@
 			eclipse="false"
 			failok="false"
 			exceptions="true"
-			output="${maven-jar}"
+			output="${maven-boolshortfloat-jar}"
 			files="fastutil-boolshortfloat.bnd"/>
 	</target>
 	<!-- end OSGi manifest generation -->
@@ -102,7 +102,7 @@
 		</jar>
 	</target>
 
-	<target name="dist-core" depends="osgi-core,javadoc" description="generate the core distribution">
+	<target name="dist-core" depends="osgi-core,dist-javadoc" description="generate the core distribution">
 		<!-- build the sources artifact -->
 		<jar jarfile="${maven-core-sources-jar}">
 			<fileset dir="." includes="README.md,CHANGES,LICENSE-2.0,build.xml,ivy.xml,pom.xml,fastutil.bnd,split.sh,fastutil-core.bnd,fastutil-refbytechar.bnd,build.properties,makefile,${drv}/*.drv,gencsource.sh,src/overview.html"/>
@@ -110,16 +110,16 @@
 		</jar>
 	</target>
 
-	<target name="dist-refbytechar" depends="osgi-refbytechar,javadoc" description="generate the distribution">
+	<target name="dist-refbytechar" depends="osgi-refbytechar,dist-javadoc" description="generate the distribution">
 		<!-- build the sources artifact -->
 		<jar jarfile="${maven-refbytechar-sources-jar}">
 			<fileset dir="src" includesfile="fastutil-src-refbytechar.txt"/>
 		</jar>
 	</target>
 
-	<target name="dist-boolshortfloat" depends="osgi-boolshortfloat,javadoc" description="generate the distribution">
+	<target name="dist-boolshortfloat" depends="osgi-boolshortfloat,dist-javadoc" description="generate the distribution">
 		<!-- build the sources artifact -->
-		<jar jarfile="${maven-sources-jar}">
+		<jar jarfile="${maven-boolshortfloat-sources-jar}">
 			<fileset dir="src" includesfile="fastutil-src-boolshortfloat.txt"/>
 		</jar>
 	</target>
@@ -134,6 +134,14 @@
 
 	<target name="pom-refbytechar" description="insert version into core pom">
 		<copy tofile="pom-refbytechar.xml" file="pom-refbytechar-model.xml">
+			<filterset>
+				<filter token="VERSION" value="${version}"/>
+			</filterset>
+		</copy>
+	</target>
+
+	<target name="pom-boolshortfloat" description="insert version into pom">
+		<copy tofile="pom-boolshortfloat.xml" file="pom-boolshortfloat-model.xml">
 			<filterset>
 				<filter token="VERSION" value="${version}"/>
 			</filterset>
@@ -236,23 +244,23 @@
 		</artifact:mvn>
 	</target>
 
-	<target name="deploy" depends="deploy-refbytechar,pom,dist-boolshortfloat" description="deploy snapshot version to Maven snapshot repository">
+	<target name="deploy-boolshortfloat" depends="deploy-refbytechar,pom-boolshortfloat,dist-boolshortfloat" description="deploy snapshot version to Maven snapshot repository">
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
 			<arg value="-Durl=${maven-snapshots-repository-url}" />
 			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
-			<arg value="-DpomFile=${build}/pom.xml" />
-			<arg value="-Dfile=${maven-jar}" />
+			<arg value="-DpomFile=${build}/pom-boolshortfloat.xml" />
+			<arg value="-Dfile=${maven-boooshortfloat-jar}" />
 		</artifact:mvn>
 	</target>
 
-	<target name="stage" depends="stage-refbytechar,pom,dist-boolshortfloat" description="deploy release version to Maven staging repository">
+	<target name="stage-boolshortfloat" depends="stage-refbytechar,pom-boolshortfloat,dist-boolshortfloat" description="deploy release version to Maven staging repository">
 		<!-- sign and deploy the main artifact -->
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
+			<arg value="-DpomFile=pom-boolshortfloat.xml" />
 			<arg value="-Dfile=${maven-boolshortfloat-jar}" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
@@ -262,7 +270,7 @@
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
+			<arg value="-DpomFile=pom-boolshortfloat.xml" />
 			<arg value="-Dfile=${maven-boolshortfloat-sources-jar}" />
 			<arg value="-Dclassifier=sources" />
 			<arg value="-Pgpg" />
@@ -273,13 +281,23 @@
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
+			<arg value="-DpomFile=pom-boolshortfloat.xml" />
 			<arg value="-Dfile=${maven-javadoc-jar}" />
 			<arg value="-Dclassifier=javadoc" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
 	</target>
 
+	<target name="stage" depends="stage-boolshortfloat,pom" description="deploy release version to Maven staging repository">
+		<!-- sign and deploy the main artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-boolshortfloat.xml" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
+	</target>
 	<!-- ************************************** END OF MAVEN SH*T ************************************** -->
 
 	<condition property="j2se.apiurl" value="${local.j2se.apiurl}" else="${remote.j2se.apiurl}"><isset property="local"/></condition>
