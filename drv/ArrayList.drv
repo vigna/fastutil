@@ -40,7 +40,7 @@ import java.util.function.Consumer;
  * <em>never</em> made smaller (even on a {@link #clear()}). A family of
  * {@linkplain #trim() trimming methods} lets you control the size of the
  * backing array; this is particularly useful if you reuse instances of this class.
- * Range checks are equivalent to those of {@link java.util}'s classes, but
+ * Range checks are equivalent to those of {@code java.util}'s classes, but
  * they are delayed as much as possible. The backing array is exposed by the
  * {@link #elements()} method.
  *
@@ -340,7 +340,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return wrap(a, a.length);
 	}
 
-	/** Creates a new empty array list. 
+	/** Creates a new empty array list.
 	 *
 	 * @return a new empty array list.
 	 */
@@ -374,20 +374,28 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 		ARRAY_LIST::add,
 	 		ARRAY_LIST::addAll);
 	 }
-	 
-	/** Collects the result of a primitive {@code Stream} into a new ArrayList.
+
+	/** Collects the result of a primitive {@code Stream} into a new ArrayList, potentially pre-allocated to handle the given size.
 	 *
 	 * <p>This method performs a terminal operation on the given {@code Stream}
 	 *
 	 * @apiNote Taking a primitive stream instead returning something like a
 	 * {@link java.util.stream.Collector Collector} is necessary because there is no
 	 * primitive {@code Collector} equivalent in the Java API.
-	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
-	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the contents of the full stream.
 	 */
 	public static KEY_GENERIC ARRAY_LIST KEY_GENERIC toListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+ 		if (expectedSize <= DEFAULT_INITIAL_CAPACITY) {
+ 			// Already below default capacity. Just use all default construction instead of fiddling with atomics in SizeDecreasingSupplier
+ 			return toList(stream);
+		}
 		return stream.collect(
-			() -> new ARRAY_LIST KEY_GENERIC(expectedSize),
+			new COLLECTIONS.SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+					K,
+#endif
+					ARRAY_LIST KEY_GENERIC>(
+				expectedSize, (int size) ->
+					size <= DEFAULT_INITIAL_CAPACITY ? new ARRAY_LIST KEY_GENERIC() : new ARRAY_LIST KEY_GENERIC(size)),
 			ARRAY_LIST::add,
 			ARRAY_LIST::addAll);
 	}
@@ -402,7 +410,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		Collector.of(
 			ARRAY_LIST::new,
 			ARRAY_LIST::add,
-			ARRAY_LIST::combine); 
+			ARRAY_LIST::combine);
 
 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
@@ -410,14 +418,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return (Collector) TO_LIST_COLLECTOR;
 	}
 
- 	/**
- 	 * Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList.
-	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
-	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the contents of the full stream.
- 	 */
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ArrayList, potentially pre-allocated to handle the given size. */
  	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, ARRAY_LIST KEY_GENERIC> toListWithExpectedSize(int expectedSize) {
+ 		if (expectedSize <= DEFAULT_INITIAL_CAPACITY) {
+ 			// Already below default capacity. Just use all default construction instead of fiddling with atomics in SizeDecreasingSupplier
+ 			return toList();
+		}
  		return Collector.of(
-		() -> new ARRAY_LIST KEY_GENERIC_DIAMOND(expectedSize),
+ 			new COLLECTIONS.SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+				K,
+#endif
+				ARRAY_LIST KEY_GENERIC>(
+			expectedSize, (int size) ->
+				size <= DEFAULT_INITIAL_CAPACITY ? new ARRAY_LIST KEY_GENERIC() : new ARRAY_LIST KEY_GENERIC(size)),
 		ARRAY_LIST::add,
 		ARRAY_LIST::combine);
 	}
@@ -694,7 +708,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 			return new SubListSpliterator();
 		}
-		
+
 		boolean contentsEquals(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
 			if (a == otherA && from == otherAFrom && to == otherATo) return true;
 			if (otherATo - otherAFrom != size()) {
@@ -1151,7 +1165,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		final KEY_GENERIC_TYPE[] a1 = a;
 		final KEY_GENERIC_TYPE[] a2 = l.a;
 
-		if (a1 == a2 && s == l.size()) return true; 
+		if (a1 == a2 && s == l.size()) return true;
 
 #if KEY_CLASS_Object
 		while(s-- !=  0) if (! java.util.Objects.equals(a1[s], a2[s])) return false;
@@ -1177,7 +1191,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 		if (o instanceof ARRAY_LIST.SubList) {
 			// Safe cast because we are only going to take elements from other list, never give them
-			// Sublist has an optimized sub-array based comparison, reuse that. 
+			// Sublist has an optimized sub-array based comparison, reuse that.
 			return ((ARRAY_LIST KEY_GENERIC.SubList)o).equals(this);
 		}
 		return super.equals(o);
@@ -1202,7 +1216,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
 		if (a1 == a2 && s1 == s2) return 0;
 #endif
-		
+
 		// TODO When minimum version of Java becomes Java 9, use Arrays.compare, which vectorizes.
 		KEY_GENERIC_TYPE e1, e2;
 		int r, i;

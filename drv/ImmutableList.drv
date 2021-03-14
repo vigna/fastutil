@@ -41,7 +41,7 @@ import java.util.stream.Collector;
 
 public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements LIST KEY_GENERIC, RandomAccess, Cloneable, java.io.Serializable {
 	private static final long serialVersionUID = 0L;
-	
+
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
 	static final IMMUTABLE_LIST EMPTY = new IMMUTABLE_LIST(ARRAYS.EMPTY_ARRAY);
 
@@ -119,7 +119,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	public IMMUTABLE_LIST(final KEY_ITERATOR KEY_EXTENDS_GENERIC i) {
 		this(i.hasNext() ? ITERATORS.unwrap(i) : _EMPTY_ARRAY);
 	}
-	
+
 	/**
 	 * Returns an empty immutable list.
 	 * @return an immutable list (possibly shared) that is empty.
@@ -167,15 +167,13 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		return convertTrustedToImmutableList(ARRAY_LIST.toList(stream));
 	}
 
-	/** Collects the result of a primitive {@code Stream} into a new ImmutableList.
+	/** Collects the result of a primitive {@code Stream} into a new ImmutableList, potentially pre-allocated to handle the given size.
 	 *
 	 * <p>This method performs a terminal operation on the given {@code Stream}
 	 *
 	 * @apiNote Taking a primitive stream instead returning something like a
 	 * {@link java.util.stream.Collector Collector} is necessary because there is no
 	 * primitive {@code Collector} equivalent in the Java API.
-	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
-	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
 	 */
 	public static KEY_GENERIC IMMUTABLE_LIST KEY_GENERIC toListWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
 		return convertTrustedToImmutableList(ARRAY_LIST.toListWithExpectedSize(stream, expectedSize));
@@ -194,14 +192,20 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		return (Collector) TO_LIST_COLLECTOR;
 	}
 
- 	/**
- 	 * Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ImmutableList.
- 	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
-	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
- 	 */
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new ImmutableList, potentially pre-allocated to handle the given size. */
  	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, IMMUTABLE_LIST KEY_GENERIC> toListWithExpectedSize(int expectedSize) {
+ 		if (expectedSize <= ARRAY_LIST.DEFAULT_INITIAL_CAPACITY) {
+ 			// Already below default capacity. Just use all default construction instead of fiddling with atomics in SizeDecreasingSupplier
+ 			return toList();
+		}
  		return Collector.<KEY_GENERIC_TYPE, ARRAY_LIST KEY_GENERIC, IMMUTABLE_LIST KEY_GENERIC>of(
-			() -> new ARRAY_LIST KEY_GENERIC_DIAMOND(expectedSize),
+			new COLLECTIONS.SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+					K,
+#endif
+					ARRAY_LIST KEY_GENERIC>(
+				expectedSize, (int size) ->
+					size <= ARRAY_LIST.DEFAULT_INITIAL_CAPACITY ? new ARRAY_LIST KEY_GENERIC() : new ARRAY_LIST KEY_GENERIC(size)),
 			ARRAY_LIST::add,
 			ARRAY_LIST::combine,
 			IMMUTABLE_LIST::convertTrustedToImmutableList);
@@ -428,7 +432,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 	public KEY_SPLITERATOR KEY_GENERIC spliterator() {
 		return new Spliterator();
 	}
-	
+
 	private final static class ImmutableSubList KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENERIC implements java.util.RandomAccess, java.io.Serializable {
 		private static final long serialVersionUID = 7054639518438982401L;
 		final IMMUTABLE_LIST KEY_GENERIC innerList;
@@ -466,12 +470,12 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			for(int i = to; i-- != from;) if (KEY_EQUALS(k, a[i])) return i - from;
 			return -1;
 		}
-	
+
 		@Override
 		public int size() {
 			return to - from;
 		}
-	
+
 		@Override
 		public boolean isEmpty() {
 			return to <= from;
@@ -481,11 +485,11 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		public void getElements(final int fromSublistIndex, final KEY_TYPE[] a, final int offset, final int length) {
 			ARRAYS.ensureOffsetLength(a, offset, length);
 			ensureRestrictedIndex(fromSublistIndex);
-			if (from + length > to) 
+			if (from + length > to)
 				throw new IndexOutOfBoundsException("Final index " + (from + length) + " (startingIndex: " + from + " + length: " + length + ") is greater then list length " + size());
 			System.arraycopy(this.a, fromSublistIndex + from, a, offset, length);
 		}
-	
+
 		@Override
 		public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
 			for (int i = from; i < to; ++i) {
@@ -496,9 +500,9 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 #if KEYS_PRIMITIVE
 		@Override
 		public KEY_TYPE[] TO_KEY_ARRAY() {
-			return java.util.Arrays.copyOfRange(a, from, to); 
+			return java.util.Arrays.copyOfRange(a, from, to);
 		}
-	
+
 		@Override
 		public KEY_TYPE[] toArray(KEY_TYPE a[]) {
 			if (a == null || a.length < size()) a = new KEY_TYPE[size()];
@@ -511,7 +515,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			// A subtle part of the spec says the returned array must be Object[] exactly.
 			return java.util.Arrays.copyOfRange(a, from, to, Object[].class);
 		}
-	
+
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		@Override
 		public KEY_GENERIC KEY_GENERIC_TYPE[] toArray(KEY_GENERIC_TYPE a[]) {
@@ -532,10 +536,10 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		@Override
 		public KEY_LIST_ITERATOR KEY_GENERIC listIterator(final int index) {
 			ensureIndex(index);
-	
+
 			return new KEY_LIST_ITERATOR KEY_GENERIC() {
 					int pos = index;
-	
+
 					@Override
 					public boolean hasNext() { return pos < to; }
 					@Override
@@ -748,8 +752,8 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 		if (from > to) throw new IllegalArgumentException("Start index (" + from + ") is greater than end index (" + to + ")");
 		return new ImmutableSubList KEY_GENERIC_DIAMOND(this, from, to);
 	}
-		
-	
+
+
 	@Override
 	public IMMUTABLE_LIST KEY_GENERIC clone() {
 		return this;
@@ -793,7 +797,7 @@ public class IMMUTABLE_LIST KEY_GENERIC extends LISTS.ImmutableListBase KEY_GENE
 			return equals((IMMUTABLE_LIST KEY_GENERIC) o);
 		}
 		if (o instanceof ImmutableSubList) {
-			// Sublist has an optimized sub-array based comparison, reuse that. 
+			// Sublist has an optimized sub-array based comparison, reuse that.
 			return ((ImmutableSubList KEY_GENERIC)o).equals(this);
 		}
 		return super.equals(o);

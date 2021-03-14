@@ -575,14 +575,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		this(a, DEFAULT_LOAD_FACTOR);
 	}
 
-	/** Creates a new empty hash set. 
+	/** Creates a new empty hash set.
 	 *
 	 * @return a new empty hash set.
 	 */
 	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of() {
 		return new OPEN_HASH_SET KEY_GENERIC_DIAMOND();
 	}
-	
+
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor
 	 * using the given element.
 	 *
@@ -648,7 +648,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				throw new IllegalArgumentException("Duplicate element " + element);
 			}
 		}
-		return result; 
+		return result;
 	}
 #endif
 
@@ -668,20 +668,28 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 		OPEN_HASH_SET::add,
 	 		OPEN_HASH_SET::addAll);
 	 }
-	 
-	/** Collects the result of a primitive {@code Stream} into a new hash set.
+
+	/** Collects the result of a primitive {@code Stream} into a new hash set, potentially pre-allocated to handle the given size.
 	 *
 	 * <p>This method performs a terminal operation on the given {@code Stream}
 	 *
 	 * @apiNote Taking a primitive stream instead returning something like a
 	 * {@link java.util.stream.Collector Collector} is necessary because there is no
 	 * primitive {@code Collector} equivalent in the Java API.
-	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
-	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
 	 */
 	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSetWithExpectedSize(JDK_PRIMITIVE_STREAM stream, int expectedSize) {
+ 		if (expectedSize <= Hash.DEFAULT_INITIAL_SIZE) {
+ 			// Already below default capacity. Just use all default construction instead of fiddling with atomics in SizeDecreasingSupplier
+ 			return toSet(stream);
+		}
 		return stream.collect(
-			() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+			new COLLECTIONS.SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+					K,
+#endif
+					OPEN_HASH_SET KEY_GENERIC>(
+				expectedSize, (int size) ->
+					size <= Hash.DEFAULT_INITIAL_SIZE ? new OPEN_HASH_SET KEY_GENERIC() : new OPEN_HASH_SET KEY_GENERIC(size)),
 			OPEN_HASH_SET::add,
 			OPEN_HASH_SET::addAll);
 	}
@@ -696,7 +704,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		Collector.of(
 			OPEN_HASH_SET::new,
 			OPEN_HASH_SET::add,
-			OPEN_HASH_SET::combine); 
+			OPEN_HASH_SET::combine);
 
 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
@@ -704,14 +712,20 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return (Collector) TO_SET_COLLECTOR;
 	}
 
- 	/**
- 	 * Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set.
- 	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
-	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
- 	 */
+ 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set, potentially pre-allocated to handle the given size. */
  	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toSetWithExpectedSize(int expectedSize) {
+ 		if (expectedSize <= Hash.DEFAULT_INITIAL_SIZE) {
+ 			// Already below default capacity. Just use all default construction instead of fiddling with atomics in SizeDecreasingSupplier
+ 			return toSet();
+		}
  		return Collector.of(
-		() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+ 			new COLLECTIONS.SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+					K,
+#endif
+					OPEN_HASH_SET KEY_GENERIC>(
+			expectedSize, (int size) ->
+				size <= Hash.DEFAULT_INITIAL_SIZE ? new OPEN_HASH_SET KEY_GENERIC() : new OPEN_HASH_SET KEY_GENERIC(size)),
 		OPEN_HASH_SET::add,
 		OPEN_HASH_SET::combine);
 	}

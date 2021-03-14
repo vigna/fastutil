@@ -20,6 +20,9 @@ package PACKAGE;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
 #if KEYS_BYTE_CHAR_SHORT_FLOAT
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.WIDENED_ITERATORS;
@@ -536,4 +539,69 @@ public final class COLLECTIONS {
 		return new IterableCollection KEY_GENERIC_DIAMOND(iterable);
 	}
 
+#if KEYS_INT_LONG_DOUBLE || KEYS_REFERENCE  // Currently used for the collector methods, which only exist for the "first-class" primitives and object types.
+	/** Helper class for size decreasing size estimation.
+	 *
+	 * <p>Used to implement {@code toXWithExpectedSize} to prevent allocating a data structure big enough for the full stream in every thread, when only one thread
+	 * (typically the first one) is going to need to "see" all of it at some point.
+	 *
+	 * <p>Currently set to always assume a roughly split-by-two strategy from the {@link java.util.Spliterator} backing the
+	 * {@link java.util.stream.Stream} (or primitive equivalant). This may perform worse for {@code Spliterator}s that don't
+	 * (for example the ones that wrap an {@link java.util.Iterator} as a {@code Spliterator}). This is quite rare in practice however.
+	 * But note that even in such cases, this would <em>still</em> perform no worse (modulo some trivial amount) then the default
+	 * "flat size for every list" method of combining.
+ 	 * A way to detect such cases a different size estimation strategy may come in the future.
+ 	 *
+ 	 * <p>See the constructor for requirements of the {@link #builder} functor.
+	 */
+	static class SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+			K,
+#endif
+			C extends COLLECTION KEY_GENERIC> implements Supplier<C> {
+		static final int RECOMMENDED_MIN_SIZE = 8;
+
+		final AtomicInteger suppliedCount = new AtomicInteger(0);
+		final int expectedFinalSize;
+		final IntFunction<C> builder;
+
+		/**
+		 * Construct the proper empty collection preallocated to the given size.
+		 *
+		 * @param expectedFinalSize The expected size of the entire remaining contents of the {@code Stream}
+		 *   and thus what the holding the final results should  size what size to try to preallocate to.
+		 * @param builder the builder function.
+		 *   <p>The input integer will be the size of the collection to preallocate.
+		 *   <p>The subclass is free to use the default constructor for the Collection contruction
+		 *     instead of the {@code size} given
+		 *     if {@code size} falls below the default size used for the default initial capacity for
+		 *     that Collection implementation. Often such default constructors contain additional
+		 *     optimizations that giving an explicit initial capacity would not do (even if given
+		 *     the default capacity as the initial capacity explicitly).
+		 *   <p>Even if the Collection type being constructed doesn't, it is recommended that you allocate a
+		 *     minimum size if the given {@code size} ({@link #RECOMMENDED_MIN_SIZE} gives a good enough ballpark for most cases).
+		 *   <p>{@link Supplier#get() get()} of the {@link Supplier} must return non-{@code null}.
+		 */
+		SizeDecreasingSupplier(int expectedFinalSize, IntFunction<C> builder) {
+			this.expectedFinalSize = expectedFinalSize;
+			this.builder = builder;
+		}
+
+		// This method may be worth pulling into a shared superclass.
+		@Override
+		public C get() {
+			// The "correct" splitting (assuming split by two) would be
+			// expectedFinalSize / floor(ln_2(++suppliedCount)). But that seems too much trouble to be worth it.
+			// Instead we will take a simple harmonically decreasing ratio (1, 1/2, 1/3, 1/4)
+			//
+			// Round up int math (to round up, not down) adapted from https://stackoverflow.com/a/503201.
+			int expectedNeededNextSize = 1 + ((expectedFinalSize - 1) / suppliedCount.incrementAndGet());
+			if (expectedNeededNextSize < 0) {
+				// Overflow (and weird below zero results) failsafe
+				expectedNeededNextSize = RECOMMENDED_MIN_SIZE;
+			}
+			return builder.apply(expectedNeededNextSize);
+		}
+	}
+#endif  // KEYS_INT_LONG_DOUBLE || KEYS_REFERENCE
 }
