@@ -177,6 +177,26 @@ public class ObjectArrayListTest {
 	}
 
 	@Test
+	public void testToListWithExpectedSize() {
+		final ObjectArrayList<String> baseList = ObjectArrayList.of("wood", "board", "glass", "metal");
+		ObjectArrayList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(4));
+		final ObjectArrayList<String> expectedList = ObjectArrayList.of("plywood", "plyboard", "plyglass", "plymetal");
+		assertEquals(expectedList, transformed);
+
+		// Test undersized below default capacity
+		transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(2));
+		assertEquals(expectedList, transformed);
+
+		// Test oversized below default capacity
+		transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(8));
+		assertEquals(expectedList, transformed);
+
+		// Test oversized
+		transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(50));
+		assertEquals(expectedList, transformed);
+	}
+
+	@Test
 	public void testSpliteratorTrySplit() {
 		final ObjectArrayList<String> baseList = ObjectArrayList
 				.of("0", "1", "2", "3", "4", "5", "bird");

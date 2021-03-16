@@ -364,6 +364,46 @@ public class IntOpenHashSetTest {
 	}
 
 	@Test
+	public void testToSetWithExpectedSize() {
+		final IntOpenHashSet baseSet = IntOpenHashSet.toSet(java.util.stream.IntStream.range(0, 100));
+		IntOpenHashSet transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intStream().map(i -> i + 40), 100);
+		final IntOpenHashSet expectedSet = IntOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
+		assertEquals(expectedSet, transformed);
+
+		// Test undersized below default capacity
+		transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intStream().map(i -> i + 40), 5);
+		assertEquals(expectedSet, transformed);
+
+		// Test undersized above default capacity
+		transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intStream().map(i -> i + 40), 50);
+		assertEquals(expectedSet, transformed);
+
+		// Test oversized
+		transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intStream().map(i -> i + 40), 50000);
+		assertEquals(expectedSet, transformed);
+	}
+
+	@Test
+	public void testToSetWithExpectedSize_parallel() {
+		final IntOpenHashSet baseSet = IntOpenHashSet.toSet(java.util.stream.IntStream.range(0, 5000).parallel());
+		IntOpenHashSet transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intParallelStream().map(i -> i + 40), 5000);
+		final IntOpenHashSet expectedSet = IntOpenHashSet.toSet(baseSet.intParallelStream().map(i -> i + 40));
+		assertEquals(expectedSet, transformed);
+
+		// Test undersized below default capacity
+		transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intParallelStream().map(i -> i + 40), 5);
+		assertEquals(expectedSet, transformed);
+
+		// Test undersized above default capacity
+		transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intParallelStream().map(i -> i + 40), 50);
+		assertEquals(expectedSet, transformed);
+
+		// Test oversized
+		transformed = IntOpenHashSet.toSetWithExpectedSize(baseSet.intParallelStream().map(i -> i + 40), 50000);
+		assertEquals(expectedSet, transformed);
+	}
+
+	@Test
 	public void testSpliteratorTrySplit() {
 		final IntOpenHashSet baseSet = IntOpenHashSet.of(0, 1, 2, 3, 72, 5, 6);
 		final IntSpliterator spliterator1 = baseSet.spliterator();
