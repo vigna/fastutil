@@ -494,13 +494,13 @@ public final class MAPS {
 
 		private static final long serialVersionUID = -7046029254386353129L;
 
-		protected final MAP KEY_VALUE_GENERIC map;
+		protected final MAP KEY_VALUE_EXTENDS_GENERIC map;
 
 		protected transient ObjectSet<MAP.Entry KEY_VALUE_GENERIC> entries;
 		protected transient SET KEY_GENERIC keys;
 		protected transient VALUE_COLLECTION VALUE_GENERIC values;
 
-		protected UnmodifiableMap(final MAP KEY_VALUE_GENERIC m) {
+		protected UnmodifiableMap(final MAP KEY_VALUE_EXTENDS_GENERIC m) {
 			super(m);
 			this.map = m;
 		}
@@ -518,8 +518,9 @@ public final class MAPS {
 		@Override
 		public void putAll(final Map<? extends KEY_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> m) { throw new UnsupportedOperationException(); }
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		@Override
-		public ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() { if (entries == null) entries = ObjectSets.unmodifiable(map.ENTRYSET()); return entries; }
+		public ObjectSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() { if (entries == null) entries = ObjectSets.unmodifiable((ObjectSet)map.ENTRYSET()); return entries; }
 
 #if KEYS_PRIMITIVE || VALUES_PRIMITIVE
 		/** {@inheritDoc}
@@ -528,8 +529,8 @@ public final class MAPS {
 #else
 		/** {@inheritDoc} */
 #endif
-		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Override
 		public ObjectSet<Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> entrySet() { return (ObjectSet)ENTRYSET(); }
 
 		@Override
@@ -553,7 +554,12 @@ public final class MAPS {
 		// Defaultable methods
 
 		@Override
+#if KEYS_REFERENCE || VALUES_REFERENCE
+		@SuppressWarnings("unchecked")
+		public VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE key, final VALUE_GENERIC_TYPE defaultValue) { return ((MAP KEY_VALUE_GENERIC)map).getOrDefault(key, defaultValue); }
+#else
 		public VALUE_GENERIC_TYPE getOrDefault(final KEY_TYPE key, final VALUE_GENERIC_TYPE defaultValue) { return map.getOrDefault(key, defaultValue); }
+#endif
 
 		@Override
 		public void forEach(final java.util.function.BiConsumer<? super KEY_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS> action) { map.forEach(action); }
@@ -602,7 +608,12 @@ public final class MAPS {
 		 * @deprecated Please use the corresponding type-specific method instead. */
 		@Deprecated
 		@Override
+#if KEYS_REFERENCE || VALUES_REFERENCE
+		@SuppressWarnings("unchecked")
+		public VALUE_GENERIC_CLASS getOrDefault(final Object key, final VALUE_GENERIC_CLASS defaultValue) { return ((MAP KEY_VALUE_GENERIC)map).getOrDefault(key, defaultValue); }
+#else
 		public VALUE_GENERIC_CLASS getOrDefault(final Object key, final VALUE_GENERIC_CLASS defaultValue) { return map.getOrDefault(key, defaultValue); }
+#endif
 
 		/** {@inheritDoc}
 		 * @deprecated Please use the corresponding type-specific method instead. */
@@ -667,6 +678,6 @@ public final class MAPS {
 	 * @return an unmodifiable view of the specified map.
 	 * @see java.util.Collections#unmodifiableMap(Map)
 	 */
-	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC unmodifiable(final MAP KEY_VALUE_GENERIC m) { return new UnmodifiableMap KEY_VALUE_GENERIC_DIAMOND(m); }
+	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC unmodifiable(final MAP KEY_VALUE_EXTENDS_GENERIC m) { return new UnmodifiableMap KEY_VALUE_GENERIC_DIAMOND(m); }
 
 }
