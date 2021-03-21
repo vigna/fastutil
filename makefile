@@ -80,10 +80,11 @@ source: pom
 	$(TAR) zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/drv/*.drv \
 		fastutil-$(version)/build.xml \
-		fastutil-$(version)/ivy.xml \
 		fastutil-$(version)/split.sh \
 		fastutil-$(version)/fastutil*bnd \
-		fastutil-$(version)/pom.xml \
+		fastutil-$(version)/pom-core-model.xml \
+		fastutil-$(version)/pom-extra-model.xml \
+		fastutil-$(version)/pom-model.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/find-deps.sh \

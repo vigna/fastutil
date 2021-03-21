@@ -1,6 +1,5 @@
 <project name="fastutil" default="jar" basedir="."
-         xmlns:artifact="antlib:org.apache.maven.artifact.ant"
-         xmlns:ivy="antlib:org.apache.ivy.ant">
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
 	<property file="build.properties"/>
 	<property environment="env"/>
@@ -15,12 +14,12 @@
 	<!-- define artifacts' name, which follows the convention of Maven -->
 
 	<property name="maven-core-jar" value="${dist}/lib/${artifactId}-core-${version}.jar" />
-	<property name="maven-refbytechar-jar" value="${dist}/lib/${artifactId}-refbytechar-${version}.jar" />
-	<property name="maven-boolshortfloat-jar" value="${dist}/lib/${artifactId}-boolshortfloat-${version}.jar" />
+	<property name="maven-extra-jar" value="${dist}/lib/${artifactId}-extra-${version}.jar" />
+	<property name="maven-rest-jar" value="${dist}/lib/${artifactId}-${version}.jar" />
 
 	<property name="maven-core-sources-jar" value="${dist}/lib/${artifactId}-core-${version}-sources.jar" />
-	<property name="maven-refbytechar-sources-jar" value="${dist}/lib/${artifactId}-refbytechar-${version}-sources.jar" />
-	<property name="maven-boolshortfloat-sources-jar" value="${dist}/lib/${artifactId}-boolshortfloat-${version}-sources.jar" />
+	<property name="maven-extra-sources-jar" value="${dist}/lib/${artifactId}-extra-${version}-sources.jar" />
+	<property name="maven-rest-sources-jar" value="${dist}/lib/${artifactId}-${version}-sources.jar" />
 
 	<property name="maven-javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
 
@@ -32,11 +31,6 @@
 	<property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
 
 
-	<!-- OSGi manifest generation -->
-<!--	<target name="resolve" description="run Ivy to fetch jars">
-		<ivy:retrieve />
-	</target>-->
-
 	<target name="split-core" depends="compile">
 		<delete dir="${build}-core"/>
 		<mkdir dir="${build}-core"/> 
@@ -45,24 +39,24 @@
 		</copy>
 	</target>
 
-	<target name="split-refbytechar" depends="compile">
-		<delete dir="${build}-refbytechar"/>
-		<mkdir dir="${build}-refbytechar"/> 
-		<copy todir="${build}-refbytechar">
-			<fileset dir="${build}" includesfile="fastutil-refbytechar.txt"/>
+	<target name="split-extra" depends="compile">
+		<delete dir="${build}-extra"/>
+		<mkdir dir="${build}-extra"/> 
+		<copy todir="${build}-extra">
+			<fileset dir="${build}" includesfile="fastutil-extra.txt"/>
 		</copy>
 	</target>
 
-	<target name="split-boolshortfloat" depends="compile">
-		<delete dir="${build}-boolshortfloat"/>
-		<mkdir dir="${build}-boolshortfloat"/>
-		<copy todir="${build}-boolshortfloat">
-			<fileset dir="${build}" includesfile="fastutil-boolshortfloat.txt"/>
+	<target name="split-rest" depends="compile">
+		<delete dir="${build}-rest"/>
+		<mkdir dir="${build}-rest"/>
+		<copy todir="${build}-rest">
+			<fileset dir="${build}" includesfile="fastutil-rest.txt"/>
 		</copy>
 	</target>
 
 	<target name="osgi-core" depends="split-core">
-		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
+		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="bnd/biz.aQute.bnd-5.2.0.jar"/>
 		<bnd
 			classpath="${build}-core"
 			eclipse="false"
@@ -72,26 +66,26 @@
 			files="fastutil-core.bnd"/>
 	</target>
 
-	<target name="osgi-refbytechar" depends="split-refbytechar">
-		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
+	<target name="osgi-extra" depends="split-extra">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="bnd/biz.aQute.bnd-5.2.0.jar"/>
 		<bnd
-			classpath="${build}-refbytechar"
+			classpath="${build}-extra"
 			eclipse="false"
 			failok="false"
 			exceptions="true"
-			output="${maven-refbytechar-jar}"
-			files="fastutil-refbytechar.bnd"/>
+			output="${maven-extra-jar}"
+			files="fastutil-extra.bnd"/>
 	</target>
 
-	<target name="osgi-boolshortfloat" depends="split-boolshortfloat">
-		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="lib/bnd-2.4.0.jar"/>
+	<target name="osgi-rest" depends="split-rest">
+		<taskdef resource="aQute/bnd/ant/taskdef.properties" classpath="bnd/biz.aQute.bnd-5.2.0.jar"/>
 		<bnd
-			classpath="${build}-boolshortfloat"
+			classpath="${build}-rest"
 			eclipse="false"
 			failok="false"
 			exceptions="true"
-			output="${maven-boolshortfloat-jar}"
-			files="fastutil-boolshortfloat.bnd"/>
+			output="${maven-rest-jar}"
+			files="fastutil-rest.bnd"/>
 	</target>
 	<!-- end OSGi manifest generation -->
 
@@ -105,26 +99,26 @@
 	<target name="dist-core" depends="osgi-core,dist-javadoc" description="generate the core distribution">
 		<!-- build the sources artifact -->
 		<jar jarfile="${maven-core-sources-jar}">
-			<fileset dir="." includes="README.md,CHANGES,LICENSE-2.0,build.xml,ivy.xml,pom.xml,fastutil.bnd,split.sh,fastutil-core.bnd,fastutil-refbytechar.bnd,build.properties,makefile,${drv}/*.drv,gencsource.sh,src/overview.html"/>
+			<fileset dir="." includes="README.md,CHANGES,LICENSE-2.0,build.xml,pom-core-model.xml,pom-core-extra.xml,pom-model.xml,fastutil.bnd,split.sh,fastutil-core.bnd,fastutil-extra.bnd,build.properties,makefile,${drv}/*.drv,gencsource.sh,src/overview.html"/>
 			<fileset dir="src" includesfile="fastutil-src-core.txt"/>
 		</jar>
 	</target>
 
-	<target name="dist-refbytechar" depends="osgi-refbytechar,dist-javadoc" description="generate the distribution">
+	<target name="dist-extra" depends="osgi-extra,dist-javadoc" description="generate the distribution">
 		<!-- build the sources artifact -->
-		<jar jarfile="${maven-refbytechar-sources-jar}">
-			<fileset dir="src" includesfile="fastutil-src-refbytechar.txt"/>
+		<jar jarfile="${maven-extra-sources-jar}">
+			<fileset dir="src" includesfile="fastutil-src-extra.txt"/>
 		</jar>
 	</target>
 
-	<target name="dist-boolshortfloat" depends="osgi-boolshortfloat,dist-javadoc" description="generate the distribution">
+	<target name="dist-rest" depends="osgi-rest,dist-javadoc" description="generate the distribution">
 		<!-- build the sources artifact -->
-		<jar jarfile="${maven-boolshortfloat-sources-jar}">
-			<fileset dir="src" includesfile="fastutil-src-boolshortfloat.txt"/>
+		<jar jarfile="${maven-rest-sources-jar}">
+			<fileset dir="src" includesfile="fastutil-src-rest.txt"/>
 		</jar>
 	</target>
 
-	<target name="pom-core" description="insert version into core pom">
+	<target name="pom-core" description="insert version into pom (core)">
 		<copy tofile="pom-core.xml" file="pom-core-model.xml">
 			<filterset>
 				<filter token="VERSION" value="${version}"/>
@@ -132,24 +126,16 @@
 		</copy>
 	</target>
 
-	<target name="pom-refbytechar" description="insert version into core pom">
-		<copy tofile="pom-refbytechar.xml" file="pom-refbytechar-model.xml">
+	<target name="pom-extra" description="insert version into pom (extra)">
+		<copy tofile="pom-extra.xml" file="pom-extra-model.xml">
 			<filterset>
 				<filter token="VERSION" value="${version}"/>
 			</filterset>
 		</copy>
 	</target>
 
-	<target name="pom-boolshortfloat" description="insert version into pom">
-		<copy tofile="pom-boolshortfloat.xml" file="pom-boolshortfloat-model.xml">
-			<filterset>
-				<filter token="VERSION" value="${version}"/>
-			</filterset>
-		</copy>
-	</target>
-
-	<target name="pom" description="insert version into pom">
-		<copy tofile="pom.xml" file="pom-model.xml">
+	<target name="pom-rest" description="insert version into pom (rest)">
+		<copy tofile="pom-rest.xml" file="pom-rest-model.xml">
 			<filterset>
 				<filter token="VERSION" value="${version}"/>
 			</filterset>
@@ -200,24 +186,24 @@
 		</artifact:mvn>
 	</target>
 
-	<target name="deploy-refbytechar" depends="deploy-core,pom-refbytechar,dist-refbytechar" description="deploy snapshot version to Maven snapshot repository">
+	<target name="deploy-extra" depends="deploy-core,pom-extra,dist-extra" description="deploy snapshot version to Maven snapshot repository">
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
 			<arg value="-Durl=${maven-snapshots-repository-url}" />
 			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
-			<arg value="-DpomFile=${build}/pom-refbytechar.xml" />
-			<arg value="-Dfile=${maven-refbytechar-jar}" />
+			<arg value="-DpomFile=${build}/pom-extra.xml" />
+			<arg value="-Dfile=${maven-extra-jar}" />
 		</artifact:mvn>
 	</target>
 
-	<target name="stage-refbytechar" depends="stage-core,pom-refbytechar,dist-refbytechar" description="deploy release version to Maven staging repository">
+	<target name="stage-extra" depends="stage-core,pom-extra,dist-extra" description="deploy release version to Maven staging repository">
 		<!-- sign and deploy the main artifact -->
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-refbytechar.xml" />
-			<arg value="-Dfile=${maven-refbytechar-jar}" />
+			<arg value="-DpomFile=pom-extra.xml" />
+			<arg value="-Dfile=${maven-extra-jar}" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
 
@@ -227,7 +213,7 @@
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
 			<arg value="-DpomFile=pom.xml" />
-			<arg value="-Dfile=${maven-refbytechar-sources-jar}" />
+			<arg value="-Dfile=${maven-extra-sources-jar}" />
 			<arg value="-Dclassifier=sources" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
@@ -237,31 +223,31 @@
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-refbytechar.xml" />
+			<arg value="-DpomFile=pom-extra.xml" />
 			<arg value="-Dfile=${maven-javadoc-jar}" />
 			<arg value="-Dclassifier=javadoc" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
 	</target>
 
-	<target name="deploy-boolshortfloat" depends="deploy-refbytechar,pom-boolshortfloat,dist-boolshortfloat" description="deploy snapshot version to Maven snapshot repository">
+	<target name="deploy-rest" depends="deploy-extra,pom-rest,dist-rest" description="deploy snapshot version to Maven snapshot repository">
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file" />
 			<arg value="-Durl=${maven-snapshots-repository-url}" />
 			<arg value="-DrepositoryId=${maven-snapshots-repository-id}" />
-			<arg value="-DpomFile=${build}/pom-boolshortfloat.xml" />
+			<arg value="-DpomFile=${build}/pom-rest.xml" />
 			<arg value="-Dfile=${maven-boooshortfloat-jar}" />
 		</artifact:mvn>
 	</target>
 
-	<target name="stage-boolshortfloat" depends="stage-refbytechar,pom-boolshortfloat,dist-boolshortfloat" description="deploy release version to Maven staging repository">
+	<target name="stage-rest" depends="stage-extra,pom-rest,dist-rest" description="deploy release version to Maven staging repository">
 		<!-- sign and deploy the main artifact -->
 		<artifact:mvn>
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-boolshortfloat.xml" />
-			<arg value="-Dfile=${maven-boolshortfloat-jar}" />
+			<arg value="-DpomFile=pom-rest.xml" />
+			<arg value="-Dfile=${maven-rest-jar}" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
 
@@ -270,8 +256,8 @@
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-boolshortfloat.xml" />
-			<arg value="-Dfile=${maven-boolshortfloat-sources-jar}" />
+			<arg value="-DpomFile=pom-rest.xml" />
+			<arg value="-Dfile=${maven-rest-sources-jar}" />
 			<arg value="-Dclassifier=sources" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
@@ -281,23 +267,17 @@
 			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-boolshortfloat.xml" />
+			<arg value="-DpomFile=pom-rest.xml" />
 			<arg value="-Dfile=${maven-javadoc-jar}" />
 			<arg value="-Dclassifier=javadoc" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
 	</target>
 
-	<target name="stage" depends="stage-boolshortfloat,pom" description="deploy release version to Maven staging repository">
-		<!-- sign and deploy the main artifact -->
-		<artifact:mvn>
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-boolshortfloat.xml" />
-			<arg value="-Dfile=pom.xml" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
+	<target name="deploy" depends="stage-rest" description="deploy release version to Maven staging repository">
+	</target>
+
+	<target name="stage" depends="stage-rest" description="stage release version to Maven staging repository">
 	</target>
 	<!-- ************************************** END OF MAVEN SH*T ************************************** -->
 

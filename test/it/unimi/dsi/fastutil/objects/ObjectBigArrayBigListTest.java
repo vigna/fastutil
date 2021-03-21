@@ -34,6 +34,7 @@ import org.junit.Test;
 import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.MainRunner;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 
 @SuppressWarnings("rawtypes")
 public class ObjectBigArrayBigListTest {
@@ -87,8 +88,8 @@ public class ObjectBigArrayBigListTest {
 		final ObjectList<Integer> m = ObjectList.of(2, 3, 3, 4);
 		l.addAll(0, m);
 		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
-		l.addAll(0, List.of());
-		l.addAll(2, List.of());
+		l.addAll(0, IntLists.emptyList());
+		l.addAll(2, IntLists.emptyList());
 		assertEquals(ObjectBigArrayBigList.of(2, 3, 3, 4, 0, 1, 1, 2), l);
 	}
 
@@ -107,7 +108,7 @@ public class ObjectBigArrayBigListTest {
 	@Test
 	public void testOf() {
 		final ObjectBigArrayBigList<String> l = ObjectBigArrayBigList.of("0", "1", "2");
-		assertEquals(new ObjectBigArrayBigList<>(List.of("0", "1", "2")), l);
+		assertEquals(new ObjectBigArrayBigList<>(BigArrays.wrap(new String[] { "0", "1", "2" })), l);
 	}
 
 	@Test
