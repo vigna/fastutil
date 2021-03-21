@@ -74,17 +74,19 @@ explain:
 	@echo "involving ints, longs and doubles (and some necessary utility)."
 	@echo "Note that in this case some tests will not compile."
 
-source: pom
+source:
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	$(TAR) zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/drv/*.drv \
 		fastutil-$(version)/build.xml \
 		fastutil-$(version)/split.sh \
-		fastutil-$(version)/fastutil*bnd \
+		fastutil-$(version)/fastutil-core.bnd \
+		fastutil-$(version)/fastutil-extra.bnd \
+		fastutil-$(version)/fastutil-rest.bnd \
 		fastutil-$(version)/pom-core-model.xml \
 		fastutil-$(version)/pom-extra-model.xml \
-		fastutil-$(version)/pom-model.xml \
+		fastutil-$(version)/pom-rest-model.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/find-deps.sh \
