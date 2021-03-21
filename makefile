@@ -103,11 +103,11 @@ source:
 
 binary:
 	make -s clean sources format
-	ant clean osgi javadoc
+	ant clean osgi-core osgi-extra osgi-rest javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	cp dist/lib/fastutil-core-$(version).jar .
-	cp dist/lib/fastutil-refbytechar-$(version).jar .
+	cp dist/lib/fastutil-extra-$(version).jar .
 	cp dist/lib/fastutil-$(version).jar .
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
@@ -115,7 +115,7 @@ binary:
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/docs \
 		fastutil-$(version)/fastutil-core-$(version).jar \
-		fastutil-$(version)/fastutil-refbytechar-$(version).jar \
+		fastutil-$(version)/fastutil-extra-$(version).jar \
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)
 
