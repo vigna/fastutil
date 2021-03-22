@@ -103,7 +103,7 @@ source:
 
 binary:
 	make -s clean sources format
-	ant clean osgi-core osgi-extra osgi-rest javadoc
+	ant clean osgi-rest javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	cp dist/lib/fastutil-core-$(version).jar .
