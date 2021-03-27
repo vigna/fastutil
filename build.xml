@@ -22,7 +22,9 @@
 	<property name="maven-extra-sources-jar" value="${dist}/lib/${artifactId}-extra-${version}-sources.jar" />
 	<property name="maven-rest-sources-jar" value="${dist}/lib/${artifactId}-${version}-sources.jar" />
 
-	<property name="maven-javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
+	<property name="maven-core-javadoc-jar" value="${dist}/lib/${artifactId}-core-${version}-javadoc.jar" />
+	<property name="maven-extra-javadoc-jar" value="${dist}/lib/${artifactId}-extra-${version}-javadoc.jar" />
+	<property name="maven-rest-javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
 
 	<!-- defined maven snapshots and staging repository id and url -->
 
@@ -31,6 +33,31 @@
 	<property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
 	<property name="maven-staging-repository-url" value="https://oss.sonatype.org/service/local/staging/deploy/maven2/" />
 
+	<target name="split-src-core">
+		<delete dir="$src}-core"/>
+		<mkdir dir="${src}-core"/> 
+		<copy todir="${src}-core">
+			<fileset dir="${src}" includesfile="fastutil-src-core.txt"/>
+		</copy>
+	</target>
+
+	<target name="split-src-extra">
+		<delete dir="$src}-extra"/>
+		<mkdir dir="${src}-extra"/> 
+		<copy todir="${src}-extra">
+			<fileset dir="${src}" includesfile="fastutil-src-extra.txt"/>
+			<fileset dir="${src}" includes="it/unimi/dsi/fastutil/*/package-info.java" excludes="it/unimi/dsi/fastutil/io/package-info.java"/>
+		</copy>
+	</target>
+
+	<target name="split-src-rest">
+		<delete dir="$src}-rest"/>
+		<mkdir dir="${src}-rest"/> 
+		<copy todir="${src}-rest">
+			<fileset dir="${src}" includesfile="fastutil-src-rest.txt"/>
+			<fileset dir="${src}" includes="it/unimi/dsi/fastutil/*/package-info.java" excludes="it/unimi/dsi/fastutil/io/package-info.java"/>
+		</copy>
+	</target>
 
 	<target name="split-core" depends="compile">
 		<delete dir="${build}-core"/>
@@ -90,14 +117,28 @@
 	</target>
 	<!-- end OSGi manifest generation -->
 
-	<target name="dist-javadoc" depends="javadoc" description="generate the distribution Javadoc">
+	<target name="dist-javadoc-core" depends="javadoc-core" description="generate the distribution Javadoc">
 		<!-- build the javadoc artifact (from symbolic link created in init) -->
-		<jar jarfile="${maven-javadoc-jar}">
-			<fileset dir="${dist}/javadoc" />
+		<jar jarfile="${maven-core-javadoc-jar}">
+			<fileset dir="${dist}/javadoc-core" />
 		</jar>
 	</target>
 
-	<target name="dist-core" depends="osgi-core,dist-javadoc" description="generate the distribution (core)">
+	<target name="dist-javadoc-extra" depends="javadoc-extra" description="generate the distribution Javadoc">
+		<!-- build the javadoc artifact (from symbolic link created in init) -->
+		<jar jarfile="${maven-extra-javadoc-jar}">
+			<fileset dir="${dist}/javadoc-extra" />
+		</jar>
+	</target>
+
+	<target name="dist-javadoc-rest" depends="javadoc-rest" description="generate the distribution Javadoc">
+		<!-- build the javadoc artifact (from symbolic link created in init) -->
+		<jar jarfile="${maven-rest-javadoc-jar}">
+			<fileset dir="${dist}/javadoc-rest" />
+		</jar>
+	</target>
+
+	<target name="dist-core" depends="osgi-core,dist-javadoc-core" description="generate the distribution (core)">
 		<!-- build the sources artifact -->
 		<jar jarfile="${maven-core-sources-jar}">
 			<fileset dir="." includes="README.md,CHANGES,LICENSE-2.0,build.xml,pom-core-model.xml,pom-extra-model.xml,pom-rest-model.xml,fastutil-core.bnd,fastutil-extra.bnd,fastutil-rest.bnd,split.sh,build.properties,makefile,${drv}/*.drv,gencsource.sh,src/overview.html"/>
@@ -105,14 +146,14 @@
 		</jar>
 	</target>
 
-	<target name="dist-extra" depends="osgi-extra,dist-javadoc" description="generate the distribution (extra)">
+	<target name="dist-extra" depends="osgi-extra,dist-javadoc-extra" description="generate the distribution (extra)">
 		<!-- build the sources artifact -->
 		<jar jarfile="${maven-extra-sources-jar}">
 			<fileset dir="src" includesfile="fastutil-src-extra.txt"/>
 		</jar>
 	</target>
 
-	<target name="dist-rest" depends="osgi-rest,dist-javadoc" description="generate the distribution (rest)">
+	<target name="dist-rest" depends="osgi-rest,dist-javadoc-rest" description="generate the distribution (rest)">
 		<!-- build the sources artifact -->
 		<jar jarfile="${maven-rest-sources-jar}">
 			<fileset dir="src" includesfile="fastutil-src-rest.txt"/>
@@ -181,7 +222,7 @@
 			<arg value="-Durl=${maven-staging-repository-url}" />
 			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
 			<arg value="-DpomFile=pom-core.xml" />
-			<arg value="-Dfile=${maven-javadoc-jar}" />
+			<arg value="-Dfile=${maven-core-javadoc-jar}" />
 			<arg value="-Dclassifier=javadoc" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
@@ -218,6 +259,17 @@
 			<arg value="-Dclassifier=sources" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
+
+		<!-- sign and deploy the javadoc artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-extra.xml" />
+			<arg value="-Dfile=${maven-extra-javadoc-jar}" />
+			<arg value="-Dclassifier=javadoc" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
 	</target>
 
 	<target name="deploy-rest" depends="deploy-extra,pom-rest,dist-rest" description="deploy snapshot version to Maven snapshot repository (rest)">
@@ -251,6 +303,17 @@
 			<arg value="-Dclassifier=sources" />
 			<arg value="-Pgpg" />
 		</artifact:mvn>
+
+		<!-- sign and deploy the javadoc artifact -->
+		<artifact:mvn>
+			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
+			<arg value="-Durl=${maven-staging-repository-url}" />
+			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
+			<arg value="-DpomFile=pom-rest.xml" />
+			<arg value="-Dfile=${maven-rest-javadoc-jar}" />
+			<arg value="-Dclassifier=javadoc" />
+			<arg value="-Pgpg" />
+		</artifact:mvn>
 	</target>
 
 	<target name="deploy" depends="stage-rest" description="deploy release version to Maven staging repository">
@@ -265,10 +328,13 @@
 	<property name="j2se.apiurl" value="http://java.sun.com/j2se/5.0/docs/api/"/>
 
 	<target name="init">
+		<delete dir="${dist}"/>
 		<mkdir dir="${build}"/>
 		<mkdir dir="${dist}/lib"/>
 		<mkdir dir="${reports}"/>
-		<symlink link="${dist}/javadoc" resource="../${docs}" overwrite="true"/>
+		<symlink link="${dist}/javadoc-core" resource="../${docs}-core" overwrite="true"/>
+		<symlink link="${dist}/javadoc-extra" resource="../${docs}-extra" overwrite="true"/>
+		<symlink link="${dist}/javadoc-rest" resource="../${docs}-rest" overwrite="true"/>
 	</target>
 
 	<target name="compile" depends="init">
@@ -313,19 +379,63 @@
 	 </jar>
 	</target>
 
-	<target name="javadoc">
+	<target name="javadoc" description="Generates documentation">
 		<mkdir dir="${docs}"/>
 		<javadoc destdir="${docs}"
 			 packagenames = "it.unimi.dsi.fastutil,it.unimi.dsi.fastutil.*"
 			 overview="${src}/overview.html"
-			 sourcepath="${src}:${env.JAVA_HOME}/src"
+			 sourcepath="${src}"
 			 public="on"
 			 source="1.8"
 			 windowtitle="fastutil ${version}"
 			 additionalparam="-breakiterator -Xmaxwarns 1 -tag &quot;apiNote:a:API Notes:&quot; -tag &quot;implSpec:a:Implementation Specification:&quot; -tag &quot;implNote:a:Implementation Notes:\&quot;"
 			 maxmemory="2G"
 		>
-	<link href="${j2se.apiurl}"/>
+		</javadoc>
+	</target>
+
+	<target name="javadoc-core" depends="split-src-core" description="Generates documentation (core)">
+		<mkdir dir="${docs}-core"/>
+		<javadoc destdir="${docs}-core"
+			 packagenames = "it.unimi.dsi.fastutil,it.unimi.dsi.fastutil.*"
+			 overview="${src}/overview.html"
+			 sourcepath="${src}-core"
+			 public="on"
+			 source="1.8"
+			 windowtitle="fastutil ${version}"
+			 additionalparam="-breakiterator -Xmaxwarns 1 -tag &quot;apiNote:a:API Notes:&quot; -tag &quot;implSpec:a:Implementation Specification:&quot; -tag &quot;implNote:a:Implementation Notes:\&quot;"
+			 maxmemory="2G"
+		>
+		</javadoc>
+	</target>
+
+	<target name="javadoc-extra" depends="split-src-extra" description="Generates documentation (extra)">
+		<mkdir dir="${docs}-extra"/>
+		<javadoc destdir="${docs}-extra"
+			 packagenames = "it.unimi.dsi.fastutil,it.unimi.dsi.fastutil.*"
+			 overview="${src}/overview.html"
+			 sourcepath="${src}-extra"
+			 public="on"
+			 source="1.8"
+			 windowtitle="fastutil ${version}"
+			 additionalparam="-breakiterator -Xmaxwarns 1 -tag &quot;apiNote:a:API Notes:&quot; -tag &quot;implSpec:a:Implementation Specification:&quot; -tag &quot;implNote:a:Implementation Notes:\&quot;"
+			 maxmemory="2G"
+		>
+		</javadoc>
+	</target>
+
+	<target name="javadoc-rest" depends="split-src-rest" description="Generates documentation (rest)">
+		<mkdir dir="${docs}-rest"/>
+		<javadoc destdir="${docs}-rest"
+			 packagenames = "it.unimi.dsi.fastutil,it.unimi.dsi.fastutil.*"
+			 overview="${src}/overview.html"
+			 sourcepath="${src}-rest"
+			 public="on"
+			 source="1.8"
+			 windowtitle="fastutil ${version}"
+			 additionalparam="-breakiterator -Xmaxwarns 1 -tag &quot;apiNote:a:API Notes:&quot; -tag &quot;implSpec:a:Implementation Specification:&quot; -tag &quot;implNote:a:Implementation Notes:\&quot;"
+			 maxmemory="2G"
+		>
 		</javadoc>
 	</target>
 
@@ -363,9 +473,14 @@
 		<delete dir="${build}-core"/>
 		<delete dir="${build}-extra"/>
 		<delete dir="${build}-rest"/>
+		<delete dir="${src}-core"/>
+		<delete dir="${src}-extra"/>
+		<delete dir="${src}-rest"/>
 		<delete dir="${dist}"/>
 		<delete dir="${reports}"/>
-		<delete dir="${docs}"/>
+		<delete dir="${docs}-core"/>
+		<delete dir="${docs}-extra"/>
+		<delete dir="${docs}-rest"/>
 		<delete>
 			<fileset dir="." includes="fastutil-*.jar"/>
 		</delete>
