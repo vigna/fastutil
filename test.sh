@@ -124,15 +124,4 @@ for ((t=1; t<10000; t*=10)); do
 			done
 		done
 	done
-
-	FRONT=(ArrayFrontCodedList)
-
-	for ((f=0; f<${#FRONT[*]}; f++)); do
-	l=${#TYPE[*]}
-	for ((k=1; k<6; k++)); do
-		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}${FRONT[$f]}
-		echo "Testing $CLASSNAME ($t elements)..."
-		java -ea -server $CLASSNAME test $t
-	done
-	done
 done
