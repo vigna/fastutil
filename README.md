@@ -23,6 +23,8 @@ Since version 8.5.4, fastutil is split into three jars for convenience:
 - `fastutil.jar` adds the remaining data structures: booleans, shorts, and
   floats.
 
+Each jar depends on the previous one.
+
 You can also create a small, customized fastutil jar (which you can put in
 your repo, local maven repo, etc.) using the `find-deps.sh` shell script.
 It has mild prerequisites, as only the `jdeps` tool is required (bundled
