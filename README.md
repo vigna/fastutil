@@ -15,26 +15,26 @@ documentation for more information.
 Since version 8.5.4, fastutil is split into three jars for convenience:
 
 - `fastutil-core.jar` contains data structures based on integers, longs,
-  doubles, and objects
+  doubles, and objects;
 
 - `fastutil-extra.jar` adds data structures  based on references, bytes,
   and characters;
 
-- `fastutil.jar` adds the remaining data structures (booleans, shorts, and
-  floats).
+- `fastutil.jar` adds the remaining data structures: booleans, shorts, and
+  floats.
 
 You can also create a small, customized fastutil jar (which you can put in
-your repo, local maven, etc.) using `find-deps.sh` shell script. It has
-mild prerequisites, as only the `jdeps` tool is required (bundled with JDK
-8). It can be used to identify all fastutil classes your project uses and
-build a minimized jar only containing the necessary classes.
+your repo, local maven repo, etc.) using the `find-deps.sh` shell script.
+It has mild prerequisites, as only the `jdeps` tool is required (bundled
+with JDK 8). It can be used to identify all fastutil classes your project
+uses and build a minimized jar only containing the necessary classes.
 
 ## Building
 
-You have to "make sources" to get the actual Java sources; "ant
-jar" will generate a single jar file, whereas "ant osgi-rest" will
-generate the three jars described above with OSGi modularization; "ant
-javadoc" will generate the API documentation; "ant junit" will run the
+You have to `make sources` to get the actual Java sources; `ant
+jar` will generate a single jar file, whereas `ant osgi-rest` will
+generate the three jars described above with OSGi modularization; `ant
+javadoc` will generate the API documentation; `ant junit` will run the
 unit tests.
 
 The Java sources are generated using a C preprocessor. The `gencsource.sh`
