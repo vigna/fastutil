@@ -33,9 +33,9 @@ uses and build a minimized jar only containing the necessary classes.
 
 ## Building
 
-You have to `make sources` to get the actual Java sources; `ant
-jar` will generate a single jar file; `ant javadoc` will generate the API
-documentation; `ant junit` will run the unit tests.
+First, you have to `make sources` to get the actual Java sources.
+After that, `ant jar` will generate a single jar file; `ant javadoc` will
+generate the API documentation; `ant junit` will run the unit tests.
 
 If you want to obtain the three jars above, you have to run the script
 `split.sh`, and then `ant osgi-rest`.
