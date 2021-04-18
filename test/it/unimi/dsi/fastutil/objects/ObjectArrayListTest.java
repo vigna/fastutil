@@ -29,7 +29,7 @@ import java.util.List;
 import org.junit.Test;
 
 import it.unimi.dsi.fastutil.MainRunner;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 
 public class ObjectArrayListTest {
 
@@ -55,12 +55,12 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<Integer> l = ObjectArrayList.wrap(new Integer[] { 0, 1, 1, 2 });
 		final List<Integer> m = Arrays.asList(new Integer[] { 2, 3, 3, 4 });
 		l.addAll(0, m);
-		assertEquals(List.of(2, 3, 3, 4, 0, 1, 1, 2), l);
-		l.addAll(0, IntList.of());
-		l.addAll(2, IntList.of());
-		assertEquals(List.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+		assertEquals(ObjectArrayList.wrap(new Integer[] { 2, 3, 3, 4, 0, 1, 1, 2 }), l);
+		l.addAll(0, IntLists.emptyList());
+		l.addAll(2, IntLists.emptyList());
+		assertEquals(ObjectArrayList.wrap(new Integer[] { 2, 3, 3, 4, 0, 1, 1, 2 }), l);
 		l.addAll(0, (Collection<Integer>)ObjectList.of(0));
-		assertEquals(List.of(0, 2, 3, 3, 4, 0, 1, 1, 2), l);
+		assertEquals(ObjectArrayList.wrap(new Integer[] { 0, 2, 3, 3, 4, 0, 1, 1, 2 }), l);
 	}
 
 	@SuppressWarnings("boxing")
@@ -69,10 +69,10 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<Integer> l = ObjectArrayList.wrap(new Integer[] { 0, 1, 1, 2 });
 		final ObjectArrayList<Integer> m = ObjectArrayList.wrap(new Integer[] { 2, 3, 3, 4 });
 		l.addAll(0, m);
-		assertEquals(List.of(2, 3, 3, 4, 0, 1, 1, 2), l);
-		l.addAll(0, List.of());
-		l.addAll(2, List.of());
-		assertEquals(List.of(2, 3, 3, 4, 0, 1, 1, 2), l);
+		assertEquals(ObjectArrayList.wrap(new Integer[] { 2, 3, 3, 4, 0, 1, 1, 2 }), l);
+		l.addAll(0, IntLists.emptyList());
+		l.addAll(2, IntLists.emptyList());
+		assertEquals(ObjectArrayList.wrap(new Integer[] { 2, 3, 3, 4, 0, 1, 1, 2 }), l);
 	}
 
 	@Test
@@ -174,6 +174,26 @@ public class ObjectArrayListTest {
 		final ObjectArrayList<String> baseList = ObjectArrayList.of("wood", "board", "glass", "metal");
 		final ObjectArrayList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toList());
 		assertEquals(ObjectArrayList.of("plywood", "plyboard", "plyglass", "plymetal"), transformed);
+	}
+
+	@Test
+	public void testToListWithExpectedSize() {
+		final ObjectArrayList<String> baseList = ObjectArrayList.of("wood", "board", "glass", "metal");
+		ObjectArrayList<String> transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(4));
+		final ObjectArrayList<String> expectedList = ObjectArrayList.of("plywood", "plyboard", "plyglass", "plymetal");
+		assertEquals(expectedList, transformed);
+
+		// Test undersized below default capacity
+		transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(2));
+		assertEquals(expectedList, transformed);
+
+		// Test oversized below default capacity
+		transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(8));
+		assertEquals(expectedList, transformed);
+
+		// Test oversized
+		transformed = baseList.stream().map(s -> "ply" + s).collect(ObjectArrayList.toListWithExpectedSize(50));
+		assertEquals(expectedList, transformed);
 	}
 
 	@Test

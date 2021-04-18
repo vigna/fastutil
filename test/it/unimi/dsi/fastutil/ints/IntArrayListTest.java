@@ -430,6 +430,46 @@ public class IntArrayListTest {
 	}
 
 	@Test
+	public void testToListWithExpectedSize() {
+		final IntArrayList baseList = IntArrayList.toList(java.util.stream.IntStream.range(0, 100));
+		IntArrayList transformed = IntArrayList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 100);
+		final IntArrayList expectedList = IntArrayList.toList(baseList.intStream().map(i -> i + 40));
+		assertEquals(expectedList, transformed);
+
+		// Test undersized below default capacity
+		transformed = IntArrayList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 5);
+		assertEquals(expectedList, transformed);
+
+		// Test undersized above default capacity
+		transformed = IntArrayList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 50);
+		assertEquals(expectedList, transformed);
+
+		// Test oversized
+		transformed = IntArrayList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 50000);
+		assertEquals(expectedList, transformed);
+	}
+
+	@Test
+	public void testToListWithExpectedSize_parallel() {
+		final IntArrayList baseList = IntArrayList.toList(java.util.stream.IntStream.range(0, 5000).parallel());
+		IntArrayList transformed = IntArrayList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 5000);
+		final IntArrayList expectedList = IntArrayList.toList(baseList.intParallelStream().map(i -> i + 40));
+		assertEquals(expectedList, transformed);
+
+		// Test undersized below default capacity
+		transformed = IntArrayList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 5);
+		assertEquals(expectedList, transformed);
+
+		// Test undersized above default capacity
+		transformed = IntArrayList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 50);
+		assertEquals(expectedList, transformed);
+
+		// Test oversized
+		transformed = IntArrayList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 50000);
+		assertEquals(expectedList, transformed);
+	}
+
+	@Test
 	public void testSpliteratorTrySplit() {
 		final IntArrayList baseList = IntArrayList.of(0, 1, 2, 3, 72, 5, 6);
 		final IntSpliterator willBeSuffix = baseList.spliterator();

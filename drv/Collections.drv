@@ -20,11 +20,16 @@ package PACKAGE;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Consumer;
+
 #if KEYS_BYTE_CHAR_SHORT_FLOAT
 import WIDENED_PACKAGE.KEY_WIDENED_ITERATOR;
 import WIDENED_PACKAGE.WIDENED_ITERATORS;
 import WIDENED_PACKAGE.KEY_WIDENED_SPLITERATOR;
 import WIDENED_PACKAGE.WIDENED_SPLITERATORS;
+#elif ! KEY_CLASS_Boolean
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
 #endif
 
 #if ! KEYS_REFERENCE
@@ -340,9 +345,9 @@ public final class COLLECTIONS {
 
 		private static final long serialVersionUID = -7046029254386353129L;
 
-		protected final COLLECTION KEY_GENERIC collection;
+		protected final COLLECTION KEY_EXTENDS_GENERIC collection;
 
-		protected UnmodifiableCollection(final COLLECTION KEY_GENERIC c) {
+		protected UnmodifiableCollection(final COLLECTION KEY_EXTENDS_GENERIC c) {
 			this.collection = Objects.requireNonNull(c);
 		}
 
@@ -365,19 +370,34 @@ public final class COLLECTIONS {
 		public KEY_ITERATOR KEY_GENERIC iterator() { return ITERATORS.unmodifiable(collection.iterator()); }
 
 		@Override
+#if KEYS_PRIMITIVE
 		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return collection.spliterator(); }
+#else
+		@SuppressWarnings("unchecked")
+		public KEY_SPLITERATOR KEY_GENERIC spliterator() { return (KEY_SPLITERATOR KEY_GENERIC)collection.spliterator(); }
+#endif
 
 #if defined JDK_PRIMITIVE_STREAM
 		@Deprecated
 #endif
 		@Override
+#if KEYS_PRIMITIVE
 		public java.util.stream.Stream <KEY_GENERIC_CLASS> stream() { return collection.stream(); }
+#else
+		@SuppressWarnings("unchecked")
+		public java.util.stream.Stream <KEY_GENERIC_CLASS> stream() { return (java.util.stream.Stream <KEY_GENERIC_CLASS>)collection.stream(); }
+#endif
 
 #if defined JDK_PRIMITIVE_STREAM
 		@Deprecated
 #endif
 		@Override
+#if KEYS_PRIMITIVE
 		public java.util.stream.Stream <KEY_GENERIC_CLASS> parallelStream() { return collection.parallelStream(); }
+#else
+		@SuppressWarnings("unchecked")
+		public java.util.stream.Stream <KEY_GENERIC_CLASS> parallelStream() { return (java.util.stream.Stream <KEY_GENERIC_CLASS>)collection.parallelStream(); }
+#endif
 
 		@Override
 		public void clear() { throw new UnsupportedOperationException(); }
@@ -478,7 +498,7 @@ public final class COLLECTIONS {
 	 * @return an unmodifiable view of the specified collection.
 	 * @see java.util.Collections#unmodifiableCollection(Collection)
 	 */
-	public static KEY_GENERIC COLLECTION KEY_GENERIC unmodifiable(final COLLECTION KEY_GENERIC c) { return new UnmodifiableCollection KEY_GENERIC_DIAMOND(c); }
+	public static KEY_GENERIC COLLECTION KEY_GENERIC unmodifiable(final COLLECTION KEY_EXTENDS_GENERIC c) { return new UnmodifiableCollection KEY_GENERIC_DIAMOND(c); }
 
 	/** A collection wrapper class for iterables. */
 
@@ -536,4 +556,69 @@ public final class COLLECTIONS {
 		return new IterableCollection KEY_GENERIC_DIAMOND(iterable);
 	}
 
+#if KEYS_INT_LONG_DOUBLE || KEYS_REFERENCE  // Currently used for the collector methods, which only exist for the "first-class" primitives and object types.
+	/** Helper class for size decreasing size estimation.
+	 *
+	 * <p>Used to implement {@code toXWithExpectedSize} to prevent allocating a data structure big enough for the full stream in every thread, when only one thread
+	 * (typically the first one) is going to need to "see" all of it at some point.
+	 *
+	 * <p>Currently set to always assume a roughly split-by-two strategy from the {@link java.util.Spliterator} backing the
+	 * {@link java.util.stream.Stream} (or primitive equivalent). This may perform worse for {@code Spliterator}s that don't
+	 * (for example the ones that wrap an {@link java.util.Iterator} as a {@code Spliterator}). This is quite rare in practice however.
+	 * But note that even in such cases, this would <em>still</em> perform no worse (modulo some trivial amount) then the default
+	 * "flat size for every list" method of combining.
+	 * A way to detect such cases and use a different size estimation strategy may come in the future.
+	 *
+	 * <p>See the {@linkplain #SizeDecreasingSupplier constructor} for requirements of the {@link #builder} functor.
+	 */
+	static class SizeDecreasingSupplier<
+#if KEYS_REFERENCE
+			K,
+#endif
+			C extends COLLECTION KEY_GENERIC> implements Supplier<C> {
+		static final int RECOMMENDED_MIN_SIZE = 8;
+
+		final AtomicInteger suppliedCount = new AtomicInteger(0);
+		final int expectedFinalSize;
+		final IntFunction<C> builder;
+
+		/**
+		 * Construct this {@link SizeDecreasingSupplier}.
+		 *
+		 * @param expectedFinalSize The expected size of the entire remaining contents of the {@code Stream}
+		 *   and thus what size the Collection holding the final results should try to be preallocated to.
+		 * @param builder the builder function.
+		 *   <p>The input integer will be the size of the collection to preallocate.
+		 *   <p>It is recommended that you allocate a minimum size if the given {@code size} is small.
+		 *     {@link #RECOMMENDED_MIN_SIZE} gives a good enough ballpark for most cases.
+		 *   <p>The subclass is free to use the default constructor for the Collection construction
+		 *     instead of the {@code size} given
+		 *     if {@code size} falls below the default size used for the default initial capacity for
+		 *     that Collection implementation. Often such default constructors contain additional
+		 *     optimizations that giving an explicit initial capacity would not do (even if given
+		 *     the default capacity as the initial capacity explicitly).
+		 *   <p>{@link Supplier#get() get()} of the {@link IntFunction} must return non-{@code null}.
+		 */
+		SizeDecreasingSupplier(int expectedFinalSize, IntFunction<C> builder) {
+			this.expectedFinalSize = expectedFinalSize;
+			this.builder = builder;
+		}
+
+		// This method may be worth pulling into a shared superclass.
+		@Override
+		public C get() {
+			// The "correct" splitting (assuming split by two) would be
+			// expectedFinalSize / floor(ln_2(++suppliedCount)). But that seems too much trouble to be worth it.
+			// Instead we will take a simple harmonically decreasing ratio (1, 1/2, 1/3, 1/4)
+			//
+			// Round up int math (to round up, not down) adapted from https://stackoverflow.com/a/503201.
+			int expectedNeededNextSize = 1 + ((expectedFinalSize - 1) / suppliedCount.incrementAndGet());
+			if (expectedNeededNextSize < 0) {
+				// Overflow (and weird below zero results) failsafe
+				expectedNeededNextSize = RECOMMENDED_MIN_SIZE;
+			}
+			return builder.apply(expectedNeededNextSize);
+		}
+	}
+#endif  // KEYS_INT_LONG_DOUBLE || KEYS_REFERENCE
 }

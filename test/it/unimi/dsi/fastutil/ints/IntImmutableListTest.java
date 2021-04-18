@@ -70,7 +70,47 @@ public class IntImmutableListTest {
 		final IntImmutableList transformed = IntImmutableList.toList(baseList.intStream().map(i -> i + 40));
 		assertEquals(IntImmutableList.of(42, 420, 1337), transformed);
 	}
-	
+
+	@Test
+	public void testToListWithExpectedSize() {
+		final IntImmutableList baseList = IntImmutableList.toList(java.util.stream.IntStream.range(0, 100));
+		IntImmutableList transformed = IntImmutableList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 100);
+		final IntImmutableList expectedList = IntImmutableList.toList(baseList.intStream().map(i -> i + 40));
+		assertEquals(expectedList, transformed);
+
+		// Test undersized below default capacity
+		transformed = IntImmutableList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 5);
+		assertEquals(expectedList, transformed);
+
+		// Test undersized above default capacity
+		transformed = IntImmutableList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 50);
+		assertEquals(expectedList, transformed);
+
+		// Test oversized
+		transformed = IntImmutableList.toListWithExpectedSize(baseList.intStream().map(i -> i + 40), 50000);
+		assertEquals(expectedList, transformed);
+	}
+
+	@Test
+	public void testToListWithExpectedSize_parallel() {
+		final IntImmutableList baseList = IntImmutableList.toList(java.util.stream.IntStream.range(0, 5000).parallel());
+		IntImmutableList transformed = IntImmutableList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 5000);
+		final IntImmutableList expectedList = IntImmutableList.toList(baseList.intParallelStream().map(i -> i + 40));
+		assertEquals(expectedList, transformed);
+
+		// Test undersized below default capacity
+		transformed = IntImmutableList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 5);
+		assertEquals(expectedList, transformed);
+
+		// Test undersized above default capacity
+		transformed = IntImmutableList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 50);
+		assertEquals(expectedList, transformed);
+
+		// Test oversized
+		transformed = IntImmutableList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 50000);
+		assertEquals(expectedList, transformed);
+	}
+
 	@Test
 	public void testEquals_AnotherImmutableList() {
 		final IntImmutableList baseList = IntImmutableList.of(2, 380, 1297);
@@ -196,7 +236,7 @@ public class IntImmutableListTest {
 		final IntList sl = l.subList(0, 3);
 		assertArrayEquals(new int[] { 0, 1, 2 }, sl.toIntArray());
 	}
-	
+
 	@Test
 	public void testSubList_testSubSubList() {
 		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4);

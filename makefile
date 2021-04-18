@@ -74,16 +74,19 @@ explain:
 	@echo "involving ints, longs and doubles (and some necessary utility)."
 	@echo "Note that in this case some tests will not compile."
 
-source: pom
+source:
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	$(TAR) zcvf fastutil-$(version)-src.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/drv/*.drv \
 		fastutil-$(version)/build.xml \
-		fastutil-$(version)/ivy.xml \
 		fastutil-$(version)/split.sh \
-		fastutil-$(version)/fastutil*bnd \
-		fastutil-$(version)/pom.xml \
+		fastutil-$(version)/fastutil-core.bnd \
+		fastutil-$(version)/fastutil-extra.bnd \
+		fastutil-$(version)/fastutil-rest.bnd \
+		fastutil-$(version)/pom-core-model.xml \
+		fastutil-$(version)/pom-extra-model.xml \
+		fastutil-$(version)/pom-rest-model.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/find-deps.sh \
@@ -100,11 +103,11 @@ source: pom
 
 binary:
 	make -s clean sources format
-	ant clean osgi javadoc
+	ant clean osgi-rest javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	cp dist/lib/fastutil-core-$(version).jar .
-	cp dist/lib/fastutil-refbytechar-$(version).jar .
+	cp dist/lib/fastutil-extra-$(version).jar .
 	cp dist/lib/fastutil-$(version).jar .
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
@@ -112,7 +115,7 @@ binary:
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/docs \
 		fastutil-$(version)/fastutil-core-$(version).jar \
-		fastutil-$(version)/fastutil-refbytechar-$(version).jar \
+		fastutil-$(version)/fastutil-extra-$(version).jar \
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)
 

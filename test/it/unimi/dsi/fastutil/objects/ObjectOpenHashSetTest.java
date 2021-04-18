@@ -122,6 +122,26 @@ public class ObjectOpenHashSetTest {
 	}
 
 	@Test
+	public void testToSetWithExpectedSize() {
+		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet.of("wood", "board", "glass", "metal");
+		ObjectOpenHashSet<String> transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSetWithExpectedSize(4));
+		final ObjectOpenHashSet<String> expectedSet = ObjectOpenHashSet.of("plywood", "plyboard", "plyglass", "plymetal");
+		assertEquals(expectedSet, transformed);
+
+		// Test undersized below default capacity
+		transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSetWithExpectedSize(2));
+		assertEquals(expectedSet, transformed);
+
+		// Test oversized below default capacity
+		transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSetWithExpectedSize(8));
+		assertEquals(expectedSet, transformed);
+
+		// Test oversized
+		transformed = baseSet.stream().map(s -> "ply" + s).collect(ObjectOpenHashSet.toSetWithExpectedSize(50));
+		assertEquals(expectedSet, transformed);
+	}
+
+	@Test
 	public void testSpliteratorTrySplit() {
 		final ObjectOpenHashSet<String> baseSet = ObjectOpenHashSet
 				.of("0", "1", "2", "3", "4", "5", "bird");
