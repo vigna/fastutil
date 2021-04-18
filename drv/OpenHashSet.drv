@@ -575,14 +575,14 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		this(a, DEFAULT_LOAD_FACTOR);
 	}
 
-	/** Creates a new empty hash set. 
+	/** Creates a new empty hash set.
 	 *
 	 * @return a new empty hash set.
 	 */
 	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC of() {
 		return new OPEN_HASH_SET KEY_GENERIC_DIAMOND();
 	}
-	
+
 	/** Creates a new hash set with {@link Hash#DEFAULT_LOAD_FACTOR} as load factor
 	 * using the given element.
 	 *
@@ -648,7 +648,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 				throw new IllegalArgumentException("Duplicate element " + element);
 			}
 		}
-		return result; 
+		return result;
 	}
 #endif
 
@@ -662,13 +662,13 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 	 * {@link java.util.stream.Collector Collector} is necessary because there is no
 	 * primitive {@code Collector} equivalent in the Java API.
 	 */
-	 public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSet(JDK_PRIMITIVE_STREAM stream) {
-	 	return stream.collect(
-	 		OPEN_HASH_SET::new,
-	 		OPEN_HASH_SET::add,
-	 		OPEN_HASH_SET::addAll);
-	 }
-	 
+	public static KEY_GENERIC OPEN_HASH_SET KEY_GENERIC toSet(JDK_PRIMITIVE_STREAM stream) {
+		return stream.collect(
+			OPEN_HASH_SET::new,
+			OPEN_HASH_SET::add,
+			OPEN_HASH_SET::addAll);
+	}
+
 	/** Collects the result of a primitive {@code Stream} into a new hash set.
 	 *
 	 * <p>This method performs a terminal operation on the given {@code Stream}
@@ -696,7 +696,11 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		Collector.of(
 			OPEN_HASH_SET::new,
 			OPEN_HASH_SET::add,
-			OPEN_HASH_SET::combine); 
+			OPEN_HASH_SET::combine
+#ifndef Linked
+			, Collector.Characteristics.UNORDERED
+#endif
+		);
 
 	/** Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set. */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED_RAWTYPES
@@ -704,16 +708,20 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		return (Collector) TO_SET_COLLECTOR;
 	}
 
- 	/**
- 	 * Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set.
- 	 * @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
+	/**
+		* Returns a {@link Collector} that collects a {@code Stream}'s elements into a new hash set.
+		* @implNote The current implementation preallocates the full size for every worker thread when used on parallel streams.
 	 *   This can be quite wasteful, as worker threads other then the first don't usually handle the full stream.
- 	 */
- 	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toSetWithExpectedSize(int expectedSize) {
- 		return Collector.of(
-		() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
-		OPEN_HASH_SET::add,
-		OPEN_HASH_SET::combine);
+		*/
+	public static KEY_GENERIC Collector<KEY_GENERIC_TYPE, ?, OPEN_HASH_SET KEY_GENERIC> toSetWithExpectedSize(int expectedSize) {
+		return Collector.of(
+			() -> new OPEN_HASH_SET KEY_GENERIC(expectedSize),
+			OPEN_HASH_SET::add,
+			OPEN_HASH_SET::combine
+#ifndef Linked
+			, Collector.Characteristics.UNORDERED
+#endif
+		);
 	}
 #endif
 #endif
@@ -1445,7 +1453,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 			if (curr == prev) {
 				/* If the last operation was a next(), we are removing an entry that preceeds
-				   the current index, and thus we must decrement it. */
+					the current index, and thus we must decrement it. */
 				index--;
 				prev = GET_PREV(link[curr]);
 			}
@@ -1454,7 +1462,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 			size--;
 			/* Now we manually fix the pointers. Because of our knowledge of next
-			   and prev, this is going to be faster than calling fixPointers(). */
+				and prev, this is going to be faster than calling fixPointers(). */
 			if (prev == -1) first = next;
 			else
 				SET_NEXT(link[prev], next);
@@ -2458,7 +2466,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 
 		ensure(c == t.size(), "Error (" + seed + "): m has only " + c + " keys instead of " + t.size() + " after insertion (iterating on m)");
 		/* Now we check that inquiries about random data give the same answer in m and t. For
-		   m we use the polymorphic method. */
+			m we use the polymorphic method. */
 
 		for(int i=0; i<n;  i++) {
 			KEY_TYPE T = genKey();
@@ -2466,7 +2474,7 @@ public class OPEN_HASH_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implemen
 		}
 
 		/* Again, we check that inquiries about random data give the same answer in m and t, but
-		   for m we use the standard method. */
+			for m we use the standard method. */
 
 		for(int i=0; i<n;  i++) {
 			KEY_TYPE T = genKey();
