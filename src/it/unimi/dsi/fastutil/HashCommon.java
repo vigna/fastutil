@@ -69,7 +69,7 @@ public class HashCommon {
 	/** Quickly mixes the bits of an integer.
 	 *
 	 * <p>This method mixes the bits of the argument by multiplying by the golden ratio and
-	 * xorshifting the result. It is borrowed from <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>, and
+	 * xorshifting the result. It is borrowed from <a href="https://github.com/leventov/Koloboke">Koloboke</a>, and
 	 * it has slightly worse behaviour than {@link #murmurHash3(int)} (in open-addressing hash tables the average number of probes
 	 * is slightly larger), but it's much faster.
 	 *
@@ -94,7 +94,7 @@ public class HashCommon {
 	/** Quickly mixes the bits of a long integer.
 	 *
 	 * <p>This method mixes the bits of the argument by multiplying by the golden ratio and
-	 * xorshifting twice the result. It is borrowed from <a href="https://github.com/OpenHFT/Koloboke">Koloboke</a>, and
+	 * xorshifting twice the result. It is borrowed from <a href="https://github.com/leventov/Koloboke">Koloboke</a>, and
 	 * it has slightly worse behaviour than {@link #murmurHash3(long)} (in open-addressing hash tables the average number of probes
 	 * is slightly larger), but it's much faster.
 	 *
