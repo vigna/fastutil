@@ -475,6 +475,33 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define VALUE_OPERATOR_APPLY apply\n"\
 "#endif\n"\
 \
+"#if KEYS_INT_LONG_DOUBLE\n"\
+"#define METHOD_GENERIC_TO_KEY java.util.function.To${TYPE_CAP[$k]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.applyAs${TYPE_CAP[$wk]}\n"\
+"#elif KEY_CLASS_Boolean\n"\
+"#define METHOD_GENERIC_TO_KEY java.util.function.Predicate<T>\n"\
+"#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.test\n"\
+"#elif KEY_CLASS_Object || KEY_CLASS_Reference\n"\
+"#define METHOD_GENERIC_TO_KEY java.util.function.Function<T, K>\n"\
+"#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.apply\n"\
+"#else\n"\
+"#define METHOD_GENERIC_TO_KEY it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$k]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.get${TYPE_CAP[$k]}\n"\
+"#endif\n"\
+"#if VALUES_INT_LONG_DOUBLE\n"\
+"#define METHOD_GENERIC_TO_VALUE java.util.function.To${TYPE_CAP[$v]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.applyAs${TYPE_CAP[$wv]}\n"\
+"#elif VALUE_CLASS_Boolean\n"\
+"#define METHOD_GENERIC_TO_VALUE java.util.function.Predicate<T>\n"\
+"#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.test\n"\
+"#elif VALUE_CLASS_Object || VALUE_CLASS_Reference\n"\
+"#define METHOD_GENERIC_TO_VALUE java.util.function.Function<T, V>\n"\
+"#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.apply\n"\
+"#else\n"\
+"#define METHOD_GENERIC_TO_VALUE it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$v]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.get${TYPE_CAP[$v]}\n"\
+"#endif\n"\
+\
 \
 "/* Abstract implementations (keys) */\n"\
 \
@@ -522,6 +549,13 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define BIG_LISTS ${TYPE_CAP[$k]}BigLists\n"\
 "#define MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Maps\n"\
 "#define FUNCTIONS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}Functions\n"\
+"#if VALUES_REFERENCE\n"\
+"#define BIFUNCTION java.util.function.BiFunction<? super VALUE_GENERIC_TYPE , ? super VALUE_GENERIC_TYPE, ? extends VALUE_GENERIC_TYPE>\n"\
+"#elif VALUES_INT_LONG_DOUBLE\n"\
+"#define BIFUNCTION java.util.function.${TYPE_CAP[$v]}BinaryOperator\n"\
+"#else\n"\
+"#define BIFUNCTION VALUE_PACKAGE.VALUE_BINARY_OPERATOR\n"\
+"#endif\n"\
 "#define SORTED_MAPS ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}SortedMaps\n"\
 "#define PRIORITY_QUEUES ${TYPE_CAP2[$k]}PriorityQueues\n"\
 "#define HEAPS ${TYPE_CAP2[$k]}Heaps\n"\
@@ -670,7 +704,11 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "/* Methods (values) */\n"\
 \
 \
+"#if VALUE_CLASS_Boolean\n"\
+"#define MERGE_VALUE merge\n"\
+"#else\n"\
 "#define MERGE_VALUE merge${TYPE_STD[$v]}\n"\
+"#endif\n"\
 "#define NEXT_VALUE next${TYPE_STD[$v]}\n"\
 "#define PREV_VALUE previous${TYPE_STD[$v]}\n"\
 "#define READ_VALUE read${TYPE_CAP2[$v]}\n"\
