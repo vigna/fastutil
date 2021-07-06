@@ -19,7 +19,7 @@ public class Int2BooleanMapsTest {
     }
 
     @Test
-    public void testInt2IntMap() {
+    public void testInt2BooleanMap() {
         final Int2BooleanMap result =
                 Stream.of(1, 2, 3, 3)
                         .collect(
@@ -40,7 +40,7 @@ public class Int2BooleanMapsTest {
     }
 
     @Test
-    public void testInt2IntMapEmpty() {
+    public void testInt2BooleanMapEmpty() {
         final Int2BooleanMap result =
                 Stream.<Integer>empty()
                         .collect(

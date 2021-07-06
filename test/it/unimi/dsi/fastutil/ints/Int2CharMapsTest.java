@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 public class Int2CharMapsTest {
 
     @Test
-    public void testInt2IntMap() {
+    public void testInt2CharMap() {
         final Int2CharMap result =
                 Stream.of(1, 2, 3, 3)
                         .collect(
@@ -30,7 +30,7 @@ public class Int2CharMapsTest {
     }
 
     @Test
-    public void testInt2IntMapEmpty() {
+    public void testInt2CharMapEmpty() {
         final Int2CharMap result =
                 Stream.<Integer>empty()
                         .collect(
