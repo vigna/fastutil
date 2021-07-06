@@ -482,23 +482,23 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define METHOD_GENERIC_TO_KEY java.util.function.Predicate<T>\n"\
 "#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.test\n"\
 "#elif KEY_CLASS_Object || KEY_CLASS_Reference\n"\
-"#define METHOD_GENERIC_TO_KEY java.util.function.Function<T, K>\n"\
+"#define METHOD_GENERIC_TO_KEY java.util.function.Function<? super T, ? extends K>\n"\
 "#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.apply\n"\
 "#else\n"\
-"#define METHOD_GENERIC_TO_KEY it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$k]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_KEY it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$k]}Function<? super T>\n"\
 "#define METHOD_GENERIC_TO_KEY_APPLY keyMapper.get${TYPE_CAP[$k]}\n"\
 "#endif\n"\
 "#if VALUES_INT_LONG_DOUBLE\n"\
-"#define METHOD_GENERIC_TO_VALUE java.util.function.To${TYPE_CAP[$v]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_VALUE java.util.function.To${TYPE_CAP[$v]}Function<? super T>\n"\
 "#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.applyAs${TYPE_CAP[$wv]}\n"\
 "#elif VALUE_CLASS_Boolean\n"\
-"#define METHOD_GENERIC_TO_VALUE java.util.function.Predicate<T>\n"\
+"#define METHOD_GENERIC_TO_VALUE java.util.function.Predicate<? super T>\n"\
 "#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.test\n"\
 "#elif VALUE_CLASS_Object || VALUE_CLASS_Reference\n"\
-"#define METHOD_GENERIC_TO_VALUE java.util.function.Function<T, V>\n"\
+"#define METHOD_GENERIC_TO_VALUE java.util.function.Function<? super T, ? extends V>\n"\
 "#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.apply\n"\
 "#else\n"\
-"#define METHOD_GENERIC_TO_VALUE it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$v]}Function<T>\n"\
+"#define METHOD_GENERIC_TO_VALUE it.unimi.dsi.fastutil.objects.Object2${TYPE_CAP[$v]}Function<? super T>\n"\
 "#define METHOD_GENERIC_TO_VALUE_APPLY valueMapper.get${TYPE_CAP[$v]}\n"\
 "#endif\n"\
 \
