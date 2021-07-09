@@ -125,6 +125,7 @@ public class FastBufferedOutputStream extends MeasurableOutputStream implements 
 	}
 
 	private void dumpBuffer(final boolean ifFull) throws IOException {
+		if (pos == 0) return; // nothing to dump
 		if (! ifFull || avail == 0) {
 			os.write(buffer, 0, pos);
 			pos = 0;

@@ -23,7 +23,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.Random;
@@ -103,6 +105,40 @@ public class FastBufferedOutputStreamTest {
 		testRandom(2);
 		testRandom(3);
 		testRandom(1024);
+	}
+
+	@Test
+	public void testCloseOutputBeforeBufferedStream() throws IOException {
+		NonWritableAfterClose os = new NonWritableAfterClose(new ByteArrayOutputStream());
+		final FastBufferedOutputStream fbos = new FastBufferedOutputStream(os);
+		os.close();
+		fbos.close(); // Should not throw!
+	}
+
+	private static class NonWritableAfterClose extends FilterOutputStream {
+		private boolean closed = false;
+
+		public NonWritableAfterClose(OutputStream out) {
+			super(out);
+		}
+
+		@Override
+		public void write(int b) throws IOException {
+			if (closed) throw new IOException("Stream is closed");
+			super.write(b);
+		}
+
+		@Override
+		public void write(byte[] b, int off, int len) throws IOException {
+			if (closed) throw new IOException("Stream is closed");
+			super.write(b, off, len);
+		}
+
+		@Override
+		public void close() throws IOException {
+			super.close();
+			closed = true;
+		}
 	}
 }
 
