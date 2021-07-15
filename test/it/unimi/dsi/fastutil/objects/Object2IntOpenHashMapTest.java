@@ -16,17 +16,16 @@
 
 package it.unimi.dsi.fastutil.objects;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Map;
-
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.MainRunner;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.MainRunner;
+import java.io.IOException;
+import java.util.Map;
+import java.util.function.IntBinaryOperator;
+
+import static org.junit.Assert.*;
 
 @SuppressWarnings({"rawtypes","deprecation"})
 public class Object2IntOpenHashMapTest {
@@ -214,6 +213,53 @@ public class Object2IntOpenHashMapTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(Object2IntOpenHashMap.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383454");
+	}
+
+	@Test
+	public void testMergePrimitiveNoBoxing() {
+		Object2IntOpenHashMap<Integer> m = new Object2IntOpenHashMap<>();
+		m.defaultReturnValue(-1);
+
+		assertEquals(0, m.mergeInt(1, 0, (oldVal, newVal) -> {
+			fail();
+			return 0;
+		}));
+		assertEquals(0, m.mergeInt(1, 0, (oldVal, newVal) -> {
+			assertEquals(0, oldVal);
+			assertEquals(0, newVal);
+			return 0;
+		}));
+		assertEquals(0, m.getInt(1));
+		m.clear();
+
+		final IntBinaryOperator add =
+			(oldVal, newVal) -> oldVal + newVal;
+
+		assertEquals(0, m.mergeInt(1, 0, add));
+		assertEquals(1, m.mergeInt(1, 1, add));
+		assertEquals(3, m.mergeInt(1, 2, add));
+		assertEquals(0, m.mergeInt(2, 0, add));
+		assertTrue(m.containsKey(1));
+
+		assertEquals(-1, m.mergeInt(1, 2, (key, value) -> -1));
+		assertEquals(-1, m.mergeInt(2, 2, (key, value) -> -1));
+
+		assertTrue(m.isEmpty());
+	}
+
+
+	@Test(expected = NullPointerException.class)
+	public void testMergePrimitiveNoBoxingNullFunction() {
+		Object2IntOpenHashMap<Integer> m = new Object2IntOpenHashMap<>();
+		m.put((Integer)1, 1);
+		m.mergeInt(1, 1, null);
+	}
+
+
+	@Test(expected = NullPointerException.class)
+	public void testMergePrimitiveNoBoxingNullFunctionMissingKey() {
+		Object2IntOpenHashMap<Integer> m = new Object2IntOpenHashMap<>();
+		m.mergeInt(1, 1, null);
 	}
 }
 

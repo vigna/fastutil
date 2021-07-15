@@ -399,6 +399,7 @@ fi)\
 "#define VALUE_ITERATOR ${TYPE_CAP2[$v]}Iterator\n"\
 "#define VALUE_SPLITERATOR ${TYPE_CAP2[$v]}Spliterator\n"\
 "#define VALUE_LIST_ITERATOR ${TYPE_CAP2[$v]}ListIterator\n"\
+"#define VALUE_BINARY_OPERATOR ${TYPE_STD[$v]}BinaryOperator\n"\
 \
 \
 "/* Types and methods related to primitive-type support in the JDK */\n"\
@@ -449,6 +450,9 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 			echo "#define JDK_PRIMITIVE_FUNCTION_APPLY test\\n";\
 		fi;\
 	fi;\
+  if [[ "${TYPE_CAP[$wk]}" == "${TYPE_CAP[$wv]}" ]]; then\
+    echo "#define KEYS_AND_VALUES_WIDENED_ARE_SAME 1\\n";\
+  fi;\
  fi)\
 \
 "#if KEYS_INT_LONG_DOUBLE\n"\
@@ -703,6 +707,10 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define COMPUTE compute${TYPE_STD[$v]}\n"\
 "#define COMPUTE_IF_PRESENT compute${TYPE_STD[$v]}IfPresent\n"\
 "#define MERGE merge${TYPE_STD[$v]}\n"\
+"#if VALUES_INT_LONG_DOUBLE\n"\
+"#define MERGE_PRIMITIVE MERGE\n"\
+"#define MERGE_TYPE_SPECIFIC MERGE\n"\
+"#endif\n"\
 "#else\n"\
 "#define GET_VALUE get\n"\
 "#define REMOVE_VALUE remove\n"\
@@ -711,6 +719,14 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define COMPUTE_IF_ABSENT_PARTIAL computeIfAbsentPartial\n"\
 "#define COMPUTE compute\n"\
 "#define COMPUTE_IF_PRESENT computeIfPresent\n"\
+"#define MERGE merge\n"\
+"#if VALUES_INT_LONG_DOUBLE\n"\
+"#define MERGE_PRIMITIVE merge${TYPE_STD[$v]}\n"\
+"#endif\n"\
+"#if KEYS_AND_VALUES_WIDENED_ARE_SAME\n"\
+"#define COMPUTE_IF_PRESENT_PRIMITIVE compute${TYPE_STD[$v]}IfPresent\n"\
+"#define COMPUTE_PRIMITIVE compute${TYPE_STD[$v]}\n"\
+"#endif\n"\
 "#endif\n"\
 \
 \
