@@ -24,6 +24,7 @@ import static org.junit.Assert.assertSame;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -74,5 +75,43 @@ public class Int2IntMapsTest {
 		final Set<Entry> s = new HashSet<>();
 		Int2IntMaps.fastIterable(m).forEach(s::add);
 		assertEquals(1, s.size()); // Should be always the same entry, mutated
+	}
+
+	@Test
+	public void testInt2IntMap() {
+		final Int2IntMap result =
+				Stream.of(1, 2, 3, 3)
+						.collect(
+								Int2IntMaps.collector(
+										i -> i,
+										i -> i,
+										Integer::sum,
+										Int2IntArrayMap::new
+								)
+						);
+		Int2IntMap expected =
+				new Int2IntArrayMap(
+						new int[] {1, 2, 3},
+						new int[] {1, 2, 6}
+				);
+
+		assertEquals(result, expected);
+	}
+
+	@Test
+	public void testInt2IntMapEmpty() {
+		final Int2IntMap result =
+				Stream.<Integer>empty()
+						.collect(
+								Int2IntMaps.collector(
+										i -> i,
+										i -> i,
+										Integer::sum,
+										Int2IntArrayMap::new
+								)
+						);
+		Int2IntMap expected = Int2IntMaps.EMPTY_MAP;
+
+		assertEquals(result, expected);
 	}
 }

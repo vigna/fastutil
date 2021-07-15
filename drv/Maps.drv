@@ -37,6 +37,11 @@ import java.util.Map;
 import java.util.function.Consumer;
 import PACKAGE.MAP.FastEntrySet;
 
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+
 /** A class providing static methods and objects that do useful things with type-specific maps.
  *
  * @see java.util.Collections
@@ -680,4 +685,54 @@ public final class MAPS {
 	 */
 	public static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC unmodifiable(final MAP KEY_VALUE_EXTENDS_GENERIC m) { return new UnmodifiableMap KEY_VALUE_GENERIC_DIAMOND(m); }
 
+#if KEYS_PRIMITIVE && VALUES_PRIMITIVE
+	static <M extends MAP>
+#elif KEYS_PRIMITIVE && VALUES_REFERENCE
+	static <VALUE_GENERIC_CLASS, M extends MAP<VALUE_GENERIC_CLASS>>
+#elif KEYS_REFERENCE && VALUES_PRIMITIVE
+	static <KEY_GENERIC_CLASS, M extends MAP<KEY_GENERIC_CLASS>>
+#else
+	static <KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS, M extends MAP<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>>
+#endif
+	BinaryOperator<M> merger(BIFUNCTION mergeFunction) {
+		return (m1, m2) -> {
+			fastForEach(
+					m2,
+					entry -> m1.MERGE_VALUE(entry.ENTRY_GET_KEY(), entry.ENTRY_GET_VALUE(), mergeFunction)
+			);
+			return m1;
+		};
+	}
+
+#if KEYS_PRIMITIVE && VALUES_PRIMITIVE
+		public static <T, M extends MAP> Collector<T, ?, M> collector(
+#elif KEYS_PRIMITIVE && VALUES_REFERENCE
+		public static <T, VALUE_GENERIC_CLASS, M extends MAP<VALUE_GENERIC_CLASS>> Collector<T, ?, M> collector(
+#elif KEYS_REFERENCE && VALUES_PRIMITIVE
+		public static <T, KEY_GENERIC_CLASS, M extends MAP<KEY_GENERIC_CLASS>> Collector<T, ?, M> collector(
+#else
+	  	public static <T, KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS, M extends MAP<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>> Collector<T, ?, M> toMap(
+#endif
+		   METHOD_GENERIC_TO_KEY  keyMapper,
+		   METHOD_GENERIC_TO_VALUE valueMapper,
+		   BIFUNCTION mergeFunction,
+		   Supplier<M> creator
+	) {
+		BiConsumer<M, T> accumulator =
+			(map, element) ->
+				map.MERGE_VALUE(
+					METHOD_GENERIC_TO_KEY_APPLY(element),
+					METHOD_GENERIC_TO_VALUE_APPLY(element),
+#if VALUE_CLASS_Boolean
+					mergeFunction::apply
+#else
+					mergeFunction
+#endif
+				);
+		return Collector.of(
+			creator,
+			accumulator,
+			merger(mergeFunction)
+		);
+	}
 }
