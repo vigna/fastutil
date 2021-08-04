@@ -294,11 +294,13 @@ fi)\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K, ? extends V>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <K, ? extends V>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? super K, ? extends V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC <K>\n"\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <K>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? super K>\n"\
 "#endif\n"\
 "#else\n"\
 "#if VALUES_REFERENCE\n"\
@@ -306,11 +308,13 @@ fi)\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <? extends V>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC\n"\
 "#define KEY_VALUE_GENERIC_DIAMOND\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC\n"\
 "#endif\n"\
 "#endif\n"\
 \

@@ -1070,8 +1070,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	}
 
 
-#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
-
 	/** {@inheritDoc} */
 	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
@@ -1155,7 +1153,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	/** {@inheritDoc} */
 	@Override
-	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
+	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE k, final JDK_PRIMITIVE_FUNCTION KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC mappingFunction) {
 		java.util.Objects.requireNonNull(mappingFunction);
 		final int pos = find(k);
 		if (pos >= 0) return value[pos];
@@ -1183,18 +1181,35 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 #endif
 
+#if VALUES_REFERENCE
 	/** {@inheritDoc} */
 	@Override
-	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE key, final FUNCTION KEY_SUPER_GENERIC VALUE_EXTENDS_GENERIC mappingFunction) {
+	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE key, final java.util.function.Function KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC mappingFunction) {
+		java.util.Objects.requireNonNull(mappingFunction);
+		final int pos = find(key);
+		if (pos >= 0) return value[pos];
+
+		final VALUE_GENERIC_TYPE newValue = mappingFunction.apply(key);
+		if (newValue == null) return defRetValue;
+		insert(-pos -1, key, newValue);
+		return newValue;
+	}
+#endif
+
+#if KEYS_PRIMITIVE || VALUES_PRIMITIVE
+	/** {@inheritDoc} */
+	@Override
+	public VALUE_GENERIC_TYPE computeIfAbsent(final KEY_GENERIC_TYPE key, final FUNCTION KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC mappingFunction) {
 		java.util.Objects.requireNonNull(mappingFunction);
 		final int pos = find(key);
 		if (pos >= 0) return value[pos];
 
 		if (!mappingFunction.containsKey(key)) return defRetValue;
-		VALUE_GENERIC_TYPE newValue = mappingFunction.GET_VALUE(key);
+		final VALUE_GENERIC_TYPE newValue = mappingFunction.GET_VALUE(key);
 		insert(-pos -1, key, newValue);
 		return newValue;
 	}
+#endif
 
 	/** {@inheritDoc} */
 	@Override
@@ -1260,8 +1275,6 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		return value[pos] = VALUE_CLASS2TYPE(newValue);
 	}
 
-
-#endif
 
 	/* Removes all elements from this map.
 	 *
