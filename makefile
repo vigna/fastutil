@@ -104,16 +104,12 @@ binary:
 	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
-	cp dist/lib/fastutil-core-$(version).jar .
-	cp dist/lib/fastutil-extra-$(version).jar .
 	cp dist/lib/fastutil-$(version).jar .
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README.md \
 		fastutil-$(version)/LICENSE-2.0 \
 		fastutil-$(version)/docs \
-		fastutil-$(version)/fastutil-core-$(version).jar \
-		fastutil-$(version)/fastutil-extra-$(version).jar \
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)
 
