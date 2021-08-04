@@ -82,11 +82,9 @@ source:
 		fastutil-$(version)/build.xml \
 		fastutil-$(version)/split.sh \
 		fastutil-$(version)/fastutil-core.bnd \
-		fastutil-$(version)/fastutil-extra.bnd \
-		fastutil-$(version)/fastutil-rest.bnd \
+		fastutil-$(version)/fastutil.bnd \
 		fastutil-$(version)/pom-core-model.xml \
-		fastutil-$(version)/pom-extra-model.xml \
-		fastutil-$(version)/pom-rest-model.xml \
+		fastutil-$(version)/pom-model.xml \
 		fastutil-$(version)/build.properties \
 		fastutil-$(version)/gencsource.sh \
 		fastutil-$(version)/find-deps.sh \
@@ -103,7 +101,7 @@ source:
 
 binary:
 	make -s clean sources format
-	ant clean osgi-rest javadoc
+	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
 	cp dist/lib/fastutil-core-$(version).jar .
@@ -126,7 +124,7 @@ format:
 
 stage:
 	./split.sh
-	(unset LOCAL_IVY_SETTINGS; ant stage)
+	(unset LOCAL_IVY_SETTINGS; ant stage-all)
 
 dirs:
 	mkdir -p $(GEN_SRCDIR)/$(PKG_PATH)
