@@ -12,18 +12,19 @@ starting from a parameterized version; the classes are much more compact
 and much faster than the general ones. Please read the package
 documentation for more information.
 
-Since version 8.5.4, fastutil is split into three jars for convenience:
+Since version 8.5.5, fastutil is split into two jars for convenience:
 
 - `fastutil-core.jar` contains data structures based on integers, longs,
   doubles, and objects;
 
-- `fastutil-extra.jar` adds data structures  based on references, bytes,
-  and characters;
+- `fastutil.jar` is the classic distribution, containing all classes.
 
-- `fastutil.jar` adds the remaining data structures: booleans, shorts, and
-  floats.
+Note that core classes are duplicated in the standard jar, so if you are
+depending on both (for example, because of transitive dependencies) you
+should exclude the core jar.
 
-Each jar depends on the previous one.
+Previous split versions would provide different classes in different jars,
+but managing sensibly dependencies turned out to be impossible.
 
 You can also create a small, customized fastutil jar (which you can put in
 your repo, local maven repo, etc.) using the `find-deps.sh` shell script.
