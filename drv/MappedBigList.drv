@@ -153,26 +153,27 @@ public class MAPPED_BIG_LIST extends ABSTRACT_BIG_LIST {
 		return KEY_BUFFER((int)(index >>> CHUNK_SHIFT)).get((int)(index & CHUNK_MASK));
 	}
 
-/*	@Override
-	default void getElements(long from, KEY_TYPE a[], int offset, int length) {
-		int chunk = (int)(index >>> CHUNK_SHIFT);
-		int displ = (int)(index & CHUNK_MASK) << LOG2_BITS;
+	@Override
+	public void getElements(long from, KEY_TYPE a[], int offset, int length) {
+		int chunk = (int)(from >>> CHUNK_SHIFT);
+		int displ = (int)(from & CHUNK_MASK);
 
 		while(length > 0) {
-			final int l = Math.min((KEY_BUFFER[chunk].capacity() << LOG2_BITS) - displ, length);
+			final int l = Math.min(KEY_BUFFER[chunk].capacity() - displ, length);
 			if (l == 0) throw new ArrayIndexOutOfBoundsException();
 			
-			System.arraycopy(srcArray[srcSegment], srcDispl, destArray, destPos, l);
-	  if ((srcDispl += l) == SEGMENT_SIZE) {
-	   srcDispl = 0;
-	   srcSegment++;
-	  }
-	  destPos += l;
-	  length -= l;
+			// TODO: use indexed get() method when switching to Java 11
+			KEY_BUFFER[chunk].position(displ).get(a, offset, l);
+			if ((displ += l) == CHUNK_SIZE) {
+				displ = 0;
+				chunk++;
+			}
+
+			offset += l;
+			length -= l;
+		}
 	 }
 	 	  	  	  	  	   	   	  	  	  	 		
-	}
-*/
 	@Override
 	public KEY_TYPE set(final long index, final KEY_TYPE value) {
 		final KEY_BUFFER b = KEY_BUFFER((int)(index >>> CHUNK_SHIFT));
