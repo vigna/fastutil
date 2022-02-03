@@ -19,7 +19,7 @@ package PACKAGE;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.nio.KEY_BUFFER;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -54,10 +54,10 @@ public class MAPPED_BIG_LIST extends ABSTRACT_BIG_LIST {
 	private static final long CHUNK_MASK = CHUNK_SIZE - 1;
 
 	/** The underlying byte buffers. */
-	private final ByteBuffer[] byteBuffer;
+	private final KEY_BUFFER[] KEY_BUFFER;
 
-	/** An array parallel to {@link #byteBuffer} specifying which buffers do not need to be
-	 * {@linkplain ByteBuffer#duplicate() duplicated} before being used. */
+	/** An array parallel to {@link #KEY_BUFFER} specifying which buffers do not need to be
+	 * {@linkplain KEY_BUFFER#duplicate() duplicated} before being used. */
 	private final boolean[] readyToUse;
 
 	/** The number of byte buffers. */
@@ -68,21 +68,21 @@ public class MAPPED_BIG_LIST extends ABSTRACT_BIG_LIST {
 
 	/** Creates a new mapped big list.
 	 *
-	 * @param byteBuffer the underlying byte buffers.
+	 * @param KEY_BUFFER the underlying byte buffers.
 	 * @param size the overall number of elements in the underlying byte buffers (i.e., the
-	 * sum of the {@linkplain ByteBuffer#capacity() capacities} of the byte buffers divided by the size of an element in bytes).
-	 * @param readyToUse an array parallel to <code>byteBuffer</code> specifying which buffers do not need to be
-	 * {@linkplain ByteBuffer#duplicate() duplicated} before being used (the process will happen lazily); the array
+	 * sum of the {@linkplain KEY_BUFFER#capacity() capacities} of the byte buffers divided by the size of an element in bytes).
+	 * @param readyToUse an array parallel to <code>KEY_BUFFER</code> specifying which buffers do not need to be
+	 * {@linkplain KEY_BUFFER#duplicate() duplicated} before being used (the process will happen lazily); the array
 	 * will be used internally by the newly created mapped big list.
 	 */
 
-	protected MAPPED_BIG_LIST(final ByteBuffer[] byteBuffer, final long size, final boolean[] readyToUse) {
-		this.byteBuffer = byteBuffer;
-		this.n = byteBuffer.length;
+	protected MAPPED_BIG_LIST(final KEY_BUFFER[] KEY_BUFFER, final long size, final boolean[] readyToUse) {
+		this.KEY_BUFFER = KEY_BUFFER;
+		this.n = KEY_BUFFER.length;
 		this.size = size;
 		this.readyToUse = readyToUse;
 
-		for(int i = 0; i < n; i++) if (i < n - 1 && byteBuffer[i].capacity() / KEY_CLASS.BYTES != CHUNK_SIZE) throw new IllegalArgumentException();
+		for(int i = 0; i < n; i++) if (i < n - 1 && KEY_BUFFER[i].capacity() != CHUNK_SIZE) throw new IllegalArgumentException();
 	}
 
 	/** Creates a new mapped big list by read-only mapping a given file channel using the standard Java (i.e., {@link DataOutput}) byte order ({@link ByteOrder#BIG_ENDIAN}).
@@ -122,39 +122,63 @@ public class MAPPED_BIG_LIST extends ABSTRACT_BIG_LIST {
 	public static MAPPED_BIG_LIST map(final FileChannel fileChannel, final ByteOrder byteOrder, final MapMode mapMode) throws IOException {
 		final long size = fileChannel.size() / KEY_CLASS.BYTES;
 		final int chunks = (int)((size + (CHUNK_SIZE - 1)) / CHUNK_SIZE);
-		final ByteBuffer[] byteBuffer = new ByteBuffer[chunks];
-		for(int i = 0; i < chunks; i++) byteBuffer[i] = fileChannel.map(mapMode, i * CHUNK_SIZE * KEY_CLASS.BYTES, Math.min(CHUNK_SIZE, size - i * CHUNK_SIZE) * KEY_CLASS.BYTES).order(byteOrder);
+		final KEY_BUFFER[] KEY_BUFFER = new KEY_BUFFER[chunks];
+#if KEY_CLASS_Byte
+		for(int i = 0; i < chunks; i++) KEY_BUFFER[i] = fileChannel.map(mapMode, i * CHUNK_SIZE * KEY_CLASS.BYTES, Math.min(CHUNK_SIZE, size - i * CHUNK_SIZE) * KEY_CLASS.BYTES);
+#else
+		for(int i = 0; i < chunks; i++) KEY_BUFFER[i] = fileChannel.map(mapMode, i * CHUNK_SIZE * KEY_CLASS.BYTES, Math.min(CHUNK_SIZE, size - i * CHUNK_SIZE) * KEY_CLASS.BYTES).order(byteOrder).AS_KEY_BUFFER();
+#endif
 		final boolean[] readyToUse = new boolean[chunks];
 		Arrays.fill(readyToUse, true);
-		return new MAPPED_BIG_LIST(byteBuffer, size, readyToUse);
+		return new MAPPED_BIG_LIST(KEY_BUFFER, size, readyToUse);
 	}
 
-	private ByteBuffer byteBuffer(final int n) {
-		if (readyToUse[n]) return byteBuffer[n];
+	private KEY_BUFFER KEY_BUFFER(final int n) {
+		if (readyToUse[n]) return KEY_BUFFER[n];
 		readyToUse[n] = true;
-		return byteBuffer[n] = byteBuffer[n].duplicate().order(byteBuffer[n].order());
+		return KEY_BUFFER[n] = KEY_BUFFER[n].duplicate();
 	}
 
 	/** Returns a lightweight duplicate that can be read independently by another thread.
 	 *
-	 * <p>Only chunks that are actually used will be {@linkplain ByteBuffer#duplicate() duplicated} lazily.
+	 * <p>Only chunks that are actually used will be {@linkplain KEY_BUFFER#duplicate() duplicated} lazily.
 	 * @return a lightweight duplicate that can be read independently by another thread.
 	 */
 	public MAPPED_BIG_LIST copy() {
-		return new MAPPED_BIG_LIST(byteBuffer.clone(), size, new boolean[n]);
+		return new MAPPED_BIG_LIST(KEY_BUFFER.clone(), size, new boolean[n]);
 	}
 
 	@Override
 	public KEY_TYPE GET_KEY(final long index) {
-		return byteBuffer((int)(index >>> CHUNK_SHIFT)).BUFFER_GET_KEY((int)(index & CHUNK_MASK) << LOG2_BITS);
+		return KEY_BUFFER((int)(index >>> CHUNK_SHIFT)).get((int)(index & CHUNK_MASK));
 	}
 
+/*	@Override
+	default void getElements(long from, KEY_TYPE a[], int offset, int length) {
+		int chunk = (int)(index >>> CHUNK_SHIFT);
+		int displ = (int)(index & CHUNK_MASK) << LOG2_BITS;
+
+		while(length > 0) {
+			final int l = Math.min((KEY_BUFFER[chunk].capacity() << LOG2_BITS) - displ, length);
+			if (l == 0) throw new ArrayIndexOutOfBoundsException();
+			
+			System.arraycopy(srcArray[srcSegment], srcDispl, destArray, destPos, l);
+	  if ((srcDispl += l) == SEGMENT_SIZE) {
+	   srcDispl = 0;
+	   srcSegment++;
+	  }
+	  destPos += l;
+	  length -= l;
+	 }
+	 	  	  	  	  	   	   	  	  	  	 		
+	}
+*/
 	@Override
 	public KEY_TYPE set(final long index, final KEY_TYPE value) {
-		final ByteBuffer b = byteBuffer((int)(index >>> CHUNK_SHIFT));
-		final int i = (int)(index & CHUNK_MASK) << LOG2_BITS;
-		final KEY_TYPE previousValue = b.BUFFER_GET_KEY(i);
-		b.BUFFER_PUT_KEY(i, value);
+		final KEY_BUFFER b = KEY_BUFFER((int)(index >>> CHUNK_SHIFT));
+		final int i = (int)(index & CHUNK_MASK);
+		final KEY_TYPE previousValue = b.get(i);
+		b.put(i, value);
 		return previousValue;
 	}
 

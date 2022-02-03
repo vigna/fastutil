@@ -581,6 +581,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define ARRAY_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayPriorityQueue\n"\
 "#define ARRAY_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayIndirectPriorityQueue\n"\
 "#define ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayIndirectDoublePriorityQueue\n"\
+"#define KEY_BUFFER ${TYPE_CAP[$k]}Buffer\n"\
 \
 \
 "/* Synchronized wrappers */\n"\
@@ -629,13 +630,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
-"#if KEY_CLASS_Byte\n"\
-"#define BUFFER_GET_KEY get\n"\
-"#define BUFFER_PUT_KEY put\n"\
-"#else\n"\
-"#define BUFFER_GET_KEY get${TYPE_STD[$k]}\n"\
-"#define BUFFER_PUT_KEY put${TYPE_STD[$k]}\n"\
-"#endif\n"\
+"#define AS_KEY_BUFFER as${TYPE_STD[$k]}Buffer\n"\
 "#define PAIR_LEFT left${TYPE_STD[$k]}\n"\
 "#define PAIR_FIRST first${TYPE_STD[$k]}\n"\
 "#define PAIR_KEY key${TYPE_STD[$k]}\n"\

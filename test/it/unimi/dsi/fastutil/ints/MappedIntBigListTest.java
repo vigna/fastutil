@@ -75,6 +75,34 @@ public class MappedIntBigListTest {
 		r = new SplittableRandom(0);
 		for (int i = 0; i < 100; i++) assertEquals(Integer.toString(i), r.nextInt(), list.getInt(i));
 
+		final MappedIntBigList copy = list.copy();
+		r = new SplittableRandom(0);
+		for (int i = 0; i < 100; i++) assertEquals(Integer.toString(i), r.nextInt(), copy.getInt(i));
+		file.delete();
+	}
+
+	@Test
+	public void testBigEndian() throws IOException {
+		final File file = File.createTempFile(this.getClass().getName(), ".bin");
+		file.deleteOnExit();
+		final java.nio.ByteBuffer buffer = java.nio.ByteBuffer.allocate(10000);
+
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		SplittableRandom r = new SplittableRandom(0);
+		for (int i = 0; i < 100; i++) buffer.putInt(r.nextInt());
+		buffer.flip();
+
+		final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE);
+		channel.write(buffer);
+		channel.close();
+
+		final MappedIntBigList list = MappedIntBigList.map(FileChannel.open(file.toPath()), ByteOrder.BIG_ENDIAN);
+		r = new SplittableRandom(0);
+		for (int i = 0; i < 100; i++) assertEquals(Integer.toString(i), r.nextInt(), list.getInt(i));
+
+		final MappedIntBigList copy = list.copy();
+		r = new SplittableRandom(0);
+		for (int i = 0; i < 100; i++) assertEquals(Integer.toString(i), r.nextInt(), copy.getInt(i));
 		file.delete();
 	}
 }
