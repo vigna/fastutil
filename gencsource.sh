@@ -41,7 +41,7 @@ file=${2##*/}
 name=${file%.*}
 
 class=${name#Abstract}
-class=${name#Mapped}
+class=${class#Mapped}
 
 # Now we rip off the types.
 rem=${class##[A-Z]+([a-z])}
