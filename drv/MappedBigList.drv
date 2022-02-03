@@ -159,11 +159,14 @@ public class MAPPED_BIG_LIST extends ABSTRACT_BIG_LIST {
 		int displ = (int)(from & CHUNK_MASK);
 
 		while(length > 0) {
-			final int l = Math.min(KEY_BUFFER[chunk].capacity() - displ, length);
+			KEY_BUFFER b = KEY_BUFFER(chunk);
+			final int l = Math.min(b.capacity() - displ, length);
 			if (l == 0) throw new ArrayIndexOutOfBoundsException();
 			
-			// TODO: use indexed get() method when switching to Java 11
-			KEY_BUFFER[chunk].position(displ).get(a, offset, l);
+			// TODO: use chaining switching to Java 9+
+			b.position(displ);
+			b.get(a, offset, l);
+
 			if ((displ += l) == CHUNK_SIZE) {
 				displ = 0;
 				chunk++;
