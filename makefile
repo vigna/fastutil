@@ -440,6 +440,11 @@ $(BIG_ARRAY_BIG_LISTS): drv/BigArrayBigList.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIG_ARRAY_BIG_LISTS)
 
+MAPPED_BIG_LISTS := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/Mapped$(k)BigList.c)
+$(MAPPED_BIG_LISTS): drv/MappedBigList.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(MAPPED_BIG_LISTS)
+
 IMMUTABLE_LISTS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ImmutableList.c)
 $(IMMUTABLE_LISTS): drv/ImmutableList.drv; ./gencsource.sh $< $@ >$@
 

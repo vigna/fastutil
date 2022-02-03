@@ -39,13 +39,9 @@ shopt -s extglob
 
 file=${2##*/}
 name=${file%.*}
+
 class=${name#Abstract}
-if [[ "$class" == "$name" ]]; then
-    abstract=
-else
-    abstract=Abstract
-fi
-class=${class#Striped}
+class=${name#Mapped}
 
 # Now we rip off the types.
 rem=${class##[A-Z]+([a-z])}
@@ -573,6 +569,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n"\
 "#define IMMUTABLE_LIST ${TYPE_CAP[$k]}ImmutableList\n"\
 "#define BIG_ARRAY_BIG_LIST ${TYPE_CAP[$k]}BigArrayBigList\n"\
+"#define MAPPED_BIG_LIST Mapped${TYPE_CAP[$k]}BigList\n"\
 "#define ARRAY_FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n"\
 "#define ARRAY_FRONT_CODED_BIG_LIST ${TYPE_CAP[$k]}ArrayFrontCodedBigList\n"\
 "#define HEAP_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapPriorityQueue\n"\
@@ -632,6 +629,13 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define FIRST_KEY first${TYPE_STD[$k]}Key\n"\
 "#define LAST_KEY last${TYPE_STD[$k]}Key\n"\
 "#define GET_KEY get${TYPE_STD[$k]}\n"\
+"#if KEY_CLASS_Byte\n"\
+"#define BUFFER_GET_KEY get\n"\
+"#define BUFFER_PUT_KEY put\n"\
+"#else\n"\
+"#define BUFFER_GET_KEY get${TYPE_STD[$k]}\n"\
+"#define BUFFER_PUT_KEY put${TYPE_STD[$k]}\n"\
+"#endif\n"\
 "#define PAIR_LEFT left${TYPE_STD[$k]}\n"\
 "#define PAIR_FIRST first${TYPE_STD[$k]}\n"\
 "#define PAIR_KEY key${TYPE_STD[$k]}\n"\

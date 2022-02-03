@@ -20,7 +20,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.junit.Test;
+
+import com.google.common.collect.testing.MapTestSuiteBuilder;
+import com.google.common.collect.testing.TestStringMapGenerator;
+import com.google.common.collect.testing.features.CollectionFeature;
+import com.google.common.collect.testing.features.CollectionSize;
+import com.google.common.collect.testing.features.MapFeature;
+
+import junit.framework.TestSuite;
 
 public class Object2ObjectOpenHashMapTest {
 
@@ -59,5 +70,21 @@ public class Object2ObjectOpenHashMapTest {
 		assertNull(map.computeIfPresent("def", (a, b) -> "four"));
 		assertFalse(map.containsKey("def"));
 	}
-}
 
+	public static TestSuite suite() {
+		return suite("Object2ObjectOpenHashMap", Object2ObjectOpenHashMap::new);
+	}
+
+	public static TestSuite suite(final String name, final Supplier<Map<String, String>> factory) {
+		return MapTestSuiteBuilder.using(new TestStringMapGenerator() {
+			@Override
+			protected Map<String, String> create(final Map.Entry<String, String>[] entries) {
+				final var map = factory.get();
+				for (final var entry : entries) {
+					map.put(entry.getKey(), entry.getValue());
+				}
+				return map;
+			}
+		}).named(name).withFeatures(CollectionSize.ANY, MapFeature.GENERAL_PURPOSE, MapFeature.ALLOWS_NULL_KEYS, MapFeature.ALLOWS_NULL_VALUES, MapFeature.ALLOWS_ANY_NULL_QUERIES, CollectionFeature.SUPPORTS_ITERATOR_REMOVE).createTestSuite();
+	}
+}

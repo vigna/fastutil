@@ -1,0 +1,165 @@
+/*
+ * Copyright (C) 2002-2021 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package PACKAGE;
+
+import java.io.DataOutput;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
+import java.util.Arrays;
+
+/** A bridge between byte {@linkplain ByteBuffer buffers} and type-specific {@linkplain it.unimi.dsi.fastutil.BigList big lists}.
+ *
+ * <p>Java's {@linkplain FileChannel#map(MapMode, long, long) memory-mapping facilities} have
+ * the severe limitation of mapping at most {@link Integer#MAX_VALUE} bytes, as they
+ * expose the content of a file using a {@link MappedByteBuffer}. This class can {@linkplain #map(FileChannel, ByteOrder, FileChannel.MapMode) expose
+ * a file of primitive types of arbitrary length} as a {@link it.unimi.dsi.fastutil.BigList}
+ * that is actually based on an array of {@link MappedByteBuffer}s, each mapping
+ * a <em>chunk</em> of {@link #CHUNK_SIZE} longs.
+ *
+ * <p>Instances of this class are not thread safe, but the {@link #copy()} method provides a lightweight
+ * duplicate that can be read independently by another thread.
+ * Only chunks that are actually used will be {@linkplain ByteBuffer#duplicate() duplicated} lazily.
+ * If you are modifiying the content of list, however, you will need to provide external synchronization.
+ * 
+ * @author Sebastiano Vigna
+ */
+
+public class MAPPED_BIG_LIST extends ABSTRACT_BIG_LIST {
+	private static int LOG2_BITS = Long.SIZE - Long.numberOfLeadingZeros(KEY_CLASS.BYTES);
+	private static int CHUNK_SHIFT = 30 - LOG2_BITS;
+
+	/** The size in elements of a chunk created by {@link #map(FileChannel, ByteOrder, FileChannel.MapMode)}. */
+	public static final long CHUNK_SIZE = 1L << CHUNK_SHIFT;
+
+	/** The mask used to compute the offset in the chunk in longs. */
+	private static final long CHUNK_MASK = CHUNK_SIZE - 1;
+
+	/** The underlying byte buffers. */
+	private final ByteBuffer[] byteBuffer;
+
+	/** An array parallel to {@link #byteBuffer} specifying which buffers do not need to be
+	 * {@linkplain ByteBuffer#duplicate() duplicated} before being used. */
+	private final boolean[] readyToUse;
+
+	/** The number of byte buffers. */
+	private final int n;
+
+	/** The overall size in elements. */
+	private final long size;
+
+	/** Creates a new mapped big list.
+	 *
+	 * @param byteBuffer the underlying byte buffers.
+	 * @param size the overall number of elements in the underlying byte buffers (i.e., the
+	 * sum of the {@linkplain ByteBuffer#capacity() capacities} of the byte buffers divided by the size of an element in bytes).
+	 * @param readyToUse an array parallel to <code>byteBuffer</code> specifying which buffers do not need to be
+	 * {@linkplain ByteBuffer#duplicate() duplicated} before being used (the process will happen lazily); the array
+	 * will be used internally by the newly created mapped big list.
+	 */
+
+	protected MAPPED_BIG_LIST(final ByteBuffer[] byteBuffer, final long size, final boolean[] readyToUse) {
+		this.byteBuffer = byteBuffer;
+		this.n = byteBuffer.length;
+		this.size = size;
+		this.readyToUse = readyToUse;
+
+		for(int i = 0; i < n; i++) if (i < n - 1 && byteBuffer[i].capacity() / KEY_CLASS.BYTES != CHUNK_SIZE) throw new IllegalArgumentException();
+	}
+
+	/** Creates a new mapped big list by read-only mapping a given file channel using the standard Java (i.e., {@link DataOutput}) byte order ({@link ByteOrder#BIG_ENDIAN}).
+	 *
+	 * @param fileChannel the file channel that will be mapped.
+	 * @return a new read-only mapped big list over the contents of <code>fileChannel</code>.
+	 *
+	 * @see #map(FileChannel, ByteOrder, MapMode)
+	 */
+
+	public static MAPPED_BIG_LIST map(final FileChannel fileChannel) throws IOException {
+		return map(fileChannel, ByteOrder.BIG_ENDIAN);
+	}
+
+	/** Creates a new mapped big list by read-only mapping a given file channel.
+	 *
+	 * @param fileChannel the file channel that will be mapped.
+	 * @param byteOrder a prescribed byte order.
+	 * @return a new read-only mapped big list over the contents of <code>fileChannel</code>.
+	 *
+	 * @see #map(FileChannel, ByteOrder, MapMode)
+	 */
+
+	public static MAPPED_BIG_LIST map(final FileChannel fileChannel, final ByteOrder byteOrder) throws IOException {
+		return map(fileChannel, byteOrder, MapMode.READ_ONLY);
+	}
+
+	/** Creates a new mapped big list by mapping a given file channel.
+	 *
+	 * @param fileChannel the file channel that will be mapped.
+	 * @param byteOrder a prescribed byte order.
+	 * @param mapMode the mapping mode: usually {@link MapMode#READ_ONLY}, but if intend to make the list
+	 * {@linkplain #set mutable}, you have to pass {@link MapMode#READ_WRITE}.
+	 * @return a new mapped big list over the contents of <code>fileChannel</code>.
+	 */
+
+	public static MAPPED_BIG_LIST map(final FileChannel fileChannel, final ByteOrder byteOrder, final MapMode mapMode) throws IOException {
+		final long size = fileChannel.size() / KEY_CLASS.BYTES;
+		final int chunks = (int)((size + (CHUNK_SIZE - 1)) / CHUNK_SIZE);
+		final ByteBuffer[] byteBuffer = new ByteBuffer[chunks];
+		for(int i = 0; i < chunks; i++) byteBuffer[i] = fileChannel.map(mapMode, i * CHUNK_SIZE * KEY_CLASS.BYTES, Math.min(CHUNK_SIZE, size - i * CHUNK_SIZE) * KEY_CLASS.BYTES).order(byteOrder);
+		final boolean[] readyToUse = new boolean[chunks];
+		Arrays.fill(readyToUse, true);
+		return new MAPPED_BIG_LIST(byteBuffer, size, readyToUse);
+	}
+
+	private ByteBuffer byteBuffer(final int n) {
+		if (readyToUse[n]) return byteBuffer[n];
+		readyToUse[n] = true;
+		return byteBuffer[n] = byteBuffer[n].duplicate().order(byteBuffer[n].order());
+	}
+
+	/** Returns a lightweight duplicate that can be read independently by another thread.
+	 *
+	 * <p>Only chunks that are actually used will be {@linkplain ByteBuffer#duplicate() duplicated} lazily.
+	 * @return a lightweight duplicate that can be read independently by another thread.
+	 */
+	public MAPPED_BIG_LIST copy() {
+		return new MAPPED_BIG_LIST(byteBuffer.clone(), size, new boolean[n]);
+	}
+
+	@Override
+	public KEY_TYPE GET_KEY(final long index) {
+		return byteBuffer((int)(index >>> CHUNK_SHIFT)).BUFFER_GET_KEY((int)(index & CHUNK_MASK) << LOG2_BITS);
+	}
+
+	@Override
+	public KEY_TYPE set(final long index, final KEY_TYPE value) {
+		final ByteBuffer b = byteBuffer((int)(index >>> CHUNK_SHIFT));
+		final int i = (int)(index & CHUNK_MASK) << LOG2_BITS;
+		final KEY_TYPE previousValue = b.BUFFER_GET_KEY(i);
+		b.BUFFER_PUT_KEY(i, value);
+		return previousValue;
+	}
+
+	@Override
+	public long size64() {
+		return size;
+	}
+}
