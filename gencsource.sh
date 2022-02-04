@@ -693,7 +693,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#if VALUES_REFERENCE\n"\
 "#define REQUIRE_VALUE_NON_NULL(v) java.util.Objects.requireNonNull(v);\n"\
 "#else\n"\
-"#define REQUIRE_VALUE_NON_NULL(k)\n"\
+"#define REQUIRE_VALUE_NON_NULL(v)\n"\
 "#endif\n"\
 \
 \

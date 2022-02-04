@@ -29,6 +29,8 @@ import com.google.common.collect.testing.features.CollectionFeature;
 import com.google.common.collect.testing.features.CollectionSize;
 import com.google.common.collect.testing.features.MapFeature;
 import com.google.common.collect.testing.testers.CollectionToStringTester;
+import com.google.common.collect.testing.testers.MapComputeIfPresentTester;
+import com.google.common.collect.testing.testers.MapMergeTester;
 import com.google.common.collect.testing.testers.MapToStringTester;
 
 import junit.framework.TestCase;
@@ -36,14 +38,17 @@ import junit.framework.TestSuite;
 
 public class Object2ObjectRBTreeMapGuavaTest extends TestCase {
 
-	public static TestSuite suite() {
+	public static TestSuite suite() throws NoSuchMethodException, SecurityException {
 		return suite("Object2ObjectRBTreeMap", Object2ObjectRBTreeMap::new);
 	}
 
-	public static TestSuite suite(final String name, final Supplier<Map<String, String>> factory) {
-		final HashSet<Method> toStringTests = new HashSet<>();
-		toStringTests.addAll(Arrays.asList(MapToStringTester.class.getDeclaredMethods()));
-		toStringTests.addAll(Arrays.asList(CollectionToStringTester.class.getDeclaredMethods()));
+	public static TestSuite suite(final String name, final Supplier<Map<String, String>> factory) throws NoSuchMethodException, SecurityException {
+		final HashSet<Method> suppressed = new HashSet<>();
+		suppressed.addAll(Arrays.asList(MapToStringTester.class.getDeclaredMethods()));
+		suppressed.addAll(Arrays.asList(CollectionToStringTester.class.getDeclaredMethods()));
+		// An @apiNote explains that our semantics is slightly different
+		suppressed.add(MapMergeTester.class.getDeclaredMethod("testMappedToNull"));
+		suppressed.add(MapComputeIfPresentTester.class.getDeclaredMethod("testComputeIfPresent_nullTreatedAsAbsent"));
 
 		return MapTestSuiteBuilder.using(new TestStringSortedMapGenerator() {
 
@@ -55,6 +60,6 @@ public class Object2ObjectRBTreeMapGuavaTest extends TestCase {
 				}
 				return (SortedMap<String, String>)map;
 			}
-		}).named(name).withFeatures(CollectionSize.ANY, CollectionFeature.KNOWN_ORDER, MapFeature.GENERAL_PURPOSE, MapFeature.SUPPORTS_PUT, MapFeature.SUPPORTS_REMOVE, MapFeature.ALLOWS_NULL_VALUES, CollectionFeature.SUPPORTS_ITERATOR_REMOVE).suppressing(toStringTests).createTestSuite();
+		}).named(name).withFeatures(CollectionSize.ANY, CollectionFeature.KNOWN_ORDER, MapFeature.GENERAL_PURPOSE, MapFeature.SUPPORTS_PUT, MapFeature.SUPPORTS_REMOVE, MapFeature.ALLOWS_NULL_VALUES, CollectionFeature.SUPPORTS_ITERATOR_REMOVE).suppressing(suppressed).createTestSuite();
 	}
 }
