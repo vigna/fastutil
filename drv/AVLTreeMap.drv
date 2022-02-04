@@ -296,9 +296,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	*				after creation of the node.
 	*/
 	private Entry KEY_VALUE_GENERIC add(final KEY_GENERIC_TYPE k) {
-#if KEYS_REFERENCE
-		java.util.Objects.requireNonNull(k);
-#endif
+		REQUIRE_KEY_NON_NULL(k)
 		/* After execution of this method, modified is true iff a new entry has been inserted. */
 		modified = false;
 
@@ -1065,6 +1063,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public boolean containsKey(final KEY_TYPE k) {
+		RETURN_FALSE_IF_KEY_NULL(k)
 		return findKey(KEY_GENERIC_CAST k) != null;
 	}
 
@@ -1216,9 +1215,13 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 
 
 	@Override
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
 		if (entries == null) entries = new AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC>() {
-				final Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator = (Comparator<MAP.Entry KEY_VALUE_GENERIC>) (x, y) -> AVL_TREE_MAP.this.actualComparator.compare(x.ENTRY_GET_KEY(), y.ENTRY_GET_KEY());
+				final Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator =  (AVL_TREE_MAP.this.actualComparator == null ? 
+					(Comparator<MAP.Entry KEY_VALUE_GENERIC>) (x, y) -> KEY_CMP(x.ENTRY_GET_KEY(), y.ENTRY_GET_KEY()) :
+					(Comparator<MAP.Entry KEY_VALUE_GENERIC>) (x, y) -> AVL_TREE_MAP.this.actualComparator.compare(x.ENTRY_GET_KEY(), y.ENTRY_GET_KEY())
+				);
 
 				@Override
 				public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return comparator; }
@@ -1232,10 +1235,11 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
 				public boolean contains(final Object o) {
-					if (!(o instanceof Map.Entry)) return false;
+					if (o == null || !(o instanceof Map.Entry)) return false;
 					final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+					if (e.getKey() == null) return false;
 #if KEYS_PRIMITIVE
-					if (e.getKey() == null || ! (e.getKey() instanceof KEY_CLASS)) return false;
+					if (! (e.getKey() instanceof KEY_CLASS)) return false;
 #endif
 #if VALUES_PRIMITIVE
 					if (e.getValue() == null || ! (e.getValue() instanceof VALUE_CLASS)) return false;
@@ -1249,11 +1253,12 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				public boolean remove(final Object o) {
 					if (!(o instanceof Map.Entry)) return false;
 					final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+					if (e.getKey() == null) return false;
 #if KEYS_PRIMITIVE
 					if (e.getKey() == null || ! (e.getKey() instanceof KEY_CLASS)) return false;
 #endif
 #if VALUES_PRIMITIVE
-					if (e.getValue() == null || ! (e.getValue() instanceof VALUE_CLASS)) return false;
+					if (! (e.getValue() instanceof VALUE_CLASS)) return false;
 #endif
 					final Entry KEY_VALUE_GENERIC f = findKey(KEY_OBJ2TYPE(KEY_GENERIC_CAST e.getKey()));
 					if (f == null || ! VALUE_EQUALS(f.ENTRY_GET_VALUE(), VALUE_OBJ2TYPE(e.getValue()))) return false;
@@ -1529,6 +1534,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public boolean containsKey(final KEY_TYPE k) {
+			RETURN_FALSE_IF_KEY_NULL(k)
 			return in(KEY_GENERIC_CAST k) && AVL_TREE_MAP.this.containsKey(k);
 		}
 

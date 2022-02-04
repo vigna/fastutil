@@ -38,7 +38,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testMergeSort() {
-		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
+		final int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
 		Arrays.sort(sorted);
 		IntArrays.mergeSort(b);
 		assertArrayEquals(sorted, b);
@@ -56,7 +56,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testMergeSortSmallSupport() {
-		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
+		final int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 };
 		for(int to = 1; to < a.length; to++)
 			for(int from = 0; from <= to; from++) {
 				final int[] support = new int[to];
@@ -68,7 +68,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testStableSort() {
-		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
+		final int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
 		Arrays.sort(sorted);
 		IntArrays.stableSort(b);
 		assertArrayEquals(sorted, b);
@@ -85,7 +85,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testQuickSort() {
-		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
+		final int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
 		Arrays.sort(sorted);
 		Arrays.sort(b);
 		assertArrayEquals(sorted, b);
@@ -101,7 +101,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testParallelQuickSort() {
-		int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
+		final int[] a = { 2, 1, 5, 2, 1, 0, 9, 1, 4, 2, 4, 6, 8, 9, 10, 12, 1, 7 }, b = a.clone(), sorted = a.clone();
 		Arrays.sort(sorted);
 		Arrays.sort(b);
 		assertArrayEquals(sorted, b);
@@ -427,7 +427,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testQuickSort2() {
-		int[][] d = new int[2][];
+		final int[][] d = new int[2][];
 
 		d[0] = new int[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;
@@ -473,7 +473,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testParallelQuickSort2() {
-		int[][] d = new int[2][];
+		final int[][] d = new int[2][];
 
 		d[0] = new int[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;
@@ -518,10 +518,10 @@ public class IntArraysTest {
 
 	@Test
 	public void testShuffle() {
-		int[] a = new int[100];
+		final int[] a = new int[100];
 		for(int i = a.length; i-- != 0;) a[i] = i;
 		IntArrays.shuffle(a, new Random());
-		boolean[] b = new boolean[a.length];
+		final boolean[] b = new boolean[a.length];
 		for(int i = a.length; i-- != 0;) {
 			assertFalse(b[a[i]]);
 			b[a[i]] = true;
@@ -530,11 +530,11 @@ public class IntArraysTest {
 
 	@Test
 	public void testShuffleFragment() {
-		int[] a = new int[100];
+		final int[] a = new int[100];
 		for(int i = a.length; i-- != 0;) a[i] = -1;
 		for(int i = 10; i < 30; i++) a[i] = i - 10;
 		IntArrays.shuffle(a, 10, 30, new Random());
-		boolean[] b = new boolean[20];
+		final boolean[] b = new boolean[20];
 		for(int i = 20; i-- != 0;) {
 			assertFalse(b[a[i + 10]]);
 			b[a[i + 10]] = true;
@@ -615,7 +615,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testRadixSort2() {
-		int[][] d = new int[2][];
+		final int[][] d = new int[2][];
 
 		d[0] = new int[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;
@@ -660,7 +660,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testParallelRadixSort2() {
-		int[][] d = new int[2][];
+		final int[][] d = new int[2][];
 
 		d[0] = new int[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;
@@ -706,7 +706,7 @@ public class IntArraysTest {
 
 	@Test
 	public void testRadixSort() {
-		int[][] t = { { 2, 1, 0, 4 } };
+		final int[][] t = { { 2, 1, 0, 4 } };
 		IntArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
@@ -714,7 +714,7 @@ public class IntArraysTest {
 		IntArrays.radixSort(t);
 		for(int i = t[0].length - 1; i-- != 0;) assertTrue(t[0][i] <= t[0][i + 1]);
 
-		int[][] d = new int[2][];
+		final int[][] d = new int[2][];
 
 		d[0] = new int[10];
 		for(int i = d[0].length; i-- != 0;) d[0][i] = 3 - i % 3;
@@ -1292,7 +1292,7 @@ public class IntArraysTest {
 		IntArrays.stabilize(perm, val, 1, 3);
 		assertArrayEquals(new int[] { 4, 2, 3, 1, 0 }, perm);
 	}
-	
+
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");

@@ -664,9 +664,13 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#if KEYS_REFERENCE\n"\
 "#define MAP_TO_KEY map\n"\
 "#define MAP_TO_KEY_WIDENED map\n"\
+"#define RETURN_FALSE_IF_KEY_NULL(k) if (k == null) return false;\n"\
+"#define REQUIRE_KEY_NON_NULL(k) java.util.Objects.requireNonNull(k);\n"\
 "#else\n"\
 "#define MAP_TO_KEY mapTo${TYPE_CAP2[$k]}\n"\
 "#define MAP_TO_KEY_WIDENED mapTo${TYPE_CAP2[$wk]}\n"\
+"#define REQUIRE_KEY_NON_NULL(k)\n"\
+"#define RETURN_FALSE_IF_KEY_NULL(k)\n"\
 "#endif\n"\
 \
 \
@@ -686,6 +690,11 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define PAIR_RIGHT right${TYPE_STD[$v]}\n"\
 "#define PAIR_SECOND second${TYPE_STD[$v]}\n"\
 "#define PAIR_VALUE value${TYPE_STD[$v]}\n"\
+"#if VALUES_REFERENCE\n"\
+"#define REQUIRE_VALUE_NON_NULL(v) java.util.Objects.requireNonNull(v);\n"\
+"#else\n"\
+"#define REQUIRE_VALUE_NON_NULL(k)\n"\
+"#endif\n"\
 \
 \
 "/* Methods (keys/values) */\n"\
