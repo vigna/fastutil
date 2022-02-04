@@ -16,17 +16,11 @@
 
 package it.unimi.dsi.fastutil.objects;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Supplier;
-
-import org.junit.Test;
 
 import com.google.common.collect.testing.MapTestSuiteBuilder;
 import com.google.common.collect.testing.TestStringMapGenerator;
@@ -38,43 +32,7 @@ import com.google.common.collect.testing.testers.MapToStringTester;
 
 import junit.framework.TestSuite;
 
-public class Object2ObjectOpenHashMapTest {
-
-
-	@Test
-	public void testCombinationMethodsWithDefaultValue() {
-		final Object2ObjectOpenHashMap<String, String> map = new Object2ObjectOpenHashMap<>();
-		map.defaultReturnValue("undefined");
-		assertEquals("nak", map.getOrDefault("bar", "nak"));
-		map.putIfAbsent("foo", "one");
-		assertEquals("one", map.get("foo"));
-
-		assertEquals("undefined", map.replace("bar", "two"));
-		assertFalse(map.containsKey("bar"));
-
-		assertEquals("three", map.computeIfAbsent("qux", s -> "three"));
-		assertEquals("three", map.get("qux"));
-
-		assertEquals("undefined", map.computeIfPresent("def", (a, b) -> "four"));
-		assertFalse(map.containsKey("def"));
-	}
-
-	@Test
-	public void testCombinationMethodsWithoutDefaultValue() {
-		final Object2ObjectOpenHashMap<String, String> map = new Object2ObjectOpenHashMap<>();
-		assertEquals("nak", map.getOrDefault("bar", "nak"));
-		map.putIfAbsent("foo", "one");
-		assertEquals("one", map.get("foo"));
-
-		assertNull(map.replace("bar", "two"));
-		assertFalse(map.containsKey("bar"));
-
-		assertEquals("three", map.computeIfAbsent("qux", s -> "three"));
-		assertEquals("three", map.get("qux"));
-
-		assertNull(map.computeIfPresent("def", (a, b) -> "four"));
-		assertFalse(map.containsKey("def"));
-	}
+public class Object2ObjectOpenHashMapGuavaTest {
 
 	public static TestSuite suite() {
 		return suite("Object2ObjectOpenHashMap", Object2ObjectOpenHashMap::new);

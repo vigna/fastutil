@@ -1202,6 +1202,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		java.util.Objects.requireNonNull(remappingFunction);
 		final int pos = find(k);
 		if (pos < 0) return defRetValue;
+#if VALUES_REFERENCE
+		if (value[pos] == null) return defRetValue;
+#endif
 		final VALUE_GENERIC_CLASS newValue = remappingFunction.apply(KEY2OBJ(k), VALUE2OBJ(value[pos]));
 		if (newValue == null) {
 			if (KEY_EQUALS_NULL(k)) removeNullEntry();
@@ -1238,6 +1241,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	@Override
 	public VALUE_GENERIC_TYPE merge(final KEY_GENERIC_TYPE k, final VALUE_GENERIC_TYPE v, final java.util.function.BiFunction<? super VALUE_GENERIC_CLASS, ? super VALUE_GENERIC_CLASS, ? extends VALUE_GENERIC_CLASS> remappingFunction) {
 		java.util.Objects.requireNonNull(remappingFunction);
+#if VALUES_REFERENCE
+		java.util.Objects.requireNonNull(v);
+#endif
 
 		final int pos = find(k);
 #if VALUES_PRIMITIVE
@@ -1246,7 +1252,9 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		if (pos < 0 || value[pos] == null) {
 			if (v == null) return defRetValue;
 #endif
-			insert(-pos - 1, k, v);
+			if (pos < 0) insert(-pos - 1, k, v);
+			else value[pos] = v;
+			
 			return v;
 		}
 
