@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2021 Sebastiano Vigna
+ * Copyright (C) 2002-2022 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 
 		KEY_TYPE[][] a = new KEY_TYPE[2][];
 		long curSize = 0;
-		int n = 0, b = 0, common, length, minLength;
+		int n = 0, b = 0, length;
 
 		while(arrays.hasNext()) {
 			a[b] = arrays.next();
@@ -137,8 +137,8 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 				curSize += length;
 			}
 			else {
-				minLength = a[1 - b].length;
-				if (length < minLength) minLength = length;
+				final int minLength = Math.min(a[1 - b].length, length);
+				int common;
 				for(common = 0; common < minLength; common++) if (a[0][common] != a[1][common]) break;
 				length -= common;
 
@@ -255,12 +255,9 @@ public class ARRAY_FRONT_CODED_LIST extends AbstractObjectList<KEY_TYPE[]> imple
 		final int count = count(length);
 		BigArrays.set(a, pos + count - 1, (byte)(length & 0x7F));
 
-		if (count != 1) {
-			int i = count - 1;
-			while(i-- != 0) {
-				length >>>= 7;
-				BigArrays.set(a, pos + i, (byte)(- (length  & 0x7F) - 1));
-			}
+		for(int i = count -1; i-- != 0;) {
+			length >>>= 7;
+			BigArrays.set(a, pos + i, (byte)(- (length  & 0x7F) - 1));
 		}
 
 		return count;
