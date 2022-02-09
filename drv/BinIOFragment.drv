@@ -224,21 +224,21 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final OutputStream outpu
 
 #elif ! KEY_CLASS_Boolean
 
-/** Loads elements from a given file channel, using the given byte order, storing them in a given array fragment.
+/** Loads elements from a given readable channel, using the given byte order, storing them in a given array fragment.
  *
- * @param fileChannel a readable file channel.
- * @param byteOrder the byte order of the data from {@code fileChannel}.
- * @param array an array which will be filled with data from {@code fileChannel}.
+ * @param channel a readable channel.
+ * @param byteOrder the byte order of the data from {@code channel}.
+ * @param array an array which will be filled with data from {@code channel}.
  * @param offset the index of the first element of {@code array} to be filled.
  * @param length the number of elements of {@code array} to be filled.
- * @return the number of elements actually read from {@code fileChannel} (it might be less than {@code length} if {@code fileChannel} ends).
+ * @return the number of elements actually read from {@code channel} (it might be less than {@code length} if {@code channel} ends).
  */
-public static int LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byteOrder, final KEY_TYPE[] array, int offset, int length) throws IOException {
+public static int LOAD_KEYS(final ReadableByteChannel channel, final ByteOrder byteOrder, final KEY_TYPE[] array, int offset, int length) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 	ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(byteOrder);
-	KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
+	final KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
 	int read = 0;
-	for(int r; (r = fileChannel.read(byteBuffer)) > 0;) {
+	for(int r; (r = channel.read(byteBuffer)) > 0;) {
 		read += r >> MAPPED_BIG_LIST.LOG2_BITS;
 		final int l = Math.min(r, length);
 		buffer.flip();
@@ -250,15 +250,15 @@ public static int LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byteO
 	return read;
 }
 
-/** Loads elements from a given file channel, using the given byte order, storing them in a given array.
+/** Loads elements from a given readable channel, using the given byte order, storing them in a given array.
  *
- * @param fileChannel a readable file channel.
- * @param byteOrder the byte order of the data from {@code fileChannel}.
- * @param array an array which will be filled with data from {@code fileChannel}.
- * @return the number of elements actually read from {@code fileChannel} (it might be less than the array length if {@code fileChannel} ends).
+ * @param channel a readable channel.
+ * @param byteOrder the byte order of the data from {@code channel}.
+ * @param array an array which will be filled with data from {@code channel}.
+ * @return the number of elements actually read from {@code channel} (it might be less than the array length if {@code channel} ends).
  */
-public static int LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byteOrder, final KEY_TYPE[] array) throws IOException {
-	return LOAD_KEYS(fileChannel, byteOrder, array, 0, array.length);
+public static int LOAD_KEYS(final ReadableByteChannel channel, final ByteOrder byteOrder, final KEY_TYPE[] array) throws IOException {
+	return LOAD_KEYS(channel, byteOrder, array, 0, array.length);
 }
 
 /** Loads elements from a file given by a {@link File} object, using the given byte order, storing them in a given array fragment.
@@ -272,13 +272,13 @@ public static int LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byteO
  */
 public static int LOAD_KEYS(final File file, final ByteOrder byteOrder, final KEY_TYPE[] array, final int offset, final int length) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
-	final FileChannel fileChannel = FileChannel.open(file.toPath());
-	final int read = LOAD_KEYS(fileChannel, byteOrder, array, offset, length);
-	fileChannel.close();
+	final FileChannel channel = FileChannel.open(file.toPath());
+	final int read = LOAD_KEYS(channel, byteOrder, array, offset, length);
+	channel.close();
 	return read;
 }
 
-/** Loads elements from a file given by a pathname, using the given byte order, storing them in a given array fragment.
+/** Loads elements from a file given by a filename, using the given byte order, storing them in a given array fragment.
  *
  * @param filename a filename.
  * @param byteOrder the byte order of the data stored in the file {@code filename}.
@@ -302,7 +302,7 @@ public static int LOAD_KEYS(final File file, final ByteOrder byteOrder, final KE
 	return LOAD_KEYS(file, byteOrder, array, 0, array.length);
 }
 
-/** Loads elements from a file given by a pathname, using the given byte order, storing them in a given array.
+/** Loads elements from a file given by a filename, using the given byte order, storing them in a given array.
  *
  * @param filename a filename.
  * @param byteOrder the byte order of the data stored in the file {@code filename}.
@@ -324,17 +324,17 @@ public static int LOAD_KEYS(final CharSequence filename, final ByteOrder byteOrd
  * @return an array filled with the content of the specified file.
  */
 public static KEY_TYPE[] LOAD_KEYS(final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath());
-	final long length = fileChannel.size() / KEY_CLASS.BYTES;
+	final FileChannel channel = FileChannel.open(file.toPath());
+	final long length = channel.size() / KEY_CLASS.BYTES;
 
 	if (length > Integer.MAX_VALUE) {
-		fileChannel.close();
-		throw new IllegalArgumentException("File too long: " + fileChannel.size()+ " bytes (" + length + " elements)");
+		channel.close();
+		throw new IllegalArgumentException("File too long: " + channel.size()+ " bytes (" + length + " elements)");
 	}
 
 	final KEY_TYPE[] array = new KEY_TYPE[(int)length];
-	LOAD_KEYS(fileChannel, byteOrder, array);
-	fileChannel.close();
+	LOAD_KEYS(channel, byteOrder, array);
+	channel.close();
 	return array;
 }
 
@@ -351,25 +351,25 @@ public static KEY_TYPE[] LOAD_KEYS(final CharSequence filename, final ByteOrder 
 	return LOAD_KEYS(new File(filename.toString()), byteOrder);
 }
 
-/** Stores an array fragment to a given file channel, using the given byte order.
+/** Stores an array fragment to a given writable channel, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code dataOutput}.
+ * @param array an array whose elements will be written to {@code channel}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
- * @param fileChannel a writable file channel.
- * @param byteOrder the byte order to be used to store data in {@link fileChannel}.
+ * @param channel a writable channel.
+ * @param byteOrder the byte order to be used to store data in {@code channel}.
  */
-public static void STORE_KEYS(final KEY_TYPE array[], int offset, int length, final FileChannel fileChannel, final ByteOrder byteOrder) throws IOException {
+public static void STORE_KEYS(final KEY_TYPE array[], int offset, int length, final WritableByteChannel channel, final ByteOrder byteOrder) throws IOException {
 	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 
 	ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(byteOrder);
-	KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
+	final KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
 	
 	while(length != 0) {
 		final int l = Math.min(length, buffer.remaining());
 		buffer.put(array, offset, l);
 		buffer.flip();
-		fileChannel.write(byteBuffer);
+		channel.write(byteBuffer);
 		buffer.clear();
 
 		offset += l;
@@ -377,37 +377,37 @@ public static void STORE_KEYS(final KEY_TYPE array[], int offset, int length, fi
 	}
 }
 
-/** Stores an array to a given file channel, using the given byte order.
+/** Stores an array to a given writable channel, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code dataOutput}.
- * @param fileChannel a writable file channel.
- * @param byteOrder the byte order to be used to store data in {@link fileChannel}.
+ * @param array an array whose elements will be written to {@code channel}.
+ * @param channel a writable channel.
+ * @param byteOrder the byte order to be used to store data in {@code channel}.
  */
-public static void STORE_KEYS(final KEY_TYPE array[], final FileChannel fileChannel, final ByteOrder byteOrder) throws IOException {
-	STORE_KEYS(array, 0, array.length, fileChannel, byteOrder);
+public static void STORE_KEYS(final KEY_TYPE array[], final WritableByteChannel channel, final ByteOrder byteOrder) throws IOException {
+	STORE_KEYS(array, 0, array.length, channel, byteOrder);
 }
 
 /** Stores an array fragment to a file given by a {@link File} object, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to {@code file}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param file a file.
- * @param byteOrder the byte order to be used to store data in {@link file}.
+ * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final int length, final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-	STORE_KEYS(array, offset, length, fileChannel, byteOrder);
-	fileChannel.close();
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	STORE_KEYS(array, offset, length, channel, byteOrder);
+	channel.close();
 }
 
-/** Stores an array fragment to a file given by a pathname, using the given byte order.
+/** Stores an array fragment to a file given by a filename, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to the file {@code filename}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param filename a filename.
- * @param byteOrder the byte order to be used to store data in the file {@link filename}.
+ * @param byteOrder the byte order to be used to store data in the file {@code filename}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final int length, final CharSequence filename, final ByteOrder byteOrder) throws IOException {
 	STORE_KEYS(array, offset, length, new File(filename.toString()), byteOrder);
@@ -415,19 +415,19 @@ public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final in
 
 /** Stores an array to a file given by a {@link File} object, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to {@code file}.
  * @param file a file.
- * @param byteOrder the byte order to be used to store data in {@link file}.
+ * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final File file, final ByteOrder byteOrder) throws IOException {
 	STORE_KEYS(array, 0, array.length, file, byteOrder);
 }
 
-/** Stores an array to a file given by a pathname, using the given byte order.
+/** Stores an array to a file given by a filename, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to the file {@code filename}.
  * @param filename a filename.
- * @param byteOrder the byte order to be used to store data in the file {@link filename}.
+ * @param byteOrder the byte order to be used to store data in the file {@code filename}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final CharSequence filename, final ByteOrder byteOrder) throws IOException {
 	STORE_KEYS(array, new File(filename.toString()), byteOrder);
@@ -435,39 +435,39 @@ public static void STORE_KEYS(final KEY_TYPE array[], final CharSequence filenam
 
 
 
-/** Loads elements from a given data input, using the given byte order, storing them in a given big-array fragment.
+/** Loads elements from a given readable channel, using the given byte order, storing them in a given big-array fragment.
  *
- * @param fileChannel a file channel.
- * @param byteOrder the byte order of the data from {@code fileChannel}.
- * @param array a big array which will be filled with data from {@code fileChannel}.
+ * @param channel a readable channel.
+ * @param byteOrder the byte order of the data from {@code channel}.
+ * @param array a big array which will be filled with data from {@code channel}.
  * @param offset the index of the first element of {@code bigArray} to be filled.
  * @param length the number of elements of {@code bigArray} to be filled.
- * @return the number of elements actually read from {@code fileChannel} (it might be less than {@code length} if {@code fileChannel} ends).
+ * @return the number of elements actually read from {@code channel} (it might be less than {@code length} if {@code channel} ends).
  */
-public static long LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byteOrder, final KEY_TYPE[][] array, final long offset, final long length) throws IOException {
+public static long LOAD_KEYS(final ReadableByteChannel channel, final ByteOrder byteOrder, final KEY_TYPE[][] array, final long offset, final long length) throws IOException {
 	ensureOffsetLength(array, offset, length);
 	long c = 0;
 	try {
 		for(int i = segment(offset); i < segment(offset + length + SEGMENT_MASK); i++) {
 			final KEY_TYPE[] t = array[i];
 			final int s = (int)Math.max(0, offset - start(i));
-			final int l = (int)Math.min(t.length, offset + length - start(i));
-			LOAD_KEYS(fileChannel, byteOrder, t, s, l - s);
+			final int e = (int)Math.min(t.length, offset + length - start(i));
+			LOAD_KEYS(channel, byteOrder, t, s, e - s);
 		}
 	}
 	catch(EOFException itsOk) {}
 	return c;
 }
 
-/** Loads elements from a given data input, using the given byte order, storing them in a given big array.
+/** Loads elements from a given readable channel, using the given byte order, storing them in a given big array.
  *
- * @param fileChannel a file channel.
- * @param byteOrder the byte order of the data from {@code fileChannel}.
- * @param array a big array which will be filled with data from {@code fileChannel}.
- * @return the number of elements actually read from {@code fileChannel} (it might be less than the array length if {@code fileChannel} ends).
+ * @param channel a readable channel.
+ * @param byteOrder the byte order of the data from {@code channel}.
+ * @param array a big array which will be filled with data from {@code channel}.
+ * @return the number of elements actually read from {@code channel} (it might be less than the array length if {@code channel} ends).
  */
-public static long LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byteOrder, final KEY_TYPE[][] array) throws IOException {
-	return LOAD_KEYS(fileChannel, byteOrder, array, 0, length(array));
+public static long LOAD_KEYS(final ReadableByteChannel channel, final ByteOrder byteOrder, final KEY_TYPE[][] array) throws IOException {
+	return LOAD_KEYS(channel, byteOrder, array, 0, length(array));
 }
 
 /** Loads elements from a file given by a {@link File} object, using the given byte order, storing them in a given big-array fragment.
@@ -480,13 +480,13 @@ public static long LOAD_KEYS(final FileChannel fileChannel, final ByteOrder byte
  * @return the number of elements actually read from the given file (it might be less than {@code length} if the file is too short).
  */
 public static long LOAD_KEYS(final File file, final ByteOrder byteOrder, final KEY_TYPE[][] array, final long offset, final long length) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath());
-	final long read = LOAD_KEYS(fileChannel, byteOrder, array, offset, length);
-	fileChannel.close();
+	final FileChannel channel = FileChannel.open(file.toPath());
+	final long read = LOAD_KEYS(channel, byteOrder, array, offset, length);
+	channel.close();
 	return read;
 }
 
-/** Loads elements from a file given by a pathname, using the given byte order, storing them in a given big-array fragment.
+/** Loads elements from a file given by a filename, using the given byte order, storing them in a given big-array fragment.
  *
  * @param filename a filename.
  * @param byteOrder the byte order of the data stored in the file {@code filename}.
@@ -510,7 +510,7 @@ public static long LOAD_KEYS(final File file, final ByteOrder byteOrder, final K
 	return LOAD_KEYS(file, byteOrder, array, 0, length(array));
 }
 
-/** Loads elements from a file given by a pathname, using the given byte order, storing them in a given big array.
+/** Loads elements from a file given by a filename, using the given byte order, storing them in a given big array.
  *
  * @param filename a filename.
  * @param byteOrder the byte order of the data stored in the file {@code filename}.
@@ -532,11 +532,11 @@ public static long LOAD_KEYS(final CharSequence filename, final ByteOrder byteOr
  * @return a big array filled with the content of the specified file.
  */
 public static KEY_TYPE[][] LOAD_KEYS_BIG(final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath());
-	final long length = fileChannel.size() / KEY_CLASS.BYTES;
+	final FileChannel channel = FileChannel.open(file.toPath());
+	final long length = channel.size() / KEY_CLASS.BYTES;
 	final KEY_TYPE[][] array = BIG_ARRAYS.newBigArray(length);
-	for(final KEY_TYPE[] t: array) LOAD_KEYS(fileChannel, byteOrder, t);
-	fileChannel.close();
+	for(final KEY_TYPE[] t: array) LOAD_KEYS(channel, byteOrder, t);
+	channel.close();
 	return array;
 }
 
@@ -554,53 +554,53 @@ public static KEY_TYPE[][] LOAD_KEYS_BIG(final CharSequence filename, final Byte
 	return LOAD_KEYS_BIG(new File(filename.toString()));
 }
 
-/** Stores an array fragment to a given file channel, using the given byte order.
+/** Stores an array fragment to a given writable channel, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code fileChannel}.
+ * @param array an array whose elements will be written to {@code channel}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
- * @param final Channel a writable file channel.
- * @param byteOrder the byte order to be used to store data in {@link fileChannel}.
+ * @param channel a writable channel.
+ * @param byteOrder the byte order to be used to store data in {@code channel}.
  */
-public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final long length, final FileChannel fileChannel, final ByteOrder byteOrder) throws IOException {
+public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final long length, final WritableByteChannel channel, final ByteOrder byteOrder) throws IOException {
 	for(int i = segment(offset); i < segment(offset + length + SEGMENT_MASK); i++) {
 		final int s = (int)Math.max(0, offset - start(i));
 		final int l = (int)Math.min(array[i].length, offset + length - start(i));
-		STORE_KEYS(array[i], s, l - s, fileChannel, byteOrder);
+		STORE_KEYS(array[i], s, l - s, channel, byteOrder);
 	}
 }
 
-/** Stores a big array to a given file channel, using the given byte order.
+/** Stores a big array to a given writable channel, using the given byte order.
  *
- * @param array a big array whose elements will be written to {@code fileChannel}.
- * @param fileChannel a writable file channel.
- * @param byteOrder the byte order to be used to store data in {@link fileChannel}.
+ * @param array a big array whose elements will be written to {@code channel}.
+ * @param channel a writable channel.
+ * @param byteOrder the byte order to be used to store data in {@code channel}.
  */
-public static void STORE_KEYS(final KEY_TYPE array[][], final FileChannel fileChannel, final ByteOrder byteOrder) throws IOException {
-	for(KEY_TYPE[] t: array) STORE_KEYS(t, fileChannel, byteOrder);
+public static void STORE_KEYS(final KEY_TYPE array[][], final WritableByteChannel channel, final ByteOrder byteOrder) throws IOException {
+	for(KEY_TYPE[] t: array) STORE_KEYS(t, channel, byteOrder);
 }
 
 /** Stores a big-array fragment to a file given by a {@link File} object, using the given byte order.
  *
- * @param array a big array whose elements will be written to {@code filename}.
+ * @param array a big array whose elements will be written to {@code file}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param file a file.
- * @param byteOrder the byte order to be used to store data in {@link file}.
+ * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final long length, final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-	STORE_KEYS(array, offset, length, fileChannel, byteOrder);
-	fileChannel.close();
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	STORE_KEYS(array, offset, length, channel, byteOrder);
+	channel.close();
 }
 
-/** Stores a big-array fragment to a file given by a pathname, using the given byte order.
+/** Stores a big-array fragment to a file given by a filename, using the given byte order.
  *
- * @param array a big array whose elements will be written to {@code filename}.
+ * @param array a big array whose elements will be written to the file {@code filename}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param filename a filename.
- * @param byteOrder the byte order to be used to store data in the file {@link filename}.
+ * @param byteOrder the byte order to be used to store data in the file {@code filename}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final long length, final CharSequence filename, final ByteOrder byteOrder) throws IOException {
 	STORE_KEYS(array, offset, length, new File(filename.toString()), byteOrder);
@@ -608,79 +608,79 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final
 
 /** Stores an array to a file given by a {@link File} object, using the given byte order.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to {@code file}.
  * @param file a file.
- * @param byteOrder the byte order to be used to store data in {@link file}.
+ * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-	STORE_KEYS(array, fileChannel, byteOrder);
-	fileChannel.close();
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	STORE_KEYS(array, channel, byteOrder);
+	channel.close();
 }
 
-/** Stores a big array to a file given by a pathname, using the given byte order.
+/** Stores a big array to a file given by a filename, using the given byte order.
  *
- * @param array a big array whose elements will be written to {@code filename}.
+ * @param array a big array whose elements will be written to the file {@code filename}.
  * @param filename a filename.
- * @param byteOrder the byte order to be used to store data in the file {@link filename}.
+ * @param byteOrder the byte order to be used to store data in the file {@code filename}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final CharSequence filename, final ByteOrder byteOrder) throws IOException {
 	STORE_KEYS(array, new File(filename.toString()), byteOrder);
 }
 
-/** Stores the element returned by an iterator to a given file channel, using the given byte order.
+/** Stores the element returned by an iterator to a given writable channel, using the given byte order.
  *
- * @param i an iterator whose output will be written to {@code fileChannel}.
- * @param fileChannel a writable file channel.
- * @param byteOrder the byte order to be used to store data in {@link fileChannel}.
+ * @param i an iterator whose output will be written to {@code channel}.
+ * @param channel a writable channel.
+ * @param byteOrder the byte order to be used to store data in {@code channel}.
  */
-public static void STORE_KEYS(final KEY_ITERATOR i, final FileChannel fileChannel, final ByteOrder byteOrder) throws IOException {
+public static void STORE_KEYS(final KEY_ITERATOR i, final WritableByteChannel channel, final ByteOrder byteOrder) throws IOException {
 	ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(byteOrder);
-	KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
+	final KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
 	while(i.hasNext()) {
 		if (! buffer.hasRemaining()) {
 			buffer.flip();
-			fileChannel.write(byteBuffer);
+			channel.write(byteBuffer);
 			buffer.clear();
 		}
 		buffer.put(i.NEXT_KEY());
 	}
 
 	buffer.flip();
-	fileChannel.write(byteBuffer);
+	channel.write(byteBuffer);
 }
 
 /** Stores the element returned by an iterator to a file given by a {@link File} object, using the given byte order.
  *
- * @param i an iterator whose output will be written to {@code filename}.
+ * @param i an iterator whose output will be written to {@code file}.
  * @param file a file.
- * @param byteOrder the byte order to be used to store data in {@link file}.
+ * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_ITERATOR i, final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-	STORE_KEYS(i, fileChannel, byteOrder);
-	fileChannel.close();
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	STORE_KEYS(i, channel, byteOrder);
+	channel.close();
 }
 
-/** Stores the element returned by an iterator to a file given by a pathname, using the given byte order.
+/** Stores the element returned by an iterator to a file given by a filename, using the given byte order.
  *
- * @param i an iterator whose output will be written to {@code filename}.
+ * @param i an iterator whose output will be written to the file {@code filename}.
  * @param filename a filename.
- * @param byteOrder the byte order to be used to store data in the file {@link filename}.
+ * @param byteOrder the byte order to be used to store data in the file {@code filename}.
  */
 public static void STORE_KEYS(final KEY_ITERATOR i, final CharSequence filename, final ByteOrder byteOrder) throws IOException {
 	STORE_KEYS(i, new File(filename.toString()), byteOrder);
 }
 
-/** A wrapper that exhibits the content of a data input stream as a type-specific iterator. */
+/** A wrapper that exhibits the content of a readable channel as a type-specific iterator. */
 
 private static final class KEY_DATA_NIO_INPUT_WRAPPER implements KEY_ITERATOR {
-	private final FileChannel fileChannel;
+	private final ReadableByteChannel channel;
 	private final ByteBuffer byteBuffer;
 	private final KEY_BUFFER buffer;
 
-	public KEY_DATA_NIO_INPUT_WRAPPER(final FileChannel fileChannel, final ByteOrder byteOrder) {
-		this.fileChannel = fileChannel;
+	public KEY_DATA_NIO_INPUT_WRAPPER(final ReadableByteChannel channel, final ByteOrder byteOrder) {
+		this.channel = channel;
 		byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(byteOrder);
 		buffer = byteBuffer.AS_KEY_BUFFER();
 	}
@@ -690,7 +690,7 @@ private static final class KEY_DATA_NIO_INPUT_WRAPPER implements KEY_ITERATOR {
 		if (! buffer.hasRemaining()) {
 			buffer.clear();
 			try {
-				fileChannel.read(byteBuffer);
+				channel.read(byteBuffer);
 			} catch(IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -706,26 +706,32 @@ private static final class KEY_DATA_NIO_INPUT_WRAPPER implements KEY_ITERATOR {
 	}
 }
 
-/** Wraps the given data input stream, using the given byte order, into an iterator.
+/** Wraps the given readable channel, using the given byte order, into an iterator.
  *
- * @param fileChannel a data input.
- * @param byteOrder the byte order of the data from {@code fileChannel}.
+ * @param channel a readable channel.
+ * @param byteOrder the byte order of the data from {@code channel}.
  */
-public static KEY_ITERATOR AS_KEY_ITERATOR(final FileChannel fileChannel, final ByteOrder byteOrder) {
-	return new KEY_DATA_NIO_INPUT_WRAPPER(fileChannel, byteOrder);
+public static KEY_ITERATOR AS_KEY_ITERATOR(final ReadableByteChannel channel, final ByteOrder byteOrder) {
+	return new KEY_DATA_NIO_INPUT_WRAPPER(channel, byteOrder);
 }
 
 /** Wraps a file given by a {@link File} object, using the given byte order, into an iterator.
+ *
+ * @implNote This method opens a {@link FileChannel} that will not be closed until
+ * it is garbage collected.
  *
  * @param file a file.
  * @param byteOrder the byte order of the data stored in {@code file}.
  */
 public static KEY_ITERATOR AS_KEY_ITERATOR(final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel fileChannel = FileChannel.open(file.toPath());
-	return new KEY_DATA_NIO_INPUT_WRAPPER(fileChannel, byteOrder);
+	final FileChannel channel = FileChannel.open(file.toPath());
+	return new KEY_DATA_NIO_INPUT_WRAPPER(channel, byteOrder);
 }
 
-/** Wraps a file given by a pathname, using the given byte order, into an iterator.
+/** Wraps a file given by a filename, using the given byte order, into an iterator.
+ *
+ * @implNote This method opens a {@link FileChannel} that will not be closed until
+ * it is garbage collected.
  *
  * @param filename a filename.
  * @param byteOrder the byte order of the data stored in the file {@code filename}.
@@ -735,6 +741,9 @@ public static KEY_ITERATOR AS_KEY_ITERATOR(final CharSequence filename, final By
 }
 
 /** Wraps a file given by a {@link File} object, using the given byte order, into an iterable object.
+ *
+ * @implNote Each iterator returned by this class opens a {@link FileChannel}
+ * that will not be closed until it is garbage collected.
  *
  * @param file a file.
  * @param byteOrder the byte order of the data stored in {@code file}.
@@ -746,7 +755,10 @@ public static KEY_ITERABLE AS_KEY_ITERABLE(final File file, final ByteOrder byte
 	};
 }
 
-/** Wraps a file given by a pathname, using the given byte order, into an iterable object.
+/** Wraps a file given by a filename, using the given byte order, into an iterable object.
+ *
+ * @implNote Each iterator returned by this class opens a {@link FileChannel}
+ * that will not be closed until it is garbage collected.
  *
  * @param filename a filename.
  * @param byteOrder the byte order of the data stored in the file {@code filename}.
@@ -825,7 +837,7 @@ public static int LOAD_KEYS(final File file, final KEY_TYPE[] array, final int o
 #endif
 }
 
-/** Loads elements from a file given by a pathname, storing them in a given array fragment.
+/** Loads elements from a file given by a filename, storing them in a given array fragment.
  *
  * @param filename a filename.
  * @param array an array which will be filled with data from the specified file.
@@ -865,7 +877,7 @@ public static int LOAD_KEYS(final File file, final KEY_TYPE[] array) throws IOEx
 #endif
 }
 
-/** Loads elements from a file given by a pathname, storing them in a given array.
+/** Loads elements from a file given by a filename, storing them in a given array.
  *
  * @param filename a filename.
  * @param array an array which will be filled with data from the specified file.
@@ -956,7 +968,7 @@ public static void STORE_KEYS(final KEY_TYPE array[], final DataOutput dataOutpu
 
 /** Stores an array fragment to a file given by a {@link File} object.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to {@code file}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param file a file.
@@ -974,9 +986,9 @@ public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final in
 #endif
 }
 
-/** Stores an array fragment to a file given by a pathname.
+/** Stores an array fragment to a file given by a filename.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to the file {@code filename}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param filename a filename.
@@ -987,7 +999,7 @@ public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final in
 
 /** Stores an array to a file given by a {@link File} object.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to {@code file}.
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final File file) throws IOException {
@@ -1003,9 +1015,9 @@ public static void STORE_KEYS(final KEY_TYPE array[], final File file) throws IO
 #endif
 }
 
-/** Stores an array to a file given by a pathname.
+/** Stores an array to a file given by a filename.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to the file {@code filename}.
  * @param filename a filename.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final CharSequence filename) throws IOException {
@@ -1099,7 +1111,7 @@ public static long LOAD_KEYS(final File file, final KEY_TYPE[][] array, final lo
 #endif
 }
 
-/** Loads elements from a file given by a pathname, storing them in a given big-array fragment.
+/** Loads elements from a file given by a filename, storing them in a given big-array fragment.
  *
  * @param filename a filename.
  * @param array an array which will be filled with data from the specified file.
@@ -1145,7 +1157,7 @@ public static long LOAD_KEYS(final File file, final KEY_TYPE[][] array) throws I
 #endif
 }
 
-/** Loads elements from a file given by a pathname, storing them in a given big array.
+/** Loads elements from a file given by a filename, storing them in a given big array.
  *
  * @param filename a filename.
  * @param array a big array which will be filled with data from the specified file.
@@ -1244,7 +1256,7 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final DataOutput dataOut
 
 /** Stores a big-array fragment to a file given by a {@link File} object.
  *
- * @param array a big array whose elements will be written to {@code filename}.
+ * @param array a big array whose elements will be written to {@code file}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param file a file.
@@ -1267,9 +1279,9 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final
 #endif
 }
 
-/** Stores a big-array fragment to a file given by a pathname.
+/** Stores a big-array fragment to a file given by a filename.
  *
- * @param array a big array whose elements will be written to {@code filename}.
+ * @param array a big array whose elements will be written to the file {@code filename}.
  * @param offset the index of the first element of {@code array} to be written.
  * @param length the number of elements of {@code array} to be written.
  * @param filename a filename.
@@ -1280,7 +1292,7 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final
 
 /** Stores an array to a file given by a {@link File} object.
  *
- * @param array an array whose elements will be written to {@code filename}.
+ * @param array an array whose elements will be written to {@code file}.
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final File file) throws IOException {
@@ -1299,9 +1311,9 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final File file) throws 
 #endif
 }
 
-/** Stores a big array to a file given by a pathname.
+/** Stores a big array to a file given by a filename.
  *
- * @param array a big array whose elements will be written to {@code filename}.
+ * @param array a big array whose elements will be written to the file {@code filename}.
  * @param filename a filename.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final CharSequence filename) throws IOException {
@@ -1319,7 +1331,7 @@ public static void STORE_KEYS(final KEY_ITERATOR i, final DataOutput dataOutput)
 
 /** Stores the element returned by an iterator to a file given by a {@link File} object.
  *
- * @param i an iterator whose output will be written to {@code filename}.
+ * @param i an iterator whose output will be written to {@code file}.
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_ITERATOR i, final File file) throws IOException {
@@ -1328,9 +1340,9 @@ public static void STORE_KEYS(final KEY_ITERATOR i, final File file) throws IOEx
 	dos.close();
 }
 
-/** Stores the element returned by an iterator to a file given by a pathname.
+/** Stores the element returned by an iterator to a file given by a filename.
  *
- * @param i an iterator whose output will be written to {@code filename}.
+ * @param i an iterator whose output will be written to the file {@code filename}.
  * @param filename a filename.
  */
 public static void STORE_KEYS(final KEY_ITERATOR i, final CharSequence filename) throws IOException {
@@ -1380,13 +1392,19 @@ public static KEY_ITERATOR AS_KEY_ITERATOR(final DataInput dataInput) {
 
 /** Wraps a file given by a {@link File} object into an iterator.
  *
+ * @implNote This method opens a {@link FileChannel} that will not be closed until
+ * it is garbage collected.
+ *
  * @param file a file.
  */
 public static KEY_ITERATOR AS_KEY_ITERATOR(final File file) throws IOException {
 	return new KEY_DATA_INPUT_WRAPPER(new DataInputStream(new FastBufferedInputStream(new FileInputStream(file))));
 }
 
-/** Wraps a file given by a pathname into an iterator.
+/** Wraps a file given by a filename into an iterator.
+ *
+ * @implNote This method opens a {@link FileChannel} that will not be closed until
+ * it is garbage collected.
  *
  * @param filename a filename.
  */
@@ -1395,6 +1413,9 @@ public static KEY_ITERATOR AS_KEY_ITERATOR(final CharSequence filename) throws I
 }
 
 /** Wraps a file given by a {@link File} object into an iterable object.
+ *
+ * @implNote Each iterator returned by this class opens a {@link FileChannel}
+ * that will not be closed until it is garbage collected.
  *
  * @param file a file.
  */
@@ -1405,7 +1426,10 @@ public static KEY_ITERABLE AS_KEY_ITERABLE(final File file) {
 	};
 }
 
-/** Wraps a file given by a pathname into an iterable object.
+/** Wraps a file given by a filename into an iterable object.
+ *
+ * @implNote Each iterator returned by this class opens a {@link FileChannel}
+ * that will not be closed until it is garbage collected.
  *
  * @param filename a filename.
  */
