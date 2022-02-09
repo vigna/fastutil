@@ -614,6 +614,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 \
 "#define KEY_READER_WRAPPER ${TYPE_CAP[$k]}ReaderWrapper\n"\
 "#define KEY_DATA_INPUT_WRAPPER ${TYPE_CAP[$k]}DataInputWrapper\n"\
+"#define KEY_DATA_NIO_INPUT_WRAPPER ${TYPE_CAP[$k]}DataNioInputWrapper\n"\
 \
 \
 "/* Methods (keys) */\n"\
