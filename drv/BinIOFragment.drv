@@ -238,16 +238,20 @@ public static int LOAD_KEYS(final ReadableByteChannel channel, final ByteOrder b
 	ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(byteOrder);
 	final KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
 	int read = 0;
-	for(int r; (r = channel.read(byteBuffer)) > 0;) {
-		read += r >> MAPPED_BIG_LIST.LOG2_BITS;
-		final int l = Math.min(r, length);
-		buffer.flip();
-		buffer.get(array, offset, l);
-		offset += l;
-		length -= l;
+	for (;;) {
+		byteBuffer.clear();
+		byteBuffer.limit(Math.min(buffer.capacity(), length << MAPPED_BIG_LIST.LOG2_BYTES));
+		int r = channel.read(byteBuffer);
+		if (r <= 0) return read;
+		r >>>= MAPPED_BIG_LIST.LOG2_BYTES;
+		read += r;
+		// TODO: use the indexed get() method when switching to Java 13+
 		buffer.clear();
+		buffer.limit(r);
+		buffer.get(array, offset, r);
+		offset += r;
+		length -= r;
 	}
-	return read;
 }
 
 /** Loads elements from a given readable channel, using the given byte order, storing them in a given array.
@@ -366,11 +370,14 @@ public static void STORE_KEYS(final KEY_TYPE array[], int offset, int length, fi
 	final KEY_BUFFER buffer = byteBuffer.AS_KEY_BUFFER();
 	
 	while(length != 0) {
-		final int l = Math.min(length, buffer.remaining());
+		final int l = Math.min(length, buffer.capacity());
+		buffer.clear();
 		buffer.put(array, offset, l);
 		buffer.flip();
+
+		byteBuffer.clear();
+		byteBuffer.limit(buffer.limit() << MAPPED_BIG_LIST.LOG2_BYTES);
 		channel.write(byteBuffer);
-		buffer.clear();
 
 		offset += l;
 		length -= l;
@@ -396,7 +403,7 @@ public static void STORE_KEYS(final KEY_TYPE array[], final WritableByteChannel 
  * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final int length, final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	STORE_KEYS(array, offset, length, channel, byteOrder);
 	channel.close();
 }
@@ -589,7 +596,7 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final WritableByteChanne
  * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final long length, final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	STORE_KEYS(array, offset, length, channel, byteOrder);
 	channel.close();
 }
@@ -613,7 +620,7 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final
  * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	STORE_KEYS(array, channel, byteOrder);
 	channel.close();
 }
@@ -640,13 +647,18 @@ public static void STORE_KEYS(final KEY_ITERATOR i, final WritableByteChannel ch
 	while(i.hasNext()) {
 		if (! buffer.hasRemaining()) {
 			buffer.flip();
+			byteBuffer.clear();
+			byteBuffer.limit(buffer.limit() << MAPPED_BIG_LIST.LOG2_BYTES);
 			channel.write(byteBuffer);
+
 			buffer.clear();
 		}
 		buffer.put(i.NEXT_KEY());
 	}
 
 	buffer.flip();
+	byteBuffer.clear();
+	byteBuffer.limit(buffer.limit() << MAPPED_BIG_LIST.LOG2_BYTES);
 	channel.write(byteBuffer);
 }
 
@@ -657,7 +669,7 @@ public static void STORE_KEYS(final KEY_ITERATOR i, final WritableByteChannel ch
  * @param byteOrder the byte order to be used to store data in {@code file}.
  */
 public static void STORE_KEYS(final KEY_ITERATOR i, final File file, final ByteOrder byteOrder) throws IOException {
-	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+	final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	STORE_KEYS(i, channel, byteOrder);
 	channel.close();
 }
@@ -682,19 +694,22 @@ private static final class KEY_DATA_NIO_INPUT_WRAPPER implements KEY_ITERATOR {
 	public KEY_DATA_NIO_INPUT_WRAPPER(final ReadableByteChannel channel, final ByteOrder byteOrder) {
 		this.channel = channel;
 		byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE).order(byteOrder);
-		buffer = byteBuffer.AS_KEY_BUFFER();
+		buffer = byteBuffer.AS_KEY_BUFFER().clear().flip();
 	}
 
 	@Override
 	public boolean hasNext() {
 		if (! buffer.hasRemaining()) {
-			buffer.clear();
+			byteBuffer.clear();
 			try {
 				channel.read(byteBuffer);
 			} catch(IOException e) {
 				throw new RuntimeException(e);
 			}
-			buffer.flip();
+			byteBuffer.flip();
+
+			buffer.clear();
+			buffer.limit(byteBuffer.limit() >>> MAPPED_BIG_LIST.LOG2_BYTES);
 		}
 		return buffer.hasRemaining();
 	}
@@ -816,6 +831,7 @@ public static int LOAD_KEYS(final DataInput dataInput, final KEY_TYPE[] array) t
  * @return the number of elements actually read from the given file (it might be less than {@code length} if the file is too short).
  */
 public static int LOAD_KEYS(final File file, final KEY_TYPE[] array, final int offset, final int length) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 
 	final FileInputStream fis = new FileInputStream(file);
@@ -834,6 +850,9 @@ public static int LOAD_KEYS(final File file, final KEY_TYPE[] array, final int o
 
 	dis.close();
 	return i;
+#endif
+#else
+	return LOAD_KEYS(file, ByteOrder.BIG_ENDIAN, array, offset, length);
 #endif
 }
 
@@ -856,25 +875,7 @@ public static int LOAD_KEYS(final CharSequence filename, final KEY_TYPE[] array,
  * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
  */
 public static int LOAD_KEYS(final File file, final KEY_TYPE[] array) throws IOException {
-	final FileInputStream fis = new FileInputStream(file);
-#if KEY_CLASS_Byte
-	final int result = read(fis, array, 0, array.length);
-	fis.close();
-	return result;
-#else
-	final DataInputStream dis = new DataInputStream(new FastBufferedInputStream(fis));
-
-	int i = 0;
-	try {
-		final int length = array.length;
-		for(i = 0; i < length; i++) array[i] = dis.READ_KEY();
-	}
-	catch(EOFException itsOk) {}
-
-	dis.close();
-
-	return i;
-#endif
+	return LOAD_KEYS(file, array, 0, array.length);
 }
 
 /** Loads elements from a file given by a filename, storing them in a given array.
@@ -897,6 +898,7 @@ public static int LOAD_KEYS(final CharSequence filename, final KEY_TYPE[] array)
  * @return an array filled with the content of the specified file.
  */
 public static KEY_TYPE[] LOAD_KEYS(final File file) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	final FileInputStream fis = new FileInputStream(file);
 
 #if KEY_CLASS_Boolean
@@ -921,6 +923,9 @@ public static KEY_TYPE[] LOAD_KEYS(final File file) throws IOException {
 	dis.close();
 #endif
 	return array;
+#else
+	return LOAD_KEYS(file, ByteOrder.BIG_ENDIAN);
+#endif
 }
 
 /** Loads elements from a file given by a filename, storing them in a new array.
@@ -947,7 +952,7 @@ public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final in
 	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 #if KEY_CLASS_Byte
 	write(dataOutput, array, offset, length);
-#else
+#elif KEY_CLASS_Boolean
 	for(int i = 0; i < length; i++) dataOutput.WRITE_KEY(array[offset + i]);
 #endif
 }
@@ -974,15 +979,18 @@ public static void STORE_KEYS(final KEY_TYPE array[], final DataOutput dataOutpu
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final int length, final File file) throws IOException {
-	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 #if KEY_CLASS_Byte
+	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 	final OutputStream os = new FastBufferedOutputStream(new FileOutputStream(file));
 	write(os, array, offset, length);
 	os.close();
-#else
+#elif KEY_CLASS_Boolean
+	PACKAGE.ARRAYS.ensureOffsetLength(array, offset, length);
 	final DataOutputStream dos = new DataOutputStream(new FastBufferedOutputStream(new FileOutputStream(file)));
 	for(int i = 0; i < length; i++) dos.WRITE_KEY(array[offset + i]);
 	dos.close();
+#else
+	STORE_KEYS(array, offset, length, file, ByteOrder.BIG_ENDIAN);
 #endif
 }
 
@@ -1003,16 +1011,7 @@ public static void STORE_KEYS(final KEY_TYPE array[], final int offset, final in
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_TYPE array[], final File file) throws IOException {
-#if KEY_CLASS_Byte
-	final OutputStream os = new FastBufferedOutputStream(new FileOutputStream(file));
-	write(os, array, 0, array.length);
-	os.close();
-#else
-	final int length = array.length;
-	final DataOutputStream dos = new DataOutputStream(new FastBufferedOutputStream(new FileOutputStream(file)));
-	for(int i = 0; i < length; i++) dos.WRITE_KEY(array[i]);
-	dos.close();
-#endif
+	STORE_KEYS(array, 0, array.length, file);
 }
 
 /** Stores an array to a file given by a filename.
@@ -1023,9 +1022,6 @@ public static void STORE_KEYS(final KEY_TYPE array[], final File file) throws IO
 public static void STORE_KEYS(final KEY_TYPE array[], final CharSequence filename) throws IOException {
 	STORE_KEYS(array, new File(filename.toString()));
 }
-
-
-
 
 
 /** Loads elements from a given data input, storing them in a given big-array fragment.
@@ -1084,6 +1080,7 @@ public static long LOAD_KEYS(final DataInput dataInput, final KEY_TYPE[][] array
  * @return the number of elements actually read from the given file (it might be less than {@code length} if the file is too short).
  */
 public static long LOAD_KEYS(final File file, final KEY_TYPE[][] array, final long offset, final long length) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	ensureOffsetLength(array, offset, length);
 
 	final FileInputStream fis = new FileInputStream(file);
@@ -1109,6 +1106,9 @@ public static long LOAD_KEYS(final File file, final KEY_TYPE[][] array, final lo
 	dis.close();
 	return c;
 #endif
+#else
+	return LOAD_KEYS(file, ByteOrder.BIG_ENDIAN, array, offset, length);
+#endif
 }
 
 /** Loads elements from a file given by a filename, storing them in a given big-array fragment.
@@ -1130,6 +1130,7 @@ public static long LOAD_KEYS(final CharSequence filename, final KEY_TYPE[][] arr
  * @return the number of elements actually read from the given file (it might be less than the array length if the file is too short).
  */
 public static long LOAD_KEYS(final File file, final KEY_TYPE[][] array) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	final FileInputStream fis = new FileInputStream(file);
 #if KEY_CLASS_Byte
 	final long result = read(fis, array, 0, length(array));
@@ -1155,6 +1156,9 @@ public static long LOAD_KEYS(final File file, final KEY_TYPE[][] array) throws I
 
 	return c;
 #endif
+#else
+	return LOAD_KEYS(file, ByteOrder.BIG_ENDIAN, array);
+#endif
 }
 
 /** Loads elements from a file given by a filename, storing them in a given big array.
@@ -1177,6 +1181,7 @@ public static long LOAD_KEYS(final CharSequence filename, final KEY_TYPE[][] arr
  * @return a big array filled with the content of the specified file.
  */
 public static KEY_TYPE[][] LOAD_KEYS_BIG(final File file) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	final FileInputStream fis = new FileInputStream(file);
 
 #if KEY_CLASS_Boolean
@@ -1202,6 +1207,9 @@ public static KEY_TYPE[][] LOAD_KEYS_BIG(final File file) throws IOException {
 	dis.close();
 #endif
 	return array;
+#else
+	return LOAD_KEYS_BIG(file, ByteOrder.BIG_ENDIAN);
+#endif
 }
 
 /** Loads elements from a file given by a filename, storing them in a new big array.
@@ -1262,12 +1270,11 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final DataOutput dataOut
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final long length, final File file) throws IOException {
-	ensureOffsetLength(array, offset, length);
 #if KEY_CLASS_Byte
 	final OutputStream os = new FastBufferedOutputStream(new FileOutputStream(file));
 	write(os, array, offset, length);
 	os.close();
-#else
+#elif KEY_CLASS_Boolean
 	final DataOutputStream dos = new DataOutputStream(new FastBufferedOutputStream(new FileOutputStream(file)));
 	for(int i = segment(offset); i < segment(offset + length + SEGMENT_MASK); i++) {
 		final KEY_TYPE[] t = array[i];
@@ -1275,7 +1282,8 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final long offset, final
 		for(int d = (int)Math.max(0, offset - start(i)); d < l; d++) dos.WRITE_KEY(t[d]);
 	}
 	dos.close();
-
+#else
+	STORE_KEYS(array, offset, length, file, ByteOrder.BIG_ENDIAN);
 #endif
 }
 
@@ -1300,7 +1308,7 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final File file) throws 
 	final OutputStream os = new FastBufferedOutputStream(new FileOutputStream(file));
 	write(os, array, 0, length(array));
 	os.close();
-#else
+#elif KEY_CLASS_Boolean
 	final DataOutputStream dos = new DataOutputStream(new FastBufferedOutputStream(new FileOutputStream(file)));
 	for(int i = 0; i < array.length; i++) {
 		final KEY_TYPE[] t = array[i];
@@ -1308,6 +1316,8 @@ public static void STORE_KEYS(final KEY_TYPE array[][], final File file) throws 
 		for(int d = 0; d < l; d++) dos.WRITE_KEY(t[d]);
 	}
 	dos.close();
+#else
+	STORE_KEYS(array, file, ByteOrder.BIG_ENDIAN);
 #endif
 }
 
@@ -1335,9 +1345,13 @@ public static void STORE_KEYS(final KEY_ITERATOR i, final DataOutput dataOutput)
  * @param file a file.
  */
 public static void STORE_KEYS(final KEY_ITERATOR i, final File file) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	final DataOutputStream dos = new DataOutputStream(new FastBufferedOutputStream(new FileOutputStream(file)));
 	while(i.hasNext()) dos.WRITE_KEY(i.NEXT_KEY());
 	dos.close();
+#else
+	STORE_KEYS(i, file, ByteOrder.BIG_ENDIAN);
+#endif
 }
 
 /** Stores the element returned by an iterator to a file given by a filename.
@@ -1398,7 +1412,11 @@ public static KEY_ITERATOR AS_KEY_ITERATOR(final DataInput dataInput) {
  * @param file a file.
  */
 public static KEY_ITERATOR AS_KEY_ITERATOR(final File file) throws IOException {
+#if KEY_CLASS_Boolean || KEY_CLASS_Byte
 	return new KEY_DATA_INPUT_WRAPPER(new DataInputStream(new FastBufferedInputStream(new FileInputStream(file))));
+#else
+	return AS_KEY_ITERATOR(file, ByteOrder.BIG_ENDIAN);
+#endif
 }
 
 /** Wraps a file given by a filename into an iterator.

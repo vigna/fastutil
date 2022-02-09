@@ -21,6 +21,8 @@ import static it.unimi.dsi.fastutil.BigArrays.get;
 import static it.unimi.dsi.fastutil.BigArrays.length;
 import static it.unimi.dsi.fastutil.BigArrays.set;
 import static it.unimi.dsi.fastutil.BigArrays.wrap;
+import static java.nio.ByteOrder.BIG_ENDIAN;
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -34,11 +36,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteOrder;
+import java.util.Arrays;
+import java.util.SplittableRandom;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.BigArrays;
 import it.unimi.dsi.fastutil.bytes.ByteBigArrays;
+import it.unimi.dsi.fastutil.doubles.DoubleBigArrays;
 import it.unimi.dsi.fastutil.doubles.DoubleIterator;
+import it.unimi.dsi.fastutil.doubles.DoubleIterators;
 
 public class BinIOTest {
 
@@ -168,6 +176,7 @@ public class BinIOTest {
 		testBigBytes(wrap(LARGE));
 	}
 
+	@Test
 	public void testFileDataWrappers() throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
@@ -226,5 +235,97 @@ public class BinIOTest {
 	public void testInts() throws IOException {
 		testInts(new int[1024]);
 		testInts(new int[1024 * 1024]);
+	}
+
+	@Test
+	public void testNioDataWrappers() throws IOException {
+		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
+		file.deleteOnExit();
+		for (final ByteOrder o : new ByteOrder[] { LITTLE_ENDIAN, BIG_ENDIAN }) {
+			for (final int size : new int[] { 100, BinIO.BUFFER_SIZE / Double.BYTES,
+					BinIO.BUFFER_SIZE / Double.BYTES + 100, BinIO.BUFFER_SIZE, 10000 }) {
+				final SplittableRandom r = new SplittableRandom(0);
+				final double[] d = new double[size];
+				for (int i = 0; i < size; i++) d[i] = r.nextDouble();
+
+				BinIO.storeDoubles(d, file, o);
+				assertArrayEquals(d, BinIO.loadDoubles(file, o), 0);
+				BinIO.storeDoubles(DoubleIterators.wrap(d), file, o);
+				assertArrayEquals(d, BinIO.loadDoubles(file, o), 0);
+
+				DoubleIterator di = BinIO.asDoubleIterator(file, o);
+				for (int i = 0; i < size; i++) assertEquals(d[i], di.nextDouble(), 0.);
+				assertFalse(Integer.toString(size), di.hasNext());
+
+				di = BinIO.asDoubleIterator(file, o);
+				for (int i = 0; i < size; i++) {
+					assertTrue(di.hasNext());
+					assertEquals(d[i], di.nextDouble(), 0.);
+				}
+
+				di = BinIO.asDoubleIterator(file, o);
+				int s = 1;
+				for (int i = 0; i < size; i++) {
+					assertEquals(Math.min(s, size - i), di.skip(s));
+					i += s;
+					if (i >= size) break;
+					assertEquals(d[i], di.nextDouble(), 0.);
+					s *= 2;
+				}
+
+				di = BinIO.asDoubleIterator(file, o);
+				s = 1;
+				for (int i = 0; i < size; i++) {
+					if (s > size - i) break;
+					assertTrue(di.hasNext());
+					assertEquals(Math.min(s, size - i), di.skip(s));
+					i += s;
+					if (i >= size) {
+						assertFalse(di.hasNext());
+						break;
+					}
+					assertTrue(di.hasNext());
+					assertTrue(di.hasNext()); // To increase coverage
+					assertEquals(d[i], di.nextDouble(), 0.);
+					s *= 2;
+				}
+			}
+		}
+	}
+
+	@Test
+	public void testNioBig() throws IOException {
+		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
+		file.deleteOnExit();
+		for (final ByteOrder o : new ByteOrder[] { LITTLE_ENDIAN, BIG_ENDIAN }) {
+			for (final int size : new int[] { 100, BinIO.BUFFER_SIZE / Double.BYTES,
+					BinIO.BUFFER_SIZE / Double.BYTES + 100, BinIO.BUFFER_SIZE, 10000 }) {
+				final SplittableRandom r = new SplittableRandom(0);
+				final double[] d = new double[size];
+				for (int i = 0; i < size; i++) d[i] = r.nextDouble();
+				final double[][] dd = BigArrays.wrap(d);
+
+				BinIO.storeDoubles(dd, file, o);
+				assertArrayEquals(d, BinIO.loadDoubles(file, o), 0);
+				assertTrue(BigArrays.equals(dd, BinIO.loadDoublesBig(file, o)));
+
+				final double[][] ee = DoubleBigArrays.newBigArray(length(dd));
+				BinIO.loadDoubles(file, o, ee, 0, length(dd));
+				assertTrue(BigArrays.equals(dd, ee));
+
+				BinIO.loadDoubles(file, o, ee, size / 2, size - size / 2);
+				for (int i = size / 2; i < size; i++) assertEquals(get(ee, i), get(dd, i - size / 2), 0);
+
+				BinIO.loadDoubles(file, o, ee, size / 2, 3 * size / 4 - size / 2);
+				for (int i = size / 2; i < 3 * size / 4; i++) assertEquals(get(ee, i), get(dd, i - size / 2), 0);
+
+				BinIO.storeDoubles(dd, size / 2, size - size / 2, file, o);
+				assertArrayEquals(Arrays.copyOfRange(d, size / 2, size), BinIO.loadDoubles(file, o), 0);
+
+				BinIO.storeDoubles(dd, size / 2, 3 * size / 4 - size / 2, file, o);
+				assertArrayEquals(Arrays.copyOfRange(d, size / 2, 3 * size / 4), BinIO.loadDoubles(file, o), 0);
+
+			}
+		}
 	}
 }
