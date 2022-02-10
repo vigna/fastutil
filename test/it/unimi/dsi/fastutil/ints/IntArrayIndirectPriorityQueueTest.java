@@ -27,8 +27,8 @@ public class IntArrayIndirectPriorityQueueTest {
 
 	@Test
 	public void testFront() {
-		int refArray[] = { 4, 3, 2, 1, 0, 3, 2, 1, 0, 2, 1, 0, 1, 0, 0 };
-		int tops[] = new int[refArray.length];
+		final int refArray[] = { 4, 3, 2, 1, 0, 3, 2, 1, 0, 2, 1, 0, 1, 0, 0 };
+		final int tops[] = new int[refArray.length];
 		final IntArrayIndirectPriorityQueue queue = new IntArrayIndirectPriorityQueue(refArray);
 		for (int i = refArray.length; i-- != 0;)
 			queue.enqueue(i);
@@ -69,10 +69,10 @@ public class IntArrayIndirectPriorityQueueTest {
 
 	private int[] ref;
 
-	private boolean heapEqual(int[] a, int[] b, int sizea, int sizeb) {
+	private boolean heapEqual(final int[] a, final int[] b, int sizea, final int sizeb) {
 		if (sizea != sizeb) return false;
-		int[] aa = new int[sizea];
-		int[] bb = new int[sizea];
+		final int[] aa = new int[sizea];
+		final int[] bb = new int[sizea];
 		for (int i = 0; i < sizea; i++) {
 			aa[i] = ref[a[i]];
 			bb[i] = ref[b[i]];
@@ -84,16 +84,16 @@ public class IntArrayIndirectPriorityQueueTest {
 		return true;
 	}
 
-	public void test(int n, IntComparator comparator) {
+	public void test(final int n, final IntComparator comparator) {
 		Exception mThrowsIllegal, tThrowsIllegal, mThrowsOutOfBounds, tThrowsOutOfBounds, mThrowsNoElement, tThrowsNoElement;
 		int rm = 0, rt = 0;
-		Random r = new Random(0);
+		final Random r = new Random(0);
 		ref = new int[n];
 
 		for (int i = 0; i < n; i++) ref[i] = r.nextInt();
 
 		IntArrayIndirectPriorityQueue m = new IntArrayIndirectPriorityQueue(ref, comparator);
-		IntHeapIndirectPriorityQueue t = new IntHeapIndirectPriorityQueue(ref, comparator);
+		final IntHeapIndirectPriorityQueue t = new IntHeapIndirectPriorityQueue(ref, comparator);
 
 		/* We add pairs to t. */
 		for (int i = 0; i < n / 2; i++) {
@@ -115,17 +115,17 @@ public class IntArrayIndirectPriorityQueueTest {
 				}
 			}
 
-			int T = r.nextInt(2 * n);
+			final int T = r.nextInt(2 * n);
 
 			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
 
 			try {
 				t.enqueue(T);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
-			catch (IllegalArgumentException e) {
+			catch (final IllegalArgumentException e) {
 				tThrowsIllegal = e;
 			}
 
@@ -133,10 +133,10 @@ public class IntArrayIndirectPriorityQueueTest {
 				try {
 					m.enqueue(T);
 				}
-				catch (IndexOutOfBoundsException e) {
+				catch (final IndexOutOfBoundsException e) {
 					mThrowsOutOfBounds = e;
 				}
-				catch (IllegalArgumentException e) {
+				catch (final IllegalArgumentException e) {
 					mThrowsIllegal = e;
 				}
 			}
@@ -155,19 +155,19 @@ public class IntArrayIndirectPriorityQueueTest {
 						((ref[m.first()]) == (ref[t.first()])));
 			}
 
-			mThrowsNoElement = tThrowsNoElement = mThrowsOutOfBounds = tThrowsOutOfBounds = mThrowsIllegal = tThrowsIllegal = null;
+			mThrowsOutOfBounds = tThrowsOutOfBounds = null;
 
 			try {
 				rm = m.dequeue();
 				while (!m.isEmpty() && ((ref[m.first()]) == (ref[rm])))	m.dequeue();
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
-			catch (IllegalArgumentException e) {
+			catch (final IllegalArgumentException e) {
 				mThrowsIllegal = e;
 			}
-			catch (java.util.NoSuchElementException e) {
+			catch (final java.util.NoSuchElementException e) {
 				mThrowsNoElement = e;
 			}
 
@@ -176,13 +176,13 @@ public class IntArrayIndirectPriorityQueueTest {
 				while (!t.isEmpty() && ((ref[t.first()]) == (ref[rt])))
 					t.dequeue();
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
-			catch (IllegalArgumentException e) {
+			catch (final IllegalArgumentException e) {
 				tThrowsIllegal = e;
 			}
-			catch (java.util.NoSuchElementException e) {
+			catch (final java.util.NoSuchElementException e) {
 				tThrowsNoElement = e;
 			}
 
@@ -210,26 +210,26 @@ public class IntArrayIndirectPriorityQueueTest {
 			try {
 				m.remove(pos);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				mThrowsOutOfBounds = e;
 			}
-			catch (IllegalArgumentException e) {
+			catch (final IllegalArgumentException e) {
 				mThrowsIllegal = e;
 			}
-			catch (java.util.NoSuchElementException e) {
+			catch (final java.util.NoSuchElementException e) {
 				mThrowsNoElement = e;
 			}
 
 			try {
 				t.remove(pos);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
-			catch (IllegalArgumentException e) {
+			catch (final IllegalArgumentException e) {
 				tThrowsIllegal = e;
 			}
-			catch (java.util.NoSuchElementException e) {
+			catch (final java.util.NoSuchElementException e) {
 				tThrowsNoElement = e;
 			}
 
@@ -254,13 +254,13 @@ public class IntArrayIndirectPriorityQueueTest {
 			try {
 				t.changed(pos);
 			}
-			catch (IndexOutOfBoundsException e) {
+			catch (final IndexOutOfBoundsException e) {
 				tThrowsOutOfBounds = e;
 			}
-			catch (IllegalArgumentException e) {
+			catch (final IllegalArgumentException e) {
 				tThrowsIllegal = e;
 			}
-			catch (java.util.NoSuchElementException e) {
+			catch (final java.util.NoSuchElementException e) {
 				tThrowsNoElement = e;
 			}
 
@@ -268,13 +268,13 @@ public class IntArrayIndirectPriorityQueueTest {
 				try {
 					m.changed(pos);
 				}
-				catch (IndexOutOfBoundsException e) {
+				catch (final IndexOutOfBoundsException e) {
 					mThrowsOutOfBounds = e;
 				}
-				catch (IllegalArgumentException e) {
+				catch (final IllegalArgumentException e) {
 					mThrowsIllegal = e;
 				}
-				catch (java.util.NoSuchElementException e) {
+				catch (final java.util.NoSuchElementException e) {
 					mThrowsNoElement = e;
 				}
 			}
@@ -294,7 +294,7 @@ public class IntArrayIndirectPriorityQueueTest {
 						((ref[m.first()]) == (ref[t.first()])));
 			}
 
-			int[] temp = t.heap.clone();
+			final int[] temp = t.heap.clone();
 			IntArrays.quickSort(temp, 0, t.size()); // To scramble a bit
 			m = new IntArrayIndirectPriorityQueue(m.refArray, temp, t.size(), comparator);
 
@@ -307,7 +307,7 @@ public class IntArrayIndirectPriorityQueueTest {
 
 			if (m.size() != 0 && ((new it.unimi.dsi.fastutil.ints.IntOpenHashSet(m.array, 0, m.size)).size() == m.size())) {
 
-				int first = m.first();
+				final int first = m.first();
 				ref[first] = r.nextInt();
 
 				// System.err.println("Pre-change m: " +m);

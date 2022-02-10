@@ -32,25 +32,25 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.io.FastBufferedOutputStream;
 
-public class MappedIntBigListTest {
+public class IntMappedBigListTest {
 	@Test
 	public void testReadWrite() throws IOException {
 		final File file = File.createTempFile(this.getClass().getName(), ".bin");
 		file.deleteOnExit();
 		SplittableRandom r = new SplittableRandom(0);
 		final DataOutputStream dos = new DataOutputStream(new FastBufferedOutputStream(new FileOutputStream(file)));
-		for (long i = 0; i < MappedIntBigList.CHUNK_SIZE + 10; i++) dos.writeInt(r.nextInt());
+		for (long i = 0; i < IntMappedBigList.CHUNK_SIZE + 10; i++) dos.writeInt(r.nextInt());
 		dos.close();
 
-		final MappedIntBigList list = MappedIntBigList.map(FileChannel.open(file.toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE), ByteOrder.BIG_ENDIAN, MapMode.READ_WRITE);
+		final IntMappedBigList list = IntMappedBigList.map(FileChannel.open(file.toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE), ByteOrder.BIG_ENDIAN, MapMode.READ_WRITE);
 		r = new SplittableRandom(0);
-		for (long i = 0; i < MappedIntBigList.CHUNK_SIZE + 10; i++) assertEquals(Long.toString(i), r.nextInt(), list.getInt(i));
+		for (long i = 0; i < IntMappedBigList.CHUNK_SIZE + 10; i++) assertEquals(Long.toString(i), r.nextInt(), list.getInt(i));
 
 		r = new SplittableRandom(0);
-		for (long i = 0; i < MappedIntBigList.CHUNK_SIZE - 10; i++) r.nextInt();
+		for (long i = 0; i < IntMappedBigList.CHUNK_SIZE - 10; i++) r.nextInt();
 		final int[] a = new int[20];
-		list.getElements(MappedIntBigList.CHUNK_SIZE - 10, a, 0, 20);
-		for (long i = MappedIntBigList.CHUNK_SIZE - 10; i < MappedIntBigList.CHUNK_SIZE + 10; i++) assertEquals(Long.toString(i), r.nextInt(), a[(int)(i - (MappedIntBigList.CHUNK_SIZE - 10))]);
+		list.getElements(IntMappedBigList.CHUNK_SIZE - 10, a, 0, 20);
+		for (long i = IntMappedBigList.CHUNK_SIZE - 10; i < IntMappedBigList.CHUNK_SIZE + 10; i++) assertEquals(Long.toString(i), r.nextInt(), a[(int)(i - (IntMappedBigList.CHUNK_SIZE - 10))]);
 
 		r = new SplittableRandom(0);
 		list.getElements(1, a, 1, 19);
@@ -58,10 +58,10 @@ public class MappedIntBigListTest {
 		for (int i = 1; i < 20; i++) assertEquals(Long.toString(i), r.nextInt(), a[i]);
 
 		r = new SplittableRandom(1);
-		for (long i = 0; i < MappedIntBigList.CHUNK_SIZE + 10; i++) list.set(i, r.nextInt());
+		for (long i = 0; i < IntMappedBigList.CHUNK_SIZE + 10; i++) list.set(i, r.nextInt());
 
 		r = new SplittableRandom(1);
-		for (long i = 0; i < MappedIntBigList.CHUNK_SIZE + 10; i++) assertEquals(Long.toString(i), r.nextInt(), list.getInt(i));
+		for (long i = 0; i < IntMappedBigList.CHUNK_SIZE + 10; i++) assertEquals(Long.toString(i), r.nextInt(), list.getInt(i));
 
 
 		file.delete();
@@ -83,7 +83,7 @@ public class MappedIntBigListTest {
 		channel.write(buffer);
 		channel.close();
 
-		final MappedIntBigList list = MappedIntBigList.map(FileChannel.open(file.toPath()), ByteOrder.LITTLE_ENDIAN);
+		final IntMappedBigList list = IntMappedBigList.map(FileChannel.open(file.toPath()), ByteOrder.LITTLE_ENDIAN);
 		r = new SplittableRandom(0);
 		for (long i = 0; i < 100; i++) assertEquals(Long.toString(i), r.nextInt(), list.getInt(i));
 
@@ -94,7 +94,7 @@ public class MappedIntBigListTest {
 			assertEquals(Long.toString(i), r.nextInt(), a[0]);
 		}
 
-		final MappedIntBigList copy = list.copy();
+		final IntMappedBigList copy = list.copy();
 		r = new SplittableRandom(0);
 		for (long i = 0; i < 100; i++) assertEquals(Long.toString(i), r.nextInt(), copy.getInt(i));
 		file.delete();
@@ -115,7 +115,7 @@ public class MappedIntBigListTest {
 		channel.write(buffer);
 		channel.close();
 
-		final MappedIntBigList list = MappedIntBigList.map(FileChannel.open(file.toPath()), ByteOrder.BIG_ENDIAN);
+		final IntMappedBigList list = IntMappedBigList.map(FileChannel.open(file.toPath()), ByteOrder.BIG_ENDIAN);
 		r = new SplittableRandom(0);
 		for (long i = 0; i < 100; i++) assertEquals(Long.toString(i), r.nextInt(), list.getInt(i));
 
@@ -126,7 +126,7 @@ public class MappedIntBigListTest {
 			assertEquals(Long.toString(i), r.nextInt(), a[0]);
 		}
 
-		final MappedIntBigList copy = list.copy();
+		final IntMappedBigList copy = list.copy();
 		r = new SplittableRandom(0);
 		for (long i = 0; i < 100; i++) assertEquals(Long.toString(i), r.nextInt(), copy.getInt(i));
 		file.delete();

@@ -557,7 +557,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertTrue(m.int2IntEntrySet().isEmpty());
 	}
 
-	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
+	@SuppressWarnings({ "unlikely-arg-type" })
 	@Test
 	public void testEntrySetContains() {
 		m.put(0, 0);
@@ -618,7 +618,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		}
 		final Set<Entry> s = new HashSet<>();
 		final Set<Entry> sIdentity = Collections.newSetFromMap(new IdentityHashMap<Entry, Boolean>());
-		
+
 		Int2IntMaps.fastIterator(m).forEachRemaining(x -> {
 			s.add(new AbstractInt2IntMap.BasicEntry(x.getIntKey(), x.getIntValue()));
 			sIdentity.add(x);
@@ -661,13 +661,13 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, i);
 		}
-    	Iterator<Entry> i = m.int2IntEntrySet().iterator();
+		final Iterator<Entry> i = m.int2IntEntrySet().iterator();
 		int key;
 		int value;
 		// This will be an invalid entry after the removal, so we can't trust it long term.
 		// Enforce this with scoping; get the contents and then not use it again.
 		{
-			Entry toRemoveEntry = i.next();
+			final Entry toRemoveEntry = i.next();
 			key = toRemoveEntry.getIntKey();
 			value = toRemoveEntry.getIntValue();
 		}
@@ -678,7 +678,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
     	assertFalse(m.containsKey(key));
     	assertFalse(m.containsValue(value));
     	assertEquals(m.get(key), -1);
-    	assertEquals(99, m.size()); 
+    	assertEquals(99, m.size());
 	}
 
 	@Test(expected = IllegalStateException.class)
@@ -698,7 +698,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		iterator.remove();
 	}
 
-	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
+	@SuppressWarnings({ "unlikely-arg-type" })
 	@Test
 	public void testEntrySetRemove() {
 		m.put(0, 0);
@@ -798,7 +798,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(1, m.getOrDefault(1, 2));
 	}
 
-	
+
 	@Test
 	public void testKeySetIteration() {
 		for (int i = 0; i < 100; i++) {
@@ -821,7 +821,6 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(m.keySet(), s);
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testKeySetForEachObject() {
 		for (int i = 0; i < 100; i++) {
@@ -848,7 +847,6 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(m.keySet(), s);
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testKeySetIteratorForEachObject() {
 		for (int i = 0; i < 100; i++) {
@@ -873,9 +871,9 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, i);
 		}
-		IntIterator i = m.keySet().iterator();
-		int toRemoveKey = i.nextInt();
-		
+		final IntIterator i = m.keySet().iterator();
+		final int toRemoveKey = i.nextInt();
+
 		// Taking advantage of the fact we mapped keys to values
 		assertTrue(m.containsKey(toRemoveKey));
 		assertEquals(m.get(toRemoveKey), toRemoveKey);
@@ -1440,7 +1438,7 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(0, m.size());
 		assertTrue(m.isEmpty());
 	}
-	
+
 	// No testValuesIteration; it would basically turn into a test whether
 	// new IntOpenHashSet(m.values()).equals(new IntOpenHashSet(m.values()))
 	// which is not very instructive.
@@ -1521,9 +1519,9 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		for (int i = 0; i < 100; i++) {
 			m.put(i, i);
 		}
-		IntIterator i = m.values().iterator();
-		int toRemoveValue = i.nextInt();
-		
+		final IntIterator i = m.values().iterator();
+		final int toRemoveValue = i.nextInt();
+
 		// Taking advantage of the fact we mapped keys to values
 		assertTrue(m.containsKey(toRemoveValue));
 		assertTrue(m.containsValue(toRemoveValue));

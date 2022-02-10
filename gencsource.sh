@@ -41,7 +41,6 @@ file=${2##*/}
 name=${file%.*}
 
 class=${name#Abstract}
-class=${class#Mapped}
 
 # Now we rip off the types.
 rem=${class##[A-Z]+([a-z])}
@@ -569,7 +568,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define ARRAY_LIST ${TYPE_CAP[$k]}ArrayList\n"\
 "#define IMMUTABLE_LIST ${TYPE_CAP[$k]}ImmutableList\n"\
 "#define BIG_ARRAY_BIG_LIST ${TYPE_CAP[$k]}BigArrayBigList\n"\
-"#define MAPPED_BIG_LIST Mapped${TYPE_CAP[$k]}BigList\n"\
+"#define MAPPED_BIG_LIST ${TYPE_CAP[$k]}MappedBigList\n"\
 "#define ARRAY_FRONT_CODED_LIST ${TYPE_CAP[$k]}ArrayFrontCodedList\n"\
 "#define ARRAY_FRONT_CODED_BIG_LIST ${TYPE_CAP[$k]}ArrayFrontCodedBigList\n"\
 "#define HEAP_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapPriorityQueue\n"\

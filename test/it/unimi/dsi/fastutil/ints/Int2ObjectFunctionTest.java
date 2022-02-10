@@ -20,7 +20,6 @@ import static org.junit.Assert.assertSame;
 
 import org.junit.Test;
 
-@SuppressWarnings("rawtypes")
 public class Int2ObjectFunctionTest {
 
 	@SuppressWarnings("deprecation")

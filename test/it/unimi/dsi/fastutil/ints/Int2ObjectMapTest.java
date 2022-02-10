@@ -99,7 +99,6 @@ public class Int2ObjectMapTest {
 		assertNull(m.get(ONE));
 	}
 
-	@SuppressWarnings("deprecation")
 	@Test
 	public void testDefaultReplaceTernary() {
 		final Int2ObjectMap<Object> m = new SimpleInt2ObjectMap(new Int2ObjectArrayMap<>());

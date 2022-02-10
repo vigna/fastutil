@@ -33,7 +33,7 @@ public class Int2IntMapGenericOpenHashTest extends Int2IntMapGenericTest<Int2Int
 	@Parameter(2)
 	public float loadFactor;
 
-	@SuppressWarnings({ "AutoBoxing", "boxing" })
+	@SuppressWarnings({ "boxing" })
 	@Parameters(name = "{index}: lf {2}")
 	public static Iterable<Object[]> data() {
 		final EnumSet<Capability> capabilities = EnumSet.allOf(Capability.class);

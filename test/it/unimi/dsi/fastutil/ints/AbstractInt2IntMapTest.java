@@ -90,7 +90,7 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 					return new ObjectIterator<Entry>() {
 					final IntIterator keyIter = keys.iterator();
 					final IntIterator valueIter = values.iterator();
-					
+
 					@Override
 					public boolean hasNext() {
 						return keyIter.hasNext();

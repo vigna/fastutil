@@ -43,7 +43,6 @@ public class IntBigArrayBigListTest {
 		assertEquals(IntBigLists.EMPTY_BIG_LIST, list);
 	}
 
-	@SuppressWarnings("boxing")
 	@Test
 	public void testRemoveAllSkipSegment() {
 		final IntBigList list = new IntBigArrayBigList();

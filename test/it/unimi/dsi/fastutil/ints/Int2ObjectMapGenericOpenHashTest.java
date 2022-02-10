@@ -16,19 +16,21 @@
 
 package it.unimi.dsi.fastutil.ints;
 
-import it.unimi.dsi.fastutil.Hash;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.function.Supplier;
+
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+
+import it.unimi.dsi.fastutil.Hash;
 
 public class Int2ObjectMapGenericOpenHashTest extends Int2ObjectMapGenericTest<Int2ObjectOpenHashMap<Integer>> {
 	@Parameter(2)
 	public float loadFactor;
 
-	@SuppressWarnings({"AutoBoxing", "boxing"})
+	@SuppressWarnings({ "boxing" })
 	@Parameters(name = "{index}: lf {2}")
 	public static Iterable<Object[]> data() {
 		final EnumSet<Capability> capabilities = EnumSet.allOf(Capability.class);

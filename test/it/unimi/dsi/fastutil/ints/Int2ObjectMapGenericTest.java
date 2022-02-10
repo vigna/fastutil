@@ -515,7 +515,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertTrue(m.int2ObjectEntrySet().isEmpty());
 	}
 
-	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
+	@SuppressWarnings({ "unlikely-arg-type" })
 	@Test
 	public void testEntrySetContains() {
 		m.put(0, ZERO);
@@ -582,7 +582,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		}
 		final Set<Entry<Integer>> s = new HashSet<>();
 		final Set<Entry<Integer>> sIdentity = Collections.newSetFromMap(new IdentityHashMap<Entry<Integer>, Boolean>());
-		
+
 		Int2ObjectMaps.fastIterator(m).forEachRemaining(x -> {
 			s.add(new AbstractInt2ObjectMap.BasicEntry<>(x.getIntKey(), x.getValue()));
 			sIdentity.add(x);
@@ -623,13 +623,13 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
-		Iterator<Entry<Integer>> i = m.int2ObjectEntrySet().iterator();
+		final Iterator<Entry<Integer>> i = m.int2ObjectEntrySet().iterator();
 		int key;
 		Integer value;
 		// This will be an invalid entry after the removal, so we can't trust it long term.
 		// Enforce this with scoping; get the contents and then not use it again.
 		{
-			Entry<Integer> toRemoveEntry = i.next();
+			final Entry<Integer> toRemoveEntry = i.next();
 			key = toRemoveEntry.getIntKey();
 			value = toRemoveEntry.getValue();
 		}
@@ -653,7 +653,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		iterator.remove();
 	}
 
-	@SuppressWarnings({ "SuspiciousMethodCalls", "unlikely-arg-type" })
+	@SuppressWarnings({ "unlikely-arg-type" })
 	@Test
 	public void testEntrySetRemove() {
 		m.put(0, ZERO);
@@ -671,7 +671,6 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		assertTrue(m.equals(new Object2ObjectOpenHashMap<>(new Integer[] {ONE}, new Integer[] {ONE})));
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = IllegalStateException.class)
 	public void testFastEntrySetEmptyIteratorRemove() {
 		final ObjectSet<Entry<Integer>> entries = m.int2ObjectEntrySet();
@@ -681,7 +680,6 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		iterator.remove();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test(expected = IllegalStateException.class)
 	public void testFastEntrySetIteratorTwoRemoves() {
 		m.put(0, ZERO);
@@ -764,7 +762,7 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		// Test symmetry of equals
 		assertEquals(s, m.keySet());
 	}
-	
+
 	@Test
 	public void testKeySetForEach() {
 		for (int i = 0; i < 100; i++) {
@@ -832,8 +830,8 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
-		IntIterator i = m.keySet().iterator();
-		int toRemoveKey = i.nextInt();
+		final IntIterator i = m.keySet().iterator();
+		final int toRemoveKey = i.nextInt();
 		assertTrue(m.containsKey(toRemoveKey));
 		// Taking advantage of the fact we mapped keys to their Integer values
 		assertEquals(m.get(toRemoveKey), Integer.valueOf(toRemoveKey));
@@ -1387,15 +1385,15 @@ public abstract class Int2ObjectMapGenericTest<M extends Int2ObjectMap<Integer>>
 		// values() is a Collection without an equals, so need to convert to Set first.
 		assertEquals(new IntOpenHashSet(m.values()), s);
 	}
-	
+
 	@Test
 	public void testValuesIteratorRemove() {
 		assumeTrue(capabilities.contains(Capability.ITERATOR_MODIFY));
 		for (int i = 0; i < 100; i++) {
 			m.put(i, Integer.valueOf(i));
 		}
-		Iterator<Integer> i = m.values().iterator();
-		Integer toRemoveValue = i.next();
+		final Iterator<Integer> i = m.values().iterator();
+		final Integer toRemoveValue = i.next();
 		// Taking advantage of the fact we mapped keys to their Integer values
 		assertTrue(m.containsKey(toRemoveValue.intValue()));
 		assertTrue(m.containsValue(toRemoveValue));
