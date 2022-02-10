@@ -10,7 +10,6 @@ import it.unimi.dsi.fastutil.ints.IntIntPair;
 
 public class IntIntPairTest {
 
-	@SuppressWarnings("boxing")
 	@Test
 	public void test() {
 		final Comparator<IntIntPair> comparator = IntIntPair.lexComparator();

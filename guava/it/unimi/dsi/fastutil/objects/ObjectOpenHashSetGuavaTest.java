@@ -49,7 +49,7 @@ public class ObjectOpenHashSetGuavaTest extends TestCase {
 			@Override
 			protected Set<String> create(final String[] elements) {
 				final Set<String> set = factory.get();
-				for (final var e : elements) {
+				for (final String e : elements) {
 					set.add(e);
 				}
 				return set;

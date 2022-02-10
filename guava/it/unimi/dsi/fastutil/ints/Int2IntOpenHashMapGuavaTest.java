@@ -61,8 +61,7 @@ public class Int2IntOpenHashMapGuavaTest extends TestCase {
 
 			@Override
 			public Map<Integer, Integer> create(final Object... entries) {
-				@SuppressWarnings("unchecked")
-				final var map = factory.get();
+				Map<Integer, Integer> map = factory.get();
 				for (final Object o : entries) {
 					@SuppressWarnings("unchecked")
 					final Entry<Integer, Integer> e = (Entry<Integer, Integer>)o;

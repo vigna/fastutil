@@ -448,10 +448,22 @@ public class BinIOTest {
 				assertArrayEquals(d, e);
 				dis.close();
 
+				dis = new DataInputStream(new FileInputStream(file));
+				assertEquals(size, BinIO.loadBooleans(dis, new boolean[size * 2]));
+				dis.close();
+
 				DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
 				BinIO.storeBooleans(d, size2, size34 - size2, dos);
 				assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
 				dos.close();
+
+				BinIO.storeBooleans(d, file);
+
+				dis = new DataInputStream(new FileInputStream(file));
+				assertEquals(size, BinIO.loadBooleans(dis, new boolean[size * 3], size, 2 * size));
+				dis.close();
+
+				assertEquals(size, BinIO.loadBooleans(file, new boolean[size * 3], size, 2 * size));
 
 				dos = new DataOutputStream(new FileOutputStream(file));
 				BinIO.storeBooleans(BooleanIterators.wrap(d), dos);
@@ -568,6 +580,14 @@ public class BinIOTest {
 				DataInputStream dis = new DataInputStream(new FileInputStream(file));
 				assertEquals(size, BinIO.loadBooleans(dis, ee));
 				assertTrue(BigArrays.equals(dd, ee));
+				dis.close();
+
+				dis = new DataInputStream(new FileInputStream(file));
+				assertEquals(size, BinIO.loadBooleans(dis, BooleanBigArrays.newBigArray(size * 3)));
+				dis.close();
+
+				dis = new DataInputStream(new FileInputStream(file));
+				assertEquals(size, BinIO.loadBooleans(dis, BooleanBigArrays.newBigArray(size * 3), size, 2 * size));
 				dis.close();
 
 				dis = new DataInputStream(new FileInputStream(file));

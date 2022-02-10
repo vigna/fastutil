@@ -53,8 +53,8 @@ public class Object2ObjectOpenHashMapGuavaTest extends TestCase {
 
 			@Override
 			protected Map<String, String> create(final Map.Entry<String, String>[] entries) {
-				final var map = factory.get();
-				for (final var entry : entries) {
+				final Map<String, String> map = factory.get();
+				for (final Map.Entry<String, String> entry : entries) {
 					map.put(entry.getKey(), entry.getValue());
 				}
 				return map;
