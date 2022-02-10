@@ -18,7 +18,7 @@ package it.unimi.dsi.fastutil;
 
 /**  An abstract class providing basic methods for implementing the {@link PriorityQueue} interface.
  *
- * @deprecated As of fastutil 8 this class is no longer necessary, as its previous abstract
+ * @deprecated As of {@code fastutil} 8 this class is no longer necessary, as its previous abstract
  * methods are now default methods of {@link PriorityQueue}.
  */
 @Deprecated

@@ -1,16 +1,11 @@
 # Welcome to fastutil
 
-[fastutil](http://fastutil.di.unimi.it/) is a collection of type-specific
-Java classes that extend the Java Collections Framework by providing
-several containers, such as maps, sets, lists and prority queues,
-implementing the interfaces of the java.util package; it also provides big
-(64-bit) arrays, sets, lists, and fast, practical I/O classes for binary
-and text files.
-
-fastutil provides a huge collection of specialized classes generated
-starting from a parameterized version; the classes are much more compact
-and much faster than the general ones. Please read the package
-documentation for more information.
+[fastutil](http://fastutil.di.unimi.it/) extends the Java Collections
+Framework by providing type-specific maps, sets, lists, and queues with a
+small memory footprint and fast access and insertion; it provides also big
+(64-bit) arrays, sets, and lists, sorting algorithms, fast, practical I/O
+classes for binary and text files, and facilities for memory mapping large
+files.
 
 Since version 8.5.5, fastutil is split into two jars for convenience:
 
