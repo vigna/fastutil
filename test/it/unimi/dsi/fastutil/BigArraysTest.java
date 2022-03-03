@@ -67,4 +67,9 @@ public class BigArraysTest {
 		// Never completes!
 		longList.ensureCapacity(2);
 	}
+
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testEnsureOffSetLength() {
+		BigArrays.ensureOffsetLength(42, Long.MAX_VALUE, 10);
+	}
 }

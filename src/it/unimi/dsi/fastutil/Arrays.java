@@ -96,7 +96,7 @@ public class Arrays {
 		// When Java 9 becomes the minimum, use Objects#checkFromIndexSize​, as that can be an intrinsic
 		if (offset < 0) throw new ArrayIndexOutOfBoundsException("Offset (" + offset + ") is negative");
 		if (length < 0) throw new IllegalArgumentException("Length (" + length + ") is negative");
-		if (offset + length > arrayLength) throw new ArrayIndexOutOfBoundsException("Last index (" + (offset + length) + ") is greater than array length (" + arrayLength + ")");
+		if (length > arrayLength - offset) throw new ArrayIndexOutOfBoundsException("Last index (" + (offset + length) + ") is greater than array length (" + arrayLength + ")");
 	}
 
 	/**

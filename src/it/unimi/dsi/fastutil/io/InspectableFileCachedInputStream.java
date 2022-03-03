@@ -189,7 +189,6 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 		overflowFile.delete();
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void finalize() throws Throwable {
 		try {

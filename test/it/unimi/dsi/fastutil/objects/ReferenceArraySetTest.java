@@ -30,7 +30,6 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.io.BinIO;
 
-@SuppressWarnings("deprecation")
 public class ReferenceArraySetTest {
 
 	@Test

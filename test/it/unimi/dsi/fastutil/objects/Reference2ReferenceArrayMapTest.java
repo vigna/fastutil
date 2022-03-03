@@ -31,7 +31,6 @@ import org.junit.Test;
 
 import it.unimi.dsi.fastutil.io.BinIO;
 
-@SuppressWarnings("deprecation")
 public class Reference2ReferenceArrayMapTest {
 
 	@Test

@@ -46,8 +46,8 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 		private final IntList keys = new IntArrayList();
 		private final IntList values = new IntArrayList();
 		@Override
-		public int get(int key) {
-			int index = keys.indexOf(key);
+		public int get(final int key) {
+			final int index = keys.indexOf(key);
 			if (index == -1) {
 				return defaultReturnValue();
 			}
@@ -58,8 +58,8 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 			return keys.size();
 		}
 		@Override
-		public int put(int key, int value) {
-			int index = keys.indexOf(key);
+		public int put(final int key, final int value) {
+			final int index = keys.indexOf(key);
 			if (index == -1) {
 				keys.add(key);
 				values.add(value);
@@ -68,8 +68,8 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 			return values.set(index, value);
 		}
 		@Override
-		public int remove(int key) {
-			int index = keys.indexOf(key);
+		public int remove(final int key) {
+			final int index = keys.indexOf(key);
 			if (index == -1) {
 				return defaultReturnValue();
 			}
@@ -123,11 +123,10 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 			}
 
 			@Override
-			public int get(int key) {
+			public int get(final int key) {
 				return -1;
 			}
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public ObjectSet<Entry> int2IntEntrySet() {
 				return ObjectSets.EMPTY_SET;
@@ -148,7 +147,7 @@ public class AbstractInt2IntMapTest extends Int2IntMapGenericTest<AbstractInt2In
 			}
 
 			@Override
-			public int get(int key) {
+			public int get(final int key) {
 				return key == 0 ? 0 : -1;
 			}
 

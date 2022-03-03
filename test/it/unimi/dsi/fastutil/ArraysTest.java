@@ -142,4 +142,8 @@ public class ArraysTest {
 		testParallelQuickSort(t);
 	}
 
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testEnsureOffSetLength() {
+		Arrays.ensureOffsetLength(42, Integer.MAX_VALUE, 10);
+	}
 }
