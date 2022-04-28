@@ -95,7 +95,7 @@ public class IntArrayFIFOQueueTest {
 
 	@Test
 	public void testWrap() {
-		IntArrayFIFOQueue q = new IntArrayFIFOQueue(30);
+		final IntArrayFIFOQueue q = new IntArrayFIFOQueue(30);
 		for(int i = 0; i < 20; i++) {
 			q.enqueue(i);
 			assertEquals(i, q.lastInt());
@@ -162,23 +162,34 @@ public class IntArrayFIFOQueueTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testImmediateReduce() {
-		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		final IntArrayFIFOQueue q = new IntArrayFIFOQueue();
 		q.enqueue(0);
 		q.dequeue();
 	}
 
 	@SuppressWarnings("deprecation")
-	private static final void assertSameQueue(IntArrayFIFOQueue a, IntArrayFIFOQueue b) {
+	private static final void assertSameQueue(final IntArrayFIFOQueue a, final IntArrayFIFOQueue b) {
 		assertEquals(a.size(), b.size());
 		while(! a.isEmpty() && ! b.isEmpty()) assertEquals(a.dequeue(), b.dequeue());
 		assertEquals(Boolean.valueOf(a.isEmpty()) , Boolean.valueOf(b.isEmpty()));
 	}
 
 	@Test
+	public void testExactlyFull() {
+		final IntArrayFIFOQueue q = new IntArrayFIFOQueue(10);
+		for (int i = 0; i < 10; i++) {
+			q.enqueue(i);
+			assertEquals(i, q.lastInt());
+		}
+
+		assertEquals(0, q.dequeueInt());
+	}
+
+	@Test
 	public void testSerialization() throws IOException, ClassNotFoundException {
-		File temp = File.createTempFile(IntArrayFIFOQueueTest.class.getSimpleName() + "-", "-test");
+		final File temp = File.createTempFile(IntArrayFIFOQueueTest.class.getSimpleName() + "-", "-test");
 		temp.deleteOnExit();
-		IntArrayFIFOQueue q = new IntArrayFIFOQueue();
+		final IntArrayFIFOQueue q = new IntArrayFIFOQueue();
 		BinIO.storeObject(q, temp);
 		assertSameQueue(q, (IntArrayFIFOQueue)BinIO.loadObject(temp));
 
