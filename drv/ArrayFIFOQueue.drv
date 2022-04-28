@@ -58,12 +58,18 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 
 	/** Creates a new empty queue with given capacity.
 	 *
+	 * @implNote Because of inner limitations of the JVM, the initial
+	 * capacity cannot exceed {@link it.unimi.dsi.fastutil.Arrays#MAX_ARRAY_SIZE} &minus; 1.
+	 *
 	 * @param capacity the initial capacity of this queue.
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_FIFO_QUEUE(final int capacity) {
+		if (capacity > it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE - 1) throw new IllegalArgumentException("Initial capacity (" + capacity + ") exceeds " + (it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE - 1));
 		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
-		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(1, capacity)]; // Never build a queue with zero-sized backing array.
+		// We never build a queue with a zero-sized backing array; moreover, to
+		// avoid resizing at the given capacity we need one additional element.
+		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(1, capacity + 1)];
 		length = array.length;
 	}
 
