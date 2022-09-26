@@ -52,6 +52,7 @@ import it.unimi.dsi.fastutil.bytes.ByteIterators;
 import it.unimi.dsi.fastutil.doubles.DoubleBigArrays;
 import it.unimi.dsi.fastutil.doubles.DoubleIterator;
 import it.unimi.dsi.fastutil.doubles.DoubleIterators;
+import it.unimi.dsi.fastutil.longs.LongMappedBigList;
 
 public class BinIOTest {
 
@@ -59,8 +60,8 @@ public class BinIOTest {
 	static final byte[] LARGE = new byte[1024 * 1024 + 42];
 
 	static {
-		for(int i = SMALL.length; i-- != 0;) SMALL[i] = (byte)i;
-		for(int i = LARGE.length; i-- != 0;) LARGE[i] = (byte)i;
+		for (int i = SMALL.length; i-- != 0;) SMALL[i] = (byte)i;
+		for (int i = LARGE.length; i-- != 0;) LARGE[i] = (byte)i;
 	}
 
 	public void testBytes(final byte[] a) throws IOException {
@@ -69,15 +70,27 @@ public class BinIOTest {
 		final byte[] aShifted = new byte[a.length + 1];
 		System.arraycopy(a, 0, aShifted, 1, a.length);
 
-		for(int i = 0; i < 6; i++) {
+		for (int i = 0; i < 6; i++) {
 			file.delete();
-			switch(i) {
-			case 0: BinIO.storeBytes(a, file); break;
-			case 1: BinIO.storeBytes(a, (DataOutput)new DataOutputStream(new FileOutputStream(file))); break;
-			case 2: BinIO.storeBytes(a, new FileOutputStream(file)); break;
-			case 3: BinIO.storeBytes(aShifted, 1, a.length, file); break;
-			case 4: BinIO.storeBytes(aShifted, 1, a.length, (DataOutput)new DataOutputStream(new FileOutputStream(file))); break;
-			case 5: BinIO.storeBytes(aShifted, 1, a.length, new FileOutputStream(file)); break;
+			switch (i) {
+			case 0:
+				BinIO.storeBytes(a, file);
+				break;
+			case 1:
+				BinIO.storeBytes(a, (DataOutput)new DataOutputStream(new FileOutputStream(file)));
+				break;
+			case 2:
+				BinIO.storeBytes(a, new FileOutputStream(file));
+				break;
+			case 3:
+				BinIO.storeBytes(aShifted, 1, a.length, file);
+				break;
+			case 4:
+				BinIO.storeBytes(aShifted, 1, a.length, (DataOutput)new DataOutputStream(new FileOutputStream(file)));
+				break;
+			case 5:
+				BinIO.storeBytes(aShifted, 1, a.length, new FileOutputStream(file));
+				break;
 			}
 			assertArrayEquals(a, BinIO.loadBytes(file));
 
@@ -144,15 +157,27 @@ public class BinIOTest {
 		final byte[][] aShifted = ByteBigArrays.newBigArray(length + 1);
 		copy(a, 0, aShifted, 1, length);
 
-		for(int i = 0; i < 6; i++) {
+		for (int i = 0; i < 6; i++) {
 			file.delete();
-			switch(i) {
-			case 0: BinIO.storeBytes(a, file); break;
-			case 1: BinIO.storeBytes(a, (DataOutput)new DataOutputStream(new FileOutputStream(file))); break;
-			case 2: BinIO.storeBytes(a, new FileOutputStream(file)); break;
-			case 3: BinIO.storeBytes(aShifted, 1, length, file); break;
-			case 4: BinIO.storeBytes(aShifted, 1, length, (DataOutput)new DataOutputStream(new FileOutputStream(file))); break;
-			case 5: BinIO.storeBytes(aShifted, 1, length, new FileOutputStream(file)); break;
+			switch (i) {
+			case 0:
+				BinIO.storeBytes(a, file);
+				break;
+			case 1:
+				BinIO.storeBytes(a, (DataOutput)new DataOutputStream(new FileOutputStream(file)));
+				break;
+			case 2:
+				BinIO.storeBytes(a, new FileOutputStream(file));
+				break;
+			case 3:
+				BinIO.storeBytes(aShifted, 1, length, file);
+				break;
+			case 4:
+				BinIO.storeBytes(aShifted, 1, length, (DataOutput)new DataOutputStream(new FileOutputStream(file)));
+				break;
+			case 5:
+				BinIO.storeBytes(aShifted, 1, length, new FileOutputStream(file));
+				break;
 			}
 			assertArrayEquals(a, BinIO.loadBytesBig(file));
 
@@ -202,22 +227,22 @@ public class BinIOTest {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
 		final DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
-		for(int i = 0; i < 100; i++) dos.writeDouble(i);
+		for (int i = 0; i < 100; i++) dos.writeDouble(i);
 		dos.close();
 
 		DoubleIterator di = BinIO.asDoubleIterator(file);
-		for(int i = 0; i < 100; i++) assertEquals(i, di.nextDouble(), 0.);
+		for (int i = 0; i < 100; i++) assertEquals(i, di.nextDouble(), 0.);
 		assertFalse(di.hasNext());
 
 		di = BinIO.asDoubleIterator(file);
-		for(int i = 0; i < 100; i++) {
+		for (int i = 0; i < 100; i++) {
 			assertTrue(di.hasNext());
 			assertEquals(i, di.nextDouble(), 0.);
 		}
 
 		di = BinIO.asDoubleIterator(file);
 		int s = 1;
-		for(int i = 0; i < 100; i++) {
+		for (int i = 0; i < 100; i++) {
 			assertEquals(Math.min(s, 100 - i), di.skip(s));
 			i += s;
 			if (i >= 100) break;
@@ -227,7 +252,7 @@ public class BinIOTest {
 
 		di = BinIO.asDoubleIterator(file);
 		s = 1;
-		for(int i = 0; i < 100; i++) {
+		for (int i = 0; i < 100; i++) {
 			if (s > 100 - i) break;
 			assertTrue(di.hasNext());
 			assertEquals(Math.min(s, 100 - i), di.skip(s));
@@ -247,7 +272,7 @@ public class BinIOTest {
 	public void testInts(final int[] a) throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
-		for(int i = 0; i < a.length; i++) a[i] = i;
+		for (int i = 0; i < a.length; i++) a[i] = i;
 		BinIO.storeInts(a, file);
 		assertArrayEquals(a, BinIO.loadInts(file));
 	}
@@ -426,120 +451,120 @@ public class BinIOTest {
 	public void testNioDataWrappersBooleans() throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
-			for (final int size : new int[] { 100, BinIO.BUFFER_SIZE / Double.BYTES,
-					BinIO.BUFFER_SIZE / Double.BYTES + 100, BinIO.BUFFER_SIZE, 10000 }) {
-				final int size2 = size / 2, size34 = 3 * size / 4;
-				final SplittableRandom r = new SplittableRandom(0);
-				final boolean[] d = new boolean[size];
-				final boolean[] e = new boolean[size];
-				for (int i = 0; i < size; i++) d[i] = r.nextBoolean();
+		for (final int size : new int[] { 100, BinIO.BUFFER_SIZE / Double.BYTES, BinIO.BUFFER_SIZE / Double.BYTES + 100,
+				BinIO.BUFFER_SIZE, 10000 }) {
+			final int size2 = size / 2, size34 = 3 * size / 4;
+			final SplittableRandom r = new SplittableRandom(0);
+			final boolean[] d = new boolean[size];
+			final boolean[] e = new boolean[size];
+			for (int i = 0; i < size; i++) d[i] = r.nextBoolean();
 
-				BinIO.storeBooleans(d, file);
-				assertArrayEquals(d, BinIO.loadBooleans(file));
-				BinIO.storeBooleans(d, file.toString());
-				assertArrayEquals(d, BinIO.loadBooleans(file));
-				BinIO.storeBooleans(BooleanIterators.wrap(d), file);
-				assertArrayEquals(d, BinIO.loadBooleans(file));
-				BinIO.storeBooleans(BooleanIterators.wrap(d), file.toString());
-				assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(d, file);
+			assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(d, file.toString());
+			assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(BooleanIterators.wrap(d), file);
+			assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(BooleanIterators.wrap(d), file.toString());
+			assertArrayEquals(d, BinIO.loadBooleans(file));
 
-				DataInputStream dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size, BinIO.loadBooleans(dis, e));
-				assertArrayEquals(d, e);
-				dis.close();
+			DataInputStream dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size, BinIO.loadBooleans(dis, e));
+			assertArrayEquals(d, e);
+			dis.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size, BinIO.loadBooleans(dis, new boolean[size * 2]));
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size, BinIO.loadBooleans(dis, new boolean[size * 2]));
+			dis.close();
 
-				DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
-				BinIO.storeBooleans(d, size2, size34 - size2, dos);
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
-				dos.close();
+			DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
+			BinIO.storeBooleans(d, size2, size34 - size2, dos);
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
+			dos.close();
 
-				BinIO.storeBooleans(d, file);
+			BinIO.storeBooleans(d, file);
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size, BinIO.loadBooleans(dis, new boolean[size * 3], size, 2 * size));
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size, BinIO.loadBooleans(dis, new boolean[size * 3], size, 2 * size));
+			dis.close();
 
-				assertEquals(size, BinIO.loadBooleans(file, new boolean[size * 3], size, 2 * size));
+			assertEquals(size, BinIO.loadBooleans(file, new boolean[size * 3], size, 2 * size));
 
-				dos = new DataOutputStream(new FileOutputStream(file));
-				BinIO.storeBooleans(BooleanIterators.wrap(d), dos);
-				assertArrayEquals(d, BinIO.loadBooleans(file));
-				dos.close();
+			dos = new DataOutputStream(new FileOutputStream(file));
+			BinIO.storeBooleans(BooleanIterators.wrap(d), dos);
+			assertArrayEquals(d, BinIO.loadBooleans(file));
+			dos.close();
 
-				BinIO.storeBooleans(BooleanIterators.wrap(d), file);
-				assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(BooleanIterators.wrap(d), file);
+			assertArrayEquals(d, BinIO.loadBooleans(file));
 
-				BinIO.storeBooleans(BooleanIterators.wrap(d), file.toString());
-				assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(BooleanIterators.wrap(d), file.toString());
+			assertArrayEquals(d, BinIO.loadBooleans(file));
 
-				dos = new DataOutputStream(new FileOutputStream(file));
-				BinIO.storeBooleans(d, dos);
-				assertArrayEquals(d, BinIO.loadBooleans(file));
-				dos.close();
+			dos = new DataOutputStream(new FileOutputStream(file));
+			BinIO.storeBooleans(d, dos);
+			assertArrayEquals(d, BinIO.loadBooleans(file));
+			dos.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size34 - size2, BinIO.loadBooleans(dis, e, size2, size34 - size2));
-				for (int i = size2; i < size34; i++) assertEquals(d[i - size2], e[i]);
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size34 - size2, BinIO.loadBooleans(dis, e, size2, size34 - size2));
+			for (int i = size2; i < size34; i++) assertEquals(d[i - size2], e[i]);
+			dis.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				BooleanIterator di = BinIO.asBooleanIterator(dis);
-				for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
-				assertFalse(Integer.toString(size), di.hasNext());
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			BooleanIterator di = BinIO.asBooleanIterator(dis);
+			for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
+			assertFalse(Integer.toString(size), di.hasNext());
+			dis.close();
 
-				di = BinIO.asBooleanIterator(file);
-				for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
-				assertFalse(Integer.toString(size), di.hasNext());
+			di = BinIO.asBooleanIterator(file);
+			for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
+			assertFalse(Integer.toString(size), di.hasNext());
 
-				di = BinIO.asBooleanIterator(file.toString());
-				for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
-				assertFalse(Integer.toString(size), di.hasNext());
+			di = BinIO.asBooleanIterator(file.toString());
+			for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
+			assertFalse(Integer.toString(size), di.hasNext());
 
-				di = BinIO.asBooleanIterable(file).iterator();
-				for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
-				assertFalse(Integer.toString(size), di.hasNext());
+			di = BinIO.asBooleanIterable(file).iterator();
+			for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
+			assertFalse(Integer.toString(size), di.hasNext());
 
-				di = BinIO.asBooleanIterable(file.toString()).iterator();
-				for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
-				assertFalse(Integer.toString(size), di.hasNext());
+			di = BinIO.asBooleanIterable(file.toString()).iterator();
+			for (int i = 0; i < size; i++) assertEquals(d[i], di.nextBoolean());
+			assertFalse(Integer.toString(size), di.hasNext());
 
-				di = BinIO.asBooleanIterator(file);
-				for (int i = 0; i < size; i++) {
-					assertTrue(di.hasNext());
-					assertEquals(d[i], di.nextBoolean());
+			di = BinIO.asBooleanIterator(file);
+			for (int i = 0; i < size; i++) {
+				assertTrue(di.hasNext());
+				assertEquals(d[i], di.nextBoolean());
+			}
+
+			di = BinIO.asBooleanIterator(file);
+			int s = 1;
+			for (int i = 0; i < size; i++) {
+				assertEquals(Math.min(s, size - i), di.skip(s));
+				i += s;
+				if (i >= size) break;
+				assertEquals(d[i], di.nextBoolean());
+				s *= 2;
+			}
+
+			di = BinIO.asBooleanIterator(file);
+			s = 1;
+			for (int i = 0; i < size; i++) {
+				if (s > size - i) break;
+				assertTrue(di.hasNext());
+				assertEquals(Math.min(s, size - i), di.skip(s));
+				i += s;
+				if (i >= size) {
+					assertFalse(di.hasNext());
+					break;
 				}
-
-				di = BinIO.asBooleanIterator(file);
-				int s = 1;
-				for (int i = 0; i < size; i++) {
-					assertEquals(Math.min(s, size - i), di.skip(s));
-					i += s;
-					if (i >= size) break;
-					assertEquals(d[i], di.nextBoolean());
-					s *= 2;
-				}
-
-				di = BinIO.asBooleanIterator(file);
-				s = 1;
-				for (int i = 0; i < size; i++) {
-					if (s > size - i) break;
-					assertTrue(di.hasNext());
-					assertEquals(Math.min(s, size - i), di.skip(s));
-					i += s;
-					if (i >= size) {
-						assertFalse(di.hasNext());
-						break;
-					}
-					assertTrue(di.hasNext());
-					assertTrue(di.hasNext()); // To increase coverage
-					assertEquals(d[i], di.nextBoolean());
-					s *= 2;
-				}
+				assertTrue(di.hasNext());
+				assertTrue(di.hasNext()); // To increase coverage
+				assertEquals(d[i], di.nextBoolean());
+				s *= 2;
+			}
 		}
 	}
 
@@ -548,102 +573,110 @@ public class BinIOTest {
 	public void testNioBigBooleans() throws IOException {
 		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
 		file.deleteOnExit();
-			for (final int size : new int[] { 100, BinIO.BUFFER_SIZE / Double.BYTES,
-					BinIO.BUFFER_SIZE / Double.BYTES + 100, BinIO.BUFFER_SIZE, 10000 }) {
-				final int size2 = size / 2, size34 = 3 * size / 4;
-				final SplittableRandom r = new SplittableRandom(0);
-				final boolean[] d = new boolean[size];
-				for (int i = 0; i < size; i++) d[i] = r.nextBoolean();
-				final boolean[][] dd = BigArrays.wrap(d);
+		for (final int size : new int[] { 100, BinIO.BUFFER_SIZE / Double.BYTES, BinIO.BUFFER_SIZE / Double.BYTES + 100,
+				BinIO.BUFFER_SIZE, 10000 }) {
+			final int size2 = size / 2, size34 = 3 * size / 4;
+			final SplittableRandom r = new SplittableRandom(0);
+			final boolean[] d = new boolean[size];
+			for (int i = 0; i < size; i++) d[i] = r.nextBoolean();
+			final boolean[][] dd = BigArrays.wrap(d);
 
-				BinIO.storeBooleans(dd, file);
-				assertArrayEquals(d, BinIO.loadBooleans(file));
-				BinIO.storeBooleans(dd, file.toString());
-				assertArrayEquals(d, BinIO.loadBooleans(file.toString()));
-				assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file)));
+			BinIO.storeBooleans(dd, file);
+			assertArrayEquals(d, BinIO.loadBooleans(file));
+			BinIO.storeBooleans(dd, file.toString());
+			assertArrayEquals(d, BinIO.loadBooleans(file.toString()));
+			assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file)));
 
-				final boolean[] e = new boolean[size];
-				assertEquals(size - size2, BinIO.loadBooleans(file, e, size2, size - size2));
-				for (int i = size2; i < size; i++) assertEquals(e[i], d[i - size2]);
-				assertEquals(size - size2, BinIO.loadBooleans(file.toString(), e, size2, size - size2));
-				for (int i = size2; i < size; i++) assertEquals(e[i], d[i - size2]);
+			final boolean[] e = new boolean[size];
+			assertEquals(size - size2, BinIO.loadBooleans(file, e, size2, size - size2));
+			for (int i = size2; i < size; i++) assertEquals(e[i], d[i - size2]);
+			assertEquals(size - size2, BinIO.loadBooleans(file.toString(), e, size2, size - size2));
+			for (int i = size2; i < size; i++) assertEquals(e[i], d[i - size2]);
 
-				final boolean[] h = new boolean[size2];
-				assertEquals(size2, BinIO.loadBooleans(file, h));
-				for (int i = 0; i < size2; i++) assertEquals(h[i], d[i]);
-				assertEquals(size2, BinIO.loadBooleans(file.toString(), h));
-				for (int i = 0; i < size2; i++) assertEquals(h[i], d[i]);
+			final boolean[] h = new boolean[size2];
+			assertEquals(size2, BinIO.loadBooleans(file, h));
+			for (int i = 0; i < size2; i++) assertEquals(h[i], d[i]);
+			assertEquals(size2, BinIO.loadBooleans(file.toString(), h));
+			for (int i = 0; i < size2; i++) assertEquals(h[i], d[i]);
 
-				final boolean[][] ee = BooleanBigArrays.newBigArray(length(dd));
-				final boolean[][] hh = BigArrays.wrap(h);
+			final boolean[][] ee = BooleanBigArrays.newBigArray(length(dd));
+			final boolean[][] hh = BigArrays.wrap(h);
 
-				DataInputStream dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size, BinIO.loadBooleans(dis, ee));
-				assertTrue(BigArrays.equals(dd, ee));
-				dis.close();
+			DataInputStream dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size, BinIO.loadBooleans(dis, ee));
+			assertTrue(BigArrays.equals(dd, ee));
+			dis.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size, BinIO.loadBooleans(dis, BooleanBigArrays.newBigArray(size * 3)));
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size, BinIO.loadBooleans(dis, BooleanBigArrays.newBigArray(size * 3)));
+			dis.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size, BinIO.loadBooleans(dis, BooleanBigArrays.newBigArray(size * 3), size, 2 * size));
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size, BinIO.loadBooleans(dis, BooleanBigArrays.newBigArray(size * 3), size, 2 * size));
+			dis.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size2, BinIO.loadBooleans(dis, hh));
-				for (int i = 0; i < size2; i++) assertEquals(h[i], get(hh, i));
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size2, BinIO.loadBooleans(dis, hh));
+			for (int i = 0; i < size2; i++) assertEquals(h[i], get(hh, i));
+			dis.close();
 
-				dis = new DataInputStream(new FileInputStream(file));
-				assertEquals(size34 - size2, BinIO.loadBooleans(dis, ee, size2, size34 - size2));
-				for (int i = size2; i < size34 - size2; i++) assertEquals(d[i - size2], get(ee, i));
-				dis.close();
+			dis = new DataInputStream(new FileInputStream(file));
+			assertEquals(size34 - size2, BinIO.loadBooleans(dis, ee, size2, size34 - size2));
+			for (int i = size2; i < size34 - size2; i++) assertEquals(d[i - size2], get(ee, i));
+			dis.close();
 
-				assertEquals(size, BinIO.loadBooleans(file, ee, 0, size));
-				assertTrue(BigArrays.equals(dd, ee));
-				assertEquals(size, BinIO.loadBooleans(file, ee));
-				assertTrue(BigArrays.equals(dd, ee));
-				assertEquals(size, BinIO.loadBooleans(file.toString(), ee, 0, size));
-				assertTrue(BigArrays.equals(dd, ee));
-				assertEquals(size, BinIO.loadBooleans(file.toString(), ee));
-				assertTrue(BigArrays.equals(dd, ee));
-				assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file)));
-				assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file.toString())));
+			assertEquals(size, BinIO.loadBooleans(file, ee, 0, size));
+			assertTrue(BigArrays.equals(dd, ee));
+			assertEquals(size, BinIO.loadBooleans(file, ee));
+			assertTrue(BigArrays.equals(dd, ee));
+			assertEquals(size, BinIO.loadBooleans(file.toString(), ee, 0, size));
+			assertTrue(BigArrays.equals(dd, ee));
+			assertEquals(size, BinIO.loadBooleans(file.toString(), ee));
+			assertTrue(BigArrays.equals(dd, ee));
+			assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file)));
+			assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file.toString())));
 
-				assertEquals(size - size2, BinIO.loadBooleans(file, ee, size2, size - size2));
-				for (int i = size2; i < size; i++) assertEquals(get(ee, i), get(dd, i - size2));
+			assertEquals(size - size2, BinIO.loadBooleans(file, ee, size2, size - size2));
+			for (int i = size2; i < size; i++) assertEquals(get(ee, i), get(dd, i - size2));
 
-				assertEquals(size34 - size2, BinIO.loadBooleans(file, ee, size2, size34 - size2));
-				for (int i = size2; i < size34; i++) assertEquals(get(ee, i), get(dd, i - size2));
+			assertEquals(size34 - size2, BinIO.loadBooleans(file, ee, size2, size34 - size2));
+			for (int i = size2; i < size34; i++) assertEquals(get(ee, i), get(dd, i - size2));
 
-				BinIO.storeBooleans(dd, size2, size - size2, file);
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
-				BinIO.storeBooleans(dd, size2, size - size2, file.toString());
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
+			BinIO.storeBooleans(dd, size2, size - size2, file);
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
+			BinIO.storeBooleans(dd, size2, size - size2, file.toString());
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
 
-				BinIO.storeBooleans(dd, size2, size34 - size2, file);
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
+			BinIO.storeBooleans(dd, size2, size34 - size2, file);
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
 
-				BinIO.storeBooleans(d, size2, size - size2, file);
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
-				BinIO.storeBooleans(d, size2, size - size2, file.toString());
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
+			BinIO.storeBooleans(d, size2, size - size2, file);
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
+			BinIO.storeBooleans(d, size2, size - size2, file.toString());
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size), BinIO.loadBooleans(file));
 
-				BinIO.storeBooleans(d, size2, size34 - size2, file);
-				assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
+			BinIO.storeBooleans(d, size2, size34 - size2, file);
+			assertArrayEquals(Arrays.copyOfRange(d, size2, size34), BinIO.loadBooleans(file));
 
-				DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
-				BinIO.storeBooleans(dd, dos);
-				dos.close();
-				assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file)));
+			DataOutputStream dos = new DataOutputStream(new FileOutputStream(file));
+			BinIO.storeBooleans(dd, dos);
+			dos.close();
+			assertTrue(BigArrays.equals(dd, BinIO.loadBooleansBig(file)));
 
-				dos = new DataOutputStream(new FileOutputStream(file));
-				BinIO.storeBooleans(dd, size2, size34 - size2, dos);
-				dos.close();
-				assertTrue(BigArrays.equals(BigArrays.copy(dd, size2, size34 - size2), BinIO.loadBooleansBig(file)));
+			dos = new DataOutputStream(new FileOutputStream(file));
+			BinIO.storeBooleans(dd, size2, size34 - size2, dos);
+			dos.close();
+			assertTrue(BigArrays.equals(BigArrays.copy(dd, size2, size34 - size2), BinIO.loadBooleansBig(file)));
 
-			}
+		}
 	}
 
+	@Test
+	public void testNioLarge() throws IOException {
+		final File file = File.createTempFile(getClass().getSimpleName(), "dump");
+		file.deleteOnExit();
+		BinIO.storeLongs(new long[(int)(((1L << 31) + 1024) >> LongMappedBigList.LOG2_BYTES)], file);
+		final long[] longs = BinIO.loadLongs(file);
+		for (final long element : longs) assertEquals(0, element);
+	}
 }
