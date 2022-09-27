@@ -225,4 +225,22 @@ public class ObjectArrayListTest {
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(ObjectArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
 	}
+
+	@Test
+	public void testZeroLengthToArray() {
+		assertSame(ObjectArrays.EMPTY_ARRAY, new ObjectArrayList<Integer>().toArray());
+		assertSame(ObjectArrays.EMPTY_ARRAY, new AbstractObjectList<Integer>() {
+
+			@Override
+			public Integer get(final int index) {
+				throw new ArrayIndexOutOfBoundsException();
+			}
+
+			@Override
+			public int size() {
+				// TODO Auto-generated method stub
+				return 0;
+			}
+		}.toArray());
+	}
 }

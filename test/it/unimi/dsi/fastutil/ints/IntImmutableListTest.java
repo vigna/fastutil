@@ -16,10 +16,11 @@
 
 package it.unimi.dsi.fastutil.ints;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -312,5 +313,10 @@ public class IntImmutableListTest {
 		assertTrue(baseList.compareTo(lessBecauseItIsSmaller) > 0);
 		assertTrue(baseList.compareTo(greaterBecauseItIsLarger) < 0);
 		assertTrue(baseList.compareTo(equalList) == 0);
+	}
+
+	@Test
+	public void testZeroLengthToArray() {
+		assertSame(IntArrays.EMPTY_ARRAY, IntImmutableList.of().toIntArray());
 	}
 }

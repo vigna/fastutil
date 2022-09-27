@@ -234,4 +234,9 @@ public class ObjectArraySetTest {
 		final ObjectArraySet<String> l = ObjectArraySet.ofUnchecked("0", "0");
 		assertEquals(new ObjectArraySet<>(new String[] { "0" , "0" }), l);
 	}
+
+	@Test
+	public void testZeroLengthToArray() {
+		assertSame(ObjectArrays.EMPTY_ARRAY, new ObjectArraySet<Integer>().toArray());
+	}
 }

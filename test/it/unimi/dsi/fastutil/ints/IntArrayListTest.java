@@ -600,4 +600,9 @@ public class IntArrayListTest {
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntArrayList.class, "test", /*num=*/"500", /*seed=*/"939384");
 	}
+
+	@Test
+	public void testZeroLengthToArray() {
+		assertSame(IntArrays.EMPTY_ARRAY, new IntArrayList().toIntArray());
+	}
 }

@@ -19,6 +19,7 @@ package it.unimi.dsi.fastutil.ints;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -65,8 +66,8 @@ public class IntArraySetTest {
 			assertTrue(s.contains(1));
 			assertTrue(s.contains(2));
 			assertTrue(s.contains(3));
-			int[] expectedArray = i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 };
-			IntSet expected = new IntOpenHashSet(expectedArray);
+			final int[] expectedArray = i == 0 ? new int[] { 1, 2, 3 } : new int[] { 0, 1, 2, 3 };
+			final IntSet expected = new IntOpenHashSet(expectedArray);
 			assertEquals(expected, s);
 			assertEquals(s, expected);
 			assertEquals(expected, new IntOpenHashSet(s.iterator()));
@@ -190,5 +191,10 @@ public class IntArraySetTest {
 		// A IntArraySet in an invalid state that by spec we aren't checking for in this method.
 		final IntArraySet s = IntArraySet.ofUnchecked(0, 0);
 		assertEquals(new IntArraySet(new int[] { 0 , 0 }), s);
+	}
+
+	@Test
+	public void testZeroLengthToArray() {
+		assertSame(IntArrays.EMPTY_ARRAY, new IntArraySet().toIntArray());
 	}
 }
