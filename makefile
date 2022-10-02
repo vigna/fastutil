@@ -101,6 +101,7 @@ source:
 
 binary:
 	make -s clean sources format
+	ant clean junit
 	ant clean osgi javadoc
 	-rm -f fastutil-$(version)
 	ln -s . fastutil-$(version)
