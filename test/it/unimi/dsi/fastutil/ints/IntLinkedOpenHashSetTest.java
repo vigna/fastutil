@@ -35,7 +35,7 @@ public class IntLinkedOpenHashSetTest {
 	@Test
 	public void testStrangeRetainAllCase() {
 
-		IntArrayList initialElements = IntArrayList.wrap(new int[] { 586, 940,
+		final IntArrayList initialElements = IntArrayList.wrap(new int[] { 586, 940,
 				1086, 1110, 1168, 1184, 1185, 1191, 1196, 1229, 1237, 1241,
 				1277, 1282, 1284, 1299, 1308, 1309, 1310, 1314, 1328, 1360,
 				1366, 1370, 1378, 1388, 1392, 1402, 1406, 1411, 1426, 1437,
@@ -57,11 +57,11 @@ public class IntLinkedOpenHashSetTest {
 				7094, 7379, 7384, 7388, 7394, 7414, 7419, 7458, 7459, 7466,
 				7467 });
 
-		IntArrayList retainElements = IntArrayList.wrap(new int[] { 586 });
+		final IntArrayList retainElements = IntArrayList.wrap(new int[] { 586 });
 
 		// Initialize both implementations with the same data
-		IntLinkedOpenHashSet instance = new IntLinkedOpenHashSet(initialElements);
-		IntRBTreeSet referenceInstance = new IntRBTreeSet(initialElements);
+		final IntLinkedOpenHashSet instance = new IntLinkedOpenHashSet(initialElements);
+		final IntRBTreeSet referenceInstance = new IntRBTreeSet(initialElements);
 
 		instance.retainAll(retainElements);
 		referenceInstance.retainAll(retainElements);
@@ -83,10 +83,10 @@ public class IntLinkedOpenHashSetTest {
 	}
 
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	private static void test(int n, float f) throws IOException, ClassNotFoundException {
+	private static void test(final int n, final float f) throws IOException, ClassNotFoundException {
 		int c;
 		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE, f);
-		java.util.Set<Integer> t = new java.util.LinkedHashSet<>();
+		final java.util.Set<Integer> t = new java.util.LinkedHashSet<>();
 		/* First of all, we fill t with random data. */
 		for (int i = 0; i < f * n; i++)
 			t.add((Integer.valueOf(genKey())));
@@ -95,14 +95,13 @@ public class IntLinkedOpenHashSetTest {
 		assertTrue("Error: !m.equals(t) after insertion", s.equals(t));
 		assertTrue("Error: !t.equals(m) after insertion", t.equals(s));
 		/* Now we check that m actually holds that data. */
-		for (java.util.Iterator i = t.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on t)", s.contains(e));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
 		c = 0;
-		for (java.util.Iterator i = s.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = s.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			c++;
 			assertTrue("Error: m and t differ on a key (" + e + ") after insertion (iterating on m)", t.contains(e));
 		}
@@ -112,7 +111,7 @@ public class IntLinkedOpenHashSetTest {
 		 * use the polymorphic method.
 		 */
 		for (int i = 0; i < n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertTrue("Error: divergence in keys between t and m (polymorphic method)", s.contains(T) == t.contains((Integer.valueOf(T))));
 		}
 		/*
@@ -120,7 +119,7 @@ public class IntLinkedOpenHashSetTest {
 		 * m we use the standard method.
 		 */
 		for (int i = 0; i < n; i++) {
-			int T = genKey();
+			final int T = genKey();
 			assertTrue("Error: divergence between t and m (standard method)", s.contains((Integer.valueOf(T))) == t.contains((Integer.valueOf(T))));
 		}
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
@@ -133,30 +132,29 @@ public class IntLinkedOpenHashSetTest {
 		assertTrue("Error: !m.equals(t) after removal", s.equals(t));
 		assertTrue("Error: !t.equals(m) after removal", t.equals(s));
 		/* Now we check that m actually holds that data. */
-		for (java.util.Iterator i = t.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final Object e : t) {
 			assertTrue("Error: m and t differ on a key (" + e + ") after removal (iterating on t)", s.contains(e));
 		}
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for (java.util.Iterator i = s.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = s.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			assertTrue("Error: m and t differ on a key (" + e + ") after removal (iterating on m)", t.contains(e));
 		}
 		/* Now we make m into an array, make it again a set and check it is OK. */
-		int a[] = s.toIntArray();
+		final int a[] = s.toIntArray();
 		assertEquals("Error: toArray() output (or array-based constructor) is not OK", new IntLinkedOpenHashSet(a), s);
 		/* Now we check cloning. */
 		assertTrue("Error: m does not equal m.clone()", s.equals(s.clone()));
 		assertTrue("Error: m.clone() does not equal m", s.clone().equals(s));
-		int h = s.hashCode();
+		final int h = s.hashCode();
 		/* Now we save and read m. */
-		java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + s.getClass().getSimpleName() + "." + n);
-		java.io.OutputStream os = new java.io.FileOutputStream(ff);
-		java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
+		final java.io.File ff = new java.io.File("it.unimi.dsi.fastutil.test.junit." + s.getClass().getSimpleName() + "." + n);
+		final java.io.OutputStream os = new java.io.FileOutputStream(ff);
+		final java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(os);
 		oos.writeObject(s);
 		oos.close();
-		java.io.InputStream is = new java.io.FileInputStream(ff);
-		java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
+		final java.io.InputStream is = new java.io.FileInputStream(ff);
+		final java.io.ObjectInputStream ois = new java.io.ObjectInputStream(is);
 		s = (IntLinkedOpenHashSet)ois.readObject();
 		ois.close();
 		ff.delete();
@@ -164,8 +162,8 @@ public class IntLinkedOpenHashSetTest {
 
 		assertEquals("Error: clone()", s, s.clone());
 		/* Now we check that m actually holds that data, but iterating on m. */
-		for (java.util.Iterator i = s.iterator(); i.hasNext();) {
-			Object e = i.next();
+		for (final java.util.Iterator i = s.iterator(); i.hasNext();) {
+			final Object e = i.next();
 			assertTrue("Error: m and t differ on a key (" + e + ") after save/read", t.contains(e));
 		}
 		/* Now we put and remove random data in m and t, checking that the result is the same. */
@@ -243,7 +241,7 @@ public class IntLinkedOpenHashSetTest {
 		assertTrue("Error: ! m.equals(t) after iteration", s.equals(t));
 		assertTrue("Error: ! t.equals(m) after iteration", t.equals(s));
 		/* Now we take out of m everything, and check that it is empty. */
-		for (java.util.Iterator i = s.iterator(); i.hasNext();) {
+		for (final java.util.Iterator i = s.iterator(); i.hasNext();) {
 			i.next();
 			i.remove();
 		}
@@ -291,7 +289,7 @@ public class IntLinkedOpenHashSetTest {
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testAdd() {
-		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		assertTrue(s.add(0));
 		assertTrue(s.contains(0));
 		assertFalse(s.contains(1));
@@ -302,7 +300,7 @@ public class IntLinkedOpenHashSetTest {
 
 	@Test
 	public void testRemove() {
-		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		for(int i = 0; i < 100; i++) assertTrue(s.add(i));
 		for(int i = 0; i < 100; i++) assertFalse(s.remove(100 + i));
 		assertEquals(0, s.firstInt());
@@ -316,7 +314,7 @@ public class IntLinkedOpenHashSetTest {
 		for(int i = -1; i <= 1; i++) assertTrue(s.add(i));
 		assertTrue(s.remove(0));
 		IntListIterator iterator = s.iterator();
-		IntOpenHashSet z = new IntOpenHashSet();
+		final IntOpenHashSet z = new IntOpenHashSet();
 		z.add(iterator.nextInt());
 		z.add(iterator.nextInt());
 		assertFalse(iterator.hasNext());
@@ -367,7 +365,7 @@ public class IntLinkedOpenHashSetTest {
 
 	@Test
 	public void testIterator() {
-		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		for(int i = 0; i < 100; i++) assertTrue(s.add(i));
 		assertEquals(0, s.firstInt());
 
@@ -424,14 +422,14 @@ public class IntLinkedOpenHashSetTest {
 
 	@Test(expected=NoSuchElementException.class)
 	public void testIteratorMissingElement() {
-		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		for(int i = 0; i < 100; i++) assertTrue(s.add(i));
 		s.iterator(1000);
 	}
 
 	@Test
 	public void testPutAndMove() {
-		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		for(int i = 0; i < 100; i++) assertTrue(s.addAndMoveToFirst(i));
 		s.clear();
 		for(int i = 0; i < 100; i++) assertTrue(s.addAndMoveToLast(i));
@@ -459,7 +457,7 @@ public class IntLinkedOpenHashSetTest {
 
 	@Test
 	public void testRemoveFirstLast() {
-		IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet(Hash.DEFAULT_INITIAL_SIZE);
 		for(int i = 0; i < 100; i++) assertTrue(s.add(i));
 		assertEquals(0, s.removeFirstInt());
 		assertEquals(1, s.removeFirstInt());
@@ -502,19 +500,19 @@ public class IntLinkedOpenHashSetTest {
 	@Test
 	public void testToSet() {
 		final IntLinkedOpenHashSet baseSet = IntLinkedOpenHashSet.of(2, 380, 1297);
-		IntLinkedOpenHashSet transformed = IntLinkedOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
+		final IntLinkedOpenHashSet transformed = IntLinkedOpenHashSet.toSet(baseSet.intStream().map(i -> i + 40));
 		assertEquals(IntLinkedOpenHashSet.of(42, 420, 1337), transformed);
 	}
 
 	@Test
 	public void testSpliteratorTrySplit() {
 		final IntLinkedOpenHashSet baseSet = IntLinkedOpenHashSet.of(0, 1, 2, 3, 72, 5, 6);
-		IntSpliterator spliterator1 = baseSet.spliterator();
+		final IntSpliterator spliterator1 = baseSet.spliterator();
 		assertEquals(baseSet.size(), spliterator1.getExactSizeIfKnown());
-		IntSpliterator spliterator2 = spliterator1.trySplit();
+		final IntSpliterator spliterator2 = spliterator1.trySplit();
 		// No assurance of where we split, but where ever it is it should be a perfect split.
-		java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
-		java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
+		final java.util.stream.IntStream stream1 = java.util.stream.StreamSupport.intStream(spliterator1, false);
+		final java.util.stream.IntStream stream2 = java.util.stream.StreamSupport.intStream(spliterator2, false);
 
 		final IntLinkedOpenHashSet subSet1 = IntLinkedOpenHashSet.toSet(stream1);
 		// Intentionally collecting to a list for this second one.
@@ -529,5 +527,13 @@ public class IntLinkedOpenHashSetTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntLinkedOpenHashSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"3832474");
+	}
+
+	@Test
+	public void testRemoveLast() {
+		final IntLinkedOpenHashSet s = new IntLinkedOpenHashSet();
+		s.add(0);
+		s.removeLastInt();
+		assertFalse(s.iterator().hasNext());
 	}
 }

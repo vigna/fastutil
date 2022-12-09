@@ -32,7 +32,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 public class Int2IntLinkedOpenHashMapTest {
 	@Test
 	public void testContainsValue() {
-		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
+		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
 		assertEquals(0, m.put(0, 2));
 		assertEquals(0, m.put(1, 3));
 		assertTrue(m.containsValue(2));
@@ -86,7 +86,7 @@ public class Int2IntLinkedOpenHashMapTest {
 
 	@Test
 	public void testWrapAround() {
-		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .5f);
+		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .5f);
 		assertEquals(8, m.n);
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 6, 7 and 0
 		m.put(HashCommon.invMix(6), 0);
@@ -95,9 +95,9 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertNotEquals(0, m.key[0]);
 		assertNotEquals(0, m.key[6]);
 		assertNotEquals(0, m.key[7]);
-		IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
-		IntIterator iterator = m.keySet().iterator();
-		IntOpenHashSet t = new IntOpenHashSet();
+		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
+		final IntIterator iterator = m.keySet().iterator();
+		final IntOpenHashSet t = new IntOpenHashSet();
 		t.add(iterator.nextInt());
 		t.add(iterator.nextInt());
 		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
@@ -108,7 +108,7 @@ public class Int2IntLinkedOpenHashMapTest {
 
 	@Test
 	public void testWrapAround2() {
-		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .75f);
+		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .75f);
 		assertEquals(8, m.n);
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
 		m.put(HashCommon.invMix(4), 0);
@@ -122,9 +122,9 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertNotEquals(0, m.key[6]);
 		assertNotEquals(0, m.key[7]);
 		//System.err.println(Arraym.toString(m.key));
-		IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
-		IntIterator iterator = m.keySet().iterator();
-		IntOpenHashSet t = new IntOpenHashSet();
+		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
+		final IntIterator iterator = m.keySet().iterator();
+		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
 		//System.err.println(Arraym.toString(m.key));
@@ -143,7 +143,7 @@ public class Int2IntLinkedOpenHashMapTest {
 
 	@Test
 	public void testWrapAround3() {
-		Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .75f);
+		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .75f);
 		assertEquals(8, m.n);
 		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
 		m.put(HashCommon.invMix(5), 0);
@@ -157,9 +157,9 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertNotEquals(0, m.key[0]);
 		assertNotEquals(0, m.key[1]);
 		//System.err.println(Arraym.toString(m.key));
-		IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
-		IntIterator iterator = m.keySet().iterator();
-		IntOpenHashSet t = new IntOpenHashSet();
+		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
+		final IntIterator iterator = m.keySet().iterator();
+		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
 		//System.err.println(Arraym.toString(m.key));
@@ -187,16 +187,24 @@ public class Int2IntLinkedOpenHashMapTest {
 		m.int2IntEntrySet().forEach(new Consumer<Int2IntMap.Entry>() {
 			int i = a.length;
 			@Override
-			public void accept(Entry t) {
+			public void accept(final Entry t) {
 				assertEquals(--i, t.getIntKey());
 			}
 		});
 		m.int2IntEntrySet().fastForEach(new Consumer<Int2IntMap.Entry>() {
 			int i = a.length;
 			@Override
-			public void accept(Entry t) {
+			public void accept(final Entry t) {
 				assertEquals(--i, t.getIntKey());
 			}
 		});
+	}
+
+	@Test
+	public void testRemoveLast() {
+		final Int2IntLinkedOpenHashMap s = new Int2IntLinkedOpenHashMap();
+		s.put(0, 0);
+		s.removeLastInt();
+		assertFalse(s.int2IntEntrySet().iterator().hasNext());
 	}
 }
