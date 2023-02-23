@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2022 Sebastiano Vigna
+ * Copyright (C) 2002-2023 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2309,19 +2309,17 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			for(int i = size, curr, next = first; i-- != 0;) {
 				curr = next;
 				next = GET_NEXT(link[curr]);
-				consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[curr], value[curr]));
+				consumer.accept(new MapEntry(curr));
 			}
 		}
 
 		/** {@inheritDoc} */
 		@Override
 		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			final ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
-			for(int i = size, curr, next = first; i-- != 0;) {
-				curr = next;
-				next = GET_NEXT(link[curr]);
-				entry.key = key[curr];
-				entry.value = value[curr];
+			final MapEntry entry = new MapEntry();
+			for(int i = size, next = first; i-- != 0;) {
+				entry.index = next;
+				next = GET_NEXT(link[next]);
 				consumer.accept(entry);
 			}
 		}
@@ -2331,24 +2329,22 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** {@inheritDoc} */
 		@Override
 		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			if (containsNullKey) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[n], value[n]));
+			if (containsNullKey) consumer.accept(new MapEntry(n));
 			for(int pos = n; pos-- != 0;)
-				if (! KEY_IS_NULL(key[pos])) consumer.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC(key[pos], value[pos]));
+				if (! KEY_IS_NULL(key[pos])) consumer.accept(new MapEntry(pos));
 		}
 
 		/** {@inheritDoc} */
 		@Override
 		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
-			final ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC entry = new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND();
+			final MapEntry entry = new MapEntry();
 			if (containsNullKey) {
-				entry.key = key[n];
-				entry.value = value[n];
+				entry.index = n;
 				consumer.accept(entry);
 			}
 			for(int pos = n; pos-- != 0;)
 				if (! KEY_IS_NULL(key[pos])) {
-					entry.key = key[pos];
-					entry.value = value[pos];
+					entry.index = pos;
 					consumer.accept(entry);
 				}
 		}

@@ -28,6 +28,7 @@ import org.junit.Test;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.HashCommon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 public class Int2IntLinkedOpenHashMapTest {
 	@Test
@@ -60,13 +61,13 @@ public class Int2IntLinkedOpenHashMapTest {
 		for (int i = 0; i < 100; i++) {
 			assertEquals(0, s.put(i, i));
 		}
-		for (int i = 100; i-- != 0; ) {
+		for (int i = 100; i-- != 0;) {
 			assertEquals(i, s.removeLastInt());
 		}
 		assertTrue(s.isEmpty());
 
 		s = new Int2IntLinkedOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
-		for (int i = 100; i-- != 0; ) {
+		for (int i = 100; i-- != 0;) {
 			assertEquals(0, s.put(i, i));
 		}
 		for (int i = 0; i < 100; i++) {
@@ -75,10 +76,10 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertTrue(s.isEmpty());
 
 		s = new Int2IntLinkedOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
-		for (int i = 100; i-- != 0; ) {
+		for (int i = 100; i-- != 0;) {
 			assertEquals(0, s.put(i, i));
 		}
-		for (int i = 100; i-- != 0; ) {
+		for (int i = 100; i-- != 0;) {
 			assertEquals(i, s.removeFirstInt());
 		}
 		assertTrue(s.isEmpty());
@@ -100,7 +101,8 @@ public class Int2IntLinkedOpenHashMapTest {
 		final IntOpenHashSet t = new IntOpenHashSet();
 		t.add(iterator.nextInt());
 		t.add(iterator.nextInt());
-		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in
+		// 0 twice
 		iterator.remove();
 		t.add(iterator.nextInt());
 		assertEquals(keys, t);
@@ -110,7 +112,8 @@ public class Int2IntLinkedOpenHashMapTest {
 	public void testWrapAround2() {
 		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .75f);
 		assertEquals(8, m.n);
-		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7 and 0
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 4, 5, 6, 7
+		// and 0
 		m.put(HashCommon.invMix(4), 0);
 		m.put(HashCommon.invMix(5), 0);
 		m.put(HashCommon.invMix(4 + 8), 0);
@@ -121,21 +124,22 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertNotEquals(0, m.key[5]);
 		assertNotEquals(0, m.key[6]);
 		assertNotEquals(0, m.key[7]);
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
 		final IntIterator iterator = m.keySet().iterator();
 		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
-		//System.err.println(Arraym.toString(m.key));
-		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		// System.err.println(Arraym.toString(m.key));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in
+		// 0 twice
 		assertTrue(t.add(iterator.nextInt()));
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		assertEquals(3, m.size());
 		assertEquals(keys, t);
@@ -145,7 +149,8 @@ public class Int2IntLinkedOpenHashMapTest {
 	public void testWrapAround3() {
 		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(4, .75f);
 		assertEquals(8, m.n);
-		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0 and 1
+		// The following code inverts HashCommon.phiMix() and places strategically keys in slots 5, 6, 7, 0
+		// and 1
 		m.put(HashCommon.invMix(5), 0);
 		m.put(HashCommon.invMix(5 + 8), 0);
 		m.put(HashCommon.invMix(5 + 16), 0);
@@ -156,23 +161,24 @@ public class Int2IntLinkedOpenHashMapTest {
 		assertNotEquals(0, m.key[7]);
 		assertNotEquals(0, m.key[0]);
 		assertNotEquals(0, m.key[1]);
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		final IntOpenHashSet keys = new IntOpenHashSet(m.keySet());
 		final IntIterator iterator = m.keySet().iterator();
 		final IntOpenHashSet t = new IntOpenHashSet();
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
-		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in 0 twice
+		// System.err.println(Arraym.toString(m.key));
+		// Originally, this remove would move the entry in slot 0 in slot 6 and we would return the entry in
+		// 0 twice
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
-		//System.err.println(Arraym.toString(m.key));
+		// System.err.println(Arraym.toString(m.key));
 		assertTrue(t.add(iterator.nextInt()));
 		iterator.remove();
 		assertEquals(0, m.size());
@@ -182,10 +188,11 @@ public class Int2IntLinkedOpenHashMapTest {
 	@Test
 	public void testEntrySetForEach() {
 		final int[] a = new int[1000];
-		for(int i = 0; i < 1000; i++) a[i] = a.length - 1 - i;
+		for (int i = 0; i < 1000; i++) a[i] = a.length - 1 - i;
 		final Int2IntLinkedOpenHashMap m = new Int2IntLinkedOpenHashMap(a, a);
 		m.int2IntEntrySet().forEach(new Consumer<Int2IntMap.Entry>() {
 			int i = a.length;
+
 			@Override
 			public void accept(final Entry t) {
 				assertEquals(--i, t.getIntKey());
@@ -193,6 +200,7 @@ public class Int2IntLinkedOpenHashMapTest {
 		});
 		m.int2IntEntrySet().fastForEach(new Consumer<Int2IntMap.Entry>() {
 			int i = a.length;
+
 			@Override
 			public void accept(final Entry t) {
 				assertEquals(--i, t.getIntKey());
@@ -206,5 +214,42 @@ public class Int2IntLinkedOpenHashMapTest {
 		s.put(0, 0);
 		s.removeLastInt();
 		assertFalse(s.int2IntEntrySet().iterator().hasNext());
+	}
+
+	@Test
+	public void testSetValue() {
+		final Int2IntLinkedOpenHashMap s = new Int2IntLinkedOpenHashMap();
+
+		for (int i = 0; i < 20; i++) s.put(i, i);
+		final ObjectIterator<Entry> f = s.int2IntEntrySet().fastIterator();
+		while (f.hasNext()) {
+			final Entry e = f.next();
+			e.setValue(e.getIntValue() + 20);
+		}
+		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
+
+		for (int i = 0; i < 20; i++) s.put(i, i);
+		final ObjectIterator<Entry> n = s.int2IntEntrySet().iterator();
+		while (n.hasNext()) {
+			final Entry e = n.next();
+			e.setValue(e.getIntValue() + 20);
+		}
+		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
+
+		for (int i = 0; i < 20; i++) s.put(i, i);
+		s.int2IntEntrySet().fastIterator().forEachRemaining(e -> e.setValue(e.getIntValue() + 20));
+		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
+
+		for (int i = 0; i < 20; i++) s.put(i, i);
+		s.int2IntEntrySet().iterator().forEachRemaining(e -> e.setValue(e.getIntValue() + 20));
+		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
+
+		for (int i = 0; i < 20; i++) s.put(i, i);
+		s.int2IntEntrySet().forEach(e -> e.setValue(e.getIntValue() + 20));
+		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
+
+		for (int i = 0; i < 20; i++) s.put(i, i);
+		s.int2IntEntrySet().fastForEach(e -> e.setValue(e.getIntValue() + 20));
+		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
 	}
 }

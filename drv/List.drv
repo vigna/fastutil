@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2022 Sebastiano Vigna
+ * Copyright (C) 2002-2023 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

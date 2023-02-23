@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2022 Paolo Boldi and Sebastiano Vigna
+ * Copyright (C) 2003-2023 Paolo Boldi and Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
