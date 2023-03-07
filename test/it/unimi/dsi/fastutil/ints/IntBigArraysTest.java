@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.ints;
 
+import static it.unimi.dsi.fastutil.BigArrays.SEGMENT_SIZE;
 import static it.unimi.dsi.fastutil.BigArrays.copy;
 import static it.unimi.dsi.fastutil.BigArrays.get;
 import static it.unimi.dsi.fastutil.BigArrays.length;
@@ -525,4 +526,31 @@ public class IntBigArraysTest {
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(IntBigArrays.class, "test", /*num=*/"10000", /*seed=*/"293843");
 	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testAssertBigArrayLastEmpty() {
+		BigArrays.assertBigArray(new int[][] { new int[] {} });
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testAssertBigArrayLastLong() {
+		BigArrays.assertBigArray(new int[][] { new int[SEGMENT_SIZE + 1] });
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testAssertBigArrayMiddleWrong() {
+		BigArrays.assertBigArray(new int[][] { new int[SEGMENT_SIZE - 1], new int[1] });
+	}
+
+	@Test
+	public void testAssertBigArrayOK() {
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(0));
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(SEGMENT_SIZE));
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(SEGMENT_SIZE - 1));
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(SEGMENT_SIZE + 1));
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(2 * SEGMENT_SIZE));
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(2 * SEGMENT_SIZE - 1));
+		BigArrays.assertBigArray(IntBigArrays.newBigArray(2 * SEGMENT_SIZE + 1));
+	}
+
 }
