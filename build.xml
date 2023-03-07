@@ -1,4 +1,4 @@
-<project name="fastutil" default="jar" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="dsiutils" default="jar" basedir="." xmlns:resolver="antlib:org.apache.maven.resolver.ant">
 
 	<property name="build.sysclasspath" value="ignore"/>
 	<property file="build.properties"/>
@@ -113,72 +113,67 @@
 		</copy>
 	</target>
 
-	<target name="stage-core" depends="pom-core,dist-core" description="deploy core release version to Maven staging repository (core)">
+	<target name="stage-core" depends="pom-core,dist-core" description="deploy release version to Maven staging repository (core)">
 		<!-- sign and deploy the main artifact -->
-		<artifact:mvn fork="true">
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-core.xml" />
-			<arg value="-Dfile=${maven-core-jar}" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
+		<exec executable="gpg">
+			<arg value="-sba"/>
+			<arg value="--yes"/>
+			<arg value="${maven-core-jar}"/>
+		</exec>
+		<exec executable="gpg">
+			<arg value="-sba"/>
+			<arg value="--yes"/>
+			<arg value="${maven-core-sources-jar}"/>
+		</exec>
+		<exec executable="gpg">
+			<arg value="-sba"/>
+			<arg value="--yes"/>
+			<arg value="${maven-core-javadoc-jar}"/>
+		</exec>
 
-		<!-- sign and deploy the sources artifact -->
-		<artifact:mvn fork="true">
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-core.xml" />
-			<arg value="-Dfile=${maven-core-sources-jar}" />
-			<arg value="-Dclassifier=sources" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
+		<resolver:deploy>
+			<pom file="pom-core.xml"/>
+			<remoterepo id="${maven-staging-repository-id}" url ="${maven-staging-repository-url}"/>
+			<artifact file="pom-core.xml.asc" type="pom.asc"/>
+			<artifact file="${maven-core-jar}" type="jar"/>
+			<artifact file="${maven-core-sources-jar}" type="jar" classifier="sources"/>
+			<artifact file="${maven-core-javadoc-jar}" type="jar" classifier="javadoc"/>
+			<artifact file="${maven-core-jar}.asc" type="jar.asc"/>
+			<artifact file="${maven-core-sources-jar}.asc" type="jar.asc" classifier="sources"/>
+			<artifact file="${maven-core-javadoc-jar}.asc" type="jar.asc" classifier="javadoc"/>
+		</resolver:deploy>
 
-		<!-- sign and deploy the javadoc artifact -->
-		<artifact:mvn fork="true">
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom-core.xml" />
-			<arg value="-Dfile=${maven-core-javadoc-jar}" />
-			<arg value="-Dclassifier=javadoc" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
 	</target>
 
 	<target name="stage" depends="pom,dist" description="deploy release version to Maven staging repository">
 		<!-- sign and deploy the main artifact -->
-		<artifact:mvn fork="true">
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
-			<arg value="-Dfile=${maven-jar}" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
+		<exec executable="gpg">
+			<arg value="-sba"/>
+			<arg value="--yes"/>
+			<arg value="${maven-jar}"/>
+		</exec>
+		<exec executable="gpg">
+			<arg value="-sba"/>
+			<arg value="--yes"/>
+			<arg value="${maven-sources-jar}"/>
+		</exec>
+		<exec executable="gpg">
+			<arg value="-sba"/>
+			<arg value="--yes"/>
+			<arg value="${maven-javadoc-jar}"/>
+		</exec>
 
-		<!-- sign and deploy the sources artifact -->
-		<artifact:mvn fork="true">
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
-			<arg value="-Dfile=${maven-sources-jar}" />
-			<arg value="-Dclassifier=sources" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
-
-		<!-- sign and deploy the javadoc artifact -->
-		<artifact:mvn fork="true">
-			<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.3:sign-and-deploy-file" />
-			<arg value="-Durl=${maven-staging-repository-url}" />
-			<arg value="-DrepositoryId=${maven-staging-repository-id}" />
-			<arg value="-DpomFile=pom.xml" />
-			<arg value="-Dfile=${maven-javadoc-jar}" />
-			<arg value="-Dclassifier=javadoc" />
-			<arg value="-Pgpg" />
-		</artifact:mvn>
+		<resolver:deploy>
+			<pom file="pom.xml"/>
+			<remoterepo id="${maven-staging-repository-id}" url ="${maven-staging-repository-url}"/>
+			<artifact file="pom.xml.asc" type="pom.asc"/>
+			<artifact file="${maven-jar}" type="jar"/>
+			<artifact file="${maven-sources-jar}" type="jar" classifier="sources"/>
+			<artifact file="${maven-javadoc-jar}" type="jar" classifier="javadoc"/>
+			<artifact file="${maven-jar}.asc" type="jar.asc"/>
+			<artifact file="${maven-sources-jar}.asc" type="jar.asc" classifier="sources"/>
+			<artifact file="${maven-javadoc-jar}.asc" type="jar.asc" classifier="javadoc"/>
+		</resolver:deploy>
 	</target>
 
 	<target name="stage-all" depends="stage-core,stage" description="stage all release versions to Maven staging repository">
