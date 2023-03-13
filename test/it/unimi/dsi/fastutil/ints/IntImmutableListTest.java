@@ -111,6 +111,67 @@ public class IntImmutableListTest {
 		transformed = IntImmutableList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 50000);
 		assertEquals(expectedList, transformed);
 	}
+	
+	@Test
+	public void testListIterator_testIteration() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
+		final IntListIterator li = l.listIterator(1);
+
+		assertTrue(li.hasPrevious()); // We are at position 1
+		assertTrue(li.hasNext());
+		assertEquals(1, li.nextIndex());
+		assertEquals(1, li.nextInt());
+		assertEquals(2, li.nextIndex());
+		assertEquals(2, li.nextInt());
+		assertEquals(3, li.nextIndex());
+		assertEquals(3, li.nextInt());
+		assertEquals(4, li.nextIndex());
+		assertFalse(li.hasNext());
+		assertTrue(li.hasPrevious());
+
+		assertEquals(3, li.previousIndex());
+		assertEquals(3, li.previousInt());
+		assertEquals(2, li.previousIndex());
+		assertEquals(2, li.previousInt());
+		assertEquals(1, li.previousIndex());
+		assertEquals(1, li.previousInt());
+		assertEquals(0, li.previousIndex());
+		assertEquals(0, li.previousInt());
+		assertEquals(-1, li.previousIndex());
+		assertFalse(li.hasPrevious());
+		assertTrue(li.hasNext());
+	}
+
+	@Test
+	public void testListIterator_testSkipping() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5);
+		final IntListIterator li = l.listIterator(1);
+
+		li.back(10);
+		assertEquals(0, li.nextIndex());
+		assertFalse(li.hasPrevious());
+		assertTrue(li.hasNext());
+
+		li.skip(10);
+		assertEquals(6, li.nextIndex());
+		assertTrue(li.hasPrevious());
+		assertFalse(li.hasNext());
+
+		li.back(3);
+		assertEquals(3, li.nextIndex());
+
+		li.skip(1);
+		assertEquals(4, li.nextIndex());
+	}
+
+	@Test
+	public void testListIterator_testForEachRemaining() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
+		final IntListIterator li = l.listIterator(1);
+		final IntList consumer = new IntArrayList();
+		li.forEachRemaining(consumer::add);
+		assertEquals(consumer, IntList.of(1, 2, 3));
+	}
 
 	@Test
 	public void testEquals_AnotherImmutableList() {
@@ -239,12 +300,62 @@ public class IntImmutableListTest {
 	}
 
 	@Test
-	public void testSublist_testListIterator() {
-		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
-		final IntList sl = l.subList(1, 3);
+	public void testSublistListIterator_testIteration() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5);
+		final IntList sl = l.subList(1, 4);
 		final IntListIterator li = sl.listIterator(1);
+		assertTrue(li.hasPrevious()); // We are at position 1
+		assertTrue(li.hasNext());
+		assertEquals(1, li.nextIndex());
 		assertEquals(2, li.nextInt());
+		assertEquals(2, li.nextIndex());
+		assertEquals(3, li.nextInt());
+		assertEquals(3, li.nextIndex());
 		assertFalse(li.hasNext());
+		assertTrue(li.hasPrevious());
+
+		assertEquals(2, li.previousIndex());
+		assertEquals(3, li.previousInt());
+		assertEquals(1, li.previousIndex());
+		assertEquals(2, li.previousInt());
+		assertEquals(0, li.previousIndex());
+		assertEquals(1, li.previousInt());
+		assertEquals(-1, li.previousIndex());
+		assertFalse(li.hasPrevious());
+		assertTrue(li.hasNext());
+	}
+
+	@Test
+	public void testSublistListIterator_testSkipping() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5);
+		final IntList sl = l.subList(1, 4);
+		final IntListIterator li = sl.listIterator(1);
+
+		li.back(10);
+		assertEquals(0, li.nextIndex());
+		assertFalse(li.hasPrevious());
+		assertTrue(li.hasNext());
+
+		li.skip(10);
+		assertEquals(3, li.nextIndex());
+		assertTrue(li.hasPrevious());
+		assertFalse(li.hasNext());
+
+		li.back(2);
+		assertEquals(1, li.nextIndex());
+
+		li.skip(1);
+		assertEquals(2, li.nextIndex());
+	}
+
+	@Test
+	public void testSublistListIterator_testForEachRemaining() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5);
+		final IntList sl = l.subList(1, 4);
+		final IntListIterator li = sl.listIterator(1);
+		IntList consumer = new IntArrayList();
+		li.forEachRemaining(consumer::add);
+		assertEquals(consumer, IntList.of(2, 3));
 	}
 
 	@Test
