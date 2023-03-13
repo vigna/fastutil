@@ -239,6 +239,15 @@ public class IntImmutableListTest {
 	}
 
 	@Test
+	public void testSublist_testListIterator() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
+		final IntList sl = l.subList(1, 3);
+		final IntListIterator li = sl.listIterator(1);
+		assertEquals(2, li.nextInt());
+		assertFalse(li.hasNext());
+	}
+
+	@Test
 	public void testSubList_testSubSubList() {
 		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4);
 		final IntList sl = l.subList(1, 4);
