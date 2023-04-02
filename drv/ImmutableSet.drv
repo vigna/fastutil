@@ -1,0 +1,149 @@
+/*
+ * Copyright (C) 2002-2023 Sebastiano Vigna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+ 
+
+package PACKAGE;
+
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.stream.Collector;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+
+/**
+ * Make an unmodifiable set feel like a Guava immutable set.
+ *
+ * <p>Mostly this means copy-on-construction and exposing an explicit immutable type.
+ * Note that unlike the Guava versions, we don't guarantee anything about the iteration order.
+ */
+@SuppressWarnings({"unused", "unchecked"})
+public class IMMUTABLE_SET KEY_GENERIC extends SETS.UnmodifiableSet KEY_GENERIC {
+
+  private static final long serialVersionUID = 0L;
+
+  @SuppressWarnings("rawtypes")
+  private static final IMMUTABLE_SET EMPTY =
+      new IMMUTABLE_SET(SETS.emptySet());
+
+  private IMMUTABLE_SET(SET KEY_GENERIC set) {
+    super(set);
+  }
+
+  public static KEY_GENERIC IMMUTABLE_SET KEY_GENERIC of() {
+    return EMPTY;
+  }
+
+  public static KEY_GENERIC IMMUTABLE_SET KEY_GENERIC of(KEY_GENERIC_TYPE key) {
+    return new IMMUTABLE_SET KEY_GENERIC(SETS.singleton(key));
+  }
+
+  public static KEY_GENERIC IMMUTABLE_SET KEY_GENERIC of(KEY_GENERIC_TYPE... keys) {
+    SET KEY_GENERIC set = new OPEN_HASH_SET KEY_GENERIC (keys.length);
+    for (KEY_GENERIC_TYPE key : keys) {
+      set.add(key);
+    }
+    return new IMMUTABLE_SET KEY_GENERIC(set);
+  }
+
+  @SuppressWarnings("deprecation")
+  public static KEY_GENERIC IMMUTABLE_SET KEY_GENERIC copyOf(Iterable<? extends KEY_GENERIC_CLASS> iter) {
+    if ((iter instanceof IMMUTABLE_SET)) {
+      return (IMMUTABLE_SET KEY_GENERIC) iter;
+    }
+    Collection<KEY_GENERIC_CLASS> col; 
+    if (iter instanceof Collection) {
+      col = (Collection<KEY_GENERIC_CLASS>) iter;
+    } else {  
+      col = new ArrayList<KEY_GENERIC_CLASS>();
+      iter.forEach(col::add);
+    }
+    if (col.isEmpty()) {
+      return of();
+    }
+    if (col.size() == 1) {
+      return of(col.iterator().next());
+    }
+    if ((col instanceof SETS.UnmodifiableSet)) {
+      return new IMMUTABLE_SET KEY_GENERIC((SET) col);
+    }
+    if (col instanceof COLLECTION) {
+      return new IMMUTABLE_SET KEY_GENERIC(new OPEN_HASH_SET KEY_GENERIC((COLLECTION KEY_GENERIC) col));
+    }
+    return new IMMUTABLE_SET KEY_GENERIC (new OPEN_HASH_SET KEY_GENERIC(col));
+  }
+
+  public static KEY_GENERIC IMMUTABLE_SET KEY_GENERIC copyOf(KEY_GENERIC_TYPE[] arr) {
+    return arr.length == 0
+        ? of()
+        : arr.length == 1
+            ? of(arr[0])
+            : new IMMUTABLE_SET KEY_GENERIC(new OPEN_HASH_SET KEY_GENERIC(arr));
+  }
+
+  public static KEY_GENERIC Collector<KEY_GENERIC_CLASS, ?, IMMUTABLE_SET KEY_GENERIC> TO_IMMUTABLE_SET() {
+    return collectingAndThen(
+        toCollection(OPEN_HASH_SET::new), IMMUTABLE_SET::new);
+  }
+
+  public static class Builder KEY_GENERIC {
+
+    private OPEN_HASH_SET KEY_GENERIC temp;
+
+    public Builder() {
+      temp = new OPEN_HASH_SET KEY_GENERIC();
+    }
+
+    public Builder(int initialCapacity) {
+      temp = new OPEN_HASH_SET KEY_GENERIC(initialCapacity);
+    }
+
+    public Builder KEY_GENERIC add(KEY_GENERIC_TYPE... keys) {
+      for (KEY_GENERIC_TYPE key : keys) {
+        temp.add(key);
+      }
+      return this;
+    }
+
+    @SuppressWarnings("deprecation")
+    public Builder KEY_GENERIC addAll(Iterable<? extends KEY_GENERIC_CLASS> iter) {
+#if KEYS_PRIMITIVE
+      if (iter instanceof COLLECTION) {
+        return add(((COLLECTION KEY_GENERIC) iter).TO_KEY_ARRAY());
+      } 
+#endif
+      if (iter instanceof Collection) {
+        temp.addAll((Collection<? extends KEY_GENERIC_CLASS>) iter);
+      } else {  
+        iter.forEach(temp::add);
+      }
+      return this;
+    }
+
+    public Builder KEY_GENERIC combine(Builder KEY_GENERIC other) {
+      return addAll(other.temp);
+    }
+
+    public IMMUTABLE_SET KEY_GENERIC build() {
+      OPEN_HASH_SET KEY_GENERIC  built = temp;
+      temp = null;
+      built.trim();
+      return new IMMUTABLE_SET KEY_GENERIC(built);
+    }
+  }
+}

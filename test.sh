@@ -37,7 +37,15 @@ for ((t=1; t<10000; t*=10)); do
 		java -ea -server $CLASSNAME test $t $lf
 	done
 
-	 MAP=(OpenHashMap LinkedOpenHashMap RBTreeMap AVLTreeMap)
+	l=${#TYPE[*]}
+	for ((k=1; k<l; k++)); do
+		CLASSNAME=it.unimi.dsi.fastutil.${PACKAGE[$k]}.${TYPE_CAP[$k]}ImmutableSet
+		echo "Testing $CLASSNAME ($t elements)..."
+		java -ea -server $CLASSNAME test $t
+	done
+
+
+	MAP=(OpenHashMap LinkedOpenHashMap RBTreeMap AVLTreeMap)
 
 	for ((f=0; f<${#MAP[*]}; f++)); do
 		l=${#TYPE[*]}

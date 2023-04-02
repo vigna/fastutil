@@ -629,6 +629,17 @@ $(COMPARATORS_STATIC): drv/Comparators.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(COMPARATORS_STATIC)
 
+
+#
+# Immutable wrappers
+#
+
+IMMUTABLE_SETS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ImmutableSet.c)
+$(IMMUTABLE_SETS): drv/ImmutableSet.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(IMMUTABLE_SETS)
+
+
 #
 # Fragmented stuff
 #

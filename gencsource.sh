@@ -607,6 +607,14 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define UNMODIFIABLE_KEY_BIDI_ITERATOR Unmodifiable${TYPE_CAP[$k]}BidirectionalIterator\n"\
 "#define UNMODIFIABLE_KEY_LIST_ITERATOR Unmodifiable${TYPE_CAP[$k]}ListIterator\n"\
 \
+"/* Immutable wrappers */\n"\
+\
+\
+"#define IMMUTABLE_SET ${TYPE_CAP[$k]}ImmutableSet\n"\
+"#define IMMUTABLE_MAP ${TYPE_CAP[$k]}2${TYPE_CAP[$v]}ImmutableMap\n"\
+"#define TO_IMMUTABLE_SET to${TYPE_CAP[$k]}ImmutableSet\n"\
+"#define TO_IMMUTABLE_MAP to${TYPE_CAP[$k]}2${TYPE_CAP[$v]}ImmutableMap\n"\
+\
 \
 "/* Other wrappers */\n"\
 \
