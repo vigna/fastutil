@@ -18,7 +18,7 @@ package PACKAGE;
 
 #if ! KEYS_REFERENCE
 import it.unimi.dsi.fastutil.objects.AbstractObjectSortedSet;
-import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
+import it.unimi.dsi.fastutil.objects.ObjectMovableBidirectionalIterator;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSortedSet;
 #endif
@@ -1185,6 +1185,30 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			while(i-- != 0 && hasPrevious()) previousEntry();
 			return n - i - 1;
 		}
+
+		public void moveKey(final KEY_GENERIC_TYPE fromElement) {
+			prev = null;
+			curr = prev;
+			if ((next = locateKey(fromElement)) != null) {
+				if (compare(next.key, fromElement) <= 0) {
+					prev = next;
+					next = next.next();
+				}
+				else prev = next.prev();
+			}
+		}
+
+		public void beginKey() {
+			next = firstEntry;
+			prev = next.prev();
+			curr = prev;
+		}
+
+		public void endKey() {
+			next = lastEntry;
+			prev = next.prev();
+			curr = prev;
+		}
 	}
 
 
@@ -1193,7 +1217,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	 * <p>This class can iterate in both directions on a threaded tree.
 	 */
 
-	private class EntryIterator extends TreeIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
+	private class EntryIterator extends TreeIterator implements ObjectMovableBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC>, ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC> {
 		EntryIterator() {}
 
 		EntryIterator(final KEY_GENERIC_TYPE k) {
@@ -1211,6 +1235,15 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 
 		@Override
 		public void add(MAP.Entry KEY_VALUE_GENERIC ok) { throw new UnsupportedOperationException(); }
+
+		@Override
+		public void move(final MAP.Entry KEY_VALUE_GENERIC fromElement) { moveKey(fromElement.ENTRY_GET_KEY()); }
+
+		@Override
+		public void begin() { beginKey(); }
+
+		@Override
+		public void end() { endKey(); }
 	}
 
 
@@ -1227,10 +1260,10 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return comparator; }
 
 				@Override
-				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() { return new EntryIterator(); }
+				public ObjectMovableBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() { return new EntryIterator(); }
 
 				@Override
-				public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator(final MAP.Entry KEY_VALUE_GENERIC from) { return new EntryIterator(from.ENTRY_GET_KEY()); }
+				public ObjectMovableBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator(final MAP.Entry KEY_VALUE_GENERIC from) { return new EntryIterator(from.ENTRY_GET_KEY()); }
 
 				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
@@ -1297,21 +1330,27 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 	 * simply override the {@link java.util.ListIterator#next()}/{@link java.util.ListIterator#previous()} methods (and possibly
 	 * their type-specific counterparts) so that they return keys instead of entries.
 	 */
-	private final class KeyIterator extends TreeIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+	private final class KeyIterator extends TreeIterator implements KEY_MOVE_BIDI_ITERATOR KEY_GENERIC, KEY_LIST_ITERATOR KEY_GENERIC {
 		public KeyIterator() {}
 		public KeyIterator(final KEY_GENERIC_TYPE k) { super(k); }
 		@Override
 		public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
 		@Override
 		public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
+		@Override
+		public void move(final KEY_GENERIC_TYPE fromElement) { moveKey(fromElement); }
+		@Override
+		public void begin() { beginKey(); }
+		@Override
+		public void end() { endKey(); }
 	}
 
 	/** A keyset implementation using a more direct implementation for iterators. */
 	private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
 		@Override
-		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new KeyIterator(); }
+		public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator() { return new KeyIterator(); }
 		@Override
-		public KEY_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new KeyIterator(from); }
+		public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new KeyIterator(from); }
 	}
 
 	/** Returns a type-specific sorted set view of the keys contained in this map.
@@ -1443,9 +1482,9 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		public ObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC> ENTRYSET() {
 			if (entries == null) entries = new AbstractObjectSortedSet<MAP.Entry KEY_VALUE_GENERIC>() {
 					@Override
-					public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() { return new SubmapEntryIterator(); }
+					public ObjectMovableBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() { return new SubmapEntryIterator(); }
 					@Override
-					public ObjectBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator(final MAP.Entry KEY_VALUE_GENERIC from) { return new SubmapEntryIterator(from.ENTRY_GET_KEY()); }
+					public ObjectMovableBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC> iterator(final MAP.Entry KEY_VALUE_GENERIC from) { return new SubmapEntryIterator(from.ENTRY_GET_KEY()); }
 					@Override
 					public Comparator<? super MAP.Entry KEY_VALUE_GENERIC> comparator() { return AVL_TREE_MAP.this.ENTRYSET().comparator(); }
 					@Override
@@ -1504,9 +1543,9 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 
 		private class KeySet extends ABSTRACT_SORTED_MAP KEY_VALUE_GENERIC.KeySet {
 			@Override
-			public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubmapKeyIterator(); }
+			public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubmapKeyIterator(); }
 			@Override
-			public KEY_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SubmapKeyIterator(from); }
+			public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SubmapKeyIterator(from); }
 		}
 
 		@Override
@@ -1706,9 +1745,23 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 				next = next.next();
 				if (! top && next != null && AVL_TREE_MAP.this.compare(next.key, to) >= 0) next = null;
 			}
+
+			@Override
+			public void beginKey() {
+				next = firstEntry();
+				prev = next.prev();
+				curr = prev;
+			}
+
+			@Override
+			public void endKey() {
+				next = lastEntry();
+				prev = next.prev();
+				curr = prev;
+			}
 		}
 
-		private class SubmapEntryIterator extends SubmapIterator implements ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC>  {
+		private class SubmapEntryIterator extends SubmapIterator implements ObjectMovableBidirectionalIterator<MAP.Entry KEY_VALUE_GENERIC>, ObjectListIterator<MAP.Entry KEY_VALUE_GENERIC>  {
 			SubmapEntryIterator() {}
 			SubmapEntryIterator(final KEY_GENERIC_TYPE k) { super(k); }
 
@@ -1716,6 +1769,12 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			public MAP.Entry KEY_VALUE_GENERIC next() { return nextEntry(); }
 			@Override
 			public MAP.Entry KEY_VALUE_GENERIC previous() { return previousEntry(); }
+			@Override
+			public void move(final MAP.Entry KEY_VALUE_GENERIC from) { moveKey(from.ENTRY_GET_KEY()); }
+			@Override
+			public void begin() { beginKey(); }
+			@Override
+			public void end() { endKey(); }
 		}
 
 
@@ -1727,7 +1786,7 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 		 * type-specific counterparts) so that they return keys instead of
 		 * entries.
 		 */
-		private final class SubmapKeyIterator extends SubmapIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+		private final class SubmapKeyIterator extends SubmapIterator implements KEY_MOVE_BIDI_ITERATOR KEY_GENERIC, KEY_LIST_ITERATOR KEY_GENERIC {
 			public SubmapKeyIterator() { super(); }
 			public SubmapKeyIterator(KEY_GENERIC_TYPE from) { super(from); }
 
@@ -1735,6 +1794,12 @@ public class AVL_TREE_MAP KEY_VALUE_GENERIC extends ABSTRACT_SORTED_MAP  KEY_VAL
 			public KEY_GENERIC_TYPE NEXT_KEY() { return nextEntry().key; }
 			@Override
 			public KEY_GENERIC_TYPE PREV_KEY() { return previousEntry().key; }
+			@Override
+			public void move(final KEY_GENERIC_TYPE from) { moveKey(from); }
+			@Override
+			public void begin() { beginKey(); }
+			@Override
+			public void end() { endKey(); }
 		};
 
 		/** An iterator on a subrange of values.
