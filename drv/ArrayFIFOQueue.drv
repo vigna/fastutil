@@ -97,6 +97,18 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		return t;
 	}
 
+	@Override
+	public KEY_GENERIC_TYPE DEQUEUE(KEY_GENERIC_TYPE x) {
+		if (start == end) return x;
+		final KEY_GENERIC_TYPE t = array[start];
+#if KEYS_REFERENCE
+		array[start] = null; // Clean-up for the garbage collector.
+#endif
+		if (++start == length) start = 0;
+		reduce();
+		return t;
+	}
+
 	/** Dequeues the {@linkplain PriorityQueue#last() last} element from the queue.
 	 *
 	 * @return the dequeued element.
@@ -104,6 +116,23 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	 */
 	public KEY_GENERIC_TYPE DEQUEUE_LAST() {
 		if (start == end) throw new NoSuchElementException();
+		if (end == 0) end = length;
+		final KEY_GENERIC_TYPE t = array[--end];
+#if KEYS_REFERENCE
+		array[end] = null; // Clean-up for the garbage collector.
+#endif
+		reduce();
+		return t;
+	}
+
+	/** Dequeues the {@linkplain PriorityQueue#last() last} element from the queue
+	 * or return {@code x} if the queue is empty.
+	 *
+	 * @param x the element to return when queue is empty.
+	 * @return the dequeued element.
+	 */
+	public KEY_GENERIC_TYPE DEQUEUE_LAST(KEY_GENERIC_TYPE x) {
+		if (start == end) return x;
 		if (end == 0) end = length;
 		final KEY_GENERIC_TYPE t = array[--end];
 #if KEYS_REFERENCE
@@ -139,19 +168,21 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	}
 
 	@Override
-	public void enqueue(KEY_GENERIC_TYPE x) {
+	public boolean enqueue(KEY_GENERIC_TYPE x) {
 		array[end++] = x;
 		if (end == length) end = 0;
 		if (end == start) expand();
+		return true;
 	}
 
 	/** Enqueues a new element as the first element (in dequeuing order) of the queue.
 	 * @param x the element to enqueue.
 	 */
-	public void enqueueFirst(KEY_GENERIC_TYPE x) {
+	public boolean enqueueFirst(KEY_GENERIC_TYPE x) {
 		if (start == 0) start = length;
 		array[--start] = x;
 		if (end == start) expand();
+		return true;
 	}
 
 	@Override
@@ -160,10 +191,22 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		return array[start];
 	}
 
+	@Override
+	public KEY_GENERIC_TYPE FIRST(KEY_GENERIC_TYPE x) {
+		if (start == end) return x;
+		return array[start];
+	}
+
 
 	@Override
 	public KEY_GENERIC_TYPE LAST() {
 		if (start == end) throw new NoSuchElementException();
+		return array[(end == 0 ? length : end) - 1];
+	}
+
+	@Override
+	public KEY_GENERIC_TYPE LAST(KEY_GENERIC_TYPE x) {
+		if (start == end) return x;
 		return array[(end == 0 ? length : end) - 1];
 	}
 

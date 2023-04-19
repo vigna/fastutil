@@ -42,10 +42,13 @@ public class PriorityQueues {
 		protected EmptyPriorityQueue() {}
 
 		@Override
-		public void enqueue(final Object o) { throw new UnsupportedOperationException(); }
+		public boolean enqueue(final Object o) { throw new UnsupportedOperationException(); }
 
 		@Override
 		public Object dequeue() { throw new NoSuchElementException(); }
+
+		@Override
+		public Object dequeue(Object x) {return x;}
 
 		@Override
 		public boolean isEmpty() { return true; }
@@ -60,7 +63,13 @@ public class PriorityQueues {
 		public Object first() { throw new NoSuchElementException(); }
 
 		@Override
+		public Object first(Object x) { return x; }
+
+		@Override
 		public Object last() { throw new NoSuchElementException(); }
+
+		@Override
+		public Object last(Object x) { return x; }
 
 		@Override
 		public void changed() { throw new NoSuchElementException(); }
@@ -114,16 +123,25 @@ public class PriorityQueues {
 		}
 
 		@Override
-		public void enqueue(final K x) { synchronized(sync) { q.enqueue(x); } }
+		public boolean enqueue(final K x) { synchronized(sync) { return q.enqueue(x); } }
 
 		@Override
 		public K dequeue() { synchronized(sync) { return q.dequeue(); } }
 
 		@Override
+		public K dequeue(K x) { synchronized(sync) { return q.dequeue(x); } }
+
+		@Override
 		public K first() { synchronized(sync) { return q.first(); } }
 
 		@Override
+		public K first(K x) { synchronized(sync) { return q.first(x); } }
+
+		@Override
 		public K last() { synchronized(sync) { return q.last(); } }
+
+		@Override
+		public K last(K x) { synchronized(sync) { return q.last(x); } }
 
 		@Override
 		public boolean isEmpty() { synchronized(sync) { return q.isEmpty(); } }

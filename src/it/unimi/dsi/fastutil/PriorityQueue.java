@@ -41,9 +41,10 @@ public interface PriorityQueue<K> {
 	/** Enqueues a new element.
 	 *
 	 * @param x the element to enqueue.
+	 * @return true if element was added into this queue.
 	 */
 
-	void enqueue(K x);
+	boolean enqueue(K x);
 
 	/** Dequeues the {@linkplain #first() first} element from the queue.
 	 *
@@ -52,6 +53,14 @@ public interface PriorityQueue<K> {
 	 */
 
 	K dequeue();
+
+	/** Dequeues the {@linkplain PriorityQueue#first() first} element from the queue
+	 * or return {@code x} if the queue is empty.
+	 *
+	 * @param x the element to return when queue is empty.
+	 * @return the dequeued element or {@code x} if the queue is empty.
+	 */
+	K dequeue(K x);
 
 	/** Checks whether this queue is empty.
 	 *
@@ -83,6 +92,14 @@ public interface PriorityQueue<K> {
 
 	K first();
 
+	/** Returns the first element of the queue or {@code x} if the queue is empty.
+	 *
+	 * @param x the element to return when queue is empty.
+	 * @return the first element or {@code x} if the queue is empty.
+	 */
+
+	K first(K x);
+
 	/** Returns the last element of the queue, that is, the element the would be dequeued last (optional operation).
 	 *
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
@@ -91,6 +108,15 @@ public interface PriorityQueue<K> {
 	 */
 
 	default K last() { throw new UnsupportedOperationException(); }
+
+	/** Returns the last element of the queue or {@code x} if the queue is empty,
+	 *  that is, the element the would be dequeued last (optional operation).
+	 *
+	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.
+	 * @return the last element or {@code x} if the queue is empty.
+	 */
+
+	default K last(K x) { throw new UnsupportedOperationException(); }
 
 	/** Notifies the queue that the {@linkplain #first() first} element has changed (optional operation).
 	 * <p>This default implementation just throws an {@link UnsupportedOperationException}.

@@ -154,13 +154,9 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENE
 		return this.firstIndex = firstIndex;
 	}
 
-	private void ensureNonEmpty() {
-		if (size == 0) throw new NoSuchElementException();
-	}
-
 	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	public void enqueue(KEY_GENERIC_TYPE x) {
+	public boolean enqueue(KEY_GENERIC_TYPE x) {
 		if (size == array.length) array = ARRAYS.grow(array, size + 1);
 		if (firstIndexValid) {
 			if (c == null) { if (KEY_LESS(x, array[firstIndex])) firstIndex = size; }
@@ -168,11 +164,25 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENE
 		}
 		else firstIndexValid = false;
 		array[size++] = x;
+		return true;
 	}
 
 	@Override
 	public KEY_GENERIC_TYPE DEQUEUE() {
-		ensureNonEmpty();
+		if (size == 0) throw new NoSuchElementException();
+		final int first = findFirst();
+		final KEY_GENERIC_TYPE result = array[first];
+		System.arraycopy(array, first + 1, array, first, --size - first);
+#if KEY_CLASS_Object
+		array[size] = null;
+#endif
+		firstIndexValid = false;
+		return result;
+	}
+
+	@Override
+	public KEY_GENERIC_TYPE DEQUEUE(KEY_GENERIC_TYPE x) {
+		if (size == 0) return x;
 		final int first = findFirst();
 		final KEY_GENERIC_TYPE result = array[first];
 		System.arraycopy(array, first + 1, array, first, --size - first);
@@ -185,13 +195,19 @@ public class ARRAY_PRIORITY_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENE
 
 	@Override
 	public KEY_GENERIC_TYPE FIRST() {
-		ensureNonEmpty();
+		if (size == 0) throw new NoSuchElementException();
+		return array[findFirst()];
+	}
+
+	@Override
+	public KEY_GENERIC_TYPE FIRST(KEY_GENERIC_TYPE x) {
+		if (size == 0) return x;
 		return array[findFirst()];
 	}
 
 	@Override
 	public void changed() {
-		ensureNonEmpty();
+		if (size == 0) throw new NoSuchElementException();
 		firstIndexValid = false;
 	}
 
