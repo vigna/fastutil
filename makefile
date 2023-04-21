@@ -476,6 +476,11 @@ $(ARRAY_FIFO_QUEUES): drv/ArrayFIFOQueue.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(ARRAY_FIFO_QUEUES)
 
+FIXED_ARRAY_FIFO_QUEUES := $(foreach k,$(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)FixedArrayFIFOQueue.c)
+$(FIXED_ARRAY_FIFO_QUEUES): drv/FixedArrayFIFOQueue.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(FIXED_ARRAY_FIFO_QUEUES)
+
 HEAP_SEMI_INDIRECT_PRIORITY_QUEUES := $(foreach k, $(TYPE_NOBOOL_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)HeapSemiIndirectPriorityQueue.c)
 $(HEAP_SEMI_INDIRECT_PRIORITY_QUEUES): drv/HeapSemiIndirectPriorityQueue.drv; ./gencsource.sh $< $@ >$@
 

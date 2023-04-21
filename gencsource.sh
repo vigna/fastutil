@@ -577,6 +577,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define HEAP_SESQUI_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapSesquiIndirectDoublePriorityQueue\n"\
 "#define HEAP_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}HeapIndirectDoublePriorityQueue\n"\
 "#define ARRAY_FIFO_QUEUE ${TYPE_CAP2[$k]}ArrayFIFOQueue\n"\
+"#define FIXED_ARRAY_FIFO_QUEUE ${TYPE_CAP2[$k]}FixedArrayFIFOQueue\n"\
 "#define ARRAY_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayPriorityQueue\n"\
 "#define ARRAY_INDIRECT_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayIndirectPriorityQueue\n"\
 "#define ARRAY_INDIRECT_DOUBLE_PRIORITY_QUEUE ${TYPE_CAP2[$k]}ArrayIndirectDoublePriorityQueue\n"\
