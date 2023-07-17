@@ -27,6 +27,7 @@ import java.lang.reflect.Array;
 import java.util.Comparator;
 import java.util.stream.Collector;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 #endif
 
 #if KEYS_PRIMITIVE
@@ -897,6 +898,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		int j = 0;
 		for(int i = 0; i < size; i++)
 			if (! c.contains(a[i])) a[j++] = a[i];
+#if KEYS_REFERENCE
+		Arrays.fill(a, j, size, null);
+#endif
+		final boolean modified = size != j;
+		size = j;
+		return modified;
+	}
+
+	@Override
+	public boolean removeIf(final METHOD_ARG_PREDICATE filter) {
+		final KEY_GENERIC_TYPE[] a = this.a;
+		int j = 0;
+		for(int i = 0; i < size; i++)
+			if (! filter.test(a[i])) a[j++] = a[i];
 #if KEYS_REFERENCE
 		Arrays.fill(a, j, size, null);
 #endif
