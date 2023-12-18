@@ -693,6 +693,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		int last, slot;
 		KEY_GENERIC_TYPE curr;
 		final KEY_GENERIC_TYPE[] key = this.key;
+		final VALUE_GENERIC_TYPE value[] = this.value;
 
 		for(;;) {
 			pos = ((last = pos) + 1) & mask;
@@ -1077,8 +1078,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 
 	@Override
 	public boolean containsValue(final VALUE_TYPE v) {
-		final VALUE_GENERIC_TYPE value[] = this.value;
 		final KEY_GENERIC_TYPE key[] = this.key;
+		final VALUE_GENERIC_TYPE value[] = this.value;
 		if (containsNullKey && VALUE_EQUALS(value[n], v)) return true;
 		for(int i = n; i-- != 0;) if (! KEY_IS_NULL(key[i]) && VALUE_EQUALS(value[i], v)) return true;
 		return false;
@@ -1682,6 +1683,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			else {
 				KEY_GENERIC_TYPE curr;
 				final KEY_GENERIC_TYPE[] key = OPEN_HASH_MAP.this.key;
+				final VALUE_GENERIC_TYPE value[] = OPEN_HASH_MAP.this.value;
 				// We have to horribly duplicate the shiftKeys() code because we need to update next/prev.
 				for(;;) {
 					pos = ((last = pos) + 1) & mask;
@@ -1876,6 +1878,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 			int last, slot;
 			KEY_GENERIC_TYPE curr;
 			final KEY_GENERIC_TYPE[] key = OPEN_HASH_MAP.this.key;
+			final VALUE_GENERIC_TYPE value[] = OPEN_HASH_MAP.this.value;
 
 			for(;;) {
 				pos = ((last = pos) + 1) & mask;
@@ -2306,6 +2309,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** {@inheritDoc} */
 		@Override
 		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
+			final long[] link = this.link;
 			for(int i = size, curr, next = first; i-- != 0;) {
 				curr = next;
 				next = GET_NEXT(link[curr]);
@@ -2317,6 +2321,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		@Override
 		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
 			final MapEntry entry = new MapEntry();
+			final long[] link = this.link;
 			for(int i = size, next = first; i-- != 0;) {
 				entry.index = next;
 				next = GET_NEXT(link[next]);
@@ -2330,6 +2335,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		@Override
 		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> consumer) {
 			if (containsNullKey) consumer.accept(new MapEntry(n));
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
 			for(int pos = n; pos-- != 0;)
 				if (! KEY_IS_NULL(key[pos])) consumer.accept(new MapEntry(pos));
 		}
@@ -2342,6 +2348,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				entry.index = n;
 				consumer.accept(entry);
 			}
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
 			for(int pos = n; pos-- != 0;)
 				if (! KEY_IS_NULL(key[pos])) {
 					entry.index = pos;
@@ -2447,6 +2454,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** {@inheritDoc} */
 		@Override
 		public void forEach(final METHOD_ARG_KEY_CONSUMER consumer) {
+			final long[] link = OPEN_HASH_MAP.this.link;
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
 			for(int i = size, curr, next = first; i-- != 0;) {
 				curr = next;
 				next = GET_NEXT(link[curr]);
@@ -2466,6 +2475,7 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 		/** {@inheritDoc} */
 		@Override
 		public void forEach(final METHOD_ARG_KEY_CONSUMER consumer) {
+			final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
 			if (containsNullKey) consumer.accept(key[n]);
 			for(int pos = n; pos-- != 0;) {
 				final KEY_GENERIC_TYPE k = key[pos];
@@ -2608,6 +2618,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				/** {@inheritDoc} */
 				@Override
 				public void forEach(final METHOD_ARG_VALUE_CONSUMER consumer) {
+					final long[] link = OPEN_HASH_MAP.this.link;
+					final VALUE_GENERIC_TYPE value[] = OPEN_HASH_MAP.this.value;
 					for(int i = size, curr, next = first; i-- != 0;) {
 						curr = next;
 						next = GET_NEXT(link[curr]);
@@ -2621,6 +2633,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 				/** {@inheritDoc} */
 				@Override
 				public void forEach(final METHOD_ARG_VALUE_CONSUMER consumer) {
+					final KEY_GENERIC_TYPE key[] = OPEN_HASH_MAP.this.key;
+					final VALUE_GENERIC_TYPE value[] = OPEN_HASH_MAP.this.value;
 					if (containsNullKey) consumer.accept(value[n]);
 					for(int pos = n; pos-- != 0;)
 						if (! KEY_IS_NULL(key[pos])) consumer.accept(value[pos]);
@@ -2814,6 +2828,8 @@ public class OPEN_HASH_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENE
 	@Override
 	public int hashCode() {
 		int h = 0;
+		final KEY_GENERIC_TYPE key[] = this.key;
+		final VALUE_GENERIC_TYPE value[] = this.value;
 		for(int j = realSize(), i = 0, t = 0; j-- != 0;) {
 			while(KEY_IS_NULL(key[i])) i++;
 #if KEYS_REFERENCE
