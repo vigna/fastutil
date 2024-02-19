@@ -142,6 +142,11 @@ $(BIDIRECTIONAL_ITERABLES): drv/BidirectionalIterable.drv; ./gencsource.sh $< $@
 
 CSOURCES += $(BIDIRECTIONAL_ITERABLES)
 
+MOVABLE_BIDIRECTIONAL_ITERABLES := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)MovableBidirectionalIterable.c)
+$(MOVABLE_BIDIRECTIONAL_ITERABLES): drv/MovableBidirectionalIterable.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(MOVABLE_BIDIRECTIONAL_ITERABLES)
+
 COLLECTIONS := $(foreach k,$(TYPE), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)Collection.c)
 $(COLLECTIONS): drv/Collection.drv; ./gencsource.sh $< $@ >$@
 
@@ -236,6 +241,11 @@ BIDIRECTIONAL_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/
 $(BIDIRECTIONAL_ITERATORS): drv/BidirectionalIterator.drv; ./gencsource.sh $< $@ >$@
 
 CSOURCES += $(BIDIRECTIONAL_ITERATORS)
+
+MOVABLE_BIDIRECTIONAL_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)MovableBidirectionalIterator.c)
+$(MOVABLE_BIDIRECTIONAL_ITERATORS): drv/MovableBidirectionalIterator.drv; ./gencsource.sh $< $@ >$@
+
+CSOURCES += $(MOVABLE_BIDIRECTIONAL_ITERATORS)
 
 LIST_ITERATORS := $(foreach k,$(TYPE_NOREF), $(GEN_SRCDIR)/$(PKG_PATH)/$(PACKAGE_$(k))/$(k)ListIterator.c)
 $(LIST_ITERATORS): drv/ListIterator.drv; ./gencsource.sh $< $@ >$@

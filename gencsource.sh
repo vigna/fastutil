@@ -380,6 +380,8 @@ fi)\
 "#define KEY_WIDENED_SPLITERATOR ${TYPE_CAP[$wk]}Spliterator\n"\
 "#define KEY_BIDI_ITERATOR ${TYPE_CAP2[$k]}BidirectionalIterator\n"\
 "#define KEY_BIDI_ITERABLE ${TYPE_CAP2[$k]}BidirectionalIterable\n"\
+"#define KEY_MOVE_BIDI_ITERATOR ${TYPE_CAP2[$k]}MovableBidirectionalIterator\n"\
+"#define KEY_MOVE_BIDI_ITERABLE ${TYPE_CAP2[$k]}MovableBidirectionalIterable\n"\
 "#define KEY_LIST_ITERATOR ${TYPE_CAP2[$k]}ListIterator\n"\
 "#define KEY_BIG_LIST_ITERATOR ${TYPE_CAP2[$k]}BigListIterator\n"\
 "#define STD_KEY_ITERATOR ${TYPE_STD[$k]}Iterator\n"\
