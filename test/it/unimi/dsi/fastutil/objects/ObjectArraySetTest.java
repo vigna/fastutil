@@ -239,4 +239,43 @@ public class ObjectArraySetTest {
 	public void testZeroLengthToArray() {
 		assertSame(ObjectArrays.EMPTY_ARRAY, new ObjectArraySet<Integer>().toArray());
 	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testRemovalAtStart() {
+		final ObjectArraySet<String> s = ObjectArraySet.ofUnchecked("0", "1");
+		final ObjectIterator<String> i = s.iterator();
+		i.remove();
+	}
+
+	@Test
+	public void testForEachRemaining() {
+		final ObjectArraySet<String> s = ObjectArraySet.ofUnchecked("0", "1", "2", "3", "4");
+		for (int i = 0; i <= s.size(); i++) {
+			final Iterator<String> iterator = s.iterator();
+			final int[] j = new int[1];
+			for (j[0] = 0; j[0] < i; j[0]++) iterator.next();
+			iterator.forEachRemaining(x -> {
+				if (!x.equals(String.valueOf(j[0]++))) throw new AssertionError();
+			});
+		}
+	}
+
+	@Test
+	public void testSkipOneAtStart() {
+		final ObjectArraySet<String> s = ObjectArraySet.ofUnchecked("0", "1");
+		final ObjectIterator<String> i = s.iterator();
+		i.skip(1);
+		i.remove();
+		assertEquals(ObjectArraySet.ofUnchecked("1"), s);
+	}
+
+	@Test
+	public void testSkipBeyondEnd() {
+		final ObjectArraySet<String> s = ObjectArraySet.ofUnchecked("0", "1");
+		final ObjectIterator<String> i = s.iterator();
+		i.skip(4);
+		i.remove();
+		assertEquals(ObjectArraySet.ofUnchecked("0"), s);
+	}
 }
+

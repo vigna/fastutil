@@ -51,7 +51,7 @@ public class IntArraySetTest {
 
 	@Test
 	public void testSet() {
-		for(int i = 0; i <= 1; i++) {
+		for (int i = 0; i <= 1; i++) {
 			final IntArraySet s = i == 0 ? new IntArraySet() : new IntArraySet(new int[i]);
 			assertTrue(s.add(1));
 			assertEquals(1 + i, s.size());
@@ -140,7 +140,7 @@ public class IntArraySetTest {
 		iterator.nextInt();
 		iterator.nextInt();
 		iterator.remove();
-		assertEquals(44, iterator.nextInt ());
+		assertEquals(44, iterator.nextInt());
 		assertFalse(iterator.hasNext());
 		assertEquals(new IntArraySet(new int[] { 42, 44 }), set);
 	}
@@ -190,11 +190,57 @@ public class IntArraySetTest {
 	public void testOfUnchekedDuplicatesNotDetected() {
 		// A IntArraySet in an invalid state that by spec we aren't checking for in this method.
 		final IntArraySet s = IntArraySet.ofUnchecked(0, 0);
-		assertEquals(new IntArraySet(new int[] { 0 , 0 }), s);
+		assertEquals(new IntArraySet(new int[] { 0, 0 }), s);
 	}
 
 	@Test
 	public void testZeroLengthToArray() {
 		assertSame(IntArrays.EMPTY_ARRAY, new IntArraySet().toIntArray());
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testRemovalAtStart() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 1);
+		final IntIterator i = s.intIterator();
+		i.remove();
+	}
+
+	@Test
+	public void testForEachRemaining() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 1, 2, 3, 4);
+		for (int i = 0; i <= s.size(); i++) {
+			final IntIterator iterator = s.intIterator();
+			final int[] j = new int[1];
+			for(j[0] = 0; j[0] < i; j[0]++) iterator.nextInt();
+			iterator.forEachRemaining(x -> {
+				if (x != j[0]++) throw new AssertionError();
+			});
+		}
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testSkipZeroAtStart() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 1);
+		final IntIterator i = s.intIterator();
+		i.skip(0);
+		i.remove();
+	}
+
+	@Test
+	public void testSkipOneAtStart() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 1);
+		final IntIterator i = s.intIterator();
+		i.skip(1);
+		i.remove();
+		assertEquals(IntArraySet.ofUnchecked(1), s);
+	}
+
+	@Test
+	public void testSkipBeyondEnd() {
+		final IntArraySet s = IntArraySet.ofUnchecked(0, 1);
+		final IntIterator i = s.intIterator();
+		i.skip(4);
+		i.remove();
+		assertEquals(IntArraySet.ofUnchecked(0), s);
 	}
 }

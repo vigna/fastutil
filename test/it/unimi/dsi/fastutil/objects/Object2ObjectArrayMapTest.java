@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.io.BinIO;
 
 public class Object2ObjectArrayMapTest  {
@@ -153,5 +154,52 @@ public class Object2ObjectArrayMapTest  {
 		final Entry<Integer, Integer> next = keySet.next();
 		assertEquals(Integer.valueOf(3), next.getKey());
 		assertEquals(Integer.valueOf(3), next.getValue());
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testForEachRemaining() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1, 2, 3, 4 }, new Integer[] { 0, 1, 2, 3, 4 }));
+		for (int i = 0; i <= s.size(); i++) {
+			final ObjectIterator<Integer> iterator = s.keySet().iterator();
+			final int[] j = new int[1];
+			for (j[0] = 0; j[0] < i; j[0]++) iterator.next();
+			iterator.forEachRemaining(x -> {
+				if (x.intValue() != j[0]++) throw new AssertionError();
+			});
+		}
+	}
+
+	@SuppressWarnings("boxing")
+	@Test(expected = IllegalStateException.class)
+	public void testSkipZeroAtStart() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1 }, new Integer[] { 0, 1 }));
+		final ObjectIterator<Integer> i = s.keySet().iterator();
+		i.skip(0);
+		i.remove();
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testSkipOneAtStart() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1 }, new Integer[] { 0, 1 }));
+		final ObjectIterator<Integer> i = s.keySet().iterator();
+		i.skip(1);
+		i.remove();
+		assertEquals(IntArraySet.ofUnchecked(1), s.keySet());
+	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testSkipBeyondEnd() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1 }, new Integer[] { 0, 1 }));
+		final ObjectIterator<Integer> i = s.keySet().iterator();
+		i.skip(4);
+		i.remove();
+		assertEquals(IntArraySet.ofUnchecked(0), s.keySet());
 	}
 }

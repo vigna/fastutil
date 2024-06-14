@@ -72,4 +72,5 @@ public class IntSetGuavaTest extends TestCase {
 			}
 		}).named(name).withFeatures(CollectionSize.ANY, SetFeature.GENERAL_PURPOSE, CollectionFeature.ALLOWS_NULL_QUERIES, CollectionFeature.RESTRICTS_ELEMENTS, CollectionFeature.SUPPORTS_ADD, CollectionFeature.SUPPORTS_REMOVE, CollectionFeature.SERIALIZABLE, CollectionFeature.REMOVE_OPERATIONS, CollectionFeature.SUPPORTS_ITERATOR_REMOVE).suppressing(toStringTests).createTestSuite();
 	}
+
 }

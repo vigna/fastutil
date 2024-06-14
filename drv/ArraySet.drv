@@ -194,7 +194,7 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public KEY_ITERATOR KEY_GENERIC iterator() {
 		return new KEY_ITERATOR KEY_GENERIC () {
-			int next = 0;
+			int curr = -1, next = 0;
 
 			@Override
 			public boolean hasNext() { return next < size; }
@@ -207,6 +207,8 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 
 			@Override
 			public void remove() {
+				if (curr == -1) throw new IllegalStateException();
+				curr = -1;
 				final int tail = size-- - next--;
 				System.arraycopy(a, next + 1, a, next, tail);
 #if KEYS_REFERENCE
@@ -217,14 +219,16 @@ public class ARRAY_SET KEY_GENERIC extends ABSTRACT_SET KEY_GENERIC implements j
 			@Override
 			public int skip(int n) {
 				if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
-				final int remaining = size - next;
-				if (n < remaining) {
-					next += n;
-					return n;
-				}
-				n = remaining;
-				next = size;
+				n = Math.min(n, size - next);
+				next += n;
+				if (n != 0) curr = next - 1;
 				return n;
+			}
+
+			@Override
+			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
+				final KEY_TYPE a[] = ARRAY_SET.this.a;
+				while (next < size) action.accept(KEY_GENERIC_CAST a[next++]);
 			}
 		};
 	}

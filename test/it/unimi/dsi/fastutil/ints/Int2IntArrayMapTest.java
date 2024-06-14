@@ -52,4 +52,48 @@ public class Int2IntArrayMapTest {
 		map.values().removeAll(Collections.singleton(Integer.valueOf(24)));
 		assertTrue(map.isEmpty());
 	}
+
+	@Test
+	public void testForEachRemaining() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1, 2, 3,
+				4 }, new int[] { 0,
+				1, 2, 3, 4 }));
+		for (int i = 0; i <= s.size(); i++) {
+			final IntIterator iterator = s.keySet().intIterator();
+			final int[] j = new int[1];
+			for (j[0] = 0; j[0] < i; j[0]++) iterator.nextInt();
+			iterator.forEachRemaining(x -> {
+				if (x != j[0]++) throw new AssertionError();
+			});
+		}
+	}
+
+	@Test(expected = IllegalStateException.class)
+	public void testSkipZeroAtStart() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1 }, new int[] { 0,
+				1 }));
+		final IntIterator i = s.keySet().intIterator();
+		i.skip(0);
+		i.remove();
+	}
+
+	@Test
+	public void testSkipOneAtStart() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1 }, new int[] { 0,
+				1 }));
+		final IntIterator i = s.keySet().intIterator();
+		i.skip(1);
+		i.remove();
+		assertEquals(IntArraySet.ofUnchecked(1), s.keySet());
+	}
+
+	@Test
+	public void testSkipBeyondEnd() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1 }, new int[] { 0,
+				1 }));
+		final IntIterator i = s.keySet().intIterator();
+		i.skip(4);
+		i.remove();
+		assertEquals(IntArraySet.ofUnchecked(0), s.keySet());
+	}
 }
