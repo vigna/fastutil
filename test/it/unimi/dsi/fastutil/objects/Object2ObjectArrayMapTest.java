@@ -202,4 +202,44 @@ public class Object2ObjectArrayMapTest  {
 		i.remove();
 		assertEquals(IntArraySet.ofUnchecked(0), s.keySet());
 	}
+
+	@SuppressWarnings("boxing")
+	@Test
+	public void testSetValue() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1 }, new Integer[] { 0, 1 }));
+		final ObjectIterator<Entry<Integer, Integer>> i = s.entrySet().iterator();
+		final Entry<Integer, Integer> e = i.next();
+		assertEquals(e.setValue(Integer.valueOf(1)), Integer.valueOf(0));
+		assertEquals(e.setValue(Integer.valueOf(0)), Integer.valueOf(1));
+
+		final ObjectIterator<Object2ObjectMap.Entry<Integer, Integer>> j = s.object2ObjectEntrySet().fastIterator();
+		final Entry<Integer, Integer> f = j.next();
+		assertEquals(f.setValue(Integer.valueOf(1)), Integer.valueOf(0));
+		assertEquals(f.setValue(Integer.valueOf(0)), Integer.valueOf(1));
+	}
+
+	@SuppressWarnings("boxing")
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testSetValueRemoved() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1 }, new Integer[] { 0, 1 }));
+		final ObjectIterator<Entry<Integer, Integer>> i = s.entrySet().iterator();
+		final Entry<Integer, Integer> e = i.next();
+		i.remove();
+		assertEquals(e.setValue(Integer.valueOf(1)), Integer.valueOf(0));
+
+	}
+
+	@SuppressWarnings("boxing")
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testSetValueFastRemoved() {
+		final Object2ObjectArrayMap<Integer, Integer> s = new Object2ObjectArrayMap<>(new Object2ObjectLinkedOpenHashMap<>(new Integer[] {
+				0, 1 }, new Integer[] { 0, 1 }));
+
+		final ObjectIterator<Object2ObjectMap.Entry<Integer, Integer>> j = s.object2ObjectEntrySet().fastIterator();
+		final Entry<Integer, Integer> f = j.next();
+		j.remove();
+		assertEquals(f.setValue(Integer.valueOf(1)), Integer.valueOf(0));
+	}
 }

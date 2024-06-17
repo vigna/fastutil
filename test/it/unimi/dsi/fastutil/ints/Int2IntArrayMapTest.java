@@ -24,10 +24,12 @@ import java.util.HashMap;
 
 import org.junit.Test;
 
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+
 public class Int2IntArrayMapTest {
 	@Test
 	public void testCopyConstructor() {
-		final Int2IntOpenHashMap m = new Int2IntOpenHashMap(new int [] {1, 2}, new int[] {3, 4});
+		final Int2IntOpenHashMap m = new Int2IntOpenHashMap(new int[] { 1, 2 }, new int[] { 3, 4 });
 		assertEquals(new Int2IntArrayMap(m), m);
 		assertEquals(new HashMap<>(m), m);
 	}
@@ -56,8 +58,7 @@ public class Int2IntArrayMapTest {
 	@Test
 	public void testForEachRemaining() {
 		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1, 2, 3,
-				4 }, new int[] { 0,
-				1, 2, 3, 4 }));
+				4 }, new int[] { 0, 1, 2, 3, 4 }));
 		for (int i = 0; i <= s.size(); i++) {
 			final IntIterator iterator = s.keySet().intIterator();
 			final int[] j = new int[1];
@@ -96,4 +97,40 @@ public class Int2IntArrayMapTest {
 		i.remove();
 		assertEquals(IntArraySet.ofUnchecked(0), s.keySet());
 	}
+
+	@Test
+	public void testSetValue() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1 }, new int[] { 0,
+				1 }));
+		final ObjectIterator<Int2IntMap.Entry> i = s.int2IntEntrySet().iterator();
+		final Int2IntMap.Entry e = i.next();
+		assertEquals(e.setValue(1), 0);
+		assertEquals(e.setValue(0), 1);
+
+		final ObjectIterator<Int2IntMap.Entry> j = s.int2IntEntrySet().fastIterator();
+		final Int2IntMap.Entry f = j.next();
+		assertEquals(f.setValue(1), 0);
+		assertEquals(f.setValue(0), 1);
+	}
+
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testSetValueRemoved() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1 }, new int[] { 0,
+				1 }));
+		final ObjectIterator<Int2IntMap.Entry> i = s.int2IntEntrySet().iterator();
+		final Int2IntMap.Entry e = i.next();
+		i.remove();
+		assertEquals(e.setValue(1), 0);
+	}
+
+	@Test(expected = ArrayIndexOutOfBoundsException.class)
+	public void testSetValueFastRemoved() {
+		final Int2IntArrayMap s = new Int2IntArrayMap(new Int2IntLinkedOpenHashMap(new int[] { 0, 1 }, new int[] { 0,
+				1 }));
+		final ObjectIterator<Int2IntMap.Entry> j = s.int2IntEntrySet().fastIterator();
+		final Int2IntMap.Entry f = j.next();
+		j.remove();
+		assertEquals(f.setValue(1), 0);
+	}
+
 }

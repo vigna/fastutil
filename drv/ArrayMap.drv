@@ -140,13 +140,113 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		if (size > key.length) throw new IllegalArgumentException("The provided size (" + size + ") is larger than or equal to the backing-arrays size (" + key.length + ")");
 	}
 
+	/** The entry class for an array map does not record key and value, but
+	 * rather the position in the array of the corresponding entry. This
+	 * is necessary so that calls to {@link java.util.Map.Entry#setValue(Object)}
+	 * are reflected in the map */
+
+	private final class MapEntry implements MAP.Entry KEY_VALUE_GENERIC, Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>, PAIR KEY_VALUE_GENERIC {
+		// The array index this entry refers to, or -1 if this entry has been deleted.
+		int index;
+
+		MapEntry() {}
+
+		MapEntry(final int index) {
+			this.index = index;
+		}
+
+		@Override
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		public KEY_GENERIC_TYPE ENTRY_GET_KEY() {
+			return KEY_GENERIC_CAST key[index];
+		}
+
+		@Override
+		SUPPRESS_WARNINGS_KEY_UNCHECKED
+		public KEY_GENERIC_TYPE PAIR_LEFT() {
+			return KEY_GENERIC_CAST key[index];
+		}
+
+		@Override
+		SUPPRESS_WARNINGS_VALUE_UNCHECKED
+		public VALUE_GENERIC_TYPE ENTRY_GET_VALUE() {
+			return VALUE_GENERIC_CAST value[index];
+		}
+
+		@Override
+		SUPPRESS_WARNINGS_VALUE_UNCHECKED
+		public VALUE_GENERIC_TYPE PAIR_RIGHT() {
+			return VALUE_GENERIC_CAST value[index];
+		}
+
+		@Override
+		SUPPRESS_WARNINGS_VALUE_UNCHECKED
+		public VALUE_GENERIC_TYPE setValue(final VALUE_GENERIC_TYPE v) {
+			final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[index];
+			value[index] = v;
+			return oldValue;
+		}
+
+		@Override
+		public PAIR KEY_VALUE_GENERIC right(final VALUE_GENERIC_TYPE v) {
+			value[index] = v;
+			return this;
+		}
+
+#if KEYS_PRIMITIVE
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		@Override
+		public KEY_GENERIC_CLASS getKey() {
+			return KEY2OBJ(key[index]);
+		}
+#endif
+
+#if VALUES_PRIMITIVE
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS getValue() {
+			return VALUE2OBJ(value[index]);
+		}
+
+		/** {@inheritDoc}
+		 * @deprecated Please use the corresponding type-specific method instead. */
+		@Deprecated
+		@Override
+		public VALUE_GENERIC_CLASS setValue(final VALUE_GENERIC_CLASS v) {
+			return VALUE2OBJ(setValue(VALUE_CLASS2TYPE(v)));
+		}
+#endif
+
+		@SuppressWarnings("unchecked")
+		@Override
+		public boolean equals(final Object o) {
+			if (!(o instanceof Map.Entry)) return false;
+			Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
+
+			return KEY_EQUALS(key[index], KEY_CLASS2TYPE(e.getKey())) && VALUE_EQUALS(value[index], VALUE_CLASS2TYPE(e.getValue()));
+		}
+
+		@Override
+		public int hashCode() {
+			return KEY2JAVAHASH(key[index]) ^ VALUE2JAVAHASH(value[index]);
+		}
+
+		@Override
+		public String toString() {
+			return key[index] + "=>" + value[index];
+		}
+	}
+
+
 	private final class EntrySet extends AbstractObjectSet<MAP.Entry KEY_VALUE_GENERIC> implements FastEntrySet KEY_VALUE_GENERIC {
-
-		// TODO Maybe make this return a list-iterator like the LinkedXHashMaps do? (same for other collection view types)
-
 		@Override
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
 			return new ObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
+				private MapEntry entry;
 				int curr = -1, next = 0;
 
 				@Override
@@ -156,7 +256,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public Entry KEY_VALUE_GENERIC next() {
 					if (! hasNext()) throw new NoSuchElementException();
-					return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[curr = next], VALUE_GENERIC_CAST value[next++]);
+					return entry = new MapEntry(curr = next++);
 				}
 
 				@Override
@@ -166,6 +266,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 					final int tail = size-- - next--;
 					System.arraycopy(key, next + 1, key, next, tail);
 					System.arraycopy(value, next + 1, value, next, tail);
+					entry.index = -1;
 #if KEYS_REFERENCE
 					key[size] = null;
 #endif
@@ -186,11 +287,10 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public void forEachRemaining(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
-					final KEY_TYPE[] key = ARRAY_MAP.this.key;
-					final VALUE_TYPE[] value = ARRAY_MAP.this.value;
 					final int max = size;
 					while (next < max) {
-						action.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[curr = next], VALUE_GENERIC_CAST value[next++]));
+						entry = new MapEntry(curr = next++);
+						action.accept(entry);
 					}
 				}
 			};
@@ -199,8 +299,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> fastIterator() {
 			return new ObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
+				private MapEntry entry = new MapEntry();
 				int next = 0, curr = -1;
-				final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC_DIAMOND ();
 
 				@Override
 				public boolean hasNext() { return next < size; }
@@ -209,8 +309,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public Entry KEY_VALUE_GENERIC next() {
 					if (! hasNext()) throw new NoSuchElementException();
-					entry.key = KEY_GENERIC_CAST key[curr = next];
-					entry.value = VALUE_GENERIC_CAST value[next++];
+					entry.index = curr = next++;
 					return entry;
 				}
 
@@ -221,6 +320,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 					final int tail = size-- - next--;
 					System.arraycopy(key, next + 1, key, next, tail);
 					System.arraycopy(value, next + 1, value, next, tail);
+					entry.index = -1;
 #if KEYS_REFERENCE
 					key[size] = null;
 #endif
@@ -242,12 +342,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 				public void forEachRemaining(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
-					final KEY_TYPE[] key = ARRAY_MAP.this.key;
-					final VALUE_TYPE[] value = ARRAY_MAP.this.value;
 					final int max = size;
 					while (next < max) {
-						entry.key = KEY_GENERIC_CAST key[curr = next];
-						entry.value = VALUE_GENERIC_CAST value[next++];
+						entry.index = curr = next++;
 						action.accept(entry);
 					}
 				}
@@ -271,7 +368,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			@Override
 			SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 			protected final MAP.Entry KEY_VALUE_GENERIC get(int location) {
-				return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[location], VALUE_GENERIC_CAST value[location]);
+				return new MapEntry(location);
 			}
 
 			@Override
@@ -289,10 +386,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 		public void forEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
-			final KEY_TYPE[] key = ARRAY_MAP.this.key;
-			final VALUE_TYPE[] value = ARRAY_MAP.this.value;
 			for (int i = 0, max = size; i < max; ++i) {
-				action.accept(new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(KEY_GENERIC_CAST key[i], VALUE_GENERIC_CAST value[i]));
+				action.accept(new MapEntry(i));
 			}
 		}
 
@@ -300,12 +395,9 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
 		public void fastForEach(final Consumer<? super MAP.Entry KEY_VALUE_GENERIC> action) {
-			final KEY_TYPE[] key = ARRAY_MAP.this.key;
-			final VALUE_TYPE[] value = ARRAY_MAP.this.value;
-			final BasicEntry KEY_VALUE_GENERIC entry = new BasicEntry KEY_VALUE_GENERIC_DIAMOND ();
+			final MapEntry entry = new MapEntry();
 			for (int i = 0, max = size; i < max; ++i) {
-				entry.key = KEY_GENERIC_CAST key[i];
-				entry.value = VALUE_GENERIC_CAST value[i];
+				entry.index = i;
 				action.accept(entry);
 			}
 		}

@@ -258,5 +258,4 @@ public class Int2IntOpenHashMapTest {
 		s.int2IntEntrySet().fastForEach(e -> e.setValue(e.getIntValue() + 20));
 		for (int i = 0; i < 20; i++) assertEquals(20 + i, s.get(i));
 	}
-
 }
