@@ -439,4 +439,10 @@ public class IntImmutableListTest {
 	public void testZeroLengthToArray() {
 		assertSame(IntArrays.EMPTY_ARRAY, IntImmutableList.of().toIntArray());
 	}
+
+	@Test
+	public void testOversizedToArray() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
+		assertArrayEquals(new int[]{0, 1, 2, 3, 0}, l.toArray(new int[5]));
+	}
 }
