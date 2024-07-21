@@ -18,6 +18,8 @@
 package PACKAGE;
 
 import java.util.Comparator;
+import java.util.Objects;
+import java.io.Serializable;
 
 /** A type-specific {@link Comparator}; provides methods to compare two primitive types both as objects
  * and as primitive types.
@@ -76,4 +78,112 @@ public interface KEY_COMPARATOR KEY_GENERIC extends Comparator<KEY_GENERIC_CLASS
 		return Comparator.super.thenComparing(second);
 	}
 #endif
+
+#define CONCAT_(A, B) A ## B
+#define CONCAT(A, B) CONCAT_(A, B)
+#define KEY_TO_OBJ_FUNCTION CONCAT(KEY_TYPE_CAP, 2ObjectFunction)
+#define KEY_TO_INT_FUNCTION CONCAT(KEY_TYPE_CAP, 2IntFunction)
+#define KEY_TO_LONG_FUNCTION CONCAT(KEY_TYPE_CAP, 2LongFunction)
+#define KEY_TO_DOUBLE_FUNCTION CONCAT(KEY_TYPE_CAP, 2DoubleFunction)
+
+
+	/**
+	 * Accepts a function that extracts a {@link java.lang.Comparable Comparable} sort key from
+	 * a primitive key, and returns a comparator that compares by that sort key.
+	 *
+	 * <p>
+	 * The returned comparator is serializable if the specified function is also serializable.
+	 *
+	 * @param keyExtractor the function used to extract the {@link Comparable} sort key
+	 * @return a comparator that compares by an extracted key
+	 * @throws NullPointerException if {@code keyExtractor} is {@code null}
+	 */
+#if KEYS_PRIMITIVE
+	static <U  extends Comparable<? super U>> KEY_COMPARATOR KEY_GENERIC comparing(KEY_TO_OBJ_FUNCTION <? extends U> keyExtractor) {
+#else
+	static <K, U  extends Comparable<? super U>> KEY_COMPARATOR KEY_GENERIC comparing(KEY_TO_OBJ_FUNCTION <? super K, ? extends U> keyExtractor) {
+#endif
+		Objects.requireNonNull(keyExtractor);
+		return (KEY_COMPARATOR KEY_GENERIC & Serializable)
+			(k1, k2) -> keyExtractor.get(k1).compareTo(keyExtractor.get(k2));
+	}
+
+	/**
+	 * Accepts a function that extracts a sort key from a primitive key, and returns a
+	 * comparator that compares by that sort key using the specified {@link Comparator}.
+	 *
+	 * <p>
+	 * The returned comparator is serializable if the specified function and comparator are
+	 * both serializable.
+	 *
+	 * @param keyExtractor the function used to extract the sort key
+	 * @param keyComparator the {@code Comparator} used to compare the sort key
+	 * @return a comparator that compares by an extracted key using the specified {@code Comparator}
+	 * @throws NullPointerException if {@code keyExtractor} or {@code keyComparator} are {@code null}
+	 */
+#if KEYS_PRIMITIVE
+	static <U  extends Comparable<? super U>> KEY_COMPARATOR KEY_GENERIC comparing(KEY_TO_OBJ_FUNCTION <? extends U> keyExtractor, Comparator<? super U> keyComparator) {
+#else
+	static <K, U  extends Comparable<? super U>> KEY_COMPARATOR KEY_GENERIC comparing(KEY_TO_OBJ_FUNCTION <? super K, ? extends U> keyExtractor, Comparator<? super U> keyComparator) {
+#endif
+		Objects.requireNonNull(keyExtractor);
+		Objects.requireNonNull(keyComparator);
+		return (KEY_COMPARATOR KEY_GENERIC & Serializable)
+			(k1, k2) -> keyComparator.compare(keyExtractor.get(k1), keyExtractor.get(k2));
+	}
+
+	/**
+	 * Accepts a function that extracts an {@code int} sort key from a primitive key,
+	 * and returns a comparator that compares by that sort key.
+	 *
+	 * <p>
+	 * The returned comparator is serializable if the specified function
+	 * is also serializable.
+	 *
+	 * @param keyExtractor the function used to extract the integer sort key
+	 * @return a comparator that compares by an extracted key
+	 * @throws NullPointerException if {@code keyExtractor} is {@code null}
+	 */
+	static KEY_GENERIC KEY_COMPARATOR KEY_GENERIC comparingInt(KEY_TO_INT_FUNCTION KEY_SUPER_GENERIC keyExtractor) {
+		Objects.requireNonNull(keyExtractor);
+		return (KEY_COMPARATOR KEY_GENERIC & Serializable)
+			(k1, k2) -> Integer.compare(keyExtractor.get(k1), keyExtractor.get(k2));
+	}
+
+	/**
+	 * Accepts a function that extracts an {@code long} sort key from a primitive key,
+	 * and returns a comparator that compares by that sort key.
+	 *
+	 * <p>
+	 * The returned comparator is serializable if the specified function
+	 * is also serializable.
+	 *
+	 * @param keyExtractor the function used to extract the long sort key
+	 * @return a comparator that compares by an extracted key
+	 * @throws NullPointerException if {@code keyExtractor} is {@code null}
+	 */
+	static KEY_GENERIC KEY_COMPARATOR KEY_GENERIC comparingLong(KEY_TO_LONG_FUNCTION KEY_SUPER_GENERIC keyExtractor) {
+		Objects.requireNonNull(keyExtractor);
+		return (KEY_COMPARATOR KEY_GENERIC & Serializable)
+			(k1, k2) -> Long.compare(keyExtractor.get(k1), keyExtractor.get(k2));
+	}
+
+	/**
+	 * Accepts a function that extracts an {@code double} sort key from a primitive key,
+	 * and returns a comparator that compares by that sort key.
+	 *
+	 * <p>
+	 * The returned comparator is serializable if the specified function
+	 * is also serializable.
+	 *
+	 * @param keyExtractor the function used to extract the double sort key
+	 * @return a comparator that compares by an extracted key
+	 * @throws NullPointerException if {@code keyExtractor} is {@code null}
+	 */
+	static KEY_GENERIC KEY_COMPARATOR KEY_GENERIC comparingDouble(KEY_TO_DOUBLE_FUNCTION KEY_SUPER_GENERIC keyExtractor) {
+		Objects.requireNonNull(keyExtractor);
+		return (KEY_COMPARATOR KEY_GENERIC & Serializable)
+			(k1, k2) -> Double.compare(keyExtractor.get(k1), keyExtractor.get(k2));
+	}
+
 }
