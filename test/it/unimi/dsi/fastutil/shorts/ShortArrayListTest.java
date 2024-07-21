@@ -151,6 +151,7 @@ public class ShortArrayListTest {
 		assertEquals(ShortArrayList.wrap(new short[] { 24, 86, 42 }), list);
 	}
 
+	@Test
 	public void testAddAll() {
 		final ShortArrayList l = ShortArrayList.wrap(new short[] { 0, 1 });
 		l.addAll(ShortArrayList.wrap(new short[] { 2, 3 } ));
@@ -190,6 +191,7 @@ public class ShortArrayListTest {
 		assertEquals(ShortArrayList.wrap(new short[] { 0, 2 }), l);
 	}
 
+	@Test
 	public void testSort() {
 		final ShortArrayList l = ShortArrayList.wrap(new short[] { 4, 2, 1, 3 });
 		l.sort(null);

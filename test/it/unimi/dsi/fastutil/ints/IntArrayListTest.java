@@ -147,6 +147,7 @@ public class IntArrayListTest {
 		assertEquals(IntArrayList.wrap(new int[] { 24, 86, 42 }), list);
 	}
 
+	@Test
 	public void testAddAll() {
 		final IntArrayList l = IntArrayList.wrap(new int[] { 0, 1 });
 		l.addAll(IntArrayList.wrap(new int[] { 2, 3 } ));
@@ -186,6 +187,7 @@ public class IntArrayListTest {
 		assertEquals(IntArrayList.wrap(new int[] { 0, 2 }), l);
 	}
 
+	@Test
 	public void testSort() {
 		final IntArrayList l = IntArrayList.wrap(new int[] { 4, 2, 1, 3 });
 		l.sort(null);
