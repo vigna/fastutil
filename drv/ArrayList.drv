@@ -117,7 +117,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 * with {@link #wrap}.
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	private static KEY_GENERIC KEY_GENERIC_TYPE[] copyArraySafe(KEY_GENERIC_TYPE[] a, int length) {
+	private static final KEY_GENERIC KEY_GENERIC_TYPE[] copyArraySafe(KEY_GENERIC_TYPE[] a, int length) {
 		if (length == 0) return KEY_GENERIC_ARRAY_CAST ARRAYS.EMPTY_ARRAY;
 #if KEYS_PRIMITIVE
 		return java.util.Arrays.copyOf(a, length);
@@ -126,7 +126,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #endif
 	}
 
-	private static KEY_GENERIC KEY_GENERIC_TYPE[] copyArrayFromSafe(ARRAY_LIST KEY_GENERIC l) {
+	private static final KEY_GENERIC KEY_GENERIC_TYPE[] copyArrayFromSafe(ARRAY_LIST KEY_GENERIC l) {
 		return copyArraySafe(l.a, l.size);
 	}
 
@@ -442,13 +442,20 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 *
 	 * @param capacity the new minimum capacity for this array list.
 	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void ensureCapacity(final int capacity) {
 		if (capacity <= a.length || (a == ARRAYS.DEFAULT_EMPTY_ARRAY && capacity <= DEFAULT_INITIAL_CAPACITY)) return;
 #if KEYS_PRIMITIVE
 		a = ARRAYS.ensureCapacity(a, capacity, size);
 #else
 		if (wrapped) a = ARRAYS.ensureCapacity(a, capacity, size);
-		else a = Arrays.copyOf(a, capacity);
+		else {
+			if (capacity > a.length) {
+				final Object[] t = new Object[capacity];
+				System.arraycopy(a, 0, t, 0, size);
+				a = (KEY_GENERIC_TYPE[])t;
+			}
+		}
 #endif
 		assert size <= a.length;
 	}
@@ -458,6 +465,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 *
 	 * @param capacity the new minimum capacity for this array list.
 	 */
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private void grow(int capacity) {
 		if (capacity <= a.length) return;
 		if (a != ARRAYS.DEFAULT_EMPTY_ARRAY)
@@ -467,7 +475,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		a = ARRAYS.forceCapacity(a, capacity, size);
 #else
 		if (wrapped) a = ARRAYS.forceCapacity(a, capacity, size);
-		else a = Arrays.copyOf(a, capacity);
+		else {
+			final Object[] t = new Object[capacity];
+			System.arraycopy(a, 0, t, 0, size);
+			a = (KEY_GENERIC_TYPE[])t;
+		}
 #endif
 		assert size <= a.length;
 	}
@@ -476,7 +488,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public void add(final int index, final KEY_GENERIC_TYPE k) {
 		ensureIndex(index);
 		grow(size + 1);
-		final KEY_GENERIC_TYPE[] a = this.a;
 		if (index != size) System.arraycopy(a, index, a, index + 1, size - index);
 		a[index] = k;
 		size++;
@@ -500,7 +511,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	@Override
 	public int indexOf(final KEY_TYPE k) {
 		final KEY_TYPE[] a = this.a;
-		final int size = this.size;
 		for(int i = 0; i < size; i++) if (KEY_EQUALS(k, a[i])) return i;
 		return -1;
 	}
@@ -518,7 +528,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		if (index >= size) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + size + ")");
 		final KEY_GENERIC_TYPE[] a = this.a;
 		final KEY_GENERIC_TYPE old = a[index];
-		final int size = --this.size;
+		size--;
 		if (index != size) System.arraycopy(a, index + 1, a, index, size - index);
 #if KEYS_REFERENCE
 		a[size] = null;
@@ -539,8 +549,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	@Override
 	public KEY_GENERIC_TYPE set(final int index, final KEY_GENERIC_TYPE k) {
 		if (index >= size) throw new IndexOutOfBoundsException("Index (" + index + ") is greater than or equal to list size (" + size + ")");
-		final KEY_GENERIC_TYPE[] a = this.a;
-		final KEY_GENERIC_TYPE old = a[index];
+		KEY_GENERIC_TYPE old = a[index];
 		a[index] = k;
 		return old;
 	}
@@ -561,12 +570,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public void size(final int size) {
-		KEY_GENERIC_TYPE[] a = this.a;
-		final int oldSize = this.size;
-		if (size > a.length) a = this.a = ARRAYS.forceCapacity(a, size, oldSize);
-		if (size > oldSize) Arrays.fill(a, oldSize, size, KEY_NULL);
+		if (size > a.length) a = ARRAYS.forceCapacity(a, size, this.size);
+		if (size > this.size) Arrays.fill(a, this.size, size, KEY_NULL);
 #if KEYS_REFERENCE
-		else Arrays.fill(a, size, oldSize, KEY_NULL);
+		else Arrays.fill(a, size, this.size, KEY_NULL);
 #endif
 		this.size = size;
 	}
@@ -602,12 +609,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public void trim(final int n) {
 		// TODO: use Arrays.trim() and preserve type only if necessary
-		final KEY_GENERIC_TYPE[] a = this.a;
-		final int size = this.size;
 		if (n >= a.length || size == a.length) return;
-		final KEY_GENERIC_TYPE[] t = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(n, size)];
+		final KEY_GENERIC_TYPE t[] = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(n, size)];
 		System.arraycopy(a, 0, t, 0, size);
-		this.a = t;
+		a = t;
 		assert size <= a.length;
 	}
 
@@ -631,15 +636,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			return a[i + from];
 		}
 
-		@Override
-		public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
-			final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
-			final int to = this.to;
-			for (int i = from; i < to; ++i) {
-				action.accept(a[i]);
-			}
-		}
-
 		private final class SubListIterator extends ITERATORS.AbstractIndexBasedListIterator KEY_GENERIC {
 
 			// We are using pos == 0 to be 0 relative to SubList.from (meaning you need to do a[from + i] when accessing array).
@@ -648,15 +644,15 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			}
 
 			@Override
-			protected KEY_GENERIC_TYPE get(int i) { return a[from + i]; }
+			protected final KEY_GENERIC_TYPE get(int i) { return a[from + i]; }
 			@Override
-			protected void add(int i, KEY_GENERIC_TYPE k) { SubList.this.add(i, k); }
+			protected final void add(int i, KEY_GENERIC_TYPE k) { SubList.this.add(i, k); }
 			@Override
-			protected void set(int i, KEY_GENERIC_TYPE k) { SubList.this.set(i, k); }
+			protected final void set(int i, KEY_GENERIC_TYPE k) { SubList.this.set(i, k); }
 			@Override
-			protected void remove(int i) { SubList.this.REMOVE_KEY(i); }
+			protected final void remove(int i) { SubList.this.REMOVE_KEY(i); }
 			@Override
-			protected int getMaxPos() { return to - from; }
+			protected final int getMaxPos() { return to - from; }
 
 			@Override
 			public KEY_GENERIC_TYPE NEXT_KEY() { if (! hasNext()) throw new NoSuchElementException(); return a[from + (lastReturned = pos++)]; }
@@ -666,14 +662,10 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			@Override
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 				final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
-				final int from = SubList.this.from, to = SubList.this.to;
-				for (int i = from + pos; i < to; i++) {
-					action.accept(a[i]);
-				}
-
 				final int max = to - from;
-				pos = max;
-				lastReturned = max - 1;
+				while(pos < max) {
+					action.accept(a[from + (lastReturned = pos++)]);
+				}
 			}
 		}
 
@@ -694,12 +686,12 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			}
 
 			@Override
-			protected int getMaxPosFromBackingStore() { return to; }
+			protected final int getMaxPosFromBackingStore() { return to; }
 
 	 		@Override
-			protected KEY_GENERIC_TYPE get(int i) { return a[i]; }
+			protected final KEY_GENERIC_TYPE get(int i) { return a[i]; }
 			@Override
-			protected SubListSpliterator makeForSplit(int pos, int maxPos) {
+			protected final SubListSpliterator makeForSplit(int pos, int maxPos) {
 				return new SubListSpliterator(pos, maxPos);
 			}
 			@Override
@@ -712,10 +704,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 				final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
 				final int max = getMaxPos();
-				for (int i = pos; i < max; i++) {
-					action.accept(a[i]);
+				while(pos < max) {
+					action.accept(a[pos++]);
 				}
-				pos = max;
 			}
 		}
 
@@ -725,10 +716,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		}
 
 		boolean contentsEquals(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
-			final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
-			final int from = this.from, to = this.to;
 			if (a == otherA && from == otherAFrom && to == otherATo) return true;
-			if (otherATo - otherAFrom != to - from) {
+			if (otherATo - otherAFrom != size()) {
 				return false;
 			}
 			int pos = from, otherPos = otherAFrom;
@@ -764,8 +753,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 #if ! KEYS_USE_REFERENCE_EQUALITY
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		int contentsCompareTo(KEY_GENERIC_TYPE[] otherA, int otherAFrom, int otherATo) {
-			final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
-			final int from = this.from, to = this.to;
 #if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
 			if (a == otherA && from == otherAFrom && to == otherATo) return 0;
 #endif
@@ -804,7 +791,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public LIST KEY_GENERIC subList(int from, int to) {
-		if (from == 0 && to == size) return this;
+		if (from == 0 && to == size()) return this;
 		ensureIndex(from);
 		ensureIndex(to);
 		if (from > to) throw new IndexOutOfBoundsException("Start index (" + from + ") is greater than end index (" + to + ")");
@@ -831,14 +818,13 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	@Override
 	public void removeElements(final int from, final int to) {
-		final int size = this.size;
 		it.unimi.dsi.fastutil.Arrays.ensureFromTo(size, from, to);
-		final KEY_TYPE[] a = this.a;
 		System.arraycopy(a, to, a, from, size - to);
+		size -= (to - from);
 #if KEYS_REFERENCE
-		Arrays.fill(a, to, size, null);
+		int i = to - from;
+		while(i-- != 0) a[size + i] = null;
 #endif
-		this.size -= (to - from);
 	}
 
 
@@ -854,9 +840,8 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		ensureIndex(index);
 		ARRAYS.ensureOffsetLength(a, offset, length);
 		grow(size + length);
-		final KEY_GENERIC_TYPE[] thisA = this.a;
-		System.arraycopy(thisA, index, thisA, index + length, size - index);
-		System.arraycopy(a, offset, thisA, index, length);
+		System.arraycopy(this.a, index, this.a, index + length, size - index);
+		System.arraycopy(a, offset, this.a, index, length);
 		size += length;
 	}
 
@@ -878,7 +863,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	@Override
 	public void forEach(final METHOD_ARG_KEY_CONSUMER action) {
 		final KEY_GENERIC_TYPE[] a = this.a;
-		final int size = this.size;
 		for (int i = 0; i < size; ++i) {
 			action.accept(a[i]);
 		}
@@ -893,7 +877,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		int n = c.size();
 		if (n == 0) return false;
 		grow(size + n);
-		final KEY_GENERIC_TYPE[] a = this.a;
 		System.arraycopy(a, index, a, index + n, size - index);
 		final STD_KEY_ITERATOR KEY_EXTENDS_GENERIC i = c.iterator();
 		size += n;
@@ -908,7 +891,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		final int n = l.size();
 		if (n == 0) return false;
 		grow(size + n);
-		final KEY_GENERIC_TYPE[] a = this.a;
 		System.arraycopy(a, index, a, index + n, size - index);
 		l.getElements(0, a, index, n);
 		size += n;
@@ -919,7 +901,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	@Override
 	public boolean removeAll(final STD_KEY_COLLECTION KEY_GENERIC_WILDCARD c) {
 		final KEY_TYPE[] a = this.a;
-		final int size = this.size;
 		int j = 0;
 		for(int i = 0; i < size; i++)
 			if (! c.contains(a[i])) a[j++] = a[i];
@@ -927,14 +908,13 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		Arrays.fill(a, j, size, null);
 #endif
 		final boolean modified = size != j;
-		this.size = j;
+		size = j;
 		return modified;
 	}
 
 	@Override
 	public boolean removeIf(final METHOD_ARG_PREDICATE filter) {
 		final KEY_GENERIC_TYPE[] a = this.a;
-		final int size = this.size;
 		int j = 0;
 		for(int i = 0; i < size; i++)
 			if (! filter.test(a[i])) a[j++] = a[i];
@@ -942,7 +922,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		Arrays.fill(a, j, size, null);
 #endif
 		final boolean modified = size != j;
-		this.size = j;
+		size = j;
 		return modified;
 	}
 
@@ -950,7 +930,6 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public KEY_TYPE[] toArray(KEY_TYPE[] a) {
-		final int size = this.size;
 		if (a == null || a.length < size) a = java.util.Arrays.copyOf(a, size);
 		System.arraycopy(this.a, 0, a, 0, size);
 		return a;
@@ -960,7 +939,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	@Override
 	public Object[] toArray() {
-		final int size = this.size;
+		final int size = size();
 		// A subtle part of the spec says the returned array must be Object[] exactly.
 		if (size == 0) return it.unimi.dsi.fastutil.objects.ObjectArrays.EMPTY_ARRAY;
 		return Arrays.copyOf(a, size, Object[].class);
@@ -969,15 +948,14 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public <T> T[] toArray(T[] a) {
-		final int size = this.size;
 		if (a == null) {
-			a = (T[]) new Object[size];
-		} else if (a.length < size) {
-			a = (T[]) Array.newInstance(a.getClass().getComponentType(), size);
+			a = (T[]) new Object[size()];
+		} else if (a.length < size()) {
+			a = (T[]) Array.newInstance(a.getClass().getComponentType(), size());
 		}
-		System.arraycopy(this.a, 0, a, 0, size);
-		if (a.length > size) {
-			a[size] = null;
+		System.arraycopy(this.a, 0, a, 0, size());
+		if (a.length > size()) {
+			a[size()] = null;
 		}
 		return a;
 	}
@@ -1023,12 +1001,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 				@Override
 				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 					final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
-					final int size = ARRAY_LIST.this.size;
-					for (int i = pos; i < size; i++) {
-						action.accept(a[i]);
+					while (pos < size) {
+						action.accept(a[last = pos++]);
 					}
-					pos = size;
-					last = size - 1;
 				}
 				@Override
 				public int back(int n) {
@@ -1064,7 +1039,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		// Until we split, we will track the size of the list.
 		// Once we split, then we stop updating on structural modifications.
 		// Aka, size is late-binding.
-		boolean hasSplit;
+		boolean hasSplit = false;
 		int pos, max;
 
 #ifdef TEST
@@ -1104,11 +1079,9 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		@Override
 		public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
 			final KEY_GENERIC_TYPE[] a = ARRAY_LIST.this.a;
-			final int max = getWorkingMax();
-			for (int i = pos; i < max; i++) {
-				action.accept(a[i]);
+			for (final int max = getWorkingMax(); pos < max; ++pos) {
+				action.accept(a[pos]);
 			}
-			pos = max;
 		}
 
 		@Override
@@ -1134,10 +1107,11 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 			// Update instance max with the last seen list size (if needed) before continuing
 			this.max = max;
 			int myNewPos = pos + retLen;
+			int retMax = myNewPos;
 			int oldPos = pos;
 			this.pos = myNewPos;
 			this.hasSplit = true;
-			return new Spliterator(oldPos, myNewPos, true);
+			return new Spliterator(oldPos, retMax, true);
 		}
 	}
 
@@ -1156,6 +1130,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 		return new Spliterator();
 	}
 
+	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	@Override
 	public void sort(final KEY_COMPARATOR KEY_SUPER_GENERIC comp) {
 		if (comp == null) {
@@ -1177,7 +1152,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	@Override
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public ARRAY_LIST KEY_GENERIC clone() {
-		ARRAY_LIST KEY_GENERIC cloned;
+		ARRAY_LIST KEY_GENERIC cloned = null;
 		// Test for fastpath we can do if exactly an ArrayList
 		if (getClass() == ARRAY_LIST.class) {
 			// Preserve backwards compatibility and make new list have Object[] even if it was wrapped from some subclass.
@@ -1210,15 +1185,17 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	public boolean equals(final ARRAY_LIST KEY_GENERIC l) {
 		// TODO When minimum version of Java becomes Java 9, use the Arrays.equals which takes bounds, which is vectorized.
 		if (l == this) return true;
-		final int size = this.size;
-		if (size != l.size()) return false;
-		final KEY_GENERIC_TYPE[] a1 = a, a2 = l.a;
-		if (a1 == a2) return true;
+		int s = size();
+		if (s != l.size()) return false;
+		final KEY_GENERIC_TYPE[] a1 = a;
+		final KEY_GENERIC_TYPE[] a2 = l.a;
+
+		if (a1 == a2 && s == l.size()) return true;
 
 #if KEY_CLASS_Object
-		for (int i = 0; i < size; i++) if (!java.util.Objects.equals(a1[i], a2[i])) return false;
+		while(s-- !=  0) if (! java.util.Objects.equals(a1[s], a2[s])) return false;
 #else
-		for (int i = 0; i < size; i++) if (a1[i] != a2[i]) return false;
+		while(s-- !=  0) if (a1[s] != a2[s]) return false;
 #endif
 		return true;
 	}
@@ -1259,7 +1236,7 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	public int compareTo(final ARRAY_LIST KEY_EXTENDS_GENERIC l) {
-		final int s1 = size, s2 = l.size();
+		final int s1 = size(), s2 = l.size();
 		final KEY_GENERIC_TYPE[] a1 = a, a2 = l.a;
 #if KEYS_PRIMITIVE // Can't make this assumption for reference types in case we have a goofy Comparable that doesn't compare itself equal
 		if (a1 == a2 && s1 == s2) return 0;
@@ -1294,17 +1271,15 @@ public class ARRAY_LIST KEY_GENERIC extends ABSTRACT_LIST KEY_GENERIC implements
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
-		final int size = this.size;
 		final KEY_GENERIC_TYPE[] a = this.a;
-		for (int i = 0; i < size; i++) s.WRITE_KEY(a[i]);
+		for(int i = 0; i < size; i++) s.WRITE_KEY(a[i]);
 	}
 
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		final int size = this.size;
 		final KEY_GENERIC_TYPE[] a = this.a = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[size];
-		for (int i = 0; i < size; i++) a[i] = KEY_GENERIC_CAST s.READ_KEY();
+		for(int i = 0; i < size; i++) a[i] = KEY_GENERIC_CAST s.READ_KEY();
 	}
 
 
