@@ -1055,7 +1055,7 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 	 * <p>This class can iterate in both directions on a threaded tree.
 	 */
 
-	private class SetIterator implements KEY_LIST_ITERATOR KEY_GENERIC {
+	private class SetIterator implements KEY_MOVE_BIDI_ITERATOR KEY_GENERIC, KEY_LIST_ITERATOR KEY_GENERIC {
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#previous()} (or {@code null} if no previous entry exists). */
 		Entry KEY_GENERIC prev;
 		/** The entry that will be returned by the next call to {@link java.util.ListIterator#next()} (or {@code null} if no next entry exists). */
@@ -1127,13 +1127,40 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 			AVL_TREE_SET.this.remove(curr.key);
 			curr = null;
 		}
+
+		@Override
+		public void move(final KEY_GENERIC_TYPE fromElement) {
+			prev = null;
+			curr = prev;
+			if ((next = locateKey(fromElement)) != null) {
+				if (compare(next.key, fromElement) <= 0) {
+					prev = next;
+					next = next.next();
+				}
+				else prev = next.prev();
+			}
+		}
+
+		@Override
+		public void begin() {
+			prev = null;
+			next = firstEntry;
+			curr = null;
+		}
+
+		@Override
+		public void end() {
+			next = lastEntry;
+			prev = next.prev();
+			curr = prev;
+		}
 	}
 
 	@Override
-	public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new SetIterator(); }
+	public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator() { return new SetIterator(); }
 
 	@Override
-	public KEY_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SetIterator(from); }
+	public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SetIterator(from); }
 
 	@Override
 	public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return actualComparator; }
@@ -1241,10 +1268,10 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 		public KEY_COMPARATOR KEY_SUPER_GENERIC comparator() { return actualComparator; }
 
 		@Override
-		public KEY_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubsetIterator(); }
+		public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator() { return new SubsetIterator(); }
 
 		@Override
-		public KEY_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SubsetIterator(from); }
+		public KEY_MOVE_BIDI_ITERATOR KEY_GENERIC iterator(final KEY_GENERIC_TYPE from) { return new SubsetIterator(from); }
 
 		@Override
 		public SORTED_SET KEY_GENERIC headSet(final KEY_GENERIC_TYPE to) {
@@ -1359,6 +1386,41 @@ public class AVL_TREE_SET KEY_GENERIC extends ABSTRACT_SORTED_SET KEY_GENERIC im
 			void updateNext() {
 				next = next.next();
 				if (! top && next != null && AVL_TREE_SET.this.compare(next.key, to) >= 0) next = null;
+			}
+
+			@Override
+			public void move(final KEY_GENERIC_TYPE fromElement) {
+				prev = null;
+				curr = prev;
+				next = firstEntry();
+
+				if (next != null) {
+					if (! bottom && compare(fromElement, next.key) < 0) prev = null;
+					else if (! top && compare(fromElement, (prev = lastEntry()).key) >= 0) next = null;
+					else {
+						next = locateKey(fromElement);
+
+						if (compare(next.key, fromElement) <= 0) {
+							prev = next;
+							next = next.next();
+						}
+						else prev = next.prev();
+					}
+				}
+			}
+
+			@Override
+			public void begin() {
+				prev = null;
+				next = firstEntry();
+				curr = null;
+			}
+
+			@Override
+			public void end() {
+				next = lastEntry();
+				prev = next.prev();
+				curr = prev;
 			}
 		}
 	}
