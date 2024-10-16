@@ -111,7 +111,7 @@ public class IntImmutableListTest {
 		transformed = IntImmutableList.toListWithExpectedSize(baseList.intParallelStream().map(i -> i + 40), 50000);
 		assertEquals(expectedList, transformed);
 	}
-	
+
 	@Test
 	public void testListIterator_testIteration() {
 		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
@@ -353,7 +353,7 @@ public class IntImmutableListTest {
 		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5);
 		final IntList sl = l.subList(1, 4);
 		final IntListIterator li = sl.listIterator(1);
-		IntList consumer = new IntArrayList();
+		final IntList consumer = new IntArrayList();
 		li.forEachRemaining(consumer::add);
 		assertEquals(consumer, IntList.of(2, 3));
 	}

@@ -62,7 +62,7 @@ public class Arrays {
 	 *
 	 * @param arrayLength an array length (must be nonnegative).
 	 * @param from a start index (inclusive).
-	 * @param to an end index (inclusive).
+	 * @param to an end index (exclusive).
 	 * @throws IllegalArgumentException if {@code from} is greater than {@code to}.
 	 * @throws ArrayIndexOutOfBoundsException if {@code from} or {@code to} are greater than
 	 *             {@code arrayLength} or negative.
