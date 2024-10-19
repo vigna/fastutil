@@ -156,7 +156,7 @@ public class HashCommon {
 	 * @param x an integer smaller than or equal to 2<sup>30</sup>.
 	 * @return the least power of two greater than or equal to the specified value.
 	 */
-	public static int nextPowerOfTwo(int x) {
+	public static int nextPowerOfTwo(final int x) {
 		return 1 << (32 - Integer.numberOfLeadingZeros(x - 1));
 	}
 
@@ -167,7 +167,7 @@ public class HashCommon {
 	 * @param x a long integer smaller than or equal to 2<sup>62</sup>.
 	 * @return the least power of two greater than or equal to the specified value.
 	 */
-	public static long nextPowerOfTwo(long x) {
+	public static long nextPowerOfTwo(final long x) {
 		return 1L << (64 - Long.numberOfLeadingZeros(x - 1));
 	}
 
@@ -180,8 +180,12 @@ public class HashCommon {
 	 */
 	public static int maxFill(final int n, final float f) {
 		/* We must guarantee that there is always at least
-		 * one free entry (even with pathological load factors). */
-		return Math.min((int)Math.ceil(n * f), n - 1);
+		 * one free entry (even with pathological load factors).
+		 *
+		 * The cast to double is essential to avoid a precision
+		 * loss due to a cast to float before the call to Math.ceil.
+		 */
+		return Math.min((int)Math.ceil(n * (double)f), n - 1);
 	}
 
 	/** Returns the maximum number of entries that can be filled before rehashing.
@@ -192,8 +196,12 @@ public class HashCommon {
 	 */
 	public static long maxFill(final long n, final float f) {
 		/* We must guarantee that there is always at least
-		 * one free entry (even with pathological load factors). */
-		return Math.min((long)Math.ceil(n * f), n - 1);
+		 * one free entry (even with pathological load factors).
+		 *
+		 * The cast to double is essential to avoid a precision
+		 * loss due to a cast to float before the call to Math.ceil.
+		 */
+		return Math.min((long)Math.ceil(n * (double)f), n - 1);
 	}
 
 	/** Returns the least power of two smaller than or equal to 2<sup>30</sup> and larger than or equal to {@code Math.ceil(expected / f)}.
@@ -204,7 +212,11 @@ public class HashCommon {
 	 * @throws IllegalArgumentException if the necessary size is larger than 2<sup>30</sup>.
 	 */
 	public static int arraySize(final int expected, final float f) {
-		final long s = Math.max(2, nextPowerOfTwo((long)Math.ceil(expected / f)));
+		/*
+		 * The cast to double is essential to avoid a precision
+		 * loss due to a cast to float before the call to Math.ceil.
+		 */
+		final long s = Math.max(2, nextPowerOfTwo((long)Math.ceil(expected / (double)f)));
 		if (s > (1 << 30)) throw new IllegalArgumentException("Too large (" + expected + " expected elements with load factor " + f + ")");
 		return (int)s;
 	}
@@ -216,6 +228,10 @@ public class HashCommon {
 	 * @return the minimum possible size for a backing big array.
 	 */
 	public static long bigArraySize(final long expected, final float f) {
-		return nextPowerOfTwo((long)Math.ceil(expected / f));
+		/*
+		 * The cast to double is essential to avoid a precision
+		 * loss due to a cast to float before the call to Math.ceil.
+		 */
+		return nextPowerOfTwo((long)Math.ceil(expected / (double)f));
 	}
 }
