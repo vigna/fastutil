@@ -227,12 +227,13 @@ public class Object2IntOpenHashMapTest {
 		}
 	}
 
+	// Regression test for https://github.com/vigna/fastutil/pull/337.
 	@Test
-	public void testMergeIntHashesKeyMultipleTimes() {
+	public void testMergeIntHashesKeyOnce() {
 		Object2IntOpenHashMap m = new Object2IntOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
 		HashCounter hc = new HashCounter();
 		m.mergeInt(hc, 0, Math::max);
-		assertEquals(3, hc.hashCount);
+		assertEquals(1, hc.hashCount);
 	}
 }
 
