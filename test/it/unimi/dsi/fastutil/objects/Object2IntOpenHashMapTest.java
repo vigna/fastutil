@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.objects;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -214,6 +215,24 @@ public class Object2IntOpenHashMapTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(Object2IntOpenHashMap.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383454");
+	}
+
+	/** Counts times hashCode() is called, so we can test double-hashing. */
+	private static final class HashCounter {
+		int hashCount = 0;
+		@Override
+		public int hashCode() {
+			hashCount++;
+			return super.hashCode();
+		}
+	}
+
+	@Test
+	public void testMergeIntHashesKeyMultipleTimes() {
+		Object2IntOpenHashMap m = new Object2IntOpenHashMap(Hash.DEFAULT_INITIAL_SIZE);
+		HashCounter hc = new HashCounter();
+		m.mergeInt(hc, 0, Math::max);
+		assertEquals(3, hc.hashCount);
 	}
 }
 
