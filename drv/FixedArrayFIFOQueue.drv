@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2024 Sebastiano Vigna
+ * Copyright (C) 2010-2023 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,17 +31,13 @@ import java.util.NoSuchElementException;
 /** A type-specific array-based FIFO queue, supporting also deque operations.
  *
  * <p>Instances of this class represent a FIFO queue using a backing
- * array in a circular way. The array is enlarged and shrunk as needed. You can use the {@link #trim()} method
- * to reduce its memory usage, if necessary.
+ * array in a circular way.
  *
  * <p>This class provides additional methods that implement a <em>deque</em> (double-ended queue).
  */
 
-public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC, Serializable {
+public class FIXED_ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC, Serializable {
 	private static final long serialVersionUID = 0L;
-
-	/** The standard initial capacity of a queue. */
-	public static final int INITIAL_CAPACITY = 4;
 
 	/** The backing array. */
 	protected transient KEY_GENERIC_TYPE array[];
@@ -64,18 +60,13 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	 * @param capacity the initial capacity of this queue.
 	 */
 	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	public ARRAY_FIFO_QUEUE(final int capacity) {
+	public FIXED_ARRAY_FIFO_QUEUE(final int capacity) {
 		if (capacity > it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE - 1) throw new IllegalArgumentException("Initial capacity (" + capacity + ") exceeds " + (it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE - 1));
 		if (capacity < 0) throw new IllegalArgumentException("Initial capacity (" + capacity + ") is negative");
 		// We never build a queue with a zero-sized backing array; moreover, to
 		// avoid resizing at the given capacity we need one additional element.
 		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[Math.max(1, capacity + 1)];
 		length = array.length;
-	}
-
-	/** Creates a new empty queue with standard {@linkplain #INITIAL_CAPACITY initial capacity}. */
-	public ARRAY_FIFO_QUEUE() {
-		this(INITIAL_CAPACITY);
 	}
 
 	/** {@inheritDoc}
@@ -93,7 +84,6 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		array[start] = null; // Clean-up for the garbage collector.
 #endif
 		if (++start == length) start = 0;
-		reduce();
 		return t;
 	}
 
@@ -105,7 +95,6 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		array[start] = null; // Clean-up for the garbage collector.
 #endif
 		if (++start == length) start = 0;
-		reduce();
 		return t;
 	}
 
@@ -117,7 +106,6 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 #if KEYS_REFERENCE
 		array[end] = null; // Clean-up for the garbage collector.
 #endif
-		reduce();
 		return t;
 	}
 
@@ -129,7 +117,6 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 #if KEYS_REFERENCE
 		array[end] = null; // Clean-up for the garbage collector.
 #endif
-		reduce();
 		return t;
 	}
 
@@ -149,28 +136,21 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		length = newLength;
 	}
 
-	private final void expand() {
-		resize(length, (int)Math.min(it.unimi.dsi.fastutil.Arrays.MAX_ARRAY_SIZE, 2L * length));
-	}
-
-	private final void reduce() {
-		final int size = size();
-		if (length > INITIAL_CAPACITY && size <= length / 4) resize(size, length / 2);
-	}
-
 	@Override
 	public boolean enqueue(KEY_GENERIC_TYPE x) {
-		array[end++] = x;
+		final int next = end++;
+		if (end == start) return false;
+		array[next] = x;
 		if (end == length) end = 0;
-		if (end == start) expand();
 		return true;
 	}
 
 	@Override
 	public boolean enqueueFirst(KEY_GENERIC_TYPE x) {
 		if (start == 0) start = length;
-		array[--start] = x;
-		if (end == start) expand();
+		final int next = --start;
+		if (end == start) return false;
+		array[next] = x;
 		return true;
 	}
 
@@ -208,27 +188,7 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 			Arrays.fill(array, 0, end, null);
 		}
 #endif
-		start = end = 0;
-	}
-
-	/** Trims the queue to the smallest possible size. */
-	SUPPRESS_WARNINGS_KEY_UNCHECKED
-	public void trim() {
-		final int size = size();
-		final KEY_GENERIC_TYPE[] newArray =
-#if KEYS_PRIMITIVE
-											new KEY_GENERIC_TYPE[size + 1];
-#else
-											(KEY_GENERIC_TYPE[])new Object[size + 1];
-#endif
-		if (start <= end) System.arraycopy(array, start, newArray, 0, end - start);
-		else {
-			System.arraycopy(array, start, newArray, 0, length - start);
-			System.arraycopy(array, 0, newArray, length - start, end);
-		}
-		start = 0;
-		length = (end = size) + 1;
-		array = newArray;
+				start = end = 0;
 	}
 
 	@Override
@@ -237,11 +197,14 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		return apparentLength >= 0 ? apparentLength : length + apparentLength;
 	}
 
+	public int capacity() {
+		return array.length - 1;
+	}
+
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
 		int size = size();
 		s.writeInt(size);
-		final KEY_GENERIC_TYPE[] array = this.array;
 		for(int i = start; size-- != 0;) {
 			s.WRITE_KEY(array[i++]);
 			if (i == length) i = 0;
@@ -252,7 +215,7 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
 		end = s.readInt();
-		final KEY_GENERIC_TYPE[] array = this.array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length = HashCommon.nextPowerOfTwo(end + 1)];
+		array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length = HashCommon.nextPowerOfTwo(end + 1)];
 		for(int i = 0; i < end; i++) array[i] = KEY_GENERIC_CAST s.READ_KEY();
 	}
 }
