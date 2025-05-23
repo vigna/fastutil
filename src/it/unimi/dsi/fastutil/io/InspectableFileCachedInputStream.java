@@ -190,16 +190,6 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	}
 
 	@Override
-	protected void finalize() throws Throwable {
-		try {
-			dispose();
-		}
-		finally {
-			super.finalize();
-		}
-	}
-
-	@Override
 	public int available() throws IOException {
 		ensureOpen();
 		return (int)Math.min(Integer.MAX_VALUE, length() - position);
