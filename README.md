@@ -21,9 +21,7 @@ operator rather than the `equals()` method.
 
 The sources are generated using a C preprocessor, starting from a set of
 driver files. You can peek at the `javadoc`-generated documentation. In
-particular, the
-[overview](https://github.com/vigna/fastutil/blob/master/src/overview.html)
-explains the design choices used in `fastutil`.
+particular, the overview explains the design choices used in `fastutil`.
 
 ## Core jar
 
@@ -79,7 +77,7 @@ static methods that act on them as if they were monodimensional arrays
 with 64-bit indices, and big lists provide 64-bit list access. The size of
 a hash big set is limited only by the amount of core memory.
 
-# Discussion
+## Discussion
 
 There is a [discussion group](http://groups.google.com/group/fastutil)
 about `fastutil`. You can join or [send a
