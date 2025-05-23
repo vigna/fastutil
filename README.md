@@ -1,6 +1,6 @@
 # Welcome to `fastutil`!
 
-# Introduction
+## Introduction
 
 `fastutil` extends the [Java™ Collections
 Framework](http://download.oracle.com/javase/1.5.0/docs/guide/collections/)
@@ -20,11 +20,12 @@ for _references_, that is, objects that are compared using the equality
 operator rather than the `equals()` method.
 
 The sources are generated using a C preprocessor, starting from a set of
-driver files. You can peek at the `javadoc`-generated
-[documentation](docs). In particular, the overview explains the design
-choices used in `fastutil`.
+driver files. You can peek at the `javadoc`-generated documentation. In
+particular, the
+[overview](https://github.com/vigna/fastutil/blob/master/src/overview.html)
+explains the design choices used in `fastutil`.
 
-# Core jar
+## Core jar
 
 If the standard `fastutil` jar is too large, there is a _core_ jar
 containing only data structures specific for integers, longs and doubles.
@@ -53,7 +54,7 @@ preprocessor-defined symbols and some conditional compilation, and produces a
 (fake) C source, which includes the driver code and some definitions that
 customize the environment.
 
-# Speed
+## Speed
 
 `fastutil` provides in many cases the fastest implementations available.
 You can find many other implementations of primitive collections (e.g.,
@@ -69,33 +70,14 @@ In particular, when testing hash-based data structures you should always
 set explicitly the load factor, as speed is strongly dependent on the
 length of collision chains.
 
-# Big data structures
+## Big Data Structures
 
 With `fastutil` 6, a new set of classes makes it possible to handle very
 large collections: in particular, collections whose size exceeds
-2<sup>31</sup>. [Big arrays](docs/it/unimi/dsi/fastutil/BigArrays.html)
-are arrays-of-arrays handled by a wealth of static methods that act on
-them as if they were monodimensional arrays with 64-bit indices, and [big
-lists](docs/it/unimi/dsi/fastutil/BigList.html) provide 64-bit list
-access. The size of a [hash big
-set](docs/it/unimi/dsi/fastutil/ints/IntOpenHashBigSet.html) is limited
-only by the amount of core memory. The usual methods from
-[`java.util.Arrays`](http://download.oracle.com/javase/1.5.0/docs/api/java/util/Arrays.html)
-and similar classes have been extended to big arrays: have a look at the
-Javadoc documentation of
-[`BigArrays`](docs/it/unimi/dsi/fastutil/BigArrays.html) and
-[`IntBigArrays`](docs/it/unimi/dsi/fastutil/ints/IntBigArrays.html) to get
-an idea of the generic and type-specific methods available.
-
-# History and Motivation
-
-`fastutil` came up as a necessity during the development of
-[UbiCrawler](http://law.di.unimi.it/index.php?option=com_content&task=view&id=34&Itemid=42),
-as we needed to manage structures with dozens of millions of items very
-efficiently. The same reasons led to the development of the
-high-performance classes of [`dsiutils`](http://dsiutils.di.unimi.it/) and
-[MG4J](http://mg4j.di.unimi.it/) (e.g.,
-[`MutableString`](http://dsiutils.di.unimi.it/docs/it/unimi/dsi/lang/MutableString.html)).
+2<sup>31</sup>. Big arrays are arrays-of-arrays handled by a wealth of
+static methods that act on them as if they were monodimensional arrays
+with 64-bit indices, and big lists provide 64-bit list access. The size of
+a hash big set is limited only by the amount of core memory.
 
 # Discussion
 
