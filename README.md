@@ -1,5 +1,8 @@
 # Welcome to `fastutil`!
 
+[![Maven Central](https://img.shields.io/maven-central/v/it.unimi.dsi/fastutil.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22it.unimi.dsi%22%20AND%20a:%22fastutil%22)
+[![javadoc](https://javadoc.io/badge2/it.unimi.dsi/fastutil/javadoc.svg)](https://javadoc.io/doc/it.unimi.dsi/fastutil)
+
 ## Introduction
 
 `fastutil` extends the [Java™ Collections
