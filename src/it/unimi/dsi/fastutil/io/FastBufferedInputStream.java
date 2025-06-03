@@ -101,7 +101,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	protected byte buffer[];
 
 	/** The current position in the buffer. */
-	protected int pos;
+	protected long pos;
 
 	/** The number of bytes ever read (reset upon a call to {@link #position(long)}).
 	 * In particular, this will always represent the index (in the underlying input stream)
