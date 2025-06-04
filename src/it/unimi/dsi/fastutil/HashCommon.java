@@ -123,30 +123,33 @@ public class HashCommon {
 	 *
 	 * @param f a float.
 	 * @return the same code as {@link Float#hashCode() new Float(f).hashCode()}.
+	 * @deprecated Use {@link Float#hashCode(float)} instead.
 	 */
-
+        @Deprecated
 	public static int float2int(final float f) {
-		return Float.floatToRawIntBits(f);
+		return Float.hashCode(f);
 	}
 
 	/** Returns the hash code that would be returned by {@link Double#hashCode()}.
 	 *
 	 * @param d a double.
 	 * @return the same code as {@link Double#hashCode() new Double(f).hashCode()}.
+	 * @deprecated Use {@link Double#hashCode(double)} instead.
 	 */
-
+        @Deprecated
 	public static int double2int(final double d) {
-		final long l = Double.doubleToRawLongBits(d);
-		return (int)(l ^ (l >>> 32));
+		return Double.hashCode(d);
 	}
 
 	/** Returns the hash code that would be returned by {@link Long#hashCode()}.
 	 *
 	 * @param l a long.
 	 * @return the same code as {@link Long#hashCode() new Long(f).hashCode()}.
+	 * @deprecated Use {@link Long#hashCode(long)} instead.
 	 */
+        @Deprecated
 	public static int long2int(final long l) {
-		return (int)(l ^ (l >>> 32));
+		return Long.hashCode(l);
 	}
 
 	/** Returns the least power of two greater than or equal to the specified value.

@@ -874,17 +874,17 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#else\n"\
 \
 "#if KEY_CLASS_Float\n"\
-"#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.float2int(x)\n"\
-"#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( it.unimi.dsi.fastutil.HashCommon.float2int(x) )\n"\
-"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (long)( it.unimi.dsi.fastutil.HashCommon.float2int(x) ) )\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) Float.hashCode(x)\n"\
+"#define KEY2INTHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( Float.hashCode(x) )\n"\
+"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (long)( Float.hashCode(x) ) )\n"\
 "#define INT(x) (x)\n"\
 "#elif KEY_CLASS_Double\n"\
-"#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.double2int(x)\n"\
-"#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToRawLongBits(x) )\n"\
-"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToRawLongBits(x) )\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) Double.hashCode(x)\n"\
+"#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToLongBits(x) )\n"\
+"#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( Double.doubleToLongBits(x) )\n"\
 "#define INT(x) (int)(x)\n"\
 "#elif KEY_CLASS_Long\n"\
-"#define KEY2JAVAHASH_NOT_NULL(x) it.unimi.dsi.fastutil.HashCommon.long2int(x)\n"\
+"#define KEY2JAVAHASH_NOT_NULL(x) Long.hashCode(x)\n"\
 "#define KEY2INTHASH(x) (int)it.unimi.dsi.fastutil.HashCommon.mix( (x) )\n"\
 "#define KEY2LONGHASH(x) it.unimi.dsi.fastutil.HashCommon.mix( (x) )\n"\
 "#define INT(x) (int)(x)\n"\
@@ -936,7 +936,7 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 \
 "#if VALUE_CLASS_Float || VALUE_CLASS_Double || VALUE_CLASS_Long\n"\
 "#define VALUE_NULL (0)\n"\
-"#define VALUE2JAVAHASH(x) it.unimi.dsi.fastutil.HashCommon.${TYPE[$v]}2int(x)\n"\
+"#define VALUE2JAVAHASH(x) ${TYPE_CAP[$v]}.hashCode(x)\n"\
 "#elif VALUE_CLASS_Boolean\n"\
 "#define VALUE_NULL (false)\n"\
 "#define VALUE2JAVAHASH(x) (x ? 1231 : 1237)\n"\
