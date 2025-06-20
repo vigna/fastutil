@@ -16,8 +16,6 @@
 
 package it.unimi.dsi.fastutil.io;
 
-import java.io.IOException;
-
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 /** Simple, fast byte-array output stream that exposes the backing array.
@@ -87,7 +85,7 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 	}
 
 	@Override
-	public void write(final byte[] b, final int off, final int len) throws IOException {
+	public void write(final byte[] b, final int off, final int len) {
 		ByteArrays.ensureOffsetLength(b, off, len);
 		if (position + len > array.length) array = ByteArrays.grow(array, position + len, position);
 		System.arraycopy(b, off, array, position, len);
@@ -96,7 +94,7 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 
 	@Override
 	public void position(final long newPosition) {
-		if (position > Integer.MAX_VALUE) throw new IllegalArgumentException("Position too large: " + newPosition);
+		if (newPosition > Integer.MAX_VALUE) throw new IllegalArgumentException("Position too large: " + newPosition);
 		position = (int)newPosition;
 	}
 
@@ -106,7 +104,7 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 	}
 
 	@Override
-	public long length() throws IOException {
+	public long length() {
 		return length;
 	}
 }
