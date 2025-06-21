@@ -26,6 +26,8 @@ import java.util.NoSuchElementException;
  * or even a more powerful {@link #peek(int)} method that provides
  * access to all elements on the stack (indexed from the top, which
  * has index 0).
+ *
+ * @param <K> the types of elements in the stack.
  */
 
 public interface Stack<K> {
