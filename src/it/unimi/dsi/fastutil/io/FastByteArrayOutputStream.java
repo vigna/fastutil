@@ -109,18 +109,17 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 
 	/** @see java.io.ByteArrayOutputStream#toByteArray() */
 	public byte[] toByteArray () {
-		if (length == array.length){ return array; }// don't copy array if full e.g. after trim
 		return ByteArrays.copy(array, 0, length);
 	}
 
 	@Override
 	public void close () {
-		// NOP: only to force "no exception"
+		// NOP: only to force no exception
 	}
 
 	@Override
-	public void write (byte[] b) {
-		if (b == null){ return; }
+	public void write(final byte[] b) {
+		// Only to force no exception
 		write(b, 0, b.length);
 	}
 }
