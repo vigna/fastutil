@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2024 Sebastiano Vigna
+ * Copyright (C) 2010-2025 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 package PACKAGE;
 
@@ -223,4 +222,37 @@ public class ARRAY_FIFO_QUEUE KEY_GENERIC implements PRIORITY_QUEUE KEY_GENERIC,
 		final KEY_GENERIC_TYPE[] array = this.array = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[length = HashCommon.nextPowerOfTwo(end + 1)];
 		for(int i = 0; i < end; i++) array[i] = KEY_GENERIC_CAST s.READ_KEY();
 	}
+
+  /** Returns the physical capacity of the queue (internal array). */
+  public int capacity() {
+  	return length;
+  }
+
+	/** @see java.util.Collection#toArray() */
+  public KEY_GENERIC_TYPE[] toArray() {
+ 		final KEY_GENERIC_TYPE[] tmp = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[size()];
+		if (start <= end){
+      System.arraycopy(array, start, tmp, 0, end - start);// [..ssssseeee...] -> [ssssseeee]
+    } else {
+      System.arraycopy(array, start, tmp, 0, length - start);  //[eeee...{sssss}] -> [sssss]
+      System.arraycopy(array, 0,     tmp, length - start, end);//[{eeee}...sssss] -> [ssssseeee]
+    }
+    return tmp;
+  }
+
+  @Override
+  public String toString() {
+    int size = size();
+    StringBuilder sb = new StringBuilder(size * 9 + 3).append('[');
+    for (int i = start; size-- > 0; ){
+      sb.append(array[i++]).append(", ");
+      if (i == length){ i = 0; }// wrap index
+    }
+
+    if (sb.length() > 2){// cut last ', '
+      sb.setLength(sb.length() - 2);
+    }
+
+    return sb.append(']').toString();
+  }
 }
