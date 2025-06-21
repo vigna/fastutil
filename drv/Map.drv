@@ -823,6 +823,45 @@ public interface MAP KEY_VALUE_GENERIC extends FUNCTION KEY_VALUE_GENERIC, Map<K
 
 #endif
 
+	/** Returns an unmodifiable, type-specific map with the specified entries.
+	 * See {@link java.util.Map#ofEntries(Map.Entry[])} */
+#if !KEYS_PRIMITIVE || !VALUES_PRIMITIVE
+	@SafeVarargs
+	@SuppressWarnings({"varargs", "unchecked"})
+#else
+	@SuppressWarnings("varargs")
+#endif
+	static KEY_VALUE_GENERIC MAP KEY_VALUE_GENERIC ofEntries(MAP.Entry KEY_VALUE_GENERIC ... entries) {
+		if (entries.length == 0) return MAPS.EMPTY_MAP;
+		if (entries.length == 1) return MAPS.singleton(entries[0].ENTRY_GET_KEY(), entries[0].ENTRY_GET_VALUE());
+
+		if (entries.length <= 8) {
+			KEY_GENERIC_TYPE[] keys = KEY_GENERIC_ARRAY_CAST new KEY_TYPE[entries.length];
+			VALUE_GENERIC_TYPE[] vals = VALUE_GENERIC_ARRAY_CAST new VALUE_TYPE[entries.length];
+
+			for (int i = 0; i < entries.length; ++i) {
+				MAP.Entry KEY_VALUE_GENERIC entry = entries[i];
+				keys[i] = entry.ENTRY_GET_KEY();
+				// Prevent duplicate keys
+				for (int j = 0; j < i; ++j) if (KEY_EQUALS(keys[j], keys[i])) throw new IllegalArgumentException("duplicate key: " + keys[i]);
+				vals[i] = entry.ENTRY_GET_VALUE();
+			}
+			return MAPS.unmodifiable(new ARRAY_MAP KEY_VALUE_GENERIC_DIAMOND(keys, vals, entries.length));
+		} else {
+			MAP KEY_VALUE_GENERIC newMap = new OPEN_HASH_MAP KEY_VALUE_GENERIC_DIAMOND(entries.length, 0.75f);
+			for (MAP.Entry KEY_VALUE_GENERIC entry : entries) {
+				if (!VALUE_IS_NULL(newMap.put(entry.ENTRY_GET_KEY(), entry.ENTRY_GET_VALUE()))) throw new IllegalArgumentException("duplicate key: " + entry.ENTRY_GET_KEY());
+			}
+			return MAPS.unmodifiable(newMap);
+		}
+	}
+
+	/** Returns an unmodifiable, type-specific entry.
+	 * See {@link java.util.Map#entry(Object, Object)} */
+	static KEY_VALUE_GENERIC Entry KEY_VALUE_GENERIC entry(KEY_GENERIC_TYPE key, VALUE_GENERIC_TYPE value) {
+		return new ABSTRACT_MAP.BasicEntry KEY_VALUE_GENERIC_DIAMOND(key, value);
+	}
+
 	/** A type-specific {@link java.util.Map.Entry}; provides some additional methods
 	 *  that use polymorphism to avoid (un)boxing.
 	 *
