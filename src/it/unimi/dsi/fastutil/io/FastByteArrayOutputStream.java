@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2024 Sebastiano Vigna
+ * Copyright (C) 2005-2025 Sebastiano Vigna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import it.unimi.dsi.fastutil.bytes.ByteArrays;
  *
  * @author Sebastiano Vigna
  */
-
 public class FastByteArrayOutputStream extends MeasurableOutputStream implements RepositionableStream {
 
 	/** The array backing the output stream. */
@@ -106,5 +105,22 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 	@Override
 	public long length() {
 		return length;
+	}
+
+	/** @see java.io.ByteArrayOutputStream#toByteArray() */
+	public byte[] toByteArray () {
+		if (length == array.length){ return array; }// don't copy array if full e.g. after trim
+		return ByteArrays.copy(array, 0, length);
+	}
+
+	@Override
+	public void close () {
+		// NOP: only to force "no exception"
+	}
+
+	@Override
+	public void write (byte[] b) {
+		if (b == null){ return; }
+		write(b, 0, b.length);
 	}
 }
