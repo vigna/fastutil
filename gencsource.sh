@@ -738,13 +738,13 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
 "#define KEY_IS_NULL(x) ( (x) == null )\n"\
 "#elif KEY_CLASS_Float\n"\
-"#define KEY_EQUALS(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
-"#define KEY_EQUALS_NOT_NULL(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
-"#define KEY_IS_NULL(x) ( Float.floatToIntBits(x) == 0 )\n"\
+"#define KEY_EQUALS(x,y) ( Float.floatToRawIntBits(x) == Float.floatToRawIntBits(y) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( Float.floatToRawIntBits(x) == Float.floatToRawIntBits(y) )\n"\
+"#define KEY_IS_NULL(x) ( Float.floatToRawIntBits(x) == 0 )\n"\
 "#elif KEY_CLASS_Double\n"\
-"#define KEY_EQUALS(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
-"#define KEY_EQUALS_NOT_NULL(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
-"#define KEY_IS_NULL(x) ( Double.doubleToLongBits(x) == 0 )\n"\
+"#define KEY_EQUALS(x,y) ( Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y) )\n"\
+"#define KEY_EQUALS_NOT_NULL(x,y) ( Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y) )\n"\
+"#define KEY_IS_NULL(x) ( Double.doubleToRawLongBits(x) == 0 )\n"\
 "#else\n"\
 "#define KEY_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define KEY_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\
@@ -770,13 +770,13 @@ $(if [[ "${CLASS[$k]}" != "" && "${CLASS[$v]}" != "" ]]; then\
 "#define VALUE_EQUALS_NOT_NULL(x,y) ( (x).equals(y) )\n"\
 "#define VALUE_IS_NULL(x) ( (x) == null )\n"\
 "#elif VALUE_CLASS_Float\n"\
-"#define VALUE_EQUALS(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
-"#define VALUE_EQUALS_NOT_NULL(x,y) ( Float.floatToIntBits(x) == Float.floatToIntBits(y) )\n"\
-"#define VALUE_IS_NULL(x) ( Float.floatToIntBits(x) == 0 )\n"\
+"#define VALUE_EQUALS(x,y) ( Float.floatToRawIntBits(x) == Float.floatToRawIntBits(y) )\n"\
+"#define VALUE_EQUALS_NOT_NULL(x,y) ( Float.floatToRawIntBits(x) == Float.floatToRawIntBits(y) )\n"\
+"#define VALUE_IS_NULL(x) ( Float.floatToRawIntBits(x) == 0 )\n"\
 "#elif VALUE_CLASS_Double\n"\
-"#define VALUE_EQUALS(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
-"#define VALUE_EQUALS_NOT_NULL(x,y) ( Double.doubleToLongBits(x) == Double.doubleToLongBits(y) )\n"\
-"#define VALUE_IS_NULL(x) ( Double.doubleToLongBits(x) == 0 )\n"\
+"#define VALUE_EQUALS(x,y) ( Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y) )\n"\
+"#define VALUE_EQUALS_NOT_NULL(x,y) ( Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(y) )\n"\
+"#define VALUE_IS_NULL(x) ( Double.doubleToRawLongBits(x) == 0 )\n"\
 "#else\n"\
 "#define VALUE_EQUALS(x,y) ( (x) == (y) )\n"\
 "#define VALUE_EQUALS_NOT_NULL(x,y) ( (x) == (y) )\n"\

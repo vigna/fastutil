@@ -119,22 +119,29 @@ public class HashCommon {
 	}
 
 
-	/** Returns the hash code that would be returned by {@link Float#hashCode()}.
+	/**
+	 * Returns {@link Float#floatToRawIntBits(float)}.
+	 *
+	 * <p>
+	 * Note that {@link Float#hashCode()} returns {@link Float#floatToIntBits(float)}.
 	 *
 	 * @param f a float.
-	 * @return the same code as {@link Float#hashCode() new Float(f).hashCode()}.
+	 * @return {@link Float#floatToRawIntBits(float)}.
 	 */
-
 	public static int float2int(final float f) {
 		return Float.floatToRawIntBits(f);
 	}
 
-	/** Returns the hash code that would be returned by {@link Double#hashCode()}.
+	/**
+	 * Returns the upper and lower halves of {@link Double#doubleToRawLongBits(double)} xor'd together.
+	 *
+	 * <p>
+	 * Note that {@link Double#hashCode()} would do the same with
+	 * {@link Double#doubleToLongBits(double)}.
 	 *
 	 * @param d a double.
-	 * @return the same code as {@link Double#hashCode() new Double(f).hashCode()}.
+	 * @return the upper and lower halves of {@link Double#doubleToRawLongBits(double)} xor'd together.
 	 */
-
 	public static int double2int(final double d) {
 		final long l = Double.doubleToRawLongBits(d);
 		return (int)(l ^ (l >>> 32));
