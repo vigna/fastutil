@@ -19,6 +19,8 @@ package it.unimi.dsi.fastutil.io;
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 import java.io.DataOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 /** Simple, fast byte-array output stream that exposes the backing array.
@@ -129,6 +131,11 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 	/** @see java.io.ByteArrayOutputStream#toString(Charset) */
 	public String toString(Charset charset) {
 		return new String(array, 0, length, charset);
+	}
+
+	/** @see java.io.ByteArrayOutputStream#writeTo(OutputStream) */
+	public synchronized void writeTo(OutputStream out) throws IOException {
+		out.write(array, 0, length);
 	}
 
 
