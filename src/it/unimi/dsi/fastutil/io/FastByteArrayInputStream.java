@@ -57,8 +57,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	public FastByteArrayInputStream(final byte[] array, final int offset, final int length) {
 		this.array = array;
 		this.offset = offset;
-		this.length = Math.min(offset + length, array.length);
-		this.mark = offset;
+		this.length = Math.min(length, array.length - offset);
 	}
 
 	/** Creates a new array input stream using a given array.
