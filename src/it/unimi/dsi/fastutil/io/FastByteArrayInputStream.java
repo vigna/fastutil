@@ -266,7 +266,7 @@ loop:
 	@Override
 	public String readUTF () throws UTFDataFormatException {
 		try {
-			return DataInputStream.readUTF(this);
+			return available() > 0 ? DataInputStream.readUTF(this) : null;
 		} catch (UTFDataFormatException badBinaryFormatting){
 			throw badBinaryFormatting;
 		} catch (IOException e){
