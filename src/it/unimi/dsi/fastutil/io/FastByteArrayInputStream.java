@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package it.unimi.dsi.fastutil.io;
 
-import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.UTFDataFormatException;
 import java.io.UncheckedIOException;
 
@@ -31,7 +31,7 @@ import java.io.UncheckedIOException;
  *
  * @author Sebastiano Vigna
  */
-public class FastByteArrayInputStream extends MeasurableInputStream implements RepositionableStream, DataInput {
+public class FastByteArrayInputStream extends MeasurableInputStream implements RepositionableStream, ObjectInput {
 
 	/** The array backing the input stream. */
 	public byte[] array;
@@ -271,6 +271,14 @@ loop:
 			throw badBinaryFormatting;
 		} catch (IOException e){
 			throw new UncheckedIOException("readUTF @ "+this, e);
+		}
+	}
+
+	/// not efficient! Only added to support custom {@link java.io.Externalizable}
+	@Override
+	public Object readObject () throws ClassNotFoundException, IOException {
+		try (ObjectInputStream ois = new ObjectInputStream(this)){
+			return ois.readObject();
 		}
 	}
 }

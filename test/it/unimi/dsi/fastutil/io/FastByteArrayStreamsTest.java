@@ -9,8 +9,11 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import java.io.UTFDataFormatException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -123,8 +126,8 @@ public class FastByteArrayStreamsTest {
 	void x (String hex, ThrowingConsumer<DataOutput> write, ThrowingConsumer<DataInput> readAndVerify) {
 		hex = hex.replaceAll("[\\s_]+", "").trim();
 		try {
-			for (var w : new DataOutput[]{new FastByteArrayOutputStream(), new OpenDataOutputStream()}){
-				for (var r : new DataInput[]{new FastByteArrayInputStream(ByteArrays.EMPTY_ARRAY), new OpenDataInputStream()}){
+			for (DataOutput w : new DataOutput[]{new FastByteArrayOutputStream(), new OpenDataOutputStream()}){
+				for (DataInput r : new DataInput[]{new FastByteArrayInputStream(ByteArrays.EMPTY_ARRAY), new OpenDataInputStream()}){
 					reset(w);
 
 					write.accept(w);//1
@@ -145,7 +148,7 @@ public class FastByteArrayStreamsTest {
 
 	@Test
 	public void testEOF () throws UTFDataFormatException {
-		var r = new FastByteArrayInputStream(ByteArrays.EMPTY_ARRAY);
+		FastByteArrayInputStream r = new FastByteArrayInputStream(ByteArrays.EMPTY_ARRAY);
 		assertEquals(0, r.available());
 		assertEquals(-1, r.read());
 		assertEquals(-1, r.readByte());
@@ -187,7 +190,7 @@ public class FastByteArrayStreamsTest {
 					w.write(new byte[]{0, 0x7f, -1, -1}, 0, 4);
 				},
 				r -> {
-					var b = new byte[4];
+					byte[] b = new byte[4];
 					r.readFully(b, 0, 0);
 					r.readFully(b, 0, 4);
 					assertEquals(0, b[0]);
@@ -205,7 +208,7 @@ public class FastByteArrayStreamsTest {
 					w.write(new byte[]{0, 0x7f, -1, -1});
 				},
 				r -> {
-					var b = new byte[4];
+					byte[] b = new byte[4];
 					r.readFully(b);
 					assertEquals(0, b[0]);
 					assertEquals(0x7f, b[1]);
@@ -440,7 +443,7 @@ public class FastByteArrayStreamsTest {
 				r -> {
 					assertEquals('@', r.readChar());
 
-					var sb = new StringBuilder();
+					StringBuilder sb = new StringBuilder();
 					char c;
 					while ((c = r.readChar())!=0)
 						sb.append(c);
@@ -469,9 +472,9 @@ public class FastByteArrayStreamsTest {
 				}
 		);
 
-		var w = new FastByteArrayOutputStream();
+		FastByteArrayOutputStream w = new FastByteArrayOutputStream();
 		w.writeUTF(s.repeat(100));
-		var r = new FastByteArrayInputStream(w.toByteArray());
+		FastByteArrayInputStream r = new FastByteArrayInputStream(w.toByteArray());
 		assertEquals(s.repeat(100), r.readUTF());
 	}
 
@@ -492,5 +495,23 @@ public class FastByteArrayStreamsTest {
 					assertEquals(3, r.readByte());
 				}
 		);
+	}
+
+	@Test
+	public void testObjectStreams () throws IOException, ClassNotFoundException {
+		FastByteArrayOutputStream w = new FastByteArrayOutputStream();
+
+		String s = "Simple Java Object";
+		w.writeObject(s);
+
+		w.writeObject(Math.PI);
+
+		Map<? extends Serializable,? extends Serializable> m = Map.of("field1", 42, 'c', 17, boolean.class, true);
+		w.writeObject(m);
+
+		FastByteArrayInputStream r = new  FastByteArrayInputStream(w.toByteArray());
+		assertEquals(s, r.readObject());
+		assertEquals(Math.PI, r.readObject());
+		assertEquals(m, r.readObject());
 	}
 }

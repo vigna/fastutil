@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package it.unimi.dsi.fastutil.io;
 
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
@@ -35,7 +36,7 @@ import java.nio.charset.Charset;
  *
  * @author Sebastiano Vigna
  */
-public class FastByteArrayOutputStream extends MeasurableOutputStream implements RepositionableStream, DataOutput {
+public class FastByteArrayOutputStream extends MeasurableOutputStream implements RepositionableStream, ObjectOutput {
 
 	/** The array backing the output stream. */
 	public static final int DEFAULT_INITIAL_CAPACITY = 16;
@@ -234,6 +235,15 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 			write(0xC0 | c >> 6 & 0x1F);
 			write(0x80 | c      & 0x3F);
 			return 2;
+		}
+	}
+
+	/// not efficient! Only added to support custom {@link java.io.Externalizable}
+	@Override
+	public void writeObject(Object obj) throws IOException {
+		try (ObjectOutputStream oout = new ObjectOutputStream(this)){
+			oout.writeObject(obj);
+			oout.flush();
 		}
 	}
 }
