@@ -15,6 +15,8 @@
  */
 package it.unimi.dsi.fastutil.io;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -219,7 +221,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	}
 
 	@Override  @Deprecated
-	public String readLine () {
+	public @Nullable String readLine () {
 		final StringBuilder sb = new StringBuilder(99);
 loop:
 		for (int c;;){
@@ -245,7 +247,7 @@ loop:
 	@Override
 	public String readUTF () throws UTFDataFormatException {
 		try {
-			return available() > 0 ? DataInputStream.readUTF(this) : null;
+			return available() > 0 ? DataInputStream.readUTF(this) : null; // FIXME: DataInput.readUTF should be NotNull
 		} catch (final UTFDataFormatException badBinaryFormatting){
 			throw badBinaryFormatting;
 		} catch (final IOException e){
