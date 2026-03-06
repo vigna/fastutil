@@ -3,11 +3,10 @@
 	<property name="build.sysclasspath" value="ignore"/>
 	<property file="build.properties"/>
 	<property environment="env"/>
-
 	<!-- ************************************** WARNING: MAVEN SH*T ************************************** -->
 
 	<!-- define Maven coordinates -->
-	<property name="groupId" value="it.unimi.dsi" />
+	<property name="groupId" value="${env.MAVEN_GROUP_ID}" />
 	<property name="artifactId" value="fastutil" />
 	<property name="version" value="${version}" />
 
@@ -24,10 +23,10 @@
 
 	<!-- defined maven snapshots and staging repository id and url -->
 
-	<property name="maven-snapshots-repository-id" value="sonatype-nexus-snapshots" />
-	<property name="maven-snapshots-repository-url" value="https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots/" />
-	<property name="maven-staging-repository-id" value="sonatype-nexus-staging" />
-	<property name="maven-staging-repository-url" value="https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/" />
+	<property name="maven-snapshots-repository-id" value="${env.MAVEN_SNAPSHOTS_REPOSITORY_ID}" />
+	<property name="maven-snapshots-repository-url" value="${env.MAVEN_SNAPSHOTS_REPOSITORY_URL}" />
+	<property name="maven-staging-repository-id" value="${env.MAVEN_STAGING_REPOSITORY_ID}" />
+	<property name="maven-staging-repository-url" value="${env.MAVEN_STAGING_REPOSITORY_URL}" />
 
 	<target name="src-core">
 		<delete dir="$src}-core"/>
@@ -97,10 +96,17 @@
 		</jar>
 	</target>
 
+	<target name="dist-all" depends="dist,dist-core" description="generate all distributions">
+	</target>
+	
+	<target name="pom-all" depends="pom,pom-core" description="generate all pom files">
+	</target>
+	
 	<target name="pom-core" description="insert version into pom (core)">
 		<copy tofile="pom-core.xml" file="pom-core-model.xml" overwrite="true">
 			<filterset>
 				<filter token="VERSION" value="${version}"/>
+				<filter token="GROUP_ID" value="${groupId}"/>
 			</filterset>
 		</copy>
 	</target>
@@ -109,6 +115,7 @@
 		<copy tofile="pom.xml" file="pom-model.xml" overwrite="true">
 			<filterset>
 				<filter token="VERSION" value="${version}"/>
+				<filter token="GROUP_ID" value="${groupId}"/>
 			</filterset>
 		</copy>
 	</target>
@@ -302,7 +309,7 @@
 			<report todir="reports/html"/>
 		</junitreport>
 	</target>
-
+	
 	<!-- ************		CLEAN		********************* -->
 	<target name="clean">
 		<delete dir="${build}"/>
