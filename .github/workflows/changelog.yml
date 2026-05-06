@@ -1,0 +1,81 @@
+name: Update Changelog
+on:
+  pull_request_target:
+    branches:
+      - master
+    types:
+      - closed
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-changelog
+  cancel-in-progress: true
+
+jobs:
+  updateChangelog:
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    name: Update Changelog
+    timeout-minutes: 15
+    steps:
+      - name: Git Safe Directory
+        run: git config --global --add safe.directory "${{ github.workspace }}"
+
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set changelog context
+        run: |
+          $tagName = ""
+
+          if ("${{ github.event_name }}" -eq "release") {
+            $tagName = "${{ github.event.release.tag_name }}"
+          } elseif (-not [string]::IsNullOrWhiteSpace("${{ inputs.version }}")) {
+            $tagName = "${{ inputs.version }}"
+          }
+
+          if (-not [string]::IsNullOrWhiteSpace($tagName)) {
+            echo "TAG_VERSION=$tagName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          }
+        shell: pwsh
+
+      - name: Download git-chglog
+        uses: craicoverflow/install-git-chglog@v1.0.0
+
+      - name: Update Changelog
+        shell: bash
+        run: |
+          if [[ -n "${TAG_VERSION:-}" ]]; then
+            git-chglog --config .chglog/config.yml -o CHANGELOG.md "..${TAG_VERSION}"
+          else
+            git-chglog --config .chglog/config.yml -o CHANGELOG.md
+          fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8.1.0
+        with:
+          commit-message: update changelog
+          title: Update CHANGELOG
+          body: |
+            Update CHANGELOG.md after a merge to master or a published release.
+
+            This keeps the fork changelog current and preserves a repository-level
+            modification notice for this Apache 2.0 distribution.
+          branch: update-changelog
+          base: master
+          delete-branch: true
+          add-paths: |
+            CHANGELOG.md

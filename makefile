@@ -90,7 +90,9 @@ source:
 		fastutil-$(version)/find-deps.sh \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README.md \
-		fastutil-$(version)/LICENSE-2.0 \
+		fastutil-$(version)/LICENSE \
+		fastutil-$(version)/NOTICE \
+		fastutil-$(version)/licenses \
 		fastutil-$(version)/makefile \
 		$(foreach f, $(SOURCES), fastutil-$(version)/$(f)) \
 		fastutil-$(version)/$(SOURCEDIR)/{boolean,byte,char,short,int,long,float,double,object}s/package-info.java \
@@ -109,7 +111,9 @@ binary:
 	$(TAR) zcvf fastutil-$(version)-bin.tar.gz --owner=0 --group=0 \
 		fastutil-$(version)/CHANGES \
 		fastutil-$(version)/README.md \
-		fastutil-$(version)/LICENSE-2.0 \
+		fastutil-$(version)/LICENSE \
+		fastutil-$(version)/NOTICE \
+		fastutil-$(version)/licenses \
 		fastutil-$(version)/docs \
 		fastutil-$(version)/fastutil-$(version).jar
 	rm fastutil-$(version)

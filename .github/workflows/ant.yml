@@ -27,8 +27,6 @@ jobs:
       MAVEN_GROUP_ID: ${{ secrets.MAVEN_GROUP_ID }}
       MAVEN_SNAPSHOTS_REPOSITORY_ID: ${{ secrets.MAVEN_SNAPSHOTS_REPOSITORY_ID }}
       MAVEN_SNAPSHOTS_REPOSITORY_URL: ${{ secrets.MAVEN_SNAPSHOTS_REPOSITORY_URL }}
-      MAVEN_STAGING_REPOSITORY_ID: ${{ secrets.MAVEN_STAGING_REPOSITORY_ID }}
-      MAVEN_STAGING_REPOSITORY_URL: ${{ secrets.MAVEN_STAGING_REPOSITORY_URL }}
 
     steps:
       - name: Checkout git
@@ -40,6 +38,7 @@ jobs:
           java-version: '21'
           distribution: 'corretto'
           server-id: github
+          # setup-java expects environment variable names here, not ${{ }} expressions.
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
@@ -51,7 +50,7 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
             DEPLOY_VERSION="${BASE_VERSION}-pr-${{ github.event.pull_request.number }}-SNAPSHOT"
           elif [[ "${GITHUB_REF_NAME}" == "master" ]]; then
-            DEPLOY_VERSION="${BASE_VERSION}"
+            DEPLOY_VERSION="${BASE_VERSION}-SNAPSHOT"
           else
             SAFE_REF="$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9._/-]#-#g; s#/#-#g')"
             DEPLOY_VERSION="${BASE_VERSION}-${SAFE_REF}-SNAPSHOT"
@@ -83,7 +82,6 @@ jobs:
           comment: true
 
       - name: Deploy snapshot main package
-        if: github.event_name == 'pull_request' || github.ref_name != 'master'
         run: >
           mvn --batch-mode deploy:deploy-file
           -Durl=${MAVEN_SNAPSHOTS_REPOSITORY_URL}
@@ -94,33 +92,10 @@ jobs:
           -Djavadoc=dist/lib/fastutil-${PROJECT_VERSION}-javadoc.jar
 
       - name: Deploy snapshot core package
-        if: github.event_name == 'pull_request' || github.ref_name != 'master'
         run: >
           mvn --batch-mode deploy:deploy-file
           -Durl=${MAVEN_SNAPSHOTS_REPOSITORY_URL}
           -DrepositoryId=${MAVEN_SNAPSHOTS_REPOSITORY_ID}
-          -Dfile=dist/lib/fastutil-core-${PROJECT_VERSION}.jar
-          -DpomFile=pom-core.xml
-          -Dsources=dist/lib/fastutil-core-${PROJECT_VERSION}-sources.jar
-          -Djavadoc=dist/lib/fastutil-core-${PROJECT_VERSION}-javadoc.jar
-
-      - name: Deploy release main package
-        if: github.event_name != 'pull_request' && github.ref_name == 'master'
-        run: >
-          mvn --batch-mode deploy:deploy-file
-          -Durl=${MAVEN_STAGING_REPOSITORY_URL}
-          -DrepositoryId=${MAVEN_STAGING_REPOSITORY_ID}
-          -Dfile=dist/lib/fastutil-${PROJECT_VERSION}.jar
-          -DpomFile=pom.xml
-          -Dsources=dist/lib/fastutil-${PROJECT_VERSION}-sources.jar
-          -Djavadoc=dist/lib/fastutil-${PROJECT_VERSION}-javadoc.jar
-
-      - name: Deploy release core package
-        if: github.event_name != 'pull_request' && github.ref_name == 'master'
-        run: >
-          mvn --batch-mode deploy:deploy-file
-          -Durl=${MAVEN_STAGING_REPOSITORY_URL}
-          -DrepositoryId=${MAVEN_STAGING_REPOSITORY_ID}
           -Dfile=dist/lib/fastutil-core-${PROJECT_VERSION}.jar
           -DpomFile=pom-core.xml
           -Dsources=dist/lib/fastutil-core-${PROJECT_VERSION}-sources.jar
@@ -134,6 +109,9 @@ jobs:
             dist/lib/*.jar
             pom.xml
             pom-core.xml
+            LICENSE
+            NOTICE
+            licenses/**
 
       - name: Upload Documentation Artifacts
         uses: actions/upload-artifact@v4

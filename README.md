@@ -1,7 +1,16 @@
 # Welcome to `fastutil`!
 
-[![Maven Central](https://img.shields.io/maven-central/v/it.unimi.dsi/fastutil.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22it.unimi.dsi%22%20AND%20a:%22fastutil%22)
-[![javadoc](https://javadoc.io/badge2/it.unimi.dsi/fastutil/javadoc.svg)](https://javadoc.io/doc/it.unimi.dsi/fastutil)
+## About this fork
+
+This repository is a fork of [vigna/fastutil](https://github.com/vigna/fastutil).
+It is developed and maintained by Luxonit s.r.o.
+
+## Upstream attribution and affiliation
+
+The upstream project is [vigna/fastutil](https://github.com/vigna/fastutil).
+This repository is an independent fork and is not affiliated with, endorsed by, or officially associated with the upstream project.
+
+This fork continues to be distributed under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for license and attribution details.
 
 ## Introduction
 
@@ -79,9 +88,3 @@ large collections: in particular, collections whose size exceeds
 static methods that act on them as if they were monodimensional arrays
 with 64-bit indices, and big lists provide 64-bit list access. The size of
 a hash big set is limited only by the amount of core memory.
-
-## Discussion
-
-There is a [discussion group](http://groups.google.com/group/fastutil)
-about `fastutil`. You can join or [send a
-message](mailto:fastutil@googlegroups.com).

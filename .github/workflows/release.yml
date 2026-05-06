@@ -1,0 +1,160 @@
+name: Java Release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag in the form v1.0.2
+        required: true
+        type: string
+
+concurrency:
+  group: java-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: true
+
+permissions:
+  checks: write
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    name: Java Release Build
+    runs-on: ubuntu-latest
+
+    env:
+      GITHUB_ACTOR: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_GROUP_ID: ${{ secrets.MAVEN_GROUP_ID }}
+      MAVEN_STAGING_REPOSITORY_ID: ${{ secrets.MAVEN_STAGING_REPOSITORY_ID }}
+      MAVEN_STAGING_REPOSITORY_URL: ${{ secrets.MAVEN_STAGING_REPOSITORY_URL }}
+
+    steps:
+      - name: Checkout git
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          server-id: github
+          # setup-java expects environment variable names here, not ${{ }} expressions.
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Compute release version
+        shell: bash
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+
+          if [[ -z "${TAG_NAME}" ]]; then
+            TAG_NAME="${{ inputs.tag }}"
+          fi
+
+          if [[ ! "${TAG_NAME}" =~ ^v[0-9]+(\.[0-9]+){2}([.-][0-9A-Za-z]+)*$ ]]; then
+            echo "Release tag must look like v1.0.2 or v1.0.2-rc1. Got: ${TAG_NAME}" >&2
+            exit 1
+          fi
+
+          PROJECT_VERSION="${TAG_NAME#v}"
+
+          echo "RELEASE_TAG=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "PROJECT_VERSION=${PROJECT_VERSION}" >> "$GITHUB_ENV"
+          echo "Using PROJECT_VERSION=${PROJECT_VERSION} from tag ${TAG_NAME}"
+
+      - name: Pull Java sources
+        run: make sources
+
+      - name: Run tests with Ant
+        run: ant junit -Dversion=${PROJECT_VERSION} -noinput -buildfile build.xml
+
+      - name: Split JARs
+        run: ./split.sh
+
+      - name: Build all distributions with Ant
+        run: ant dist-all -Dversion=${PROJECT_VERSION} -noinput -buildfile build.xml
+
+      - name: Generate all pom.xml files with Ant
+        run: ant pom-all -Dversion=${PROJECT_VERSION} -noinput -buildfile build.xml
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v6
+        if: always()
+        with:
+          report_paths: '**/reports/TEST-*.xml'
+          comment: true
+
+      - name: Deploy release main package
+        run: >
+          mvn --batch-mode deploy:deploy-file
+          -Durl=${MAVEN_STAGING_REPOSITORY_URL}
+          -DrepositoryId=${MAVEN_STAGING_REPOSITORY_ID}
+          -Dfile=dist/lib/fastutil-${PROJECT_VERSION}.jar
+          -DpomFile=pom.xml
+          -Dsources=dist/lib/fastutil-${PROJECT_VERSION}-sources.jar
+          -Djavadoc=dist/lib/fastutil-${PROJECT_VERSION}-javadoc.jar
+
+      - name: Deploy release core package
+        run: >
+          mvn --batch-mode deploy:deploy-file
+          -Durl=${MAVEN_STAGING_REPOSITORY_URL}
+          -DrepositoryId=${MAVEN_STAGING_REPOSITORY_ID}
+          -Dfile=dist/lib/fastutil-core-${PROJECT_VERSION}.jar
+          -DpomFile=pom-core.xml
+          -Dsources=dist/lib/fastutil-core-${PROJECT_VERSION}-sources.jar
+          -Djavadoc=dist/lib/fastutil-core-${PROJECT_VERSION}-javadoc.jar
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cp dist/lib/*.jar release-assets/
+          cp pom.xml pom-core.xml LICENSE NOTICE release-assets/
+          tar -czf "release-assets/fastutil-${PROJECT_VERSION}-licenses.tar.gz" licenses
+          tar -czf "release-assets/fastutil-${PROJECT_VERSION}-docs.tar.gz" docs docs-core
+
+          if compgen -G 'reports/TEST-*.xml' > /dev/null; then
+            tar -czf "release-assets/fastutil-${PROJECT_VERSION}-test-results.tar.gz" reports/TEST-*.xml
+          fi
+
+      - name: Attach assets to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release view "${RELEASE_TAG}" --repo "${{ github.repository }}"
+          gh release upload "${RELEASE_TAG}" release-assets/* --clobber --repo "${{ github.repository }}"
+
+      - name: Upload JAR Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastutil-release-${{ github.event.release.tag_name || inputs.tag }}-jar-artifacts
+          path: |
+            dist/lib/*.jar
+            pom.xml
+            pom-core.xml
+            LICENSE
+            NOTICE
+            licenses/**
+
+      - name: Upload Documentation Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastutil-release-${{ github.event.release.tag_name || inputs.tag }}-docs-artifacts
+          path: |
+            ./docs/
+            ./docs-core/
+
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fastutil-release-${{ github.event.release.tag_name || inputs.tag }}-test-results
+          path: '**/reports/TEST-*.xml'
+          retention-days: 14
