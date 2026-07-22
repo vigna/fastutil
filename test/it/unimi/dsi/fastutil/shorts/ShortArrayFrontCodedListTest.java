@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.shorts;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -138,5 +139,14 @@ public class ShortArrayFrontCodedListTest {
 	@Test
 	public void test10000() throws IOException, ClassNotFoundException {
 		test(10000);
+	}
+
+	@Test
+	public void testLargeArrayLength() {
+		// A stored array of length >= 2^15 exercises the two-short length encoding/decoding.
+		final short[] big = new short[40000];
+		for (int i = 0; i < big.length; i++) big[i] = (short)i;
+		final ShortArrayFrontCodedList list = new ShortArrayFrontCodedList(it.unimi.dsi.fastutil.objects.ObjectIterators.wrap(new short[][] { big }), 1);
+		assertArrayEquals(big, list.get(0));
 	}
 }

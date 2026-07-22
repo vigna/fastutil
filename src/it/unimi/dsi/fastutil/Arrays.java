@@ -347,8 +347,8 @@ public class Arrays {
 				}
 				if (b > c) break;
 				// Fix reference to pivot if necessary
-				if (b == m) m = d;
-				else if (c == m) m = c;
+				if (b == m) m = c;
+				else if (c == m) m = b;
 				swapper.swap(b++, c--);
 			}
 
@@ -454,8 +454,8 @@ public class Arrays {
 			}
 			if (b > c) break;
 			// Fix reference to pivot if necessary
-			if (b == m) m = d;
-			else if (c == m) m = c;
+			if (b == m) m = c;
+			else if (c == m) m = b;
 			swapper.swap(b++, c--);
 		}
 

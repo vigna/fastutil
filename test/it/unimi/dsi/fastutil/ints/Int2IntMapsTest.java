@@ -75,4 +75,11 @@ public class Int2IntMapsTest {
 		Int2IntMaps.fastIterable(m).forEach(s::add);
 		assertEquals(1, s.size()); // Should be always the same entry, mutated
 	}
+
+	@SuppressWarnings({ "boxing", "deprecation" })
+	@Test
+	public void testSingletonContainsValueNull() {
+		final Int2IntMap m = Int2IntMaps.singleton(1, 2);
+		assertFalse(m.containsValue(null));
+	}
 }

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collections;
 
@@ -613,5 +614,18 @@ public class IntArrayListTest {
 	public void testOversizedToArray() {
 		final IntArrayList l = IntArrayList.of(0, 1, 2, 3);
 		assertArrayEquals(new int[]{0, 1, 2, 3, 0}, l.toArray(new int[5]));
+	}
+
+	@Test
+	public void testSubListGetElementsMessage() {
+		final IntArrayList l = IntArrayList.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+		final IntList s = l.subList(2, 6); // size 4
+		try {
+			s.getElements(2, new int[3], 0, 3); // end index 2 + 3 = 5 > size 4
+			fail("Expected an IndexOutOfBoundsException");
+		} catch (final IndexOutOfBoundsException e) {
+			// The reported end index must be the sum 5, not the concatenation "23".
+			assertTrue(e.getMessage(), e.getMessage().contains("(5)"));
+		}
 	}
 }

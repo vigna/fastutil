@@ -525,4 +525,12 @@ public class FastByteArrayStreamsTest {
 		assertEquals(Math.PI, r.readObject());
 		assertEquals(m, r.readObject());
 	}
+
+	@Test
+	public void testSkipNegative() {
+		final FastByteArrayInputStream s = new FastByteArrayInputStream(new byte[] { 0, 1, 2, 3, 4 });
+		assertEquals(0, s.read());
+		assertEquals(0L, s.skip(-100)); // A negative argument must skip nothing.
+		assertEquals(1, s.read());
+	}
 }

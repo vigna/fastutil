@@ -679,4 +679,20 @@ public class BinIOTest {
 		final long[] longs = BinIO.loadLongs(file);
 		for (final long element : longs) assertEquals(0, element);
 	}
+
+	@Test(timeout = 120000)
+	public void testLoadBytesFileDoesNotLeakDescriptors() throws IOException {
+		final File file = File.createTempFile(getClass().getSimpleName(), "leak");
+		file.deleteOnExit();
+		final byte[] a = { 1, 2, 3, 4, 5 };
+		BinIO.storeBytes(a, file);
+		final byte[][] big = ByteBigArrays.newBigArray(a.length);
+		// A descriptor leak in the byte-specialized File loaders would exhaust the
+		// process file-descriptor table over these repeated invocations.
+		for (int i = 0; i < 8000; i++) {
+			assertArrayEquals(a, BinIO.loadBytes(file));
+			assertEquals(a.length, BinIO.loadBytes(file, big));
+			assertEquals(a.length, BinIO.loadBytes(file, big, 0, a.length));
+		}
+	}
 }

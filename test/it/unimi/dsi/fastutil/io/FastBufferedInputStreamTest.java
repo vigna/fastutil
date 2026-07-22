@@ -362,5 +362,13 @@ public class FastBufferedInputStreamTest {
 		testRandom(100);
 		testRandom(2048);
 	}
+
+	@Test
+	public void testSkipNegative() throws IOException {
+		final FastBufferedInputStream s = new FastBufferedInputStream(new ByteArrayInputStream(new byte[] { 0, 1, 2, 3, 4 }));
+		assertEquals(0, s.read());
+		assertEquals(0, s.skip(-100)); // A negative argument must skip nothing.
+		assertEquals(1, s.read());
+	}
 }
 

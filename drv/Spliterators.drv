@@ -1071,7 +1071,7 @@ public final class SPLITERATORS {
 		@Override
 		public KEY_SPLITERATOR trySplit() {
 #if KEY_CLASS_Integer || KEY_CLASS_Long
-			long remaining = to - curr;
+			long remaining = (long)to - curr;
 #else
 			int remaining = to - curr;
 #endif
@@ -1308,10 +1308,11 @@ public final class SPLITERATORS {
 
 		@Override
 		public long skip(long n) {
+			if (n < 0) throw new IllegalArgumentException("Argument must be nonnegative: " + n);
 			long skipped = 0;
 			if (length <= 0) return 0;
 
-			while(skipped < n && length >= 0) {
+			while(skipped < n && length > 0) {
 				long curSkipped = a[offset].skip(n - skipped);
 				skipped += curSkipped;
 				// This relies on the sub spliterators implementing skip() correctly
@@ -1488,7 +1489,7 @@ public final class SPLITERATORS {
 			} else {
 				long skippedSoFar = 0;
 				while (skippedSoFar < n && iter.hasNext()) {
-					int skipped = iter.skip(SafeMath.safeLongToInt(Math.min(n, Integer.MAX_VALUE)));
+					int skipped = iter.skip(SafeMath.safeLongToInt(Math.min(n - skippedSoFar, Integer.MAX_VALUE)));
 					size -= skipped;
 					skippedSoFar += skipped;
 				}

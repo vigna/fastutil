@@ -557,4 +557,18 @@ public class DoubleArraysTest {
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(DoubleArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
 	}
+
+	@Test
+	public void testBinarySearchConsistentWithSortOrder() {
+		// binarySearch() must honour the same total order as the sorts (NaN greatest).
+		final double[] x = { 1, 2, 3, 4, 5, Double.NaN };
+		DoubleArrays.quickSort(x);
+		assertEquals(5, DoubleArrays.binarySearch(x, Double.NaN));
+
+		// -0.0 and +0.0 are distinct in that order.
+		final double[] y = { -0.0, 0.0 };
+		DoubleArrays.quickSort(y);
+		assertEquals(0, DoubleArrays.binarySearch(y, -0.0));
+		assertEquals(1, DoubleArrays.binarySearch(y, 0.0));
+	}
 }

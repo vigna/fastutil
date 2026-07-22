@@ -360,4 +360,18 @@ public class IntArrayIndirectPriorityQueueTest {
 		test(1000, IntComparators.OPPOSITE_COMPARATOR);
 	}
 
+	@Test
+	public void testChangedDecreaseKey() {
+		final int[] ref = { 5, 10 };
+		final IntArrayIndirectPriorityQueue q = new IntArrayIndirectPriorityQueue(ref);
+		q.enqueue(0);
+		q.enqueue(1);
+		assertEquals(0, q.first());
+		// Decrease-key on a non-front element: it becomes the new minimum.
+		ref[1] = 1;
+		q.changed(1);
+		assertEquals(1, q.first());
+		assertEquals(1, q.dequeue());
+	}
+
 }

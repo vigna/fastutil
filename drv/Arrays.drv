@@ -1735,9 +1735,17 @@ public final class ARRAYS {
 			final int mid = (from + to) >>> 1;
 			midVal = a[mid];
 #if KEYS_PRIMITIVE
+#if KEY_CLASS_Float || KEY_CLASS_Double
+			// We must use the same total order as the sorting methods (e.g., -0 < 0, NaN greatest).
+			final int cmp = KEY_CMP(midVal, key);
+			if (cmp < 0) from = mid + 1;
+			else if (cmp > 0) to = mid - 1;
+			else return mid;
+#else
 			if (midVal < key) from = mid + 1;
 			else if (midVal > key) to = mid - 1;
 			else return mid;
+#endif
 #else
 			final int cmp = ((Comparable KEY_SUPER_GENERIC)midVal).compareTo(key);
 			if (cmp < 0) from = mid + 1;

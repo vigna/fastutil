@@ -21,8 +21,11 @@ import static it.unimi.dsi.fastutil.BigArrays.length;
 import static it.unimi.dsi.fastutil.BigArrays.swap;
 import static it.unimi.dsi.fastutil.BigArrays.wrap;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicIntegerArray;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 import org.junit.Test;
 
@@ -71,5 +74,15 @@ public class BigArraysTest {
 	@Test(expected = ArrayIndexOutOfBoundsException.class)
 	public void testEnsureOffSetLength() {
 		BigArrays.ensureOffsetLength(42, Long.MAX_VALUE, 10);
+	}
+
+	@Test
+	public void testGetAndIncrement() {
+		final AtomicIntegerArray[] a = new AtomicIntegerArray[] { new AtomicIntegerArray(new int[] { 5 }) };
+		assertEquals(5, BigArrays.getAndIncrement(a, 0));
+		assertEquals(6, a[0].get(0));
+		final AtomicLongArray[] b = new AtomicLongArray[] { new AtomicLongArray(new long[] { 5 }) };
+		assertEquals(5L, BigArrays.getAndIncrement(b, 0));
+		assertEquals(6L, b[0].get(0));
 	}
 }

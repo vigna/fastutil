@@ -22,8 +22,13 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -160,5 +165,29 @@ public class LongOpenHashBigSetTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(LongOpenHashBigSet.class, "test", /*num=*/"500", /*loadFactor=*/"0.75", /*seed=*/"383474");
+	}
+
+	@Test
+	public void testNegativeExpected() {
+		assertThrows(IllegalArgumentException.class, () -> new LongOpenHashBigSet(-1));
+	}
+
+	@Test(timeout = 60000)
+	public void testDeserializeWithMaximalLoadFactor() throws Exception {
+		final LongOpenHashBigSet s = new LongOpenHashBigSet(4, 1.0f);
+		for (long i = 0; i < 4; i++) s.add(i); // size is a power of two, load factor is 1
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+			oos.writeObject(s);
+		}
+		final LongOpenHashBigSet t;
+		try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
+			t = (LongOpenHashBigSet)ois.readObject();
+		}
+		assertEquals(4, t.size64());
+		for (long i = 0; i < 4; i++) assertTrue(t.contains(i));
+		// With a table without free entries the following probes would loop forever.
+		assertFalse(t.contains(100));
+		assertTrue(t.add(100));
 	}
 }

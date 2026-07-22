@@ -478,6 +478,7 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 
 	@Override
 	public long skip(final long n) throws IOException {
+		if (n <= 0) return 0;
 		if (n <= avail) {
 			final int m = (int)n;
 			pos += m;

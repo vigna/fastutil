@@ -390,4 +390,27 @@ public class IntSpliteratorsTest {
 		assertEquals(0, singleton.getExactSizeIfKnown());
 		singleton.forEachRemaining(unused -> org.junit.Assert.fail("Expected no elements left"));
 	}
+
+	@Test
+	public void testConcatSpliteratorSkipPastEnd() {
+		// Skipping past the end of a concatenation must not read outside the component region.
+		final IntSpliterator s = IntSpliterators.concat(IntSpliterators.wrap(new int[] { 1, 2 }));
+		assertEquals(2, s.skip(5));
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testConcatSpliteratorSkipRejectsNegative() {
+		IntSpliterators.concat(IntSpliterators.wrap(new int[] { 1, 2 })).skip(-1);
+	}
+
+	@Test
+	public void testIntervalSpliteratorTrySplitNoOverflow() {
+		// A range wider than Integer.MAX_VALUE must still split into a valid partition.
+		final IntSpliterator s = IntSpliterators.fromTo(-2_000_000_000, 2_000_000_000);
+		final long total = s.estimateSize();
+		assertEquals(4_000_000_000L, total);
+		final IntSpliterator prefix = s.trySplit();
+		assertTrue(prefix != null);
+		assertEquals(total, prefix.estimateSize() + s.estimateSize());
+	}
 }

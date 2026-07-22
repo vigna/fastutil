@@ -16,6 +16,7 @@
 
 package it.unimi.dsi.fastutil.floats;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Random;
@@ -227,5 +228,19 @@ public class FloatArraysTest {
 	@Test
 	public void testLegacyMainMethodTests() throws Exception {
 		MainRunner.callMainIfExists(FloatArrays.class, "test", /*num=*/"1000", /*seed=*/"848747");
+	}
+
+	@Test
+	public void testBinarySearchConsistentWithSortOrder() {
+		// binarySearch() must honour the same total order as the sorts (NaN greatest).
+		final float[] x = { 1, 2, 3, 4, 5, Float.NaN };
+		FloatArrays.quickSort(x);
+		assertEquals(5, FloatArrays.binarySearch(x, Float.NaN));
+
+		// -0.0 and +0.0 are distinct in that order.
+		final float[] y = { -0.0f, 0.0f };
+		FloatArrays.quickSort(y);
+		assertEquals(0, FloatArrays.binarySearch(y, -0.0f));
+		assertEquals(1, FloatArrays.binarySearch(y, 0.0f));
 	}
 }

@@ -97,6 +97,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 
 	@Override
 	public long skip(long n) {
+		if (n <= 0) return 0;
 		if (n <= length - position) {
 			position += (int)n;
 			return n;

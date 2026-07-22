@@ -445,4 +445,20 @@ public class IntImmutableListTest {
 		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3);
 		assertArrayEquals(new int[]{0, 1, 2, 3, 0}, l.toArray(new int[5]));
 	}
+
+	@Test
+	public void testSubListGetElements() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+		final IntList s = l.subList(2, 6); // The view [2, 3, 4, 5].
+		final int[] dest = new int[2];
+		s.getElements(1, dest, 0, 2);
+		assertArrayEquals(new int[] { 3, 4 }, dest);
+	}
+
+	@Test(expected = IndexOutOfBoundsException.class)
+	public void testSubListGetElementsOutOfBounds() {
+		final IntImmutableList l = IntImmutableList.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+		// Starting from sublist index 2, only 2 elements are available; asking for 3 must throw.
+		l.subList(2, 6).getElements(2, new int[3], 0, 3);
+	}
 }
