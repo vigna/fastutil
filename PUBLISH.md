@@ -9,7 +9,7 @@ Publishing is now **two steps**:
 
 1. **`ant stage-all`** — builds, GPG-signs, and *uploads* the artifacts. This only stages
    them; it creates an **open staging repository** on the bridge. Nothing is on Central yet.
-2. **`./curl.sh`** — finds that staging repository and *releases* it to Central. This is the
+2. **`./publish.sh`** — finds that staging repository and *releases* it to Central. This is the
    replacement for the old Nexus "Close + Release" buttons.
 
 `ant publish` runs both in sequence.
@@ -35,7 +35,7 @@ Publishing is now **two steps**:
   </settings>
   ```
 
-  Both `ant stage-all` and `curl.sh` read the token from here — it lives in exactly one
+  Both `ant stage-all` and `publish.sh` read the token from here — it lives in exactly one
   place, and never in the repository.
 
   > Regenerating a token on the Portal **invalidates the old one**. A stale token, or one
@@ -68,10 +68,10 @@ Publishing is now **two steps**:
 3. Release to Central:
 
    ```bash
-   ./curl.sh
+   ./publish.sh
    ```
 
-   To review the deployment on the Portal **before** it goes live, use `./curl.sh manual`
+   To review the deployment on the Portal **before** it goes live, use `./publish.sh manual`
    instead: it pushes to <https://central.sonatype.com/publishing/deployments>, where you
    can inspect every artifact and click **Publish** by hand.
 
@@ -80,16 +80,16 @@ Publishing is now **two steps**:
    <https://repo1.maven.org/maven2/it/unimi/dsi/fastutil/> within ~10–30 minutes and is
    searchable on <https://central.sonatype.com> a bit later.
 
-## curl.sh reference
+## publish.sh reference
 
-`curl.sh` reads the token from `~/.m2/settings.xml`, auto-discovers the current staging
+`publish.sh` reads the token from `~/.m2/settings.xml`, auto-discovers the current staging
 repository key (no more hand-editing the IP-bearing URL), and acts on it:
 
 | Command            | Effect                                                             |
 | ------------------ | ----------------------------------------------------------------- |
-| `./curl.sh`        | Validate, then **auto-release** the staging repo to Central.      |
-| `./curl.sh manual` | Upload to the Portal but **hold** for a manual Publish click.     |
-| `./curl.sh drop`   | **Discard** the open staging repo (use to redo a bad `stage-all`).|
+| `./publish.sh`        | Validate, then **auto-release** the staging repo to Central.      |
+| `./publish.sh manual` | Upload to the Portal but **hold** for a manual Publish click.     |
+| `./publish.sh drop`   | **Discard** the open staging repo (use to redo a bad `stage-all`).|
 
 The script contains no secrets, so it is safe to commit.
 
@@ -98,6 +98,6 @@ The script contains no secrets, so it is safe to commit.
 - **HTTP 400 "not related to an authorized namespace"** on upload — token is stale or from
   the wrong account. Regenerate it under the account that owns `it.unimi`, update
   `~/.m2/settings.xml`, and re-stage.
-- **Staged the wrong thing** — `./curl.sh drop`, then fix and re-run `ant stage-all`.
-- **`curl.sh` says "no open staging repository found"** — `ant stage-all` did not complete;
+- **Staged the wrong thing** — `./publish.sh drop`, then fix and re-run `ant stage-all`.
+- **`publish.sh` says "no open staging repository found"** — `ant stage-all` did not complete;
   re-run it and watch for upload errors.
