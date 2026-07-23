@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
@@ -36,7 +38,7 @@ import java.util.NoSuchElementException;
  * changed its relative position in the order}.
  */
 
-public interface PriorityQueue<K> {
+public interface PriorityQueue<K extends @Nullable Object> {
 
 	/** Enqueues a new element.
 	 *
@@ -98,10 +100,10 @@ public interface PriorityQueue<K> {
 
 	default void changed() { throw new UnsupportedOperationException(); }
 
-
-	/** Returns the comparator associated with this queue, or {@code null} if it uses its elements' natural ordering.
-	 *
-	 * @return the comparator associated with this sorted set, or {@code null} if it uses its elements' natural ordering.
-	 */
-	Comparator<? super K> comparator();
+	/**
+   * Returns the comparator associated with this queue, or {@code null} if it uses its elements' natural ordering.
+   *
+   * @return the comparator associated with this sorted set, or {@code null} if it uses its elements' natural ordering.
+   */
+	@Nullable Comparator<? super K> comparator();
 }
