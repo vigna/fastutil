@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
@@ -120,7 +122,7 @@ public interface IndirectPriorityQueue<K> {
 	 *
 	 * @return the comparator associated with this sorted set, or {@code null} if it uses its elements' natural ordering.
 	 */
-	Comparator <? super K> comparator();
+	@Nullable Comparator <? super K> comparator();
 
 	/** Notifies this queue that the specified element has changed (optional operation).
 	 *

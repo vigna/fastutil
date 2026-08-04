@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
@@ -60,7 +62,7 @@ public class IndirectPriorityQueues {
 		@Override
 		public void allChanged() {}
 		@Override
-		public Comparator<?> comparator() { return null; }
+		public @Nullable Comparator<?> comparator() { return null; }
 		@Override
 		public void changed(final int i) { throw new IllegalArgumentException("Index " + i + " is not in the queue"); }
 		@Override
