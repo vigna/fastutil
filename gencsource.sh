@@ -210,6 +210,7 @@ fi)\
 "#define KEY_GENERIC_CLASS_WIDENED K\n"\
 "#define KEY_GENERIC_TYPE_WIDENED K\n"\
 "#define KEY_GENERIC <K>\n"\
+"#define KEY_GENERIC_DEFINITION <K extends @Nullable Object>\n"\
 "#define KEY_GENERIC_DIAMOND <>\n"\
 "#define KEY_GENERIC_WILDCARD <?>\n"\
 "#define KEY_EXTENDS_GENERIC <? extends K>\n"\
@@ -236,6 +237,7 @@ fi)\
 "#define KEY_GENERIC_CLASS_WIDENED KEY_CLASS_WIDENED\n"\
 "#define KEY_GENERIC_TYPE_WIDENED KEY_TYPE_WIDENED\n"\
 "#define KEY_GENERIC\n"\
+"#define KEY_GENERIC_DEFINITION\n"\
 "#define KEY_GENERIC_DIAMOND\n"\
 "#define KEY_GENERIC_WILDCARD\n"\
 "#define KEY_EXTENDS_GENERIC\n"\
@@ -294,7 +296,7 @@ fi)\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K, ? extends V>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <K, ? extends V>\n"\
-"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? super K, ? extends V>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? super K, ? extends @Nullable V>\n"\
 "#define KEY_VALUE_SUPER_GENERIC <? super K, ? super V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC <K>\n"\
@@ -312,7 +314,7 @@ fi)\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <? extends V>\n"\
-"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? extends V>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? extends @Nullable V>\n"\
 "#define KEY_VALUE_SUPER_GENERIC <? super V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC\n"\

@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Comparator;
 
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
@@ -49,7 +51,7 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
  * @param <R> the type of the right element.
  */
 
-public interface Pair<L, R> {
+public interface Pair<L extends @Nullable Object, R extends @Nullable Object> {
 
 	/**
 	 * Returns the left element of this pair.
