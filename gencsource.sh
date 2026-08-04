@@ -207,6 +207,7 @@ fi)\
 "#define KEY_TYPE_NULLABLE @Nullable KEY_TYPE\n"\
 "#define KEY_GENERIC_CLASS K\n"\
 "#define KEY_GENERIC_TYPE K\n"\
+"#define KEY_GENERIC_TYPE_NULLABLE @Nullable K\n"\
 "#define KEY_GENERIC_CLASS_WIDENED K\n"\
 "#define KEY_GENERIC_TYPE_WIDENED K\n"\
 "#define KEY_GENERIC <K>\n"\
@@ -234,6 +235,7 @@ fi)\
 "#define KEY_TYPE_NULLABLE KEY_TYPE\n"\
 "#define KEY_GENERIC_CLASS KEY_CLASS\n"\
 "#define KEY_GENERIC_TYPE KEY_TYPE\n"\
+"#define KEY_GENERIC_TYPE_NULLABLE KEY_TYPE\n"\
 "#define KEY_GENERIC_CLASS_WIDENED KEY_CLASS_WIDENED\n"\
 "#define KEY_GENERIC_TYPE_WIDENED KEY_TYPE_WIDENED\n"\
 "#define KEY_GENERIC\n"\
@@ -256,6 +258,7 @@ fi)\
 "#endif\n"\
 \
 "#if VALUES_REFERENCE\n"\
+"#define VALUE_TYPE_NULLABLE @Nullable VALUE_TYPE\n"\
 "#define VALUE_GENERIC_CLASS V\n"\
 "#define VALUE_GENERIC_TYPE V\n"\
 "#define VALUE_GENERIC_TYPE_NULLABLE @Nullable V\n"\
@@ -272,6 +275,7 @@ fi)\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#else\n"\
+"#define VALUE_TYPE_NULLABLE VALUE_TYPE\n"\
 "#define VALUE_GENERIC_CLASS VALUE_CLASS\n"\
 "#define VALUE_GENERIC_TYPE VALUE_TYPE\n"\
 "#define VALUE_GENERIC_TYPE_NULLABLE VALUE_TYPE\n"\
