@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Iterator;
 import java.util.ListIterator;
 
@@ -27,7 +29,7 @@ import java.util.ListIterator;
  * @see ListIterator
  */
 
-public interface BigListIterator<K> extends BidirectionalIterator<K> {
+public interface BigListIterator<K extends @Nullable Object> extends BidirectionalIterator<K> {
 
 	/** Returns the index of the element that would be returned by a subsequent call to next.
 	 * (Returns list size if the list iterator is at the end of the list.)
