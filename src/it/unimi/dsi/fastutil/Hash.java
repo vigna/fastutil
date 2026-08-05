@@ -47,7 +47,7 @@ public interface Hash {
 	 * be able to handle {@code null}, too.
 	 */
 
-	interface Strategy<K> {
+	interface Strategy<K extends @Nullable Object> {
 
 		/** Returns the hash code of the specified object with respect to this hash strategy.
 		 *
