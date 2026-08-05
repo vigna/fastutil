@@ -54,7 +54,7 @@ import java.util.NoSuchElementException;
  * <p>Note that <em>all element manipulation happens via indices</em>.
  */
 
-public interface IndirectPriorityQueue<K> {
+public interface IndirectPriorityQueue<K extends @Nullable Object> {
 
 	/** Enqueues a new element.
 	 *
