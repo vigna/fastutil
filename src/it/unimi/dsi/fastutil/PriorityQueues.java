@@ -16,9 +16,12 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /** A class providing static methods and objects that do useful things with priority queues.
  *
@@ -42,7 +45,7 @@ public class PriorityQueues {
 		protected EmptyPriorityQueue() {}
 
 		@Override
-		public void enqueue(final Object o) { throw new UnsupportedOperationException(); }
+		public void enqueue(final @Nullable Object o) { throw new UnsupportedOperationException(); }
 
 		@Override
 		public Object dequeue() { throw new NoSuchElementException(); }
@@ -66,7 +69,7 @@ public class PriorityQueues {
 		public void changed() { throw new NoSuchElementException(); }
 
 		@Override
-		public Comparator<?> comparator() { return null; }
+		public @Nullable Comparator<?> comparator() { return null; }
 
 		@Override
 		public Object clone() { return EMPTY_QUEUE; }
@@ -75,7 +78,7 @@ public class PriorityQueues {
 		public int hashCode() { return 0; }
 
 		@Override
-		public boolean equals(final Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
+		public boolean equals(final @Nullable Object o) { return o instanceof PriorityQueue && ((PriorityQueue)o).isEmpty(); }
 
 		private Object readResolve() { return EMPTY_QUEUE; }
 	}
@@ -97,7 +100,7 @@ public class PriorityQueues {
 
 	/** A synchronized wrapper class for priority queues. */
 
-	public static class SynchronizedPriorityQueue<K> implements PriorityQueue<K>, Serializable {
+	public static class SynchronizedPriorityQueue<K extends @Nullable Object> implements PriorityQueue<K>, Serializable {
 		public static final long serialVersionUID = -7046029254386353129L;
 
 		protected final PriorityQueue <K> q;
@@ -138,7 +141,7 @@ public class PriorityQueues {
 		public void changed() { synchronized(sync) { q.changed(); } }
 
 		@Override
-		public Comparator <? super K> comparator() { synchronized(sync) { return q.comparator(); } }
+		public @Nullable Comparator <? super K> comparator() { synchronized(sync) { return q.comparator(); } }
 
 		@Override
 		public String toString() { synchronized(sync) { return q.toString(); } }
@@ -147,7 +150,7 @@ public class PriorityQueues {
 		public int hashCode() { synchronized(sync) { return q.hashCode(); } }
 
 		@Override
-		public boolean equals(final Object o) { if (o == this) return true; synchronized(sync) { return q.equals(o); } }
+		public boolean equals(final @Nullable Object o) { if (o == this) return true; synchronized(sync) { return q.equals(o); } }
 
 		private void writeObject(final java.io.ObjectOutputStream s) throws java.io.IOException {
 			synchronized(sync) { s.defaultWriteObject(); }
@@ -161,7 +164,7 @@ public class PriorityQueues {
 	 * @param q the priority queue to be wrapped in a synchronized priority queue.
 	 * @return a synchronized view of the specified priority queue.
 	 */
-	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q) { return new SynchronizedPriorityQueue<>(q); }
+	public static <K extends @Nullable Object> PriorityQueue <K> synchronize(final PriorityQueue <K> q) { return new SynchronizedPriorityQueue<>(q); }
 
 	/** Returns a synchronized priority queue backed by the specified priority queue, using an assigned object to synchronize.
 	 *
@@ -171,5 +174,5 @@ public class PriorityQueues {
 	 * @return a synchronized view of the specified priority queue.
 	 */
 
-	public static <K> PriorityQueue <K> synchronize(final PriorityQueue <K> q, final Object sync) { return new SynchronizedPriorityQueue<>(q, sync); }
+	public static <K extends @Nullable Object> PriorityQueue <K> synchronize(final PriorityQueue <K> q, final Object sync) { return new SynchronizedPriorityQueue<>(q, sync); }
 }

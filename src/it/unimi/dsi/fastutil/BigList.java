@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -26,7 +28,7 @@ import java.util.List;
  * and iterators are of type {@link BigListIterator}.
  */
 
-public interface BigList<K> extends Collection<K>, Size64 {
+public interface BigList<K extends @Nullable Object> extends Collection<K>, Size64 {
 
 	/** Returns the element at the specified position.
 	 *

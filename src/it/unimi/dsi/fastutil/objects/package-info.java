@@ -7,4 +7,7 @@
  * <em>reference-based</em> collections}, which use identity ({@code ==}). See the related comments
  * in the overview.
  */
+@NullMarked
 package it.unimi.dsi.fastutil.objects;
+
+import org.jspecify.annotations.NullMarked;

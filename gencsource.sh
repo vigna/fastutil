@@ -204,11 +204,14 @@ fi)\
 "#define VALUES_USE_REFERENCE_EQUALITY VALUE_CLASS_Reference\n"\
 \
 "#if KEYS_REFERENCE\n"\
+"#define KEY_TYPE_NULLABLE @Nullable KEY_TYPE\n"\
 "#define KEY_GENERIC_CLASS K\n"\
 "#define KEY_GENERIC_TYPE K\n"\
+"#define KEY_GENERIC_TYPE_NULLABLE @Nullable K\n"\
 "#define KEY_GENERIC_CLASS_WIDENED K\n"\
 "#define KEY_GENERIC_TYPE_WIDENED K\n"\
 "#define KEY_GENERIC <K>\n"\
+"#define KEY_GENERIC_DEFINITION <K extends @Nullable Object>\n"\
 "#define KEY_GENERIC_DIAMOND <>\n"\
 "#define KEY_GENERIC_WILDCARD <?>\n"\
 "#define KEY_EXTENDS_GENERIC <? extends K>\n"\
@@ -229,11 +232,14 @@ fi)\
 "#define SUPPRESS_WARNINGS_CUSTOM_KEY_UNCHECKED\n"\
 "#endif\n"\
 "#else\n"\
+"#define KEY_TYPE_NULLABLE KEY_TYPE\n"\
 "#define KEY_GENERIC_CLASS KEY_CLASS\n"\
 "#define KEY_GENERIC_TYPE KEY_TYPE\n"\
+"#define KEY_GENERIC_TYPE_NULLABLE KEY_TYPE\n"\
 "#define KEY_GENERIC_CLASS_WIDENED KEY_CLASS_WIDENED\n"\
 "#define KEY_GENERIC_TYPE_WIDENED KEY_TYPE_WIDENED\n"\
 "#define KEY_GENERIC\n"\
+"#define KEY_GENERIC_DEFINITION\n"\
 "#define KEY_GENERIC_DIAMOND\n"\
 "#define KEY_GENERIC_WILDCARD\n"\
 "#define KEY_EXTENDS_GENERIC\n"\
@@ -252,8 +258,10 @@ fi)\
 "#endif\n"\
 \
 "#if VALUES_REFERENCE\n"\
+"#define VALUE_TYPE_NULLABLE @Nullable VALUE_TYPE\n"\
 "#define VALUE_GENERIC_CLASS V\n"\
 "#define VALUE_GENERIC_TYPE V\n"\
+"#define VALUE_GENERIC_TYPE_NULLABLE @Nullable V\n"\
 "#define VALUE_GENERIC_CLASS_WIDENED V\n"\
 "#define VALUE_GENERIC_TYPE_WIDENED V\n"\
 "#define VALUE_GENERIC <V>\n"\
@@ -267,8 +275,10 @@ fi)\
 "#define SUPPRESS_WARNINGS_VALUE_UNCHECKED @SuppressWarnings(\"unchecked\")\n"\
 "#define SUPPRESS_WARNINGS_VALUE_RAWTYPES @SuppressWarnings(\"rawtypes\")\n"\
 "#else\n"\
+"#define VALUE_TYPE_NULLABLE VALUE_TYPE\n"\
 "#define VALUE_GENERIC_CLASS VALUE_CLASS\n"\
 "#define VALUE_GENERIC_TYPE VALUE_TYPE\n"\
+"#define VALUE_GENERIC_TYPE_NULLABLE VALUE_TYPE\n"\
 "#define VALUE_GENERIC_CLASS_WIDENED VALUE_CLASS_WIDENED\n"\
 "#define VALUE_GENERIC_TYPE_WIDENED VALUE_TYPE_WIDENED\n"\
 "#define VALUE_GENERIC\n"\
@@ -286,13 +296,15 @@ fi)\
 "#if KEYS_REFERENCE\n"\
 "#if VALUES_REFERENCE\n"\
 "#define KEY_VALUE_GENERIC <K,V>\n"\
+"#define KEY_VALUE_GENERIC_DEFINITION <K extends @Nullable Object,V extends @Nullable Object>\n"\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K, ? extends V>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <K, ? extends V>\n"\
-"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? super K, ? extends V>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? super K, ? extends @Nullable V>\n"\
 "#define KEY_VALUE_SUPER_GENERIC <? super K, ? super V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC <K>\n"\
+"#define KEY_VALUE_GENERIC_DEFINITION <K extends @Nullable Object>\n"\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends K>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <K>\n"\
@@ -302,13 +314,15 @@ fi)\
 "#else\n"\
 "#if VALUES_REFERENCE\n"\
 "#define KEY_VALUE_GENERIC <V>\n"\
+"#define KEY_VALUE_GENERIC_DEFINITION <V extends @Nullable Object>\n"\
 "#define KEY_VALUE_GENERIC_DIAMOND <>\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC <? extends V>\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC <? extends V>\n"\
-"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? extends V>\n"\
+"#define KEY_SUPER_GENERIC_VALUE_EXTENDS_GENERIC <? extends @Nullable V>\n"\
 "#define KEY_VALUE_SUPER_GENERIC <? super V>\n"\
 "#else\n"\
 "#define KEY_VALUE_GENERIC\n"\
+"#define KEY_VALUE_GENERIC_DEFINITION\n"\
 "#define KEY_VALUE_GENERIC_DIAMOND\n"\
 "#define KEY_VALUE_EXTENDS_GENERIC\n"\
 "#define KEY_GENERIC_VALUE_EXTENDS_GENERIC\n"\

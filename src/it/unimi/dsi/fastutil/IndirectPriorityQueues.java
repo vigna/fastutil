@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Comparator;
 import java.util.NoSuchElementException;
 
@@ -60,7 +62,7 @@ public class IndirectPriorityQueues {
 		@Override
 		public void allChanged() {}
 		@Override
-		public Comparator<?> comparator() { return null; }
+		public @Nullable Comparator<?> comparator() { return null; }
 		@Override
 		public void changed(final int i) { throw new IllegalArgumentException("Index " + i + " is not in the queue"); }
 		@Override
@@ -78,7 +80,7 @@ public class IndirectPriorityQueues {
 
 	/** A synchronized wrapper class for indirect priority queues. */
 
-	public static class SynchronizedIndirectPriorityQueue<K> implements IndirectPriorityQueue<K> {
+	public static class SynchronizedIndirectPriorityQueue<K extends @Nullable Object> implements IndirectPriorityQueue<K> {
 
 		public static final long serialVersionUID = -7046029254386353129L;
 
@@ -131,7 +133,7 @@ public class IndirectPriorityQueues {
 	 * @return a synchronized view of the specified indirect priority queue.
 	 */
 
-	public static <K> IndirectPriorityQueue<K> synchronize(final IndirectPriorityQueue<K> q) {	return new SynchronizedIndirectPriorityQueue<>(q); }
+	public static <K extends @Nullable Object> IndirectPriorityQueue<K> synchronize(final IndirectPriorityQueue<K> q) {	return new SynchronizedIndirectPriorityQueue<>(q); }
 
 	/** Returns a synchronized type-specific indirect priority queue backed by the specified type-specific indirect priority queue, using an assigned object to synchronize.
 	 *
@@ -140,6 +142,6 @@ public class IndirectPriorityQueues {
 	 * @return a synchronized view of the specified indirect priority queue.
 	 */
 
-	public static <K> IndirectPriorityQueue<K> synchronize(final IndirectPriorityQueue<K> q, final Object sync) { return new SynchronizedIndirectPriorityQueue<>(q, sync); }
+	public static <K extends @Nullable Object> IndirectPriorityQueue<K> synchronize(final IndirectPriorityQueue<K> q, final Object sync) { return new SynchronizedIndirectPriorityQueue<>(q, sync); }
 
 }

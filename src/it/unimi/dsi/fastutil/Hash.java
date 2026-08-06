@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 /** Basic data for all hash-based classes. */
 
 public interface Hash {
@@ -45,7 +47,7 @@ public interface Hash {
 	 * be able to handle {@code null}, too.
 	 */
 
-	interface Strategy<K> {
+	interface Strategy<K extends @Nullable Object> {
 
 		/** Returns the hash code of the specified object with respect to this hash strategy.
 		 *
@@ -53,7 +55,7 @@ public interface Hash {
 		 * @return the hash code of the given object with respect to this hash strategy.
 		 */
 
-		int hashCode(K o);
+		int hashCode(@Nullable K o);
 
 		/** Returns true if the given objects are equal with respect to this hash strategy.
 		 *
@@ -61,7 +63,7 @@ public interface Hash {
 		 * @param b another object (or {@code null}).
 		 * @return true if the two specified objects are equal with respect to this hash strategy.
 		 */
-		boolean equals(K a, K b);
+		boolean equals(@Nullable K a, @Nullable K b);
 	}
 
 	/** The default growth factor of a hash table. */

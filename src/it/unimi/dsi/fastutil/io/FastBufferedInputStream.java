@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil.io;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.FileChannel;
@@ -112,13 +114,13 @@ public class FastBufferedInputStream extends MeasurableInputStream implements Re
 	protected int avail;
 
 	/** The cached file channel underlying {@link #is}, if any. */
-	private FileChannel fileChannel;
+	private @Nullable FileChannel fileChannel;
 
 	/** {@link #is} cast to a positionable stream, if possible. */
-	private RepositionableStream repositionableStream;
+	private @Nullable RepositionableStream repositionableStream;
 
 	/** {@link #is} cast to a measurable stream, if possible. */
-	private MeasurableStream measurableStream;
+	private @Nullable MeasurableStream measurableStream;
 
 	private static int ensureBufferSize(final int bufferSize) {
 		if (bufferSize <= 0) throw new IllegalArgumentException("Illegal buffer size: " + bufferSize);

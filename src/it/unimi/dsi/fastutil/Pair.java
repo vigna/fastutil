@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Comparator;
 
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
@@ -49,7 +51,7 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
  * @param <R> the type of the right element.
  */
 
-public interface Pair<L, R> {
+public interface Pair<L extends @Nullable Object, R extends @Nullable Object> {
 
 	/**
 	 * Returns the left element of this pair.
@@ -188,7 +190,7 @@ public interface Pair<L, R> {
 	 *
 	 * @implNote This factory method returns an instance of {@link ObjectObjectImmutablePair}.
 	 */
-	public static <L, R> Pair<L, R> of(final L l, final R r) {
+	public static <L extends @Nullable Object, R extends @Nullable Object> Pair<L, R> of(final L l, final R r) {
 		return new ObjectObjectImmutablePair<>(l, r);
 	}
 
@@ -203,7 +205,7 @@ public interface Pair<L, R> {
 	 * @return a lexicographical comparator for pairs.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <L, R> Comparator<Pair<L, R>> lexComparator() {
+	public static <L extends @Nullable Object, R extends @Nullable Object> Comparator<Pair<L, R>> lexComparator() {
 		return (x, y) -> {
 			final int t = ((Comparable<L>)x.left()).compareTo(y.left());
 			if (t != 0) return t;

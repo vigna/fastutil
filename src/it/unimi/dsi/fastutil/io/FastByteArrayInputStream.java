@@ -15,6 +15,8 @@
  */
 package it.unimi.dsi.fastutil.io;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -220,7 +222,7 @@ public class FastByteArrayInputStream extends MeasurableInputStream implements R
 	}
 
 	@Override  @Deprecated
-	public String readLine () {
+	public @Nullable String readLine () {
 		final StringBuilder sb = new StringBuilder(99);
 loop:
 		for (int c;;){
