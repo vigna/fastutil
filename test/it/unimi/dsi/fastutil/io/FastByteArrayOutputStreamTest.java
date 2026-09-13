@@ -106,6 +106,20 @@ public class FastByteArrayOutputStreamTest {
 
 	@SuppressWarnings("resource")
 	@Test
+	public void bugWriteArray0() {
+		final FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
+		fbaos.write(new byte[] { 1, 2, 3, 4, 5 });
+		assertEquals(5, fbaos.length());
+		assertEquals(5, fbaos.position());
+
+		fbaos.position(0);
+		fbaos.write(new byte[] { 1, 2, 3 });
+		assertEquals(5, fbaos.length());
+		assertEquals(3, fbaos.position());
+	}
+
+	@SuppressWarnings("resource")
+	@Test
 	public void testPositionWrite2() {
 		final FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream();
 		fbaos.position(fbaos.array.length + 2);

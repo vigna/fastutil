@@ -94,7 +94,8 @@ public class FastByteArrayOutputStream extends MeasurableOutputStream implements
 		ByteArrays.ensureOffsetLength(b, off, len);
 		if (position + len > array.length) array = ByteArrays.grow(array, position + len, position);
 		System.arraycopy(b, off, array, position, len);
-		if (position + len > length) length = position += len;
+		position += len;
+		if (length < position) length = position;
 	}
 
 	@Override
