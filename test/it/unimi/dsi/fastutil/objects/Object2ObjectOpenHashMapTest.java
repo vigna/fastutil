@@ -59,4 +59,22 @@ public class Object2ObjectOpenHashMapTest {
 		assertNull(map.computeIfPresent("def", (a, b) -> "four"));
 		assertFalse(map.containsKey("def"));
 	}
+
+    @Test
+    public void testPutIfAbsentReplacesNullValue() {
+        final Object2ObjectOpenHashMap<String, String> map = new Object2ObjectOpenHashMap<>();
+        map.put("a", null);
+
+        assertNull(map.putIfAbsent("a", "b"));
+        assertEquals("b", map.get("a"));
+    }
+
+    @Test
+    public void testComputeIfAbsentReplacesNullValue() {
+        final Object2ObjectOpenHashMap<String, String> map = new Object2ObjectOpenHashMap<>();
+        map.put("a", null);
+
+        assertEquals("b", map.computeIfAbsent("a", key -> "b"));
+        assertEquals("b", map.get("a"));
+    }
 }
