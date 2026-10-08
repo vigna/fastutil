@@ -96,4 +96,25 @@ public class AbstractIntCollectionTest {
 		assertTrue(m.retainAll((Collection<?>)new IntOpenHashSet(new int[] { -1, 0, 5, 9, 11 })));
 		assertEquals(new IntOpenHashSet(new int[] { 0, 5, 9 }), new IntOpenHashSet(m));
 	}
+
+	@Test
+	public void testRemoveAllDuplicates() {
+		IntCollection m = new AbstractIntCollection() {
+			final IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2, 3, 3, 3 });
+
+			@Override
+			public IntIterator iterator() {
+				return l.iterator();
+			}
+
+			@Override
+			public int size() {
+				return l.size();
+			}
+		};
+
+		assertTrue(m.removeAll(IntList.of(1, 3)));
+		assertEquals(IntList.of(0, 2), new IntArrayList(m));
+		assertFalse(m.removeAll(IntList.of(1, 3)));
+	}
 }

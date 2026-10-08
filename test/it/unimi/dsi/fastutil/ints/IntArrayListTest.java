@@ -181,6 +181,17 @@ public class IntArrayListTest {
 	}
 
 	@Test
+	public void testRemoveAllSubList() {
+		// Issue #385: all occurrences must be removed, not just the first one
+		final IntArrayList l = IntArrayList.wrap(new int[] { 9, 1, -4, 5, 5, 9 });
+		final IntList sublist = l.subList(1, 5);
+		assertTrue(sublist.removeAll(IntList.of(5, 1)));
+		assertEquals(IntArrayList.wrap(new int[] { -4 }), sublist);
+		assertEquals(IntArrayList.wrap(new int[] { 9, -4, 9 }), l);
+		assertFalse(sublist.removeAll(IntList.of(5, 1)));
+	}
+
+	@Test
 	public void testClearSublist() {
 		final IntArrayList l = IntArrayList.wrap(new int[] { 0, 1, 1, 2 });
 		final IntList sublist = l.subList(1,3);

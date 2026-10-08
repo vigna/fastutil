@@ -81,6 +81,16 @@ public class IntBigArrayBigListTest {
 		assertEquals(IntBigArrayBigList.of(0, 2), l);
 	}
 
+	@Test
+	public void testRemoveAllSubList() {
+		final IntBigArrayBigList l = new IntBigArrayBigList(wrap(new int[] { 9, 1, -4, 5, 5, 9 }));
+		final IntBigList sublist = l.subList(1, 5);
+		assertTrue(sublist.removeAll(IntList.of(5, 1)));
+		assertEquals(IntBigArrayBigList.of(-4), sublist);
+		assertEquals(IntBigArrayBigList.of(9, -4, 9), l);
+		assertFalse(sublist.removeAll(IntList.of(5, 1)));
+	}
+
 
 	private static IntBigArrayBigList of(final int... members) {
 		return new IntBigArrayBigList(IntArrayList.of(members));

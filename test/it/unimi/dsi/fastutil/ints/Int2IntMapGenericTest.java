@@ -1533,6 +1533,19 @@ public abstract class Int2IntMapGenericTest<M extends Int2IntMap> {
 		assertEquals(99, m.size());
 	}
 
+	@Test
+	public void testValuesRemoveAllDuplicates() {
+		assumeTrue(capabilities.contains(Capability.ITERATOR_MODIFY));
+
+		for (int i = 0; i < 10; i++) {
+			m.put(i, i % 3);
+		}
+		assertTrue(m.values().removeAll(IntList.of(1, 2)));
+		assertEquals(4, m.size());
+		for (int i = 0; i < 10; i += 3) assertEquals(0, m.get(i));
+		assertFalse(m.values().removeAll(IntList.of(1, 2)));
+	}
+
 	public enum Capability {
 		KEY_SET_MODIFY, ITERATOR_MODIFY
 	}
