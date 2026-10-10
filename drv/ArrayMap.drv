@@ -17,6 +17,8 @@
 
 package PACKAGE;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
@@ -45,24 +47,24 @@ import VALUE_PACKAGE.METHOD_ARG_VALUE_CONSUMER;
  * small number of pairs: just put them into two parallel arrays and scan linearly to find an item.
  */
 
-public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
+public class ARRAY_MAP KEY_VALUE_GENERIC_DEFINITION extends ABSTRACT_MAP KEY_VALUE_GENERIC implements java.io.Serializable, Cloneable {
 
 	private static final long serialVersionUID = 1L;
 	/** The keys (valid up to {@link #size}, excluded). */
-	protected transient KEY_TYPE[] key;
+	protected transient KEY_TYPE_NULLABLE[] key;
 	/** The values (parallel to {@link #key}). */
-	protected transient VALUE_TYPE[] value;
+	protected transient VALUE_TYPE_NULLABLE[] value;
 	/** The number of valid entries in {@link #key} and {@link #value}. */
 	protected int size;
 
 	/** Cached set of entries. */
-	protected transient FastEntrySet KEY_VALUE_GENERIC entries;
+	protected transient @Nullable FastEntrySet KEY_VALUE_GENERIC entries;
 
 	/** Cached set of keys. */
-	protected transient SET KEY_GENERIC keys;
+	protected transient @Nullable SET KEY_GENERIC keys;
 
 	/** Cached collection of values. */
-	protected transient VALUE_COLLECTION VALUE_GENERIC values;
+	protected transient @Nullable VALUE_COLLECTION VALUE_GENERIC values;
 
 	/** Creates a new empty array map with given key and value backing arrays. The resulting map will have as many entries as the given arrays.
 	 *
@@ -71,7 +73,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	 * @param key the key array.
 	 * @param value the value array (it <em>must</em> have the same length as {@code key}).
 	 */
-	public ARRAY_MAP(final KEY_TYPE[] key, final VALUE_TYPE[] value) {
+	public ARRAY_MAP(final KEY_TYPE_NULLABLE[] key, final VALUE_TYPE_NULLABLE[] value) {
 		this.key = key;
 		this.value = value;
 		size = key.length;
@@ -132,7 +134,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	 * @param value the value array (it <em>must</em> have the same length as {@code key}).
 	 * @param size the number of valid elements in {@code key} and {@code value}.
 	 */
-	public ARRAY_MAP(final KEY_TYPE[] key, final VALUE_TYPE[] value, final int size) {
+	public ARRAY_MAP(final KEY_TYPE_NULLABLE[] key, final VALUE_TYPE_NULLABLE[] value, final int size) {
 		this.key = key;
 		this.value = value;
 		this.size = size;
@@ -223,7 +225,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 		@SuppressWarnings("unchecked")
 		@Override
-		public boolean equals(final Object o) {
+		public boolean equals(final @Nullable Object o) {
 			if (!(o instanceof Map.Entry)) return false;
 			Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS> e = (Map.Entry<KEY_GENERIC_CLASS, VALUE_GENERIC_CLASS>)o;
 
@@ -246,7 +248,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		public ObjectIterator<MAP.Entry KEY_VALUE_GENERIC> iterator() {
 			return new ObjectIterator<MAP.Entry KEY_VALUE_GENERIC>() {
-				private MapEntry entry;
+				private @Nullable MapEntry entry;
 				int curr = -1, next = 0;
 
 				@Override
@@ -407,7 +409,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
-		public boolean contains(Object o) {
+		public boolean contains(@Nullable Object o) {
 			if (! (o instanceof Map.Entry)) return false;
 			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 #if KEYS_PRIMITIVE
@@ -422,7 +424,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 		@Override
 		SUPPRESS_WARNINGS_KEY_VALUE_UNCHECKED
-		public boolean remove(final Object o) {
+		public boolean remove(final @Nullable Object o) {
 			if (!(o instanceof Map.Entry)) return false;
 			final Map.Entry<?,?> e = (Map.Entry<?,?>)o;
 #if KEYS_PRIMITIVE
@@ -456,16 +458,16 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		return entries;
 	}
 
-	private int findKey(final KEY_TYPE k) {
-		final KEY_TYPE[] key = this.key;
+	private int findKey(final KEY_TYPE_NULLABLE k) {
+		final KEY_TYPE_NULLABLE[] key = this.key;
 		for(int i = size; i-- != 0;) if (KEY_EQUALS(key[i], k)) return i;
 		return -1;
 	}
 
 	@Override
 	SUPPRESS_WARNINGS_VALUE_UNCHECKED
-	public VALUE_GENERIC_TYPE GET_VALUE(final KEY_TYPE k) {
-		final KEY_TYPE[] key = this.key;
+	public VALUE_GENERIC_TYPE GET_VALUE(final KEY_TYPE_NULLABLE k) {
+		final KEY_TYPE_NULLABLE[] key = this.key;
 		for(int i = size; i-- != 0;) if (KEY_EQUALS(key[i], k)) return VALUE_GENERIC_CAST value[i];
 		return defRetValue;
 	}
@@ -476,10 +478,10 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	@Override
 	public void clear() {
 #if KEYS_REFERENCE
-	final KEY_TYPE[] key = this.key;
+	final KEY_TYPE_NULLABLE[] key = this.key;
 #endif
 #if VALUES_REFERENCE
-	final VALUE_TYPE[] value = this.value;
+	final VALUE_TYPE_NULLABLE[] value = this.value;
 #endif
 #if KEYS_REFERENCE || VALUES_REFERENCE
 		for(int i = size; i-- != 0;) {
@@ -495,11 +497,11 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 	}
 
 	@Override
-	public boolean containsKey(final KEY_TYPE k) { return findKey(k) != -1; }
+	public boolean containsKey(final KEY_TYPE_NULLABLE k) { return findKey(k) != -1; }
 
 	@Override
-	public boolean containsValue(VALUE_TYPE v) {
-		final VALUE_TYPE[] value = this.value;
+	public boolean containsValue(VALUE_TYPE_NULLABLE v) {
+		final VALUE_TYPE_NULLABLE[] value = this.value;
 		for(int i = size; i-- != 0;) if (VALUE_EQUALS(value[i], v)) return true;
 		return false;
 	}
@@ -534,7 +536,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	@Override
 	SUPPRESS_WARNINGS_VALUE_UNCHECKED
-	public VALUE_GENERIC_TYPE REMOVE_VALUE(final KEY_TYPE k) {
+	public VALUE_GENERIC_TYPE REMOVE_VALUE(final KEY_TYPE_NULLABLE k) {
 		final int oldPos = findKey(k);
 		if (oldPos == -1) return defRetValue;
 		final VALUE_GENERIC_TYPE oldValue = VALUE_GENERIC_CAST value[oldPos];
@@ -553,12 +555,12 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	private final class KeySet extends ABSTRACT_SET KEY_GENERIC {
 		@Override
-		public boolean contains(final KEY_TYPE k) {
+		public boolean contains(final KEY_TYPE_NULLABLE k) {
 			return findKey(k) != -1;
 		}
 
 		@Override
-		public boolean remove(final KEY_TYPE k) {
+		public boolean remove(final KEY_TYPE_NULLABLE k) {
 			 final int oldPos = findKey(k);
 			 if (oldPos == -1) return false;
 			 final int tail = size - oldPos - 1;
@@ -609,7 +611,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_KEY_UNCHECKED
 				public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-					final KEY_TYPE[] key = ARRAY_MAP.this.key;
+					final KEY_TYPE_NULLABLE[] key = ARRAY_MAP.this.key;
 					final int max = size;
 					while (pos < max) {
 						action.accept(KEY_GENERIC_CAST key[pos++]);
@@ -644,7 +646,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			@Override
 			SUPPRESS_WARNINGS_KEY_UNCHECKED
 			public void forEachRemaining(final METHOD_ARG_KEY_CONSUMER action) {
-				final KEY_TYPE[] key = ARRAY_MAP.this.key;
+				final KEY_TYPE_NULLABLE[] key = ARRAY_MAP.this.key;
 				final int max = size;
 				while (pos < max) {
 					action.accept(KEY_GENERIC_CAST key[pos++]);
@@ -660,7 +662,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		SUPPRESS_WARNINGS_KEY_UNCHECKED
 		public void forEach(METHOD_ARG_KEY_CONSUMER action) {
-			final KEY_TYPE[] key = ARRAY_MAP.this.key;
+			final KEY_TYPE_NULLABLE[] key = ARRAY_MAP.this.key;
 			for (int i = 0, max = size; i < max; ++i) {
 				action.accept(KEY_GENERIC_CAST key[i]);
 			}
@@ -685,7 +687,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	private final class ValuesCollection extends VALUE_ABSTRACT_COLLECTION VALUE_GENERIC {
 		@Override
-		public boolean contains(final VALUE_TYPE v) {
+		public boolean contains(final VALUE_TYPE_NULLABLE v) {
 			return containsValue(v);
 		}
 
@@ -724,7 +726,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 				@Override
 				SUPPRESS_WARNINGS_VALUE_UNCHECKED
 				public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
-					final VALUE_TYPE[] value = ARRAY_MAP.this.value;
+					final VALUE_TYPE_NULLABLE[] value = ARRAY_MAP.this.value;
 					final int max = size;
 					while (pos < max) {
 						action.accept(VALUE_GENERIC_CAST value[pos++]);
@@ -760,7 +762,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 			@Override
 			SUPPRESS_WARNINGS_VALUE_UNCHECKED
 			public void forEachRemaining(final METHOD_ARG_VALUE_CONSUMER action) {
-				final VALUE_TYPE[] value = ARRAY_MAP.this.value;
+				final VALUE_TYPE_NULLABLE[] value = ARRAY_MAP.this.value;
 				final int max = size;
 				while (pos < max) {
 					action.accept(VALUE_GENERIC_CAST value[pos++]);
@@ -776,7 +778,7 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 		@Override
 		SUPPRESS_WARNINGS_VALUE_UNCHECKED
 		public void forEach(METHOD_ARG_VALUE_CONSUMER action) {
-			final VALUE_TYPE[] value = ARRAY_MAP.this.value;
+			final VALUE_TYPE_NULLABLE[] value = ARRAY_MAP.this.value;
 			for (int i = 0, max = size; i < max; ++i) {
 				action.accept(VALUE_GENERIC_CAST value[i]);
 			}
@@ -826,8 +828,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	private void writeObject(java.io.ObjectOutputStream s) throws java.io.IOException {
 		s.defaultWriteObject();
-		final KEY_TYPE[] key = this.key;
-		final VALUE_TYPE[] value = this.value;
+		final KEY_TYPE_NULLABLE[] key = this.key;
+		final VALUE_TYPE_NULLABLE[] value = this.value;
 		for(int i = 0, max = size; i < max; i++) {
 			s.WRITE_KEY(key[i]);
 			s.WRITE_VALUE(value[i]);
@@ -836,8 +838,8 @@ public class ARRAY_MAP KEY_VALUE_GENERIC extends ABSTRACT_MAP KEY_VALUE_GENERIC 
 
 	private void readObject(java.io.ObjectInputStream s) throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();
-		final KEY_TYPE[] key = this.key = new KEY_TYPE[size];
-		final VALUE_TYPE[] value = this.value = new VALUE_TYPE[size];
+		final KEY_TYPE_NULLABLE[] key = this.key = new KEY_TYPE[size];
+		final VALUE_TYPE_NULLABLE[] value = this.value = new VALUE_TYPE[size];
 		for(int i = 0; i < size; i++) {
 			key[i] = s.READ_KEY();
 			value[i] = s.READ_VALUE();

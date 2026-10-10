@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.Iterator;
 import java.util.ListIterator;
 
@@ -34,7 +36,7 @@ import java.util.ListIterator;
  * @see ListIterator
  */
 
-public interface BidirectionalIterator<K> extends Iterator<K> {
+public interface BidirectionalIterator<K extends @Nullable Object> extends Iterator<K> {
 
 	/** Returns the previous element from the collection.
 	 *
