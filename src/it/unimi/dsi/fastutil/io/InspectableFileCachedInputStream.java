@@ -27,6 +27,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
+import org.jspecify.annotations.Nullable;
 
 /** A {@linkplain RepositionableStream repositionable} {@link MeasurableInputStream} based on
  * cached data received by a {@link WritableByteChannel} whose first bytes can be inspected directly.
@@ -95,7 +96,7 @@ public class InspectableFileCachedInputStream extends MeasurableInputStream impl
 	 * @param bufferSize the buffer size, in bytes.
 	 * @param overflowFile the directory where the overflow file should be created, or {@code null} for the default temporary directory.
 	 */
-	public InspectableFileCachedInputStream(final int bufferSize, final File overflowFile) throws IOException {
+	public InspectableFileCachedInputStream(final int bufferSize, final @Nullable File overflowFile) throws IOException {
 		if (bufferSize <= 0) throw new IllegalArgumentException("Illegal buffer size " + bufferSize);
 		if (overflowFile != null) this.overflowFile = overflowFile;
 		else (this.overflowFile = File.createTempFile(getClass().getSimpleName(), "overflow")).deleteOnExit();

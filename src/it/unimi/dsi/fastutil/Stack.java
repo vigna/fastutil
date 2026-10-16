@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.util.NoSuchElementException;
 
 /** A stack.
@@ -30,7 +32,7 @@ import java.util.NoSuchElementException;
  * @param <K> the types of elements in the stack.
  */
 
-public interface Stack<K> {
+public interface Stack<K extends @Nullable Object> {
 
 	/** Pushes the given object on the stack.
 	 *

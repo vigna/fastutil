@@ -20,6 +20,7 @@ import java.util.Objects;
 
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutableSortedPair;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A pair of sorted elements.
@@ -40,7 +41,7 @@ import it.unimi.dsi.fastutil.objects.ObjectObjectImmutableSortedPair;
  * @param <K> the type of the elements.
  */
 
-public interface SortedPair<K extends Comparable<K>> extends Pair<K, K> {
+public interface SortedPair<K extends @Nullable Comparable<K>> extends Pair<K, K> {
 
 	/**
 	 * Returns a new immutable {@link it.unimi.dsi.fastutil.SortedPair SortedPair} with given left
@@ -55,7 +56,7 @@ public interface SortedPair<K extends Comparable<K>> extends Pair<K, K> {
 	 * @implNote This factory method delegates to
 	 *           {@link ObjectObjectImmutablePair#of(Object, Object)}.
 	 */
-	public static <K extends Comparable<K>> SortedPair<K> of(final K l, final K r) {
+	public static <K extends @Nullable Comparable<K>> SortedPair<K> of(final K l, final K r) {
 		return ObjectObjectImmutableSortedPair.of(l, r);
 	}
 
@@ -65,7 +66,7 @@ public interface SortedPair<K extends Comparable<K>> extends Pair<K, K> {
 	 * @param o an object, or {@code null}-
 	 * @return true if one of the two elements of this sorted pair is equal to {@code o}.
 	 */
-	default boolean contains(final Object o) {
+	default boolean contains(final @Nullable Object o) {
 		return Objects.equals(o, left()) || Objects.equals(o, right());
 	}
 }

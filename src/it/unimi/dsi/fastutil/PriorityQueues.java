@@ -16,6 +16,8 @@
 
 package it.unimi.dsi.fastutil;
 
+import org.jspecify.annotations.Nullable;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
@@ -66,7 +68,7 @@ public class PriorityQueues {
 		public void changed() { throw new NoSuchElementException(); }
 
 		@Override
-		public Comparator<?> comparator() { return null; }
+		public @Nullable Comparator comparator() { return null; }
 
 		@Override
 		public Object clone() { return EMPTY_QUEUE; }
@@ -138,7 +140,7 @@ public class PriorityQueues {
 		public void changed() { synchronized(sync) { q.changed(); } }
 
 		@Override
-		public Comparator <? super K> comparator() { synchronized(sync) { return q.comparator(); } }
+		public @Nullable Comparator<? super K> comparator() { synchronized(sync) { return q.comparator(); } }
 
 		@Override
 		public String toString() { synchronized(sync) { return q.toString(); } }

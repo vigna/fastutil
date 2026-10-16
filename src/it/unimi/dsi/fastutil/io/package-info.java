@@ -15,4 +15,5 @@
  * {@linkplain BinIO#storeInts(int[], CharSequence) arrays}, even
  * {@linkplain TextIO#storeInts(int[], CharSequence) in text form}.
  */
+@org.jspecify.annotations.NullMarked
 package it.unimi.dsi.fastutil.io;

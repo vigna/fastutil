@@ -22,6 +22,7 @@ import java.util.function.IntUnaryOperator;
 import it.unimi.dsi.fastutil.bytes.Byte2CharFunction;
 import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import it.unimi.dsi.fastutil.ints.Int2LongFunction;
+import org.jspecify.annotations.Nullable;
 
 /** A function mapping keys into values.
  *
@@ -77,7 +78,7 @@ import it.unimi.dsi.fastutil.ints.Int2LongFunction;
  */
 
 @FunctionalInterface
-public interface Function<K,V> extends java.util.function.Function<K,V> {
+public interface Function<K extends @Nullable Object, V extends @Nullable Object> extends java.util.function.Function<K,V> {
 
 	/** {@inheritDoc} This is equivalent to calling {@link #get(Object)}.
 	 *
@@ -112,7 +113,7 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	 * @see java.util.Map#get(Object)
 	 */
 
-	V get(Object key);
+	V get(@Nullable Object key);
 
 	/**
 	 * Returns the value associated by this function to the specified key, or give the specified
@@ -125,7 +126,7 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	 * @see java.util.Map#getOrDefault(Object, Object)
 	 * @since 8.5.0
 	 */
-	default V getOrDefault(final Object key, final V defaultValue) {
+	default V getOrDefault(final @Nullable Object key, final V defaultValue) {
 		final V value = get(key);
 		return (value != null || containsKey(key)) ? value : defaultValue;
 	}
@@ -142,7 +143,7 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	 * @see java.util.Map#containsKey(Object)
 	 */
 
-	default boolean containsKey(final Object key) {
+	default boolean containsKey(final @Nullable Object key) {
 		return true;
 	}
 
@@ -153,7 +154,7 @@ public interface Function<K,V> extends java.util.function.Function<K,V> {
 	 * @see java.util.Map#remove(Object)
 	 */
 
-	default V remove(final Object key) {
+	default V remove(final @Nullable Object key) {
 		throw new UnsupportedOperationException();
 	}
 

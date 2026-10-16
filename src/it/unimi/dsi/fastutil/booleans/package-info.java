@@ -6,4 +6,5 @@
  * as they are useless. Unsorted sets and maps are kept around for orthogonality, whereas
  * {@link it.unimi.dsi.fastutil.booleans.BooleanCollection} is used by maps with boolean values.
  */
+@org.jspecify.annotations.NullMarked
 package it.unimi.dsi.fastutil.booleans;
