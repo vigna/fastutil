@@ -120,7 +120,9 @@ case "$command" in
 
   if ! dependencies=$(jdeps -recursive -verbose:class \
     "${classpath_argument[@]+"${classpath_argument[@]}"}" "${analyse_paths[@]}" |\
-    awk '/it\.unimi\.dsi\.fastutil\..*not found$/ { print $2 }' | sort | uniq) \
+    awk '/it\.unimi\.dsi\.fastutil\..*not found$/ {
+      for (i = 1; i < NF; i++) if ($i == "->") print $(i + 1)
+    }' | sort | uniq) \
     || [ -z "$dependencies" ]
   then
     >&2 echo "No unresolved references found - is fastutil on the classpath?"
@@ -141,13 +143,13 @@ case "$command" in
 
   [ ${#} -ge 2 ] || invalid_argument
 
-  jar_path="$(realpath $1)"
+  jar_path="$(realpath "$1")"
   if [ ! -f "$jar_path" ]; then
     >&2 echo "No file at \"$jar_path\""
     exit 1
   fi
 
-  class_list_path="$(realpath $2)"
+  class_list_path="$(realpath "$2")"
   if [ ! -f "$class_list_path" ]; then
     >&2 echo "No file at \"$class_list_path\""
     exit 1
@@ -159,10 +161,10 @@ case "$command" in
     exit 1
   fi
 
-  jar_name="$(basename ${dest_path})"
+  jar_name="$(basename "${dest_path}")"
 
   tmp_dir=$(mktemp -d -t "fastutil-min.XXXX")
-  trap "{ rm -rf \"${tmp_dir}\"; exit 255; }" EXIT
+  trap 'rm -rf "$tmp_dir"' EXIT
 
   ( >&2 echo "Resolving transitive dependencies" )
 
@@ -172,11 +174,36 @@ case "$command" in
     exit 1
   fi
 
-  class_list=${class_paths//.class/}
-  class_list=${class_list//\//.}
-
-  if ! transitive_dependencies=$(cd ${tmp_dir} && jdeps -recursive -regex "$fastutil_regex" \
-    -verbose:class -cp "$jar_path" ${class_list} | awk '/      -> / { gsub(/\./, "/", $2) ".class"; print $2 ".class" }')\
+  # Analyze the archive once, then follow only the dependencies reachable from
+  # the requested roots. JDK 8 and newer jdeps versions format edges differently.
+  if ! transitive_dependencies=$(jdeps -regex "$fastutil_regex" -verbose:class \
+    -filter:none "$jar_path" | awk '
+      FILENAME == ARGV[1] {
+        if (/\.class$/) {
+          sub(/\.class$/, ""); gsub(/\//, ".")
+          if (!seen[$0]++) queue[++last] = $0
+        }
+        next
+      }
+      {
+        if ($1 ~ /^it\.unimi\.dsi\.fastutil\./) source = $1
+        for (i = 1; i < NF; i++) {
+          if ($i == "->" && $(i + 1) ~ /^it\.unimi\.dsi\.fastutil\./) {
+            edges[source] = edges[source] " " $(i + 1)
+          }
+        }
+      }
+      END {
+        for (first = 1; first <= last; first++) {
+          count = split(edges[queue[first]], targets, " ")
+          for (i = 1; i <= count; i++) {
+            if (!seen[targets[i]]++) queue[++last] = targets[i]
+          }
+          path = queue[first]; gsub(/\./, "/", path)
+          print path ".class"
+        }
+      }
+    ' "$class_list_path" -)\
     || [ -z "$transitive_dependencies" ]
   then
     >&2 echo "Could not resolve dependencies with $jar_path - probably not a complete fastutil jar."
